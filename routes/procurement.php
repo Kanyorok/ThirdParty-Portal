@@ -538,6 +538,7 @@ Route::middleware(['module:300000'])->group(function () {
     //Tendering
     Route::get('/tenderresponse', [TenderResponseController::class, 'index'])->name('tenderresponse.index');
     Route::get('/tenderresponse/create', [TenderResponseController::class, 'create'])->name('tenderresponse.create');
+    Route::get('/tenderresponse/invited-suppliers/{tenderId}', [TenderResponseController::class, 'getInvitedSuppliers'])->name('tenderresponse.getInvitedSuppliers');
     Route::post('/tenderresponse', [TenderResponseController::class, 'storeResponse'])->name('tenderresponse.storeResponse');
 
     // Enhanced Tender Clarification Management
@@ -718,9 +719,16 @@ Route::get('/awards-tender/view/{id}', [AwardsController::class, 'view_tender'])
 Route::get('/awards-rfq/view/{id}', [AwardsController::class, 'view_rfq'])->name('awards.rfq');
 Route::get('/awards/unified/{id}', [AwardsController::class, 'showUnifiedAward'])->name('awards.unified');
 Route::post('/awards/switch-type', [AwardsController::class, 'switchType'])->name('awards.switch-type');
-Route::post('/awards/{award}/approve', [AwardsController::class, 'approve'])->name('awards.approve');
-Route::post('/awards/{award}/reject', [AwardsController::class, 'reject'])->name('awards.reject');
+
+// Awards approval/rejection routes with permission middleware
+Route::post('/awards/{award}/approve', [AwardsController::class, 'approve'])
+    ->middleware(\App\Http\Middleware\CanAction::class . ':approve,procawards')
+    ->name('awards.approve');
+Route::post('/awards/{award}/reject', [AwardsController::class, 'reject'])
+    ->middleware(\App\Http\Middleware\CanAction::class . ':approve,procawards')
+    ->name('awards.reject');
 Route::post('/awards/{award}/cancel', [AwardsController::class, 'cancel'])->name('awards.cancel');
+Route::post('/awards/{id}/submit-approval', [AwardsController::class, 'submitForApproval'])->name('awards.submit-approval');
 
 // Workflow history
 Route::get('/{id}/workflow-history', [AwardsController::class, 'workflowHistory'])->name('workflow-history');
@@ -728,14 +736,11 @@ Route::get('/{id}/workflow-history', [AwardsController::class, 'workflowHistory'
 // Direct from consolidation
 Route::get('/create-from-consolidation/{tenderId}', [AwardsController::class, 'createFromConsolidation'])
     ->name('create-from-consolidation');
-// Workflow actions
-Route::post('/{id}/submit-approval', [AwardsController::class, 'submitForApproval'])->name('submit-approval');
-Route::post('/approve', [AwardsController::class, 'approve'])->name('approve');
-Route::post('/reject', [AwardsController::class, 'reject'])->name('reject');
-Route::post('/{id}/cancel', [AwardsController::class, 'cancel'])->name('cancel');
 
 // RFQ direct award approval (no TenderAward model yet)
-Route::post('/awards/rfq/{rfq}/approve', [AwardsController::class, 'approveRfq'])->name('awards.rfq.approve');
+Route::post('/awards/rfq/{rfq}/approve', [AwardsController::class, 'approveRfq'])
+    ->middleware(\App\Http\Middleware\CanAction::class . ':approve,procawards')
+    ->name('awards.rfq.approve');
 
 // Award creation from consolidated scores
 Route::get('awards/create-from-consolidation/{tenderId}', [AwardsController::class, 'createFromConsolidation'])->name('awards.create-from-consolidation');
@@ -757,6 +762,7 @@ Route::post('contracts/{id}/add-addendum', [ContractsController::class, 'addAdde
 // Contracts - Approval Queue (specific routes before generic)
 Route::get('contracts/approval-queue', [ContractsController::class, 'approvalQueue'])->name('contracts.approvalQueue');
 Route::post('contracts/{id}/approve', [ContractsController::class, 'approve'])->name('contracts.approve');
+Route::post('contracts/{id}/execute', [ContractsController::class, 'execute'])->name('contracts.execute');
 Route::post('contracts/{id}/reject', [ContractsController::class, 'rejectContract'])->name('contracts.reject');
 
 // Contract Creation from Awards (specific routes before generic)
@@ -777,6 +783,7 @@ Route::prefix('contracts/lifecycle')->name('contracts.lifecycle.')->group(functi
     Route::get('{id}/terminate', [ContractsLifecycleController::class, 'terminate'])->name('terminate')->where('id', '[0-9]+');
     Route::post('{id}/terminate', [ContractsLifecycleController::class, 'submitTermination'])->name('terminate.submit')->where('id', '[0-9]+');
     Route::get('{id}/execute', [ContractsLifecycleController::class, 'monitorExecution'])->name('execution')->where('id', '[0-9]+');
+    Route::post('{id}/execute', [ContractsLifecycleController::class, 'executeAction'])->name('execution.submit')->where('id', '[0-9]+');
 });
 
 

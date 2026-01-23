@@ -4,20 +4,24 @@ namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
 use App\Models\PropertyManagement\PropertyInvoice;
-use App\Models\PropertyManagement\PropertyReceipt;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class RentDashboardController extends Controller
 {
-
     public function index(Request $request)
     {
-        $query = PropertyInvoice::with(['receipts', 'lease.property', 'lease.unit']);
+        $query = PropertyInvoice::with([
+            'receipts',
+            'lease.property',
+            'lease.unit',
+            'lease.tenant.thirdParty'
+        ]);
 
+        // ---- Filters (ALL by default) ----
         if ($request->filled('property_id')) {
             $query->whereHas('lease.property', function ($q) use ($request) {
                 $q->where('Id', $request->property_id);
@@ -26,66 +30,105 @@ class RentDashboardController extends Controller
 
         if ($request->filled('tenant_id')) {
             $query->whereHas('lease.tenant', function ($q) use ($request) {
-                $q->where('id', $request->tenant_id);
+                $q->where('Id', $request->tenant_id);
             });
         }
 
         if ($request->filled('billing_month')) {
-            $query->where('BillingMonth', $request->billing_month);
+            $query->whereMonth('InvoiceDate', Carbon::parse($request->billing_month)->month)
+                  ->whereYear('InvoiceDate', Carbon::parse($request->billing_month)->year);
         }
 
         $invoices = $query->get();
 
-        // --- Group by month (e.g., "2025-01") ---
-        $invoiceByMonth = $invoices->groupBy(function ($inv) {
-            return Carbon::parse($inv->InvoiceDate)->format('Y-m');
-        })->map(function ($group) {
-            return $group->sum(function ($inv) {
-                return $inv->RentAmount + $inv->ServicesCharge + $inv->ParkingFee + $inv->OtherCharges;
-            });
+        // ---- Finance Invoices mapping ----
+        $requestIds = $invoices->pluck('RequestID')->filter()->unique();
+        $financeByReq = collect();
+
+        if ($requestIds->isNotEmpty()) {
+            $financeByReq = collect(
+                DB::table('t_FinanceInvoices')
+                    ->whereIn('RequestID', $requestIds)
+                    ->get()
+            )->keyBy('RequestID');
+        }
+
+        // ---- Derive amounts & status ----
+        $invoices->each(function ($inv) use ($financeByReq) {
+            $due = (float)($inv->RentAmount ?? 0)
+                + (float)($inv->ServicesCharge ?? 0)
+                + (float)($inv->ParkingFee ?? 0)
+                + (float)($inv->OtherCharges ?? 0);
+
+            $fin = $inv->RequestID ? $financeByReq->get($inv->RequestID) : null;
+            $paid = $fin ? (float)($fin->AmountPaid ?? 0) : 0;
+
+            $inv->DerivedDue = $due;
+            $inv->DerivedPaid = $paid;
+            $inv->DerivedStatus = $paid >= $due && $due > 0
+                ? 'Fully Paid'
+                : ($paid > 0 ? 'Partial Paid' : 'Pending');
         });
 
-        $receiptByMonth = $invoices->flatMap->receipts
-            ->groupBy(function ($receipt) {
-                return Carbon::parse($receipt->ReceiptDate)->format('Y-m');
-            })->map(function ($group) {
-                return $group->sum('AmountPaidNow');
-            });
+        // ---- Monthly chart data ----
+        $invoiceByMonth = $invoices->groupBy(fn ($i) =>
+            Carbon::parse($i->InvoiceDate)->format('Y-m')
+        )->map(fn ($g) => $g->sum('DerivedDue'));
 
-        // --- Merge both monthly keys to cover all months ---
-        $allMonths = $invoiceByMonth->keys()->merge($receiptByMonth->keys())->unique()->sort();
+        $financeIds = $financeByReq->pluck('Id')->filter();
+        $allocations = collect();
 
-        $chartData = $allMonths->mapWithKeys(function ($month) use ($invoiceByMonth, $receiptByMonth) {
-            return [
-                $month => [
-                    'invoiced' => $invoiceByMonth->get($month, 0),
-                    'collected' => $receiptByMonth->get($month, 0),
-                ]
-            ];
-        });
+        if ($financeIds->isNotEmpty()) {
+            $allocations = collect(
+                DB::table('t_FinanceReceiptAllocations as a')
+                    ->join('t_FinanceReceipts as r', 'r.Id', '=', 'a.ReceiptID')
+                    ->whereIn('a.InvoiceID', $financeIds)
+                    ->select('r.ReceiptDate', 'a.AmountAllocated')
+                    ->get()
+            );
+        }
 
-        // Summary calculations (unchanged)
-        $collected = $invoices->sum(fn($inv) => $inv->receipts->sum('AmountPaidNow'));
-        $dueSoon = 0; // You can calculate due soon based on due dates
-        $overdue = $invoices->filter(function ($inv) {
-            $due = $inv->RentAmount + $inv->ServicesCharge + $inv->ParkingFee + $inv->OtherCharges;
-            $paid = $inv->receipts->sum('AmountPaidNow');
-            return $paid < $due && Carbon::parse($inv->InvoiceDate)->lt(now());
-        })->sum(fn($inv) => ($inv->RentAmount + $inv->ServicesCharge + $inv->ParkingFee + $inv->OtherCharges) - $inv->receipts->sum('AmountPaidNow'));
+        $receiptByMonth = $allocations->groupBy(fn ($r) =>
+            Carbon::parse($r->ReceiptDate)->format('Y-m')
+        )->map(fn ($g) => $g->sum('AmountAllocated'));
 
-        $partial = $invoices->filter(function ($inv) {
-            $due = $inv->RentAmount + $inv->ServicesCharge + $inv->ParkingFee + $inv->OtherCharges;
-            $paid = $inv->receipts->sum('AmountPaidNow');
-            return $paid > 0 && $paid < $due;
-        })->sum(fn($inv) => $inv->receipts->sum('AmountPaidNow'));
+        $months = $invoiceByMonth->keys()->merge($receiptByMonth->keys())->unique()->sort();
 
-        // Filters
+        $chartData = $months->mapWithKeys(fn ($m) => [
+            $m => [
+                'invoiced' => $invoiceByMonth->get($m, 0),
+                'collected' => $receiptByMonth->get($m, 0),
+            ]
+        ]);
+
+        // ---- Summary cards ----
+        $collected = (float)$allocations->sum('AmountAllocated');
+
+        $overdue = $invoices->sum(fn ($i) =>
+            max(($i->DerivedDue ?? 0) - ($i->DerivedPaid ?? 0), 0)
+        );
+
+        $partial = $invoices->sum(fn ($i) =>
+            ($i->DerivedPaid > 0 && $i->DerivedPaid < $i->DerivedDue)
+                ? $i->DerivedPaid
+                : 0
+        );
+
+        $dueSoon = 0; // Optional future logic
+
+        // ---- Filters data ----
         $properties = PropertyRegistry::all();
-        $tenants = PropertyNewTenant::all();
+        $tenants = PropertyNewTenant::with('thirdParty')->get();
 
         return view('property.billingandreceipting.rentdashboard.index', compact(
-            'invoices', 'collected', 'dueSoon', 'overdue', 'partial',
-            'properties', 'tenants', 'chartData'
+            'invoices',
+            'collected',
+            'dueSoon',
+            'overdue',
+            'partial',
+            'properties',
+            'tenants',
+            'chartData'
         ));
     }
 }

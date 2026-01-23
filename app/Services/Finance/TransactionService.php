@@ -499,6 +499,7 @@ class TransactionService
                 'TotalCredit'    => $totalCredit ?? null,
                 'CurrencyID'     => $header['CurrencyID'] ?? null,
                 'ApprovalStatus'=>'posted',
+                'Status'=>'posted',
                 'ApprovalReason'=>'System Generated Approval.',
                 'CreatedBy'      => 1,
                 'ModifiedBy'     => 1,

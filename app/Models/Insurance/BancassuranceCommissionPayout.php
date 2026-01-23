@@ -3,6 +3,7 @@
 namespace App\Models\Insurance;
 
 use App\Enums\Insurance\InsurancePolicyStatus;
+use App\Models\Core\Currency;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Core\Approval\CodeDetail;
@@ -23,10 +24,12 @@ class BancassuranceCommissionPayout extends Model
         'PolicyId',
         'PayoutReference',
         'PaidAmount',
+        'CurrencyId',
+        'CommissionRuleId',
         'PaymentDate',
         'PaymentMode',
         'Remarks',
-        'PaidBy',
+        'PaidTo',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
@@ -45,6 +48,11 @@ class BancassuranceCommissionPayout extends Model
     public function paymentmodes()
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentMode', 'ID');
+    }
+
+    public function currencies()
+    {
+        return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');
     }
 
 }

@@ -26,7 +26,7 @@ class MaintenanceRequest extends FormRequest
             'Block' => 'nullable|exists:t_PropertyBlock,Id',
             'Floor' => 'nullable|exists:t_PropertyFloor,Id',
             'Unit' => 'nullable|exists:t_PropertyUnit,Id',
-            'ReportedBy' => 'required|string|max:50',
+            'ReportedBy' => 'required|exists:t_ThirdParties,Id',
             'IssueType' => 'required|exists:t_CodeDetails,ID',
             'Priority' => 'required|exists:t_CodeDetails,ID',
             'IssueDescription' => 'required|string|max:255',

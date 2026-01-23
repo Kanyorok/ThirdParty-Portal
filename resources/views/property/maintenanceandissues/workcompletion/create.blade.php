@@ -126,15 +126,17 @@
           @error('WorkDoneSummary') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 
+      
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+          <a href="{{ route('workcompletion.index') }}" class="btn btn-outline-secondary">Cancel</a>
+          <button type="submit" class="btn btn-success"
+                  onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+              Submit
+          </button>
+        </div>
+
       </div>
     </div>
-
-    <!-- Submit -->
-    <a href="{{ route('workcompletion.index') }}" class="btn btn-secondary mt-3">Cancel</a>
-    <button type="submit" class="btn btn-success mt-3"
-            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
-        Mark as Completed
-    </button>
 
   </form>
 </div>

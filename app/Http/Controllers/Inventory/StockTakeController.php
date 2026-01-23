@@ -25,7 +25,7 @@ class StockTakeController extends Controller
     
     public function index()
     {
-        $this->authorize(PermissionEnum::StockTakeCreate, StockTake::class);
+        $this->authorize(PermissionEnum::StockTakeView, StockTake::class);
         $stocks = StockTake::with('branch', 'store', 'createdby', 'countedby')->get();
         return view('inventory.stockmanagement.stocktake.index', compact('stocks'));
     }
@@ -58,7 +58,7 @@ class StockTakeController extends Controller
 
     public function store(StockTakeRequest $request)
     {
-        $this->authorize('create', StockTake::class);
+        $this->authorize(PermissionEnum::StockTakeCreate, StockTake::class);
         $branch = Branch::findOrFail($request->BranchId);
         $store = Store::findOrFail($request->StoreId);
         $countedBy = $request->CountedBy;
@@ -82,7 +82,7 @@ class StockTakeController extends Controller
 
     public function show($id)
     {
-        $this->authorize('view', StockTake::class);
+         $this->authorize(PermissionEnum::StockTakeView, StockTake::class);
         $stock = StockTake::with(['branch', 'store', 'lines.item.item'])->findOrFail($id);
         return view('inventory.stockmanagement.stocktake.show', compact('stock'));
     }
@@ -90,7 +90,7 @@ class StockTakeController extends Controller
 
     public function edit($id)
     {
-        $this->authorize('update', StockTake::class);
+        $this->authorize(PermissionEnum::StockTakeUpdate, StockTake::class);
         $stock = StockTake::with('branch', 'store')->findOrFail($id);
         $branches = Branch::all();
         $stores = Store::all();
@@ -166,7 +166,7 @@ public function update(Request $request, $id)
 
     public function destroy($id)
     {
-        $this->authorize('destroy', StockTake::class);
+         $this->authorize(PermissionEnum::StockTakeDestroy, StockTake::class);
         //Check if user has permission to delete property categories
         //$this->authorize(PermissionEnum::PropertyTypeDelete , PropertyType::class);
         try {

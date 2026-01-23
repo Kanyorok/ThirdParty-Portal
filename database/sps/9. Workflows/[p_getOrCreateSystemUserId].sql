@@ -1,12 +1,4 @@
-USE [BR_ERP]
-GO
-/****** Object:  StoredProcedure [dbo].[p_getOrCreateSystemUserId]    Script Date: 31/12/2025 17:10:04 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
-ALTER     PROCEDURE [dbo].[p_getOrCreateSystemUserId]
+CREATE OR ALTER PROCEDURE [dbo].[p_getOrCreateSystemUserId]
 
     @SystemUserId BIGINT OUTPUT
 

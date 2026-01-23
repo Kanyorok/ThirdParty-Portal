@@ -9,6 +9,7 @@ use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\Facades\DataTables;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\StoreSupplierRequest;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\UpdateSupplierRequest;
@@ -42,16 +43,21 @@ class SupplierController extends Controller
                         ->limit(1),
                 ]);
 
-            if ($request->filled('search.value')) {
-                $searchValue = $request->input('search.value');
-                $query->whereHas('party', function ($q) use ($searchValue) {
-                    $q->where('ThirdPartyName', 'like', "%{$searchValue}%")
-                        ->orWhere('TradingName', 'like', "%{$searchValue}%")
-                        ->orWhere('Email', 'like', "%{$searchValue}%");
-                });
-            }
+
 
             return DataTables::of($query)
+                ->filter(function ($query) use ($request) {
+                    if ($request->filled('search.value')) {
+                        $searchValue = $request->input('search.value');
+                        $query->whereHas('party', function ($q) use ($searchValue) {
+                            $q->where(function ($subQ) use ($searchValue) {
+                                $subQ->where('ThirdPartyName', 'like', "%{$searchValue}%")
+                                    ->orWhere('TradingName', 'like', "%{$searchValue}%")
+                                    ->orWhere('Email', 'like', "%{$searchValue}%");
+                            });
+                        });
+                    }
+                })
                 ->addColumn('ThirdPartyName', function (SupplierMaster $supplier) {
                     return $supplier->party->ThirdPartyName ?? 'N/A';
                 })
@@ -305,15 +311,15 @@ class SupplierController extends Controller
 
         $buttons = '';
 
-        if (auth()->user()->can('view', SupplierMaster::class)) {
+        if (auth()->user()->can('view', $supplier)) {
             $buttons .= '<a href="' . $viewUrl . '" class="btn btn-sm btn-info">View</a>';
         }
 
-        if (auth()->user()->can('update', SupplierMaster::class)) {
+        if (auth()->user()->can('update', $supplier)) {
             $buttons .= '<a href="' . $editUrl . '" class="btn btn-sm btn-warning">Edit</a>';
         }
 
-        if (auth()->user()->can('delete', SupplierMaster::class)) {
+        if (auth()->user()->can('delete', $supplier)) {
             $buttons .= '
                 <form action="' . $deleteUrl . '" method="POST" class="inline-block">
                     ' . csrf_field() . '

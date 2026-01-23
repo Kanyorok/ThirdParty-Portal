@@ -6,7 +6,42 @@ use App\Http\Controllers\Settings\WorflowLimitController;
 use App\Http\Controllers\Settings\WorkFlowController;
 use Illuminate\Support\Facades\Route;
 
+// Added for debugging authentication in production
+// Added for debugging authentication in production
+Route::get('/debug/auth', function (Illuminate\Http\Request $request) {
+    $sessionId = session()->getId();
+    $tableName = config('session.table', 't_SYSSessions');
+    
+    $sessionEntry = \Illuminate\Support\Facades\DB::table($tableName)
+        ->where('id', $sessionId)
+        ->first();
+
+    return response()->json([
+        'auth_check' => auth()->check(),
+        'user_id' => auth()->id(),
+        'session_id' => $sessionId,
+        'session_table' => $tableName,
+        'db_session_found' => (bool) $sessionEntry,
+        'db_user_id' => $sessionEntry ? $sessionEntry->user_id : null,
+        'db_last_activity' => $sessionEntry ? $sessionEntry->last_activity : null,
+        'session_config' => [
+            'driver' => config('session.driver'),
+            'cookie' => config('session.cookie'),
+            'domain' => config('session.domain'),
+            'secure' => config('session.secure'),
+        ],
+        'cookies_received' => [
+            'value' => $request->cookie(config('session.cookie')),
+            'matches_current' => $request->cookie(config('session.cookie')) === $sessionId,
+        ],
+    ]);
+});
+
 Route::middleware(['web', 'auth'])->group(function () {
+    Route::post('/session/heartbeat', function () {
+        return response()->json(['status' => 'session_renewed']);
+    })->name('session.heartbeat');
+
     Route::get('/auth/heartbeat', function () {
         return response()->noContent();
     })->name('auth.heartbeat');
@@ -138,10 +173,10 @@ Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(fun
     // ✅ Global Locality Endpoint
     Route::get('/getCities', [BankBranchController::class, 'getCities'])->name('getCities');
 });
-// Admin Licensing endpoints (should be accessible post-auth; license check happens after upload)
-Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/license', [LicenseController::class, 'index'])
-        ->name('admin.license.index');
-    Route::post('/admin/license', [LicenseController::class, 'store'])
-        ->name('admin.license.store');
-});
+// // Admin Licensing endpoints (should be accessible post-auth; license check happens after upload)
+// Route::middleware(['auth'])->group(function () {
+//     Route::get('/admin/license', [LicenseController::class, 'index'])
+//         ->name('admin.license.index');
+//     Route::post('/admin/license', [LicenseController::class, 'store'])
+//         ->name('admin.license.store');
+// });

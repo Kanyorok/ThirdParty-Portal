@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Enums\Core\ApprovalEnum;
 use App\Enums\Core\PermissionEnum;
+use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceTransaction;
@@ -14,9 +16,16 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\QueryException;
 use App\Models\Finance\ReverseJournalEntry;
-
+use App\Services\Workflow\ApprovalWorkflow;
 class PostingController extends Controller
 {
+    protected $workflowService;
+
+    public function __construct(ApprovalWorkflow $workflowService)
+    {
+        $this->workflowService = $workflowService;
+    }
+
     /**
      * Approve or reject a journal entry and post to the transaction table if approved.
      */
@@ -25,7 +34,7 @@ class PostingController extends Controller
         $this->authorize(PermissionEnum::FinanceGeneralLedgerCreate, FinanceTransaction::class);
 
         $validated = $request->validate([
-            'action_type' => 'required|in:approve,reject',
+            'action_type' => 'required|in:approve,reject,submitForApproval',
             'journalID' => 'required|integer|exists:t_FinanceJournalEntries,Id',
             'Reason' => 'required|string|max:255',
         ]);
@@ -34,11 +43,26 @@ class PostingController extends Controller
         try {
             $journal = FinanceJournalEntry::findOrFail($validated['journalID']);
 
+            if (in_array($validated['action_type'], ['approve', 'reject'], true)
+                && ! $this->workflowService->canApproveModel($journal, Auth::user())
+            ) {
+                DB::rollBack();
+                return back()->with('fail', 'You are not authorized to approve this journal entry.');
+            }
+
             if ($validated['action_type'] === 'reject') {
-                $journal->update([
-                    'ApprovalStatus' => 'rejected',
-                    'ApprovalReason' => $validated['Reason'],
-                ]);
+                $result = $this->workflowService->reject(
+                    $journal,
+                    Auth::user(),
+                    ApprovalEnum::Rejected,
+                    $validated['Reason']
+                );
+
+                if (! $result) {
+                    throw new \RuntimeException('Failed to reject journal entry.');
+                }
+
+                $journal->update(['ApprovalReason' => $validated['Reason']]);
 
                 activity('Journal Entry Approval')
                     ->performedOn($journal)
@@ -48,17 +72,53 @@ class PostingController extends Controller
 
                 DB::commit();
                 return back()->with('success', 'Journal Entry #' . $journal->RefNo . ' rejected successfully.');
-            } elseif ($validated['action_type'] === 'approve') {
-                $journal->update([
-                    'ApprovalStatus' => 'posted',
-                    'ApprovalReason' => $validated['Reason'],
-                ]);
+            }
+            elseif($validated['action_type'] === 'submitForApproval'){
+                $result = $this->submitForApproval($validated['journalID'], $validated['Reason']);
+                if ($result) {
+                    //Update Status Column to Pending
+                    FinanceJournalEntry::where('Id', $validated['journalID'])->update(['Status' => 'pending']);
+                    //return FinanceJournalEntry::where('Id', $validated['journalID'])->update(['ApprovalStatus' => 'pending']);
+                    activity('Journal Entry Approval')
+                        ->performedOn($journal)
+                        ->causedBy(Auth::id())
+                        ->withProperties(['action' => 'submittedForApproval', 'journal_id' => $journal->Id])
+                        ->log('Submitted Journal Entry #' . $journal->RefNo . ' for approval.');
+                    DB::commit();
+                    return redirect()->back()->with('success', 'Journal Entry #' . $journal->RefNo . ' submitted for approval successfully.');
+                } else {
+                    DB::rollBack();
+                    return redirect()->back()->with('fail', 'Failed to submit journal entry for approval.');
+                }
+            }
+             elseif ($validated['action_type'] === 'approve') {
+                $result = $this->workflowService->approve(
+                    $journal,
+                    Auth::user(),
+                    ApprovalEnum::Approved,
+                    $validated['Reason']
+                );
+
+                if (! $result) {
+                    throw new \RuntimeException('Failed to approve journal entry.');
+                }
+
+                $journal->update(['ApprovalReason' => $validated['Reason']]);
 
                 activity('Journal Entry Approval')
                     ->performedOn($journal)
                     ->causedBy(Auth::id())
                     ->withProperties(['action' => 'approved', 'journal_id' => $journal->Id])
                     ->log('Approved Journal Entry #' . $journal->RefNo);
+
+                $workflowStatus = $this->workflowService->getStatus($journal);
+                $pendingCount = $workflowStatus['totalPending']
+                    ?? count($workflowStatus['pendingApprovers'] ?? []);
+
+                if ($pendingCount > 0) {
+                    DB::commit();
+                    return back()->with('success', 'Approval recorded. Awaiting other approvals.');
+                }
 
                 // Proceed to posting
                 $result = $this->journalPosting($validated['journalID']);
@@ -80,15 +140,88 @@ class PostingController extends Controller
                 'action_type' => $validated['action_type'],
                 'sql_error' => $e->getSql(),
             ]);
-            return back()->with('error', 'Database Error: ' . $e->getMessage());
+            return back()->with('fail', 'Database Error: ' . $e->getMessage());
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Journal Approval Failed: ' . $th->getMessage(), [
                 'journalID' => $validated['journalID'],
                 'action_type' => $validated['action_type'],
             ]);
-            return back()->with('error', 'Journal Approval Failed: ' . $th->getMessage());
+            return back()->with('fail', 'Journal Approval Failed: ' . $th->getMessage());
         }
+    }
+
+
+    //Calling Approval Services Workflows
+    public function submitForApproval($journalId, $remarks)
+    {
+        try {
+            $journal = FinanceJournalEntry::findOrFail($journalId);
+
+            try {
+                $result = $this->workflowService->submit(
+                    $journal,
+                    Auth::user(),
+                    ApprovalEnum::Submitted,
+                    $remarks
+                );
+            } catch (ErroredException $e) {
+                $message = strtolower($e->getMessage());
+                if (str_contains($message, 'already submitted')) {
+                    $journal->update([
+                        'ApprovalStatus' => 'draft',
+                        'ApprovalReason' => $remarks,
+                    ]);
+                    return true;
+                }
+
+                if (str_contains($message, 'invalid status')) {
+                    Log::warning('Submit status missing; falling back to pending', [
+                        'journal_id' => $journalId,
+                    ]);
+
+                    $result = $this->workflowService->submit(
+                        $journal,
+                        Auth::user(),
+                        ApprovalEnum::Pending,
+                        $remarks
+                    );
+                } else {
+                    throw $e;
+                }
+            }
+
+            if ($result) {
+                // Update the document status for UI/state tracking
+                $journal->update([
+                    'ApprovalStatus' => 'draft',
+                    'ApprovalReason' => $remarks,
+                ]);
+            }
+
+            return (bool) $result;
+        } catch (\Throwable $e) {
+            Log::error('Journal submission failed', [
+                'journal_id' => $journalId,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+
+    public function approve($journalId)
+    {
+        $journal = FinanceJournalEntry::findOrFail($journalId);
+        //$approvalService = new ApprovalService();
+        // $approvalService->approve($journal);
+    }
+
+    public function reject($journalId)
+    {
+        $journal = FinanceJournalEntry::findOrFail($journalId);
+       // $approvalService = new ApprovalService();
+        // $approvalService->reject($journal);
     }
 
     /**

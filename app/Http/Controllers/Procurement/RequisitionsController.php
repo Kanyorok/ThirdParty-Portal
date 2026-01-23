@@ -445,9 +445,12 @@ class RequisitionsController extends Controller
                 'departments' => $departments,
             ]);
         } catch (\Exception $e) {
-            Log::error('Failed to get plan details: ' . $e->getMessage());
+            Log::error('Failed to get plan details: ' . $e->getMessage(), [
+                'plan_id' => $id,
+                'exception' => $e->getTraceAsString()
+            ]);
             return response()->json([
-                'error' => 'Failed to fetch plan details: ' . $e->getMessage()
+                'error' => 'Unable to load plan details. Please try again or contact support if the issue persists.'
             ], 500);
         }
     }

@@ -3,6 +3,7 @@
 namespace App\Models\Insurance;
 
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Currency;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Insurance\BancassurancePolicy;
@@ -26,6 +27,7 @@ class BancassurancePremiumPayments extends Model
         'PaymentDate',
         'NextPaymentDate',
         'Amount',
+        'CurrencyId',
         'PaymentMode',
         'ReferenceNumber',
         'Notes',
@@ -52,5 +54,9 @@ class BancassurancePremiumPayments extends Model
     public function customer()
     {
         return $this->belongsTo(BancassuranceCustomer::class, 'CustomerID', 'Id');
+    }
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');
     }
 }

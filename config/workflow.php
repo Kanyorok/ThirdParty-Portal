@@ -1,5 +1,5 @@
 <?php
-use App\Enums\WorkflowStatus;   
+use App\Enums\WorkflowStatus;
 return [
     /*
     |--------------------------------------------------------------------------
@@ -73,10 +73,17 @@ return [
         'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,  // 'S'
     ],
 
+    'FinanceJournalEntryId' => [
+        'Approved' => 'posted',
+        'Rejected' => 'rejected',
+        'Pending' => 'draft',
+        'Submitted for Approval' => 'draft',
+    ],
+
     'tender' => [
-        'Approved' => \App\Enums\TenderApprovalStatusEnum::APPROVED, // Will now be 'Ap'
-        'Rejected' => \App\Enums\TenderApprovalStatusEnum::REJECTED, // Will now be 'R'
-        'Pending'  => \App\Enums\TenderApprovalStatusEnum::PENDING,  // Will now be 'P'
+        'Approved' => \App\Enums\TenderApprovalStatusEnum::APPROVED->value, // Will now be 'Ap'
+        'Rejected' => \App\Enums\TenderApprovalStatusEnum::REJECTED->value, // Will now be 'R'
+        'Pending'  => \App\Enums\TenderApprovalStatusEnum::PENDING->value,  // Will now be 'P'
     ],
     'LeaseTerminationId' => [
         'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'a'
@@ -136,6 +143,17 @@ return [
         'Pending' => \App\Enums\Core\ApprovalEnum::Pending->value,
         'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,
     ],
+
+    'TenderAwardStatus' => [
+        'Approved' => 'Approved',
+        'Rejected' => 'Rejected',
+        'Pending' => 'Under Review',
+        'Submitted for Approval' => 'Under Review',
+        'Draft' => 'Draft',
+    ],
+
+
+
 
 
 

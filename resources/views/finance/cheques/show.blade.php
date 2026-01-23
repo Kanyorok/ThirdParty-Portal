@@ -50,16 +50,7 @@
                 </a>
             </div>
 
-            @if(session('success'))
-                <div class="alert alert-success shadow-sm border-0 border-start border-success border-4">
-                    <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
-                </div>
-            @endif
-            @if(session('error'))
-                <div class="alert alert-danger shadow-sm border-0 border-start border-danger border-4">
-                    <i class="fas fa-exclamation-circle me-1"></i> {{ session('error') }}
-                </div>
-            @endif
+
 
             <div class="card shadow-sm rounded-3 mb-4 border-0">
                 <div class="card-header bg-white py-3 px-4 border-bottom">

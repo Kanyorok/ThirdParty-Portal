@@ -111,7 +111,6 @@
                                 <select class="form-control" id="Country" name="Country">
                                     <option disabled selected>Select Country</option>
                                     @foreach($countries as $Country)
-                                    "
                                     <option value="{{ $Country->CountryCode }}"
                                         data-phone="{{$Country->PhoneCode}}"
                                         data-location="{{ route('locality.select2',['country'=>$Country->CountryCode]) }}">{{ $Country->Flag}} {{ $Country->Name}}</option>

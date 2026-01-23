@@ -106,7 +106,11 @@ enum PermissionEnum: string
     case ListsView = 'lists-view';
     case ListsUpdate = 'lists-update';
     case Teams = 'teams';
-    case Branches = 'branches';
+    case Branches = 'branches'; // Legacy/General
+    case BranchView = 'branch-view';
+    case BranchCreate = 'branch-create';
+    case BranchUpdate = 'branch-update';
+    case BranchDelete = 'branch-delete';
     case Users = 'users'; //set branch manager.
     case UsersMeeting = 'users-meetings';
     case UsersMessaging = 'users-messaging';
@@ -131,6 +135,12 @@ enum PermissionEnum: string
 
     case MarketingManager = 'marketingManager';
     case Managers = 'manager';
+
+    //Workflows
+    case WorkflowView = 'workflow-view';
+    case WorkflowCreate = 'workflow-create';
+    case WorkflowUpdate = 'workflow-update';
+    case WorkflowDelete = 'workflow-delete';
 
         /*
      *
@@ -228,6 +238,13 @@ enum PermissionEnum: string
     case ContractUpdate = 'contract-update';
     case ContractDelete = 'contract-delete';
     case ContractApprove = 'contract-approve';
+
+    // Awards
+    case AwardRead = 'award-read';
+    case AwardCreate = 'award-create';
+    case AwardUpdate = 'award-update';
+    case AwardDelete = 'award-delete';
+    case AwardApprove = 'award-approve';
 
         // Purchase Orders (LPO)
     case PurchaseOrderRead = 'purchaseorder-read';
@@ -587,20 +604,26 @@ enum PermissionEnum: string
     case BancassurancePremiumPaymentsUpdate = 'bancassurancepremiumpayments-update';
     case BancassurancePremiumPaymentsDelete = 'bancassurancepremiumpayments-delete';
 
-        //Bancasurance Underwriting
+    //Bancasurance Underwriting
     case BancassuranceUnderwritingView = 'bancassuranceunderwriting-view';
     case BancassuranceUnderwritingCreate = 'bancassuranceunderwriting-create';
     case BancassuranceUnderwritingUpdate = 'bancassuranceunderwriting-update';
     case BancassuranceUnderwritingDelete = 'bancassuranceunderwriting-delete';
 
 
-        //Bancasurance Claim
+    //Bancasurance Claim
     case BancassuranceClaimView = 'bancassuranceclaim-view';
     case BancassuranceClaimCreate = 'bancassuranceclaim-create';
     case BancassuranceClaimDelete = 'bancassuranceclaim-delete';
     case BancassuranceClaimUpdate = 'bancassuranceclaim-update';
 
-        //Bancasurance payment
+    //Bancasurance claim assessment
+    case BancassuranceClaimAssessmentView = 'bancassuranceclaimassessment-view';
+    case BancassuranceClaimAssessmentCreate = 'bancassuranceclaimassessment-create';
+    case BancassuranceClaimAssessmentDelete = 'bancassuranceclaimassessment-delete';
+    case BancassuranceClaimAssessmentUpdate = 'bancassuranceclaimassessment-update';
+
+    //Bancasurance claim payment
     case BancassurancePaymentView = 'bancassurancepayment-view';
     case BancassurancePaymentCreate = 'bancassurancepayment-create';
     case BancassurancePaymentDelete = 'bancassurancepayment-delete';
@@ -832,14 +855,14 @@ enum PermissionEnum: string
     case FinanceCreditManagementDelete = 'financeCreditManagement-delete';
 
         //Posting
-    case FinanceJournalPosting = 'financeJournal-financeJournal';
-    case FinanceAPInvoicePosting = 'financeAPInvoice-financeAPInvoice';
-    case FinanceARInvoicePosting = 'financeARInvoice-financeARInvoice'; // AR Account Receivables
-    case FinanceCreditNotePosting = 'financeCreditNote-financeCreditNote';
-    case FinanceDebitNotePosting = 'financeDebitNote-financeDebitNote';
-    case FinanceVoucherPosting = 'financeVoucher-financeVoucher';
-    case FinancePaymentProcessingPosting = 'financePaymentProcessing-financePaymentProcessing';
-    case FinanceReceiptPosting = 'financeReceipt-financeReceipt';
+    case FinanceJournalPosting = 'financeJournal-posting';
+    case FinanceAPInvoicePosting = 'financeAPInvoice-posting';
+    case FinanceARInvoicePosting = 'financeARInvoice-posting'; // AR Account Receivables
+    case FinanceCreditNotePosting = 'financeCreditNote-posting';
+    case FinanceDebitNotePosting = 'financeDebitNote-posting';
+    case FinanceVoucherPosting = 'financeVoucher-posting';
+    case FinancePaymentProcessingPosting = 'financePaymentProcessing-posting';
+    case FinanceReceiptPosting = 'financeReceipt-posting';
 
 
         /*
@@ -1007,7 +1030,7 @@ enum PermissionEnum: string
             [self::EmailRead, self::EmailAssign, self::EmailDelete,],
             [self::CallRead, self::CallWrite, self::CallUpdate, self::CallDelete,],
             [self::ScheduleRead, self::ScheduleWrite, self::ScheduleDelete, self::MeetingRooms,],
-
+            [self::AwardRead, self::AwardCreate, self::AwardUpdate, self::AwardDelete, self::AwardApprove],
             [self::MarketingPlannerRead, self::MarketingPlannerWrite, self::MarketingPlannerUpdate, self::MarketingPlannerDelete, self::MarketingPlannerApproval,],
             [self::MarketingListRead, self::MarketingListWrite, self::MarketingListUpdate, self::MarketingListDelete,/*, self::MarketingListApproval*/],
             [self::ReviewsView, self::SurveyRead, self::SurveyWrite, self::SurveyDelete, self::SurveyApproval,],
@@ -1039,6 +1062,8 @@ enum PermissionEnum: string
 
             //Tenders
             [self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval],
+
+    
 
             //Inventory
             [self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy],
@@ -1095,7 +1120,7 @@ enum PermissionEnum: string
             [self::FinanceJournalPosting, self::FinanceAPInvoicePosting, self::FinanceARInvoicePosting, self::FinanceCreditNotePosting, self::FinanceDebitNotePosting, self::FinanceVoucherPosting, self::FinancePaymentProcessingPosting, self::FinanceReceiptPosting],
 
             ///////////////////////  Settings  /////////////////////////////////////
-            // [self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete],      
+            [self::WorkflowView, self::WorkflowCreate, self::WorkflowUpdate, self::WorkflowDelete],      
 
             ///////////////////////  Fleet Management  /////////////////////////////////////
             [self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy],
@@ -1148,6 +1173,7 @@ enum PermissionEnum: string
             [self::BancassurancePremiumPaymentsView, self::BancassurancePremiumPaymentsCreate, self::BancassurancePremiumPaymentsUpdate, self::BancassurancePremiumPaymentsDelete],
             [self::BancassuranceUnderwritingView, self::BancassuranceUnderwritingCreate, self::BancassuranceUnderwritingUpdate, self::BancassuranceUnderwritingDelete],
             [self::BancassuranceClaimView, self::BancassuranceClaimUpdate, self::BancassuranceClaimCreate, self::BancassuranceClaimDelete],
+            [self::BancassuranceClaimAssessmentView, self::BancassuranceClaimAssessmentCreate, self::BancassuranceClaimAssessmentUpdate, self::BancassuranceClaimAssessmentDelete],
             [self::MedicalFundView, self::MedicalFundCreate, self::MedicalFundUpdate, self::MedicalFundDelete],
             [self::MedicalFundContributionView, self::MedicalFundContributionCreate, self::MedicalFundContributionUpdate, self::MedicalFundContributionDelete],
             [self::MedicalFundBeneficiaryView, self::MedicalFundBeneficiaryCreate, self::MedicalFundBeneficiaryUpdate, self::MedicalFundBeneficiaryDelete],
@@ -1179,6 +1205,7 @@ enum PermissionEnum: string
             [self::ComplianceFilingView, self::ComplianceFilingCreate, self::ComplianceFilingUpdate, self::ComplianceFilingDelete],
             [self::CompliancePolicyView, self::CompliancePolicyCreate, self::CompliancePolicyUpdate, self::CompliancePolicyDelete],
             [self::ComplianceGenericView],
+            [self::BranchView, self::BranchCreate, self::BranchUpdate, self::BranchDelete],
 
 
         ]);
@@ -1200,6 +1227,7 @@ enum PermissionEnum: string
             self::TenderApproval,
             self::ContractApproval,
             self::SupplierApprove,
+            self::AwardApprove,
 
             self::PurchaseOrderApprove,
             self::RequisitionApproval,
@@ -1230,8 +1258,9 @@ enum PermissionEnum: string
             self::SurveyRead, self::SurveyWrite, self::SurveyDelete, self::SurveyApproval,
             self::Competitor, self::CompetitorLLM, self::Members, self::BoardManage, self::BoardMeeting => ModulesEnum::CRM,
             self::Teams, self::Branches, self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions, self::Integrations,
-            self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate
-            // self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete
+            self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate,
+            self::WorkflowView, self::WorkflowCreate, self::WorkflowUpdate, self::WorkflowDelete,
+            self::BranchView, self::BranchCreate, self::BranchUpdate, self::BranchDelete,
             => ModulesEnum::Settings,
 
             self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => ModulesEnum::DMS,
@@ -1253,6 +1282,24 @@ enum PermissionEnum: string
             self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete, self::PlanMaintenanceApproval,
             self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete,
             self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete,
+            self::ContractView, self::ContractCreate, self::ContractUpdate, self::ContractDelete, self::ContractApprove,
+            self::AwardRead, self::AwardCreate, self::AwardUpdate, self::AwardDelete, self::AwardApprove,
+            self::GoodsReceiptRead, self::GoodsReceiptWrite, self::GoodsReceiptUpdate, self::GoodsReceiptDelete, self::GoodsReceiptApprove,
+            self::BidOpeningRead, self::BidOpeningWrite,
+            self::RFQResponseRead, self::RFQResponseWrite, self::RFQResponseUpdate,
+            self::RFQCommitteeRead, self::RFQCommitteeWrite,
+            self::TenderCommitteeRead, self::TenderCommitteeWrite,
+            self::PrequalificationRoundRead, self::PrequalificationRoundCreate, self::PrequalificationRoundUpdate, self::PrequalificationRoundDelete, self::PrequalificationRoundApproval,
+            self::ThirdPartyRead, self::ThirdPartyCreate, self::ThirdPartyUpdate, self::ThirdPartyDelete, self::ThirdPartyApprove,
+            self::ApprovalSetupRead, self::ApprovalSetupWrite, self::ApprovalSetupUpdate, self::ApprovalSetupDelete,
+            self::EvaluationCriteriaRead, self::EvaluationCriteriaWrite, self::EvaluationCriteriaUpdate, self::EvaluationCriteriaDelete,
+            self::ProcurementSectionRead, self::ProcurementSectionWrite, self::ProcurementSectionUpdate, self::ProcurementSectionDelete,
+            self::ProcurementConfigRead, self::ProcurementConfigWrite, self::ProcurementConfigUpdate, self::ProcurementConfigDelete,
+            self::ProcurementPlanRead, self::ProcurementPlanWrite, self::ProcurementPlanUpdate, self::ProcurementPlanDelete, self::ProcurementPlanApprove,
+            self::DepartmentPlanRead, self::DepartmentPlanWrite,
+            self::ProcurementMethodUpdate,
+            self::ProcurementPlanSubmit,
+            self::HRCommitteeView, self::HRCommitteeCreate, self::HRCommitteeUpdate, self::HRCommitteeDelete
             => ModulesEnum::Procurement,
 
             //Human Resource Management
@@ -1327,6 +1374,7 @@ enum PermissionEnum: string
             self::InsurancePricingRuleView, self::InsurancePricingRuleCreate, self::InsurancePricingRuleUpdate, self::InsurancePricingRuleDelete,
             self::BancassuranceUnderwritingView, self::BancassuranceUnderwritingCreate, self::BancassuranceUnderwritingUpdate, self::BancassuranceUnderwritingDelete,
             self::BancassuranceClaimView, self::BancassuranceClaimUpdate, self::BancassuranceClaimCreate, self::BancassuranceClaimDelete,
+            self::BancassuranceClaimAssessmentView, self::BancassuranceClaimAssessmentCreate, self::BancassuranceClaimAssessmentUpdate, self::BancassuranceClaimAssessmentDelete,
             self::MedicalFundView, self::MedicalFundCreate, self::MedicalFundUpdate, self::MedicalFundDelete,
             self::MedicalFundContributionView, self::MedicalFundContributionCreate, self::MedicalFundContributionUpdate, self::MedicalFundContributionDelete,
             self::MedicalFundBeneficiaryView, self::MedicalFundBeneficiaryCreate, self::MedicalFundBeneficiaryUpdate, self::MedicalFundBeneficiaryDelete,
@@ -1450,7 +1498,7 @@ enum PermissionEnum: string
 
             self::PrequalificationRoundRead, self::PrequalificationRoundCreate, self::PrequalificationRoundUpdate, self::PrequalificationRoundDelete, self::PrequalificationRoundApproval => 'Prequalification Rounds',
             self::ThirdPartyRead, self::ThirdPartyCreate, self::ThirdPartyUpdate, self::ThirdPartyDelete, self::ThirdPartyApprove => 'Third Party Management',
-
+            self::AwardRead, self::AwardCreate, self::AwardUpdate, self::AwardDelete, self::AwardApprove => 'Awards',
             // Settings & Setup (Batch 4)
             self::ApprovalSetupRead, self::ApprovalSetupWrite, self::ApprovalSetupUpdate, self::ApprovalSetupDelete => 'Approval Setup',
             self::EvaluationCriteriaRead, self::EvaluationCriteriaWrite, self::EvaluationCriteriaUpdate, self::EvaluationCriteriaDelete => 'Evaluation Criteria',
@@ -1533,6 +1581,7 @@ enum PermissionEnum: string
             self::BancassurancePremiumPaymentsView, self::BancassurancePremiumPaymentsCreate, self::BancassurancePremiumPaymentsUpdate, self::BancassurancePremiumPaymentsDelete => 'Insurance Premium Payments',
             self::BancassuranceUnderwritingView, self::BancassuranceUnderwritingCreate, self::BancassuranceUnderwritingUpdate, self::BancassuranceUnderwritingDelete => 'Insurance Under Writting',
             self::BancassuranceClaimView, self::BancassuranceClaimUpdate, self::BancassuranceClaimCreate, self::BancassuranceClaimDelete => 'Insurance Claim',
+            self::BancassuranceClaimAssessmentView, self::BancassuranceClaimAssessmentCreate, self::BancassuranceClaimAssessmentUpdate, self::BancassuranceClaimAssessmentDelete => 'Insurance Claim Assessment',
             self::BancassurancePaymentView, self::BancassurancePaymentCreate, self::BancassurancePaymentDelete, self::BancassurancePaymentUpdate => 'Insurance Payment',
             self::MedicalFundView, self::MedicalFundCreate, self::MedicalFundUpdate, self::MedicalFundDelete => 'Medical Fund',
             self::MedicalFundContributionView, self::MedicalFundContributionCreate, self::MedicalFundContributionUpdate, self::MedicalFundContributionDelete => 'Medical Fund Contribution',
@@ -1574,6 +1623,8 @@ enum PermissionEnum: string
             self::ComplianceFilingView, self::ComplianceFilingCreate, self::ComplianceFilingUpdate, self::ComplianceFilingDelete => 'Compliance Filings',
             self::CompliancePolicyView, self::CompliancePolicyCreate, self::CompliancePolicyUpdate, self::CompliancePolicyDelete => 'Compliance Policies',
             self::ComplianceGenericView => 'Compliance Analytic',
+            self::WorkflowView, self::WorkflowCreate, self::WorkflowUpdate, self::WorkflowDelete => 'GlobalWorkflow',
+            self::BranchView, self::BranchCreate, self::BranchUpdate, self::BranchDelete => 'Branch',
 
             default      => 'System Codes' // Fallback to System Codes or specific category if unknown, but better to be explicit.
         };
@@ -1583,8 +1634,4 @@ enum PermissionEnum: string
      *
      * ========================================  Workflow  ========================================
      */
-    case WorkflowView = 'workflow-view';
-    case WorkflowCreate = 'workflow-create';
-    case WorkflowUpdate = 'workflow-update';
-    case WorkflowDelete = 'workflow-delete';
 }

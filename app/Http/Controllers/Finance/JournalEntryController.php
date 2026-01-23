@@ -9,6 +9,8 @@ use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceJournalLines;
 use App\Models\HRM\Department;
+use App\Models\Auth\User;
+use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,14 +20,20 @@ use Illuminate\Validation\ValidationException;
 
 class JournalEntryController extends Controller
 {
+    protected $workflowService;
     //
+    public function __construct(ApprovalWorkflow $workflowService)
+    {
+        $this->workflowService = $workflowService;
+    }
+
     public function index(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerView, FinanceJournalEntry::class);
 
         // Build query with filters
         $query = FinanceJournalEntry::with('journalLines:Id,JournalEntryId,Debit,Credit,Amount,IsDebit,Narration')
-            ->select('Id', 'RefNo', 'Date', 'Description', 'ApprovalStatus', 'Type', 'SourceModule', 'IsReversed')
+            ->select('Id', 'RefNo', 'Date', 'Description', 'ApprovalStatus', 'Status', 'Type', 'SourceModule', 'IsReversed')
             ->where('Type', 'normal');
 
         // Apply filters if provided
@@ -178,7 +186,179 @@ class JournalEntryController extends Controller
                 $query->with('journalEntry.createdBy:Id,Name');
             }
         ])->findOrFail($id);
-        return view('finance.generalledger.journalentry.show', compact('journalEntry'));
+            // Check if user can approve (pending row + stage permission + maker-checker)
+            try {
+                $canApprove = $this->workflowService->canApproveModel($journalEntry, Auth::user());
+                Log::info("Can approve check completed", ['journal_entry_id' => $id, 'can_approve' => $canApprove]);
+            } catch (\Exception $e) {
+                Log::warning("Failed to check approval permission", [
+                    'journal_entry_id' => $id,
+                    'error' => $e->getMessage()
+                ]);
+                $canApprove = false;
+            }
+
+        $workflowSources = array_values(array_unique(array_filter([
+            $journalEntry->getTable(),
+            $journalEntry->getMorphClass(),
+            $journalEntry::getPrimaryKey(),
+        ])));
+
+        $hasPendingApprovals = DB::table('t_WorkFlowPending')
+            ->whereIn('Source', $workflowSources)
+            ->where('SourceID', (string)$journalEntry->getKey())
+            ->whereNull('DeletedOn')
+            ->exists();
+
+        $cantApproveReason = null;
+        if ($hasPendingApprovals && !$canApprove) {
+            $cantApproveReason = $this->getCantApproveReason(
+                $workflowSources,
+                $journalEntry->getKey(),
+                Auth::user()
+            );
+        }
+
+        $permissionTable = config('permission.table_names.permissions', 't_Permissions');
+        $rolesTable = config('permission.table_names.roles', 't_Roles');
+        $modelRolesTable = config('permission.table_names.model_has_roles', 't_ModelRoles');
+        $rolePivotKey = config('permission.column_names.role_pivot_key') ?? 'role_id';
+        $modelMorphKey = config('permission.column_names.model_morph_key', 'model_id');
+
+        $workflowHistory = DB::table('t_WorkFlowHistory as h')
+            ->leftJoin('t_Users as u', 'h.CreatedBy', '=', 'u.Id')
+            ->leftJoin('t_CodeDetails as cd', 'h.StatusId', '=', 'cd.ID')
+            ->leftJoin('t_WorkFlowStages as ws', 'h.Stage', '=', 'ws.Id')
+            ->leftJoin($permissionTable . ' as perm', 'ws.PermissionId', '=', 'perm.id')
+            ->whereIn('h.Source', $workflowSources)
+            ->where('h.SourceID', (string)$journalEntry->getKey())
+            ->whereNull('h.DeletedOn')
+            ->orderBy('h.CreatedOn')
+            ->get([
+                'h.CreatedOn',
+                'h.Notes',
+                'u.Name as UserName',
+                'cd.Description as StatusDescription',
+                'ws.StageName',
+                'perm.name as PermissionName',
+            ]);
+
+        $pendingApprovers = DB::table('t_WorkFlowPending as p')
+            ->join('t_Users as u', 'p.UserId', '=', 'u.Id')
+            ->leftJoin('t_WorkFlowStages as ws', 'p.Stage', '=', 'ws.Id')
+            ->leftJoin($permissionTable . ' as perm', 'ws.PermissionId', '=', 'perm.id')
+            ->whereIn('p.Source', $workflowSources)
+            ->where('p.SourceID', (string)$journalEntry->getKey())
+            ->whereNull('p.DeletedOn')
+            ->orderBy('ws.Order')
+            ->get([
+                'u.Id as UserId',
+                'u.Name as UserName',
+                'ws.StageName',
+                'ws.Order as StageOrder',
+                'perm.name as PermissionName',
+            ]);
+
+        $roleNamesByUser = collect();
+        $pendingUserIds = $pendingApprovers->pluck('UserId')->unique()->values();
+        if ($pendingUserIds->isNotEmpty()) {
+            $roleRows = DB::table($modelRolesTable . ' as mr')
+                ->join($rolesTable . ' as r', 'mr.' . $rolePivotKey, '=', 'r.id')
+                ->whereIn('mr.' . $modelMorphKey, $pendingUserIds)
+                ->whereIn('mr.model_type', [User::class, (new User())->getMorphClass()])
+                ->select('mr.' . $modelMorphKey . ' as UserId', 'r.name')
+                ->get();
+
+            $roleNamesByUser = $roleRows
+                ->groupBy('UserId')
+                ->map(fn($rows) => $rows->pluck('name')->unique()->implode(', '));
+        }
+
+        $pendingApprovers = $pendingApprovers->map(function ($row) use ($roleNamesByUser) {
+            $row->RoleNames = $roleNamesByUser[$row->UserId] ?? '-';
+            return $row;
+        });
+
+        $isPosted = strtolower($journalEntry->ApprovalStatus ?? '') === 'posted'
+            || strtolower($journalEntry->Status ?? '') === 'posted';
+
+        $postedBy = null;
+        if ($isPosted) {
+            $postedBy = [
+                'name' => $journalEntry->modifiedBy->Name ?? $journalEntry->createdBy->Name ?? 'System',
+                'time' => $journalEntry->ModifiedOn ?? $journalEntry->CreatedOn,
+            ];
+        }
+
+        return view('finance.generalledger.journalentry.show', compact(
+            'journalEntry',
+            'canApprove',
+            'hasPendingApprovals',
+            'cantApproveReason',
+            'workflowHistory',
+            'pendingApprovers',
+            'postedBy'
+        ));
+    }
+
+    private function getCantApproveReason(array $sources, string|int $sourceId, $user): ?string
+    {
+        $pendingRow = DB::table('t_WorkFlowPending')
+            ->whereIn('Source', $sources)
+            ->where('SourceID', (string)$sourceId)
+            ->whereNull('DeletedOn')
+            ->orderBy('CreatedOn', 'desc')
+            ->first(['Stage', 'UserId']);
+
+        if (!$pendingRow) {
+            return 'No pending approvals found for this entry.';
+        }
+
+        if ((int)$pendingRow->UserId !== (int)$user->Id) {
+            return 'You are not assigned to approve at the current stage.';
+        }
+
+        $makerId = DB::table('t_WorkFlowHistory')
+            ->whereIn('Source', $sources)
+            ->where('SourceID', (string)$sourceId)
+            ->whereNull('DeletedOn')
+            ->orderBy('CreatedOn', 'asc')
+            ->value('CreatedBy');
+
+        if ($makerId && (int)$makerId === (int)$user->Id) {
+            return 'You cannot approve your own entry (Maker-Checker policy).';
+        }
+
+        if (!empty($pendingRow->Stage)) {
+            $stageRow = DB::table('t_WorkFlowStages')
+                ->select('PermissionId', 'StageName')
+                ->where('Id', (int)$pendingRow->Stage)
+                ->first();
+
+            if (!$stageRow) {
+                return 'Approval stage not found. Contact an administrator.';
+            }
+
+            if ($stageRow->PermissionId) {
+                $permissionName = DB::table('t_Permissions')
+                    ->where('id', (int)$stageRow->PermissionId)
+                    ->value('name');
+
+                if (!$permissionName) {
+                    $permissionName = 'workflowstage_' . str_replace(' ', '', (string)$stageRow->StageName);
+                    $exists = DB::table('t_Permissions')->where('name', $permissionName)->exists();
+                    if (!$exists) {
+                        return 'Approval stage permission is not configured.';
+                    }
+                }
+
+                if (!$user->hasPermissionTo($permissionName)) {
+                    return 'You do not have permission for stage: ' . $stageRow->StageName . '.';
+                }
+            }
+        }
+
+        return null;
     }
 
     public function edit($id)

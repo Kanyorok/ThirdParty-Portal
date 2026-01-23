@@ -18,32 +18,95 @@ class InsurancePricingRuleRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-     public function rules(): array
+    public function rules(): array
     {
         return [
-        'InsuranceProviderId' => 'required|exists:t_InsuranceProviders,Id',
-        'Product'=>'required|exists:t_InsuranceProducts,Id',
+            'InsuranceProviderId' => [
+                'required',
+                'exists:t_InsuranceProviders,Id',
+            ],
+
+            'Product' => [
+                'required',
+                'exists:t_InsuranceProducts,Id',
+            ],
+
             'RuleName' => [
                 'required',
                 'string',
                 'max:100',
                 Rule::unique(InsurancePricingRule::class, 'RuleName')
-                    ->where(function ($query) {
-                        return $query->where('InsuranceProviderId', $this->InsuranceProviderId)
-                            ->where('Product', $this->Product);
-                    }),
+                    ->where(fn ($query) =>
+                        $query->where('InsuranceProviderId', $this->InsuranceProviderId)
+                              ->where('Product', $this->Product)
+                    ),
             ],
-            'CoverageAmountMin' => 'required|integer|accepted_if:CoverageAmountMin,<=,CoverageAmountMax',
-            'CoverageAmountMax' => 'required|integer|accepted_if:CoverageAmountMax,>=,CoverageAmountMin',
-        'PremiumRate' => 'required|integer|min:0',
-            'AgeMin' => 'required|integer|accepted_if:AgeMin,<=,AgeMax',
-            'AgeMax' => 'required|integer|accepted_if:AgeMax,>,AgeMin',
-            'TenureMin' => 'required|integer|accepted_if:TenureMin,<=,TenureMax',
-            'TenureMax' => 'required|integer|accepted_if:TenureMax,>,TenureMin',
-        'IsActive' => 'required|boolean|',
+
+            /* ================= COVERAGE AMOUNT ================= */
+            'CoverageAmountMin' => [
+                'required',
+                'integer',
+                'min:1',
+                'lte:CoverageAmountMax',
+            ],
+
+            'CoverageAmountMax' => [
+                'required',
+                'integer',
+                'max:1000000000',
+                'gte:CoverageAmountMin',
+            ],
+
+            /* ================= PREMIUM ================= */
+            'CurrencyId' => [
+                'Required',
+                'exists:t_Currencies,Id',
+            ],
+            'PremiumRate' => [
+                'required',
+                'numeric',
+                'min:0.01',
+                'max:100',
+            ],
+
+            /* ================= AGE LIMITS ================= */
+            'AgeMin' => [
+                'required',
+                'integer',
+                'min:0',              
+                'max:100',
+                'lte:AgeMax',
+            ],
+
+            'AgeMax' => [
+                'required',
+                'integer',
+                'min:0',
+                'max:120',
+                'gte:AgeMin',
+            ],
+
+            /* ================= TENURE (YEARS) ================= */
+            'TenureMin' => [
+                'required',
+                'integer',
+                'min:1',             
+                'lte:TenureMax',
+            ],
+
+            'TenureMax' => [
+                'required',
+                'integer',
+                'max:100',             
+                'gte:TenureMin',
+            ],
+
+            /* ================= STATUS ================= */
+            'IsActive' => [
+                'required',
+                'boolean',
+            ],
         ];
     }
 }

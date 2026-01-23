@@ -16,6 +16,7 @@ use App\Enums\Property\PropertyInvoiceEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Enums\Property\TenantClearanceEnum;
 use App\Enums\TenderApprovalStatusEnum;
+use App\Enums\TenderCategoryEnum;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyTypeEnum;
@@ -148,6 +149,26 @@ class CodeDetailSeeder extends Seeder
                 'DisplayOrder' => $index + 1,
             ]);
         }
+
+        foreach (TenderCategoryEnum::cases() as $index => $tenderCategoryEnum) {
+            $entries->push([
+                'CodeID' => 'TenderCategory',
+                'Value' => $tenderCategoryEnum->value,
+                'Description' => $tenderCategoryEnum->displayName(),
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (\App\Enums\TenderAwardStatusEnum::cases() as $index => $tenderAwardStatusEnum) {
+            $entries->push([
+                'CodeID' => 'TenderAwardStatus',
+                'Value' => $tenderAwardStatusEnum->value,
+                'Description' => $tenderAwardStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+                'IsActive' => 1,
+            ]);
+        }
+
 
         foreach (BusinessTypeEnum::cases() as $index => $businessTypeEnum) {
             $entries->push([
@@ -298,8 +319,8 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ', 'Value' => 'R'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Direct Purchase', 'Value' => 'D'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender', 'Value' => 'T'],
-            ['CodeID' => 'ProcurementMethod', 'Description' => 'Prequalification', 'Value' => 'P'],
-            ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
+            // ['CodeID' => 'ProcurementMethod', 'Description' => 'Prequalification', 'Value' => 'P'],
+            // ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
 
             // Approval WorkFlow Documents
             ['CodeID' => 'ApprovalWorkFlowDocument', 'Value' => 'PR', 'Description' => 'Requisition'],
@@ -398,13 +419,6 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'Decision', 'Description' => 'Approved', 'Value' => 'A'],
             ['CodeID' => 'Decision', 'Description' => 'Decline', 'Value' => 'D'],
             ['CodeID' => 'Decision', 'Description' => 'More Information Needed', 'Value' => 'M'],
-
-            //Insurance Claim type
-            ['CodeID' => 'ClaimType', 'Description' => 'Death', 'Value' => 'D'],
-            ['CodeID' => 'ClaimType', 'Description' => 'Accident', 'Value' => 'A'],
-            ['CodeID' => 'ClaimType', 'Description' => 'Loss', 'Value' => 'L'],
-            ['CodeID' => 'ClaimType', 'Description' => 'Medical', 'Value' => 'M'],
-            ['CodeID' => 'ClaimType', 'Description' => 'Other', 'Value' => 'O'],
 
             //Insurance Cover Type
             ['CodeID' => 'CoverType', 'Description' => 'Comprehensive', 'Value' => 'C'],
@@ -727,6 +741,21 @@ class CodeDetailSeeder extends Seeder
             //Cheque Party Type
             ['CodeID' => 'ChequePartyType', 'Description' => 'Vendor', 'Value' => 'V', 'DisplayOrder' => 1],
             ['CodeID' => 'ChequePartyType', 'Description' => 'Tenant', 'Value' => 'T', 'DisplayOrder' => 2],
+
+
+            //Finance Approval Status
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Draft', 'Value' => 'dr','DisplayOrder' => 1],
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Pending', 'Value' => 'pe', 'DisplayOrder' => 2],
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Approved', 'Value' => 'ap', 'DisplayOrder' => 3],
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Posting', 'Value' => 'ps', 'DisplayOrder' => 4],
+            ['CodeID' => 'JournalEntryStatus', 'Description' => 'Reject', 'Value' => 'r', 'DisplayOrder' => 5],
+
+            //tender Approval Status
+            ['CodeID' => 'TenderStatus', 'Description' => 'Pending', 'Value'=> 'P','DisplayOrder' => 53],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Approved', 'Value'=> 'A','DisplayOrder' => 54],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Rejected', 'Value'=> 'R','DisplayOrder' => 55],
+
+
 
         ];
 

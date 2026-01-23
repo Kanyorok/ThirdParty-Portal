@@ -9,6 +9,33 @@
 
 <div class="card p-4 shadow-sm rounded-4">
 
+    {{-- GLOBAL ALERTS --}}
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+
     <style>
         /* Tabs & Table Styles */
         .font-size th {
@@ -237,13 +264,16 @@
                                             </div>
 
                                             {{-- Footer --}}
-                                            <div class="modal-footer">
-                                                <form method="POST" action="{{ route('propertyapproval.approve', $lease->Id) }}">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-approve">Approve</button>
-                                                </form>
-                                                <button type="button" class="btn btn-outline-danger btn-reject" onclick="document.getElementById('reject-area-{{ $lease->Id }}').style.display='block'">Reject</button>
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <div class="modal-footer bg-light d-flex justify-content-between align-items-center flex-wrap gap-2" style="border-top: 2px solid #e2e8f0;">
+                                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+
+                                                <div class="d-flex gap-2">
+                                                    <button type="button" class="btn btn-outline-danger btn-reject" onclick="document.getElementById('reject-area-{{ $lease->Id }}').style.display='block'">Reject</button>
+                                                    <form method="POST" action="{{ route('propertyapproval.approve', $lease->Id) }}" class="m-0">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-approve">Approve</button>
+                                                    </form>
+                                                </div>
                                             </div>
 
                                         </div>
@@ -306,60 +336,116 @@
                                 {{-- Modal --}}
                                 <div class="modal fade" id="renewalModal-{{ $renewal->Id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                                        <div class="modal-content">
+                                        <div class="modal-content border-0 shadow-lg rounded-3">
 
-                                            <div class="modal-header bg-primary text-white">
-                                                <h5 class="modal-title">Lease Renewal Approval</h5>
+                                            <div class="modal-header text-white" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%); border-bottom: 3px solid #4f46e5;">
+                                                <div>
+                                                    <h5 class="modal-title fw-bold mb-0">Lease Renewal Approval</h5>
+                                                    <small class="text-light">Review and finalize renewal details</small>
+                                                </div>
                                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                             </div>
 
-                                            <div class="modal-body">
-                                                <h6 class="mb-2">Tenant & Property Info</h6>
-                                                <p><strong>Tenant:</strong> {{ $renewal->lease->tenant->thirdParty->ThirdPartyName }}</p>
-                                                <p><strong>Property:</strong> {{ $renewal->lease->property->PropertyName }}</p>
-                                                <p><strong>Unit:</strong> {{ $renewal->lease->unit->UnitCode }}</p>
+                                            <div class="modal-body" style="background-color: #f8fafc;">
+                                                <div class="card mb-3 border-0 shadow-sm" style="border-left: 4px solid #4f46e5;">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title fw-bold text-primary mb-3">Tenant & Property</h6>
+                                                        <div class="row g-3">
+                                                            <div class="col-md-6">
+                                                                <p class="mb-1 text-muted">Tenant</p>
+                                                                <div class="fw-semibold">{{ $renewal->lease->tenant->thirdParty->ThirdPartyName }}</div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <p class="mb-1 text-muted">Property</p>
+                                                                <div class="fw-semibold">{{ $renewal->lease->property->PropertyName }}</div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <p class="mb-1 text-muted">Unit</p>
+                                                                <div class="fw-semibold">{{ $renewal->lease->unit->UnitCode }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                                                <h6 class="mt-3">Lease Period</h6>
-                                                <p><strong>Previous End:</strong> {{ $renewal->EndDateCurrentLease }}</p>
-                                                <p><strong>New Start:</strong> {{ $renewal->NewStartDate }}</p>
-                                                <p><strong>New End:</strong> {{ $renewal->NewEndDate }}</p>
+                                                <div class="card mb-3 border-0 shadow-sm" style="border-left: 4px solid #7c3aed;">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title fw-bold text-primary mb-3">Lease Period</h6>
+                                                        <div class="row g-3">
+                                                            <div class="col-md-4">
+                                                                <p class="mb-1 text-muted">Previous End</p>
+                                                                <div class="fw-semibold">{{ $renewal->EndDateCurrentLease }}</div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <p class="mb-1 text-muted">New Start</p>
+                                                                <div class="fw-semibold">{{ $renewal->NewStartDate }}</div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <p class="mb-1 text-muted">New End</p>
+                                                                <div class="fw-semibold">{{ $renewal->NewEndDate }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                                                <h6 class="mt-3">New Charges</h6>
-                                                <p><strong>Rent:</strong> KES {{ number_format($renewal->NewMonthlyRent) }}</p>
-                                                <p><strong>Service Charge:</strong> KES {{ number_format($renewal->ServiceCharge) }}</p>
-                                                <p><strong>Parking Fee:</strong> KES {{ number_format($renewal->ParkingFee) }}</p>
+                                                <div class="card mb-3 border-0 shadow-sm" style="border-left: 4px solid #f59e0b;">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title fw-bold text-primary mb-3">New Charges</h6>
+                                                        <div class="row g-3">
+                                                            <div class="col-md-4">
+                                                                <div class="p-3 bg-light rounded-3">
+                                                                    <p class="mb-1 text-muted">Rent</p>
+                                                                    <div class="fw-bold text-success fs-5">KES {{ number_format($renewal->NewMonthlyRent) }}</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <div class="p-3 bg-light rounded-3">
+                                                                    <p class="mb-1 text-muted">Service Charge</p>
+                                                                    <div class="fw-bold text-info fs-6">KES {{ number_format($renewal->ServiceCharge) }}</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <div class="p-3 bg-light rounded-3">
+                                                                    <p class="mb-1 text-muted">Parking Fee</p>
+                                                                    <div class="fw-bold text-warning fs-6">KES {{ number_format($renewal->ParkingFee) }}</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
 
                                                 {{-- Reject area --}}
-                                                <div id="renewal-reject-{{ $renewal->Id }}" class="reject-area" style="display:none;">
+                                                <div id="renewal-reject-{{ $renewal->Id }}" class="alert alert-danger border-0 shadow-sm" style="display:none;">
                                                     <form method="POST" action="{{ route('propertyapproval.rejectRenewal', $renewal->Id) }}">
                                                         @csrf
-                                                        <label>Reason for Rejection</label>
-                                                        <textarea name="reason" class="form-control" required></textarea>
+                                                        <h6 class="fw-bold mb-2">Reason for Rejection</h6>
+                                                        <textarea name="reason" class="form-control form-control-sm mb-2" rows="3" placeholder="Briefly explain why" required></textarea>
 
-                                                        <div class="mt-3 text-end">
-                                                            <button type="submit" class="btn btn-danger">Confirm Reject</button>
-                                                            <button type="button" class="btn btn-secondary"
+                                                        <div class="d-flex gap-2 justify-content-end">
+                                                            <button type="button" class="btn btn-sm btn-secondary"
                                                                 onclick="document.getElementById('renewal-reject-{{ $renewal->Id }}').style.display='none'">
                                                                 Cancel
                                                             </button>
+                                                            <button type="submit" class="btn btn-sm btn-danger fw-bold">Confirm Reject</button>
                                                         </div>
                                                     </form>
                                                 </div>
 
                                             </div>
 
-                                            <div class="modal-footer">
-                                                <form method="POST" action="{{ route('propertyapproval.approveRenewal', $renewal->Id) }}">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-success">Approve</button>
-                                                </form>
+                                            <div class="modal-footer bg-light d-flex justify-content-between align-items-center flex-wrap gap-2" style="border-top: 2px solid #e2e8f0;">
+                                                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
 
-                                                <button class="btn btn-outline-danger"
-                                                    onclick="document.getElementById('renewal-reject-{{ $renewal->Id }}').style.display='block'">
-                                                    Reject
-                                                </button>
+                                                <div class="d-flex gap-2">
+                                                    <button class="btn btn-outline-danger fw-bold"
+                                                        onclick="document.getElementById('renewal-reject-{{ $renewal->Id }}').style.display='block'">
+                                                        Reject
+                                                    </button>
 
-                                                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    <form method="POST" action="{{ route('propertyapproval.approveRenewal', $renewal->Id) }}" class="m-0">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-success fw-bold">Approve</button>
+                                                    </form>
+                                                </div>
                                             </div>
 
                                         </div>

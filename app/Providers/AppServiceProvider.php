@@ -289,6 +289,8 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use App\Http\Controllers\Finance\JournalEntryController;
+use App\Http\Controllers\Finance\PostingController;
 use App\Http\Controllers\Procurement\TenderController;
 use App\Http\Controllers\Procurement\RequisitionsController;
 use App\Http\Controllers\Procurement\AwardsController;
@@ -314,6 +316,39 @@ class AppServiceProvider extends ServiceProvider
             return new ApprovalWorkflow('DepartmentNeedsStatus');  // Pre-configure for Department Needs
         });
 
+        // Bind Finance Journal workflows
+        $this->app->when(PostingController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'ApprovalStatus',
+                    'ApprovalStatus'
+                );
+            });
+
+        $this->app->when(JournalEntryController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'ApprovalStatus',
+                    'ApprovalStatus'
+                );
+            });
+
+        // 🔥 FIX: Bind Tender Workflow using contextual binding
+        $this->app->when(TenderController::class)
+            ->needs(ApprovalWorkflow::class)
+            ->give(function () {
+                return new ApprovalWorkflow(
+                    'TenderStatus',      // CodeID for tender approval workflow
+                    'ApprovalStatus'     // Status column name - THIS WAS WRONG
+                );
+            });
+
+        // Bind Requisition Workflow Service
+        $this->app->singleton(RequisitionWorkflowService::class, function ($app) {
+            return new RequisitionWorkflowService();
+        });
         // TODO: Profile Management repositories
         $this->app->bind(
             \App\Repositories\ThirdParty\Contracts\ThirdPartyRepositoryInterface::class,
@@ -335,6 +370,8 @@ class AppServiceProvider extends ServiceProvider
             \Illuminate\Auth\Middleware\Authenticate::class,
             Authenticate::class
         );
+
+
 
         \Illuminate\Support\Facades\Blade::if('canRead', function (string $submodule) {
             $user = \Illuminate\Support\Facades\Auth::user();
@@ -500,11 +537,13 @@ class AppServiceProvider extends ServiceProvider
             LegalHold::getPrimaryKey() => LegalHold::class,
             Repository::getPrimaryKey() => Repository::class,
 
+
             //Third Parties
             // Allow resolving morph type 'ThirdParty' used by legacy data
             'ThirdParty' => \App\Models\ThirdParty\ThirdParties::class,
             \App\Models\ThirdParty\ThirdParties::getPrimaryKey() => \App\Models\ThirdParty\ThirdParties::class,
             'ThirdPartyUser' => \App\Models\ThirdParty\ThirdPartyUser::class,
+            \App\Models\ThirdParty\SupplierMaster::getPrimaryKey() => \App\Models\ThirdParty\SupplierMaster::class,
             //Fleet Management
             // FleetMake::getPrimaryKey() => FleetMake::class,
             // FleetModel::getPrimaryKey() => FleetModel::class,
@@ -580,16 +619,8 @@ class AppServiceProvider extends ServiceProvider
 
         ]);
 
-        // Super-admin bypass: Admin roles can perform any ability
-        Gate::before(function ($user, string $ability = null, $arguments = null) {
-            try {
-                if ($user->hasRole(['admin', 'Admin', 'super-admin', 'Super Admin'])) {
-                    return true;
-                }
-            } catch (\Throwable $e) {
-            }
-            return null;
-        });
+        // Permission checks now go through standard role/permission system
+        // Admin role has all permissions assigned in database, no special bypass needed
 
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Branch::class, CrmBranchPolicy::class);

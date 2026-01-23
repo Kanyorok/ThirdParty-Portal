@@ -75,8 +75,6 @@
                             <td>{{ \Carbon\Carbon::parse($pay->PaymentDate)->format('d M Y') }}</td>                           <td>{{ $pay->PaymentReference ?? '-'}}</td>
                         </tr>
                         @empty
-                                <i class="bi bi-inbox fs-4 d-block mb-2"></i>
-                                No payments found.
                         @endforelse
                     </tbody>
                 </table>

@@ -544,10 +544,38 @@ abstract class ApprovalWorkflowService
             // Check for errors returned by SP
             if (!empty($result) && isset($result[0]->Status)) {
                 if ($result[0]->Status === 'ERROR') {
+                    $message = $result[0]->Message ?? 'Unknown error';
+
+                    $permissionId = null;
+                    if (preg_match('/PermissionId:\s*(\d+)/i', $message, $m)) {
+                        $permissionId = (int)$m[1];
+                    }
+
+                    $permissionName = null;
+                    $eligibleCount = null;
+                    if ($permissionId) {
+                        try {
+                            $permissionName = DB::table('t_Permissions')->where('id', $permissionId)->value('name');
+                            $cntRow = DB::selectOne('SELECT COUNT(*) AS cnt FROM dbo.f_getUserWithPermission(?)', [$permissionId]);
+                            $eligibleCount = $cntRow?->cnt ?? null;
+                        } catch (\Throwable $e) {
+                            // ignore enrichment errors
+                        }
+                    }
+
                     Log::error("p_ProcessWorkflowPending returned ERROR", [
-                        'message' => $result[0]->Message ?? 'Unknown error',
+                        'message' => $message,
+                        'permission_id' => $permissionId,
+                        'permission_name' => $permissionName,
+                        'eligible_users' => $eligibleCount,
                     ]);
-                    throw new ErroredException($result[0]->Message ?? 'Failed to create pending approvals');
+
+                    if ($permissionId) {
+                        $suffix = $permissionName ? " (Permission: {$permissionName})" : '';
+                        throw new ErroredException($message . $suffix . '. Assign this permission to at least one approver (not the maker) and retry.');
+                    }
+
+                    throw new ErroredException($message ?: 'Failed to create pending approvals');
                 }
             }
 
@@ -604,35 +632,147 @@ abstract class ApprovalWorkflowService
      */
     public function canApprove(string $source, string|int $sourceId, User $user): bool
     {
-        $class = Relation::getMorphedModel($source) ?? $source;
-        if (!($class && class_exists($class))) {
+        $sources = $this->resolveWorkflowSources($source);
+        if (empty($sources)) {
             return false;
         }
 
-        $table = (new $class)->getTable();
+        $table = $this->resolveWorkflowTable($source);
+        if (!$table) {
+            return false;
+        }
 
-        $hasPending = WorkflowPending::where('Source', $table)
+        $currentStageId = $this->getCurrentStageId($table, $sourceId);
+        if (!$currentStageId) {
+            return false;
+        }
+
+        $pendingRows = WorkflowPending::whereIn('Source', $sources)
             ->where('SourceID', (string)$sourceId)
             ->where('UserId', $user->Id)
+            ->where('Stage', (string)$currentStageId)
             ->whereNull('DeletedOn')
-            ->exists();
+            ->get(['Stage']);
 
-        if (!$hasPending) {
+        if ($pendingRows->isEmpty()) {
             return false;
         }
 
         // Maker-checker rule
-        $maker = WorkflowHistory::where('Source', $table)
-            ->where('SourceID', $sourceId)
+        $maker = WorkflowHistory::whereIn('Source', $sources)
+            ->where('SourceID', (string)$sourceId)
             ->whereNull('DeletedOn')
             ->orderBy('CreatedOn')
             ->first();
 
-        if ($maker && $maker->CreatedBy == $user->Id) {
+        if ($maker && (int)$maker->CreatedBy === (int)$user->Id) {
             return false;
         }
 
+        $permissionTable = config('permission.table_names.permissions', 't_Permissions');
+        $stageIds = $pendingRows->pluck('Stage')->filter()->unique();
+
+        foreach ($stageIds as $stageId) {
+            $stage = WorkflowStage::query()
+                ->select('PermissionId', 'StageName')
+                ->where('Id', (int)$stageId)
+                ->first();
+
+            if (!$stage) {
+                Log::warning('Workflow stage not found during approval check', [
+                    'stage_id' => $stageId,
+                    'source' => $source,
+                    'source_id' => $sourceId,
+                ]);
+                return false;
+            }
+
+            $permissionName = null;
+            if (!empty($stage->PermissionId)) {
+                $permissionName = DB::table($permissionTable)
+                    ->where('id', (int)$stage->PermissionId)
+                    ->value('name');
+            }
+
+            if (!$permissionName) {
+                $candidate = 'workflowstage_' . str_replace(' ', '', (string)$stage->StageName);
+                $exists = DB::table($permissionTable)->where('name', $candidate)->exists();
+                if ($exists) {
+                    $permissionName = $candidate;
+                }
+            }
+
+            if (!$permissionName) {
+                Log::warning('Workflow stage permission not configured', [
+                    'stage_id' => $stageId,
+                    'stage_name' => $stage->StageName,
+                    'source' => $source,
+                    'source_id' => $sourceId,
+                ]);
+                return false;
+            }
+
+            if (!$user->hasPermissionTo($permissionName)) {
+                return false;
+            }
+        }
+
         return true;
+    }
+
+    private function resolveWorkflowSources(string $source): array
+    {
+        $sources = [$source];
+
+        $class = Relation::getMorphedModel($source);
+        if (!$class && class_exists($source)) {
+            $class = $source;
+        }
+
+        if ($class && class_exists($class)) {
+            try {
+                $instance = new $class();
+                $sources[] = $instance->getTable();
+                $sources[] = $instance->getMorphClass();
+            } catch (\Throwable $e) {
+                Log::warning('Unable to resolve workflow sources', [
+                    'source' => $source,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            $alias = array_search($class, Relation::morphMap(), true);
+            if ($alias) {
+                $sources[] = $alias;
+            }
+        }
+
+        return array_values(array_unique(array_filter($sources, function ($value) {
+            return is_string($value) && $value !== '';
+        })));
+    }
+
+    private function resolveWorkflowTable(string $source): ?string
+    {
+        $class = Relation::getMorphedModel($source);
+        if (!$class && class_exists($source)) {
+            $class = $source;
+        }
+
+        if (!($class && class_exists($class))) {
+            return null;
+        }
+
+        try {
+            $instance = new $class();
+            return $instance->getTable();
+        } catch (\Throwable $e) {
+            Log::warning('Unable to resolve workflow table', [
+                'source' => $source,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
     }
 
     /**
@@ -737,7 +877,7 @@ abstract class ApprovalWorkflowService
         $table = (new $class)->getTable();
 
         $submitterId = DB::table('t_WorkFlowHistory')
-            ->where('Source', $table)
+            ->where('Source', $table) 
             ->where('SourceID', (string)$sourceId)
             ->whereNull('DeletedOn')
             ->orderBy('CreatedOn', 'asc')

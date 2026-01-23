@@ -5,12 +5,13 @@ namespace App\Models\Insurance;
 use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\UserActorTrait;
+use App\Traits\Model\DocumentsTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BancassuranceClaimAssessment extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait, DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';

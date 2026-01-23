@@ -139,10 +139,8 @@ class ModuleService
         // Filter by permissions for current user
         $user = AuthFacade::user();
         if ($user instanceof User) {
-            // Admin bypass: show all modules/submodules without filtering
-            if (self::isSuper($user)) {
-                return $navbar; // return full, unfiltered menu
-            }
+            // All users go through permission filtering - no special bypass
+            // Admin role should have all permissions assigned in database
             $filtered = [];
             $permSet = self::getUserPermissionSet($user);
             self::buildRoutePermissionMapOnce();

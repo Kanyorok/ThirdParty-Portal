@@ -160,33 +160,42 @@
                                 </td>
                                 <td>
                                     @php
-                                        $statusClass = match(strtolower($journalEntry->ApprovalStatus)) {
+                                        $statusValue = strtolower($journalEntry->Status ?? '');
+                                        $statusClass = match($statusValue) {
+                                            'draft' => 'bg-secondary',
+                                            'pending' => 'bg-warning text-dark',
                                             'posted' => 'bg-success',
                                             'rejected' => 'bg-danger',
-                                            'draft' => 'bg-secondary',
                                             default => 'bg-secondary'
+                                        };
+                                        $statusLabel = match($statusValue) {
+                                            'draft' => 'Draft',
+                                            'pending' => 'Pending',
+                                            'posted' => 'Posted',
+                                            'rejected' => 'Rejected',
+                                            default => 'Draft'
                                         };
                                     @endphp
                                     <span class="badge {{ $statusClass }}">
-                                        {{ ucfirst($journalEntry->ApprovalStatus) ?? 'Pending' }}
+                                        {{ $statusLabel }}
                                     </span>
                                 </td>
                                 <td class="text-center">
                                     <a href="{{ route('journalentry.show', $journalEntry->Id) }}" class="btn btn-sm btn-outline-info me-1" title="View Journal Entry">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    @php $isPosted = strtolower($journalEntry->ApprovalStatus ?? '') === 'posted'; @endphp
-                                    <a href="{{ $isPosted ? '#' : route('journalentry.edit', $journalEntry->Id) }}"
-                                       class="btn btn-sm btn-outline-primary me-1 {{ $isPosted ? 'disabled' : '' }}"
-                                       title="Edit" aria-disabled="{{ $isPosted ? 'true' : 'false' }}"
-                                       style="{{ $isPosted ? 'pointer-events:none; opacity:.65;' : '' }}">
+                                    @php $isDraft = strtolower($journalEntry->Status ?? '') === 'draft'; @endphp
+                                    <a href="{{ $isDraft ? route('journalentry.edit', $journalEntry->Id) : '#' }}"
+                                       class="btn btn-sm btn-outline-primary me-1 {{ $isDraft ? '' : 'disabled' }}"
+                                       title="Edit" aria-disabled="{{ $isDraft ? 'false' : 'true' }}"
+                                       style="{{ $isDraft ? '' : 'pointer-events:none; opacity:.65;' }}">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button type="button"
-                                            class="btn btn-sm btn-outline-danger custom-delete-btn {{ $isPosted ? 'disabled' : '' }}"
+                                            class="btn btn-sm btn-outline-danger custom-delete-btn {{ $isDraft ? '' : 'disabled' }}"
                                             title="Delete"
-                                            {{ $isPosted ? 'disabled' : '' }}
-                                            @if(!$isPosted)
+                                            {{ $isDraft ? '' : 'disabled' }}
+                                            @if($isDraft)
                                                 data-bs-toggle="modal"
                                             data-bs-target="#customDeleteConfirmModal"
                                             data-name="{{ $journalEntry->RefNo ?? ('#'.$journalEntry->Id) }}"

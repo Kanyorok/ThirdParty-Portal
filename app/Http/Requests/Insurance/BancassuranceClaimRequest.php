@@ -27,6 +27,9 @@ class BancassuranceClaimRequest extends FormRequest
             'ClaimReason' => 'required|string',
             'ClaimAmount' => 'required|numeric|regex:/^\d+(\.\d{1,2})?$/',
             'ClaimDate' => 'required|date',
+            'CurrencyId' => 'required|exists:t_Currencies,Id',
+            'file' => 'required|array',
+            'file.*' => 'file|max:25000',
         ];
     }
 }

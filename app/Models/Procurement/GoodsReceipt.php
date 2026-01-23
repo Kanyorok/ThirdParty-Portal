@@ -41,6 +41,7 @@ class GoodsReceipt extends Model
                            'ModifiedBy',
                            'DeletedBy',
                            'DeletedOn',
+                           'UnitPrice',
                           ];
 
     public static function getPrimaryKey(): string

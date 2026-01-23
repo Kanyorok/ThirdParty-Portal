@@ -1,10 +1,4 @@
-
-/****** Object:  StoredProcedure [dbo].[p_ProcessWorkflowPending]    Script Date: 29/12/2025 12:53:57 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-ALTER   PROCEDURE [dbo].[p_ProcessWorkflowPending]
+CREATE OR ALTER PROCEDURE [dbo].[p_ProcessWorkflowPending]
     @Source NVARCHAR(255) = NULL,
     @SourceID NVARCHAR(100) = NULL,
     @StageID BIGINT = NULL

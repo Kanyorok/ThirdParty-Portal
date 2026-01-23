@@ -80,7 +80,7 @@ class ModuleSeeder extends Seeder
             // Submenu: Policy & Training Repository
             // =========================================================
             /* ['ModuleID' => 209400, 'Name' => 'Training', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Policies, trainings, and staff acknowledgments', 'ParentID' => 200000, 'Route' => null],
- 
+
              // ['ModuleID' => 209405, 'Name' => 'Policies', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Org Policies', 'ParentID' => 209400, 'Route' => 'legal.compliance.policies.index'],
              ['ModuleID' => 209410, 'Name' => 'Trainings', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff trainings', 'ParentID' => 209400, 'Route' => 'legal.compliance.trainings.index'],
              ['ModuleID' => 209415, 'Name' => 'Certification', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff certifications', 'ParentID' => 209400, 'Route' => 'legal.compliance.certifications.index'],*/
@@ -150,7 +150,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 306300, 'Name' => 'Quotation Evaluation', 'Icon' => null, 'Description' => '', 'ParentID' => 306000, 'Route' => 'evaluations.index', 'RequiredPermission' => PermissionEnum::RFQCommitteeRead->value],
 
             //Awards
-            ['ModuleID' => 306500, 'Name' => 'Awards', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => 'procawards.index', 'RequiredPermission' => PermissionEnum::TenderRead->value],
+            ['ModuleID' => 306500, 'Name' => 'Awards', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => 'procawards.index', 'RequiredPermission' => PermissionEnum::AwardRead->value],
             // Contracts
             ['ModuleID' => 306600, 'Name' => 'Contracts', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 306610, 'Name' => 'Contract Creation', 'Icon' => null, 'Description' => '', 'ParentID' => 306600, 'Route' => 'contracts.index', 'RequiredPermission' => PermissionEnum::ContractCreate->value],
@@ -165,19 +165,17 @@ class ModuleSeeder extends Seeder
 
             // Contracts
 
-            ['ModuleID' => 307500, 'Name' => 'Contracts', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
-            ['ModuleID' => 307510, 'Name' => 'Contract Creation', 'Icon' => null, 'Description' => '', 'ParentID' => 307500, 'Route' => 'contracts.index', 'RequiredPermission' => PermissionEnum::ContractCreate->value],
-            ['ModuleID' => 307520, 'Name' => 'Contract Lifecycle', 'Icon' => null, 'Description' => '', 'ParentID' => 307500, 'Route' => 'contractcycle.index', 'RequiredPermission' => PermissionEnum::ContractView->value],
+            // ['ModuleID' => 307500, 'Name' => 'Contracts', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
+            // ['ModuleID' => 307510, 'Name' => 'Contract Creation', 'Icon' => null, 'Description' => '', 'ParentID' => 307500, 'Route' => 'contracts.index', 'RequiredPermission' => PermissionEnum::ContractCreate->value],
+            // ['ModuleID' => 307520, 'Name' => 'Contract Lifecycle', 'Icon' => null, 'Description' => '', 'ParentID' => 307500, 'Route' => 'contractcycle.index', 'RequiredPermission' => PermissionEnum::ContractView->value],
 
 
             ['ModuleID' => 308000, 'Name' => 'Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 308100, 'Name' => 'View Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 308000, 'Route' => 'procurementreceipts.index', 'RequiredPermission' => PermissionEnum::GoodsReceiptRead->value],
-            ['ModuleID' => 308200, 'Name' => 'Create Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 308000, 'Route' => 'procurementreceipts.create', 'RequiredPermission' => PermissionEnum::GoodsReceiptWrite->value],
+            // ['ModuleID' => 308200, 'Name' => 'Create Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 308000, 'Route' => 'procurementreceipts.create', 'RequiredPermission' => PermissionEnum::GoodsReceiptWrite->value],
 
             ['ModuleID' => 398000, 'Name' => 'Settings', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 398100, 'Name' => 'Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'sections.index', 'RequiredPermission' => PermissionEnum::ProcurementSectionRead->value],
-            ['ModuleID' => 398200, 'Name' => 'Methods Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'procurement-modes.index', 'RequiredPermission' => PermissionEnum::ProcurementConfigRead->value],
-            ['ModuleID' => 398300, 'Name' => 'Approval Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'approval-setup.index', 'RequiredPermission' => PermissionEnum::ApprovalSetupRead->value],
             ['ModuleID' => 398500, 'Name' => 'Appoint Committee', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'tendercommittee.index', 'RequiredPermission' => PermissionEnum::TenderCommitteeRead->value],
             ['ModuleID' => 398600, 'Name' => 'Member Response', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'memberresponse.index', 'RequiredPermission' => PermissionEnum::TenderCommitteeRead->value],
             ['ModuleID' => 399000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 300000, 'Route' => 'procurement-reports.index', 'RequiredPermission' => PermissionEnum::ProcurementPlanRead->value], // generic for reports?
@@ -192,28 +190,25 @@ class ModuleSeeder extends Seeder
     {
         $values = collect([
             ['ModuleID' => 400000, 'Name' => ModulesEnum::Inventory->description(), 'Icon' => '<i data-feather="archive"></i>', 'Description' => 'Inventory Management Module', 'Route' => null, 'ParentID' => null],
-            ['ModuleID' => 401000, 'Name' => 'Item Master', 'Icon' => null, 'Description' => 'Item Master Management', 'Route' => null, 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::MasterListView->value],
-            ['ModuleID' => 401100, 'Name' => 'Item Master List', 'Icon' => null, 'Description' => 'Item Master List', 'Route' => 'itemmaster.index', 'ParentID' => 401000, 'RequiredPermission' => PermissionEnum::MasterListView->value],
-            ['ModuleID' => 401200, 'Name' => 'Stock Item', 'Icon' => null, 'Description' => 'Stock Item Management', 'Route' => 'sku.index', 'ParentID' => 401000, 'RequiredPermission' => PermissionEnum::StockItemView->value],
+            ['ModuleID' => 401000, 'Name' => 'Item Master', 'Icon' => null, 'Description' => 'Item Master Management', 'Route' => null, 'ParentID' => 400000],
 
-            ['ModuleID' => 402000, 'Name' => 'InterBranch Requisition', 'Icon' => null, 'Description' => 'InterBranch Requisition Management', 'Route' => null, 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::InterBranchRequisitionCreate->value],
-            ['ModuleID' => 402100, 'Name' => 'New Requisition', 'Icon' => null, 'Description' => 'Create New Requisition', 'Route' => 'interbranchrequisition.index', 'ParentID' => 402000, 'RequiredPermission' => PermissionEnum::InterBranchRequisitionCreate->value],
-            ['ModuleID' => 402200, 'Name' => 'Requisition Approval', 'Icon' => null, 'Description' => 'Requisition Approval', 'Route' => 'interbranchrequisitionapproval.index', 'ParentID' => 402000, 'RequiredPermission' => PermissionEnum::InterBranchRequisitionApproval->value],
-
-            ['ModuleID' => 403000, 'Name' => 'Inventory Dashboard', 'Icon' => null, 'Description' => 'Inventory Dashboard', 'Route' => null, 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::InventoryDashboardView->value],
+            ['ModuleID' => 401100, 'Name' => 'Item Master List', 'Icon' => null, 'Description' => 'Item Master List', 'Route' => 'itemmaster.index', 'ParentID' => 401000],
+            ['ModuleID' => 401200, 'Name' => 'Stock Item', 'Icon' => null, 'Description' => 'Stock Item Management', 'Route' => 'sku.index', 'ParentID' => 401000],
+            ['ModuleID' => 402000, 'Name' => 'InterBranch Requisition', 'Icon' => null, 'Description' => 'InterBranch Requisition Management', 'Route' => null, 'ParentID' => 400000],
+            ['ModuleID' => 402100, 'Name' => 'New Requisition', 'Icon' => null, 'Description' => 'Create New Requisition', 'Route' => 'interbranchrequisition.index', 'ParentID' => 402000],
+            ['ModuleID' => 402200, 'Name' => 'Requisition Approval', 'Icon' => null, 'Description' => 'Requisition Approval', 'Route' => 'interbranchrequisitionapproval.index', 'ParentID' => 402000],
+            ['ModuleID' => 403000, 'Name' => 'Inventory Dashboard', 'Icon' => null, 'Description' => 'Inventory Dashboard', 'Route' => null, 'ParentID' => 400000],
             ['ModuleID' => 403200, 'Name' => 'Movement Dashboard', 'Icon' => null, 'Description' => 'Movement Dashboard', 'Route' => 'movementdashboard.index', 'ParentID' => 403000],
-
-            ['ModuleID' => 404000, 'Name' => 'Transactions', 'Icon' => null, 'Description' => 'Inventory Transactions', 'Route' => null, 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::TransactionTransferView->value],
-            ['ModuleID' => 404300, 'Name' => 'Stock Transfers', 'Icon' => null, 'Description' => 'Stock Transfers', 'Route' => 'transactionstransfers.index', 'ParentID' => 404000, 'RequiredPermission' => PermissionEnum::TransactionTransferView->value],
-            ['ModuleID' => 404200, 'Name' => 'Stock Receipts', 'Icon' => null, 'Description' => 'Transaction Receipts', 'Route' => 'transactionsreceipts.index', 'ParentID' => 404000, 'RequiredPermission' => PermissionEnum::TransactionReceiptView->value],
-            ['ModuleID' => 404400, 'Name' => 'Stock Adjustments', 'Icon' => null, 'Description' => 'Stock Adjustments', 'Route' => 'transactionsadjustment.index', 'ParentID' => 404000, 'RequiredPermission' => PermissionEnum::StockAdjustmentView->value],
-            ['ModuleID' => 404500, 'Name' => 'Transactions Approval', 'Icon' => null, 'Description' => 'Transaction Approvals', 'Route' => 'transactionsapproval.index', 'ParentID' => 404000, 'RequiredPermission' => PermissionEnum::TransactionTransferApproval->value],
-
-            ['ModuleID' => 405000, 'Name' => 'Stock Management', 'Icon' => null, 'Description' => 'Stock Management', 'Route' => null, 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::StockTakeView->value],
-            ['ModuleID' => 405100, 'Name' => 'Stock Take', 'Icon' => null, 'Description' => 'Stock Take Management', 'Route' => 'stocktake.index', 'ParentID' => 405000, 'RequiredPermission' => PermissionEnum::StockTakeView->value],
-            ['ModuleID' => 405200, 'Name' => 'Stock Consumption', 'Icon' => null, 'Description' => 'Stock Consumption', 'Route' => 'stockconsumption.index', 'ParentID' => 405000, 'RequiredPermission' => PermissionEnum::StockConsumptionView->value],
-            ['ModuleID' => 407000, 'Name' => 'Price Management', 'Icon' => null, 'Description' => 'Items Prices', 'Route' => 'pricemanagement.index', 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::PriceManagementView->value],
-            ['ModuleID' => 408000, 'Name' => 'Stock Defects Review', 'Icon' => null, 'Description' => 'Stock Defects Review', 'Route' => 'inventoryholdreview.index', 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::InventoryHoldReviewView->value],
+            ['ModuleID' => 404000, 'Name' => 'Transactions', 'Icon' => null, 'Description' => 'Inventory Transactions', 'Route' => null, 'ParentID' => 400000],
+            ['ModuleID' => 404300, 'Name' => 'Stock Transfers', 'Icon' => null, 'Description' => 'Stock Transfers', 'Route' => 'transactionstransfers.index', 'ParentID' => 404000],
+            ['ModuleID' => 404200, 'Name' => 'Stock Receipts', 'Icon' => null, 'Description' => 'Transaction Receipts', 'Route' => 'transactionsreceipts.index', 'ParentID' => 404000],
+            ['ModuleID' => 404400, 'Name' => 'Stock Adjustments', 'Icon' => null, 'Description' => 'Stock Adjustments', 'Route' => 'transactionsadjustment.index', 'ParentID' => 404000],
+            ['ModuleID' => 404500, 'Name' => 'Transactions Approval', 'Icon' => null, 'Description' => 'Transaction Approvals', 'Route' => 'transactionsapproval.index', 'ParentID' => 404000],
+            ['ModuleID' => 405000, 'Name' => 'Stock Management', 'Icon' => null, 'Description' => 'Stock Management', 'Route' => null, 'ParentID' => 400000],
+            ['ModuleID' => 405100, 'Name' => 'Stock Take', 'Icon' => null, 'Description' => 'Stock Take Management', 'Route' => 'stocktake.index', 'ParentID' => 405000],
+            ['ModuleID' => 405200, 'Name' => 'Stock Consumption', 'Icon' => null, 'Description' => 'Stock Consumption', 'Route' => 'stockconsumption.index', 'ParentID' => 405000],
+            ['ModuleID' => 407000, 'Name' => 'Price Management', 'Icon' => null, 'Description' => 'Items Prices', 'Route' => 'pricemanagement.index', 'ParentID' => 400000],
+            ['ModuleID' => 408000, 'Name' => 'Stock Defects Review', 'Icon' => null, 'Description' => 'Stock Defects Review', 'Route' => 'inventoryholdreview.index', 'ParentID' => 400000],
 
 
             ['ModuleID' => 498000, 'Name' => 'Settings', 'Icon' => null, 'Description' => 'Inventory Settings', 'Route' => null, 'ParentID' => 400000, 'RequiredPermission' => PermissionEnum::ItemCategoryView->value],
@@ -552,26 +547,43 @@ class ModuleSeeder extends Seeder
         $values = collect([
             // Main module - Insurance
             ['ModuleID' => 900000, 'Name' => ModulesEnum::Insurance->description(), 'Icon' => '<i data-feather="shield"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
-            ['ModuleID' => 901000, 'Name' => 'Bank Staff Workspace', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::BancassuranceReferralView->value],
-            ['ModuleID' => 901100, 'Name' => 'Referrals & Tracking', 'Icon' => null, 'Description' => '', 'Route' => 'bancassurance.referrals.index', 'ParentID' => 901000, 'RequiredPermission' => PermissionEnum::BancassuranceReferralView->value],
-            // ...
-            ['ModuleID' => 902000, 'Name' => 'Customers', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::BancassuranceCustomersView->value],
-            // ...
-            ['ModuleID' => 903000, 'Name' => 'Policy Management', 'Icon' => null, 'Description' => null, 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::BancassurancePolicyView->value],
-            // ...
-            ['ModuleID' => 904000, 'Name' => 'Premium Management', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::BancassurancePremiumPaymentsView->value],
-            // ...
-            ['ModuleID' => 905000, 'Name' => 'Claims Management', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::BancassuranceClaimView->value],
-            // ...
-            ['ModuleID' => 906000, 'Name' => 'Medical Funds Management', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::MedicalFundView->value],
-            // ...
-            ['ModuleID' => 907000, 'Name' => 'Commissions', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::CommissionRuleView->value],
-            // ...
-            ['ModuleID' => 908000, 'Name' => 'Providers & Products', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::InsuranceProviderView->value],
+            ['ModuleID' => 901000, 'Name' => 'Bank Staff Workspace', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 901100, 'Name' => 'Referrals & Tracking', 'Icon' => null, 'Description' => '', 'Route' => 'bancassurance.referrals.index', 'ParentID' => 901000],
+            ['ModuleID' => 901200, 'Name' => 'Referral Assignment', 'Icon' => 'fas fa-user-check', 'Description' => '', 'Route' => 'bancassurance.referrals.assign.list', 'ParentID' => 901000],
+            ['ModuleID' => 901300, 'Name' => 'Referral Performance', 'Icon' => 'fas fa-chart-bar', 'Description' => 'View referral counts and conversion rates', 'Route' => 'bancassurance.referrals.performance', 'ParentID' => 901000],
+            ['ModuleID' => 902000, 'Name' => 'Customers', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            //['ModuleID' => 902100, 'Name' => 'Customer Profile & KYC', 'Icon' => 'fas fa-user-plus', 'Description' => 'Create customer profile with KYC', 'Route' => 'bancassurance.customers.check', 'ParentID' => 902000],
+            ['ModuleID' => 902300, 'Name' => 'Customer Listing', 'Icon' => 'fas fa-user-friends', 'Description' => 'Add or edit customer beneficiaries', 'Route' => 'bancassurance.customers.index', 'ParentID' => 902000],
+            ['ModuleID' => 902400, 'Name' => 'Customer Communications', 'Icon' => 'fas fa-comments', 'Description' => 'Track calls, emails, visits and SMS logs', 'Route' => 'bancassurance.customers.communication.index', 'ParentID' => 902000],
+            ['ModuleID' => 903000, 'Name' => 'Policy Management', 'Icon' => null, 'Description' => null, 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 903100, 'Name' => 'Policy Proposals', 'Icon' => null, 'Description' => 'List and manage policy proposals', 'Route' => 'bancassurance.policies.index', 'ParentID' => 903000],
+            ['ModuleID' => 903200, 'Name' => 'Proposal Review', 'Icon' => null, 'Description' => 'Review policy proposals and make underwriting decisions', 'Route' => 'bancassurance.policies.reviewIndex', 'ParentID' => 903000],
+            ['ModuleID' => 903300, 'Name' => 'Underwriting Feedback', 'Icon' => null, 'Description' => 'Capture and track underwriter decisions and comments for submitted proposals', 'Route' => 'bancassurance.policies.feedback.list', 'ParentID' => 903000],
+            ['ModuleID' => 903400, 'Name' => 'Policy Issuance', 'Icon' => null, 'Description' => 'List of policies approved for issuance', 'Route' => 'bancassurance.policies.issuance.list', 'ParentID' => 903000],
+            ['ModuleID' => 903500, 'Name' => 'Policy Register', 'Icon' => null, 'Description' => 'View list of all issued policies', 'Route' => 'bancassurance.policies.register', 'ParentID' => 903000],
+            ['ModuleID' => 903600, 'Name' => 'Renewal Management', 'Icon' => null, 'Description' => 'View and manage renewable policies', 'Route' => 'bancassurance.policies.renewals.index', 'ParentID' => 903000],
+            ['ModuleID' => 904000, 'Name' => 'Premium Management', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 904100, 'Name' => 'Premium Payments', 'Icon' => null, 'Description' => 'View all premium payments made by customers', 'Route' => 'bancassurance.premiums.index', 'ParentID' => 904000],
+            ['ModuleID' => 905000, 'Name' => 'Claims Management', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 905100, 'Name' => 'Claims Register', 'Icon' => null, 'Description' => 'View all submitted claims', 'Route' => 'bancassurance.claims.index', 'ParentID' => 905000],
+            ['ModuleID' => 905200, 'Name' => 'Claims Assessment', 'Icon' => null, 'Description' => 'Assess and decide on initiated claims', 'Route' => 'bancassurance.claims.assessment_list', 'ParentID' => 905000],
+            //['ModuleID' => 905300, 'Name' => 'Claims Approval', 'Icon' => null, 'Description' => 'List claims awaiting approval', 'Route' => 'bancassurance.claims.approvalQueue', 'ParentID' => 905000],
+            ['ModuleID' => 905400, 'Name' => 'Claim Payments', 'Icon' => null, 'Description' => 'View and track settled claim payments', 'Route' => 'bancassurance.claims.payments.index', 'ParentID' => 905000],
+            ['ModuleID' => 905500, 'Name' => 'Closed Claims', 'Icon' => null, 'Description' => 'View Closed Claims', 'Route' => 'bancassurance.claims.closed', 'ParentID' => 905000],
+            ['ModuleID' => 906000, 'Name' => 'Medical Funds Management', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 906100, 'Name' => 'Medical Fund', 'Icon' => null, 'Description' => 'View Medical Fund', 'Route' => 'bancassurance.medicalfunds.index', 'ParentID' => 906000],
+            ['ModuleID' => 907000, 'Name' => 'Commissions', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 907100, 'Name' => 'Commission Rules', 'Icon' => null, 'Description' => 'View commissions', 'Route' => 'commissions.rules.index', 'ParentID' => 907000],
+            ['ModuleID' => 907200, 'Name' => 'Commission Earned', 'Icon' => null, 'Description' => 'View commissions earned', 'Route' => 'bancassurance.commissions.earned.index', 'ParentID' => 907000],
+            ['ModuleID' => 907300, 'Name' => 'Commission PaidOut', 'Icon' => null, 'Description' => 'View commissions Paid', 'Route' => 'bancassurance.commissions.payouts.index', 'ParentID' => 907000],
+            ['ModuleID' => 908000, 'Name' => 'Providers & Products', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 908100, 'Name' => 'Insurance Providers', 'Icon' => null, 'Description' => 'View commissions', 'Route' => 'bancassurance.insurers.index', 'ParentID' => 908000],
+            ['ModuleID' => 908200, 'Name' => 'Insurance Products', 'Icon' => null, 'Description' => 'View commissions', 'Route' => 'bancassurance.products.index', 'ParentID' => 908000],
+            ['ModuleID' => 908400, 'Name' => 'Riders & Add-ons', 'Icon' => null, 'Description' => 'Riders and Addons', 'Route' => 'bancassurance.riders.index', 'ParentID' => 908000],
+            ['ModuleID' => 908500, 'Name' => 'Pricing Rules', 'Icon' => null, 'Description' => 'Define and manage premium pricing rules for mapped provider products', 'Route' => 'bancassurance.pricing.index', 'ParentID' => 908000],
+            ['ModuleID' => 909000, 'Name' => 'Settings & Access', 'Icon' => null, 'Description' => 'Bancassurance Settings', 'Route' => 'bancassurance.settings.index', 'ParentID' => 900000],
 
-            ['ModuleID' => 908500, 'Name' => 'Pricing Rules', 'Icon' => null, 'Description' => 'Define and manage premium pricing rules for mapped provider products', 'Route' => 'bancassurance.pricing.index', 'ParentID' => 908000, 'RequiredPermission' => PermissionEnum::InsurancePricingRuleView->value],
-            ['ModuleID' => 909000, 'Name' => 'Settings & Access', 'Icon' => null, 'Description' => 'Bancassurance Settings', 'Route' => 'bancassurance.settings.index', 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::InsuranceProviderView->value],
-            ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 900000, 'RequiredPermission' => PermissionEnum::InsuranceProviderView->value],
+            ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => 'insurance-reports.index', 'ParentID' => 900000],
         ]);
 
         return $values;
@@ -586,7 +598,7 @@ class ModuleSeeder extends Seeder
         $moduleIds = $modules->pluck('ModuleID')->toArray();
 
         // 2. Soft-Delete any modules in DB that are NOT in the collection
-        // "Removed even from the database" -> Using Soft Delete (DeletedOn) for safety, 
+        // "Removed even from the database" -> Using Soft Delete (DeletedOn) for safety,
         // as Module model uses SoftDeletes. This effectively removes them from view.
         DB::table('t_Modules')
             ->whereNotIn('ModuleID', $moduleIds)
@@ -687,7 +699,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1103100, 'Name' => 'Bank Registry', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => 'finance.bank.index', 'ParentID' => 1103050, 'RequiredPermission' => PermissionEnum::FinanceCOAView->value],
             ['ModuleID' => 1103200, 'Name' => 'Bank Accounts', 'Icon' => '<i class="fas fa-piggy-bank"></i>', 'Description' => 'Manage organization bank accounts', 'Route' => 'finance.bankaccountsetup.index', 'ParentID' => 1103050, 'RequiredPermission' => PermissionEnum::FinanceCOAView->value],
 
-            //  ['ModuleID' => 1103300, 'Name' => 'Cashbook', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => 'Receipts & Payments register', 'Route' => 'cashbook.index', 'ParentID' => 1103050],
+              ['ModuleID' => 1103550, 'Name' => 'Cashbook', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => 'Receipts & Payments register', 'Route' => 'cashbook.index', 'ParentID' => 1103000],
             //  ['ModuleID' => 1103400, 'Name' => 'Bank Transfers', 'Icon' => '<i class="fas fa-right-left"></i>', 'Description' => '', 'Route' => 'finance.banktransfers.index', 'ParentID' => 1103050],
             //  ['ModuleID' => 1103500, 'Name' => 'Bank Transactions', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => '', 'Route' => 'finance.banktransactions.index', 'ParentID' => 1103050],
 
@@ -697,13 +709,13 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1103610, 'Name' => 'Cheque Books', 'Icon' => null, 'Description' => '', 'Route' => 'finance.chequebooks.index', 'ParentID' => 1103600, 'RequiredPermission' => PermissionEnum::PaymentProcessingView->value],
 
 
-            //  ['ModuleID' => 1103700, 'Name' => 'Manage PettyCash', 'Icon' => '<i class="fas fa-wallet"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
-            //  ['ModuleID' => 1103705, 'Name' => 'Petty Cash', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.index', 'ParentID' => 1103700],
-            //  ['ModuleID' => 1103710, 'Name' => 'Petty Cash Floats', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettyfloats.index', 'ParentID' => 1103700],
-            //  ['ModuleID' => 1103715, 'Name' => 'New Disbursement', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.disbursement.create', 'ParentID' => 1103700],
-            //  ['ModuleID' => 1103720, 'Name' => 'New Replenishment', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.replenishment.create', 'ParentID' => 1103700],
-            //  ['ModuleID' => 1103725, 'Name' => 'Refund to Bank', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.refund.create', 'ParentID' => 1103700],
-            //  ['ModuleID' => 1103730, 'Name' => 'Replenishment Wizard', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.wizard', 'ParentID' => 1103700],
+              ['ModuleID' => 1103700, 'Name' => 'Manage PettyCash', 'Icon' => '<i class="fas fa-wallet"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
+              ['ModuleID' => 1103705, 'Name' => 'Petty Cash', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.index', 'ParentID' => 1103700],
+              ['ModuleID' => 1103710, 'Name' => 'Petty Cash Floats', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettyfloats.index', 'ParentID' => 1103700],
+              ['ModuleID' => 1103715, 'Name' => 'New Disbursement', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.disbursement.create', 'ParentID' => 1103700],
+              ['ModuleID' => 1103720, 'Name' => 'New Replenishment', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.replenishment.create', 'ParentID' => 1103700],
+              ['ModuleID' => 1103725, 'Name' => 'Refund to Bank', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.refund.create', 'ParentID' => 1103700],
+              ['ModuleID' => 1103730, 'Name' => 'Replenishment Wizard', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.wizard', 'ParentID' => 1103700],
 
             ['ModuleID' => 1104000, 'Name' => 'Tax Management', 'Icon' => '<i class="fas fa-exchange-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000, 'RequiredPermission' => PermissionEnum::FinanceTaxSettingView->value],
             ['ModuleID' => 1104040, 'Name' => 'Jurisdiction Setup', 'Icon' => null, 'Description' => '', 'Route' => 'taxjurisdiction.index', 'ParentID' => 1104000, 'RequiredPermission' => PermissionEnum::FinanceTaxSettingView->value],
@@ -722,7 +734,7 @@ class ModuleSeeder extends Seeder
             //            ['ModuleID' => 1107000, 'Name' => 'Period Management', 'Icon' => '<i class="fas fa-calendar-alt"></i>', 'Description' => '', 'Route' => 'periodmanagement.index', 'ParentID' => 1100000],
 
 
-            ['ModuleID' => 1108000, 'Name' => 'Bank Management', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
+//            ['ModuleID' => 1108000, 'Name' => 'Bank Management', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
             //            ['ModuleID' => 1108100, 'Name' => 'Account Setup', 'Icon' => null, 'Description' => '', 'Route' => 'bankaccountsetup.index', 'ParentID' => 1108000],
             //            ['ModuleID' => 1108200, 'Name' => 'Cash Book', 'Icon' => null, 'Description' => '', 'Route' => 'cashbook.index', 'ParentID' => 1108000],
             //            ['ModuleID' => 1108300, 'Name' => 'Cash Management', 'Icon' => null, 'Description' => '', 'Route' => 'cashmanagement.index', 'ParentID' => 1108000],
@@ -768,7 +780,7 @@ class ModuleSeeder extends Seeder
 
             ['ModuleID' => 9800100, 'Name' => 'Users', 'Icon' => '<i class="fas fa-user"></i>', 'Description' => '', 'ParentID' => 9800000, 'Route' => 'users.index', 'RequiredPermission' => PermissionEnum::Users->value],
             ['ModuleID' => 9800200, 'Name' => 'Roles', 'Icon' => '<i class="fas fa-user-tag"></i>', 'Description' => '', 'ParentID' => 9800000, 'Route' => 'roles.index', 'RequiredPermission' => PermissionEnum::Roles->value],
-            ['ModuleID' => 9800300, 'Name' => 'Branches', 'Icon' => '<i class="fas fa-code-branch"></i>', 'Description' => '', 'ParentID' => 9800000, 'Route' => 'branches.index', 'RequiredPermission' => PermissionEnum::Branches->value],
+            ['ModuleID' => 9800300, 'Name' => 'Branches', 'Icon' => '<i class="fas fa-code-branch"></i>', 'Description' => '', 'ParentID' => 9800000, 'Route' => 'branches.index', 'RequiredPermission' => PermissionEnum::BranchView->value],
             ['ModuleID' => 98004000, 'Name' => 'Code Details', 'Icon' => null, 'Description' => '', 'ParentID' => 9800000, 'Route' => 'settings.lists', 'RequiredPermission' => PermissionEnum::ListsView->value],
             ['ModuleID' => 98004500, 'Name' => 'User Sessions', 'Icon' => null, 'Description' => '', 'ParentID' => 9800000, 'Route' => 'settings.user-sessions.index', 'RequiredPermission' => PermissionEnum::UsersSessions->value],
             ['ModuleID' => 98005000, 'Name' => 'Integrations', 'Icon' => null, 'Description' => '', 'ParentID' => 9800000, 'Route' => 'settings.integrations', 'RequiredPermission' => PermissionEnum::Integrations->value],

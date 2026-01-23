@@ -16,9 +16,11 @@
 @section('content')
 <div class="container mt-4">
 
-    <a href="{{ route('renewlease.create') }}" class="btn btn-primary mb-3">
-        Renew Lease
-    </a>
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{{ route('renewlease.create') }}" class="btn btn-primary">
+            Renew Lease
+        </a>
+    </div>
 
     <p><small>This is a list of renewals</small></p>
 
