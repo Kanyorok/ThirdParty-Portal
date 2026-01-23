@@ -553,6 +553,21 @@ class PrequalificationApplicationController extends Controller
             return response()->json(['message' => $reason], $code);
         }
 
+        // Check MaxVendors limit
+        if ($round->MaxVendors && $round->MaxVendors > 0) {
+            $distinctSuppliers = PrequalificationApplication::query()
+                ->where('RoundID', $roundId)
+                ->whereNull('DeletedOn')
+                ->distinct()
+                ->pluck('SupplierID')
+                ->toArray();
+
+            // If I am not in the list and the list is full, block me
+            if (!in_array($supplierId, $distinctSuppliers) && count($distinctSuppliers) >= $round->MaxVendors) {
+                return response()->json(['message' => 'This prequalification round has reached the maximum number of allowed vendors.'], 403);
+            }
+        }
+
         // create records — one row per category and attach any uploaded docs to the created application
         DB::beginTransaction();
         try {

@@ -4,7 +4,8 @@ CREATE or alter PROCEDURE p_AddPurchaseOrder @Supplier bigint,
                                    @Priority varchar(20),
                                    @Terms varchar(255),
                                    @User bigint,
-                                   @BranchId int = 0
+                                   @BranchId int = 0,
+                                   @TaxId bigint = NULL -- Added TaxId
 AS
 BEGIN
     SET NOCOUNT ON
@@ -14,9 +15,9 @@ BEGIN
 
     -- Insert new purchase order
     INSERT INTO t_Orders (OrderDate, Terms, Priority, ExtOrdNum, CreatedBy, CreatedOn, ModifiedBy, ModifiedOn, BranchID,
-                          AccountID)
+                          AccountID, TaxID)
     VALUES (isnull(@OrderDate, getdate()), @Terms, @Priority, @RfqNo, @User, getdate(), @User, getdate(), @BranchId,
-            @Supplier)
+            @Supplier, @TaxId)
 
 
 --     -- Generate OrderNo
@@ -31,6 +32,3 @@ BEGIN
 
     SET NOCOUNT OFF
 END
-
-
-

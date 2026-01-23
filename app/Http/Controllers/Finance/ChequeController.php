@@ -536,54 +536,44 @@ class ChequeController extends Controller
                 return back()->with('error', 'Only Issued cheques can be cleared.');
             }
 
-            $map = FinanceGLMapping::where('ModuleID', self::CHEQUE_MODULE_ID)
-                ->where('IsActive', 1)
-                ->whereHas('transactions', fn($q) => $q->where('Code', 'CHQ_ISSUED_CLEAR'))
-                ->first()
-                ?: FinanceGLMapping::where('ModuleID', self::CASHBOOK_MODULE_ID)
-                    ->where('IsActive', 1)
-                    ->whereHas('transactions', fn($q) => $q->where('Code', 'CHQ_ISSUED_CLEAR'))
-                    ->first();
+            $payload = [
+                'ModuleID' => 1100000, // Finance module
+                'TransactionTypeID' => 22,
+                'TransactionType' => 'Cheque Clearance',
+                'ThirdPartyID' => $row->PartyID,
+                'TransactionDate' => $request->DocDate,
+                'ReferenceNumber' => $row->ChequeNumber,
+                'Amount' => $row->Amount,
+                'TaxAmount' => 0,
+                'BranchID' => session('LoginBranchId', 1),
+                'DepartmentID' => null,
+                'CurrencyID' => $row->CurrencyID,
+                'CurrencyCode' => $row->currency?->Code ?? 'KES',
+                'ExchangeRate' => 1,
+                'Narration' => 'Clear Cheque ' . $row->ChequeNumber . ' - ' . ($row->PartyName ?? 'N/A'),
+                'SourceTable' => 't_Cheques',
+                'SystemDescription' => 'Cheque Clearance - ' . $row->ChequeNumber,
+                'IdempotencyKey' => 'CHQ-CLR-' . $row->ChequeID,
+            ];
 
-            if (!$map || !$map->DebitGLAccountID) {
-                return back()->with('error', 'Mapping for CHQ_ISSUED_CLEAR not configured.');
+            try {
+                $result = $this->transactionService->postFromTypeMapping($payload);
+
+                if (in_array($result['status'], ['posted', 'success', 'exists'], true)) {
+                    $row->Status = 'Cleared';
+                    $row->ClearDate = $request->DocDate;
+                    $row->save();
+
+                    return redirect()->route('finance.cheques.show', $row->ChequeID)
+                        ->with('success', 'Issued cheque cleared & posted successfully.');
+                }
+
+                return back()->with('error', 'Transaction posting failed: ' . ($result['message'] ?? 'Unknown error'));
+
+            } catch (\Exception $e) {
+                 Log::error('Cheque clearance error', ['id'=>$id, 'error'=>$e->getMessage()]);
+                 return back()->with('error', 'Error clearing cheque: ' . $e->getMessage());
             }
-
-            return DB::transaction(function () use ($request, $row, $map) {
-                // Cashbook PAYMENT from the book's bank
-                $cb = new Cashbook([
-                    'EntryType' => 'PAYMENT',
-                    'BankAccountID' => $row->BankAccountID,
-                    'DocDate' => $request->DocDate,
-                    'CurrencyID' => $row->CurrencyID,
-                    'ExchangeRate' => 1,
-                    'Amount' => $row->Amount,
-                    'AmountBase' => $row->Amount,
-                    'Reference' => 'CHQ-CLR-' . $row->ChequeID,
-                    'Narration' => 'Clear issued cheque ' . $row->ChequeNumber,
-                    'Status' => 'Posted',
-                    'SourceModule' => 'CHEQUE',
-                    'SourceID' => $row->ChequeID,
-                    'IsSystemGenerated' => 1,
-                ]);
-                $cb->save();
-
-                CashbookLine::create([
-                    'CashbookID' => $cb->CashbookID,
-                    'GLAccountID' => (int)$map->DebitGLAccountID, // counter DR
-                    'Description' => 'Cheque Clearance',
-                    'AmountDr' => round((float)$row->Amount, 2),
-                    'AmountCr' => 0,
-                ]);
-
-                $row->Status = 'Cleared';
-                $row->ClearDate = $request->DocDate;
-                $row->CashbookID_Clear = $cb->CashbookID;
-                $row->save();
-
-                return redirect()->route('finance.cheques.show', $row->ChequeID)
-                    ->with('success', 'Issued cheque cleared & Cashbook posted.');
-            });
 
         } else { // RECEIVED
             if (!in_array($row->Status, ['Deposited'])) {

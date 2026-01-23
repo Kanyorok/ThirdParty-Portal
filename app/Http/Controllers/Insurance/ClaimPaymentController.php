@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\BancassuranceClaimPaymentRequest;
+use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancassuranceClaim;
 use App\Models\Insurance\BancassuranceClaimAssessment;
@@ -27,9 +28,9 @@ class ClaimPaymentController extends Controller
             ->get();
 
         $payments = CodeDetail::where('CodeID', 'PaymentMethod')->get();
+        $Users = User::get(['Id','Name']);
 
-
-        return view('bancassurance.claims.payments.create', compact('unpaidClaims', 'payments'));
+        return view('bancassurance.claims.payments.create', compact('unpaidClaims', 'payments', 'Users'));
     }
 
 
@@ -46,6 +47,7 @@ class ClaimPaymentController extends Controller
 
         $ClaimId = BancassuranceClaim::findOrFail($validated['ClaimId']);
         $PaymentMethod = CodeDetail::findOrFail($validated['PaymentMethod']);
+        $PaidTo = User::findOrFail($validated['PaidTo']);
 
         $payment = BancassuranceClaimPaymentService::create(
             $ClaimId,
@@ -53,7 +55,7 @@ class ClaimPaymentController extends Controller
             $validated['PaymentAmount'],
             $validated['PaymentReference'],
             $validated['Note'] ?? '',
-            $validated['PaidBy'],
+            $PaidTo,
             $PaymentMethod,
             $request->user(),
         );

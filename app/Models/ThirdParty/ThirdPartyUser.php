@@ -140,8 +140,8 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
         );
 
         // 2. Construct the Frontend URL
-        // Use dynamically provided base URL if available, otherwise fallback to config
-        $frontendUrl = $this->verificationBaseUrl ?? config('app.frontend_url', config('app.nextauth_url', 'http://localhost:3000'));
+        // Use FRONTEND_URL from .env as source of truth, fallback to app.url
+        $frontendUrl = $this->verificationBaseUrl ?? config('app.frontend_url') ?? config('app.url');
         $frontendUrl = rtrim($frontendUrl, '/');
 
         $url = $frontendUrl . '/verify-email?verify_url=' . urlencode($backendSignedUrl);
@@ -264,8 +264,9 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
 
     public function sendPasswordResetNotification($token): void
     {
-        $baseUrl = config('app.nextauth_url') ?? config('app.frontend_url') ?? config('app.url');
-        $url = $baseUrl . '/reset-password?token=' . $token . '&email=' . urlencode($this->Email);
+        // Use FRONTEND_URL from .env as the source of truth
+        $baseUrl = config('app.frontend_url') ?? config('app.url');
+        $url = rtrim($baseUrl, '/') . '/reset-password?token=' . $token . '&email=' . urlencode($this->Email);
         
         $subject = 'Reset Password Notification';
         $body = "

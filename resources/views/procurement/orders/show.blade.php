@@ -3,7 +3,7 @@
 @section('content')
 
 <div class="container py-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
         <h5 class="mb-0">Purchase Order</h5>
         <div class="d-flex gap-2">
             <button class="btn btn-outline-dark" onclick="window.print()"><i class="fas fa-print"></i> Print
@@ -17,7 +17,7 @@
     <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm" id="printable-area">
         <div class="card-body">
             @if(isset($orderInfo))
             <div class="row mb-3">
@@ -98,7 +98,7 @@
 
     <!-- Workflow History Section -->
     @if(isset($history) && $history->count() > 0)
-    <div class="card shadow-sm mt-4">
+    <div class="card shadow-sm mt-4 no-print">
         <div class="card-header bg-primary text-white">
             <h6 class="mb-0"><i class="fas fa-history"></i> Approval Workflow History</h6>
         </div>
@@ -145,7 +145,7 @@
 
     <!-- Current Workflow Status -->
     @if(isset($workflowStatus) && isset($workflowStatus['pendingApprovals']))
-    <div class="card shadow-sm mt-4">
+    <div class="card shadow-sm mt-4 no-print">
         <div class="card-header bg-info text-white">
             <h6 class="mb-0"><i class="fas fa-clock"></i> Pending Approvals</h6>
         </div>
@@ -195,23 +195,27 @@
     </div>
 </div>
 
-@endsection
-
-@push('styles')
 <style>
     @media print {
-
-        nav,
-        .btn,
-        .breadcrumb,
-        .navbar,
-        .footer {
-            display: none !important;
+        body * {
+            visibility: hidden;
         }
-
-        .card {
-            border: none;
+        #printable-area, #printable-area * {
+            visibility: visible;
+        }
+        #printable-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0; 
+            padding: 0;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .no-print {
+            display: none !important;
         }
     }
 </style>
-@endpush
+@endsection

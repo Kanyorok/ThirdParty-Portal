@@ -79,7 +79,7 @@
                         <!-- Date & Time Received -->
                         <div class="col-md-4 mb-3">
                             <label for="receivedDate" class="form-label">Date & Time Received</label>
-                            <input type="datetime-local" class="form-control @error('received_at') is-invalid @enderror" id="receivedDate" name="received_at" required>
+                            <input type="text" class="form-control flatpickr-datetime @error('received_at') is-invalid @enderror" id="receivedDate" name="received_at" required>
                             @error('received_at')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

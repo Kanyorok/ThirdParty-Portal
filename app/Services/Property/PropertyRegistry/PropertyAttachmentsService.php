@@ -20,12 +20,12 @@ class PropertyAttachmentsService
     }
 
     public static function create(
-        PropertyRegistry  $PropertyID,
-        string         $DocumentTitle,
-        CodeDetail      $DocumentType,
-        string        $Description = null,
-         User          $user,
-        UploadedFile $document = null
+        PropertyRegistry    $PropertyID,
+        string              $DocumentTitle,
+        CodeDetail          $DocumentType,
+        string              $Description = null,
+        User                $user,
+        UploadedFile        $document = null
     ): self
     {
         $propertyattachments = PropertyAttachments::create([

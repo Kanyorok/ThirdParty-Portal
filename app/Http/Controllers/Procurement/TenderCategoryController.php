@@ -25,7 +25,14 @@ class TenderCategoryController extends Controller
     {
         //Check if user has permission to create tender categories
         $this->authorize(PermissionEnum::TenderWrite, Tender::class);
-        $tenderCatOptions = TenderCategoryEnum::cases();
+        
+        // Fetch tender category types from CodeDetail table
+        $tenderCatOptions = DB::table('t_CodeDetails')
+            ->where('CodeID', 'TenderCategory')
+            ->where('IsActive', 1)
+            ->whereNull('DeletedOn')
+            ->orderBy('DisplayOrder')
+            ->get(['Value', 'Description']);
 
         return view('procurement.tendering.tendersetup.tendercategory.create', [
             'tenderCatOptions' => $tenderCatOptions,

@@ -283,17 +283,17 @@ Route::prefix('procurement')->name('api.procurement.')
             Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
             Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
         });
+        
+        // RFQ routes - now properly authenticated
+        Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
+        Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
+        Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
+        
         // Protected RFQ actions (submit, clarifying)
         Route::post('rfq-responses', [SupplierRFQController::class, 'submitResponse']);
         Route::post('rfq-clarifications', [SupplierRFQController::class, 'postClarification']);
     });
 
-// Semi-public RFQ routes (index handle their own auth checks for filtering)
-Route::prefix('procurement')->name('api.procurement.')->group(function () {
-    Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
-    Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
-    Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
-});
 
 // PROTECTED routes for prequalification (submitting applications) - AUTH REQUIRED
 Route::middleware(['web', 'auth:sanctum', \App\Http\Middleware\VerifiedUser::class])

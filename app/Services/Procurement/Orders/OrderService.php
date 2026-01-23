@@ -18,18 +18,20 @@ class OrderService
         //
     }
 
-    public static function addPO($supplier, $poDate, $rfqNo, $priority, $terms, User $actor)
+    public static function addPO($supplier, $poDate, $rfqNo, $priority, $terms, User $actor, $taxId = null)
     {
         try {
-            $response = DB::transaction(function () use ($supplier, $poDate, $rfqNo, $priority, $terms, $actor) {
+            $response = DB::transaction(function () use ($supplier, $poDate, $rfqNo, $priority, $terms, $actor, $taxId) {
                 // Execute the stored procedure and capture the result
-                $result = DB::select('EXEC p_AddPurchaseOrder ?, ?, ?, ?, ?, ?', [
+                $result = DB::select('EXEC p_AddPurchaseOrder ?, ?, ?, ?, ?, ?, ?, ?', [
                     $supplier,
                     $poDate,
                     $rfqNo,
                     $priority,
                     $terms,
-                    $actor->Id // use lowercase `id`, Laravel convention
+                    $actor->Id, // use lowercase `id`, Laravel convention
+                    0, // BranchId default
+                    $taxId // New TaxId param
                 ]);
 
 
@@ -76,17 +78,17 @@ class OrderService
 
     //
 
-    public static function addPOLines($item, $quantity, $price, $tax, $discount, $linetotal, User $actor, $orderId)
+    public static function addPOLines($item, $quantity, $price, $taxId, $discount, $linetotal, User $actor, $orderId)
     {
         try {
             // Start transaction and execute the stored procedure
-            DB::transaction(function () use ($item, $quantity, $price, $tax, $discount, $linetotal, $actor, $orderId) {
+            DB::transaction(function () use ($item, $quantity, $price, $taxId, $discount, $linetotal, $actor, $orderId) {
 
                 DB::statement('EXEC p_AddPurchaseOrderLines ?, ?, ?, ?, ?, ?, ?, ?', [
                     $item,
                     $quantity,
                     $price,
-                    $tax,
+                    $taxId, // Pass TaxId
                     $discount,
                     $linetotal,
                     $actor->Id, // Pass the User ID, not the entire User model
@@ -243,6 +245,7 @@ class OrderService
                 $join->on(DB::raw('CAST(t_CodeDetails.ID AS VARCHAR(50))'), '=', DB::raw('t_Orders.terms'))
                     ->where('t_CodeDetails.CodeID', '=', 'PaymentTerm');
             })
+            ->leftJoin(DB::raw('t_Branches WITH (NOLOCK)'), 't_Orders.BranchID', '=', 't_Branches.Id') // Added Join
             ->where('t_Orders.Id', '=', $id)
             ->select(DB::raw('
                 t_Orders.Id,
@@ -253,6 +256,7 @@ class OrderService
                 t_Orders.CreatedOn,
                 t_Users.Name as CreatedBy,
                 t_Orders.BranchID,
+                CASE WHEN t_Orders.BranchID = 0 THEN \'Head Office\' ELSE t_Branches.Name END as BranchName,
                 SUM(isnull(t_OrderLines.fUnitPriceExcl,0)) as UnitPrice,
                 COUNT(t_OrderLines.Id) as ordercount,
                 t_Orders.AccountID,
@@ -261,7 +265,8 @@ class OrderService
                 t_Orders.OrdTotTax as TaxAmount,
                 t_Orders.OrdDiscAmnt,
                 COALESCE(tp.TradingName, tp.ThirdPartyName, CAST(t_Orders.AccountID AS NVARCHAR(50))) as SupplierName,
-                t_CodeDetails.Description as terms_description,
+                COALESCE(tp.PhysicalAddress, \'\') as SupplierAddress,
+                t_CodeDetails.Description as TermsDescription,
                 t_Orders.terms as terms_id
             '))
             ->groupBy(
@@ -273,6 +278,7 @@ class OrderService
                 't_Orders.CreatedOn',
                 't_Users.Name',
                 't_Orders.BranchID',
+                't_Branches.Name', // Added GroupBy
                 't_Orders.AccountID',
                 't_Orders.OrdTotExcl',
                 't_Orders.OrdTotIncl',
@@ -280,6 +286,7 @@ class OrderService
                 't_Orders.OrdDiscAmnt',
                 'tp.TradingName',
                 'tp.ThirdPartyName',
+                'tp.PhysicalAddress',
                 't_RFQ.RFQNumber',
                 't_CodeDetails.Description',
                 't_Orders.terms'
@@ -321,47 +328,144 @@ class OrderService
         return $result;
     }
 
-    public static function AddPurchaseOrderSum($orderId)
+    public function AddPurchaseOrderSum($orderId)
     {
         try {
-            // Start transaction and execute the stored procedure
-            DB::transaction(function () use ($orderId) {
-
-                DB::statement('EXEC p_AddPurchaseOrderSum ?', [
-                    $orderId
-                ]);
-            });
-
-            return [
-                'status' => 'success',
-                'message' => 'Order successfully updated.'
-            ];
+            DB::statement('EXEC p_AddPurchaseOrderSum @OrderId = ?', [$orderId]);
+            return true;
         } catch (QueryException $e) {
-            // Log the SQL error
-            Log::error('SQL Error executing p_AddPurchaseOrderSum', [
-                'message' => $e->getMessage(),
-                'exception' => $e
-            ]);
-
-            // Return the error message back to the controller
-            return [
-                'status' => 'error',
-                'message' => 'SQL error executing order update',
-                'error' => $e->getMessage()
-            ];
-        } catch (Throwable $e) {
-            // Log the exception for debugging
-            Log::error('Error executing p_AddPurchaseOrderSum', [
-                'message' => $e->getMessage(),
-                'exception' => $e
-            ]);
-
-            // Return a custom error message or handle as needed
-            return [
-                'status' => 'error',
-                'message' => 'Error executing order update',
-                'error' => $e->getMessage()
-            ];
+            Log::error("Failed to execute p_AddPurchaseOrderSum: " . $e->getMessage());
+            return false;
+        } catch (\Throwable $e) {
+            Log::error("Unexpected error in AddPurchaseOrderSum: " . $e->getMessage());
+            return false;
         }
+    }
+
+    /**
+     * Helper to get previously ordered quantities for a source
+     */
+    public function getOrderedQuantities($sourceType, $sourceId)
+    {
+        // Must use explicit select for groupBy to work correctly in strict mode
+        // and pluck to work with correct keys.
+        return DB::table('t_OrderLines as ol')
+            ->join('t_Orders as o', 'o.Id', '=', 'ol.iOrderID')
+            ->where('o.SourceType', $sourceType)
+            ->where('o.SourceId', $sourceId)
+            ->whereNotIn('o.DocStatus', ['r', 'c', 'Re', 'Ca']) // Exclude Rejected/Cancelled. Include 'a'(Approved), 's'(Submitted), 'p'(Pending)
+            ->groupBy('ol.iStockCodeID')
+            ->select('ol.iStockCodeID as ItemCode', DB::raw('SUM(ol.fQuantity) as total_qty'))
+            ->get()
+            ->pluck('total_qty', 'ItemCode')
+            ->toArray();
+    }
+
+    /**
+     * Check if a source document is fully exhausted (all items ordered)
+     */
+    public function isSourceExhausted($sourceType, $sourceId)
+    {
+        // 1. Get previously ordered quantities
+        $orderedQuantities = $this->getOrderedQuantities($sourceType, $sourceId);
+        
+        // 2. Get original source quantities based on type
+        $originalItems = collect([]);
+        
+        if ($sourceType === 'RFQ') {
+             $originalItems = DB::table('t_RFQLines')
+                ->where('RFQId', $sourceId)
+                ->select('ItemId as itemCode', 'Quantity')
+                ->get();
+        } elseif ($sourceType === 'TENDER') {
+            $originalItems = DB::table('t_TenderItems as ti')
+                ->join('t_Items as i', 'ti.ItemID', '=', 'i.Id')
+                ->where('ti.TenderID', $sourceId)
+                ->select('i.Id as itemCode', 'ti.QtyToTender as Quantity')
+                ->get();
+        } elseif ($sourceType === 'CONTRACT') {
+             $contract = DB::table('t_TenderAwards')->where('Id', $sourceId)->first();
+             if ($contract && $contract->TenderID) {
+                 // Check aggregated usage (Tender + Contract)
+                 $originalItems = DB::table('t_TenderItems as ti')
+                    ->join('t_Items as i', 'ti.ItemID', '=', 'i.Id')
+                    ->where('ti.TenderID', $contract->TenderID)
+                    ->select('i.Id as itemCode', 'ti.QtyToTender as Quantity')
+                    ->get();
+
+                 $orderedTender = $this->getOrderedQuantities('TENDER', $contract->TenderID);
+                 $orderedContract = $this->getOrderedQuantities('CONTRACT', $sourceId);
+
+                 // Merge used quantities
+                 $orderedQuantities = [];
+                 foreach ($orderedTender as $code => $qty) {
+                     $orderedQuantities[$code] = $qty;
+                 }
+                 foreach ($orderedContract as $code => $qty) {
+                     $orderedQuantities[$code] = ($orderedQuantities[$code] ?? 0) + $qty;
+                 }
+             } else {
+                 return false;
+             }
+
+        } elseif ($sourceType === 'CONTRACT-RFQ') {
+             $rfqContract = DB::table('t_RFQAward')->where('Id', $sourceId)->first();
+             if ($rfqContract && $rfqContract->RFQId) {
+                 $originalItems = DB::table('t_RFQLines')
+                    ->where('RFQId', $rfqContract->RFQId)
+                    ->select('ItemId as itemCode', 'Quantity')
+                    ->get();
+                 
+                 $orderedRFQ = $this->getOrderedQuantities('RFQ', $rfqContract->RFQId);
+                 $orderedContract = $this->getOrderedQuantities('CONTRACT-RFQ', $sourceId);
+                 
+                  // Merge used quantities
+                 $orderedQuantities = [];
+                 foreach ($orderedRFQ as $code => $qty) {
+                     $orderedQuantities[$code] = $qty;
+                 }
+                 foreach ($orderedContract as $code => $qty) {
+                     $orderedQuantities[$code] = ($orderedQuantities[$code] ?? 0) + $qty;
+                 }
+             } else {
+                 return false;
+             }
+
+        } elseif ($sourceType === 'PLAN') { 
+             $directMethod = DB::table('t_CodeDetails')
+                ->where('CodeID', 'ProcurementMethod')
+                ->where(function ($q) {
+                    $q->where('Description', 'LIKE', '%Direct Purchase%')
+                      ->orWhere('Value', 'Like', '%D%');
+                })
+                ->value('ID');
+
+            $originalItems = DB::table('t_PlanLineItem')
+                ->where('PlanID', $sourceId)
+                ->where('ProcurementMethod', $directMethod) 
+                ->whereNull('DeletedOn')
+                ->select('ItemID as itemCode', 'MergedQty as Quantity')
+                ->get();
+        }
+
+        // 3. Compare
+        $fullyExhausted = true;
+        
+        if ($originalItems->isEmpty()) {
+            return true; 
+        }
+
+        foreach ($originalItems as $item) {
+            $code = $item->itemCode;
+            $qty = $item->Quantity;
+            $ordered = $orderedQuantities[$code] ?? 0;
+            
+            if (($qty - $ordered) > 0) {
+                $fullyExhausted = false;
+                break;
+            }
+        }
+        
+        return $fullyExhausted;
     }
 }

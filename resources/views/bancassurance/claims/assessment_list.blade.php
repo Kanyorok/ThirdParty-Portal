@@ -104,7 +104,7 @@
                                 <div class="btn-group btn-group-sm" role="group">
                                     <a href="{{ route('bancassurance.claims.assessment_show', $assessment->Id) }}"
                                         class="btn btn-outline-info rounded-pill px-2" title="View">
-                                        <i class="bi bi-eye"></i> View
+                                        <i class="bi bi-eye"></i>
                                     </a>
 
                                     @if($assessment->claimpaiyments()->exists())

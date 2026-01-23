@@ -38,6 +38,7 @@ class InsuranceProductRiderRequest extends FormRequest
             ],
             'Description' => 'nullable|string|max:255',
             'AdditionalPremium' => 'required|numeric|min:0',
+            'CurrencyId' => 'required|exists:t_Currencies,Id',
             'IsOptional' => 'nullable|boolean',
             'IsActive' => 'nullable|boolean',
         ];
