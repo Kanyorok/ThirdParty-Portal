@@ -46,6 +46,15 @@ class TenderInvitationController extends Controller
             'ConfirmationAttachment' => 'nullable|file|max:2048',
         ]);
 
+        // Check for existing response
+        $existing = TenderInvitation::where('TenderId', $validated['TenderId'])
+            ->where('SupplierId', $validated['SupplierId'])
+            ->exists();
+
+        if ($existing) {
+             return redirect()->back()->with('error', 'You have already responded to this tender invitation.');
+        }
+
         $path = null;
         if ($request->hasFile('ConfirmationAttachment')) {
             $path = $request->file('ConfirmationAttachment')->store('attachments', 'public');

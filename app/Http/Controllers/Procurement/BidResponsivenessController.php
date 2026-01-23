@@ -394,6 +394,8 @@ class BidResponsivenessController extends Controller
             
             $message = "Bulk responsiveness check completed: {$responsiveCount} responsive, {$nonResponsiveCount} non-responsive";
             
+            session()->flash('success', $message);
+
             return response()->json([
                 'success' => true,
                 'message' => $message

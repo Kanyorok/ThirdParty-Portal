@@ -66,6 +66,11 @@ class TenderResponseController extends Controller
             ->first();
 
         if ($invitation) {
+            // Prevent overwriting if already responded
+            if ($invitation->ResponseStatus !== 'Pending') {
+                 return back()->with('error', 'A response ' . $invitation->ResponseStatus . ' has already been recorded for this supplier.');
+            }
+
             $invitation->update([
                 'ResponseStatus' => $validated['ResponseStatus'],
                 'ResponseDate' => now(),
