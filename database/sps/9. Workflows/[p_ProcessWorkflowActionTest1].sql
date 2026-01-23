@@ -128,7 +128,10 @@ BEGIN
             SELECT 1 FROM t_WorkFlowPendingTest WITH (NOLOCK)
             WHERE Source = @Source AND SourceID = @SourceID AND DeletedOn IS NULL
         ) THEN 1 ELSE 0 END;
+        --
 
+        --shoudd be here for document and signature validation
+        --
         -- Set current status
         SET @CurrentStatus = CASE WHEN @HasPendingApprovals = 1 THEN 'Pending' ELSE 'Completed' END;
 

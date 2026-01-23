@@ -1,19 +1,9 @@
-USE [BR_ERP]
-GO
-
-/****** Object:  StoredProcedure [dbo].[p_ProcessWorkflowPendingTest2]    Script Date: 1/6/2026 11:42:21 AM ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
-CREATE    PROCEDURE [dbo].[p_ProcessWorkflowPendingTest2]
+CREATE or ALTER PROCEDURE [dbo].[p_ProcessWorkflowPendingTest2]
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE 
+    DECLARE
         @Now DATETIME = GETDATE(),
         @SystemUserId BIGINT;
 
@@ -37,7 +27,7 @@ BEGIN
     );
 
     INSERT INTO #HistoryToProcess (Source, SourceID, StageId, PermissionId, WorkflowType, Count)
-    SELECT 
+    SELECT
         h.Source, h.SourceID, s.Id, s.PermissionId, wt.TypeID, ISNULL(s.[Count], 0)
     FROM t_WorkFlowHistoryTest h WITH (ROWLOCK, READPAST, UPDLOCK)
     INNER JOIN t_WorkFlowsTest wf WITH (NOLOCK) ON h.Source = wf.Source AND wf.DeletedOn IS NULL
@@ -76,8 +66,7 @@ BEGIN
     WHERE h.WorkflowType = 'ALL';
 
     -- Insert CNT workflow type users (limit to @Count per record)
-    ;WITH CNTUsers AS (
-        SELECT 
+    ;WITH CNTUsers AS (SELECT
             h.Source, h.SourceID, CAST(h.StageId AS NVARCHAR(50)) AS Stage, h.PermissionId, h.Count,
             u.Id AS UserId,
             ROW_NUMBER() OVER (PARTITION BY h.Source, h.SourceID ORDER BY u.Id) AS rn
@@ -106,8 +95,7 @@ BEGIN
     WHERE rn <= Count;
 
     -- Insert MAJ workflow type users (majority = half + 1)
-    ;WITH MajUsers AS (
-        SELECT 
+    ;WITH MajUsers AS (SELECT
             h.Source, h.SourceID, CAST(h.StageId AS NVARCHAR(50)) AS Stage, h.PermissionId,
             u.Id AS UserId,
             ROW_NUMBER() OVER (PARTITION BY h.Source, h.SourceID ORDER BY u.Id) AS rn,
@@ -150,15 +138,14 @@ BEGIN
         UserId BIGINT
     );
 
-    DECLARE @AmtSource NVARCHAR(255), @AmtSourceID NVARCHAR(100), @AmtStage NVARCHAR(50), 
+    DECLARE @AmtSource NVARCHAR(255), @AmtSourceID NVARCHAR(100), @AmtStage NVARCHAR(50),
             @StagePermissionId BIGINT;  -- Permission from workflow stage
-    
+
     -- Get AMT records (we'll determine actual permission based on amount)
     DECLARE AmtCursor CURSOR LOCAL FAST_FORWARD FOR
-    SELECT 
-        h.Source, 
-        h.SourceID, 
-        CAST(h.StageId AS NVARCHAR(50)), 
+        SELECT h.Source,
+               h.SourceID,
+               CAST(h.StageId AS NVARCHAR(50)),
         h.PermissionId
     FROM #HistoryToProcess h
     WHERE h.WorkflowType = 'AMT';
@@ -182,7 +169,7 @@ BEGIN
             -- Get AmountReference from limits table
             SELECT TOP 1 @AmountReference = AmountReference
             FROM t_WorkFlowLimitsTest WITH (NOLOCK)
-            WHERE Source = @AmtSource 
+            WHERE Source = @AmtSource
               AND DeletedOn IS NULL;
 
             IF @AmountReference IS NULL OR @AmountReference = ''
@@ -195,8 +182,8 @@ BEGIN
             -- Check if the column exists in the source table
             SET @sql = N'
                 IF EXISTS (
-                    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS 
-                    WHERE TABLE_NAME = @TableName 
+                    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME = @TableName
                     AND COLUMN_NAME = @ColumnName
                 )
                 BEGIN
@@ -222,9 +209,9 @@ BEGIN
 
             -- Get the data type of the Id column
             SET @sql = N'
-                SELECT @DataTypeOut = DATA_TYPE 
-                FROM INFORMATION_SCHEMA.COLUMNS 
-                WHERE TABLE_NAME = @TableName 
+                SELECT @DataTypeOut = DATA_TYPE
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_NAME = @TableName
                   AND COLUMN_NAME = ''Id''';
 
             EXEC sp_executesql @sql,
@@ -234,7 +221,7 @@ BEGIN
 
             -- Get the amount value with proper type handling
             DECLARE @GetAmountSQL NVARCHAR(MAX);
-            
+
             IF @IdDataType IN ('int', 'bigint', 'smallint', 'tinyint')
             BEGIN
                 -- Integer types (t_FinanceInvoices likely uses BIGINT)
@@ -266,23 +253,23 @@ BEGIN
                 @AmountOut = @Amount OUTPUT;
 
             -- Based on the amount, find the appropriate permission from limits table
-            SELECT TOP 1 
+            SELECT TOP 1
                 @ActualPermissionId = PermissionId,
                 @WorkflowLimit = MaxAmount
             FROM t_WorkFlowLimitsTest WITH (NOLOCK)
-            WHERE Source = @AmtSource 
+            WHERE Source = @AmtSource
               AND @Amount <= MaxAmount
               AND DeletedOn IS NULL
             ORDER BY MaxAmount;  -- Get smallest limit that covers the amount
-            
+
             -- If no limit found (amount exceeds all limits), get the highest limit
             IF @ActualPermissionId IS NULL
             BEGIN
-                SELECT TOP 1 
+                SELECT TOP 1
                     @ActualPermissionId = PermissionId,
                     @WorkflowLimit = MaxAmount
                 FROM t_WorkFlowLimitsTest WITH (NOLOCK)
-                WHERE Source = @AmtSource 
+                WHERE Source = @AmtSource
                   AND DeletedOn IS NULL
                 ORDER BY MaxAmount DESC;
             END
@@ -311,7 +298,7 @@ BEGIN
             -- Default to 1 if not found
             IF @InsertCount IS NULL OR @InsertCount < 1
                 SET @InsertCount = 1;
-            
+
             -- Optional: Set a maximum limit
             IF @InsertCount > 10
                 SET @InsertCount = 10;
@@ -344,12 +331,12 @@ BEGIN
             DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
             DECLARE @ErrorState INT = ERROR_STATE();
             DECLARE @ErrorLine INT = ERROR_LINE();
-            
-            SET @ErrorMessage = 'Error processing AMT workflow for Source: ' + @AmtSource + 
-                               ', SourceID: ' + @AmtSourceID + 
-                               ' - ' + @ErrorMsg + 
+
+            SET @ErrorMessage = 'Error processing AMT workflow for Source: ' + @AmtSource +
+                                ', SourceID: ' + @AmtSourceID +
+                                ' - ' + @ErrorMsg +
                                ' (Line: ' + CAST(@ErrorLine AS NVARCHAR(10)) + ')';
-            
+
             RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
             RETURN;
         END CATCH
@@ -398,7 +385,7 @@ BEGIN
         BEGIN
             DECLARE @EmailMessage NVARCHAR(MAX) = 'You have been assigned to a new workflow task for Source: ' + @PendingSource + ', ID: ' + @PendingSourceID;
 
-            EXEC p_sendNotificationEmail 
+            EXEC p_sendNotificationEmail
                 @UserID = @PendingUserId,
                 @Subject = 'You have a new workflow item pending approval',
                 @Message = @EmailMessage,
