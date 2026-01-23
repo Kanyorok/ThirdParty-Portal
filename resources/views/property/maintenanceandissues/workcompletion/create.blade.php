@@ -131,7 +131,7 @@
           <a href="{{ route('workcompletion.index') }}" class="btn btn-outline-secondary">Cancel</a>
           <button type="submit" class="btn btn-success"
                   onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
-              Mark as Completed
+              Submit
           </button>
         </div>
 

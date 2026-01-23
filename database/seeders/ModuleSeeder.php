@@ -780,7 +780,7 @@ class ModuleSeeder extends Seeder
 
             ['ModuleID' => 9800100, 'Name' => 'Users', 'Icon' => '<i class="fas fa-user"></i>', 'Description' => '', 'ParentID' => 9800000, 'Route' => 'users.index', 'RequiredPermission' => PermissionEnum::Users->value],
             ['ModuleID' => 9800200, 'Name' => 'Roles', 'Icon' => '<i class="fas fa-user-tag"></i>', 'Description' => '', 'ParentID' => 9800000, 'Route' => 'roles.index', 'RequiredPermission' => PermissionEnum::Roles->value],
-            ['ModuleID' => 9800300, 'Name' => 'Branches', 'Icon' => '<i class="fas fa-code-branch"></i>', 'Description' => '', 'ParentID' => 9800000, 'Route' => 'branches.index', 'RequiredPermission' => PermissionEnum::Branches->value],
+            ['ModuleID' => 9800300, 'Name' => 'Branches', 'Icon' => '<i class="fas fa-code-branch"></i>', 'Description' => '', 'ParentID' => 9800000, 'Route' => 'branches.index', 'RequiredPermission' => PermissionEnum::BranchView->value],
             ['ModuleID' => 98004000, 'Name' => 'Code Details', 'Icon' => null, 'Description' => '', 'ParentID' => 9800000, 'Route' => 'settings.lists', 'RequiredPermission' => PermissionEnum::ListsView->value],
             ['ModuleID' => 98004500, 'Name' => 'User Sessions', 'Icon' => null, 'Description' => '', 'ParentID' => 9800000, 'Route' => 'settings.user-sessions.index', 'RequiredPermission' => PermissionEnum::UsersSessions->value],
             ['ModuleID' => 98005000, 'Name' => 'Integrations', 'Icon' => null, 'Description' => '', 'ParentID' => 9800000, 'Route' => 'settings.integrations', 'RequiredPermission' => PermissionEnum::Integrations->value],

@@ -38,6 +38,10 @@ Route::get('/debug/auth', function (Illuminate\Http\Request $request) {
 });
 
 Route::middleware(['web', 'auth'])->group(function () {
+    Route::post('/session/heartbeat', function () {
+        return response()->json(['status' => 'session_renewed']);
+    })->name('session.heartbeat');
+
     Route::get('/auth/heartbeat', function () {
         return response()->noContent();
     })->name('auth.heartbeat');

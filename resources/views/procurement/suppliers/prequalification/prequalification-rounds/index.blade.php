@@ -74,7 +74,7 @@
                         </td>
                         <td>
                             <a href="{{ route('prequalification.prequalification-rounds.show', $Round) }}"
-                                class="btn btn-sm btn-info text-white me-1" data-ajax="1">
+                                class="btn btn-sm btn-info text-white me-1">
                                 <i class="bi bi-eye"></i> View
                             </a>
 
