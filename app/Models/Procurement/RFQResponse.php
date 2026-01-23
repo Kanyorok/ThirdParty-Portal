@@ -28,7 +28,6 @@ class RFQResponse extends Model
         'DurationDays',
         'Status',
         'SubmittedOn',
-        'SubmittedBy',
         'RequisitionItems',
         'CreatedBy',
         'ModifiedBy',

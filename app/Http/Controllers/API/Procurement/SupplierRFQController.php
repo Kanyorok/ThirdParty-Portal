@@ -366,7 +366,6 @@ class SupplierRFQController extends Controller
                 'DurationDays' => $validated['durationDays'],
                 'Status' => $status,
                 'SubmittedOn' => now(),
-                'SubmittedBy' => $user->Id,
                 'CreatedBy' => $user->Id,
                 'ModifiedBy' => $user->Id,
             ]);
@@ -381,7 +380,6 @@ class SupplierRFQController extends Controller
                     'DurationDays' => $validated['durationDays'],
                     'Status' => $status,
                     'SubmittedOn' => now(),
-                    'SubmittedBy' => $user->Id,
                     'ModifiedBy' => $user->Id,
                 ]);
 
