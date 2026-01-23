@@ -247,11 +247,11 @@ enum PermissionEnum: string
     case AwardApprove = 'award-approve';
 
         // Purchase Orders (LPO)
-    case PurchaseOrderRead = 'purchaseorder-read';
-    case PurchaseOrderWrite = 'purchaseorder-create';
-    case PurchaseOrderUpdate = 'purchaseorder-update';
-    case PurchaseOrderDelete = 'purchaseorder-delete';
-    case PurchaseOrderApprove = 'purchaseorder-approve';
+    case PurchaseOrderRead = 'purchaseOrder-read';
+    case PurchaseOrderWrite = 'purchaseOrder-create';
+    case PurchaseOrderUpdate = 'purchaseOrder-update';
+    case PurchaseOrderDelete = 'purchaseOrder-delete';
+    case PurchaseOrderApprove = 'purchaseOrder-approval';
 
         // Goods Receipt (GRN)
     case GoodsReceiptRead = 'goodsreceipt-read';
