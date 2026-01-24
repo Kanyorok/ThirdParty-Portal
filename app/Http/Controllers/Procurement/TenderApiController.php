@@ -53,7 +53,22 @@ class TenderApiController extends Controller
                 $query->whereIn('Status', self::VISIBLE_STATUSES);
             }
 
-            $this->applyOptionalFilters($query, $request);
+            // Optional filters
+            $statusParam = $request->query('status');
+            if (!empty($statusParam)) {
+                // Map user-friendly status names to database codes
+                $statusMap = [
+                    'Published' => TenderStatusEnum::Published->value,  // 'pb'
+                    'Draft' => TenderStatusEnum::Draft->value,          // 'dr'
+                    'Awarded' => TenderStatusEnum::Awarded->value,      // 'aw'
+                    'Closed' => TenderStatusEnum::Closed->value,        // 'cl'
+                    'OpeningInProgress' => TenderStatusEnum::OpeningInProgress->value, // 'opening_in_progress'
+                ];
+
+                // Check if it's a friendly name or already a code
+                $statusCode = $statusMap[$statusParam] ?? $statusParam;
+                $query->where('Status', $statusCode);
+            }
 
             $tenders = $query
                 ->orderByDesc('CreatedOn')
@@ -65,6 +80,168 @@ class TenderApiController extends Controller
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'viewed'])
                 ->log('Viewed tenders list');
+            return response()->json([
+                'message' => 'Tenders retrieved successfully.',
+                'data' => $tenders
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json(['message' => 'Failed to retrieve tenders. Please try again.'], 500);
+        }
+    }
+
+    /**
+     * Get single tender details
+     * GET /api/tenders/{tender}
+     */
+    public function show(Request $request, string $id): JsonResponse
+    {
+        try {
+            // Get authenticated user for invitation checking
+            $user = Auth::guard('sanctum')->user();
+            $thirdPartyId = null;
+            
+            if ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
+                $thirdPartyId = $user->ThirdPartyId;
+            }
+
+            // Load tender with all relationships
+            $tender = Tender::with([
+                'procurementMode',
+                'currency',
+                'tenderCategoryRelation',
+                'itemCategoryRelation',
+                'documents',
+                'items.item.price'
+            ])->find($id);
+
+            if (!$tender) {
+                return response()->json([
+                    'message' => 'Tender not found.'
+                ], 404);
+            }
+
+            // Check if user has access to this tender
+            $hasAccess = false;
+            $invitationStatus = null;
+
+            // Open tenders are accessible to all authenticated users if published
+            if ($tender->TenderType === TenderTypeEnum::Open->value && 
+                in_array($tender->Status, [TenderStatusEnum::Published->value, 'opening_in_progress'])) {
+                $hasAccess = true;
+            }
+
+            // For restricted tenders or to get invitation status, check invitations
+            if ($thirdPartyId) {
+                // Get supplier IDs for this third party
+                $supplierIds = DB::table('t_Suppliers')
+                    ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
+                    ->where('t_SupplierMaster.ThirdPartyId', (int)$thirdPartyId)
+                    ->whereNull('t_Suppliers.DeletedOn')
+                    ->pluck('t_Suppliers.Id')
+                    ->toArray();
+
+                if (!empty($supplierIds)) {
+                    // Check if supplier is invited
+                    $invitation = DB::table('t_TenderInvitations')
+                        ->whereIn('SupplierId', $supplierIds)
+                        ->where('TenderId', $id)
+                        ->whereNull('DeletedOn')
+                        ->first();
+
+                    if ($invitation) {
+                        $hasAccess = true;
+                        $invitationStatus = strtolower($invitation->ResponseStatus ?? 'pending');
+                    }
+                }
+            }
+
+            // If user doesn't have access and tender is restricted, return 403
+            if (!$hasAccess && $tender->TenderType === TenderTypeEnum::Restricted->value) {
+                return response()->json([
+                    'message' => 'You do not have access to this tender. This is a restricted tender and you have not been invited.'
+                ], 403);
+            }
+
+            // Format the response
+            $tenderData = [
+                'Id' => $tender->Id,
+                'TenderNo' => $tender->TenderNo,
+                'Title' => $tender->Title,
+                'TenderType' => $tender->TenderType,
+                'Status' => $tender->Status,
+                'TenderCategory' => $tender->tenderCategoryRelation?->CategoryName ?? null,
+                'ItemCategory' => $tender->itemCategoryRelation?->Name ?? null,
+                'ProcurementMode' => $tender->procurementMode?->ModeName ?? null,
+                'ScopeOfWork' => $tender->ScopeOfWork,
+                'Instructions' => $tender->Instructions,
+                'SubmissionDeadline' => $tender->SubmissionDeadline,
+                'OpeningDate' => $tender->OpeningDate,
+                'EstimatedValue' => $tender->EstimatedValue,
+                'Currency' => $tender->currency?->Code ?? null,
+                'CurrencySymbol' => $tender->currency?->Symbol ?? null,
+                'Items' => $tender->items->map(function ($item) {
+                    return [
+                        'Id' => $item->Id,
+                        'ItemCode' => $item->item?->ItemCode ?? null,
+                        'ItemName' => $item->item?->ItemName ?? null,
+                        'Description' => $item->ManualItemDescription ?? $item->item?->ItemName ?? null,
+                        'Quantity' => $item->QtyToTender ?? 0,
+                        'UOM' => $item->UnitOfMeasure ?? $item->Unit ?? null,
+                        'EstimatedUnitPrice' => $item->EstimatedUnitCost ?? 0,
+                        'TotalEstimate' => ($item->QtyToTender ?? 0) * ($item->EstimatedUnitCost ?? 0),
+                    ];
+                }),
+                'Documents' => $tender->documents->map(function ($doc) {
+                    return [
+                        'Id' => $doc->Id,
+                        'DocumentName' => $doc->DocumentName,
+                        'DocumentType' => $doc->DocumentType,
+                        'FilePath' => $doc->FilePath,
+                        'FileSize' => $doc->FileSize,
+                        'UploadedOn' => $doc->UploadedOn,
+                    ];
+                }),
+                'InvitationStatus' => $invitationStatus,
+                'IsInvited' => $invitationStatus !== null,
+                'CreatedOn' => $tender->CreatedOn,
+                'ModifiedOn' => $tender->ModifiedOn,
+            ];
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tender details retrieved successfully.',
+                'data' => $tenderData
+            ], 200);
+
+        } catch (Exception $e) {
+            Log::error('Error fetching tender details', [
+                'tender_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to retrieve tender details. Please try again.',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    public function index22(Request $request): JsonResponse
+    {
+        try {
+            \Log::info('Tender API called with params: ', $request->all());
+
+            $query = Tender::query();
+
+            // Test basic query first
+            $count = $query->count();
+            \Log::info("Total tenders in database: {$count}");
+
+            // Add relationships one by one
+            $query->with(['procurementMode', 'currency']);
+
+            $tenders = $query->limit(10)->get();
 
             return response()->json([
                 'message' => 'Tenders retrieved successfully.',

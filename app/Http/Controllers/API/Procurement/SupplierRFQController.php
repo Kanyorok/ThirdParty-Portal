@@ -464,13 +464,23 @@ class SupplierRFQController extends Controller
                 }
             }
 
+            $systemUserId = (int)($user->Id ?? 0);
+            if ($systemUserId <= 0) {
+                $systemUser = DB::table('t_Users')->select('Id')->first();
+                $systemUserId = (int)($systemUser?->Id ?? 1);
+                Log::warning('postClarification: missing user Id, using fallback system user', [
+                    'thirdPartyId' => $user->ThirdPartyId ?? null,
+                    'systemUserId' => $systemUserId,
+                ]);
+            }
+
             RFQClarification::create([
                 'RFQId' => $validated['rfqId'],
                 'SupplierId' => $supplierId,
-                'RFQLineId' => $validated['rfqLineId'],
+                'RFQLineId' => $validated['rfqLineId'] ?? null,
                 'Question' => $validated['question'],
-                'CreatedBy' => $user->Id,
-                'ModifiedBy' => $user->Id
+                'CreatedBy' => $systemUserId,
+                'ModifiedBy' => $systemUserId,
             ]);
 
             return response()->json(['message' => 'Clarification submitted'], 201);

@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Capital Management Suite - Complete Documentation</title>
+    <style>
+        @media print {
+            @page {
+                margin: 2cm;
+                size: A4;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .document-container {
+            background: white;
+            padding: 40px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1a5490;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14pt;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .print-button:hover {
+            background: #2c5aa0;
+        }
+        
+        h1 {
+            color: #1a5490;
+            font-size: 24pt;
+            border-bottom: 3px solid #1a5490;
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+        
+        h2 {
+            color: #2c5aa0;
+            font-size: 18pt;
+            margin-top: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 5px;
+        }
+        
+        h3 {
+            color: #3d6fb0;
+            font-size: 14pt;
+            margin-top: 20px;
+        }
+        
+        h4 {
+            color: #4d7fc0;
+            font-size: 12pt;
+            margin-top: 15px;
+        }
+        
+        .cover-page {
+            text-align: center;
+            padding: 150px 0;
+            min-height: 100vh;
+        }
+        
+        .cover-title {
+            font-size: 36pt;
+            color: #1a5490;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .cover-subtitle {
+            font-size: 20pt;
+            color: #666;
+            margin-bottom: 40px;
+        }
+        
+        .cover-info {
+            font-size: 14pt;
+            color: #888;
+            margin-top: 80px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 10pt;
+        }
+        
+        th {
+            background-color: #1a5490;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .status-implemented {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .status-partial {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        
+        .status-missing {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .priority-high {
+            background-color: #ffebee;
+        }
+        
+        .priority-medium {
+            background-color: #fff3e0;
+        }
+        
+        .priority-low {
+            background-color: #e8f5e9;
+        }
+        
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 30px;
+        }
+        
+        li {
+            margin: 5px 0;
+        }
+        
+        .info-box {
+            background-color: #e3f2fd;
+            border-left: 5px solid #1a5490;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 3px;
+        }
+        
+        .warning-box {
+            background-color: #fff3e0;
+            border-left: 5px solid #ff9800;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 3px;
+        }
+        
+        .success-box {
+            background-color: #e8f5e9;
+            border-left: 5px solid #4caf50;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 3px;
+        }
+        
+        .toc {
+            margin: 30px 0;
+            line-height: 2;
+        }
+        
+        .toc-item {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .toc-level-1 {
+            font-weight: bold;
+            font-size: 13pt;
+        }
+        
+        .toc-level-2 {
+            padding-left: 40px;
+            font-size: 11pt;
+        }
+        
+        .workflow-step {
+            background-color: #f5f5f5;
+            border-left: 4px solid #1a5490;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 3px;
+        }
+        
+        code {
+            background-color: #f5f5f5;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 10pt;
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            background: #1a5490;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48pt;
+            font-weight: bold;
+            border-radius: 10px;
+            margin: 30px 0;
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button no-print" onclick="window.print()">📄 Print / Save as PDF</button>
+    
+    <div class="document-container">
+        <!-- COVER PAGE -->
+        <div class="cover-page">
+            <div class="cover-title">Human Capital Management Suite</div>
+            <div class="cover-subtitle">Complete Functional Documentation & Gap Analysis</div>
+            <div class="logo">HR</div>
+            <div class="cover-info">
+                <p><strong>BR_ERP System</strong></p>
+                <p>Version 1.0</p>
+                <p>Generated: January 21, 2026</p>
+                <p>Prepared by: Senior Business Analyst</p>
+            </div>
+        </div>
+        
+        <div class="page-break"></div>
+        
+        <!-- TABLE OF CONTENTS -->
+        <h1>Table of Contents</h1>
+        <div class="toc">
+            <div class="toc-item toc-level-1">1. Executive Summary</div>
+            <div class="toc-item toc-level-1">2. Module Overview</div>
+            <div class="toc-item toc-level-2">2.1 System Architecture</div>
+            <div class="toc-item toc-level-2">2.2 Technology Stack</div>
+            <div class="toc-item toc-level-1">3. Implemented Functionalities</div>
+            <div class="toc-item toc-level-2">3.1 Employee Management</div>
+            <div class="toc-item toc-level-2">3.2 Organizational Structure</div>
+            <div class="toc-item toc-level-2">3.3 Leave Management</div>
+            <div class="toc-item toc-level-2">3.4 Attendance & Time</div>
+            <div class="toc-item toc-level-2">3.5 Payroll</div>
+            <div class="toc-item toc-level-2">3.6 Performance & KPI</div>
+            <div class="toc-item toc-level-2">3.7 Recruitment</div>
+            <div class="toc-item toc-level-1">4. Detailed Workflows</div>
+            <div class="toc-item toc-level-1">5. Gap Analysis</div>
+            <div class="toc-item toc-level-1">6. Recommendations & Roadmap</div>
+        </div>
+        
+        <div class="page-break"></div>
+        
+        <!-- 1. EXECUTIVE SUMMARY -->
+        <h1>1. Executive Summary</h1>
+        
+        <div class="success-box">
+            <strong>Overview:</strong> The Human Capital Management Suite is a comprehensive HR solution built on Laravel framework, managing the complete employee lifecycle from recruitment to exit.
+        </div>
+        
+        <h3>Key Statistics</h3>
+        <table>
+            <tr>
+                <th>Metric</th>
+                <th>Current State</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>Active Employees</td>
+                <td>5</td>
+                <td class="status-implemented">✓ Operational</td>
+            </tr>
+            <tr>
+                <td>Employee Management</td>
+                <td>Fully Functional</td>
+                <td class="status-implemented">✓ Implemented</td>
+            </tr>
+            <tr>
+                <td>Leave Management</td>
+                <td>Fully Functional</td>
+                <td class="status-implemented">✓ Implemented</td>
+            </tr>
+            <tr>
+                <td>Payroll</td>
+                <td>Partially Functional</td>
+                <td class="status-partial">⚠ In Progress</td>
+            </tr>
+            <tr>
+                <td>Performance Management</td>
+                <td>Basic Setup</td>
+                <td class="status-partial">⚠ Limited</td>
+            </tr>
+            <tr>
+                <td>Recruitment</td>
+                <td>Basic Setup</td>
+                <td class="status-partial">⚠ Limited</td>
+            </tr>
+        </table>
+        
+        <h3>Critical Achievements</h3>
+        <ul>
+            <li><strong>User Account Integration:</strong> Seamless employee-to-user account creation with automated password reset</li>
+            <li><strong>Employee Number Generation:</strong> Automated sequential numbering (E00001-E00005)</li>
+            <li><strong>Multi-Branch Support:</strong> Full branch-based role and permission management</li>
+            <li><strong>Document Management:</strong> Comprehensive employee document storage and retrieval</li>
+        </ul>
+        
+        <h3>Priority Gaps Identified</h3>
+        <ol>
+            <li><strong>HIGH:</strong> Training & Development module completely missing</li>
+            <li><strong>HIGH:</strong> Employee Self-Service Portal incomplete</li>
+            <li><strong>MEDIUM:</strong> Advanced payroll features (loans, advances, deductions)</li>
+            <li><strong>MEDIUM:</strong> Performance appraisal workflow automation</li>
+            <li><strong>LOW:</strong> Advanced reporting and analytics dashboard</li>
+        </ol>
+        
+        <div class="page-break"></div>
+        
+        <!-- 2. MODULE OVERVIEW -->
+        <h1>2. Module Overview</h1>
+        
+        <h2>2.1 System Architecture</h2>
+        
+        <div class="info-box">
+            The HR module follows a service-oriented architecture with clear separation of concerns:
+            <ul>
+                <li><strong>Controllers:</strong> Handle HTTP requests and responses</li>
+                <li><strong>Services:</strong> Business logic layer (EmployeeService, LeaveService, UserService)</li>
+                <li><strong>Models:</strong> Eloquent ORM models with relationships</li>
+                <li><strong>Policies:</strong> Authorization rules and permissions</li>
+                <li><strong>Views:</strong> Blade templates with Bootstrap 5</li>
+            </ul>
+        </div>
+        
+        <h3>Database Structure</h3>
+        <table>
+            <tr>
+                <th>Table Name</th>
+                <th>Purpose</th>
+                <th>Key Fields</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>t_HREmployees</td>
+                <td>Main employee records</td>
+                <td>EmployeeNo, FirstName, LastName, Email</td>
+                <td class="status-implemented">✓ Active</td>
+            </tr>
+            <tr>
+                <td>t_HREmployeeContacts</td>
+                <td>Emergency contacts</td>
+                <td>Name, Relation, Phone, IsNextOfKin</td>
+                <td class="status-implemented">✓ Active</td>
+            </tr>
+            <tr>
+                <td>t_HREmployeeDocuments</td>
+                <td>Document storage</td>
+                <td>Category, FilePath, Description</td>
+                <td class="status-implemented">✓ Active</td>
+            </tr>
+            <tr>
+                <td>t_HRLeaves</td>
+                <td>Leave applications</td>
+                <td>EmployeeID, LeaveTypeID, StartDate</td>
+                <td class="status-implemented">✓ Active</td>
+            </tr>
+            <tr>
+                <td>t_HRAttendance</td>
+                <td>Daily attendance</td>
+                <td>EmployeeID, Date, CheckIn, CheckOut</td>
+                <td class="status-implemented">✓ Active</td>
+            </tr>
+        </table>
+        
+        <h2>2.2 Technology Stack</h2>
+        
+        <table>
+            <tr>
+                <th>Component</th>
+                <th>Technology</th>
+                <th>Version</th>
+                <th>Purpose</th>
+            </tr>
+            <tr>
+                <td>Backend Framework</td>
+                <td>Laravel</td>
+                <td>10.x</td>
+                <td>Core application framework</td>
+            </tr>
+            <tr>
+                <td>Database</td>
+                <td>SQL Server</td>
+                <td>2019+</td>
+                <td>Data persistence</td>
+            </tr>
+            <tr>
+                <td>Frontend</td>
+                <td>Blade + Bootstrap 5</td>
+                <td>5.3</td>
+                <td>User interface</td>
+            </tr>
+            <tr>
+                <td>Authentication</td>
+                <td>Laravel Sanctum</td>
+                <td>3.x</td>
+                <td>API & session authentication</td>
+            </tr>
+            <tr>
+                <td>Permissions</td>
+                <td>Spatie Laravel-Permission</td>
+                <td>5.x</td>
+                <td>Role-based access control</td>
+            </tr>
+        </table>
+        
+        <div class="page-break"></div>
+        
+        <!-- 3. IMPLEMENTED FUNCTIONALITIES -->
+        <h1>3. Implemented Functionalities</h1>
+        
+        <h2>3.1 Employee Management</h2>
+        
+        <h3>3.1.1 Employee CRUD Operations</h3>
+        
+        <div class="success-box">
+            <strong>Status: Fully Implemented ✓</strong><br>
+            Comprehensive employee lifecycle management with full CRUD capabilities.
+        </div>
+        
+        <table>
+            <tr>
+                <th style="width: 30%;">Feature</th>
+                <th style="width: 50%;">Description</th>
+                <th style="width: 20%;">Status</th>
+            </tr>
+            <tr>
+                <td><strong>Create Employee</strong></td>
+                <td>
+                    <ul>
+                        <li>Auto-generated Employee Number (E00001 format)</li>
+                        <li>Personal information with photo upload</li>
+                        <li>Age validation (minimum 20 years)</li>
+                        <li>Optional user account creation checkbox</li>
+                        <li>Emergency contacts (up to 2)</li>
+                        <li>Document upload (up to 3)</li>
+                        <li>Education history</li>
+                    </ul>
+                </td>
+                <td class="status-implemented">✓ Complete</td>
+            </tr>
+            <tr>
+                <td><strong>View Employee</strong></td>
+                <td>
+                    <ul>
+                        <li>Detailed profile with photo</li>
+                        <li>Tabbed interface</li>
+                        <li>Emergency contacts display</li>
+                        <li>Document list with downloads</li>
+                        <li>Employment timeline</li>
+                    </ul>
+                </td>
+                <td class="status-implemented">✓ Complete</td>
+            </tr>
+            <tr>
+                <td><strong>Edit Employee</strong></td>
+                <td>
+                    <ul>
+                        <li>Update all employee information</li>
+                        <li>Modify organizational placement</li>
+                        <li>Update salary and bank details</li>
+                        <li>Change employment status</li>
+                    </ul>
+                </td>
+                <td class="status-implemented">✓ Complete</td>
+            </tr>
+            <tr>
+                <td><strong>List Employees</strong></td>
+                <td>
+                    <ul>
+                        <li>Paginated list (10/25/50 per page)</li>
+                        <li>Search by name, email, number</li>
+                        <li>Filter by branch, department, status</li>
+                        <li>Export capabilities</li>
+                    </ul>
+                </td>
+                <td class="status-implemented">✓ Complete</td>
+            </tr>
+        </table>
+        
+        <h3>3.1.2 Employee Information Sections</h3>
+        
+        <h4>Personal Information</h4>
+        <ul>
+            <li>Full Name (First, Last, Other Names)</li>
+            <li>Date of Birth (with age calculation and 20-year minimum)</li>
+            <li>Gender (Male, Female, Other)</li>
+            <li>Religion (from master data)</li>
+            <li>Email and Phone</li>
+            <li>Physical Address</li>
+            <li>Photo upload (max 5MB)</li>
+        </ul>
+        
+        <h4>Organizational Placement</h4>
+        <ul>
+            <li>Branch assignment (required)</li>
+            <li>Department assignment (required)</li>
+            <li>Grade selection</li>
+            <li>Role assignment (filtered by grade)</li>
+            <li>Supervisor assignment</li>
+            <li>Cascading dropdowns</li>
+        </ul>
+        
+        <h4>Employment Details</h4>
+        <ul>
+            <li>Employment Date</li>
+            <li>Employment Type (Permanent, Contract, Casual)</li>
+            <li>Contract Type</li>
+            <li>Employment Status (Pending, Active, OnHold, Exited)</li>
+        </ul>
+        
+        <h4>Statutory Information</h4>
+        <ul>
+            <li>NSSF Number (Social Security)</li>
+            <li>NHIF/SHIF Number (Health Insurance)</li>
+            <li>KRA PIN (Tax Identification)</li>
+        </ul>
+        
+        <h4>Payroll Information</h4>
+        <ul>
+            <li>Basic Salary (required)</li>
+            <li>Salary Effective Date</li>
+            <li>Payment Mode (Bank, Cash, Mobile)</li>
+            <li>Bank Name and Branch</li>
+            <li>Bank Account Number</li>
+        </ul>
+        
+        <h3>3.1.3 User Account Creation</h3>
+        
+        <div class="success-box">
+            <strong>Key Feature:</strong> Automatic user account creation with password reset email
+        </div>
+        
+        <h4>Creation Methods:</h4>
+        <ol>
+            <li><strong>During Employee Creation:</strong>
+                <ul>
+                    <li>Checkbox: "Create a user account for this employee"</li>
+                    <li>Auto-creates user on save</li>
+                    <li>Links via EmployeeId field</li>
+                    <li>Sends password reset email</li>
+                </ul>
+            </li>
+            <li><strong>After Creation:</strong>
+                <ul>
+                    <li>Button on employee profile</li>
+                    <li>Only visible if no user exists</li>
+                    <li>Creates and sends reset link</li>
+                </ul>
+            </li>
+        </ol>
+        
+        <div class="page-break"></div>
+        
+        <h2>3.2 Organizational Structure</h2>
+        
+        <h3>3.2.1 Branches</h3>
+        <table>
+            <tr>
+                <th>Feature</th>
+                <th>Implementation</th>
+            </tr>
+            <tr>
+                <td>Branch Master Data</td>
+                <td>Branch Code, Name, Location, Manager assignment</td>
+            </tr>
+            <tr>
+                <td>Employee Assignment</td>
+                <td>Required field, used for permissions and reporting</td>
+            </tr>
+            <tr>
+                <td>Filtering</td>
+                <td>Filter employees by branch, branch-wise reports</td>
+            </tr>
+        </table>
+        
+        <h3>3.2.2 Departments</h3>
+        <table>
+            <tr>
+                <th>Feature</th>
+                <th>Implementation</th>
+            </tr>
+            <tr>
+                <td>Department Master</td>
+                <td>Code, Name, Description, HOD assignment</td>
+            </tr>
+            <tr>
+                <td>Employee Assignment</td>
+                <td>Required field, affects reporting structure</td>
+            </tr>
+            <tr>
+                <td>Reporting</td>
+                <td>Headcount, salary costs, performance metrics</td>
+            </tr>
+        </table>
+        
+        <h3>3.2.3 Grades & Roles</h3>
+        <ul>
+            <li><strong>Grades:</strong> Define hierarchy and compensation levels (G1, G2, G3)</li>
+            <li><strong>Roles:</strong> Specific job positions linked to grades</li>
+            <li><strong>Cascading Selection:</strong> Grade selection filters available roles</li>
+            <li><strong>Salary Ranges:</strong> Min/Max salary per grade</li>
+        </ul>
+        
+        <div class="page-break"></div>
+        
+        <h2>3.3 Leave Management</h2>
+        
+        <div class="success-box">
+            <strong>Status: Fully Implemented ✓</strong><br>
+            Complete leave application, approval, and tracking system
+        </div>
+        
+        <h3>3.3.1 Leave Types</h3>
+        <table>
+            <tr>
+                <th>Leave Type</th>
+                <th>Max Days</th>
+                <th>Carry Forward</th>
+                <th>Document Required</th>
+            </tr>
+            <tr>
+                <td>Annual Leave</td>
+                <td>21-30 (grade-based)</td>
+                <td>Yes</td>
+                <td>No</td>
+            </tr>
+            <tr>
+                <td>Sick Leave</td>
+                <td>14</td>
+                <td>No</td>
+                <td>Yes (medical cert)</td>
+            </tr>
+            <tr>
+                <td>Maternity Leave</td>
+                <td>90</td>
+                <td>No</td>
+                <td>Yes (medical cert)</td>
+            </tr>
+            <tr>
+                <td>Paternity Leave</td>
+                <td>14</td>
+                <td>No</td>
+                <td>No</td>
+            </tr>
+            <tr>
+                <td>Compassionate Leave</td>
+                <td>7</td>
+                <td>No</td>
+                <td>Yes (death cert)</td>
+            </tr>
+        </table>
+        
+        <h3>3.3.2 Leave Application Workflow</h3>
+        
+        <div class="workflow-step">
+            <strong>Step 1: Employee Initiates</strong>
+            <ul>
+                <li>Select leave type</li>
+                <li>Choose dates (system calculates working days)</li>
+                <li>Add reason</li>
+                <li>Upload documents if required</li>
+                <li>View leave balance</li>
+                <li>Submit</li>
+            </ul>
+        </div>
+        
+        <div class="workflow-step">
+            <strong>Step 2: Supervisor Review</strong>
+            <ul>
+                <li>Receives notification</li>
+                <li>Reviews details</li>
+                <li>Checks team availability</li>
+                <li>Approves/Rejects/Requests Info</li>
+            </ul>
+        </div>
+        
+        <div class="workflow-step">
+            <strong>Step 3: HR Review (if needed)</strong>
+            <ul>
+                <li>Validates policy compliance</li>
+                <li>Checks documents</li>
+                <li>Final approval</li>
+                <li>Updates calendar</li>
+            </ul>
+        </div>
+        
+        <h3>3.3.3 Leave Balance Tracking</h3>
+        <ul>
+            <li><strong>Opening Balance:</strong> Based on grade entitlement</li>
+            <li><strong>Accrued Balance:</strong> Monthly pro-rata for new employees</li>
+            <li><strong>Taken Days:</strong> Sum of approved leave</li>
+            <li><strong>Available:</strong> Opening + Accrued - Taken - Pending</li>
+            <li><strong>Carry Forward:</strong> Max 7 days to next year</li>
+        </ul>
+        
+        <div class="page-break"></div>
+        
+        <h2>3.4 Attendance & Time Management</h2>
+        
+        <div class="warning-box">
+            <strong>Status: Partially Implemented ⚠</strong><br>
+            Basic attendance tracking functional, advanced features limited
+        </div>
+        
+        <table>
+            <tr>
+                <th>Feature</th>
+                <th>Status</th>
+                <th>Details</th>
+            </tr>
+            <tr>
+                <td>Clock In/Out</td>
+                <td class="status-implemented">✓ Implemented</td>
+                <td>Manual via web interface, timestamps recorded</td>
+            </tr>
+            <tr>
+                <td>Biometric Integration</td>
+                <td class="status-missing">✗ Missing</td>
+                <td>No fingerprint/face recognition</td>
+            </tr>
+            <tr>
+                <td>GPS Tracking</td>
+                <td class="status-missing">✗ Missing</td>
+                <td>No location tracking for remote workers</td>
+            </tr>
+            <tr>
+                <td>Shift Management</td>
+                <td class="status-partial">⚠ Basic</td>
+                <td>Definitions exist, no rotation scheduling</td>
+            </tr>
+        </table>
+        
+        <h3>Attendance Records</h3>
+        <ul>
+            <li><strong>Daily Records:</strong> One per employee per day</li>
+            <li><strong>Late Detection:</strong> Flags late clock-in</li>
+            <li><strong>Work Hours:</strong> Auto-calculated duration</li>
+            <li><strong>Manual Override:</strong> HR can adjust</li>
+        </ul>
+        
+        <div class="page-break"></div>
+        
+        <h2>3.5 Payroll</h2>
+        
+        <div class="warning-box">
+            <strong>Status: Partially Implemented ⚠</strong><br>
+            Basic salary structure exists, comprehensive payroll incomplete
+        </div>
+        
+        <table>
+            <tr>
+                <th>Component</th>
+                <th>Status</th>
+                <th>Details</th>
+            </tr>
+            <tr>
+                <td>Basic Salary</td>
+                <td class="status-implemented">✓ Implemented</td>
+                <td>Stored in employee record with effective date</td>
+            </tr>
+            <tr>
+                <td>Allowances</td>
+                <td class="status-partial">⚠ Limited</td>
+                <td>Table exists, no UI or processing</td>
+            </tr>
+            <tr>
+                <td>Deductions</td>
+                <td class="status-partial">⚠ Limited</td>
+                <td>Statutory defined, no automation</td>
+            </tr>
+            <tr>
+                <td>Bonuses</td>
+                <td class="status-missing">✗ Missing</td>
+                <td>No calculation or tracking</td>
+            </tr>
+            <tr>
+                <td>Payslip Generation</td>
+                <td class="status-missing">✗ Missing</td>
+                <td>No PDF generation or distribution</td>
+            </tr>
+        </table>
+        
+        <h3>Statutory Contributions</h3>
+        <ul>
+            <li><strong>NSSF:</strong> 6% employee + 6% employer (formula exists)</li>
+            <li><strong>NHIF/SHIF:</strong> Tiered based on salary bands</li>
+            <li><strong>PAYE Tax:</strong> Progressive tax calculation</li>
+            <li><strong>Status:</strong> All captured but not automated</li>
+        </ul>
+        
+        <div class="page-break"></div>
+        
+        <h2>3.6 Performance Management & KPI</h2>
+        
+        <div class="warning-box">
+            <strong>Status: Basic Setup Only ⚠</strong><br>
+            Infrastructure exists but comprehensive performance management incomplete
+        </div>
+        
+        <h3>Current State</h3>
+        <ul>
+            <li><strong>KPI Templates:</strong> Basic structure exists</li>
+            <li><strong>Missing:</strong> Target setting, weightage, automated appraisals</li>
+            <li><strong>Missing:</strong> Self-assessment, supervisor rating, 360 feedback</li>
+            <li><strong>Missing:</strong> Goal management and tracking</li>
+            <li><strong>Missing:</strong> Performance reports and analytics</li>
+        </ul>
+        
+        <h2>3.7 Recruitment</h2>
+        
+        <div class="warning-box">
+            <strong>Status: Basic Setup Only ⚠</strong><br>
+            Minimal recruitment functionality
+        </div>
+        
+        <h3>Current Capabilities</h3>
+        <ul>
+            <li><strong>Job Posting:</strong> Basic form exists</li>
+            <li><strong>Application Form:</strong> Captures applicant info</li>
+            <li><strong>Resume Upload:</strong> PDF/DOC supported</li>
+            <li><strong>Status Tracking:</strong> Applied, Shortlisted, Interviewed, Rejected, Hired</li>
+        </ul>
+        
+        <h3>Missing Features</h3>
+        <ul>
+            <li>Online application portal (public-facing)</li>
+            <li>Automated screening</li>
+            <li>Interview scheduling</li>
+            <li>Email notifications to applicants</li>
+            <li>Offer letter generation</li>
+            <li>Onboarding workflow</li>
+        </ul>
+        
+        <div class="page-break"></div>
+        
+        <!-- 4. WORKFLOWS -->
+        <h1>4. Detailed Workflows</h1>
+        
+        <h2>4.1 Employee Onboarding Workflow</h2>
+        
+        <div class="workflow-step">
+            <strong>Phase 1: Pre-Arrival</strong>
+            <ol>
+                <li>HR receives signed offer letter</li>
+                <li>Create employee record in system</li>
+                <li>Auto-generate Employee Number</li>
+                <li>Check "Create user account" checkbox</li>
+                <li>System sends welcome email</li>
+                <li>Prepare workstation</li>
+            </ol>
+        </div>
+        
+        <div class="workflow-step">
+            <strong>Phase 2: First Day</strong>
+            <ol>
+                <li>Employee arrives and checks in</li>
+                <li>IT provides laptop and access</li>
+                <li>HR collects documents</li>
+                <li>Upload to employee profile</li>
+                <li>Orientation with department</li>
+                <li>Assign supervisor in system</li>
+            </ol>
+        </div>
+        
+        <div class="workflow-step">
+            <strong>Phase 3: Probation Period</strong>
+            <ol>
+                <li>Regular check-ins with supervisor</li>
+                <li>Performance tracking</li>
+                <li>Mid-probation review</li>
+                <li>End of probation evaluation</li>
+                <li>Confirmation decision</li>
+                <li>Update employment status</li>
+            </ol>
+        </div>
+        
+        <h2>4.2 Leave Application Workflow</h2>
+        
+        <div class="workflow-step">
+            <strong>Step 1: Employee Initiates</strong>
+            <ul>
+                <li>Navigate to Leave Management</li>
+                <li>Fill application form</li>
+                <li>System validates balance</li>
+                <li>Checks for overlaps</li>
+                <li>Calculates working days</li>
+                <li>Notifies supervisor</li>
+            </ul>
+        </div>
+        
+        <div class="workflow-step">
+            <strong>Step 2: Supervisor Review</strong>
+            <ul>
+                <li>Receives email notification</li>
+                <li>Reviews leave details</li>
+                <li>Checks team availability</li>
+                <li>Approves/Rejects/Requests Info</li>
+                <li>Routes to HR if needed</li>
+            </ul>
+        </div>
+        
+        <div class="workflow-step">
+            <strong>Step 3: HR Final Approval</strong>
+            <ul>
+                <li>Verifies policy compliance</li>
+                <li>Checks documents</li>
+                <li>Final decision</li>
+                <li>Updates calendar</li>
+                <li>Notifies all parties</li>
+            </ul>
+        </div>
+        
+        <div class="page-break"></div>
+        
+        <!-- 5. GAP ANALYSIS -->
+        <h1>5. Gap Analysis</h1>
+        
+        <h2>5.1 Critical Gaps (HIGH Priority)</h2>
+        
+        <table>
+            <tr>
+                <th>Gap</th>
+                <th>Impact</th>
+                <th>Recommendation</th>
+            </tr>
+            <tr class="priority-high">
+                <td><strong>Training & Development</strong></td>
+                <td>
+                    <ul>
+                        <li>No skills tracking</li>
+                        <li>Cannot plan training</li>
+                        <li>Compliance not monitored</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>Build training module</li>
+                        <li>Skills matrix</li>
+                        <li>Course catalog</li>
+                        <li>Certificate management</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr class="priority-high">
+                <td><strong>Employee Self-Service</strong></td>
+                <td>
+                    <ul>
+                        <li>High HR workload</li>
+                        <li>Delayed responses</li>
+                        <li>Limited engagement</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>ESS portal</li>
+                        <li>View payslips</li>
+                        <li>Update info</li>
+                        <li>Apply for leave</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr class="priority-high">
+                <td><strong>Comprehensive Payroll</strong></td>
+                <td>
+                    <ul>
+                        <li>Manual calculation</li>
+                        <li>Time-consuming</li>
+                        <li>No compliance automation</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>Automate payroll</li>
+                        <li>Allowances/deductions</li>
+                        <li>Payslip generation</li>
+                        <li>Bank file export</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr class="priority-high">
+                <td><strong>Performance Appraisal</strong></td>
+                <td>
+                    <ul>
+                        <li>No structured process</li>
+                        <li>Inconsistent ratings</li>
+                        <li>Not data-driven</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>Appraisal workflow</li>
+                        <li>Self-assessment</li>
+                        <li>360 feedback</li>
+                        <li>Performance analytics</li>
+                    </ul>
+                </td>
+            </tr>
+        </table>
+        
+        <h2>5.2 Important Gaps (MEDIUM Priority)</h2>
+        
+        <table>
+            <tr>
+                <th>Gap</th>
+                <th>Impact</th>
+            </tr>
+            <tr class="priority-medium">
+                <td><strong>Recruitment Portal</strong></td>
+                <td>Manual processing, delayed hiring, poor candidate experience</td>
+            </tr>
+            <tr class="priority-medium">
+                <td><strong>Document Management</strong></td>
+                <td>Scattered documents, no version control, compliance risk</td>
+            </tr>
+            <tr class="priority-medium">
+                <td><strong>Succession Planning</strong></td>
+                <td>No readiness for vacancies, knowledge loss risk</td>
+            </tr>
+            <tr class="priority-medium">
+                <td><strong>Exit Management</strong></td>
+                <td>No structured offboarding, incomplete asset recovery</td>
+            </tr>
+        </table>
+        
+        <h2>5.3 Nice-to-Have Gaps (LOW Priority)</h2>
+        
+        <table>
+            <tr>
+                <th>Gap</th>
+                <th>Recommendation</th>
+            </tr>
+            <tr class="priority-low">
+                <td>Mobile App</td>
+                <td>Mobile clock in/out, leave application, notifications</td>
+            </tr>
+            <tr class="priority-low">
+                <td>Biometric Integration</td>
+                <td>Fingerprint/face recognition attendance</td>
+            </tr>
+            <tr class="priority-low">
+                <td>Advanced Analytics</td>
+                <td>Predictive attrition, workforce forecasts, AI insights</td>
+            </tr>
+            <tr class="priority-low">
+                <td>Gamification</td>
+                <td>Performance badges, leaderboards, recognition</td>
+            </tr>
+        </table>
+        
+        <div class="page-break"></div>
+        
+        <!-- 6. RECOMMENDATIONS -->
+        <h1>6. Recommendations & Implementation Roadmap</h1>
+        
+        <h2>6.1 Phase 1: Foundation (Months 1-2)</h2>
+        
+        <div class="success-box">
+            <strong>Goal:</strong> Complete critical features for daily HR operations
+        </div>
+        
+        <h3>Priority Tasks:</h3>
+        <ol>
+            <li><strong>Complete Payroll Module (4 weeks)</strong>
+                <ul>
+                    <li>Allowances & Deductions UI</li>
+                    <li>Loan management</li>
+                    <li>Automated statutory calculations</li>
+                    <li>Payslip PDF generation</li>
+                    <li>Bank file export</li>
+                </ul>
+            </li>
+            <li><strong>Employee Self-Service Portal (4 weeks)</strong>
+                <ul>
+                    <li>Personal info update</li>
+                    <li>Leave application</li>
+                    <li>Payslip download</li>
+                    <li>Attendance view</li>
+                    <li>Document access</li>
+                </ul>
+            </li>
+        </ol>
+        
+        <h2>6.2 Phase 2: Performance & Growth (Months 3-4)</h2>
+        
+        <ol>
+            <li><strong>Performance Appraisal System</strong></li>
+            <li><strong>Training & Development Module</strong></li>
+        </ol>
+        
+        <h2>6.3 Phase 3: Recruitment (Months 5-6)</h2>
+        
+        <ol>
+            <li><strong>Applicant Tracking System</strong></li>
+            <li><strong>Onboarding Automation</strong></li>
+            <li><strong>Exit Management</strong></li>
+        </ol>
+        
+        <h2>6.4 Implementation Budget</h2>
+        
+        <table>
+            <tr>
+                <th>Phase</th>
+                <th>Duration</th>
+                <th>Estimated Cost</th>
+                <th>Key Deliverables</th>
+            </tr>
+            <tr>
+                <td>Phase 1</td>
+                <td>2 months</td>
+                <td>$40,000 - $50,000</td>
+                <td>Payroll + ESS Portal</td>
+            </tr>
+            <tr>
+                <td>Phase 2</td>
+                <td>2 months</td>
+                <td>$35,000 - $45,000</td>
+                <td>Performance + Training</td>
+            </tr>
+            <tr>
+                <td>Phase 3</td>
+                <td>2 months</td>
+                <td>$30,000 - $40,000</td>
+                <td>Recruitment + Exit</td>
+            </tr>
+            <tr>
+                <td><strong>TOTAL</strong></td>
+                <td><strong>6 months</strong></td>
+                <td><strong>$105,000 - $135,000</strong></td>
+                <td><strong>Complete Core HR Suite</strong></td>
+            </tr>
+        </table>
+        
+        <h2>6.5 Success Metrics</h2>
+        
+        <table>
+            <tr>
+                <th>Metric</th>
+                <th>Current</th>
+                <th>Target</th>
+            </tr>
+            <tr>
+                <td>HR Admin Time on Manual Tasks</td>
+                <td>60%</td>
+                <td>20%</td>
+            </tr>
+            <tr>
+                <td>Employee Self-Service Adoption</td>
+                <td>0%</td>
+                <td>80%</td>
+            </tr>
+            <tr>
+                <td>Payroll Processing Time</td>
+                <td>5 days</td>
+                <td>1 day</td>
+            </tr>
+            <tr>
+                <td>Time to Fill Vacancies</td>
+                <td>60 days</td>
+                <td>30 days</td>
+            </tr>
+            <tr>
+                <td>Appraisal Completion Rate</td>
+                <td>50%</td>
+                <td>95%</td>
+            </tr>
+        </table>
+        
+        <div class="page-break"></div>
+        
+        <!-- CONCLUSION -->
+        <h1>Conclusion</h1>
+        
+        <div class="success-box">
+            <h3>Current State Summary</h3>
+            <p>The Human Capital Management Suite has a strong foundation with fully functional employee management, leave management, and basic attendance tracking. The system successfully manages 5 employees with comprehensive data capture and user account integration.</p>
+        </div>
+        
+        <div class="warning-box">
+            <h3>Areas Requiring Immediate Attention</h3>
+            <ul>
+                <li><strong>Payroll Automation:</strong> Critical for monthly operations</li>
+                <li><strong>Employee Self-Service:</strong> Reduce HR workload</li>
+                <li><strong>Performance Management:</strong> Enable structured evaluations</li>
+                <li><strong>Training Module:</strong> Track employee development</li>
+            </ul>
+        </div>
+        
+        <div class="info-box">
+            <h3>Recommended Next Steps</h3>
+            <ol>
+                <li>Review and approve implementation roadmap</li>
+                <li>Allocate budget for Phase 1 (Payroll + ESS)</li>
+                <li>Assemble development team</li>
+                <li>Begin requirements gathering for payroll automation</li>
+                <li>Set up project governance structure</li>
+            </ol>
+        </div>
+        
+        <h2>Document Control</h2>
+        
+        <table>
+            <tr>
+                <th style="width: 30%;">Field</th>
+                <th>Value</th>
+            </tr>
+            <tr>
+                <td><strong>Document Title</strong></td>
+                <td>Human Capital Management Suite - Complete Documentation</td>
+            </tr>
+            <tr>
+                <td><strong>Document Number</strong></td>
+                <td>BR-ERP-HR-DOC-001</td>
+            </tr>
+            <tr>
+                <td><strong>Version</strong></td>
+                <td>1.0</td>
+            </tr>
+            <tr>
+                <td><strong>Date</strong></td>
+                <td>January 21, 2026</td>
+            </tr>
+            <tr>
+                <td><strong>Prepared By</strong></td>
+                <td>Senior Business Analyst</td>
+            </tr>
+            <tr>
+                <td><strong>Classification</strong></td>
+                <td>Internal Use Only</td>
+            </tr>
+        </table>
+        
+        <div style="margin-top: 50px; padding: 20px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 5px;">
+            <h4>Confidentiality Notice</h4>
+            <p>This document contains confidential information belonging to BR_ERP. Unauthorized use or disclosure may result in legal action.</p>
+        </div>
+        
+        <div style="margin-top: 30px; text-align: center; color: #888;">
+            <p>© 2026 BR_ERP. All Rights Reserved.</p>
+            <p><strong>BR_ERP</strong> | Thinking.Crafting.Transforming</p>
+        </div>
+    </div>
+</body>
+</html>
