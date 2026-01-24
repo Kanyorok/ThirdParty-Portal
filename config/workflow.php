@@ -35,6 +35,15 @@ return [
         'Submitted for Approval' => \App\Enums\Inventory\InterBranchRequisitionEnum::Pending->value,  // 'P'
     ],
 
+    // Procurement Requisitions (different from Inter-Branch Requisitions above)
+    'RequisitionID' => [
+        'Approved' => 'AP',  // DocStatus column is only 2 chars
+        'Rejected' => 'RE',  // DocStatus column is only 2 chars
+        'Pending' => 'PE',
+        'Submitted for Approval' => 'SU',
+        'Draft' => 'DR',
+    ],
+
     'TransferId' => [
         'Approved' => \App\Enums\Inventory\Transfers::Approved->value,  // 'Ap'
         'Rejected' => \App\Enums\Inventory\Transfers::Rejected->value,  // 'Re'

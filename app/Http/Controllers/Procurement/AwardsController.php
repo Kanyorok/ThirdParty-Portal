@@ -691,6 +691,8 @@ public function approve(Request $request)
             'Comments' => $request->input('approval_remarks'),
             'CreatedBy' => Auth::id(),
             'ModifiedBy' => Auth::id(),
+            'AwardStatus' => 'Approved', // Mark as Approved immediately
+            'AwardDate' => now(),
         ]);
 
         activity()
@@ -703,6 +705,9 @@ public function approve(Request $request)
                 'score' => round($topScore,2),
             ])
             ->log('RFQ awarded to top ranked supplier.');
+
+        // Verify/Notify Supplier
+        $this->notifySuccessfulRFQBidders($award);
 
         return redirect()->route('procawards.index')->with('success', 'RFQ awarded successfully.');
     }
@@ -1284,6 +1289,60 @@ public function approve(Request $request)
             }
         } catch (\Exception $e) {
             Log::error("Failed to notify unsuccessful bidders: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Notify the successful bidder for RFQ
+     */
+    protected function notifySuccessfulRFQBidders($award)
+    {
+        try {
+            $rfqTitle = $award->rfq->Subject ?? ($award->rfq->Comments ?? 'RFQ Award');
+            $rfqNo = $award->rfq->RFQNumber;
+            
+            // Get supplier contact info
+            $winningSupplier = \App\Models\ThirdParies\Supplier::find($award->SupplierId);
+            if (!$winningSupplier) {
+                 Log::warning("Winning supplier not found for RFQ award {$award->Id}");
+                 return;
+            }
+
+            $thirdParty = $winningSupplier->supplierMaster->thirdParty;
+            $contactUser = $thirdParty->users ? $thirdParty->users->first() : null;
+            $email = $contactUser ? $contactUser->Email : ($thirdParty->Email ?? null);
+            $name = $contactUser ? $contactUser->Name : ($thirdParty->ThirdPartyName ?? 'Valued Supplier');
+
+            if ($email) {
+                $subject = "Award Notification - {$rfqTitle} ({$rfqNo})";
+                $body = "Dear {$name},<br><br>" .
+                        "We are pleased to inform you that your quotation for <strong>{$rfqTitle} ({$rfqNo})</strong> has been successful.<br><br>" .
+                        "We will be in touch shortly with further details regarding the next steps.<br><br>" .
+                        "Congratulations and we look forward to working with you.<br><br>" .
+                        "Sincerely,<br>" .
+                        "Procurement Department<br>" .
+                        config('app.name');
+
+                $to = [[$name => $email]];
+
+                $service = \App\Services\CRMEmailService::createRaw(
+                    Auth::user(),
+                    $subject,
+                    $body,
+                    $to,
+                    'ThirdParty',
+                    (string)$thirdParty->Id, 
+                    [], [],
+                    \App\Enums\EmailPriorityEnum::Important
+                );
+                $service->send(true);
+                Log::info("RFQ Award notification sent to winner {$email} for RFQ {$rfqNo}");
+            } else {
+                 Log::warning("No email found for winning supplier ID {$award->SupplierId}");
+            }
+
+        } catch (\Exception $e) {
+            Log::error("Failed to notify successful RFQ bidder: " . $e->getMessage());
         }
     }
 

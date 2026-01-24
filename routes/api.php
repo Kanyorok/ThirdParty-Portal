@@ -128,6 +128,232 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
 });
 
 
+//   Route::get('bid-submissions', [\App\Http\Controllers\Procurement\TenderBidResponsivenessController::class, 'getSupplierBids']);
+//         Route::get('bid-submissions/existing', [\App\Http\Controllers\API\Procurement\BidSubmissionApiController::class, 'getExistingBid']);
+       
+
+
+
+// Public Test Routes (No Auth)
+Route::prefix('debug/list')->group(function() {
+    Route::get('tenders', function() {
+        return response()->json([
+            'data' => \App\Models\Procurement\Tender::with('documents')->latest()->take(5)->get()
+        ]);
+    });
+
+    Route::get('rfqs', function() {
+        return response()->json([
+            'data' => \App\Models\Procurement\RFQ::latest()->take(5)->get()
+        ]);
+    });
+
+    Route::get('bids', function() {
+        return response()->json([
+            'data' => \App\Models\Procurement\Bid::latest()->take(5)->get()
+        ]);
+    });
+
+    Route::get('rounds', function() {
+        return response()->json([
+            'data' => \App\Models\Procurement\Prequalification\PrequalificationRound::latest()->take(5)->get()
+        ]);
+    });
+});
+
+// Debug routes for token generation (browser-accessible)
+// Route::get('debug/generate-token/{thirdPartyId?}', function($thirdPartyId = null) {
+//     // Find a supplier user
+//     if ($thirdPartyId) {
+//         $user = \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyId', '6')->first();
+//     } else {
+//         $user = \App\Models\ThirdParty\ThirdPartyUser::whereNotNull('ThirdPartyId')->first();
+//     }
+    
+//     if (!$user) {
+//         return response()->json(['error' => 'No supplier user found'], 404);
+//     }
+    
+//     // Get supplier info
+//     $supplierMaster = \Illuminate\Support\Facades\DB::table('t_SupplierMaster')
+//         ->where('ThirdPartyId', $user->ThirdPartyId)
+//         ->first();
+    
+//     // Delete existing tokens and create new one
+//     $user->tokens()->delete();
+//     $token = $user->createToken('postman-test')->plainTextToken;
+    
+//     return response()->json([
+//         'user_email' => $user->Email,
+//         'user_id' => $user->Id,
+//         'third_party_id' => $user->ThirdPartyId,
+//         'supplier_master_id' => $supplierMaster?->Id,
+//         'bearer_token' => $token,
+//         'usage' => 'Add to Postman: Authorization → Bearer Token → paste the bearer_token value'
+//     ]);
+// });
+
+Route::get('debug/generate-token/{userId}', function ($userId) {
+    // Cast to integer since Id column is bigint
+    $userId = (int) $userId;
+    
+    $results = \Illuminate\Support\Facades\DB::select(
+        "SELECT TOP 1 * FROM t_ThirdPartyUsers WHERE Id = {$userId} AND DeletedOn IS NULL"
+    );
+    
+    if (empty($results)) {
+        return response()->json([
+            'error' => "No supplier user found for user Id {$userId}"
+        ], 404);
+    }
+
+    // Get the user model by Id for token creation
+    $user = new \App\Models\ThirdParty\ThirdPartyUser();
+    $user->forceFill((array) $results[0]);
+    $user->exists = true;
+
+    $supplierMaster = null;
+    if ($user->ThirdPartyId) {
+        // Use N-prefix for ThirdPartyId which is nvarchar
+        $supplierResults = \Illuminate\Support\Facades\DB::select(
+            "SELECT TOP 1 * FROM t_SupplierMaster WHERE ThirdPartyId = N'" . addslashes($user->ThirdPartyId) . "'"
+        );
+        $supplierMaster = !empty($supplierResults) ? $supplierResults[0] : null;
+    }
+
+    $user->tokens()->delete();
+    $token = $user->createToken('postman-test')->plainTextToken;
+
+    return response()->json([
+        'user_email' => $user->Email,
+        'user_id' => $user->Id,
+        'third_party_id' => $user->ThirdPartyId,
+        'supplier_master_id' => $supplierMaster?->Id,
+        'bearer_token' => $token,
+        'usage' => 'Add to Postman: Authorization → Bearer Token → paste the bearer_token value'
+    ]);
+});
+
+
+// Route::get('debug/generate-token/{thirdPartyId}', function ($thirdPartyId) {
+
+//     $user = \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyId', $thirdPartyId)->first();
+
+//     if (!$user) {
+//         return response()->json([
+//             'error' => 'No ThirdPartyUser found',
+//             'thirdPartyId' => $thirdPartyId
+//         ], 404);
+//     }
+
+//     $supplierMaster = \Illuminate\Support\Facades\DB::table('t_SupplierMaster')
+//         ->where('ThirdPartyId', $user->ThirdPartyId)
+//         ->first();
+
+//     $user->tokens()->delete();
+//     $token = $user->createToken('postman-test')->plainTextToken;
+
+//     return response()->json([
+//         'user_email' => $user->Email,
+//         'user_id' => $user->Id,
+//         'third_party_id' => $user->ThirdPartyId,
+//         'supplier_master_id' => $supplierMaster?->Id,
+//         'bearer_token' => $token,
+//     ]);
+// });
+
+
+Route::get('debug/list-suppliers', function() {
+    $suppliers = \Illuminate\Support\Facades\DB::table('t_ThirdPartyUsers as u')
+        ->leftJoin('t_SupplierMaster as sm', 'u.ThirdPartyId', '=', 'sm.ThirdPartyId')
+        ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 'u.ThirdPartyId')
+        ->whereNull('u.DeletedOn')
+        ->whereNotNull('u.ThirdPartyId')
+        ->select('u.Id', 'u.Email', 'u.ThirdPartyId', 'sm.Id as SupplierMasterId', 'tp.TradingName')
+        ->take(10)
+        ->get();
+    
+    return response()->json(['suppliers' => $suppliers]);
+});
+
+// UN-AUTHENTICATED TEST ROUTES FOR PROCUREMENT (Mirroring the protected group)
+Route::prefix('test/procurement')->name('test.api.procurement.')
+    ->group(function () {
+        Route::apiResource('supplier-cat', SupplierCategoryApiController::class);
+        Route::apiResource('supp', SupplierController::class);
+
+        // Prequalification API endpoints
+        Route::prefix('prequalification')->name('prequalification.')->group(function () {
+            Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
+            Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
+            Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
+        });
+        
+        // RFQ routes
+        Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
+        Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
+        Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
+
+        // Bid Submissions (Mock Auth)
+        Route::get('bid-submissions', function (\Illuminate\Http\Request $request) {
+            $thirdPartyId = $request->query('third_party_id', 1);
+            $supplier = \Illuminate\Support\Facades\DB::table('t_Suppliers as s')
+                ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+                ->where('sm.ThirdPartyId', $thirdPartyId)
+                ->where('s.Active_Status', 1)
+                ->select('s.Id', 'sm.ThirdPartyId') 
+                ->first();
+
+            if (!$supplier) {
+                return response()->json(['error' => 'Supplier not found', 'tp_id' => $thirdPartyId], 404);
+            }
+
+            $submissions = \App\Models\Procurement\BidSubmission::where('SupplierId', $supplier->Id)
+                ->orderBy('CreatedOn', 'desc')
+                ->get();
+                
+            return response()->json(['data' => $submissions]);
+        });
+        
+         Route::get('bid-submissions/existing', function (\Illuminate\Http\Request $request) {
+            $thirdPartyId = $request->query('third_party_id', 1);
+            $tenderId = $request->query('tender_id');
+
+            if (!$tenderId) {
+                 return response()->json(['error' => 'tender_id required'], 400);
+            }
+            
+            // Resolve TenderRef
+            $tender = \Illuminate\Support\Facades\DB::table('t_Tenders')->where('Id', $tenderId)->first();
+             if (!$tender) {
+                 return response()->json(['error' => 'Tender not found'], 404);
+            }
+
+            $supplier = \Illuminate\Support\Facades\DB::table('t_Suppliers as s')
+                ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+                ->where('sm.ThirdPartyId', $thirdPartyId)
+                ->where('s.Active_Status', 1)
+                ->select('s.Id')
+                ->first();
+
+            if (!$supplier) {
+                return response()->json(['error' => 'Supplier not found'], 404);
+            }
+
+            $existingBid = \App\Models\Procurement\BidSubmission::where('TenderRef', $tender->TenderNo)
+                ->where('SupplierId', $supplier->Id)
+                ->first();
+
+            return response()->json([
+                'success' => true,
+                'data' => $existingBid,
+                'message' => $existingBid ? 'Bid found' : 'No bid found'
+            ]);
+        });
+        // Protected RFQ actions (submit, clarifying)
+        Route::post('rfq-responses', [SupplierRFQController::class, 'submitResponse']);
+        Route::post('rfq-clarifications', [SupplierRFQController::class, 'postClarification']);
+    });
 
 // DMS: Documents visible to authenticated user
 Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
@@ -295,15 +521,9 @@ Route::prefix('procurement')->name('api.procurement.')
     });
 
 
-// PROTECTED routes for prequalification (submitting applications) - AUTH REQUIRED
-Route::middleware(['web', 'auth:sanctum', \App\Http\Middleware\VerifiedUser::class])
-    ->prefix('prequalification')
-    ->name('api.prequalification.')
-    ->group(function () {
-        Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
-        Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
-        Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
-    });
+
+// NOTE: Prequalification routes are available at /api/procurement/prequalification/...
+// The routes below were removed because 'web' middleware causes HTML responses instead of JSON.
 
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // Admin and Public Routes for Prequalification Periods
@@ -320,6 +540,64 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     //     });
     // });
 });
+
+
+//test bid submissions 
+        Route::get('bid-submissions', function (\Illuminate\Http\Request $request) {
+            $thirdPartyId = $request->query('third_party_id', 1);
+            $supplier = \Illuminate\Support\Facades\DB::table('t_Suppliers as s')
+                ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+                ->where('sm.ThirdPartyId', $thirdPartyId)
+                ->where('s.Active_Status', 1)
+                ->select('s.Id', 'sm.ThirdPartyId') 
+                ->first();
+
+            if (!$supplier) {
+                return response()->json(['error' => 'Supplier not found', 'tp_id' => $thirdPartyId], 404);
+            }
+
+            $submissions = \App\Models\Procurement\BidSubmission::where('SupplierId', $supplier->Id)
+                ->orderBy('CreatedOn', 'desc')
+                ->get();
+                
+            return response()->json(['data' => $submissions]);
+        });
+        
+         Route::get('bid-submissions/existing', function (\Illuminate\Http\Request $request) {
+            $thirdPartyId = $request->query('third_party_id', 1);
+            $tenderId = $request->query('tender_id');
+
+            if (!$tenderId) {
+                 return response()->json(['error' => 'tender_id required'], 400);
+            }
+            
+            // Resolve TenderRef
+            $tender = \Illuminate\Support\Facades\DB::table('t_Tenders')->where('Id', $tenderId)->first();
+             if (!$tender) {
+                 return response()->json(['error' => 'Tender not found'], 404);
+            }
+
+            $supplier = \Illuminate\Support\Facades\DB::table('t_Suppliers as s')
+                ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+                ->where('sm.ThirdPartyId', $thirdPartyId)
+                ->where('s.Active_Status', 1)
+                ->select('s.Id')
+                ->first();
+
+            if (!$supplier) {
+                return response()->json(['error' => 'Supplier not found'], 404);
+            }
+
+            $existingBid = \App\Models\Procurement\BidSubmission::where('TenderRef', $tender->TenderNo)
+                ->where('SupplierId', $supplier->Id)
+                ->first();
+
+            return response()->json([
+                'success' => true,
+                'data' => $existingBid,
+                'message' => $existingBid ? 'Bid found' : 'No bid found'
+            ]);
+        });
 
 
 
