@@ -32,12 +32,34 @@ class BidSubmissionApiController extends Controller
         // Authorization check - TEMPORARILY DISABLED FOR PORTAL TESTING
         // $this->authorize(PermissionEnum::BidSubmissionWrite, BidSubmission::class);
 
+        // Get authenticated user via Sanctum
+        $user = Auth::guard('sanctum')->user();
+
+        // Extract ThirdPartyId from authenticated user
+        $thirdPartyId = null;
+        if ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
+            $thirdPartyId = $user->ThirdPartyId;
+        }
+
+        // Allow query param or body param as override (for debugging/admin)
+        if ($request->has('third_party_id')) {
+            $thirdPartyId = $request->input('third_party_id');
+        }
+
+        if (!$thirdPartyId && !$request->has('supplier_id')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to determine Third Party ID. Please ensure you are authenticated.',
+                'debug' => [
+                    'user_type' => $user ? get_class($user) : 'No user',
+                    'user_id' => $user ? $user->Id : null,
+                ]
+            ], 400);
+        }
+
         // Determine validation rules based on status
         $status = $request->input('status', 'draft');
         $isDraft = ($status === 'draft');
-
-        // Accept both Portal format (third_party_id) and direct format (supplier_id)
-        $supplierId = $request->input('supplier_id') ?? $request->input('third_party_id');
 
         $rules = [
             'tender_id' => 'required|exists:t_Tenders,Id',
@@ -49,16 +71,10 @@ class BidSubmissionApiController extends Controller
             'payment_terms' => 'nullable|string|max:1000',
         ];
 
-        // Add supplier validation based on what was provided
+        // If supplier_id is provided directly, validate it
+        // Otherwise, we'll use the thirdPartyId we extracted
         if ($request->has('supplier_id')) {
-            $rules['supplier_id'] = 'required|exists:t_Suppliers,Id';
-        } elseif ($request->has('third_party_id')) {
-            $rules['third_party_id'] = 'required|exists:t_ThirdParties,Id';
-        } else {
-            return response()->json([
-                'success' => false,
-                'message' => 'Either supplier_id or third_party_id is required',
-            ], 400);
+            $rules['supplier_id'] = 'sometimes|exists:t_Suppliers,Id';
         }
 
         // File validation - stricter for final submissions
@@ -78,20 +94,22 @@ class BidSubmissionApiController extends Controller
         // Get tender and validate business rules
         $tender = Tender::findOrFail($validated['tender_id']);
 
-        // Handle both supplier_id and third_party_id formats
+        // Resolve supplier from supplier_id or thirdPartyId
+        $actualSupplierId = null;
+        $supplier = null;
+
         if (isset($validated['supplier_id'])) {
+            // Direct supplier_id provided
             $supplier = Supplier::findOrFail($validated['supplier_id']);
             $actualSupplierId = $validated['supplier_id'];
         } else {
-            // Convert third_party_id to supplier_id
-            $supplier = Supplier::whereHas('supplierMaster', function ($query) use ($validated) {
-                $query->where('ThirdPartyId', $validated['third_party_id']);
-            })->first();
+            // Use thirdPartyId from authenticated user
+            $supplier = $this->getSupplierByThirdPartyId($thirdPartyId);
 
             if (!$supplier) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No supplier found for the provided third_party_id',
+                    'message' => 'No supplier found for your account. Please contact support.',
                 ], 404);
             }
             $actualSupplierId = $supplier->Id;
@@ -505,9 +523,34 @@ class BidSubmissionApiController extends Controller
     public function getExistingBid(Request $request)
     {
         try {
+            // Get authenticated user via Sanctum
+            $user = Auth::guard('sanctum')->user();
+
+            // Extract ThirdPartyId from authenticated user
+            $thirdPartyId = null;
+            if ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
+                $thirdPartyId = $user->ThirdPartyId;
+            }
+
+            // Allow query param as override (for debugging/admin)
+            if ($request->has('third_party_id')) {
+                $thirdPartyId = $request->query('third_party_id');
+            }
+
+            if (!$thirdPartyId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unable to determine Third Party ID. Please ensure you are authenticated.',
+                    'debug' => [
+                        'user_type' => $user ? get_class($user) : 'No user',
+                        'user_id' => $user ? $user->Id : null,
+                    ]
+                ], 400);
+            }
+
+            // Validate tender_id is provided
             $validator = Validator::make($request->all(), [
                 'tender_id' => 'required|exists:t_Tenders,Id',
-                'third_party_id' => 'required|exists:t_ThirdParties,Id',
             ]);
 
             if ($validator->fails()) {
@@ -519,12 +562,12 @@ class BidSubmissionApiController extends Controller
 
             // Get tender and supplier
             $tender = Tender::findOrFail($request->tender_id);
-            $supplier = $this->getSupplierByThirdPartyId($request->third_party_id);
+            $supplier = $this->getSupplierByThirdPartyId($thirdPartyId);
 
             if (!$supplier) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Supplier not found',
+                    'message' => 'Supplier not found for your account',
                 ], 404);
             }
 
@@ -583,23 +626,37 @@ class BidSubmissionApiController extends Controller
     public function getSupplierBids(Request $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
-                'third_party_id' => 'required|integer|exists:t_ThirdParties,Id',
-            ]);
+            // Get authenticated user via Sanctum
+            $user = Auth::guard('sanctum')->user();
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => $validator->errors(),
-                ], 422);
+            // Extract ThirdPartyId from authenticated user
+            $thirdPartyId = null;
+            if ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
+                $thirdPartyId = $user->ThirdPartyId;
             }
 
-            $supplier = $this->getSupplierByThirdPartyId($request->third_party_id);
+            // Allow query param as override (for debugging/admin)
+            if ($request->has('third_party_id')) {
+                $thirdPartyId = $request->query('third_party_id');
+            }
+
+            if (!$thirdPartyId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unable to determine Third Party ID. Please ensure you are authenticated.',
+                    'debug' => [
+                        'user_type' => $user ? get_class($user) : 'No user',
+                        'user_id' => $user ? $user->Id : null,
+                    ]
+                ], 400);
+            }
+
+            $supplier = $this->getSupplierByThirdPartyId($thirdPartyId);
 
             if (!$supplier) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Supplier not found',
+                    'message' => 'Supplier not found for your account',
                 ], 404);
             }
 

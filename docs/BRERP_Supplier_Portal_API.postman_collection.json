@@ -1,0 +1,629 @@
+{
+  "info": {
+    "name": "BRERP Supplier Portal API",
+    "_postman_id": "brerp-supplier-portal-2026",
+    "description": "Complete API collection for BRERP Supplier Portal - RFQs, Tenders, and Prequalification",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.environment.set(\"auth_token\", jsonData.token);",
+                  "    console.log(\"Token saved:\", jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"joseph.njoroge@craftsilicon.com\",\n  \"password\": \"your_password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/third-party-auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["third-party-auth", "login"]
+            },
+            "description": "Login to get authentication token"
+          },
+          "response": []
+        },
+        {
+          "name": "Validate Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/validate-token",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "validate-token"]
+            },
+            "description": "Validate the authentication token"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "RFQ Management",
+      "item": [
+        {
+          "name": "List RFQ Invitations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/procurement/rfq-suppliers",
+              "host": ["{{base_url}}"],
+              "path": ["procurement", "rfq-suppliers"]
+            },
+            "description": "Get all RFQ invitations for authenticated supplier"
+          },
+          "response": []
+        },
+        {
+          "name": "Get RFQ Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/procurement/rfq-suppliers/{{rfq_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["procurement", "rfq-suppliers", "{{rfq_id}}"]
+            },
+            "description": "Get detailed RFQ information including lines and existing response"
+          },
+          "response": []
+        },
+        {
+          "name": "Submit RFQ Response",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rfqId\": 20,\n  \"currency\": \"KES\",\n  \"durationDays\": 14,\n  \"leadTimeDays\": 7,\n  \"items\": [\n    {\n      \"rfqLineId\": 45,\n      \"quotedPrice\": 85000.00,\n      \"totalPayable\": 850000.00,\n      \"comments\": \"Brand new, with warranty\"\n    }\n  ],\n  \"isDraft\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/procurement/rfq-responses",
+              "host": ["{{base_url}}"],
+              "path": ["procurement", "rfq-responses"]
+            },
+            "description": "Submit RFQ response with pricing for all line items"
+          },
+          "response": []
+        },
+        {
+          "name": "List RFQ Clarifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/procurement/rfq-clarifications/{{rfq_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["procurement", "rfq-clarifications", "{{rfq_id}}"]
+            },
+            "description": "Get all clarifications for a specific RFQ"
+          },
+          "response": []
+        },
+        {
+          "name": "Post RFQ Clarification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rfqId\": 20,\n  \"question\": \"Can we substitute with an equivalent brand?\",\n  \"rfqLineId\": 45\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/procurement/rfq-clarifications",
+              "host": ["{{base_url}}"],
+              "path": ["procurement", "rfq-clarifications"]
+            },
+            "description": "Submit a clarification question for an RFQ"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Tender Management",
+      "item": [
+        {
+          "name": "List Tenders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tenders?status=Published",
+              "host": ["{{base_url}}"],
+              "path": ["tenders"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Published"
+                }
+              ]
+            },
+            "description": "Get list of all tenders (optionally filtered by status)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tender Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tenders/{{tender_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tenders", "{{tender_id}}"]
+            },
+            "description": "Get detailed information about a specific tender"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tender Invitations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tender-invitations",
+              "host": ["{{base_url}}"],
+              "path": ["tender-invitations"]
+            },
+            "description": "Get all tender invitations for authenticated supplier"
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Bid",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenderId\": 15,\n  \"supplierId\": 5,\n  \"bidAmount\": 1500000.00,\n  \"currency\": \"KES\",\n  \"validityPeriod\": 90,\n  \"deliveryPeriod\": 30,\n  \"comments\": \"We can deliver within the specified timeline\",\n  \"documents\": [\n    {\n      \"documentType\": \"Technical Proposal\",\n      \"documentPath\": \"/uploads/technical-proposal.pdf\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/bid-submissions",
+              "host": ["{{base_url}}"],
+              "path": ["bid-submissions"]
+            },
+            "description": "Submit a bid for a tender"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Bids",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bid-submissions",
+              "host": ["{{base_url}}"],
+              "path": ["bid-submissions"]
+            },
+            "description": "Get all bid submissions by authenticated supplier"
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Tender Clarification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenderId\": 15,\n  \"subject\": \"Delivery Location Clarification\",\n  \"message\": \"Could you please clarify the exact delivery location?\",\n  \"supplierId\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tender-clarifications",
+              "host": ["{{base_url}}"],
+              "path": ["tender-clarifications"]
+            },
+            "description": "Submit a clarification question for a tender"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tender Clarifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tender-clarifications?tenderId={{tender_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tender-clarifications"],
+              "query": [
+                {
+                  "key": "tenderId",
+                  "value": "{{tender_id}}"
+                }
+              ]
+            },
+            "description": "Get clarifications for a specific tender"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Prequalification",
+      "item": [
+        {
+          "name": "List Prequalification Rounds",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/procurement/prequalification/rounds",
+              "host": ["{{base_url}}"],
+              "path": ["procurement", "prequalification", "rounds"]
+            },
+            "description": "Get all available prequalification rounds"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Prequalification Round Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/procurement/prequalification/rounds/{{round_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["procurement", "prequalification", "rounds", "{{round_id}}"]
+            },
+            "description": "Get detailed information about a prequalification round"
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Prequalification Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roundId\": 5,\n  \"categoryId\": 1,\n  \"thirdPartyId\": 1,\n  \"companyName\": \"TechSolutions Kenya\",\n  \"registrationNumber\": \"PVT-123456\",\n  \"taxPin\": \"A001234567P\",\n  \"physicalAddress\": \"Nairobi, Kenya\",\n  \"contactPerson\": \"John Doe\",\n  \"contactEmail\": \"john@techsolutions.co.ke\",\n  \"contactPhone\": \"+254712345678\",\n  \"documents\": [\n    {\n      \"requirementId\": 10,\n      \"documentType\": \"Business Registration Certificate\",\n      \"documentPath\": \"/uploads/registration-cert.pdf\",\n      \"documentName\": \"Business Registration.pdf\"\n    }\n  ],\n  \"declaration\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/procurement/prequalification/applications",
+              "host": ["{{base_url}}"],
+              "path": ["procurement", "prequalification", "applications"]
+            },
+            "description": "Submit a prequalification application"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Applications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/prequalification/applications/my-applications",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "prequalification", "applications", "my-applications"]
+            },
+            "description": "Get all prequalification applications by authenticated supplier"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Application Progress",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/prequalification/applications/{{round_id}}/progress",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "prequalification", "applications", "{{round_id}}", "progress"]
+            },
+            "description": "Get progress of prequalification application"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Utilities",
+      "item": [
+        {
+          "name": "Get Currencies",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/currencies",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "currencies"]
+            },
+            "description": "Get list of all supported currencies"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Countries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/countries",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "countries"]
+            },
+            "description": "Get list of all countries"
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Check API health status"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "rfq_id",
+      "value": "20",
+      "type": "string"
+    },
+    {
+      "key": "tender_id",
+      "value": "15",
+      "type": "string"
+    },
+    {
+      "key": "round_id",
+      "value": "5",
+      "type": "string"
+    }
+  ]
+}
