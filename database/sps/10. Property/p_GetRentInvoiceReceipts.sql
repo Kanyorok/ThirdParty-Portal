@@ -1,3 +1,9 @@
+-- ========================================
+-- Author:		<Perez Kariuki>
+-- Create date: <19/01/2026>
+-- Description:	Retrieves rent invoice receipts based on receipt status
+-- ========================================
+
 CREATE OR ALTER PROCEDURE p_GetRentInvoiceReceipts
     @ReceiptStatus VARCHAR(20)
 AS
@@ -12,7 +18,7 @@ BEGIN
         FinInv.ModuleID,
         FinInv.CurrencyID,
         FinInv.CustomerID,
-        FinInv.InvoiceAmount,
+        FinInv.TotalAmount,
         FinRec.AmountReceived
     FROM t_RentInvoice AS ProInv
     LEFT JOIN t_FinanceInvoices AS FinInv
