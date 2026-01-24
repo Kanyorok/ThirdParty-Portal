@@ -26,14 +26,18 @@ class StockTakeController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::StockTakeView, StockTake::class);
-        $stocks = StockTake::with('branch', 'store', 'createdby', 'countedby')->get();
+        $branchId = session('LoginBranchId');
+        $stocks = StockTake::with('branch', 'store', 'createdby', 'countedby')
+            ->where('BranchId', $branchId)
+            ->get();
         return view('inventory.stockmanagement.stocktake.index', compact('stocks'));
     }
 
     public function create()
     {
         $this->authorize(PermissionEnum::StockTakeCreate, StockTake::class);
-        $branches = Branch::all();
+        $branchId = session('LoginBranchId');
+        $branches = Branch::where('Id', $branchId)->get();
         $users = User::all();
         $stocks = collect();
         return view('inventory.stockmanagement.stocktake.create', compact('branches', 'stocks', 'users'));
@@ -83,7 +87,10 @@ class StockTakeController extends Controller
     public function show($id)
     {
          $this->authorize(PermissionEnum::StockTakeView, StockTake::class);
-        $stock = StockTake::with(['branch', 'store', 'lines.item.item'])->findOrFail($id);
+        $branchId = session('LoginBranchId');
+        $stock = StockTake::with(['branch', 'store', 'lines.item.item'])
+            ->where('BranchId', $branchId)
+            ->findOrFail($id);
         return view('inventory.stockmanagement.stocktake.show', compact('stock'));
     }
 
@@ -91,9 +98,12 @@ class StockTakeController extends Controller
     public function edit($id)
     {
         $this->authorize(PermissionEnum::StockTakeUpdate, StockTake::class);
-        $stock = StockTake::with('branch', 'store')->findOrFail($id);
-        $branches = Branch::all();
-        $stores = Store::all();
+        $branchId = session('LoginBranchId');
+        $stock = StockTake::with('branch', 'store')
+            ->where('BranchId', $branchId)
+            ->findOrFail($id);
+        $branches = Branch::where('Id', $branchId)->get();
+        $stores = Store::where('BranchID', $branchId)->get();
         $users = User::all();
 
         return view('inventory.stockmanagement.stocktake.edit', compact('stock', 'branches', 'stores', 'users'));
@@ -170,7 +180,8 @@ public function update(Request $request, $id)
         //Check if user has permission to delete property categories
         //$this->authorize(PermissionEnum::PropertyTypeDelete , PropertyType::class);
         try {
-            $stock = StockTake::findOrFail($id);
+            $branchId = session('LoginBranchId');
+            $stock = StockTake::where('BranchId', $branchId)->findOrFail($id);
             $stock->delete();
 
             return redirect()->route('stocktake.index')
