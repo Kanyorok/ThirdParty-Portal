@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Core\Branch;
 use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\StockGRNLedger;
 
 
 class GoodsReceipt extends Model
@@ -78,6 +79,11 @@ class GoodsReceipt extends Model
     {
         return $this->hasOne(\App\Models\Inventory\TransactionTransfer::class, 'RequisitionId', 'id')
             ->where('RequisitionType', 'procurement');
+    }
+
+    public function stockLedger()
+    {
+        return $this->hasOne(StockGRNLedger::class, 'GoodsReceiptId');
     }
 
 

@@ -175,6 +175,11 @@ Route::post('itemmasterlist/import', [ItemMasterListController::class, 'import']
     Route::get('/transactionstransfers/requisitions/by-type/{type}', [TransactionTransfersController::class, 'getRequisitionsByType'])->name('requisitions.by-type');
     Route::get('/transactionstransfers/requisitions/details/{id}', [TransactionTransfersController::class, 'getRequisitionDetails'])
         ->name('requisitions.details');
+    Route::get('/transaction-transfers/grn-batches', [TransactionTransfersController::class, 'getGRNBatches'])
+        ->name('transaction-transfers.grn-batches');
+
+        
+        
 
 
     //Route::resource('transactionsreceipts', TransactionReceiptsController::class);
@@ -185,7 +190,8 @@ Route::post('itemmasterlist/import', [ItemMasterListController::class, 'import']
     Route::get('/transactionsreceipts/{Id}/edit', [TransactionReceiptsController::class, 'edit'])->name('transactionsreceipts.edit');
     Route::put('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'update'])->name('transactionsreceipts.update');
     Route::delete('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'destroy'])->name('transactionsreceipts.destroy');
-    Route::get('/transactionsreceipts/transfer-items/{Id}', [TransactionReceiptsController::class, 'getTransferItems']);
+    Route::get('/transactionsreceipts/transfer-items/{Id}', [TransactionReceiptsController::class, 'getTransferItems'])->name('transactionsreceipts.get-transfer-items');
+    
 
     Route::resource('stockissue', StockIssueController::class);
 

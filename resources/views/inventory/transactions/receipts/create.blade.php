@@ -1,257 +1,423 @@
 @extends('layouts.app')
 
-@section('title', 'Create Receipt')
-
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+@section('title', 'Create Transfer Receipt')
 
 @section('content')
-    <div class="card mb-4">
-        <div class="card-header bg-success text-white">📥 Post Goods Receipt</div>
-        <div class="card-body">
-            <form method="POST" action="{{ route('transactionsreceipts.store') }}" id="transferForm">
-                @csrf
-                @if(session('success'))
-                    <div class="alert alert-success">{{ session('success') }}</div>
-                @endif
-                @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <ul>
-                            @foreach($errors->all() as $error)
-                                <li>{!! $error !!}</li>
-                            @endforeach
-                        </ul>
-
-                    </div>
-                @endif
-
-
-
-          <div class="row mb-3">
-                <div class="col">
-                    <label class="form-label">Transfer Ref <span class="text-danger">*</span></label>
-                    <select id="transferId" name="TransferID" class="form-select" required>
-                        <option value="">Select Transfer</option>
-                        @foreach($transfers as $transfer)
-                            <option value="{{ $transfer->Id }}" {{ old('TransferID') == $transfer->Id ? 'selected' : '' }}>
-                                {{ $transfer->TransferID }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('TransferID')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="col">
-                    <label class="form-label">Received By <span class="text-danger">*</span></label>
-                    {{-- Hidden field for form submission --}}
-                    <input type="hidden" name="ReceivedBy" value="{{ $currentUser->Id ?? auth()->id() }}">
-                    {{-- Display-only field for user visibility --}}
-                    <input type="text" class="form-control" value="{{ $currentUser->Name ?? auth()->user()->Name }}" readonly>
-                    <small class="text-muted">Current user</small>
-                    @error('ReceivedBy')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="col">
-                    <label class="form-label">Receive Date <span class="text-danger">*</span></label>
-                    {{-- Hidden field for form submission with proper format --}}
-                    <input type="hidden" id="receivedDateHidden" name="ReceivedDate" value="{{ now()->format('Y-m-d') }}">
-                    {{-- Display-only field for user visibility --}}
-                    <input type="text" class="form-control" value="{{ now()->format('m/d/Y') }}" readonly>
-                    <small class="text-muted">Current date (non-editable)</small>
-                    @error('ReceivedDate')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
+<div class="container bg-white shadow rounded p-4">
+    <h4 class="mb-4"> Transfer Receipt</h4>
+    <div class="p-3 mb-4 rounded" style="background: linear-gradient(90deg,#e8f6ff,#f0f9ff); border: 1px solid #d0eaf8;">
+        <div class="d-flex align-items-start">
+            <i class="fas fa-info-circle me-2 fs-4 text-primary"></i>
+            <div>
+                <div><i>Ensure you have an active main store set for your branch, All items will be received into your branch's main store.</i></div>
             </div>
+        </div>
+    </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Items Received</label>
+    <div class="card">
+        <div class="card-header bg-light">
+            <h6 class="mb-0">Select Transfer to Receive</h6>
+        </div>
+        <div class="card-body">
+            @if(count($transfers) > 0)
+                <div class="table-responsive">
                     <table class="table table-bordered">
                         <thead>
-            <tr>
-                <th>Product</th>
-                <th>UOM</th>
-                <th>Unit Cost</th>
-                <th>Dispatched Qty</th>
-                <th>Qty Received <span class="text-danger">*</span></th>
-                <th>Discrepancy</th>
-                <th>Qty Damaged</th>
-                <th>Store <span class="text-danger">*</span></th>
-              <th>Remarks</th>
-            </tr>
-          </thead>
-                        <tbody id="itemsTableBody">
-                        @if(old('items'))
-                            @foreach(old('items') as $index => $item)
+                            <tr>
+                                <th>Transfer ID</th>
+                                <th>Transfer Date</th>
+                                <th>From Branch</th>
+                                <th>Items Count</th>
+                                <th>GRN Allocations</th>
+                                <th>Select</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($transfers as $transfer)
+                                @php
+                                    $hasAllocations = false;
+                                    foreach ($transfer->items as $item) {
+                                        if (!empty($item->BatchAllocation)) {
+                                            $hasAllocations = true;
+                                            break;
+                                        }
+                                    }
+                                @endphp
                                 <tr>
+                                    <td>{{ $transfer->TransferID }}</td>
+                                    <td>{{ $transfer->TransferDate}}</td>
+                                    <td>{{ $transfer->fromBranch->Name ?? 'N/A' }}</td>
+                                    <td>{{ $transfer->items->count() }}</td>
                                     <td>
-                                        {{ $item['item_name'] ?? 'Item' }} {{-- Optional: pass ItemName from controller to old input --}}
-                                        <input type="hidden" name="items[{{ $index }}][item]"
-                                               value="{{ $item['item'] }}">
-                                    </td>
-
-                                    <td>
-                                        <input type="number" name="items[{{ $index }}][uom]"
-                                               class="form-control uom"
-                                               value="{{ $item['uom'] ?? '' }}" readonly>
-                                    </td>
-
-                                    <td>
-                                        <input type="number" name="items[{{ $index }}][unit_cost]"
-                                               class="form-control unit-cost"
-                                               value="{{ $item['unit_cost'] ?? 0 }}" readonly>
-                                    </td>
-
-                                    <td>
-                                        <input type="number" name="items[{{ $index }}][dispatched_qty]"
-                                               class="form-control dispatched-qty"
-                                               value="{{ $item['dispatched_qty'] ?? 0 }}" readonly>
+                                        @if($hasAllocations)
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check"></i> Specific GRN Allocations
+                                            </span>
+                                        @else
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-sort-amount-down"></i> FIFO Allocation
+                                            </span>
+                                        @endif
                                     </td>
                                     <td>
-                                        <input type="number" name="items[{{ $index }}][received_qty]"
-                                               class="form-control received-qty"
-                                               value="{{ $item['received_qty'] ?? 0 }}" required>
-                                    </td>
-                                    <td>
-                                        <input type="number" name="items[{{ $index }}][discrepancy]"
-                                               class="form-control discrepancy"
-                                               value="{{ $item['discrepancy'] ?? 0 }}" readonly>
-                                    </td>
-                                    <td>
-                                        <input type="number" name="items[{{ $index }}][damaged_qty]"
-                                               class="form-control"
-                                               value="{{ $item['damaged_qty'] ?? 0 }}">
-                                    </td>
-                                    <td>
-                                        <select name="items[{{ $index }}][store_id]" class="form-select" required>
-                                            <option value="">-- Select Store --</option>
-                                            @if(isset($item['store_options']))
-                                                @foreach($item['store_options'] as $store)
-                                                    <option
-                                                        value="{{ $store['Id'] }}" {{ (string)($item['store_id'] ?? '') === (string)$store['Id'] ? 'selected' : '' }}>
-                                                        {{ $store['StoreName'] }}
-                                                    </option>
-                                                @endforeach
-                                            @endif
-                                        </select>
-                                    </td>
-
-                                    <td>
-                                        <input type="text" name="items[{{ $index }}][remarks]" class="form-control"
-                                               value="{{ $item['remarks'] ?? '' }}">
+                                        <button type="button" class="btn btn-sm btn-primary" 
+                                                onclick="selectTransfer({{ $transfer->Id }})">
+                                            Select
+                                        </button>
                                     </td>
                                 </tr>
                             @endforeach
-                        @endif
                         </tbody>
-
                     </table>
-      </div>
-
-      <div class="mb-3">
-          <label class="form-label">General Remarks</label>
-          <textarea name="GeneralRemarks" class="form-control">{{ old('GeneralRemarks') }}</textarea>
-      </div>
-
-                <button type="submit" class="btn btn-success"
-                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Post Receipt
-                </button>
-
-            </form>
-  </div>
+                </div>
+            @else
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No transfers available for receipt at your branch.
+                </div>
+            @endif
+        </div>
     </div>
 
-    <script>
-    document.getElementById('transferId').addEventListener('change', function () {
-        const transferId = this.value;
-        if (!transferId) return;
+    {{-- Receipt Form (hidden by default) --}}
+    <div id="receiptFormContainer" class="mt-4" style="display: none;">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">Receipt Details</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ route('transactionsreceipts.store') }}" id="receiptForm">
+                    @csrf
+                    
+                    <input type="hidden" name="TransferID" id="transferId">
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="ReceivedDate" class="form-label">Receipt Date <span class="text-danger">*</span></label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="ReceivedDate" 
+                                   name="ReceivedDate" 
+                                   value="{{ \Carbon\Carbon::today()->format('Y-m-d') }}"
+                                   required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="ReceivedBy" class="form-label">Received By <span class="text-danger">*</span></label>
+                            <input type="hidden" name="ReceivedBy" id="ReceivedBy" 
+                                   value="{{ $currentUser->Id ?? auth()->id() }}">
+                            <input type="text" class="form-control" 
+                                   value="{{ $currentUser->Name ?? auth()->user()->Name }}" 
+                                   readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="GeneralRemarks" class="form-label">General Remarks</label>
+                            <input type="text" class="form-control" 
+                                   id="GeneralRemarks" 
+                                   name="GeneralRemarks" 
+                                   placeholder="Optional remarks">
+                        </div>
+                    </div>
 
-        fetch(`/inventory/transactionsreceipts/transfer-items/${transferId}`)
+                    {{-- Store Information --}}
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-store me-2"></i>
+                        <strong>Store Information:</strong> All items will be received into your branch's main store: 
+                        <span id="storeInfo" class="fw-bold"></span>
+                    </div>
+
+                    {{-- Items Section --}}
+                    <div id="itemsSection" class="mb-4">
+                        <h5>Transfer Items</h5>
+                        <div id="allocationInfo" class="alert alert-info mb-3" style="display: none;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <span id="allocationInfoText"></span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="itemsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Item Name</th>
+                                        <th>Dispatched Qty</th>
+                                        <th>Store</th>
+                                        <th>Received Qty <span class="text-danger">*</span></th>
+                                        <th>Damaged Qty</th>
+                                        <th>GRN Allocations</th>
+                                        <th>Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check-circle me-1"></i> Submit Receipt
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelReceipt()">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- GRN Allocation Details Modal --}}
+<div class="modal fade" id="allocationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">GRN Batch Allocations</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <strong>Item:</strong> <span id="modalItemName"></span><br>
+                    <strong>Dispatched Quantity:</strong> <span id="modalDispatchedQty"></span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>GRN ID</th>
+                                <th>Unit Price</th>
+                                <th>Allocated Quantity</th>
+                                <th>Total Value</th>
+                                <th>Age (Days)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allocationBody"></tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="2" class="text-end"><strong>Total:</strong></td>
+                                <td><strong id="totalAllocatedQty">0</strong></td>
+                                <td><strong id="totalAllocatedValue">0.00</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    let selectedTransferId = null;
+    let transferItems = [];
+    let mainStore = null;
+
+    function selectTransfer(transferId) {
+        selectedTransferId = transferId;
+        
+        // Show loading
+        $('#itemsBody').html('<tr><td colspan="7" class="text-center"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading transfer details...</td></tr>');
+        
+        // Fetch transfer items
+        fetch("{{ route('transactionsreceipts.get-transfer-items', '') }}/" + transferId)
             .then(response => response.json())
             .then(data => {
-                const tableBody = document.getElementById('itemsTableBody');
-                tableBody.innerHTML = "";
-
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                transferItems = data.items;
+                mainStore = data.main_store;
+                
+                $('#transferId').val(transferId);
+                
+                // Update store info
+                if (mainStore) {
+                    $('#storeInfo').text(mainStore.StoreName);
+                }
+                
+                // Populate items table
+                $('#itemsBody').empty();
+                
+                let hasSpecificAllocations = false;
+                let fifoAllocations = false;
+                
                 data.items.forEach((item, index) => {
-                    const dispatchedQty = item.DispatchedQty ?? 0;
-                    const stores = item.stores ?? [];
-
-                    const row = `
+                    const hasAllocations = item.batch_allocation && item.batch_allocation.length > 0;
+                    if (hasAllocations) {
+                        hasSpecificAllocations = true;
+                    } else if (item.allocation_type === 'fifo') {
+                        fifoAllocations = true;
+                    }
+                    
+                    // Get store name
+                    const storeName = item.main_store ? item.main_store.StoreName : 'Main Store';
+                    const storeId = item.main_store ? item.main_store.Id : '';
+                    
+                    $('#itemsBody').append(`
                         <tr>
                             <td>
-                                ${item.item?.ItemName ?? 'N/A'}
-                                <input type="hidden" name="items[${index}][item]" value="${item.Item ?? item.item?.Id ?? ''}">
+                                ${item.item.ItemName}
+                                <input type="hidden" name="items[${index}][item]" value="${item.Item}">
+                                <input type="hidden" name="items[${index}][uom]" value="${item.UOM}">
+                                <input type="hidden" name="items[${index}][unit_cost]" value="${item.UnitCost}">
+                                <input type="hidden" name="items[${index}][dispatched_qty]" value="${item.DispatchedQty}">
+                                <input type="hidden" name="items[${index}][store_id]" value="${storeId}">
                             </td>
-
+                            <td>${item.DispatchedQty}</td>
                             <td>
-                                <input type="text" class="form-control" value="${item.UOMCode ?? ''}" readonly>
-                                <input type="hidden" name="items[${index}][uom]" value="${item.UOM ?? ''}">
+                                <input type="text" 
+                                       class="form-control" 
+                                       value="${storeName}" 
+                                       readonly>
                             </td>
-
                             <td>
-                                <input type="number" class="form-control" name="items[${index}][unit_cost]" value="${item.UnitCost ?? 0}" readonly>
-                                <input type="hidden" name="items[${index}][price_id]" value="${item.PriceID ?? 0}">
+                                <input type="number" 
+                                       class="form-control received-qty" 
+                                       name="items[${index}][received_qty]"
+                                       value="${item.DispatchedQty}"
+                                       min="0" 
+                                       max="${item.DispatchedQty}"
+                                       required
+                                       data-index="${index}">
                             </td>
-
                             <td>
-                                <input type="number" name="items[${index}][dispatched_qty]" class="form-control dispatched-qty" value="${dispatchedQty}" readonly>
+                                <input type="number" 
+                                       class="form-control damaged-qty" 
+                                       name="items[${index}][damaged_qty]"
+                                       value="0"
+                                       min="0"
+                                       data-index="${index}">
                             </td>
-
                             <td>
-                                <input type="number" name="items[${index}][received_qty]" class="form-control received-qty" min="0" value="${dispatchedQty}" required>
+                                ${hasAllocations ? 
+                                    `<button type="button" class="btn btn-sm btn-info" onclick="showAllocations(${index})">
+                                        <i class="fas fa-layer-group"></i> View Allocations
+                                    </button>` :
+                                    `<span class="text-muted">FIFO Allocation</span>`
+                                }
                             </td>
-
                             <td>
-                                <input type="number" name="items[${index}][discrepancy]" class="form-control discrepancy" value="0" readonly>
-                            </td>
-
-                            <td>
-                                <input type="number" name="items[${index}][damaged_qty]" class="form-control" min="0" value="0">
-                            </td>
-
-                            <td>
-                                <select name="items[${index}][store_id]" class="form-select" required>
-                                    <option value="">-- Select Store --</option>
-                                    ${stores.map(store => `<option value="${store.Id}">${store.StoreName}</option>`).join('')}
-                                </select>
-                            </td>
-
-                            <td>
-                                <input type="text" name="items[${index}][remarks]" class="form-control">
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="items[${index}][remarks]"
+                                       placeholder="Item remarks">
                             </td>
                         </tr>
-                    `;
-                    tableBody.innerHTML += row;
+                    `);
                 });
+                
+                // Update allocation info
+                let infoText = '';
+                if (hasSpecificAllocations) {
+                    infoText = 'This transfer has specific GRN batch allocations. Costs will be tracked per batch.';
+                } else if (fifoAllocations) {
+                    infoText = 'This transfer will use FIFO (First-In-First-Out) allocation from source.';
+                } else {
+                    infoText = 'This transfer has no specific allocations and will use default costing.';
+                }
+                
+                $('#allocationInfoText').text(infoText);
+                $('#allocationInfo').show();
+                
+                // Show receipt form
+                $('#receiptFormContainer').show();
+                $('html, body').animate({
+                    scrollTop: $('#receiptFormContainer').offset().top
+                }, 500);
             })
             .catch(error => {
-                console.error("Error fetching transfer data:", error);
+                console.error('Error:', error);
+                alert('Failed to load transfer details.');
             });
-    });
+    }
 
-    // Recalculate discrepancy when quantity is changed
-    document.addEventListener('input', function (event) {
-        if (event.target.classList.contains('received-qty')) {
-            const row = event.target.closest('tr');
-            const dispatchedInput = row.querySelector('.dispatched-qty');
-            const discrepancyInput = row.querySelector('.discrepancy');
+    function showAllocations(index) {
+        const item = transferItems[index];
+        const allocations = item.batch_allocation || [];
+        
+        $('#modalItemName').text(item.item.ItemName);
+        $('#modalDispatchedQty').text(item.DispatchedQty);
+        
+        $('#allocationBody').empty();
+        
+        let totalQty = 0;
+        let totalValue = 0;
+        
+        allocations.forEach(allocation => {
+            const value = allocation.unit_price * allocation.quantity;
+            totalQty += allocation.quantity;
+            totalValue += value;
+            
+            const ageDays = allocation.age_days || 'N/A';
+            
+            $('#allocationBody').append(`
+                <tr>
+                    <td>${allocation.grn_id}</td>
+                    <td>${allocation.unit_price.toFixed(2)}</td>
+                    <td>${allocation.quantity}</td>
+                    <td>${value.toFixed(2)}</td>
+                    <td>${ageDays}</td>
+                </tr>
+            `);
+        });
+        
+        $('#totalAllocatedQty').text(totalQty);
+        $('#totalAllocatedValue').text(totalValue.toFixed(2));
+        
+        new bootstrap.Modal('#allocationModal').show();
+    }
 
-            const dispatched = parseFloat(dispatchedInput.value) || 0;
-            const received = parseFloat(event.target.value) || 0;
-            const discrepancy = dispatched - received;
+    function cancelReceipt() {
+        selectedTransferId = null;
+        transferItems = [];
+        mainStore = null;
+        $('#receiptFormContainer').hide();
+        $('#allocationInfo').hide();
+        $('#storeInfo').text('');
+    }
 
-            discrepancyInput.value = discrepancy;
+    // Validate received and damaged quantities
+    $(document).on('input', '.received-qty, .damaged-qty', function() {
+        const index = $(this).data('index');
+        const receivedQty = parseFloat($(this).closest('tr').find('.received-qty').val()) || 0;
+        const damagedQty = parseFloat($(this).closest('tr').find('.damaged-qty').val()) || 0;
+        const dispatchedQty = parseFloat(transferItems[index]?.DispatchedQty) || 0;
+        
+        if (receivedQty + damagedQty > dispatchedQty) {
+            alert(`Total received + damaged quantity cannot exceed dispatched quantity (${dispatchedQty})`);
+            $(this).val(0);
         }
     });
 
-    document.addEventListener('DOMContentLoaded', function () {
-        $('.select2').select2({
-            placeholder: 'Select user',
-            allowClear: true
+    // Form submission
+    $('#receiptForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Validate all items
+        let isValid = true;
+        $('.received-qty').each(function() {
+            const index = $(this).data('index');
+            const receivedQty = parseFloat($(this).val()) || 0;
+            const dispatchedQty = parseFloat(transferItems[index]?.DispatchedQty) || 0;
+            
+            if (receivedQty > dispatchedQty) {
+                alert(`Received quantity cannot exceed dispatched quantity`);
+                isValid = false;
+                return false;
+            }
         });
+        
+        if (!isValid) return;
+        
+        // Show loading
+        $(this).find('button[type="submit"]').html('<i class="fas fa-spinner fa-spin me-1"></i> Processing...').prop('disabled', true);
+        
+        // Submit form
+        this.submit();
     });
 </script>
-@endsection
+@endpush
