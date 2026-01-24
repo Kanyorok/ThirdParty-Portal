@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         id: r.rfqId ?? r.Id ?? r.id,
         title: r.number || `RFQ ${r.rfqId ?? ''}`,
         description: r.comments || '',
-        href: `/dashboard/rfqs/${encodeURIComponent(r.rfqId ?? r.Id ?? r.id ?? '')}`,
+        href: `/dashboard/supplier/rfqs/${encodeURIComponent(r.rfqId ?? r.Id ?? r.id ?? '')}`,
         meta: { status: r.status, submissionDeadline: r.submissionDeadline }
       }));
     } catch { return []; }

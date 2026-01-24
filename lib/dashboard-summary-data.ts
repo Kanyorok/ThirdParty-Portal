@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
+import { isClosedByDeadline } from "@/lib/deadline"
 
 export type PreqBreakdown = Record<
     "approved" | "submitted" | "under_review" | "rejected" | "not_applied",
@@ -19,23 +20,23 @@ export type RFQBreakdown = Record<
 const API_BASE = process.env.NEXT_PUBLIC_API_URL
 
 function computeRFQBreakdown(rfqs: any[]): RFQBreakdown {
-    const now = Date.now()
-
     return rfqs.reduce(
-        (acc, rfq) => {
-            if (
-                rfq.submissionDeadline &&
-                new Date(rfq.submissionDeadline).getTime() < now
-            ) {
+        (acc, item) => {
+            if (item.submissionDeadline && isClosedByDeadline(item.submissionDeadline)) {
                 acc.closed++
                 return acc
             }
 
-            const status = String(rfq.supplierResponse?.status || "").toLowerCase()
+            const myResponseStatus = item.myResponse?.status?.toLowerCase() || ""
 
-            if (status === "draft") acc.draft++
-            else if (status === "submitted") acc.submitted++
-            else acc.invited++
+            if (myResponseStatus === "final" || myResponseStatus === "submitted") {
+                acc.submitted++
+            } else if (myResponseStatus === "draft") {
+                acc.draft++
+            } else {
+                // If no response yet, it's just an open invitation @@
+                acc.invited++
+            }
 
             return acc
         },
@@ -79,20 +80,8 @@ export async function getDashboardData() {
 
     let activePreq = 0
     let completedPreq = 0
-
     const preqBreakdown: PreqBreakdown = {
-        approved: 0,
-        submitted: 0,
-        under_review: 0,
-        rejected: 0,
-        not_applied: 0,
-    }
-
-    const invitationBreakdown: InvitationsBreakdown = {
-        pending: 0,
-        accepted: 0,
-        declined: 0,
-        submitted: 0,
+        approved: 0, submitted: 0, under_review: 0, rejected: 0, not_applied: 0,
     }
 
     if (preqRes.status === "fulfilled" && Array.isArray(preqRes.value?.data)) {
@@ -106,14 +95,17 @@ export async function getDashboardData() {
                     return
                 }
 
-                if (status === "APPROVED") {
+                if (status === "FINAL" || status === "SUBMITTED") {
+                    preqBreakdown.submitted++
+                    activePreq++
+                } else if (status === "APPROVED") {
                     preqBreakdown.approved++
                     completedPreq++
                 } else if (status === "REJECTED") {
                     preqBreakdown.rejected++
-                } else {
-                    if (status === "UNDER_REVIEW") preqBreakdown.under_review++
-                    if (status === "SUBMITTED") preqBreakdown.submitted++
+                    completedPreq++
+                } else if (status === "UNDER_REVIEW") {
+                    preqBreakdown.under_review++
                     activePreq++
                 }
             })
@@ -127,27 +119,21 @@ export async function getDashboardData() {
 
     const rfqBreakdown = computeRFQBreakdown(rfqData)
 
-    const tenderVal =
-        tendersRes.status === "fulfilled" ? tendersRes.value : null
-
-    const tendersAvailable =
-        tenderVal?.total ??
-        (Array.isArray(tenderVal?.data) ? tenderVal.data.length : 0)
-
-    const rfqInvitesCount = rfqData.length
+    const tenderVal = tendersRes.status === "fulfilled" ? tendersRes.value : null
+    const tendersAvailable = tenderVal?.total ?? (Array.isArray(tenderVal?.data) ? tenderVal.data.length : 0)
 
     return {
         summary: {
             activePreq,
             completedPreq,
-            directInvites: rfqInvitesCount,
+            directInvites: rfqData.length,
             tendersAvailable,
-            rfqsInvited: rfqInvitesCount,
+            rfqsInvited: rfqBreakdown.invited,
         },
         breakdowns: {
             prequalification: preqBreakdown,
-            invitations: invitationBreakdown,
             rfqs: rfqBreakdown,
+            invitations: { pending: 0, accepted: 0, declined: 0, submitted: 0 }
         },
     }
 }

@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth-options";
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.accessToken) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ message: "Not Authorized" }, { status: 401 });
   }
   const url = new URL(req.url);
   const parts = url.pathname.split("/");

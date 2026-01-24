@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { isClosedByDeadline } from "@/lib/deadline"
 
 export type PreqBreakdown = {
     approved: number
@@ -39,13 +40,9 @@ export type DashboardState = {
 }
 
 function computeRFQBreakdown(rfqs: RFQItem[]): RFQBreakdown {
-    const now = Date.now()
     return rfqs.reduce(
         (acc, rfq) => {
-            if (
-                rfq.submissionDeadline &&
-                new Date(rfq.submissionDeadline).getTime() < now
-            ) {
+            if (rfq.submissionDeadline && isClosedByDeadline(rfq.submissionDeadline)) {
                 acc.closed++
                 return acc
             }
