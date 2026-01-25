@@ -10,11 +10,11 @@ export default function StatusBadge({
 }) {
     const statusLabel = status === "O" ? "Open" : "Closed"
     const variant = status === "O"
-        ? "bg-emerald-500 text-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-400"
-        : "bg-amber-500 text-amber-900 dark:bg-amber-900/30 dark:text-amber-400"
+        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+        : "bg-amber-50 text-amber-700 border-amber-200"
 
     return (
-        <Badge className={cn("border-0 font-normal", variant)}>
+        <Badge className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-medium", variant)}>
             {statusLabel}
         </Badge>
     )

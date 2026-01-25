@@ -63,7 +63,6 @@ export default function LoginPage() {
                 setAuthError("Invalid email or password. Please try again.")
             } else {
                 router.push("/dashboard")
-                router.refresh()
             }
         } catch {
             setAuthError("An unexpected error occurred. Please try again later.")

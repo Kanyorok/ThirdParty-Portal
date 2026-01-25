@@ -35,17 +35,26 @@ export const authOptions: NextAuthOptions = {
         return {
           id: String(u.id),
           user_id: u.id,
+          userId: u.userId ?? u.id,
           third_party_id: u.thirdPartyId ? Number(u.thirdPartyId) : null,
           first_name: u.firstName,
           last_name: u.lastName,
           full_name: u.fullName,
           email: u.email,
           phone: u.phone,
+          gender: u.gender ?? null,
+          image_id: u.imageId ?? null,
+          is_active: u.isActive ?? null,
           is_supplier: u.isSupplier,
           is_tenant: u.isTenant,
           is_customer: u.isCustomer,
           approval_status: u.approvalStatus,
+          email_verified_on: u.emailVerifiedOn ?? null,
+          created_on: u.createdOn ?? null,
+          modified_on: u.modifiedOn ?? null,
+          third_party: u.thirdParty ?? null,
           accessToken: data.token,
+          tokenType: data.tokenType ?? "Bearer",
           profile: u.thirdParty ? {
             name: u.thirdParty.thirdPartyDetails.thirdPartyName,
             trading_name: u.thirdParty.thirdPartyDetails.tradingName,
@@ -63,13 +72,15 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt", maxAge: 23 * 60 * 60 },
   callbacks: {
     async jwt({ token, user, trigger, session }): Promise<JWT> {
-      // Handle initial login
       if (user) {
         return { ...token, ...user };
       }
-      // Handle manual session update (useful after profile update)
-      if (trigger === "update" && session) {
-        return { ...token, ...session.user };
+      if (trigger === "update" && session?.user) {
+        return {
+          ...token,
+          ...session.user,
+          accessToken: token.accessToken
+        };
       }
       return token;
     },
@@ -77,27 +88,41 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user = {
           ...session.user,
-          id: String(token.user_id),
+          id: String(token.user_id || token.id),
           user_id: token.user_id,
+          userId: token.userId ?? token.user_id,
           third_party_id: token.third_party_id,
+          thirdPartyId: token.third_party_id,
           first_name: token.first_name,
           last_name: token.last_name,
           full_name: token.full_name,
           email: token.email,
           phone: token.phone,
+          gender: token.gender,
+          image_id: token.image_id,
+          imageId: token.image_id,
+          is_active: token.is_active,
+          isActive: token.is_active,
           is_supplier: token.is_supplier,
-          is_tenant: token.is_tenant,
-          is_customer: token.is_customer,
-          approval_status: token.approval_status,
-          profile: token.profile,
-
-          thirdPartyId: token.third_party_id,
-          approvalStatus: token.approval_status,
           isSupplier: token.is_supplier,
+          is_tenant: token.is_tenant,
           isTenant: token.is_tenant,
+          is_customer: token.is_customer,
           isCustomer: token.is_customer,
+          approval_status: token.approval_status,
+          approvalStatus: token.approval_status,
+          email_verified_on: token.email_verified_on,
+          emailVerifiedOn: token.email_verified_on,
+          created_on: token.created_on,
+          createdOn: token.created_on,
+          modified_on: token.modified_on,
+          modifiedOn: token.modified_on,
+          third_party: token.third_party,
+          thirdParty: token.third_party,
+          profile: token.profile,
         } as any;
         session.accessToken = token.accessToken as string;
+        (session as any).tokenType = (token as any).tokenType;
       }
       return session;
     },

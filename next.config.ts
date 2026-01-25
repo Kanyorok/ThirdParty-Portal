@@ -3,21 +3,13 @@ import type { NextConfig } from "next";
 const devPort = process.env.PORT ?? "3000";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: [`http://127.0.0.1:${devPort}`, `http://localhost:${devPort}`],
   output: "standalone",
-  cacheComponents: false,
-  experimental: {
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
-
-  reactStrictMode: true,
+  reactStrictMode: false,
   compiler: {
     removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false,
-  },
-  images: {
-    remotePatterns: [],
   },
   async headers() {
     return [
@@ -25,10 +17,7 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "SAMEORIGIN" },
-          { key: "X-XSS-Protection", value: "1; mode=block" },
           { key: "Referrer-Policy", value: "origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
         ],
       },
     ];

@@ -45,12 +45,18 @@ export default function RegisterForm() {
     }
   }
 
-  const nextStep = async () => {
-    const fields = ["Name", "Email", "Phone", "RegistrationNumber", "TaxPIN", "Country", "Location", "BusinessType", "types"] as any[]
-    if (isSupplier) fields.push("user_SupplierCategoryId")
-    if (isTenant) fields.push("user_Remarks")
+  const nextStep = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault()
 
-    const isValid = await form.trigger(fields)
+    const step1Fields: any[] = [
+      "Name", "Email", "Phone", "RegistrationNumber",
+      "TaxPIN", "Country", "Location", "BusinessType", "types"
+    ]
+
+    if (isSupplier) step1Fields.push("user_SupplierCategoryId")
+    if (isTenant) step1Fields.push("user_Remarks")
+
+    const isValid = await form.trigger(step1Fields)
     if (!isValid) return
 
     if (!createUser) {
@@ -64,50 +70,35 @@ export default function RegisterForm() {
 
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmitting) return
     await submitDirectly()
   }
 
-  const inputStyle =
-    "h-12 w-full border border-slate-200 bg-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-50"
-  const labelStyle =
-    "text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2 block"
-  const errorStyle =
-    "text-xs text-red-600 mt-1.5 flex items-center gap-1"
+  const inputStyle = "h-12 w-full border border-slate-200 bg-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-50"
+  const labelStyle = "text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2 block"
+  const errorStyle = "text-xs text-red-600 mt-1.5 flex items-center gap-1"
 
-  if (isLoadingMetadata)
-    return (
-      <div className="py-20 text-center">
-        <Spinner className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
-      </div>
-    )
+  if (isLoadingMetadata) return (
+    <div className="py-20 text-center">
+      <Spinner className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
+    </div>
+  )
 
-  if (metadataError)
-    return (
-      <div className="py-20 text-center text-red-600">
-        {metadataError}
-      </div>
-    )
+  if (metadataError) return (
+    <div className="py-20 text-center text-red-600">
+      {metadataError}
+    </div>
+  )
 
-  if (success) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-md mx-auto text-center py-20 px-8"
-      >
-        <CheckCircle2 className="h-20 w-20 text-green-600 mx-auto mb-6" />
-        <h2 className="text-2xl font-bold mb-3">
-          Registration Complete!
-        </h2>
-        <Button
-          onClick={() => router.push("/signin")}
-          className="w-full h-12 bg-blue-600 text-white font-bold rounded-lg"
-        >
-          GO TO SIGN IN
-        </Button>
-      </motion.div>
-    )
-  }
+  if (success) return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md mx-auto text-center py-20 px-8">
+      <CheckCircle2 className="h-20 w-20 text-green-600 mx-auto mb-6" />
+      <h2 className="text-2xl font-bold mb-3">Registration Complete!</h2>
+      <Button onClick={() => router.push("/signin")} className="w-full h-12 bg-blue-600 text-white font-bold rounded-lg">
+        GO TO SIGN IN
+      </Button>
+    </motion.div>
+  )
 
   return (
     <div className="max-w-5xl mx-auto px-6 pb-20">
@@ -129,7 +120,11 @@ export default function RegisterForm() {
         )}
       </AnimatePresence>
 
-      <form onSubmit={handleFinalSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+      <form
+        onSubmit={handleFinalSubmit}
+        onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
+        className="grid grid-cols-1 lg:grid-cols-12 gap-16"
+      >
         <div className="lg:col-span-8">
           {step === 1 ? (
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-10">
@@ -143,9 +138,7 @@ export default function RegisterForm() {
                       onClick={() => toggleType(type.id)}
                       className={cn(
                         "px-6 h-12 text-[11px] font-bold uppercase border-2 rounded-lg transition-all",
-                        selectedTypes?.includes(type.id)
-                          ? "border-blue-600 bg-blue-600 text-white"
-                          : "border-slate-200 text-slate-600"
+                        selectedTypes?.includes(type.id) ? "border-blue-600 bg-blue-600 text-white" : "border-slate-200 text-slate-600"
                       )}
                     >
                       {type.label}
@@ -159,6 +152,7 @@ export default function RegisterForm() {
                 <div className="md:col-span-2">
                   <label className={labelStyle}>Legal Company Name</label>
                   <Input {...form.register("Name")} className={cn(inputStyle, errors.Name && "border-red-300")} />
+                  {errors.Name && <p className={errorStyle}>{errors.Name.message}</p>}
                 </div>
 
                 <div>
@@ -175,6 +169,7 @@ export default function RegisterForm() {
                 <div>
                   <label className={labelStyle}>Registration Number</label>
                   <Input {...form.register("RegistrationNumber")} className={cn(inputStyle, errors.RegistrationNumber && "border-red-300")} />
+                  {errors.RegistrationNumber && <p className={errorStyle}>{errors.RegistrationNumber.message}</p>}
                 </div>
 
                 {isSupplier && (
@@ -192,11 +187,13 @@ export default function RegisterForm() {
                 <div>
                   <label className={labelStyle}>Business Email</label>
                   <Input {...form.register("Email")} type="email" className={cn(inputStyle, errors.Email && "border-red-300")} />
+                  {errors.Email && <p className={errorStyle}>{errors.Email.message}</p>}
                 </div>
 
                 <div>
                   <label className={labelStyle}>Phone Number</label>
                   <Input {...form.register("Phone")} className={cn(inputStyle, errors.Phone && "border-red-300")} />
+                  {errors.Phone && <p className={errorStyle}>{errors.Phone.message}</p>}
                 </div>
 
                 <div>
@@ -222,6 +219,7 @@ export default function RegisterForm() {
                 <div>
                   <label className={labelStyle}>Tax PIN</label>
                   <Input {...form.register("TaxPIN")} className={cn(inputStyle, errors.TaxPIN && "border-red-300")} />
+                  {errors.TaxPIN && <p className={errorStyle}>{errors.TaxPIN.message}</p>}
                 </div>
               </div>
 
@@ -244,15 +242,21 @@ export default function RegisterForm() {
                 </button>
               </div>
 
-              <Button type="button" onClick={nextStep} disabled={isSubmitting} className="h-14 bg-blue-600 text-white font-bold uppercase rounded-lg">
-                {createUser ? "Continue to User Details" : isSubmitting ? "Processing..." : "Finish Registration"}
+              <Button type="button" onClick={nextStep} disabled={isSubmitting} className="h-14 bg-blue-600 text-white font-bold uppercase rounded-lg w-full">
+                {isSubmitting ? "Processing..." : createUser ? "Continue to User Details" : "Finish Registration"}
               </Button>
             </motion.div>
           ) : (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-10">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                <Input {...form.register("user_FirstName")} placeholder="First Name" className={inputStyle} />
-                <Input {...form.register("user_LastName")} placeholder="Last Name" className={inputStyle} />
+                <div className="space-y-1">
+                  <Input {...form.register("user_FirstName")} placeholder="First Name" className={inputStyle} />
+                  {errors.user_FirstName && <p className={errorStyle}>{errors.user_FirstName.message}</p>}
+                </div>
+                <div className="space-y-1">
+                  <Input {...form.register("user_LastName")} placeholder="Last Name" className={inputStyle} />
+                  {errors.user_LastName && <p className={errorStyle}>{errors.user_LastName.message}</p>}
+                </div>
 
                 {isCustomer && (
                   <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -272,8 +276,14 @@ export default function RegisterForm() {
                   </div>
                 )}
 
-                <Input {...form.register("user_Email")} placeholder="Admin Email" className={inputStyle} />
-                <Input {...form.register("user_Phone")} placeholder="Admin Phone" className={inputStyle} />
+                <div className="space-y-1">
+                  <Input {...form.register("user_Email")} placeholder="Admin Email" className={inputStyle} />
+                  {errors.user_Email && <p className={errorStyle}>{errors.user_Email.message}</p>}
+                </div>
+                <div className="space-y-1">
+                  <Input {...form.register("user_Phone")} placeholder="Admin Phone" className={inputStyle} />
+                  {errors.user_Phone && <p className={errorStyle}>{errors.user_Phone.message}</p>}
+                </div>
 
                 <select {...form.register("user_Gender")} className={inputStyle}>
                   <option value="">Gender...</option>
@@ -287,6 +297,7 @@ export default function RegisterForm() {
                   <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
+                  {errors.user_Password && <p className={errorStyle}>{errors.user_Password.message}</p>}
                 </div>
 
                 <div className="relative">
@@ -294,11 +305,12 @@ export default function RegisterForm() {
                   <button type="button" onClick={() => setShowConfirmPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
+                  {errors.user_Password_confirmation && <p className={errorStyle}>{errors.user_Password_confirmation.message}</p>}
                 </div>
               </div>
 
               <div className="flex gap-4">
-                <Button type="button" onClick={() => setStep(1)} className="h-14 bg-slate-200 text-slate-700 font-bold rounded-lg">
+                <Button type="button" onClick={() => setStep(1)} className="h-14 bg-slate-200 text-slate-700 font-bold rounded-lg px-8">
                   Back
                 </Button>
                 <Button type="submit" disabled={isSubmitting} className="h-14 flex-1 bg-blue-600 text-white font-bold rounded-lg">

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { Search, ListFilter, ArrowUpDown } from "lucide-react"
+import { Search, ListFilter, ArrowUpDown, X, RefreshCw } from "lucide-react"
 import { Input } from "@/components/common/input"
 import { Button } from "@/components/common/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select"
@@ -108,76 +108,89 @@ export default function RoundsToolbar({
     return (
         <div
             className={cn(
-                "flex w-full items-center gap-2",
+                "flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:justify-end",
                 isPending && "opacity-60 pointer-events-none",
                 className
             )}
         >
-            <div className="relative flex-1 max-w-[300px]">
-                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
+            <div className="relative w-full lg:w-[340px] group">
+                <Search
+                    className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors"
+                    strokeWidth={2}
+                />
                 <Input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search query..."
-                    className="h-9 pl-9 border-none bg-muted/40 text-xs font-bold ring-offset-transparent focus-visible:ring-1 focus-visible:ring-primary/20"
+                    placeholder="Search rounds by title or ID…"
+                    className="w-full pl-11 pr-10 h-11 rounded-xl bg-white border border-slate-200 focus:border-blue-300 focus:ring-4 focus:ring-blue-50 transition-all text-sm placeholder:text-slate-400"
                 />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 rounded-lg flex items-center justify-center">
+                    {isPending ? (
+                        <RefreshCw className="h-4 w-4 animate-spin text-blue-600" strokeWidth={2} />
+                    ) : searchQuery ? (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSearchQuery("")
+                                updateUrl({ q: "" })
+                            }}
+                            className="h-7 w-7 rounded-lg hover:bg-slate-100 flex items-center justify-center transition-colors"
+                            aria-label="Clear search"
+                        >
+                            <X className="h-4 w-4 text-slate-400" strokeWidth={2} />
+                        </button>
+                    ) : null}
+                </div>
             </div>
 
-            <div className="flex items-center gap-1.5 ml-auto">
+            <div className="flex flex-col sm:flex-row gap-3 lg:w-auto">
                 <Select value={status} onValueChange={handleStatusChange}>
-                    <SelectTrigger className="h-9 w-[110px] border-none bg-muted/40 text-[10px] font-black uppercase tracking-wider focus:ring-0 focus:ring-offset-0">
+                    <SelectTrigger className="h-11 w-full sm:w-[160px] rounded-xl border border-slate-200 bg-white text-xs font-semibold focus:ring-4 focus:ring-blue-50 focus:border-blue-300">
                         <div className="flex items-center gap-2">
-                            <ListFilter className="h-3 w-3 text-primary" />
+                            <ListFilter className="h-4 w-4 text-slate-500" strokeWidth={2} />
                             <SelectValue />
                         </div>
                     </SelectTrigger>
-                    <SelectContent align="end" className="border-2">
+                    <SelectContent align="end">
                         {STATUS_OPTIONS.map((opt: StatusOption) => (
-                            <SelectItem
-                                key={opt.value}
-                                value={opt.value}
-                                className="text-[10px] font-bold uppercase"
-                            >
+                            <SelectItem key={opt.value} value={opt.value}>
                                 {opt.label}
                             </SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
 
-                <div className="flex items-center rounded-lg bg-muted/40 p-0.5">
-                    <Select value={sortBy} onValueChange={handleSortByChange}>
-                        <SelectTrigger className="h-8 border-none bg-transparent text-[10px] font-black uppercase tracking-wider shadow-none focus:ring-0">
+                <Select value={sortBy} onValueChange={handleSortByChange}>
+                    <SelectTrigger className="h-11 w-full sm:w-[150px] rounded-xl border border-slate-200 bg-white text-xs font-semibold focus:ring-4 focus:ring-blue-50 focus:border-blue-300">
+                        <div className="flex items-center gap-2">
+                            <ArrowUpDown className="h-4 w-4 text-slate-500" strokeWidth={2} />
                             <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent align="end" className="border-2">
-                            {SORT_OPTIONS.map((opt: SortOption) => (
-                                <SelectItem
-                                    key={opt.value}
-                                    value={opt.value}
-                                    className="text-[10px] font-bold uppercase"
-                                >
-                                    {opt.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                        </div>
+                    </SelectTrigger>
+                    <SelectContent align="end">
+                        {SORT_OPTIONS.map((opt: SortOption) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                                {opt.label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
 
-                    <div className="mx-1 h-4 w-[1px] bg-muted-foreground/20" />
-
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleSortOrderToggle}
-                        className="h-8 w-8 hover:bg-background"
-                    >
-                        <ArrowUpDown
-                            className={cn(
-                                "h-3 w-3 transition-transform duration-300",
-                                sortOrder === "desc" && "rotate-180 text-primary"
-                            )}
-                        />
-                    </Button>
-                </div>
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleSortOrderToggle}
+                    className="h-11 w-full sm:w-12 rounded-xl border-slate-200 bg-white hover:bg-slate-50 shadow-none"
+                    aria-label="Toggle sort order"
+                >
+                    <ArrowUpDown
+                        className={cn(
+                            "h-4 w-4 transition-transform duration-300",
+                            sortOrder === "desc" && "rotate-180 text-blue-600"
+                        )}
+                        strokeWidth={2}
+                    />
+                </Button>
 
                 <Select
                     value={String(pageSize)}
@@ -187,16 +200,12 @@ export default function RoundsToolbar({
                         updateUrl({ pageSize: size })
                     }}
                 >
-                    <SelectTrigger className="h-9 w-[65px] border-none bg-muted/40 text-[10px] font-black focus:ring-0">
+                    <SelectTrigger className="h-11 w-full sm:w-[90px] rounded-xl border border-slate-200 bg-white text-xs font-semibold focus:ring-4 focus:ring-blue-50 focus:border-blue-300">
                         <SelectValue />
                     </SelectTrigger>
-                    <SelectContent align="end" className="border-2">
+                    <SelectContent align="end">
                         {PAGE_SIZE_OPTIONS.map((size: number) => (
-                            <SelectItem
-                                key={size}
-                                value={String(size)}
-                                className="text-[10px] font-bold"
-                            >
+                            <SelectItem key={size} value={String(size)}>
                                 {size}
                             </SelectItem>
                         ))}

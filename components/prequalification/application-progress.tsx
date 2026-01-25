@@ -90,7 +90,7 @@ const CategoryProgressCard = ({ category }: { category: CategoryProgress }) => {
             </div>
             
             <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <div className="flex items-center justify-between text-xs text-slate-600">
                     <span>{category.stage_label}</span>
                     <span>{category.progress_percent}%</span>
                 </div>
@@ -98,14 +98,14 @@ const CategoryProgressCard = ({ category }: { category: CategoryProgress }) => {
             </div>
 
             {category.updated_on && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-slate-600">
                     <Calendar className="w-3 h-3" />
                     <span>Updated {new Date(category.updated_on).toLocaleDateString()}</span>
                 </div>
             )}
 
             {category.rejection_reason && (
-                <div className="p-2 bg-red-50 border border-red-200 rounded text-xs text-red-800">
+                <div className="rounded border border-rose-200 bg-rose-50 p-2 text-xs text-rose-800">
                     <strong>Reason:</strong> {category.rejection_reason}
                 </div>
             )}
@@ -153,30 +153,30 @@ const ProgressSummary = ({
                 <Badge className={cn("text-xs", statusConfig.color)}>
                     {statusConfig.label}
                 </Badge>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 text-sm text-slate-600">
                     <TrendingUp className="w-4 h-4" />
                     <span>{summary.overall_progress}% Overall Progress</span>
                 </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                <div className="p-3 bg-green-50 rounded-lg">
-                    <div className="text-lg font-semibold text-green-700">
+                <div className="p-3 bg-emerald-50 rounded-lg">
+                    <div className="text-lg font-semibold text-emerald-700">
                         {summary.approved_categories}
                     </div>
-                    <div className="text-xs text-green-600">Approved</div>
+                    <div className="text-xs text-emerald-600">Approved</div>
                 </div>
-                <div className="p-3 bg-red-50 rounded-lg">
-                    <div className="text-lg font-semibold text-red-700">
+                <div className="p-3 bg-rose-50 rounded-lg">
+                    <div className="text-lg font-semibold text-rose-700">
                         {summary.rejected_categories}
                     </div>
-                    <div className="text-xs text-red-600">Rejected</div>
+                    <div className="text-xs text-rose-600">Rejected</div>
                 </div>
-                <div className="p-3 bg-yellow-50 rounded-lg">
-                    <div className="text-lg font-semibold text-yellow-700">
+                <div className="p-3 bg-amber-50 rounded-lg">
+                    <div className="text-lg font-semibold text-amber-700">
                         {summary.pending_categories}
                     </div>
-                    <div className="text-xs text-yellow-600">Pending</div>
+                    <div className="text-xs text-amber-600">Pending</div>
                 </div>
                 <div className="p-3 bg-blue-50 rounded-lg">
                     <div className="text-lg font-semibold text-blue-700">
@@ -272,5 +272,3 @@ export default function ApplicationProgress({ round, className }: ApplicationPro
 
     return <SimpleProgressBar />;
 }
-
-

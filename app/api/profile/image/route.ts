@@ -51,6 +51,54 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function GET() {
+  const accessToken = await getAccessToken()
+  if (!accessToken) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+
+  try {
+    const res = await fetch(getExternalUrl(), {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "image/*,application/json",
+      },
+    })
+
+    if (res.status === 204) return new NextResponse(null, { status: 204 })
+
+    const contentType = res.headers.get("content-type") ?? ""
+
+    if (contentType.includes("application/json")) {
+      const body = await res.json().catch(() => null)
+      const imageUrl =
+        body?.imageUrl ?? body?.image ?? body?.data?.imageUrl ?? body?.data?.image ?? body?.data?.url ?? null
+
+      if (res.ok && typeof imageUrl === "string" && imageUrl.length) {
+        return NextResponse.redirect(imageUrl)
+      }
+
+      return NextResponse.json(body ?? { message: "Failed to fetch image" }, { status: res.status })
+    }
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => "")
+      return NextResponse.json({ message: body || "Failed to fetch image" }, { status: res.status })
+    }
+
+    const arrayBuffer = await res.arrayBuffer()
+    return new NextResponse(arrayBuffer, {
+      status: 200,
+      headers: {
+        "Content-Type": contentType || "image/*",
+        "Cache-Control": "private, max-age=0, must-revalidate",
+      },
+    })
+  } catch (error) {
+    console.error("[Profile Image] Fetch error:", error)
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+  }
+}
+
 export async function DELETE() {
   const accessToken = await getAccessToken()
   if (!accessToken) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
@@ -77,4 +125,3 @@ export async function DELETE() {
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }
 }
-

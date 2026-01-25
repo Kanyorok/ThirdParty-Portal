@@ -1,11 +1,11 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 import { format } from "date-fns"
 import { ChevronLeft, ChevronRight, FilePlus2, Lock, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/common/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/common/table"
 import { Checkbox } from "@/components/common/checkbox"
 import StatusBadge from "./status-badge"
 import ApplicationForm from "./application-form"
@@ -20,17 +20,6 @@ type Column = {
     label: string
     align?: "left" | "right"
     render: (round: Round) => React.ReactNode
-}
-
-function formatDateRange(start: string, end: string) {
-    return (
-        <div className="flex flex-col gap-0.5">
-            <span className="text-[10px] font-bold uppercase text-muted-foreground/50 leading-none">Window</span>
-            <span className="text-xs font-bold tabular-nums">
-                {format(new Date(start), "MMM d")} — {format(new Date(end), "MMM d, yyyy")}
-            </span>
-        </div>
-    )
 }
 
 export default function RoundsTable({
@@ -52,6 +41,7 @@ export default function RoundsTable({
     const { data: session } = useSession()
     const accessToken = session?.accessToken as string | undefined
     const router = useRouter()
+    const searchParams = useSearchParams()
     const [openRoundId, setOpenRoundId] = useState<string | null>(null)
     const [appliedRoundIds, setAppliedRoundIds] = useState<Set<string>>(new Set())
     const [hideApplied, setHideApplied] = useState(false)
@@ -60,25 +50,25 @@ export default function RoundsTable({
         () => [
             {
                 key: "title",
-                label: "Round Details",
+                label: "Round",
                 render: (r) => (
                     <div className="flex flex-col gap-1">
-                        <span className="text-xs font-black uppercase tracking-tight leading-tight">{r.title}</span>
-                        <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold tracking-tight leading-tight text-slate-900 line-clamp-2">
+                            {r.title}
+                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
                             <StatusBadge status={typeof r.status === "object" ? (r.status.value as any) : (r.status as any)} />
+                            <span className="text-xs text-slate-500 tabular-nums">
+                                {format(new Date(r.startDate), "MMM d")} — {format(new Date(r.endDate), "MMM d, yyyy")}
+                            </span>
                         </div>
                     </div>
                 ),
             },
             {
-                key: "window",
-                label: "Timeline",
-                render: (r) => formatDateRange(r.startDate, r.endDate),
-            },
-            {
                 key: "categories",
-                label: "Status/Progress",
-                render: (r) => <CategoryApplications round={r} className="justify-start scale-90 origin-left" />,
+                label: "Progress",
+                render: (r) => <CategoryApplications round={r} className="justify-start" />,
             },
             {
                 key: "actions",
@@ -100,7 +90,7 @@ export default function RoundsTable({
 
                     if (!supplierEligible) {
                         return (
-                            <div className="flex items-center justify-end gap-1.5 text-[10px] font-black uppercase text-muted-foreground/40">
+                            <div className="flex items-center justify-end gap-1.5 text-[11px] font-semibold text-slate-500">
                                 <Lock className="h-3 w-3" />
                                 <span>Ineligible</span>
                             </div>
@@ -109,7 +99,7 @@ export default function RoundsTable({
 
                     if (isExpired || isClosed || !windowOpen || isFutureWindow || duplicateWithinRange || !effectiveCanApply) {
                         return (
-                            <div className="flex items-center justify-end gap-1.5 text-[10px] font-black uppercase text-muted-foreground/40">
+                            <div className="flex items-center justify-end gap-1.5 text-[11px] font-semibold text-slate-500">
                                 <Lock className="h-3 w-3" />
                                 <span>{isExpired ? "Expired" : isClosed ? "Closed" : "Locked"}</span>
                             </div>
@@ -118,8 +108,8 @@ export default function RoundsTable({
 
                     if (effectiveCanApply && hasAnyApplication && !canApplyToMore) {
                         return (
-                            <div className="flex items-center justify-end gap-1.5 text-[10px] font-black uppercase text-primary">
-                                <CheckCircle2 className="h-3.5 w-3.5" />
+                            <div className="flex items-center justify-end gap-1.5 text-[11px] font-semibold text-emerald-600">
+                                <CheckCircle2 className="h-4 w-4" />
                                 <span>Complete</span>
                             </div>
                         )
@@ -127,11 +117,13 @@ export default function RoundsTable({
 
                     return (
                         <Button
-                            variant={hasAnyApplication ? "secondary" : "default"}
+                            variant={hasAnyApplication ? "outline" : "default"}
                             size="sm"
                             className={cn(
-                                "h-8 px-4 text-[10px] font-black uppercase tracking-widest transition-all",
-                                !hasAnyApplication && "bg-primary hover:bg-primary/90 shadow-sm"
+                                "h-9 px-4 rounded-xl text-xs font-semibold transition-all shadow-none",
+                                hasAnyApplication
+                                    ? "border-slate-200 bg-white hover:bg-slate-50 text-slate-700"
+                                    : "bg-blue-600 hover:bg-blue-700 text-white"
                             )}
                             onClick={() => {
                                 if (!accessToken) {
@@ -142,7 +134,7 @@ export default function RoundsTable({
                             }}
                         >
                             <FilePlus2 className="mr-1.5 h-3 w-3" />
-                            {hasAnyApplication ? "Add More" : "Apply"}
+                            {hasAnyApplication ? "Continue" : "Apply"}
                         </Button>
                     )
                 },
@@ -152,67 +144,115 @@ export default function RoundsTable({
     )
 
     const visibleRounds = hideApplied ? rounds.filter(r => !(Boolean(r.hasApplied) || appliedRoundIds.has(r.id))) : rounds
+    const buildPageHref = (nextPage: number) => {
+        const params = new URLSearchParams(searchParams.toString())
+        params.set("page", String(nextPage))
+        params.set("pageSize", String(pageSize))
+        params.set("sortBy", sortBy)
+        params.set("sortOrder", sortOrder)
+        return `?${params.toString()}`
+    }
 
     return (
         <div className="w-full">
-            <div className="flex items-center justify-end gap-2 bg-muted/20 px-6 py-3 border-y border-muted/50">
-                <Checkbox
-                    id="hide-applied"
-                    checked={hideApplied}
-                    onCheckedChange={(v) => setHideApplied(!!v)}
-                    className="h-3.5 w-3.5 border-2"
-                />
-                <label htmlFor="hide-applied" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 cursor-pointer">
-                    Hide applied rounds
-                </label>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-6 py-3 border-b border-slate-200 bg-slate-50/40">
+                <div className="flex items-center gap-2">
+                    <Checkbox
+                        id="hide-applied"
+                        checked={hideApplied}
+                        onCheckedChange={(v) => setHideApplied(!!v)}
+                        className="h-4 w-4 border-slate-300"
+                    />
+                    <label htmlFor="hide-applied" className="text-xs font-semibold text-slate-700 cursor-pointer">
+                        Hide applied rounds
+                    </label>
+                </div>
+                <p className="text-xs text-slate-500">{visibleRounds.length} shown</p>
             </div>
 
-            <Table>
-                <TableHeader className="bg-muted/10">
-                    <TableRow className="hover:bg-transparent border-none">
-                        {columns.map((col) => (
-                            <TableHead
-                                key={col.key}
-                                className={cn(
-                                    "h-10 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-6",
-                                    col.align === "right" && "text-right"
-                                )}
-                            >
-                                {col.label}
-                            </TableHead>
-                        ))}
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {visibleRounds.map((r) => (
-                        <TableRow key={r.id} className="group border-muted/40 hover:bg-muted/5 transition-colors">
-                            {columns.map((col) => (
-                                <TableCell
-                                    key={col.key}
-                                    className={cn("py-4 px-6", col.align === "right" && "text-right")}
-                                >
-                                    {col.render(r)}
-                                </TableCell>
+            <div className="hidden md:block">
+                <div className="overflow-hidden">
+                    <table className="w-full border-collapse table-fixed">
+                        <colgroup>
+                            <col className="w-[55%]" />
+                            <col className="w-[25%]" />
+                            <col className="w-[20%]" />
+                        </colgroup>
+                        <thead>
+                            <tr className="border-b border-slate-200 bg-white">
+                                {columns.map((col) => (
+                                    <th
+                                        key={col.key}
+                                        className={cn(
+                                            "h-10 px-4 sm:px-6 text-left text-[10px] font-semibold uppercase tracking-widest text-slate-700",
+                                            col.align === "right" && "text-right"
+                                        )}
+                                    >
+                                        {col.label}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {visibleRounds.map((r) => (
+                                <tr key={r.id} className="hover:bg-slate-50/50 transition-colors">
+                                    {columns.map((col) => (
+                                        <td
+                                            key={col.key}
+                                            className={cn(
+                                                "px-4 sm:px-6 py-4 align-top",
+                                                col.align === "right" && "text-right"
+                                            )}
+                                        >
+                                            {col.render(r)}
+                                        </td>
+                                    ))}
+                                </tr>
                             ))}
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-            <div className="flex items-center justify-between px-6 py-4 border-t-2 border-muted bg-muted/5">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
-                    Page {page} <span className="mx-1 text-muted-foreground/20">/</span> {totalPages}
+            <div className="md:hidden divide-y divide-slate-100">
+                {visibleRounds.map((r) => (
+                    <div key={r.id} className="p-4 space-y-3">
+                        <div className="space-y-2">
+                            {columns[0]?.render(r)}
+                        </div>
+                        <div className="text-xs font-semibold text-slate-600">Progress</div>
+                        <div>{columns[1]?.render(r)}</div>
+                        <div className="pt-1 flex justify-end">{columns[2]?.render(r)}</div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-t border-slate-200 bg-white">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-600">
+                    Page {page} <span className="mx-1 text-slate-300">/</span> {totalPages}
                 </p>
-                <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-tighter" disabled={page <= 1} asChild>
-                        <a href={`?page=${Math.max(1, page - 1)}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`}>
-                            <ChevronLeft className="mr-1 h-3 w-3" /> Prev
-                        </a>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 rounded-xl border-slate-200 bg-white hover:bg-slate-50 shadow-none text-xs font-semibold"
+                        disabled={page <= 1}
+                        asChild
+                    >
+                        <Link href={buildPageHref(Math.max(1, page - 1))} scroll={false}>
+                            <ChevronLeft className="mr-1 h-4 w-4" /> Prev
+                        </Link>
                     </Button>
-                    <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-tighter" disabled={page >= totalPages} asChild>
-                        <a href={`?page=${Math.min(totalPages, page + 1)}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`}>
-                            Next <ChevronRight className="ml-1 h-3 w-3" />
-                        </a>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 rounded-xl border-slate-200 bg-white hover:bg-slate-50 shadow-none text-xs font-semibold"
+                        disabled={page >= totalPages}
+                        asChild
+                    >
+                        <Link href={buildPageHref(Math.min(totalPages, page + 1))} scroll={false}>
+                            Next <ChevronRight className="ml-1 h-4 w-4" />
+                        </Link>
                     </Button>
                 </div>
             </div>

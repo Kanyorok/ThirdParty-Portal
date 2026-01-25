@@ -60,9 +60,9 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="overflow-x-hidden">
       <body
-        className={`${geist.variable} antialiased min-h-screen`}
+        className={`${geist.variable} antialiased min-h-screen overflow-x-hidden`}
       >
         <ThemeProvider
           attribute="class"

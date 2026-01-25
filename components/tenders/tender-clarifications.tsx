@@ -104,17 +104,10 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
     }
   }, [tenderId]);
 
-  // Auto-refresh clarifications every 30 seconds to check for new responses
+  // Load clarifications once; no auto-refresh to avoid interrupting long actions on the screen.
   useEffect(() => {
     if (tenderId) {
       fetchClarifications();
-
-      // Set up auto-refresh interval
-      const refreshInterval = setInterval(() => {
-        fetchClarifications(false); // Silent refresh without loading indicator
-      }, 30000); // 30 seconds
-
-      return () => clearInterval(refreshInterval);
     }
   }, [tenderId, fetchClarifications]);
 

@@ -4,6 +4,7 @@ import { ApiCategory, ApiRound } from "@/types/prequalification-rounds-types"
 import { Round } from "@/types/types"
 import RoundsTable from "./rounds-table"
 import RoundsToolbar from "./rounds-toolbar"
+import { Sparkles } from "lucide-react"
 
 type RoundCategory = {
     category_id: number
@@ -128,18 +129,22 @@ export default async function RoundsView({ initialQuery = {} }: { initialQuery?:
     }).length
 
     return (
-        <section className="rounded-2xl border border-border/60 bg-background shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-border/40 bg-muted/30 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <section className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+            <div className="px-4 sm:px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="space-y-2">
-                    <h2 className="text-xl font-semibold tracking-tight">Prequalification Rounds</h2>
-                    <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-muted-foreground">
-                        <span className="inline-flex items-center gap-1.5">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200 w-fit">
+                        <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-700">Rounds</span>
+                    </div>
+                    <h2 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900">Available rounds</h2>
+                    <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-600">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            {openCount} Open
+                            {openCount} open
                         </span>
-                        <span className="inline-flex items-center gap-1.5">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
                             <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
-                            {apiData.total} Total
+                            {apiData.total} total
                         </span>
                     </div>
                 </div>
@@ -155,10 +160,10 @@ export default async function RoundsView({ initialQuery = {} }: { initialQuery?:
             </div>
 
             {mappedRounds.length === 0 ? (
-                <div className="py-24 px-6 text-center">
-                    <div className="mx-auto mb-6 h-16 w-16 rounded-2xl bg-muted/40 border border-border" />
+                <div className="py-20 px-6 text-center">
+                    <div className="mx-auto mb-6 h-16 w-16 rounded-2xl bg-slate-50 border border-slate-200" />
                     <h3 className="text-lg font-semibold mb-1">No prequalification rounds</h3>
-                    <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                    <p className="text-sm text-slate-600 max-w-sm mx-auto">
                         When new rounds are published, they will appear here with application status and progress.
                     </p>
                 </div>

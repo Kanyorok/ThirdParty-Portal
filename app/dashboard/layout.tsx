@@ -30,7 +30,7 @@ async function AsyncDashboardLayout({ children }: { children: ReactNode }) {
     }
 
     const cookieStore = await cookies()
-    const sidebarState = cookieStore.get("sidebar:state")?.value
+    const sidebarState = cookieStore.get("sidebar_state")?.value
     const defaultOpen = sidebarState ? sidebarState === "true" : true
 
     const sidebarVariant = await getSidebarVariant()
@@ -67,7 +67,7 @@ async function AsyncDashboardLayout({ children }: { children: ReactNode }) {
                     </div>
                 </header>
                 <main className={cn(
-                    "flex-1 p-4 md:p-6 lg:p-8",
+                    "flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden",
                     contentLayout === "centered" && "bg-card/30"
                 )}>
                     {children}

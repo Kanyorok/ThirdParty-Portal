@@ -18,7 +18,9 @@ const PUBLIC_ROUTES = [
     "/api/health",
     "/register",
     "/forgot-password",
-    "/reset-password"
+    "/reset-password",
+    "/_next",
+    "/__nextjs_original-stack-frames"
 ]
 
 function createRedirect(req: NextRequest, path: string, params?: Record<string, string>): NextResponse {

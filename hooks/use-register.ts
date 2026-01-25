@@ -10,6 +10,12 @@ type LookupItem = {
     description: string
 }
 
+const emptyToUndefined = (value: unknown) => {
+    if (typeof value !== "string") return value
+    const trimmed = value.trim()
+    return trimmed.length ? trimmed : undefined
+}
+
 const registerSchema = z.object({
     Name: z.string().min(2),
     TradingName: z.string().nullable().optional(),
@@ -30,15 +36,27 @@ const registerSchema = z.object({
     user_MaritalStatus: z.string().nullable().optional(),
     user_Occupation: z.string().nullable().optional(),
     createUser: z.boolean(),
-    user_FirstName: z.string().min(2),
-    user_LastName: z.string().min(2),
-    user_Email: z.string().email(),
-    user_Phone: z.string().min(10),
-    user_Gender: z.string().min(1),
-    user_Password: z.string().min(8),
-    user_Password_confirmation: z.string()
-}).refine(d => d.user_Password === d.user_Password_confirmation, {
-    path: ["user_Password_confirmation"]
+    user_FirstName: z.preprocess(emptyToUndefined, z.string().min(2).optional()),
+    user_LastName: z.preprocess(emptyToUndefined, z.string().min(2).optional()),
+    user_Email: z.preprocess(emptyToUndefined, z.string().email().optional()),
+    user_Phone: z.preprocess(emptyToUndefined, z.string().min(10).optional()),
+    user_Gender: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+    user_Password: z.preprocess(emptyToUndefined, z.string().min(8).optional()),
+    user_Password_confirmation: z.preprocess(emptyToUndefined, z.string().optional())
+}).superRefine((data, ctx) => {
+    if (!data.createUser) return
+
+    if (!data.user_FirstName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_FirstName"], message: "First name is required." })
+    if (!data.user_LastName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_LastName"], message: "Last name is required." })
+    if (!data.user_Email) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Email"], message: "Admin email is required." })
+    if (!data.user_Phone) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Phone"], message: "Admin phone is required." })
+    if (!data.user_Gender) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Gender"], message: "Gender is required." })
+    if (!data.user_Password) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Password"], message: "Password is required." })
+    if (!data.user_Password_confirmation) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Password_confirmation"], message: "Confirm your password." })
+
+    if (data.user_Password && data.user_Password_confirmation && data.user_Password !== data.user_Password_confirmation) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Password_confirmation"], message: "Passwords do not match." })
+    }
 })
 
 export type RegisterFormInputs = z.infer<typeof registerSchema>
@@ -107,16 +125,21 @@ export const useRegisterForm = () => {
             const countries = await countriesRes.json()
             const categories = await categoriesRes.json()
             const lookups = await lookupsRes.json()
-            const data = lookups.data || {}
+            const data = lookups?.data ?? lookups?.Data ?? {}
+            const pick = (key: string) =>
+                data?.[key] ??
+                data?.[key.toLowerCase?.() as any] ??
+                data?.[(key[0]?.toLowerCase?.() + key.slice(1)) as any] ??
+                []
 
             setMetadata({
                 countries: countries.data || [],
                 supplierCategories: categories.data || [],
                 localities: [],
-                businessTypes: data.businessType || [],
-                genders: data.gender || [],
-                maritalStatuses: data.maritalStatus || [],
-                occupations: data.occupation || []
+                businessTypes: pick("BusinessType"),
+                genders: pick("Gender"),
+                maritalStatuses: pick("MaritalStatus"),
+                occupations: pick("Occupation")
             })
         } catch {
             setMetadataError("Initialization failed")
@@ -163,6 +186,10 @@ export const useRegisterForm = () => {
 
         const result = await res.json()
 
+        if (res.ok && result?.success === false) {
+            throw new Error(result?.message || "Registration failed.")
+        }
+
         if (!res.ok && result.errors) {
             Object.keys(result.errors).forEach(k => {
                 form.setError(k as any, { message: result.errors[k][0] })
@@ -190,8 +217,8 @@ export const useRegisterForm = () => {
             form.setValue("types", updated, { shouldValidate: true })
         },
         selectedTypes,
-        isSupplier: selectedTypes?.includes("Supplier"),
-        isTenant: selectedTypes?.includes("Tenant"),
-        isCustomer: selectedTypes?.includes("Customer")
+        isSupplier: selectedTypes?.includes("SU"),
+        isTenant: selectedTypes?.includes("TN"),
+        isCustomer: selectedTypes?.includes("CU")
     }
 }
