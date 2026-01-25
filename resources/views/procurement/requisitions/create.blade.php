@@ -60,10 +60,8 @@
                                 <td data-order="{{ (float)($item->ExpectedPrice ?? 0) }}">{{ number_format((float)($item->ExpectedPrice ?? 0), 2) }}</td>
                                 <td>{{ $item->Status }}</td>
                                 <td>
-                                    <a href="{{ route('requisition.show', [$item->Id]) }}"
-                                        class="btn btn-info btn-sm">View</a>
-                                    <a href="{{ route('requisition.approval', [$item->Id]) }}"
-                                        class="btn btn-success btn-sm">Approve</a>
+                                    <a href="{{ route('requisition.show', [$item->Id]) }}" class="btn btn-info btn-sm">View</a>
+                                    <a href="{{ route('requisition.approval', [$item->Id]) }}" class="btn btn-success btn-sm">Approve</a>
                                 </td>
                             </tr>
                             @empty
@@ -79,7 +77,6 @@
     </div>
 </div>
 
-<!-- Modal -->
 <div class="modal fade" id="RequisitionItemModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -92,30 +89,24 @@
                     @can('create', \App\Models\Procurement\Requisitions::class)
                     <form action="{{ route('requisition.store') }}" method="post" id="createRequisitionForm">
                         @csrf
-
-                        <!-- Procurement Plan -->
                         <div class="mb-3">
                             <label class="form-label" for="ProcurementPlan">Procurement Plan</label>
                             <select class="form-control" name="ProcurementPlan" id="ProcurementPlan">
                                 <option selected value="">Select Procurement Plan</option>
                                 @foreach ($procurementPlans as $procurementPlan)
                                 <option value="{{ $procurementPlan->PlanID }}">
-                                    {{ $procurementPlan->ReferenceNumber }}
-                                    -{{ $procurementPlan->Title }}
+                                    {{ $procurementPlan->ReferenceNumber }} - {{ $procurementPlan->Title }}
                                 </option>
                                 @endforeach
                             </select>
-                            <p id="ProcurementPlan_error" class="invalid-feedback d-none error col-12"
-                                role="alert"></p>
+                            <p id="ProcurementPlan_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                         </div>
 
-                        <!-- Branch -->
                         <div class="mb-3">
                             <label class="form-label" for="Branch">Branch <span class="text-danger">*</span></label>
                             <select class="form-control" name="Branch" id="Branch" required>
                                 @if (isset($branchId))
-                                <option value="{{ $branchId }}"
-                                    selected>{{ session('LoginBranchName') }}</option>
+                                <option value="{{ $branchId }}" selected>{{ session('LoginBranchName') }}</option>
                                 @else
                                 <option selected disabled>Select Branch</option>
                                 @endif
@@ -123,14 +114,11 @@
                             <p id="Branch_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                         </div>
 
-                        <!-- Department -->
                         <div class="mb-3">
                             <label class="form-label" for="Department">Department <span class="text-danger">*</span></label>
                             <select class="form-control" name="Department" id="Department" required>
-
                                 @if (isset($departmentId))
-                                <option value="{{ $departmentId }}" selected>Department
-                                    #{{ $departmentName ?? 'Department #' . $departmentId }}</option>
+                                <option value="{{ $departmentId }}" selected>Department #{{ $departmentName ?? $departmentId }}</option>
                                 @else
                                 <option selected disabled>Select Department</option>
                                 @endif
@@ -138,20 +126,15 @@
                             <p id="Department_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                         </div>
 
-                        <!-- Remarks -->
                         <div class="mb-3">
-                            <label class="form-label" for="Remarks">Remarks <span
-                                    class="text-danger">*</span></label>
-                            <textarea name="Remarks" id="Remarks" rows="3" class="form-control" maxlength="1000"
-                                required></textarea>
+                            <label class="form-label" for="Remarks">Remarks <span class="text-danger">*</span></label>
+                            <textarea name="Remarks" id="Remarks" rows="3" class="form-control" maxlength="1000" required></textarea>
                             <p id="Remarks_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                         </div>
 
                         <hr>
                         <div class="mt-4">
-                            <button type="button" class="btn btn-secondary float-start" data-bs-dismiss="modal">
-                                Cancel
-                            </button>
+                            <button type="button" class="btn btn-secondary float-start" data-bs-dismiss="modal">Cancel</button>
                             <button class="btn btn-primary float-end" id="createRequisitionBtn" type="submit">
                                 <i class="fas fa-save"></i> Add Requisition
                             </button>
@@ -164,39 +147,33 @@
     </div>
 </div>
 @endsection
+
 @section('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-<script src="{{ asset('assets/js/datatables.js') }}"></script>
 
 <script>
-    const $Modal = $('#RequisitionItemModal');
-
     $(function() {
-        // Initialize DataTable
-        @if(!$details - > isEmpty())
+        const $Modal = $('#RequisitionItemModal');
+
+        // FIXED: Removed the spaces in the arrow operator
+        @if(!$details->isEmpty())
         $('#requisitionTable').DataTable({
             pageLength: 10,
             ordering: true,
             searching: true,
             lengthChange: true,
-            order: [
-                [3, 'desc']
-            ],
-            language: {
-                emptyTable: "No data available"
-            }
+            order: [[3, 'desc']],
+            language: { emptyTable: "No data available" }
         });
         @endif
 
-        // Initialize Select2
         $('#ProcurementPlan, #Branch, #Department').select2({
             dropdownParent: $Modal,
             width: '100%'
         });
 
-        // Show modal
         $(document).on('click', '.modal-create-item', function() {
             $(".modal-title").html('Add Requisition');
             $(".modal-item").addClass('d-none');
@@ -204,17 +181,12 @@
             $Modal.modal('show');
         });
 
-        // Handle form submission - FIXED VERSION
         $('form#createRequisitionForm').on('submit', function(e) {
             e.preventDefault();
-
             const form = $(this);
             const submitBtn = $('#createRequisitionBtn');
-
-            // Create FormData
             const formData = new FormData(this);
 
-            // Make AJAX request
             $.ajax({
                 url: form.attr('action'),
                 type: 'POST',
@@ -225,93 +197,37 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
                     'Accept': 'application/json'
                 },
-                // 1. CLEAR ERRORS BEFORE SENDING
                 beforeSend: function() {
-                    // Disable button
-                    submitBtn.prop('disabled', true).html(
-                        '<span class="spinner-border spinner-border-sm me-2"></span>Creating...'
-                    );
-                    // Clear previous errors
+                    submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Creating...');
                     $('.invalid-feedback').addClass('d-none').text('');
                     $('.form-control').removeClass('is-invalid');
                 },
-                // 2. HANDLE SUCCESS
                 success: function(response) {
-                    if (response.success && response.requisition_id) {
+                    if (response.success) {
                         $Modal.modal('hide');
-
-                        // Show success message
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: response.message || 'Requisition created successfully',
-                                timer: 2000,
-                                showConfirmButton: false
-                            }).then(() => {
-                                window.location.href = response.route;
-                            });
-                        } else {
-                            alert(response.message || 'Requisition created successfully');
-                            window.location.href = response.route;
-                        }
-                    } else {
-                        // Manually trigger error if success is false
-                        // This goes to the error block below or handles it here
-                        submitBtn.prop('disabled', false).html('<i class="fas fa-save"></i> Add Requisition');
-                        alert(response.message || 'Failed to create requisition');
+                        window.location.href = response.route;
                     }
                 },
-                // 3. HANDLE ERRORS
                 error: function(xhr) {
-                    console.error('Error:', xhr);
-
-                    // Re-enable button
                     submitBtn.prop('disabled', false).html('<i class="fas fa-save"></i> Add Requisition');
-
-                    // HANDLE VALIDATION ERRORS (Status 422)
                     if (xhr.status === 422) {
                         let errors = xhr.responseJSON.errors;
                         $.each(errors, function(key, value) {
-                            // key = Field name (e.g., ProcurementPlan), value = Array of errors
-                            let errorId = '#' + key + '_error';
-                            let inputId = '#' + key;
-
-                            $(inputId).addClass('is-invalid'); // Highlight input red
-                            $(errorId).removeClass('d-none').text(value[0]); // Show error message
+                            $('#' + key).addClass('is-invalid');
+                            $('#' + key + '_error').removeClass('d-none').text(value[0]);
                         });
-
-                        // Stop here so we don't show the generic popup
-                        return;
-                    }
-
-                    // HANDLE GENERAL SERVER ERRORS
-                    let errorMessage = 'Failed to create requisition. Please try again.';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMessage = xhr.responseJSON.message;
-                    }
-
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: errorMessage
-                        });
-                    } else {
-                        alert(errorMessage);
                     }
                 }
             });
-
-
         });
 
-        // Fetch Branch and Department based on Procurement Plan
         $('#ProcurementPlan').on('change', function() {
             let planId = $(this).val();
             if (!planId) return;
 
-            fetch("{{ route('procurement.plan.details', '__ID__') }}".replace('__ID__', planId))
+            let url = "{{ route('procurement.plan.details', ':id') }}".replace(':id', planId);
+            
+            fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     const branchSelect = $('#Branch');
@@ -321,22 +237,12 @@
                     departmentSelect.empty().append('<option selected disabled>Select Department</option>');
 
                     data.branches.forEach(branch => {
-                        branchSelect.append($('<option>', {
-                            value: branch.Id,
-                            text: branch.Name
-                        }));
+                        branchSelect.append(new Option(branch.Name, branch.Id));
                     });
 
                     data.departments.forEach(dept => {
-                        departmentSelect.append($('<option>', {
-                            value: dept.Id,
-                            text: dept.Name
-                        }));
+                        departmentSelect.append(new Option(dept.Name, dept.Id));
                     });
-                })
-                .catch(error => {
-                    // Log error silently without showing to user
-                    console.error('Error fetching plan details:', error);
                 });
         });
     });
