@@ -1,11 +1,33 @@
 @extends('layouts.app')
 
 @section('title','Dashboard')
+@section('search-form')
+    <style>
+        .tt-menu {
+            width: 100% !important;
+            padding: .5rem 1.5rem !important;
+            opacity: 0.98;
+        }
 
+        .dropdown-item {
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+        }
+    </style>
+    <div class="form-search" action="" method="get">
+        <i class="search-icon">
+            <svg class="pc-icon">
+                <use xlink:href="#custom-search-normal-1"></use>
+            </svg>
+        </i>
+        <input type="search" name="q" class="form-control typeahead" id="SearchInput" style="width: 50vw;"
+               placeholder="Search Menu items & Modules" data-url="{{ route('modules.search') }}">
+    </div>
+@endsection
 @section('content')
     <div class="mb-4">
         <div class="d-flex justify-content-between align-items-center mb-2">
-            <h4 class="mb-0">My Dashboard</h4>
+            {{-- <h4 class="mb-0">My Dashboard</h4>--}}
             <div>
                 <button id="add-widget" class="btn btn-sm btn-primary">Add widget</button>
                 <button id="save-layout" class="btn btn-sm btn-outline-secondary">Save layout</button>
@@ -260,7 +282,8 @@
 @endsection
 
 @section('scripts')
-    {{-- <script src="{{ asset('assets/js/datatables.js') }}"></script> --}}
+    <script src="{{ asset('assets/libs/typeahead/typeahead.bundle.min.js') }}"></script>
+    <script src="{{ asset('assets/js/search/modules.min.js') }}"></script>
     <script>
         (function(){
             const grid = document.getElementById('dashboard-grid');
@@ -327,107 +350,6 @@
                 }
             });
         })();
-    </script>
-    <script>
-        const converted = {!! json_encode(data_get($data,'leads.line.converted')) !!},
-            labels = {!! json_encode(data_get($data,'leads.line.labels')) !!},
-            statuses = {!! json_encode(data_get($data,'leads.donut.labels')) !!};
-        let tasksTable = null, approvalsTable = null, leadStatus = [0, 0];
-        $(function () {
-            $.fn.dataTable.ext.errMode = 'none';
-            $.fn.dataTable.ext.errMode = 'none';
-
-
-            var ctx = document.getElementById("leadChart").getContext("2d");
-
-            const convertedColour = ctx.createLinearGradient(0, 0, 0, 225);
-            convertedColour.addColorStop(0, "rgba(8,182,15,0.7)");
-            convertedColour.addColorStop(1, "rgba(8,182,15, 0)");
-            // Line chart
-            new Chart(document.getElementById("leadChart"), {
-                type: "line",
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: "Lead Won",
-                        fill: true,
-                        backgroundColor: convertedColour,
-                        borderColor: window.theme.success,
-                        data: converted
-                    }]
-                },
-                options: {
-                    maintainAspectRatio: false,
-                    legend: {
-                        display: true
-                    },
-                    tooltips: {
-                        intersect: false
-                    },
-                    hover: {
-                        intersect: true
-                    },
-                    plugins: {
-                        filler: {
-                            propagate: false
-                        }
-                    },
-                    scales: {
-                        xAxes: [{
-                            reverse: true,
-                            gridLines: {
-                                color: "rgba(0,0,0,0.0)"
-                            }
-                        }],
-                        yAxes: [{
-                            ticks: {
-                                min: 0,
-                                precision: 0
-                            },
-                            display: true,
-                            borderDash: [3, 3],
-                            gridLines: {
-                                color: "rgba(112,112,112,0.1)",
-                                fontColor: "#fff"
-                            }
-                        }]
-                    }
-                }
-            });
-
-            fetchPendingApprovalsTable();
-
-        });
-
-        function fetchPendingApprovalsTable() {
-            if (approvalsTable === null) {
-                approvalsTable = $('#approvalsTable').DataTable({
-                    processing: true,
-                    serverSide: true,
-                    responsive: true,
-                    "order": [[1, 'desc']],
-                    ajax: {
-                        url: '{{ route('pending-workflows') }}',
-                        error: function (jqXHR) {
-                            codeNotify(jqXHR.status);
-                        }
-                    },
-                    columns: [
-                        {data: 'description', name: 'Source'},
-                        {data: 'CreatedOn', name: 'CreatedOn'},
-                    ], "oLanguage": {
-                        "sEmptyTable": "no pending workflow"
-                    }
-                });
-
-                approvalsTable.on('error', function (er) {
-                    nWarning("an issue occurred while loading workflow.");
-                    console.log(er);
-                });
-            } else {
-                approvalsTable.ajax.reload();
-            }
-        }
 
         // Minimal client-side save of order and sizes (cols) using current DOM
         document.getElementById('saveDashboardLayout').addEventListener('click', function() {

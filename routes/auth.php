@@ -19,6 +19,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/', DashboardController::class)->name('home');
     Route::get('/user-dashboard/widgets', [DashboardController::class, 'getWidgets'])->name('user-dashboard.widgets');
     Route::post('/user-dashboard/widgets/save', [DashboardController::class, 'saveLayout'])->name('user-dashboard.widgets.save');
+    Route::get('module-search', [DashboardController::class, 'search'])->name('modules.search');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
     Route::post('timeout', [AuthenticatedSessionController::class, 'timeout'])->name('timeout');
