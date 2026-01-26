@@ -349,6 +349,10 @@ Route::middleware(['module:300000'])->group(function () {
     // Consolidated scoring view and award action
     Route::get('/rfq-evaluations/consolidated/{rfq}', [RFQEvaluationController::class, 'consolidated'])->name('evaluations.consolidated');
     Route::post('/rfq-evaluations/{rfq}/award/{supplier}', [RFQEvaluationController::class, 'awardSupplier'])->name('evaluations.award');
+    
+    // Edit and Update evaluation routes
+    Route::get('/rfq-evaluations/{id}/edit', [RFQEvaluationController::class, 'edit'])->name('evaluations.edit');
+    Route::put('/rfq-evaluations/{id}', [RFQEvaluationController::class, 'update'])->name('evaluations.update');
 
     //GoodsReceipts
     Route::get('/procurementreceipts', [GoodsReceiptController::class, 'index'])->name('procurementreceipts.index');

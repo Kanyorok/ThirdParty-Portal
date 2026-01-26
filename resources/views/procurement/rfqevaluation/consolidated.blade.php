@@ -15,6 +15,22 @@
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
+        @if (session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+
+        {{-- Evaluation Status Alert --}}
+        @if (!($allMembersEvaluated ?? true))
+            <div class="alert alert-warning">
+                <strong><i class="bi bi-exclamation-triangle me-2"></i>Evaluation Incomplete</strong>
+                <p class="mb-1">{{ $evaluatedMembersCount ?? 0 }} of {{ $acceptedMembersCount ?? 0 }} committee members have submitted their evaluations.</p>
+                @if (!empty($pendingMembers))
+                    <small>Pending: {{ implode(', ', $pendingMembers) }}</small>
+                @endif
+                <p class="mt-2 mb-0"><em>Award cannot be made until all committee members complete their evaluations.</em></p>
+            </div>
+        @endif
+
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-suppliers" type="button"
@@ -78,9 +94,15 @@
                                         method="POST">
                                         @csrf
                                         <input type="hidden" name="Comments" value="Awarded via consolidated view">
+                                        @php
+                                            $isAwarded = $award && $award->SupplierId == $sup['supplier_id'];
+                                            $canAward = $allMembersEvaluated ?? true;
+                                        @endphp
                                         <button
-                                            class="btn btn-sm {{ ($award && $award->SupplierId == $sup['supplier_id']) ? 'btn-success' : 'btn-outline-primary' }}">
-                                            {{ ($award && $award->SupplierId == $sup['supplier_id']) ? 'Awarded' : 'Award' }}
+                                            class="btn btn-sm {{ $isAwarded ? 'btn-success' : ($canAward ? 'btn-outline-primary' : 'btn-secondary') }}"
+                                            {{ !$canAward && !$isAwarded ? 'disabled' : '' }}
+                                            title="{{ !$canAward && !$isAwarded ? 'All committee members must complete evaluations before awarding' : '' }}">
+                                            {{ $isAwarded ? 'Awarded' : 'Award' }}
                                         </button>
                                     </form>
                                 </td>
