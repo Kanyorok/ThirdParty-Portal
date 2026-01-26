@@ -99,35 +99,25 @@ class TransactionTransfersController extends Controller
         $items = $validatedData['items'] ?? [];
         unset($validatedData['items']);
 
+        DB::beginTransaction();
+
         try {
             // Create transfer and items
             $transfer = $this->service->createTransfer($validatedData);
             $this->service->createTransferItems($transfer, $items);
 
-            // Always return success message
-            $message = 'Transfer created successfully.';
+            DB::commit();
 
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => $message,
-                    'redirect' => route('transactionstransfers.index')
-                ]);
-            }
+            $message = 'Transfer created successfully.';
 
             return redirect()
                 ->route('transactionstransfers.index')
                 ->with('success', $message);
+                
         } catch (Throwable $e) {
-            // Always return error message
+            DB::rollBack();
+            
             $errorMessage = 'Error creating transfer: ' . $e->getMessage();
-
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $errorMessage,
-                ], 500);
-            }
 
             return redirect()
                 ->back()
@@ -135,7 +125,6 @@ class TransactionTransfersController extends Controller
                 ->with('error', $errorMessage);
         }
     }
-
     public function show($Id)
     {
         $this->authorize('view', TransactionTransfer::class);
@@ -152,7 +141,10 @@ class TransactionTransfersController extends Controller
 
     public function edit($Id)
     {
-        $branchId = auth()->user()->employee?->BranchId;
+        $currentBranch = $request->user()->branch;
+
+        $branchId = $currentBranch->Id;
+        $branch = Branch::findOrFail($branchId);
         $this->authorize('update', TransactionTransfer::class);
         $branches = Branch::all();
         $itemsMasterList = ItemMasterList::all();
@@ -181,6 +173,31 @@ class TransactionTransfersController extends Controller
         return redirect()
             ->route('transactionstransfers.index', $transactionTransfer->Id)
             ->with('success', 'Transfer updated.');
+    }
+
+    public function getGRNBatches(Request $request)
+    {
+        try {
+            $request->validate([
+                'item_id' => 'required|exists:t_Items,Id',
+                'branch_id' => 'required|exists:t_Branches,Id',
+            ]);
+
+            $itemId = $request->input('item_id');
+            $branchId = $request->input('branch_id');
+            
+            $batches = $this->service->getAvailableGRNBatches($itemId, $branchId);
+
+            return response()->json([
+                'success' => true,
+                'batches' => $batches
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load GRN batches: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy($Id)

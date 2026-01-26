@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\InventoryHoldReviewRequest;
 use App\Models\Inventory\InventoryHold;
 use App\Models\Inventory\InventoryHoldReview;
+use App\Models\Core\Branch;
 use App\Services\Inventory\InventoryHoldReviewService;
 use Exception;
 use Illuminate\Http\Request;
@@ -22,7 +23,9 @@ class InventoryHoldReviewController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', InventoryHoldReview::class);
         $currentBranch = $request->user()->branch;
+
             if (!$currentBranch instanceof Branch) {
                  return redirect()->back()->with('fail', 'Current user branch not found.');
             }
@@ -60,7 +63,23 @@ class InventoryHoldReviewController extends Controller
             }
 
         $branchId = $currentBranch->Id; 
+        $reviews = InventoryHoldReview::with([
+            'item.uom',
+            'fromBranch',
+            'store',
+            'creator',
+            'conditionDetail',
+            'defectDetail',
+            'inventoryHold'
+        ])
+            ->whereNull('DeletedOn')
+            ->where('FromBranch', $branchId) 
+            ->get();
 
+        $reviews->each(function ($review) {
+            $review->Condition = $review->conditionDetail?->Description ?? null;
+            $review->Defect = $review->defectDetail?->Description ?? null;
+        });
         $holds = InventoryHold::whereNull('DeletedOn')
             ->where('BranchID', $branchId) 
             ->whereHas('sourceDetail', function ($q) {
@@ -74,7 +93,7 @@ class InventoryHoldReviewController extends Controller
             $hold->Defect = $hold->defectDetail?->Description ?? null;
         });
 
-        return view('inventory.inventoryholdreview.create', compact('holds'));
+        return view('inventory.inventoryholdreview.create', compact('holds','reviews'));
     }
 
     public function store(InventoryHoldReviewRequest $request)

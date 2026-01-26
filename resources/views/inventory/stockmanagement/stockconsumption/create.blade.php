@@ -295,20 +295,32 @@
         });
 
         // Real-time quantity validation
-        $('#Quantity').on('input', function () {
-            let qty = parseFloat($(this).val());
-            $(this).removeClass('is-invalid');
-            $('#qty-error').remove();
-            $('button[type="submit"]').prop('disabled', false);
+$('#Quantity').on('input', function () {
+    let qty = parseFloat($(this).val());
+    $(this).removeClass('is-invalid');
+    $('#qty-error').remove();
+    $('button[type="submit"]').prop('disabled', false);
 
-            if (qty > availableQty) {
-                $(this).addClass('is-invalid');
-                $(this).after(`<div id="qty-error" class="invalid-feedback">
-                    Quantity exceeds available stock (${availableQty}).
-                </div>`);
-                $('button[type="submit"]').prop('disabled', true);
-            }
-        });
+    // Quantity must be greater than 0
+    if (isNaN(qty) || qty <= 0) {
+        $(this).addClass('is-invalid');
+        $(this).after(`<div id="qty-error" class="invalid-feedback">
+            Quantity must be greater than 0.
+        </div>`);
+        $('button[type="submit"]').prop('disabled', true);
+        return;
+    }
+
+    // Quantity must not exceed available stock
+    if (qty > availableQty) {
+        $(this).addClass('is-invalid');
+        $(this).after(`<div id="qty-error" class="invalid-feedback">
+            Quantity exceeds available stock (${availableQty}).
+        </div>`);
+        $('button[type="submit"]').prop('disabled', true);
+    }
+});
+
 
         // Form submission validation
         $('#consumptionForm').on('submit', function(e) {
@@ -321,9 +333,23 @@
                 $('#IssuedToID').focus();
                 return false;
             }
+
+            const qty = parseFloat($('#Quantity').val());
+
+            // Validate quantity > 0
+            if (isNaN(qty) || qty <= 0) {
+                e.preventDefault();
+                $('#Quantity').addClass('is-invalid');
+                $('#qty-error').remove();
+                $('#Quantity').after(`<div id="qty-error" class="invalid-feedback">
+                    Quantity must be greater than 0.
+                </div>`);
+                $('#Quantity').focus();
+                return false;
+            }
+
             
             // Validate quantity
-            const qty = parseFloat($('#Quantity').val());
             if (qty > availableQty) {
                 e.preventDefault();
                 alert(`Error: Quantity exceeds available stock (${availableQty}).`);

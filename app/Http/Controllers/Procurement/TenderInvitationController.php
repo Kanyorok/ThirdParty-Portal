@@ -74,19 +74,30 @@ class TenderInvitationController extends Controller
     public function getSupplierInvitations(Request $request): JsonResponse
     {
         try {
-            $thirdPartyId = $request->query('third_party_id');
             $page = (int)$request->query('page', 1);
             $limit = (int)$request->query('limit', 10);
+            
+            // Get authenticated user via Sanctum
             $user = Auth::guard('sanctum')->user();
 
-            // Fallback to Auth user if query param is missing
-            if (!$thirdPartyId && $user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
+            // Extract ThirdPartyId from authenticated user
+            $thirdPartyId = null;
+            if ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
                 $thirdPartyId = $user->ThirdPartyId;
+            }
+
+            // Allow query param as override (for debugging/admin)
+            if ($request->has('third_party_id')) {
+                $thirdPartyId = $request->query('third_party_id');
             }
 
             if (!$thirdPartyId) {
                 return response()->json([
-                    'error' => 'Third Party ID is required'
+                    'error' => 'Unable to determine Third Party ID. Please ensure you are authenticated.',
+                    'debug' => [
+                        'user_type' => $user ? get_class($user) : 'No user',
+                        'user_id' => $user ? $user->Id : null,
+                    ]
                 ], 400);
             }
 

@@ -224,7 +224,9 @@ use App\Policies\Inventory\PriceManagementPolicy;
 use App\Policies\Inventory\StockAdjustmentPolicy;
 use App\Policies\Inventory\StockTakePolicy;
 use App\Policies\Inventory\StockItemPolicy;
+use App\Policies\Inventory\StockConsumptionPolicy;
 use App\Policies\Inventory\StorePolicy;
+use App\Models\Inventory\StockConsumption;
 use App\Policies\Inventory\TransactionReceiptPolicy;
 use App\Policies\Inventory\TransactionTransferPolicy;
 use App\Policies\Inventory\UnitOfMeasurePolicy;
@@ -474,7 +476,7 @@ class AppServiceProvider extends ServiceProvider
             InventoryHoldReview::getPrimaryKey() => InventoryHoldReview::class,
             UOMConversion::getPrimaryKey() => UOMConversion::class,
             StockTake::getPrimaryKey() => StockTake::class,
-            \App\Models\Inventory\StockConsumption::getPrimaryKey() => \App\Models\Inventory\StockConsumption::class,
+            StockConsumption::getPrimaryKey() => StockConsumption::class,
 
             ///////// Budget and Analytics /////////
             BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
@@ -718,7 +720,7 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(\App\Models\Procurement\Prequalification\PrequalificationRound::class, \App\Policies\Procurement\Prequalification\PrequalificationRoundPolicy::class);
         Gate::policy(\App\Models\ThirdParty\ThirdParties::class, \App\Policies\ThirdParty\ThirdPartyPolicy::class);
-        Gate::policy(\App\Models\Inventory\StockConsumption::class, \App\Policies\Inventory\StockConsumptionPolicy::class);
+        Gate::policy(StockConsumption::class, StockConsumptionPolicy::class);
         Gate::policy(\App\Models\Settings\WorkFlow::class, \App\Policies\WorkflowPolicy::class);
 
         // Batch 4: Settings & Setup

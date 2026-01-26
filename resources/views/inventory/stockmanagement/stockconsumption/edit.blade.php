@@ -47,6 +47,21 @@
                 <label for="ItemID" class="form-label">Item <span class="text-danger">*</span></label>
                 <select class="form-select @error('ItemID') is-invalid @enderror" name="ItemID" id="ItemID" required>
                     <option value="">Select Item</option>
+                    @foreach($items as $stockItem)
+                        @php
+                            $itemAvailableQty = $stockItem->CurrentQty;
+                            if ($stockItem->ItemID == $consumption->ItemID) {
+                                $itemAvailableQty += $consumption->Quantity;
+                            }
+                        @endphp
+                        <option value="{{ $stockItem->ItemID }}" 
+                            data-uom="{{ $stockItem->uom->Code ?? '' }}"
+                            data-uom-id="{{ $stockItem->UOM }}"
+                            data-currentqty="{{ $itemAvailableQty }}"
+                            {{ old('ItemID', $consumption->ItemID) == $stockItem->ItemID ? 'selected' : '' }}>
+                            {{ $stockItem->item->ItemName ?? 'Unknown Item' }}
+                        </option>
+                    @endforeach
                 </select>
                 @error('ItemID')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -125,22 +140,29 @@
             </div>
         </div>
 
-        <div class="row mb-3">
+         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="IssuedBy" class="form-label">Issued By <span class="text-danger">*</span></label>
-                <select name="IssuedBy" id="IssuedBy" class="form-select @error('IssuedBy') is-invalid @enderror" required>
-                    <option value="">Select User</option>
-                    @foreach($users as $user)
-                        <option value="{{ $user['Id'] }}" 
-                            {{ old('IssuedBy', $consumption->IssuedBy) == $user['Id'] ? 'selected' : '' }}>
-                            {{ $user['Name'] }}
-                        </option>
-                    @endforeach
-                </select>
+                <div class="input-group">
+                    @php
+                        $currentUser = Auth::user();
+                        $employee = $currentUser->employee;
+                        $displayName = ($employee ? $employee->FirstName . ' ' . $employee->LastName : $currentUser->UserName);
+                        if ($employee && $employee->EmployeeID) {
+                            $displayName .= ' (' . $employee->EmployeeID . ')';
+                        } else {
+                            $displayName .= ' (' . $currentUser->UserName . ')';
+                        }
+                    @endphp
+                    <input type="text" class="form-control bg-light" value="{{ $displayName }}" readonly>
+                    <input type="hidden" name="IssuedBy" id="IssuedBy" value="{{ $currentUser->Id }}">
+                </div>
+                <small class="text-muted">Auto-populated with logged-in user</small>
                 @error('IssuedBy')
                     <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
             </div>
+
 
             <div class="col-md-6">
                 <label for="IssuedOn" class="form-label">Issued On <span class="text-danger">*</span></label>
@@ -363,100 +385,21 @@
         }
 
         // Initialize with current consumption data
-        function initializeForm() {
-            console.log('Initializing form...');
-            console.log('Current store ID:', currentStoreId);
-            console.log('Selected item ID:', oldItemID);
-            
-            // Load items for the current store with the selected item
-            if (currentStoreId) {
-                loadItems(currentStoreId, oldItemID);
-            } else {
-                console.warn('No store ID found for initialization');
-            }
-
-            // Load issued to options for the current type
-            if (oldIssuedToType) {
-                loadIssuedToOptions(oldIssuedToType, oldIssuedToID);
-            }
-            
-            // Initial validations
-            validateUsers();
+      function initializeForm() {
+        console.log('Initializing form...');
+        
+        // Items are already loaded from server, just trigger change to set UOM
+        if ($('#ItemID').val()) {
+            $('#ItemID').trigger('change');
         }
 
-        $('#StoreID').on('change', function () {
-            const newStoreId = $(this).val();
-            console.log('Store changed to:', newStoreId);
-            loadItems(newStoreId, null);
-        });
-
-        $('#ItemID').on('change', function () {
-            let selectedOption = $(this).find('option:selected');
-            $('#UOM_Display').val(selectedOption.data('uom') || '');
-            $('#UOM').val(selectedOption.data('uom-id') || '');
-            
-            // Get available quantity for selected item
-            availableQty = parseFloat(selectedOption.data('currentqty')) || 0;
-            
-            // Update quantity placeholder
-            $('#Quantity').attr('placeholder', `Max: ${availableQty.toFixed(2)}`);
-            
-            validateQuantity();
-        });
-
-        $('#IssuedToType').on('change', function () {
-            loadIssuedToOptions($(this).val(), null);
-        });
-
-        $('#IssuedBy, #IssuedToID').on('change', function () {
-            validateUsers();
-        });
-
-        $('#Quantity').on('input', function () {
-            validateQuantity();
-        });
-
-        // Form submission validation
-        $('#consumptionForm').on('submit', function(e) {
-            const issuedBy = $('#IssuedBy').val();
-            const issuedTo = $('#IssuedToID').val();
-            
-            // Validate Issued By vs Issued To
-            if (issuedBy == issuedTo) {
-                e.preventDefault();
-                alert('Error: Issued To cannot be the same as Issued By.');
-                $('#IssuedToID').focus();
-                return false;
-            }
-            
-            // Validate quantity
-            if (!validateQuantity()) {
-                e.preventDefault();
-                alert('Error: Please fix quantity validation errors.');
-                return false;
-            }
-            
-            // Validate item is selected
-            if (!$('#ItemID').val()) {
-                e.preventDefault();
-                alert('Error: Please select an item.');
-                $('#ItemID').focus();
-                return false;
-            }
-            
-            // Show loading state
-            $('button[type="submit"]').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...');
-        });
-
-        // Initialize form immediately on page load
-        initializeForm();
+        // Load issued to options
+        if (oldIssuedToType) {
+            loadIssuedToOptions(oldIssuedToType, oldIssuedToID);
+        }
         
-        // Also initialize when the page is fully loaded as a fallback
-        $(window).on('load', function() {
-            if (!itemsLoaded) {
-                console.log('Retrying initialization after page load...');
-                initializeForm();
-            }
-        });
-    });
+        validateUsers();
+        validateQuantity();
+}
+        
 </script>

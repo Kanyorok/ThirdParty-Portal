@@ -109,63 +109,70 @@ class StockTakeController extends Controller
         return view('inventory.stockmanagement.stocktake.edit', compact('stock', 'branches', 'stores', 'users'));
     }
 
-    public function update(Request $request, $id)
-    {
-         $this->authorize(PermissionEnum::StockTakeUpdate, StockTake::class);
-        $validated = $request->validate([
-            'BranchId' => 'required|exists:t_Branches,Id',
-            'StoreId' => 'required|exists:t_Stores,Id',
-            'CountedBy' => 'required|exists:t_Users,Id',
-            'CountDate' => 'required|date',
+public function update(Request $request, $id)
+{
+    $this->authorize('update', StockTake::class);
+    
+    $validated = $request->validate([
+        'BranchId' => 'required|exists:t_Branches,Id',
+        'StoreId' => 'required|exists:t_Stores,Id',
+        'CountedBy' => 'required|exists:t_Users,Id',
+        'CountDate' => 'required|date',
+        'lines' => 'sometimes|array',
+        'lines.*.Id' => 'sometimes|required|exists:t_StockTakeLines,Id',
+        'lines.*.CountedQuantity' => ['required', 'numeric', 'min:0'],
+        'lines.*.Remarks' => 'nullable|string',
+    ], [
+        'lines.*.CountedQuantity.min' => 'Counted quantity cannot be less than zero.',
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        $stock = StockTake::findOrFail($id);
+
+        // Update the stock take header
+        $stock->update([
+            'BranchId' => $validated['BranchId'],
+            'StoreId' => $validated['StoreId'],
+            'CountedBy' => $validated['CountedBy'],
+            'CountDate' => $validated['CountDate'],
+            'ModifiedBy' => Auth::id(),
         ]);
 
-        DB::beginTransaction();
+        // ✅ Update lines
+        if (isset($validated['lines'])) {
+            foreach ($validated['lines'] as $lineData) {
+                if (!empty($lineData['Id'])) {
+                    $line = StockTakeLines::find($lineData['Id']);
 
-        try {
-            $stock = StockTake::findOrFail($id);
-
-            // Update the stock take header
-            $stock->update([
-                'BranchId' => $validated['BranchId'],
-                'StoreId' => $validated['StoreId'],
-                'CountedBy' => $validated['CountedBy'],
-                'CountDate' => $validated['CountDate'],
-                'ModifiedBy' => Auth::id(),
-            ]);
-
-            // ✅ Update lines
-            if ($request->has('lines')) {
-                foreach ($request->lines as $lineData) {
-                    if (!empty($lineData['Id'])) {
-                        $line = StockTakeLines::find($lineData['Id']);
-
-                        if ($line) {
-                            $line->update([
-                                'CountedQuantity' => $lineData['CountedQuantity'],
-                                'Remarks' => $lineData['Remarks'] ?? null,
-                                'ModifiedBy' => Auth::id(),
-                                'ModifiedOn' => now(),
-                            ]);
-                        }
+                    if ($line) {
+                        $line->update([
+                            'CountedQuantity' => $lineData['CountedQuantity'],
+                            'Remarks' => $lineData['Remarks'] ?? null,
+                            'ModifiedBy' => Auth::id(),
+                            'ModifiedOn' => now(),
+                        ]);
                     }
                 }
             }
-
-            DB::commit();
-
-            activity()
-                ->performedOn($stock)
-                ->causedBy(Auth::user())
-                ->withProperties(['action' => 'update'])
-                ->log('Updated Stock Take and lines');
-
-            return redirect()->route('stocktake.index')->with('success', 'Stock Take updated successfully');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::error('Failed to Update Stock Take: ' . $th->getMessage());
-            return back()->withErrors(['error' => 'Failed to update Stock Take'])->withInput();
         }
+
+        DB::commit();
+
+        activity()
+            ->performedOn($stock)
+            ->causedBy(Auth::user())
+            ->withProperties(['action' => 'update'])
+            ->log('Updated Stock Take and lines');
+
+        return redirect()->route('stocktake.index')->with('success', 'Stock Take updated successfully');
+    } catch (\Throwable $th) {
+        DB::rollBack();
+        Log::error('Failed to Update Stock Take: ' . $th->getMessage());
+        return back()->withErrors(['error' => 'Failed to update Stock Take'])->withInput();
     }
+}
 
     public function destroy($id)
     {

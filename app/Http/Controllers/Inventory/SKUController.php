@@ -53,8 +53,10 @@ class SKUController extends Controller
         $categories = ItemCategories::whereNull('ParentId')
             ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
             ->get();
-        
-        $stores = Store::where('BranchID', $branchId)->get();
+
+        $stores = Store::where('BranchID', $branchId)
+            ->where('Status', 1)
+            ->get();
 
         return view('inventory.itemmaster.sku.create', compact('branch', 'stores', 'categories'));
     }
@@ -104,7 +106,10 @@ class SKUController extends Controller
             ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
             ->get();
 
-        $stores = Store::where('BranchID', $branchId)->get();
+        $stores = Store::where('BranchID', $branchId)
+            ->where('Status', 1)
+            ->get();
+
 
         $category = $item->item->category;
         $parentCategoryId = $category->parent ? $category->parent->Id : $category->Id;
@@ -149,7 +154,11 @@ class SKUController extends Controller
             return response()->json([], 400);
         }
 
-        $stores = Store::where('BranchID', $branchId)->get(['Id', 'StoreName']);
+        $stores = Store::where('BranchID', $branchId)
+        ->where('Status', 1)  
+        ->get(['Id', 'StoreName']);
+        
+
         return response()->json($stores);
     }
 

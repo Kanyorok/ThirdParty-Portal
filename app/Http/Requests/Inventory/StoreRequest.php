@@ -34,7 +34,8 @@ class StoreRequest extends FormRequest
                 'max:255',
                 Rule::unique('t_Stores', 'StoreName')
                     ->ignore($storeId)
-                    ->whereNull('DeletedOn'), // ← exclude soft-deleted stores
+                    ->where('BranchID', $this->BranchID)
+                    ->whereNull('DeletedOn'), 
             ],
             'BranchID' => 'required|integer|exists:t_Branches,Id',
             'Status' => 'required|boolean',
