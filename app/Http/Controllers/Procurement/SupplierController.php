@@ -250,9 +250,15 @@ class SupplierController extends Controller
             // Handle Suspended Toggle Logic
             if ($request->boolean('Suspended')) {
                 $masterData['ApprovalStatus'] = ThirdPartyApprovalStatusEnum::Suspended;
+                // Also deactivate associated ThirdPartyUsers when suspended
+                \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyId', $supplier->Id)
+                    ->update(['IsActive' => false]);
             } elseif ($request->input('ApprovalStatus') === ThirdPartyApprovalStatusEnum::Suspended->value) {
                 // If switch was turned off, default back to Approved or Pending (A or P)
                 $masterData['ApprovalStatus'] = ThirdPartyApprovalStatusEnum::Approved;
+                // Reactivate associated ThirdPartyUsers when unsuspended
+                \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyId', $supplier->Id)
+                    ->update(['IsActive' => true]);
             }
 
             $masterData['ModifiedBy'] = $userId;

@@ -156,9 +156,10 @@
                             <div class="d-flex flex-column gap-2">
                                 @foreach($prequalifiedCats as $supplierRow)
                                 @php $category = $supplierRow->category; @endphp
+                                @if($category)
                                 <div class="border rounded p-2">
                                     <div class="fw-bold text-primary">{{ $category->CategoryName ?? $category->Description ?? 'Category' }}</div>
-                                    @if($category->itemCategories->isNotEmpty())
+                                    @if($category->itemCategories && $category->itemCategories->isNotEmpty())
                                     <div class="small text-muted mt-1">
                                         Items: {{ $category->itemCategories->pluck('Name')->join(', ') }}
                                     </div>
@@ -166,6 +167,7 @@
                                     <div class="small text-muted mt-1 fst-italic">No specific items listed</div>
                                     @endif
                                 </div>
+                                @endif
                                 @endforeach
                             </div>
                             @else
