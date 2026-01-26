@@ -72,7 +72,7 @@ class SupplierRFQController extends Controller
     }
 
     /**
-     * Get detailed RFQ invitation
+     * Get detailed RFQ invitation with full RFQ details and lines
      */
     public function getInvitation(int|string $rfq): JsonResponse
     {
@@ -85,9 +85,9 @@ class SupplierRFQController extends Controller
                 return response()->json(['error' => 'Authentication required'], 401);
             }
 
-            $rfq = RFQ::find($rfqId); // Assuming RFQ model interprets 't_RFQ'
-            // If RFQ model not imported or alias issue, ensure 'use App\Models\Procurement\RFQ;' is present or use DB.
-            if (!$rfq) {
+            // Load RFQ with its lines and unit of measure
+            $rfqModel = RFQ::with(['rfqLines', 'rfqLines.uom'])->find($rfqId);
+            if (!$rfqModel) {
                  return response()->json(['error' => 'RFQ not found'], 404);
             }
 
@@ -113,9 +113,73 @@ class SupplierRFQController extends Controller
                 ], 404);
             }
 
+            // Get existing response if any
+            $existingResponse = \App\Models\Procurement\RFQResponse::where('RFQId', $rfqId)
+                ->where('SupplierId', $invitation->SupplierId)
+                ->whereNull('DeletedOn')
+                ->with(['items'])
+                ->first();
+
+            // Build RFQ header data
+            $rfqData = [
+                'id' => $rfqModel->Id,
+                'number' => $rfqModel->RFQNumber,
+                'comments' => $rfqModel->Comments,
+                'title' => $rfqModel->Comments, // Use comments as title
+                'referenceNumber' => $rfqModel->RFQNumber,
+                'status' => $rfqModel->Status,
+                'submissionDeadline' => $rfqModel->SubmissionDeadline,
+                'description' => $rfqModel->Remarks ?? '',
+            ];
+
+            // Build lines data
+            $lines = $rfqModel->rfqLines->map(function ($line) {
+                return [
+                    'id' => $line->Id,
+                    'rfqLineId' => $line->Id,
+                    'lineId' => $line->Id,
+                    'lineNumber' => $line->LineNumber ?? 0,
+                    'ItemCode' => $line->ItemCode ?? '',
+                    'ItemName' => $line->ItemName ?? '',
+                    'description' => $line->ItemName ?? '',
+                    'quantity' => $line->Quantity ?? 0,
+                    'unitOfMeasure' => $line->uom->Name ?? $line->UOM ?? '',
+                    'uom' => $line->uom->Name ?? $line->UOM ?? '',
+                    'specification' => $line->Specification ?? '',
+                ];
+            })->values()->all();
+
+            // Build response data if exists
+            $responseData = null;
+            if ($existingResponse) {
+                $responseData = [
+                    'currency' => $existingResponse->CurrencyCode ?? '',
+                    'DurationDays' => $existingResponse->DurationDays ?? 14,
+                    'LeadTimeDays' => $existingResponse->LeadTimeDays ?? null,
+                    'items' => $existingResponse->items->map(function ($item) {
+                        return [
+                            'rfqLineId' => $item->RFQLineID ?? $item->RfqLineId ?? '',
+                            'QuotedPrice' => $item->QuotedPrice ?? null,
+                            'TotalPayable' => $item->TotalPayable ?? null,
+                            'Comments' => $item->Comments ?? '',
+                        ];
+                    })->values()->all(),
+                    'submittedAt' => $existingResponse->CreatedOn ?? null,
+                ];
+            }
+
             return response()->json([
                 'success' => true,
-                ...(array)$invitation
+                'rfq' => $rfqData,
+                'lines' => $lines,
+                'response' => $responseData,
+                'isSubmitted' => $existingResponse && strtoupper($existingResponse->Status ?? '') === 'FINAL',
+                'invitation' => [
+                    'SupplierId' => $invitation->SupplierId,
+                    'Status' => $invitation->Status,
+                    'CreatedOn' => $invitation->CreatedOn,
+                    'ModifiedOn' => $invitation->ModifiedOn,
+                ]
             ]);
 
         } catch (\Exception $e) {
@@ -249,16 +313,17 @@ class SupplierRFQController extends Controller
                 return response()->json(['error' => 'No invitation found for this supplier'], 403);
             }
 
-            // $actor = SystemHelper::user();
-            $actorId = $user->Id ?? 0;
+            // Use system user ID (1) for CreatedBy/ModifiedBy since ThirdPartyUser IDs don't exist in t_Users
+            // The foreign key constraint requires a valid t_Users.Id
+            $systemUserId = 1; // SYSTEM user
 
             \App\Models\Procurement\RFQClarification::create([
                 'RFQId' => $request->rfqId,
                 'SupplierId' => $supplierId,
                 'RFQLineId' => $request->rfqLineId,
                 'Question' => $request->question,
-                'CreatedBy' => $actorId,
-                'ModifiedBy' => $actorId,
+                'CreatedBy' => $systemUserId,
+                'ModifiedBy' => $systemUserId,
             ]);
 
             return response()->json(['message' => 'Clarification submitted'], 201);

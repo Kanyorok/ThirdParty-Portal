@@ -76,6 +76,23 @@ Route::get('/health', function () {
     ]);
 });
 
+// Test auth endpoint (WITH AUTH REQUIRED)
+Route::middleware('auth:sanctum')->get('/test-auth', function (Illuminate\Http\Request $request) {
+    $user = Auth::guard('sanctum')->user();
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Authentication working!',
+        'user_authenticated' => $user ? true : false,
+        'user_type' => $user ? get_class($user) : 'No user',
+        'user_id' => $user ? $user->Id : null,
+        'third_party_id' => ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null,
+        'request_headers' => [
+            'authorization' => $request->header('Authorization') ? 'Present (' . substr($request->header('Authorization'), 0, 20) . '...)' : 'Missing'
+        ]
+    ]);
+});
+
 // Test endpoint for debugging (NO AUTH REQUIRED)
 Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $request) {
     try {
@@ -126,6 +143,73 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
         ]);
     }
 });
+
+// Auth diagnostic endpoint (REQUIRES AUTH) - Check your authentication status
+Route::get('/debug/auth-status', function (Illuminate\Http\Request $request) {
+    try {
+        $user = Auth::guard('sanctum')->user();
+        
+        $response = [
+            'authenticated' => $user !== null,
+            'timestamp' => now()->toDateTimeString(),
+        ];
+
+        if ($user) {
+            $response['user'] = [
+                'id' => $user->Id ?? null,
+                'username' => $user->Username ?? null,
+                'email' => $user->Email ?? null,
+                'class' => get_class($user),
+                'is_third_party_user' => $user instanceof \App\Models\ThirdParty\ThirdPartyUser,
+            ];
+
+            if ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
+                $response['third_party_id'] = $user->ThirdPartyId;
+                
+                // Get supplier IDs for this third party
+                $supplierIds = DB::table('t_Suppliers')
+                    ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
+                    ->where('t_SupplierMaster.ThirdPartyId', (int)$user->ThirdPartyId)
+                    ->whereNull('t_Suppliers.DeletedOn')
+                    ->pluck('t_Suppliers.Id')
+                    ->toArray();
+
+                $response['supplier_ids'] = $supplierIds;
+                $response['supplier_count'] = count($supplierIds);
+
+                // Check tender invitations
+                if (!empty($supplierIds)) {
+                    $invitationCount = DB::table('t_TenderInvitations')
+                        ->whereIn('SupplierId', $supplierIds)
+                        ->whereNull('DeletedOn')
+                        ->count();
+                    $response['tender_invitations_count'] = $invitationCount;
+                }
+
+                // Check available tenders
+                $openTendersCount = DB::table('t_Tenders')
+                    ->where('TenderType', 'Open')
+                    ->whereIn('Status', ['pb', 'opening_in_progress'])
+                    ->whereNull('DeletedOn')
+                    ->count();
+                $response['open_tenders_count'] = $openTendersCount;
+            }
+        } else {
+            $response['error'] = 'Not authenticated. Please ensure you have a valid Bearer token.';
+            $response['headers'] = [
+                'authorization' => $request->header('Authorization') ? 'Present (hidden)' : 'Missing',
+            ];
+        }
+
+        return response()->json($response);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Exception occurred',
+            'message' => $e->getMessage(),
+            'trace' => config('app.debug') ? $e->getTraceAsString() : 'Enable debug mode to see trace'
+        ], 500);
+    }
+})->middleware('auth:sanctum');
 
 
 //   Route::get('bid-submissions', [\App\Http\Controllers\Procurement\TenderBidResponsivenessController::class, 'getSupplierBids']);
@@ -444,14 +528,11 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
     Route::post('tenders', [TenderApiController::class, 'store']);
     Route::put('tenders/{tender}', [TenderApiController::class, 'update']);
     Route::delete('tenders/{tender}', [TenderApiController::class, 'destroy']);
-    
-    Route::put('/tender-invitations/{id}', [TenderInvitationController::class, 'update']);
 });
 
 // Semi-public routes (index/show handle their own auth checks for filtering)
 Route::get('tenders', [TenderApiController::class, 'index']);
 Route::get('tenders/{tender}', [TenderApiController::class, 'show']);
-Route::get('/tender-invitations', [TenderInvitationController::class, 'index']);
 
 // currencies
 Route::prefix('v1')->group(function () {
@@ -518,6 +599,10 @@ Route::prefix('procurement')->name('api.procurement.')
         // Protected RFQ actions (submit, clarifying)
         Route::post('rfq-responses', [SupplierRFQController::class, 'submitResponse']);
         Route::post('rfq-clarifications', [SupplierRFQController::class, 'postClarification']);
+        
+        // Tender invitations - matches RFQ structure
+        Route::get('tender-invitations', [TenderInvitationController::class, 'index']);
+        Route::put('tender-invitations/{id}', [TenderInvitationController::class, 'update']);
     });
 
 

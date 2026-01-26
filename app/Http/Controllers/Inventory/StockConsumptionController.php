@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StockConsumptionRequest;
 use App\Models\Inventory\StockConsumption;
+use App\Policies\Inventory\StockConsumptionPolicy;
 use App\Models\Core\Branch;
 use App\Models\Inventory\Store;
 use App\Models\Inventory\StockItem;
@@ -47,6 +48,7 @@ class StockConsumptionController extends Controller
 
     public function create(Request $request)
     {
+        $this->authorize('create', StockConsumption::class);
         $currentBranch = $request->user()->branch;
         if (!$currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
@@ -113,6 +115,7 @@ class StockConsumptionController extends Controller
 
     public function store(StockConsumptionRequest $request)
     {
+        $this->authorize('create', StockConsumption::class);
         try {
             $this->stockConsumptionService->create($request->validated());
             return redirect()->route('stockconsumption.index')->with('success', 'Stock consumption recorded successfully.');
@@ -123,6 +126,7 @@ class StockConsumptionController extends Controller
 
     public function edit($id, Request $request)
     {
+        $this->authorize('update', StockConsumption::class);
         $consumption = StockConsumption::with(['item', 'store', 'uom', 'issuedBy', 'branch', 'stockItem'])->findOrFail($id);
 
         $currentBranch = $request->user()->branch;
@@ -223,6 +227,8 @@ class StockConsumptionController extends Controller
 
     public function update(StockConsumptionRequest $request, $id)
     {
+        $this->authorize('update', StockConsumption::class);
+
         try {
             $consumption = StockConsumption::findOrFail($id);
             $this->stockConsumptionService->update($consumption, $request->validated());
@@ -236,6 +242,7 @@ class StockConsumptionController extends Controller
 
     public function show($id)
     {
+        $this->authorize('view', StockConsumption::class);
 
         $consumption = StockConsumption::with([
             'item',
@@ -344,6 +351,7 @@ class StockConsumptionController extends Controller
 
     public function destroy($id)
     {
+        $this->authorize('delete', StockConsumption::class);
         $item = StockConsumption::findOrFail($id);
 
         try {

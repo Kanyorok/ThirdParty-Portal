@@ -2,25 +2,30 @@
 @section('title', 'Property Management')
 
 @section('styles')
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
-<style>
-    .table th, .table td {
-        vertical-align: middle !important;
-    }
-    .action-btns .btn {
-        margin: 2px;
-    }
-    .page-title {
-        font-weight: 600;
-        font-size: 1.45rem;
-    }
-    .subtitle {
-        font-size: .85rem;
-        color: #6c757d;
-        margin-top: -5px;
-    }
-</style>
+    <style>
+        .page-title {
+            font-weight: 600;
+            font-size: 1.45rem;
+        }
+
+        .subtitle {
+            font-size: .85rem;
+            color: #6c757d;
+            margin-top: -5px;
+        }
+
+        .table th,
+        .table td {
+            vertical-align: middle !important;
+        }
+        .btn {
+            margin: 2px;
+        }
+
+    </style>
 @endsection
 
 @section('content')
@@ -41,75 +46,82 @@
         <div class="card shadow-sm border-0">
             <div class="card-body">
 
-                <table id="propertyregistry" class="table table-hover table-striped mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Property Name</th>
-                            <th>Type</th>
-                            <th>Category</th>
-                            <th>Country</th>
-                            <th>Town/City</th>
-                            <th>Status</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
+                <!-- 🔥 Horizontal Scroll Container -->
+                <div class="table-responsive">
+                    <table id="propertyregistry"
+                           class="table table-hover table-striped mb-0 w-100">
 
-                    <tbody>
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Property Name</th>
+                                <th>Type</th>
+                                <th>Category</th>
+                                <th>Country</th>
+                                <th>Town/City</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
                         @foreach($properties as $property)
-                        <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $property->PropertyName ?? '-' }}</td>
-                            <td>{{ $property->type->PropertyTypeName ?? '-' }}</td>
-                            <td>{{ $property->propertyCategory->Name ?? '-' }}</td>
-                            <td>{{ $property->propertyCountry->Name ?? '-' }}</td>
-                            <td>{{ $property->propertyLocality->Name ?? '-' }}</td>
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $property->PropertyName ?? '-' }}</td>
+                                <td>{{ $property->type->PropertyTypeName ?? '-' }}</td>
+                                <td>{{ $property->propertyCategory->Name ?? '-' }}</td>
+                                <td>{{ $property->propertyCountry->Name ?? '-' }}</td>
+                                <td>{{ $property->propertyLocality->Name ?? '-' }}</td>
 
-                            <td>
-                                <span class="badge {{ $property->IsActive ? 'bg-success' : 'bg-secondary' }}">
-                                    {{ $property->IsActive ? 'Active' : 'Inactive' }}
-                                </span>
-                            </td>
+                                <td>
+                                    <span class="badge {{ $property->IsActive ? 'bg-success' : 'bg-secondary' }}">
+                                        {{ $property->IsActive ? 'Active' : 'Inactive' }}
+                                    </span>
+                                </td>
 
-                            <td class="text-center">
-                                <div class="action-btns d-inline-flex">
-                                    <!-- View -->
-                                    <a href="{{ route('PropertyRegistry.show', $property->Id) }}"
-                                       class="btn btn-sm btn-info text-white" title="View">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
+                                <td class="text-center">
+                                    <div class="action-btns d-inline-flex">
 
-                                    <!-- Edit -->
-                                    <a href="{{ route('PropertyRegistry.edit', $property->Id) }}"
-                                       class="btn btn-sm btn-warning text-white" title="Edit">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
+                                        <!-- View -->
+                                        <a href="{{ route('PropertyRegistry.show', $property->Id) }}"
+                                           class="btn btn-sm btn-info text-white"
+                                           title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
 
-                                    <!-- Delete / In Use -->
-                                    @if($property->getBlockByProperty()->exists())
-                                        <button class="btn btn-sm btn-secondary" title="In Use">
-                                            <i class="bi bi-lock"></i>
-                                        </button>
-                                    @else
-                                        <form action="{{ route('PropertyRegistry.destroy', $property->Id) }}"
-                                              method="POST"
-                                              onsubmit="return confirm('Are you sure you want to delete this property?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button class="btn btn-sm btn-danger" title="Delete">
-                                                <i class="bi bi-trash"></i>
+                                        <!-- Edit -->
+                                        <a href="{{ route('PropertyRegistry.edit', $property->Id) }}"
+                                           class="btn btn-sm btn-warning text-white"
+                                           title="Edit">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+
+                                        <!-- Delete / In Use -->
+                                        @if($property->getBlockByProperty()->exists())
+                                            <button class="btn btn-sm btn-secondary" title="In Use">
+                                                <i class="bi bi-lock"></i>
                                             </button>
-                                        </form>
-                                    @endif
+                                        @else
+                                            <form action="{{ route('PropertyRegistry.destroy', $property->Id) }}"
+                                                  method="POST"
+                                                  onsubmit="return confirm('Are you sure you want to delete this property?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn btn-sm btn-danger" title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        @endif
 
-                                </div>
-                            </td>
-
-                        </tr>
+                                    </div>
+                                </td>
+                            </tr>
                         @endforeach
-                    </tbody>
+                        </tbody>
 
-                </table>
+                    </table>
+                </div>
 
             </div>
         </div>
@@ -131,9 +143,11 @@
             pageLength: 10,
             ordering: true,
             searching: true,
-            lengthChange: true
+            lengthChange: true,
+            scrollX: true,       
+            autoWidth: true,    
+            responsive: true    
         });
     });
 </script>
-
 @endsection

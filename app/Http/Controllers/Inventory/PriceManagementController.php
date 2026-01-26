@@ -31,13 +31,14 @@ class PriceManagementController extends Controller
         $uoms = UnitOfMeasure::all();
         $items = ItemMasterList::with('uom')
             ->whereNotIn('Id', function ($query) {
-                $query->select('ItemID')->from('t_Pricing');
+                $query->select('ItemID')
+                    ->from('t_Pricing')
+                    ->whereNull('DeletedOn');
             })
             ->get();
- 
+
         return view('inventory.pricemanagement.index', compact('prices', 'items','currencies','uoms'));
     }
- 
     public function create()
     {
         $this->authorize('create', PriceManagement::class);
