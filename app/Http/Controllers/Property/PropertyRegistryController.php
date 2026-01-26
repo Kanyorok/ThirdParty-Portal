@@ -9,13 +9,19 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\PropertyRegistry\PropertyRegistryRequest;
+use App\Http\Requests\Property\PropertyRegistry\PropertyBulkRequest;
 use App\Models\Core\CategoryMaster;
 use App\Models\Core\Locality;
 use App\Models\PropertyManagement\PropertyType;
 use App\Services\Property\PropertyRegistry\PropertyRegistryService;
+use App\Services\Property\PropertyRegistry\PropertyBulkService;
 use App\Models\PropertyManagement\PropertyRegistry;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\JsonResponse;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Concerns\FromArray;
+Use Maatwebsite\Excel\Concerns\WithHeadings;
+
 
 class PropertyRegistryController extends Controller
 {
@@ -247,6 +253,90 @@ class PropertyRegistryController extends Controller
     {
         return response()->json(
             Locality::where('CountryId', $countryId)->get()
+        );
+    }
+
+    public function bulkCreate()
+    {
+        $this->authorize(PermissionEnum::PropertyRegistryCreate, PropertyRegistry::class);
+        return view('property.propertyregistry.registry.bulk-create');
+    }
+
+    public function bulkStore(PropertyBulkRequest $request)
+    {
+        $this->authorize(PermissionEnum::PropertyRegistryCreate, PropertyRegistry::class);
+
+        try {
+            $file = $request->file('file');
+            
+            // Parse CSV/Excel file
+            $data = Excel::toArray([], $file)[0];
+            
+            // Get headers from first row
+            $headers = array_shift($data);
+            
+            // Map headers to data
+            $mappedData = [];
+            foreach ($data as $row) {
+                $mappedData[] = array_combine($headers, $row);
+            }
+
+            // Process bulk upload
+            $results = PropertyBulkService::processBulkUpload($mappedData, auth()->user());
+
+            if (request()->expectsJson()) {
+                return response()->json($results);
+            }
+
+            // Prepare success/error messages
+            $message = "Bulk upload completed. Successful: {$results['successful']}, Failed: {$results['failed']}";
+            
+            if ($results['failed'] > 0) {
+                return redirect()
+                    ->route('PropertyRegistry.index')
+                    ->with('warning', $message)
+                    ->with('errors', $results['errors']);
+            }
+
+            return redirect()
+                ->route('PropertyRegistry.index')
+                ->with('success', $message);
+
+        } catch (\Exception $e) {
+            Log::error('Bulk property upload failed: ' . $e->getMessage());
+            
+            if (request()->expectsJson()) {
+                return response()->json(['message' => 'Bulk upload failed', 'error' => $e->getMessage()], 500);
+            }
+
+            return back()
+                ->withErrors(['error' => 'Failed to process bulk upload: ' . $e->getMessage()])
+                ->withInput();
+        }
+    }
+
+    public function bulkTemplate()
+    {
+        $headers = ['PropertyName', 'PropertyCode', 'PropertyType', 'Category', 'Owner', 'AcquisitionDate', 'CountryId', 'LocationId', 'Address', 'PropertyDescription'];
+        $sampleData = [
+            ['Property A', 'PROP-001', 1, 1, 'Perez', '2024-01-01', 1, 124, '123 Main St', 'Sample property DEscription'],
+        ];
+
+        return Excel::download(
+            new class implements FromArray, WithHeadings {
+                public function array(): array
+                {
+                    return [
+                        ['Property A', 'PROP-001', 1, 1, 'Perez', '2024-01-01', 1, 124, '123 Main St', 'Sample property DEscription'],
+                    ];
+                }
+
+                public function headings(): array
+                {
+                    return ['PropertyName', 'PropertyCode', 'PropertyType', 'Category', 'Owner', 'AcquisitionDate', 'CountryId', 'LocationId', 'Address', 'PropertyDescription'];
+                }
+            },
+            'property_bulk_template.xlsx'
         );
     }
 }

@@ -61,6 +61,10 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::delete('propertyregistry/delete/{Id}', [PropertyRegistryController::class, 'destroy'])->name('PropertyRegistry.destroy');
     Route::get('propertyregistry/edit/{Id}', [PropertyRegistryController::class, 'edit'])->name('PropertyRegistry.edit');
     Route::put('propertyregistry/edit/{Id}', [PropertyRegistryController::class, 'update'])->name('PropertyRegistry.update');
+    // Bulk property upload routes
+    Route::get('propertyregistry/bulk/create', [PropertyRegistryController::class, 'bulkCreate'])->name('PropertyRegistry.bulkCreate');
+    Route::post('propertyregistry/bulk/store', [PropertyRegistryController::class, 'bulkStore'])->name('PropertyRegistry.bulkStore');
+    Route::get('propertyregistry/bulk/template', [PropertyRegistryController::class, 'bulkTemplate'])->name('PropertyRegistry.bulkTemplate');
 
     //Route::resource('attachments', PropertyAttachmentsController::class);
     Route::get('attachments', [PropertyAttachmentsController::class, 'index'])->name('attachments.index');
@@ -80,6 +84,10 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::delete('propertyaddblock/delete/{Id}', [PropertyBlockController::class, 'destroy'])->name('addblock.destroy');
     Route::get('propertyaddblock/edit/{Id}', [PropertyBlockController::class, 'edit'])->name('addblock.edit');
     Route::put('propertyaddblock/update/{Id}', [PropertyBlockController::class, 'update'])->name('addblock.update');
+    // Bulk block upload routes
+    Route::get('propertyaddblock/bulk/create', [PropertyBlockController::class, 'bulkCreate'])->name('addblock.bulkCreate');
+    Route::post('propertyaddblock/bulk/store', [PropertyBlockController::class, 'bulkStore'])->name('addblock.bulkStore');
+    Route::get('propertyaddblock/bulk/template', [PropertyBlockController::class, 'bulkTemplate'])->name('addblock.bulkTemplate');
 
 
     //Property Settings
@@ -108,6 +116,10 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::delete('propertyaddfloor/delete/{Id}', [PropertyFloorController::class, 'destroy'])->name('addfloor.destroy');
     Route::get('propertyaddfloor/edit/{Id}', [PropertyFloorController::class, 'edit'])->name('addfloor.edit');
     Route::put('propertyaddfloor/edit/{Id}', [PropertyFloorController::class, 'update'])->name('addfloor.update');
+    // Bulk floor upload routes
+    Route::get('propertyaddfloor/bulk/create', [PropertyFloorController::class, 'bulkCreate'])->name('addfloor.bulkCreate');
+    Route::post('propertyaddfloor/bulk/store', [PropertyFloorController::class, 'bulkStore'])->name('addfloor.bulkStore');
+    Route::get('propertyaddfloor/bulk/template', [PropertyFloorController::class, 'bulkTemplate'])->name('addfloor.bulkTemplate');
 
 
     //Route::resource('addunit', PropertyUnitController::class);
@@ -120,6 +132,10 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::delete('propertyaddunit/delete/{Id}', [PropertyUnitController::class, 'destroy'])->name('addunit.destroy');
     Route::get('propertyaddunit/edit/{Id}', [PropertyUnitController::class, 'edit'])->name('addunit.edit');
     Route::put('propertyaddunit/edit/{Id}', [PropertyUnitController::class, 'update'])->name('addunit.update');
+    // Bulk unit upload routes
+    Route::get('propertyaddunit/bulk/create', [PropertyUnitController::class, 'bulkCreate'])->name('addunit.bulkCreate');
+    Route::post('propertyaddunit/bulk/store', [PropertyUnitController::class, 'bulkStore'])->name('addunit.bulkStore');
+    Route::get('propertyaddunit/bulk/template', [PropertyUnitController::class, 'bulkTemplate'])->name('addunit.bulkTemplate');
 
 
     //Route::resource('addtenant', PropertyNewTenantController::class);

@@ -9,10 +9,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\PropertyRegistry\PropertyBlockRequest;
+use App\Http\Requests\Property\PropertyRegistry\PropertyBlockBulkRequest;
 use App\Services\Property\PropertyRegistry\PropertyBlockService;
+use App\Services\Property\PropertyRegistry\PropertyBlockBulkService;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyRegistry;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 
 
 class PropertyBlockController extends Controller
@@ -120,4 +125,82 @@ class PropertyBlockController extends Controller
         }
     }
 
+    public function bulkCreate()
+    {
+        $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyBlock::class);
+        return view('property.propertyregistry.structuralmapping.addblock.bulk-create');
+    }
+
+    public function bulkStore(PropertyBlockBulkRequest $request)
+    {
+        $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyBlock::class);
+
+        try {
+            $file = $request->file('file');
+            
+            // Parse CSV/Excel file
+            $data = Excel::toArray([], $file)[0];
+            
+            // Get headers from first row
+            $headers = array_shift($data);
+            
+            // Map headers to data
+            $mappedData = [];
+            foreach ($data as $row) {
+                $mappedData[] = array_combine($headers, $row);
+            }
+
+            // Process bulk upload
+            $results = PropertyBlockBulkService::processBulkUpload($mappedData, auth()->user());
+
+            if (request()->expectsJson()) {
+                return response()->json($results);
+            }
+
+            // Prepare success/error messages
+            $message = "Bulk upload completed. Successful: {$results['successful']}, Failed: {$results['failed']}";
+            
+            if ($results['failed'] > 0) {
+                return redirect()
+                    ->route('addblock.index')
+                    ->with('warning', $message)
+                    ->with('errors', $results['errors']);
+            }
+
+            return redirect()
+                ->route('addblock.index')
+                ->with('success', $message);
+
+        } catch (\Exception $e) {
+            Log::error('Bulk block upload failed: ' . $e->getMessage());
+            
+            if (request()->expectsJson()) {
+                return response()->json(['message' => 'Bulk upload failed', 'error' => $e->getMessage()], 500);
+            }
+
+            return back()
+                ->withErrors(['error' => 'Failed to process bulk upload: ' . $e->getMessage()])
+                ->withInput();
+        }
+    }
+
+    public function bulkTemplate()
+    {
+        return Excel::download(
+            new class implements FromArray, WithHeadings {
+                public function array(): array
+                {
+                    return [
+                        [1, 'Block A', 'Ground floor block'],
+                    ];
+                }
+
+                public function headings(): array
+                {
+                    return ['PropertyID', 'BlockName', 'Description'];
+                }
+            },
+            'block_bulk_template.xlsx'
+        );
+    }
 }

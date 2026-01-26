@@ -8,12 +8,15 @@ use Illuminate\Support\Facades\Auth;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\PropertyRegistry\PropertyUnitRequest;
+use App\Http\Requests\Property\PropertyRegistry\PropertyUnitBulkRequest;
 use App\Services\Property\PropertyRegistry\PropertyUnitService;
+use App\Services\Property\PropertyRegistry\PropertyUnitBulkService;
 use Illuminate\Http\Request;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyBlock;
+use Maatwebsite\Excel\Facades\Excel;
 
 
 class PropertyUnitController extends Controller
@@ -168,6 +171,85 @@ class PropertyUnitController extends Controller
                 ->withErrors(['error' => 'Failed to delete Property Unit. Please try again.'])
                 ->withInput();
         }
+    }
+
+    public function bulkCreate()
+    {
+        $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyUnit::class);
+        return view('property.propertyregistry.structuralmapping.addunit.bulk-create');
+    }
+
+    public function bulkStore(PropertyUnitBulkRequest $request)
+    {
+        $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyUnit::class);
+
+        try {
+            $file = $request->file('file');
+            
+            // Parse CSV/Excel file
+            $data = Excel::toArray([], $file)[0];
+            
+            // Get headers from first row
+            $headers = array_shift($data);
+            
+            // Map headers to data
+            $mappedData = [];
+            foreach ($data as $row) {
+                $mappedData[] = array_combine($headers, $row);
+            }
+
+            // Process bulk upload
+            $results = PropertyUnitBulkService::processBulkUpload($mappedData, auth()->user());
+
+            if (request()->expectsJson()) {
+                return response()->json($results);
+            }
+
+            // Prepare success/error messages
+            $message = "Bulk upload completed. Successful: {$results['successful']}, Failed: {$results['failed']}";
+            
+            if ($results['failed'] > 0) {
+                return redirect()
+                    ->route('addunit.index')
+                    ->with('warning', $message)
+                    ->with('errors', $results['errors']);
+            }
+
+            return redirect()
+                ->route('addunit.index')
+                ->with('success', $message);
+
+        } catch (\Exception $e) {
+            Log::error('Bulk unit upload failed: ' . $e->getMessage());
+            
+            if (request()->expectsJson()) {
+                return response()->json(['message' => 'Bulk upload failed', 'error' => $e->getMessage()], 500);
+            }
+
+            return back()
+                ->withErrors(['error' => 'Failed to process bulk upload: ' . $e->getMessage()])
+                ->withInput();
+        }
+    }
+
+    public function bulkTemplate()
+    {
+        return Excel::download(
+            new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
+                public function array(): array
+                {
+                    return [
+                        ['PROP-001', 'Block A', 'Floor 1', 'UNIT-101', '1500', 1, 1, 'Ground floor unit'],
+                    ];
+                }
+
+                public function headings(): array
+                {
+                    return ['PropertyID', 'BlockID', 'FloorID', 'UnitCode', 'UnitSize', 'IsRentable', 'CurrentStatus', 'Remarks'];
+                }
+            },
+            'unit_bulk_template.xlsx'
+        );
     }
 }
 
