@@ -1,64 +1,46 @@
 export type ApiRound = {
-    id?: string | number;
-    roundID?: number | string;
-    roundId?: string;
-    title?: string;
-    name?: string;
-    status?: "O" | "CL" | string | { value: string; label?: string };
-    startDate?: string;
-    endDate?: string;
-    maxVendors?: number;
-    categories?: ApiCategory[];
-    supplierEligible?: boolean;
-    canApply?: boolean;
-    isClosed?: boolean;
-    isExpired?: boolean;
-    windowOpen?: boolean;
-    isFutureWindow?: boolean;
-    duplicateWithinRange?: boolean;
-    primaryWindowRoundId?: number;
-    primaryWindowRoundTitle?: string;
+    id: number | string
+    RoundID?: number | string
+    roundID?: number | string
+    roundId?: number | string
+    title?: string
+    name?: string
+    status?: "O" | "CL" | "D" | string | { value: string; label?: string }
+    startDate?: string
+    StartDate?: string
+    endDate?: string
+    EndDate?: string
+    maxVendors?: number
+    MaxVendors?: number
+    categories?: ApiCategory[]
+    supplierEligible?: boolean
+    canApply?: boolean
 }
 
 export type ApiCategory = {
-    id?: number | string;
-    category_id?: number;
-    categoryId?: number;
-    SupplierCategoryID?: number;
-    name?: string;
-    CategoryName?: string;
-    category_name?: string;
-    description?: string;
-    has_applied?: boolean;
-    hasApplied?: boolean;
-    application_id?: string | number;
-    applicationId?: string | number;
-    application_date?: string;
-    applicationDate?: string;
-    progress_percent?: number;
-    progressPercent?: number;
-    stage?: string;
-    stage_label?: string;
-    stageLabel?: string;
-    updated_on?: string;
-    updatedOn?: string;
-    decision_date?: string;
-    decisionDate?: string;
-    rejection_reason?: string;
-    rejectionReason?: string;
-    status?: string;
+    id?: number | string
+    category_id?: number
+    categoryId?: number
+    SupplierCategoryID?: number
+    name?: string
+    CategoryName?: string
+    category_name?: string
+    hasApplied?: boolean
+    has_applied?: boolean
+    applicationId?: string | number | null
+    application_id?: string | number | null
+    status?: string
+    progress_percent?: number
 }
 
 export type ApiResponse = {
-    data: ApiRound[];
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-    sortBy: string;
-    sortOrder: "asc" | "desc";
-    filters: Record<string, string | undefined>;
+    data: ApiRound[]
+    page: number
+    pageSize: number
+    total: number
 }
+
+export type StatusFilter = "all" | "open" | "closed"
 
 export type ToolbarProps = {
     defaultQuery?: {
@@ -71,29 +53,51 @@ export type ToolbarProps = {
     className?: string
 }
 
-export type StatusFilter = "all" | "open" | "closed"
+export type RoundCategory = {
+    id: number
+    name: string
+    hasApplied: boolean
+    applicationId?: string
+    status: string
+    progress_percent?: number
+}
+
+export type ApplicationSummary = {
+    total_categories: number
+    applied_categories: number
+    approved_categories: number
+    pending_categories: number
+    overall_progress: number
+}
 
 export type Round = {
-    id: string;
-    name: string;
-    status: string;
-    deadline?: string;
-    applicantCount?: number;
-    hasApplied?: boolean;
-    applicationId?: string;
+    id: number
+    title: string
+    status?: string
+    startDate?: string
+    endDate?: string
+    categories?: RoundCategory[]
+    hasApplied?: boolean
+    canApply?: boolean
+    supplierEligible?: boolean
+    applicationSummary?: ApplicationSummary
 }
 
 export type SupplierCategory = {
-    id: string;
-    name: string;
-    is_active: boolean;
+    id: number | string
+    name: string
+    is_active: boolean
 }
 
 export type RoundSection = {
-    id?: number | string | null;
-    sectionId?: number | null;
-    name?: string;
-    weight?: number | null;
-    criteria?: { id?: number | string | null; criteriaId?: number | null; maxScore?: number | null; included?: boolean }[];
+    id?: number | string | null
+    sectionId?: number | null
+    name?: string
+    weight?: number | null
+    criteria?: {
+        id?: number | string | null
+        criteriaId?: number | null
+        maxScore?: number | null
+        included?: boolean
+    }[]
 }
-

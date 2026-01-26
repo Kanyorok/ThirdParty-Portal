@@ -1,6 +1,25 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
+import type { JWT } from "next-auth/jwt"
+
+type AppToken = JWT & {
+    user_id?: number
+    third_party_id?: number
+    is_supplier?: boolean
+    isSupplier?: boolean
+    is_tenant?: boolean
+    isTenant?: boolean
+    is_customer?: boolean
+    isCustomer?: boolean
+    approval_status?: string
+    approvalStatus?: string
+    third_party?: {
+        isSupplier?: boolean
+        isTenant?: boolean
+        approvalStatus?: string
+    }
+}
 
 const AUTH_SIGN_IN_PATH = "/signin"
 const AUTH_SIGN_UP_PATH = "/signup"
@@ -23,13 +42,17 @@ const PUBLIC_ROUTES = [
     "/__nextjs_original-stack-frames"
 ]
 
-function createRedirect(req: NextRequest, path: string, params?: Record<string, string>): NextResponse {
+function redirect(
+    req: NextRequest,
+    pathname: string,
+    params?: Record<string, string>
+) {
     const url = req.nextUrl.clone()
-    url.pathname = path
+    url.pathname = pathname
     if (params) {
-        Object.entries(params).forEach(([key, value]) => {
-            url.searchParams.set(key, value)
-        })
+        for (const [k, v] of Object.entries(params)) {
+            url.searchParams.set(k, v)
+        }
     }
     return NextResponse.redirect(url)
 }
@@ -37,42 +60,63 @@ function createRedirect(req: NextRequest, path: string, params?: Record<string, 
 export async function proxy(req: NextRequest) {
     const { pathname, search } = req.nextUrl
 
-    if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
+    if (PUBLIC_ROUTES.some(r => pathname.startsWith(r))) {
         return NextResponse.next()
     }
 
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-    const isAuth = !!token
-    const isAuthPage = pathname === AUTH_SIGN_IN_PATH || pathname === AUTH_SIGN_UP_PATH || pathname === AUTH_REGISTER_PATH
+    const token = (await getToken({
+        req,
+        secret: process.env.NEXTAUTH_SECRET
+    })) as AppToken | null
 
-    if (isAuth && isAuthPage) {
-        return createRedirect(req, DEFAULT_AUTH_REDIRECT)
+    const isAuthenticated = Boolean(token)
+
+    const isAuthPage =
+        pathname === AUTH_SIGN_IN_PATH ||
+        pathname === AUTH_SIGN_UP_PATH ||
+        pathname === AUTH_REGISTER_PATH
+
+    if (isAuthenticated && isAuthPage) {
+        return redirect(req, DEFAULT_AUTH_REDIRECT)
     }
 
-    if (!isAuth && !isAuthPage) {
-        if (pathname.startsWith("/dashboard")) {
-            return createRedirect(req, AUTH_SIGN_IN_PATH, {
-                callbackUrl: pathname + search,
-            })
-        }
-        if (pathname.startsWith("/api")) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-        }
+    if (!isAuthenticated && pathname.startsWith("/dashboard")) {
+        return redirect(req, AUTH_SIGN_IN_PATH, {
+            callbackUrl: pathname + search
+        })
     }
 
-    if (isAuth && pathname.startsWith("/dashboard/prequalification")) {
-        const isSupplier = Boolean((token as any).is_supplier ?? (token as any).isSupplier)
-        const approvalStatus = (token as any).approval_status ?? (token as any).approvalStatus
+    if (!isAuthenticated && pathname.startsWith("/api")) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    if (isAuthenticated && token && pathname.startsWith("/dashboard/prequalification")) {
+        const isSupplier = Boolean(
+            token.is_supplier ??
+            token.isSupplier ??
+            token.third_party?.isSupplier
+        )
+
+        const approvalStatus =
+            token.approval_status ??
+            token.approvalStatus ??
+            token.third_party?.approvalStatus
+
         const isApproved =
-            Boolean((token as any).is_approved ?? (token as any).isApproved) ||
-            (typeof approvalStatus === "string" && approvalStatus.toLowerCase() === "approved")
+            approvalStatus === "A" ||
+            approvalStatus === "APPROVED" ||
+            approvalStatus === "approved"
 
         if (!isSupplier) {
-            return createRedirect(req, "/dashboard", { error: "AccessDenied" })
+            return redirect(req, "/dashboard", { error: "AccessDenied" })
         }
 
         if (!isApproved && pathname !== "/dashboard/prequalification/onboarding") {
-            return createRedirect(req, "/dashboard/prequalification/onboarding", { error: "AccountNotApproved" })
+            return redirect(
+                req,
+                "/dashboard/prequalification/onboarding",
+                { error: "AccountNotApproved" }
+            )
         }
     }
 
@@ -87,6 +131,6 @@ export const config = {
         "/register",
         "/signup",
         "/forgot-password",
-        "/reset-password",
-    ],
+        "/reset-password"
+    ]
 }

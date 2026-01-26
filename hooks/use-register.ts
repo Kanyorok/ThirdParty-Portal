@@ -16,6 +16,8 @@ const emptyToUndefined = (value: unknown) => {
     return trimmed.length ? trimmed : undefined
 }
 
+const hasRole = (types: string[] | undefined, flag: string) => types?.includes(flag)
+
 const registerSchema = z.object({
     Name: z.string().min(2),
     TradingName: z.string().nullable().optional(),
@@ -56,6 +58,22 @@ const registerSchema = z.object({
 
     if (data.user_Password && data.user_Password_confirmation && data.user_Password !== data.user_Password_confirmation) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Password_confirmation"], message: "Passwords do not match." })
+    }
+
+    if (hasRole(data.types, "SU") && !data.user_SupplierCategoryId) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["user_SupplierCategoryId"],
+            message: "Select a supplier category."
+        })
+    }
+
+    if (hasRole(data.types, "TN") && !(data.user_Remarks ?? "").trim()) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["user_Remarks"],
+            message: "Tell us why you need tenant access."
+        })
     }
 })
 
@@ -175,13 +193,19 @@ export const useRegisterForm = () => {
     }, [selectedCountryCode, fetchLocalities, form])
 
     const onSubmitHandler = async (values: RegisterFormInputs) => {
+        const { user_SupplierCategoryId, ...rest } = values
+        const payload = {
+            ...rest,
+            ...(user_SupplierCategoryId != null ? { supplier_category_id: user_SupplierCategoryId } : {})
+        }
+
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/register`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Accept": "application/json"
             },
-            body: JSON.stringify(values)
+            body: JSON.stringify(payload)
         })
 
         const result = await res.json()
@@ -219,6 +243,7 @@ export const useRegisterForm = () => {
         selectedTypes,
         isSupplier: selectedTypes?.includes("SU"),
         isTenant: selectedTypes?.includes("TN"),
+        requiresSupplierCategory: selectedTypes?.includes("SU") ?? false,
         isCustomer: selectedTypes?.includes("CU")
     }
 }

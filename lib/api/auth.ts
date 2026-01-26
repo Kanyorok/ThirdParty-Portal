@@ -1,9 +1,13 @@
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
+if (!BASE_URL) {
+  throw new Error("NEXT_PUBLIC_API_URL is not defined")
+}
+
 interface ApiResponse<T = any> {
   success: boolean
-  message: string
-  data?: T
+  message?: string
+  error?: string
   user?: T
   token?: string
 }
@@ -22,20 +26,6 @@ interface RegisterRequest {
   Password_confirmation: string
 }
 
-interface CompleteProfileRequest {
-  ThirdPartyName: string
-  TradingName: string
-  RegistrationNumber: string
-  TaxPIN: string
-  BusinessType: number
-  CountryId: number
-  PhysicalAddress: string
-  Website?: string | null
-  accountType: 'supplier' | 'tenant' | 'customer'
-  supplierCategories?: number[]
-  tenantCategories?: number[]
-}
-
 interface UserData {
   id: number
   userId: number
@@ -48,19 +38,22 @@ interface UserData {
   imageId?: number | null
   thirdPartyId: string | null
   isActive: boolean
-  hasProfile: boolean
-  emailVerified: boolean
-  emailVerifiedOn?: string | null
-  createdOn?: string | null
-  modifiedOn?: string | null
   isSupplier: boolean
   isTenant: boolean
   isCustomer: boolean
-  approvalStatus: string
+  approvalStatus?: string
+  emailVerifiedOn?: string | null
+  createdOn?: string | null
+  modifiedOn?: string | null
   thirdParty?: unknown
-  supplier?: unknown
-  tenant?: unknown
-  customer?: unknown
+}
+
+class ApiError extends Error {
+  code?: string
+  constructor(message: string, code?: string) {
+    super(message)
+    this.code = code
+  }
 }
 
 const request = async <T = any>(
@@ -68,113 +61,92 @@ const request = async <T = any>(
   options: RequestInit = {},
   token?: string
 ): Promise<T> => {
-  const url = `${BASE_URL}${endpoint}`
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    ...(options.headers as Record<string, string>),
-  }
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
-  }
-
-  const response = await fetch(url, {
+  const response = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
-    headers,
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   })
 
   const text = await response.text()
   const data = text ? JSON.parse(text) : {}
 
-  if (!response.ok) {
-    throw new Error(data.message || `Request failed with status ${response.status}`)
+  if (!response.ok || data?.success === false) {
+    throw new ApiError(data?.message || "Request failed", data?.error)
   }
 
   return data
 }
 
 export const authService = {
-  login: async (credentials: LoginRequest): Promise<{ user: UserData; token: string }> => {
-    const response = await request<ApiResponse<UserData>>('/api/v1/portal/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    })
-
-    return {
-      user: response.user!,
-      token: response.token || (response.data as any)?.token || '',
-    }
-  },
-
-  register: async (data: RegisterRequest): Promise<{ user: UserData; token: string }> => {
-    const response = await request<ApiResponse<UserData>>('/api/v1/portal/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    })
-
-    return {
-      user: response.user!,
-      token: response.token || (response.data as any)?.token || '',
-    }
-  },
-
-  completeProfile: async (
-    data: CompleteProfileRequest,
-    token: string
-  ): Promise<{ user: UserData }> => {
-    const response = await request<ApiResponse<UserData>>(
-      '/api/v1/portal/auth/complete-profile',
+  register: async (data: RegisterRequest): Promise<{ userId: string }> => {
+    const res = await request<ApiResponse>(
+      "/api/v1/portal/auth/register",
       {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify(data),
-      },
-      token
+      }
+    )
+
+    return { userId: (res as any).userId }
+  },
+
+  login: async (
+    credentials: LoginRequest
+  ): Promise<{ user: UserData; token: string }> => {
+    const res = await request<ApiResponse<UserData>>(
+      "/api/v1/portal/auth/login",
+      {
+        method: "POST",
+        body: JSON.stringify(credentials),
+      }
     )
 
     return {
-      user: response.data || response.user!,
+      user: res.user!,
+      token: res.token!,
     }
   },
 
   me: async (token: string): Promise<UserData> => {
-    const response = await request<ApiResponse<UserData>>(
-      '/api/v1/portal/auth/me',
-      {
-        method: 'POST',
-      },
+    const res = await request<ApiResponse<UserData>>(
+      "/api/v1/portal/auth/me",
+      { method: "GET" },
       token
     )
 
-    return response.user || response.data!
+    return res.user!
   },
 
   logout: async (token: string): Promise<void> => {
     await request(
-      '/api/v1/portal/auth/logout',
-      {
-        method: 'POST',
-      },
+      "/api/v1/portal/auth/logout",
+      { method: "POST" },
       token
     )
   },
 
-  resendVerificationEmail: async (token: string): Promise<{ message: string }> => {
-    return await request(
-      '/api/v1/portal/auth/email/verification-notification',
+  resendVerificationEmail: async (email: string): Promise<void> => {
+    await request(
+      "/api/v1/portal/auth/email/resend",
       {
-        method: 'POST',
-      },
-      token
+        method: "POST",
+        body: JSON.stringify({ email }),
+      }
     )
   },
 
-  forgotPassword: async (email: string): Promise<{ message: string }> => {
-    return await request('/api/v1/portal/auth/password/forgot', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-    })
+  forgotPassword: async (email: string): Promise<void> => {
+    await request(
+      "/api/v1/portal/auth/password/forgot",
+      {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      }
+    )
   },
 
   resetPassword: async (data: {
@@ -182,22 +154,26 @@ export const authService = {
     password: string
     password_confirmation: string
     token: string
-  }): Promise<{ message: string }> => {
-    return await request('/api/v1/portal/auth/password/reset', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    })
+  }): Promise<void> => {
+    await request(
+      "/api/v1/portal/auth/password/reset",
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      }
+    )
   },
 
-  validateToken: async (token: string): Promise<{ valid: boolean; user: UserData }> => {
+  validateToken: async (
+    token: string
+  ): Promise<{ valid: boolean; user: UserData }> => {
     return await request(
-      '/api/v1/portal/auth/validate-token',
-      {
-        method: 'GET',
-      },
+      "/api/v1/portal/auth/validate-token",
+      { method: "GET" },
       token
     )
   },
 }
 
+export { ApiError }
 export default authService

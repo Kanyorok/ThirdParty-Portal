@@ -75,19 +75,27 @@ export default function RoundsToolbar({
                 }
             })
 
+            const nextQueryString = params.toString()
+            const currentQueryString = searchParams.toString()
+            if (nextQueryString === currentQueryString) return
+
             startTransition(() => {
-                router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+                const nextUrl = nextQueryString ? `${pathname}?${nextQueryString}` : pathname
+                router.replace(nextUrl, { scroll: false })
             })
         },
         [router, pathname, searchParams, searchQuery, status, sortBy, sortOrder, pageSize]
     )
 
     useEffect(() => {
+        const currentQ = searchParams.get("q") ?? ""
+        if (searchQuery === currentQ) return
+
         const timeoutId = setTimeout(() => {
             updateUrl({ q: searchQuery })
         }, 300)
         return () => clearTimeout(timeoutId)
-    }, [searchQuery, updateUrl])
+    }, [searchQuery, searchParams, updateUrl])
 
     const handleStatusChange = (newStatus: StatusFilter) => {
         setStatus(newStatus)

@@ -1,122 +1,140 @@
-import { create } from 'zustand'
-import { getSession } from 'next-auth/react'
+import { create } from "zustand"
+import { getSession } from "next-auth/react"
 import { PrequalificationRound } from "@/types/procurement/types"
 
 interface ProcurementState {
     rounds: PrequalificationRound[]
     selectedRound: PrequalificationRound | null
+    myApplications: any[]
+    applicationProgress: Record<number, any>
     isLoading: boolean
     error: string | null
-    applicationStatus: Record<number, any>
+
     fetchRounds: () => Promise<void>
-    setRounds: (rounds: PrequalificationRound[]) => void
+    fetchRoundDetails: (roundId: number) => Promise<void>
+    fetchMyApplications: () => Promise<void>
+    submitApplication: (payload: any) => Promise<any>
+    fetchApplicationProgress: (roundId: number) => Promise<void>
+
     setSelectedRound: (round: PrequalificationRound | null) => void
-    initializeApplication: (roundId: number) => Promise<any>
-    saveApplicationProgress: (applicationId: number, formData: FormData) => Promise<any>
-    submitApplication: (applicationId: number) => Promise<any>
-    updateApplicationStatus: (roundId: number, status: any) => void
 }
 
-export const useProcurementStore = create<ProcurementState>((set, _get) => ({
+const API_BASE = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/supplier/prequalification`
+
+export const useProcurementStore = create<ProcurementState>((set) => ({
     rounds: [],
     selectedRound: null,
+    myApplications: [],
+    applicationProgress: {},
     isLoading: false,
     error: null,
-    applicationStatus: {},
 
-    setRounds: (rounds) => set({ rounds }),
     setSelectedRound: (round) => set({ selectedRound: round }),
-
-    updateApplicationStatus: (roundId, status) => set((state) => ({
-        applicationStatus: { ...state.applicationStatus, [roundId]: status }
-    })),
 
     fetchRounds: async () => {
         set({ isLoading: true, error: null })
         try {
             const session = await getSession()
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/procurement/rounds/open`, {
+            const res = await fetch(`${API_BASE}/rounds`, {
                 headers: {
-                    'Authorization': `Bearer ${session?.accessToken}`,
-                    'Accept': 'application/json'
+                    Authorization: `Bearer ${session?.accessToken}`,
+                    Accept: "application/json"
                 }
             })
             const result = await res.json()
-            if (!res.ok) throw new Error(result.message || 'Failed to fetch rounds')
-            set({ rounds: result.data || [], isLoading: false })
+            if (!res.ok) throw new Error(result.message)
+            set({ rounds: result.data ?? [], isLoading: false })
         } catch (err: any) {
             set({ error: err.message, isLoading: false })
         }
     },
 
-    initializeApplication: async (roundId: number) => {
+    fetchRoundDetails: async (roundId: number) => {
         set({ isLoading: true, error: null })
         try {
             const session = await getSession()
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/prequalification/rounds/application/initialize/${roundId}`, {
-                method: 'POST',
+            const res = await fetch(`${API_BASE}/rounds/${roundId}`, {
                 headers: {
-                    'Authorization': `Bearer ${session?.accessToken}`,
-                    'Accept': 'application/json'
+                    Authorization: `Bearer ${session?.accessToken}`,
+                    Accept: "application/json"
                 }
             })
             const result = await res.json()
-            if (!res.ok) throw new Error(result.message || 'Initialization failed')
+            if (!res.ok) throw new Error(result.message)
+            set({ selectedRound: result.data, isLoading: false })
+        } catch (err: any) {
+            set({ error: err.message, isLoading: false })
+        }
+    },
 
+    submitApplication: async (payload: any) => {
+        set({ isLoading: true, error: null })
+        try {
+            const session = await getSession()
+            const res = await fetch(`${API_BASE}/applications`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${session?.accessToken}`,
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+            const result = await res.json()
+            if (!res.ok) throw new Error(result.message)
+            set({ isLoading: false })
+            return result
+        } catch (err: any) {
+            set({ error: err.message, isLoading: false })
+            throw err
+        }
+    },
+
+    fetchMyApplications: async () => {
+        set({ isLoading: true, error: null })
+        try {
+            const session = await getSession()
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/v1/supplier/prequalification/applications/my-applications`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${session?.accessToken}`,
+                        Accept: "application/json"
+                    }
+                }
+            )
+            const result = await res.json()
+            if (!res.ok) throw new Error(result.message)
+            set({ myApplications: result.data ?? [], isLoading: false })
+        } catch (err: any) {
+            set({ error: err.message, isLoading: false })
+        }
+    },
+
+    fetchApplicationProgress: async (roundId: number) => {
+        set({ isLoading: true, error: null })
+        try {
+            const session = await getSession()
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/v1/supplier/prequalification/applications/${roundId}/progress`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${session?.accessToken}`,
+                        Accept: "application/json"
+                    }
+                }
+            )
+            const result = await res.json()
+            if (!res.ok) throw new Error(result.message)
             set((state) => ({
-                isLoading: false,
-                applicationStatus: { ...state.applicationStatus, [roundId]: result.data }
+                applicationProgress: {
+                    ...state.applicationProgress,
+                    [roundId]: result.data
+                },
+                isLoading: false
             }))
-
-            return result.data
         } catch (err: any) {
-            set({ isLoading: false, error: err.message })
-            throw err
-        }
-    },
-
-    saveApplicationProgress: async (applicationId: number, formData: FormData) => {
-        set({ isLoading: true })
-        try {
-            const session = await getSession()
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/prequalification/rounds/application/${applicationId}/save`, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'Authorization': `Bearer ${session?.accessToken}`,
-                    'Accept': 'application/json'
-                }
-            })
-            const result = await res.json()
-            if (!res.ok) throw new Error(result.message || 'Save failed')
-
-            set({ isLoading: false })
-            return result.data
-        } catch (err: any) {
-            set({ isLoading: false, error: err.message })
-            throw err
-        }
-    },
-
-    submitApplication: async (applicationId: number) => {
-        set({ isLoading: true })
-        try {
-            const session = await getSession()
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/prequalification/rounds/application/${applicationId}/submit`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${session?.accessToken}`,
-                    'Accept': 'application/json'
-                }
-            })
-            const result = await res.json()
-            if (!res.ok) throw new Error(result.message || 'Submission failed')
-
-            set({ isLoading: false })
-            return result.data
-        } catch (err: any) {
-            set({ isLoading: false, error: err.message })
-            throw err
+            set({ error: err.message, isLoading: false })
         }
     }
 }))

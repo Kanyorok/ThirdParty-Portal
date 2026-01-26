@@ -4,6 +4,7 @@ export interface SupplierCategory {
 }
 
 export interface PrequalificationRound {
+    [x: string]: any;
     id: number;
     title: string;
     description: string;

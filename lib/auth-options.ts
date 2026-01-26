@@ -12,25 +12,34 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("MISSING_FIELDS");
+          throw new Error("MISSING_FIELDS")
         }
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({
-            email: credentials.email,
-            password: credentials.password,
-          }),
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/login`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          }
+        )
 
-        const data = await res.json();
+        const data = await res.json()
 
-        if (!res.ok || !data?.success || !data?.user || !data?.token) {
-          throw new Error(data?.message || "AUTH_FAILURE");
+        if (!res.ok || !data?.success) {
+          if (data?.error) {
+            throw new Error(data.error)
+          }
+          throw new Error("AUTH_FAILURE")
         }
 
-        const u = data.user;
+        const u = data.user
 
         return {
           id: String(u.id),
@@ -55,18 +64,23 @@ export const authOptions: NextAuthOptions = {
           third_party: u.thirdParty ?? null,
           accessToken: data.token,
           tokenType: data.tokenType ?? "Bearer",
-          profile: u.thirdParty ? {
-            name: u.thirdParty.thirdPartyDetails.thirdPartyName,
-            trading_name: u.thirdParty.thirdPartyDetails.tradingName,
-            registration_number: u.thirdParty.thirdPartyDetails.registrationNumber,
-            tax_pin: u.thirdParty.thirdPartyDetails.taxPIN,
-            physical_address: u.thirdParty.thirdPartyDetails.physicalAddress,
-            supplier_data: u.supplier || null,
-            tenant_data: u.tenant || null,
-            customer_data: u.customer || null,
-          } : null,
-        } as any;
-      },
+          profile: u.thirdParty
+            ? {
+              name: u.thirdParty.thirdPartyDetails.thirdPartyName,
+              trading_name: u.thirdParty.thirdPartyDetails.tradingName,
+              registration_number:
+                u.thirdParty.thirdPartyDetails.registrationNumber,
+              tax_pin: u.thirdParty.thirdPartyDetails.taxPIN,
+              physical_address:
+                u.thirdParty.thirdPartyDetails.physicalAddress,
+              supplier_data: u.supplier || null,
+              tenant_data: u.tenant || null,
+              customer_data: u.customer || null,
+            }
+            : null,
+        } as any
+      }
+
     }),
   ],
   session: { strategy: "jwt", maxAge: 23 * 60 * 60 },

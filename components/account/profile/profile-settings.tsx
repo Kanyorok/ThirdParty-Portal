@@ -26,7 +26,7 @@ function LoadingState() {
   )
 }
 
-export default function ProfileSettingsPage() {
+export default function ProfileSettings() {
   const [isEditing, setIsEditing] = useState(false)
   const [isLogoDialogOpen, setIsLogoDialogOpen] = useState(false)
   const [optimisticLogoUrl, setOptimisticLogoUrl] = useState<string | null>(null)

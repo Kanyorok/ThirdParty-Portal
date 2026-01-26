@@ -52,6 +52,7 @@ export default function LoginPage() {
 
     const onSubmit = async (data: FormValues) => {
         setAuthError(null)
+
         try {
             const result = await signIn("credentials", {
                 email: data.email,
@@ -60,10 +61,16 @@ export default function LoginPage() {
             })
 
             if (result?.error) {
+                if (result.error === "EMAIL_NOT_VERIFIED") {
+                    router.push(`/verify-email/expired?email=${encodeURIComponent(data.email)}`)
+                    return
+                }
+
                 setAuthError("Invalid email or password. Please try again.")
-            } else {
-                router.push("/dashboard")
+                return
             }
+
+            router.push("/dashboard")
         } catch {
             setAuthError("An unexpected error occurred. Please try again later.")
         }

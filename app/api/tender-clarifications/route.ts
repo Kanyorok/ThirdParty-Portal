@@ -1,189 +1,174 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
+import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth-options"
 
-const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL
+const REQUEST_TIMEOUT = 20000
 
-async function getAuthSession() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return null;
-  return session;
+function timeoutSignal() {
+  return AbortSignal.timeout(REQUEST_TIMEOUT)
 }
 
-export async function GET(request: NextRequest) {
+async function requireSession() {
+  const session = await getServerSession(authOptions)
+  if (!session?.user || !session.accessToken) return null
+  return session
+}
+
+function jsonError(message: string, status = 500, extra?: unknown) {
+  return NextResponse.json(
+    { error: message, ...(extra ? { details: extra } : {}) },
+    { status }
+  )
+}
+
+export async function GET(req: NextRequest) {
+  const session = await requireSession()
+  if (!session) return jsonError("Unauthorized", 401)
+  if (!API_URL) return jsonError("Service misconfigured", 500)
+
+  const params = req.nextUrl.searchParams
+  const tenderId = params.get("tenderId")
+  if (!tenderId) return jsonError("Tender ID is required", 400)
+
+  const status = params.get("status") ?? "all"
+  const page = Number(params.get("page") ?? 1)
+  const limit = Number(params.get("limit") ?? 20)
+
+  const query = new URLSearchParams({
+    tender_id: tenderId,
+    page: String(page),
+    limit: String(limit)
+  })
+
+  if (status !== "all") query.set("status", status)
+  if (session.user.thirdPartyId) {
+    query.set("third_party_id", String(session.user.thirdPartyId))
+  }
+
   try {
-    const session = await getAuthSession();
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const searchParams = request.nextUrl.searchParams;
-    const tenderId = searchParams.get('tenderId');
-    if (!tenderId) return NextResponse.json({ error: "Tender ID is required" }, { status: 400 });
-
-    const status = searchParams.get('status') || 'all';
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const thirdPartyId = session.user.thirdPartyId;
-
-    const queryParams = new URLSearchParams({
-      tender_id: tenderId,
-      page: page.toString(),
-      limit: limit.toString(),
-    });
-
-    if (status !== 'all') queryParams.append('status', status);
-    if (thirdPartyId) queryParams.append('third_party_id', thirdPartyId.toString());
-
-    if (EXTERNAL_API_URL) {
-      try {
-        const response = await fetch(`${EXTERNAL_API_URL}/api/tender-clarifications?${queryParams}`, {
-          headers: {
-            'Authorization': `Bearer ${session.accessToken}`,
-            'Accept': 'application/json',
-          },
-          signal: AbortSignal.timeout(20000)
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          return NextResponse.json({
-            data: result.data,
-            pagination: {
-              total: result.total,
-              page: result.page,
-              limit: result.limit,
-              pages: Math.ceil(result.total / result.limit),
-            },
-          });
-        } else {
-          const errorData = await response.json();
-          return NextResponse.json(errorData, { status: response.status });
-        }
-      } catch (e) {
-        console.error("ERP Fetch Error:", e);
+    const res = await fetch(
+      `${API_URL}/api/tender-clarifications?${query.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          Accept: "application/json"
+        },
+        signal: timeoutSignal()
       }
-    } else {
-      return NextResponse.json(
-        { error: "Configuration Error", details: "NEXT_PUBLIC_EXTERNAL_API_URL is not defined" },
-        { status: 500 }
-      );
-    }
+    )
+
+    const body = await res.json()
+
+    if (!res.ok) return NextResponse.json(body, { status: res.status })
 
     return NextResponse.json({
-      data: [],
-      pagination: { total: 0, page, limit, pages: 0 },
-      message: "No data available"
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Fetch failed", message: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
-    );
+      data: body.data ?? [],
+      pagination: {
+        total: body.total ?? 0,
+        page: body.page ?? page,
+        limit: body.limit ?? limit,
+        pages: body.total ? Math.ceil(body.total / limit) : 0
+      }
+    })
+  } catch (e) {
+    return jsonError("Upstream request failed", 502)
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
+  const session = await requireSession()
+  if (!session) return jsonError("Unauthorized", 401)
+  if (!API_URL) return jsonError("Service misconfigured", 500)
+
+  const body = await req.json()
+  const tenderId = body.tenderId ?? body.tender_id
+  const question = body.question?.trim()
+
+  if (!tenderId || !question) {
+    return jsonError("Tender ID and question are required", 400)
+  }
+
+  if (!session.user.thirdPartyId) {
+    return jsonError("Third party not linked", 400)
+  }
+
+  const payload = {
+    tender_id: Number(tenderId),
+    third_party_id: session.user.thirdPartyId,
+    question,
+    is_public: Boolean(body.isPublic),
+    attachments: Array.isArray(body.attachments) ? body.attachments : [],
+    question_date: new Date().toISOString(),
+    status: "pending",
+    created_by: session.user.id,
+    created_on: new Date().toISOString()
+  }
+
   try {
-    const session = await getAuthSession();
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const res = await fetch(`${API_URL}/api/tender-clarifications`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify(payload),
+      signal: timeoutSignal()
+    })
 
-    const body = await request.json();
-    // Support both camelCase and snake_case
-    const tenderId = body.tenderId || body.tender_id;
-    const { question, isPublic, attachments } = body;
+    const data = await res.json()
+    if (!res.ok) return NextResponse.json(data, { status: res.status })
 
-    if (!tenderId || !question?.trim()) {
-      return NextResponse.json({ error: "Tender ID and question are required" }, { status: 400 });
-    }
-
-    const thirdPartyId = session.user.thirdPartyId;
-    if (!thirdPartyId) return NextResponse.json({ error: "Third Party ID not found" }, { status: 400 });
-
-    const payload = {
-      tender_id: parseInt(tenderId),
-      third_party_id: thirdPartyId,
-      question: question.trim(),
-      question_date: new Date().toISOString(),
-      status: 'pending',
-      is_public: !!isPublic,
-      attachments: attachments || [],
-      created_by: session.user.id,
-      created_on: new Date().toISOString(),
-    };
-
-    if (EXTERNAL_API_URL) {
-      const response = await fetch(`${EXTERNAL_API_URL}/api/tender-clarifications`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(20000)
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        return NextResponse.json({ message: "Submitted successfully", data });
-      }
-    } else {
-      return NextResponse.json(
-        { error: "Configuration Error", details: "NEXT_PUBLIC_EXTERNAL_API_URL is not defined" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Submission failed", message: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: true, data })
+  } catch {
+    return jsonError("Submission failed", 502)
   }
 }
 
-export async function PUT(request: NextRequest) {
+export async function PUT(req: NextRequest) {
+  const session = await requireSession()
+  if (!session) return jsonError("Unauthorized", 401)
+  if (!API_URL) return jsonError("Service misconfigured", 500)
+
+  const body = await req.json()
+  const clarificationId = body.clarificationId
+  const responseText = body.response?.trim()
+
+  if (!clarificationId || !responseText) {
+    return jsonError("Clarification ID and response are required", 400)
+  }
+
+  const payload = {
+    response: responseText,
+    response_by: body.responseBy ?? "Procurement Team",
+    response_date: new Date().toISOString(),
+    status: body.status ?? "answered",
+    is_public: Boolean(body.publishToAll),
+    modified_by: session.user.id,
+    modified_on: new Date().toISOString()
+  }
+
   try {
-    const session = await getAuthSession();
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const { clarificationId, response, responseBy, publishToAll, status } = await request.json();
-
-    if (!clarificationId || !response?.trim()) {
-      return NextResponse.json({ error: "ID and response required" }, { status: 400 });
-    }
-
-    const payload = {
-      response: response.trim(),
-      response_by: responseBy || 'Procurement Team',
-      response_date: new Date().toISOString(),
-      status: status || 'answered',
-      is_public: !!publishToAll,
-      modified_by: session.user.id,
-      modified_on: new Date().toISOString(),
-    };
-
-    if (EXTERNAL_API_URL) {
-      const res = await fetch(`${EXTERNAL_API_URL}/api/tender-clarifications/${clarificationId}/respond`, {
-        method: 'PUT',
+    const res = await fetch(
+      `${API_URL}/api/tender-clarifications/${clarificationId}/respond`,
+      {
+        method: "PUT",
         headers: {
-          'Authorization': `Bearer ${session.accessToken}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.accessToken}`,
+          "Content-Type": "application/json",
+          Accept: "application/json"
         },
         body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(20000)
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        return NextResponse.json({ message: "Response recorded", data });
+        signal: timeoutSignal()
       }
-    }
+    )
 
-    return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Update failed", message: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
-    );
+    const data = await res.json()
+    if (!res.ok) return NextResponse.json(data, { status: res.status })
+
+    return NextResponse.json({ success: true, data })
+  } catch {
+    return jsonError("Update failed", 502)
   }
 }
