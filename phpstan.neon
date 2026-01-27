@@ -1,0 +1,33 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - app
+        - config
+        - database/factories
+        - database/seeders
+        - routes
+    
+    # Exclude problematic paths
+    excludePaths:
+        - app/Console/Kernel.php
+        - bootstrap
+        - storage
+        - vendor
+        - node_modules
+    
+    # Laravel specific configurations
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+    
+    # Custom rules to detect debug code
+    ignoreErrors:
+        # Ignore some Laravel magic
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
+        - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model#'
+    
+    # Report unused private properties and methods
+    checkUnusedViews: true
+    reportUnmatchedIgnoredErrors: false
