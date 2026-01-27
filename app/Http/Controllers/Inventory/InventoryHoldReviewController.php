@@ -89,8 +89,8 @@ class InventoryHoldReviewController extends Controller
             'store',
             'sourceDetail',
             'defectDetail',
-            'sourceAdjustment', // Load adjustment relationship
-            'sourceReceipt'     // Load receipt relationship
+            'sourceAdjustment', 
+            'sourceReceipt'     
         ])
             ->whereNull('DeletedOn')
             ->where('BranchID', $branchId)
