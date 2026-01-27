@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\InventoryHoldReviewRequest;
+use App\Models\Core\Branch;
 use App\Models\Inventory\InventoryHold;
 use App\Models\Inventory\InventoryHoldReview;
-use App\Models\Core\Branch;
 use App\Services\Inventory\InventoryHoldReviewService;
 use Exception;
 use Illuminate\Http\Request;
@@ -14,7 +14,7 @@ use Throwable;
 
 class InventoryHoldReviewController extends Controller
 {
-    protected InventoryHoldReviewService $service;
+    protected $service;
 
     public function __construct(InventoryHoldReviewService $service)
     {
@@ -24,13 +24,13 @@ class InventoryHoldReviewController extends Controller
     public function index(Request $request)
     {
         $this->authorize('viewAny', InventoryHoldReview::class);
+
         $currentBranch = $request->user()->branch;
+        if (!$currentBranch instanceof Branch) {
+            return redirect()->back()->with('fail', 'Current user branch not found.');
+        }
 
-            if (!$currentBranch instanceof Branch) {
-                 return redirect()->back()->with('fail', 'Current user branch not found.');
-            }
-
-        $branchId = $currentBranch->Id; 
+        $branchId = $currentBranch->Id;
 
         $holds = InventoryHoldReview::with([
             'item.uom',
@@ -42,7 +42,7 @@ class InventoryHoldReviewController extends Controller
             'inventoryHold'
         ])
             ->whereNull('DeletedOn')
-            ->where('FromBranch', $branchId) 
+            ->where('FromBranch', $branchId)
             ->get();
 
         $holds->each(function ($hold) {
@@ -58,11 +58,12 @@ class InventoryHoldReviewController extends Controller
         $this->authorize('create', InventoryHoldReview::class);
 
         $currentBranch = $request->user()->branch;
-            if (!$currentBranch instanceof Branch) {
-                 return redirect()->back()->with('fail', 'Current user branch not found.');
-            }
+        if (!$currentBranch instanceof Branch) {
+            return redirect()->back()->with('fail', 'Current user branch not found.');
+        }
 
-        $branchId = $currentBranch->Id; 
+        $branchId = $currentBranch->Id;
+
         $reviews = InventoryHoldReview::with([
             'item.uom',
             'fromBranch',
@@ -73,19 +74,28 @@ class InventoryHoldReviewController extends Controller
             'inventoryHold'
         ])
             ->whereNull('DeletedOn')
-            ->where('FromBranch', $branchId) 
+            ->where('FromBranch', $branchId)
             ->get();
 
         $reviews->each(function ($review) {
             $review->Condition = $review->conditionDetail?->Description ?? null;
             $review->Defect = $review->defectDetail?->Description ?? null;
         });
-        $holds = InventoryHold::whereNull('DeletedOn')
-            ->where('BranchID', $branchId) 
+
+        $holds = InventoryHold::with([
+            'item.uom',
+            'fromBranch',
+            'branch',
+            'store',
+            'sourceDetail',
+            'defectDetail' // Add this relationship
+        ])
+            ->whereNull('DeletedOn')
+            ->where('BranchID', $branchId)
             ->whereHas('sourceDetail', function ($q) {
                 $q->where('Description', '!=', 'Transaction Transfer');
             })
-            ->whereDoesntHave('inventoryHoldReview') 
+            ->whereDoesntHave('inventoryHoldReview')
             ->get();
 
         $holds->each(function ($hold) {
@@ -93,7 +103,7 @@ class InventoryHoldReviewController extends Controller
             $hold->Defect = $hold->defectDetail?->Description ?? null;
         });
 
-        return view('inventory.inventoryholdreview.create', compact('holds','reviews'));
+        return view('inventory.inventoryholdreview.create', compact('holds', 'reviews'));
     }
 
     public function store(InventoryHoldReviewRequest $request)
@@ -117,11 +127,11 @@ class InventoryHoldReviewController extends Controller
         $this->authorize('view', InventoryHoldReview::class);
 
         $currentBranch = $request->user()->branch;
-            if (!$currentBranch instanceof Branch) {
-                 return redirect()->back()->with('fail', 'Current user branch not found.');
-            }
+        if (!$currentBranch instanceof Branch) {
+            return redirect()->back()->with('fail', 'Current user branch not found.');
+        }
 
-        $branchId = $currentBranch->Id; 
+        $branchId = $currentBranch->Id;
 
         $holds = InventoryHoldReview::with([
             'item.uom',
@@ -133,7 +143,7 @@ class InventoryHoldReviewController extends Controller
             'inventoryHold'
         ])
             ->where('Id', $id)
-            ->where('FromBranch', $branchId) 
+            ->where('FromBranch', $branchId)
             ->whereNull('DeletedOn')
             ->firstOrFail();
 
@@ -143,65 +153,63 @@ class InventoryHoldReviewController extends Controller
         return view('inventory.inventoryholdreview.show', compact('holds'));
     }
 
-   public function resolve(Request $request, $id)
-{
-    $this->authorize('update', InventoryHoldReview::class);
-
-    $currentBranch = $request->user()->branch;
-            if (!$currentBranch instanceof Branch) {
-                 return redirect()->back()->with('fail', 'Current user branch not found.');
-            }
-
-    $branchId = $currentBranch->Id; 
-    $action = $request->input('Action');
-    $extras = [
-        'Condition' => $request->input('Condition'),
-        'Notes' => $request->input('Notes'),
-    ];
-
-    try {
-        // Try to find either an InventoryHoldReview OR fall back to InventoryHold
-        $holdReview = InventoryHoldReview::where('Id', $id)
-            ->where('FromBranch', $branchId)
-            ->first();
-
-        if (!$holdReview) {
-            // If no review exists, try to find the original hold
-            $inventoryHold = InventoryHold::where('Id', $id)
-                ->where('BranchID', $branchId)
-                ->firstOrFail();
-            
-            // Use the hold ID for disposal/return
-            $targetId = $inventoryHold->Id;
-        } else {
-            $targetId = $holdReview->Id;
+    public function resolve(Request $request, $id)
+    {
+        $currentBranch = $request->user()->branch;
+        if (!$currentBranch instanceof Branch) {
+            return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
-        match ($action) {
-            'dispose' => $this->service->dispose($targetId, $extras),
-            'return' => $this->service->returnToSender($targetId, $extras),
-            default => throw new Exception('Unknown action')
-        };
+        $branchId = $currentBranch->Id;
+        $action = $request->input('Action');
 
-        return redirect()->route('inventoryholdreview.index')
-            ->with('success', "Item marked as {$action} successfully.");
-    } catch (Throwable $th) {
-        return redirect()->back()->with('error', $th->getMessage());
-    }
-}
-    public function destroy($id, Request $request)
-    {
-        $this->authorize('destroy', InventoryHoldReview::class);
+        $extras = [
+            'Condition' => $request->input('Condition'),
+            'Notes' => $request->input('Notes'),
+        ];
 
-        $currentBranch = $request->user()->branch;
-            if (!$currentBranch instanceof Branch) {
-                 return redirect()->back()->with('fail', 'Current user branch not found.');
+        try {
+            // Try to find either an InventoryHoldReview OR fall back to InventoryHold
+            $holdReview = InventoryHoldReview::where('Id', $id)
+                ->where('FromBranch', $branchId)
+                ->first();
+
+            if (!$holdReview) {
+                // If no review exists, try to find the original hold
+                $inventoryHold = InventoryHold::where('Id', $id)
+                    ->where('BranchID', $branchId)
+                    ->firstOrFail();
+
+                // Use the hold ID for disposal/return
+                $targetId = $inventoryHold->Id;
+            } else {
+                $targetId = $holdReview->Id;
             }
 
-        $branchId = $currentBranch->Id; 
+            match ($action) {
+                'dispose' => $this->service->dispose($targetId, $extras),
+                'return' => $this->service->returnToSender($targetId, $extras),
+                default => throw new Exception('Unknown action')
+            };
+
+            return redirect()->route('inventoryholdreview.index')
+                ->with('success', "Item marked as {$action} successfully.");
+        } catch (Throwable $th) {
+            return redirect()->back()->with('error', $th->getMessage());
+        }
+    }
+
+    public function destroy($id, Request $request)
+    {
+        $currentBranch = $request->user()->branch;
+        if (!$currentBranch instanceof Branch) {
+            return redirect()->back()->with('fail', 'Current user branch not found.');
+        }
+
+        $branchId = $currentBranch->Id;
 
         $hold = InventoryHoldReview::where('Id', $id)
-            ->where('FromBranch', $branchId) 
+            ->where('FromBranch', $branchId)
             ->firstOrFail();
 
         $this->service->delete($hold);
@@ -212,14 +220,14 @@ class InventoryHoldReviewController extends Controller
     public function getDetails($id, Request $request)
     {
         $currentBranch = $request->user()->branch;
-            if (!$currentBranch instanceof Branch) {
-                 return redirect()->back()->with('fail', 'Current user branch not found.');
-            }
+        if (!$currentBranch instanceof Branch) {
+            return redirect()->back()->with('fail', 'Current user branch not found.');
+        }
 
-        $branchId = $currentBranch->Id; 
+        $branchId = $currentBranch->Id;
 
-        $hold = InventoryHold::with(['item', 'branch', 'store'])
-            ->where('BranchID', $branchId) 
+        $hold = InventoryHold::with(['item', 'branch', 'store', 'defectDetail'])
+            ->where('BranchID', $branchId)
             ->findOrFail($id);
 
         return response()->json([
@@ -229,7 +237,7 @@ class InventoryHoldReviewController extends Controller
             'ItemName' => $hold->item->ItemName ?? null,
             'FromBranch' => $hold->branch->Name ?? null,
             'Store' => $hold->store->StoreName ?? null,
-            'Defect' => $hold->Reason,
+            'Defect' => $hold->defectDetail?->Description ?? $hold->Reason,
         ]);
     }
 }

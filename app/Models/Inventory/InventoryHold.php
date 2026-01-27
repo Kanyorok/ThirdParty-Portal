@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models\Inventory;
 
 use App\Models\Auth\User;
@@ -21,7 +20,6 @@ class InventoryHold extends Model
     protected $primaryKey = 'Id';
     protected $connection = 'sqlsrv';
 
-
     protected $fillable = [
         'InventoryHoldID', 'ItemID', 'BranchID', 'Store', 'Quantity', 'Reason', 'Source', 'SourceID',
         'Status', 'Remarks', 'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy'
@@ -31,6 +29,11 @@ class InventoryHold extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'Reason', 'ID')
             ->where('CodeID', 'Adjustment Reason');
+    }
+
+    public function defectDetail()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Reason', 'ID');
     }
 
     public function item()
@@ -54,6 +57,16 @@ class InventoryHold extends Model
     }
 
     public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'BranchID');
+    }
+
+    /**
+     * For transfer scenarios, this represents the branch the item came from
+     * In most cases, this will be the same as 'branch' unless dealing with transfers
+     * This is added for compatibility with the blade template
+     */
+    public function fromBranch()
     {
         return $this->belongsTo(Branch::class, 'BranchID');
     }
@@ -92,6 +105,4 @@ class InventoryHold extends Model
             }
         });
     }
-
-
 }

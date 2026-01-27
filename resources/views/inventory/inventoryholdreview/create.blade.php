@@ -39,26 +39,23 @@
                     @foreach($holds as $hold)
                         @php
                             $displayText = $hold->InventoryHoldID;
-                            if ($hold->sourceDetail) {
-                                $sourceType = $hold->sourceDetail->Description ?? '';
-                                if ($sourceType === 'Transaction Transfer' && $hold->fromBranch) {
-                                    $displayText .= ' (' . $hold->fromBranch->Name . ' → ' . ($hold->branch->Name ?? 'Current') . ')';
-                                } else {
-                                    $displayText .= ' (' . $sourceType . ')';
-                                }
+                            $sourceType = $hold->sourceDetail->Description ?? '';
+                            
+                            if ($sourceType === 'Transaction Transfer') {
+                                $displayText .= ' (Transfer)';
+                            } elseif ($sourceType) {
+                                $displayText .= ' (' . $sourceType . ')';
                             }
                         @endphp
                         <option value="{{ $hold->Id }}" 
                                 data-itemid="{{ $hold->ItemID }}"
                                 data-branchid="{{ $hold->BranchID }}"
                                 data-quantity="{{ $hold->Quantity }}"
-                                data-frombranch="{{ $hold->fromBranch->Name ?? '' }}"
+                                data-frombranch="{{ $hold->branch->Name ?? '' }}"
                                 data-currentbranch="{{ $hold->branch->Name ?? '' }}"
-                                data-sourcetype="{{ $hold->sourceDetail->Description ?? '' }}"
+                                data-sourcetype="{{ $sourceType }}"
                                 data-store="{{ $hold->store->StoreName ?? '' }}"
-                                 @foreach($reviews as $review)
-                                data-defect="{{ $review->defectDetail->Description ?? $review->Reason }}"
-                                @endforeach
+                                data-defect="{{ $hold->defectDetail->Description ?? $hold->Reason }}"
                                 data-itemname="{{ $hold->item->ItemName ?? '' }}"
                                 {{ old('InventoryHoldID') == $hold->Id ? 'selected' : '' }}>
                             {{ $displayText }}

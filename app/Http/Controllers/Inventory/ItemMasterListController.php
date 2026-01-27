@@ -56,10 +56,10 @@ class ItemMasterListController extends Controller
                 ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
                 ->get(),
             'status' => CodeDetail::where('CodeID', 'ItemStatus')->orderBy('Value')->get(),
-            'uoms' => UnitOfMeasure::all(),
+            'uoms' => UnitOfMeasure::where('Active', 1)->get(),
             'price' => PriceManagement::all(),
-            'itemTypes' => ItemType::with('type')->get(),
-            'inventoryTypes' => InventoryType::with('type')->get(),
+            'itemTypes' => ItemType::with('type')->where('Active', 1)->get(),
+            'inventoryTypes' => InventoryType::with('type')->where('Status', 1)->get(),
         ]);
     }
 
@@ -190,9 +190,9 @@ class ItemMasterListController extends Controller
             'subcategories' => ItemCategories::where('ParentId', $item->category?->ParentId ?? $item->Category)
                 ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
                 ->get(),
-            'itemTypes' => ItemType::all(),
-            'uoms' => UnitOfMeasure::all(),
-            'inventoryTypes' => InventoryType::all(),
+            'itemTypes' => ItemType::where('Active', 1)->get(),
+            'uoms' => UnitOfMeasure::where('Active', 1)->get(),
+            'inventoryTypes' => InventoryType::where('Status', 1)->get(),
             'priceManagement' => PriceManagement::all(),
         ]);
     }

@@ -34,18 +34,18 @@ class InventoryHoldReviewPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user): bool
-    {
-        return $user->can(PermissionEnum::InventoryHoldReviewUpdate->value);
-    }
+    // public function update(User $user): bool
+    // {
+    //     return $user->can(PermissionEnum::InventoryHoldReviewUpdate->value);
+    // }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function destroy(User $user): bool
-    {
-        return $user->can(PermissionEnum::InventoryHoldReviewDestroy->value);
-    }
+    // public function destroy(User $user): bool
+    // {
+    //     return $user->can(PermissionEnum::InventoryHoldReviewDestroy->value);
+    // }
 
     /**
      * Determine whether the user can restore the model.
