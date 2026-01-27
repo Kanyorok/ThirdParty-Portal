@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Property;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\PropertyRegistry\PropertyFloorRequest;
+use App\Http\Requests\Property\PropertyRegistry\PropertyFloorBulkRequest;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Services\Property\PropertyRegistry\PropertyFloorService;
+use App\Services\Property\PropertyRegistry\PropertyFloorBulkService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +18,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Throwable;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class PropertyFloorController extends Controller
 {
@@ -138,5 +143,84 @@ class PropertyFloorController extends Controller
                 ->withErrors(['error' => 'Failed to delete Property Floor. Please try again.'])
                 ->withInput();
         }
+    }
+
+    public function bulkCreate()
+    {
+        $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyFloor::class);
+        return view('property.propertyregistry.structuralmapping.addfloor.bulk-create');
+    }
+
+    public function bulkStore(PropertyFloorBulkRequest $request)
+    {
+        $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyFloor::class);
+
+        try {
+            $file = $request->file('file');
+            
+            // Parse CSV/Excel file
+            $data = Excel::toArray([], $file)[0];
+            
+            // Get headers from first row
+            $headers = array_shift($data);
+            
+            // Map headers to data
+            $mappedData = [];
+            foreach ($data as $row) {
+                $mappedData[] = array_combine($headers, $row);
+            }
+
+            // Process bulk upload
+            $results = PropertyFloorBulkService::processBulkUpload($mappedData, auth()->user());
+
+            if (request()->expectsJson()) {
+                return response()->json($results);
+            }
+
+            // Prepare success/error messages
+            $message = "Bulk upload completed. Successful: {$results['successful']}, Failed: {$results['failed']}";
+            
+            if ($results['failed'] > 0) {
+                return redirect()
+                    ->route('addfloor.index')
+                    ->with('warning', $message)
+                    ->with('errors', $results['errors']);
+            }
+
+            return redirect()
+                ->route('addfloor.index')
+                ->with('success', $message);
+
+        } catch (\Exception $e) {
+            Log::error('Bulk floor upload failed: ' . $e->getMessage());
+            
+            if (request()->expectsJson()) {
+                return response()->json(['message' => 'Bulk upload failed', 'error' => $e->getMessage()], 500);
+            }
+
+            return back()
+                ->withErrors(['error' => 'Failed to process bulk upload: ' . $e->getMessage()])
+                ->withInput();
+        }
+    }
+
+    public function bulkTemplate()
+    {
+        return Excel::download(
+            new class implements FromArray, WithHeadings {
+                public function array(): array
+                {
+                    return [
+                        ['1', '1', 'Floor 1', 'Ground floor'],
+                    ];
+                }
+
+                public function headings(): array
+                {
+                    return ['PropertyID', 'BlockID', 'FloorLabel', 'FloorNotes'];
+                }
+            },
+            'floor_bulk_template.xlsx'
+        );
     }
 }
