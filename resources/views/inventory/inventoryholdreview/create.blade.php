@@ -38,13 +38,15 @@
                     <option value="">-- Select --</option>
                     @foreach($holds as $hold)
                         @php
-                            $displayText = $hold->InventoryHoldID;
+                            // Get the actual source document ID (AdjustmentID or ReceiptID)
                             $sourceType = $hold->sourceDetail->Description ?? '';
+                            $sourceDocumentId = $hold->source_document_id ?? $hold->SourceID ?? 'N/A';
                             
-                            if ($sourceType === 'Transaction Transfer') {
-                                $displayText .= ' (Transfer)';
-                            } elseif ($sourceType) {
-                                $displayText .= ' (' . $sourceType . ')';
+                            // Build the display text: SourceDocumentID (Source Type)
+                            if ($sourceType) {
+                                $displayText = $sourceDocumentId . ' (' . $sourceType . ')';
+                            } else {
+                                $displayText = $sourceDocumentId;
                             }
                         @endphp
                         <option value="{{ $hold->Id }}" 
@@ -54,6 +56,7 @@
                                 data-frombranch="{{ $hold->branch->Name ?? '' }}"
                                 data-currentbranch="{{ $hold->branch->Name ?? '' }}"
                                 data-sourcetype="{{ $sourceType }}"
+                                data-sourceid="{{ $sourceDocumentId }}"
                                 data-store="{{ $hold->store->StoreName ?? '' }}"
                                 data-defect="{{ $hold->defectDetail->Description ?? $hold->Reason }}"
                                 data-itemname="{{ $hold->item->ItemName ?? '' }}"
@@ -89,14 +92,19 @@
                         <input type="text" class="form-control" id="SourceDisplay" disabled>
                     </div>
                     
-                    <div class="col-md-6" id="store-col" style="display: none;">
-                        <label class="form-label">Store</label>
-                        <input type="text" class="form-control" id="Store" disabled>
+                    <div class="col-md-6">
+                        <label class="form-label">Source ID<span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="SourceID" disabled>
                     </div>
                 </div>
                 
                 <div class="row mb-3">
-                    <div class="col-12">
+                    <div class="col-md-6" id="store-col">
+                        <label class="form-label">Store</label>
+                        <input type="text" class="form-control" id="Store" disabled>
+                    </div>
+                    
+                    <div class="col-md-6">
                         <label class="form-label">Defect Reason<span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="Defect" disabled>
                     </div>
@@ -166,6 +174,7 @@
         const fromBranch = selectedOption.getAttribute('data-frombranch');
         const currentBranch = selectedOption.getAttribute('data-currentbranch');
         const sourceType = selectedOption.getAttribute('data-sourcetype');
+        const sourceId = selectedOption.getAttribute('data-sourceid');
         const store = selectedOption.getAttribute('data-store');
         const defect = selectedOption.getAttribute('data-defect');
         const itemId = selectedOption.getAttribute('data-itemid');
@@ -176,14 +185,10 @@
         document.getElementById('Quantity').value = quantity || '';
         document.getElementById('Store').value = store || '';
         document.getElementById('Defect').value = defect || '';
+        document.getElementById('SourceID').value = sourceId || '';
         
         // Determine source display
-        let sourceDisplay = '';
-        if (sourceType === 'Transaction Transfer' && fromBranch) {
-            sourceDisplay = `${fromBranch} → ${currentBranch || 'Current Branch'}`;
-        } else {
-            sourceDisplay = sourceType || fromBranch || 'N/A';
-        }
+        let sourceDisplay = sourceType || 'N/A';
         document.getElementById('SourceDisplay').value = sourceDisplay;
 
         // Set hidden fields
@@ -194,6 +199,14 @@
 
         // Show details section
         document.getElementById('hold-details').classList.remove('d-none');
+
+        // Show/hide store field based on source type
+        const storeCol = document.getElementById('store-col');
+        if (sourceType && sourceType.toLowerCase().includes('adjustment')) {
+            storeCol.style.display = 'none';
+        } else {
+            storeCol.style.display = 'block';
+        }
 
         // 🔒 Disable or hide "Return to Sender" if it's an Adjustment
         const returnBtn = document.getElementById('returnBtn');
