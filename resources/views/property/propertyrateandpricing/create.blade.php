@@ -66,8 +66,8 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Parking Fee</label>
-                        <input type="number" name="ParkingFee" class="form-control" placeholder="e.g. 3000">
+                        <label class="form-label">Parking Fee<span class="text-danger">*</span></label>
+                        <input type="number" name="ParkingFee" class="form-control" placeholder="e.g. 3000" required>
                     </div>
                 </div>
 
@@ -75,13 +75,13 @@
                 <div class="row g-2 mb-3">
 
                     <div class="col-md-6">
-                        <label class="form-label">Service Charge</label>
-                        <input type="number" name="ServiceCharge" class="form-control" placeholder="e.g. 2000">
+                        <label class="form-label">Service Charge<span class="text-danger">*</span></label>
+                        <input type="number" name="ServiceCharge" class="form-control" placeholder="e.g. 2000" required>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Other Charges</label>
-                        <input type="number" name="OtherCharges" class="form-control" placeholder="e.g. 1000">
+                        <label class="form-label">Other Charges<span class="text-danger">*</span></label>
+                        <input type="number" name="OtherCharges" class="form-control" placeholder="e.g. 1000" required>
                     </div>
 
                 </div>
@@ -90,8 +90,8 @@
                 <div class="row g-2 mb-3">
 
                     <div class="col-md-4">
-                        <label class="form-label">Deposit Amount</label>
-                        <input type="number" name="DepositAmount" class="form-control" placeholder="e.g. 60000">
+                        <label class="form-label">Deposit Amount<span class="text-danger">*</span></label>
+                        <input type="number" name="DepositAmount" class="form-control" placeholder="e.g. 60000" required>
                     </div>
 
                     <div class="col-md-4">

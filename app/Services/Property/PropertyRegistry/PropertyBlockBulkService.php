@@ -13,7 +13,7 @@ class PropertyBlockBulkService
      * Process bulk block upload from CSV/Excel data
      * 
      * Expected columns:
-     * - PropertyID (property code or Id)
+     * - PropertyID (property Id)
      * - BlockName
      * - Description (optional)
      */

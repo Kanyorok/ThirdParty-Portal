@@ -26,7 +26,7 @@ class PropertyRateAndPricingRequest extends FormRequest
             'BlockId' => ['nullable', 'exists:t_PropertyBlock,Id'],
             'FloorId' => ['nullable', 'exists:t_PropertyFloor,Id'],
             'UnitId' => ['nullable', 'exists:t_PropertyUnit,Id'],
-            'Rent' => ['required', 'numeric', 'min:0'],
+            'Rent' => ['required', 'numeric', 'min:1'],
             'ParkingFee' => ['nullable', 'numeric', 'min:0'],
             'ServiceCharge' => ['nullable', 'numeric', 'min:0'],
             'OtherCharges' => ['nullable', 'numeric', 'min:0'],
