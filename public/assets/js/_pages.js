@@ -1,5 +1,17 @@
 /** @mureithi.maina 2024 */
-window.notyf = new Notyf(); window.isDirty = false; window.addEventListener('beforeunload', (event) => { if (window.isDirty) { const confirmationMessage = 'You have unsaved changes. Are you sure you want to leave?'; event.returnValue = confirmationMessage; return confirmationMessage; } }); async function saveForm(form, saveBtn, redirect = false, reset = false, popMessage = true, isEdit = false) {
+// Initialize Notyf when DOM and all scripts are ready
+window.addEventListener('load', function () {
+  try {
+    if (window.Notyf && typeof window.Notyf === 'function') {
+      window.notyf = new window.Notyf();
+    } else {
+      console.warn('Notyf library not loaded - notifications will not work');
+    }
+  } catch (e) {
+    console.error('Error initializing Notyf:', e);
+  }
+});
+window.isDirty = false; window.addEventListener('beforeunload', (event) => { if (window.isDirty) { const confirmationMessage = 'You have unsaved changes. Are you sure you want to leave?'; event.returnValue = confirmationMessage; return confirmationMessage; } }); async function saveForm(form, saveBtn, redirect = false, reset = false, popMessage = true, isEdit = false) {
   const btnContent = saveBtn.html(); saveBtn.prop('disable', true).addClass('disabled').prop('type', 'button').html('<i class="fas fa-spinner fa-spin"></i> please wait'); $('.form-control').removeClass('is-invalid'); $('.error').addClass('d-none'); window.isDirty = true; try {
     return await $.ajax({
       url: form.attr('action'), type: 'post', dataType: 'json', data: form.serialize(), success(data) { if (redirect && data.route && data.route !== '') { window.setTimeout(() => { window.location.replace(data.route); }, 3000); } if (reset) { form.trigger('reset'); } if (popMessage) { nSuccess(data.message); } return data; }, complete() { saveBtn.prop('disable', false).removeClass('disabled').prop('type', 'submit').html(btnContent); window.isDirty = false; },

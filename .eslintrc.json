@@ -11,7 +11,9 @@
     "htmx": "readonly",
     "toastr": "readonly",
     "Swal": "readonly",
-    "axios": "readonly"
+    "axios": "readonly",
+    "Notyf": "readonly",
+    "bootstrap": "readonly"
   },
   "parser": "babel-eslint",
   "parserOptions": {
