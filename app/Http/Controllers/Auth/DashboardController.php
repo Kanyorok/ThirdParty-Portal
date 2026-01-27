@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Auth;
 
 use App\Enums\LeadStatusEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Base\ModuleCollection;
 use App\Models\Auth\User;
 use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetGLMaster;
+use App\Models\Core\Module;
 use App\Models\CRM\Lead;
 use App\Models\Dashboard\DashboardWidget;
 use App\Models\Dashboard\UserDashboardWidget;
@@ -14,10 +16,16 @@ use App\Models\Procurement\DepartmentNeed;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('ajax')->only('search');
+    }
+
     protected const int MONTHS = 6;
 
     /**
@@ -255,5 +263,28 @@ class DashboardController extends Controller
             'status' => 'ok',
             'message' => 'Layout saved successfully',
         ]);
+    }
+
+
+    public function search(Request $request): ModuleCollection
+    {
+        $actor = $request->user();
+        $search = $request->get('q', '');
+        $search = (is_string($search)) ? str_replace(['*', '%'], ['', ''], $search) : '';
+        $search = trim($search);
+
+        if (empty($search)) {
+            return new ModuleCollection(collect([]));
+        }
+        $modules = Module::query()->accessibleToUser($actor)->where(function (Builder $query) use ($search) {
+            $query->where('Name', 'LIKE', "%{$search}%")
+                ->orWhere('Route', 'LIKE', "%{$search}%")
+                ->orWhere('Description', 'LIKE', "%{$search}%")
+                ->orWhereHas('parent', function (Builder $parentQuery) use ($search) {
+                    $parentQuery->where('Name', 'LIKE', "%{$search}%");
+                });
+        })->whereNotNull('Route')->with('parent')->limit(5)->get();
+
+        return new ModuleCollection($modules);
     }
 }

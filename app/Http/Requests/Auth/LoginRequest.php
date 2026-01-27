@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -54,7 +53,6 @@ class LoginRequest extends FormRequest
         if (!$modelRole instanceof ModelRole || !$role instanceof Role) {
             throw ValidationException::withMessages([
                 'branch' => 'Branch not found or not authorized.',
-                //'branch' => 'You do not have access to the selected branch.',
             ]);
         }
 
@@ -81,7 +79,6 @@ class LoginRequest extends FormRequest
             RateLimiter::clear($this->throttleKey());
 
             //remove other sessions
-            //remove other sessions
             if (config(key: 'session.driver') === 'database') {
                 DB::connection(config(key: 'session.connection'))->table(table: config(key: 'session.table', default: 't_SYSSessions'))
                     ->where(column: 'user_id', operator: '=', value: $user->getAuthIdentifier())->delete();
@@ -101,20 +98,20 @@ class LoginRequest extends FormRequest
 
             //new session
             Auth::guard('web')->login($user, $branchRole['role']->hasPermissionTo(PermissionEnum::UsersSessions));
-            
+
             // Debug: Log immediately after login
             \Log::info('AFTER Auth::login', [
                 'auth_check' => auth()->check(),
                 'auth_id' => auth()->id(),
                 'session_id' => session()->getId(),
             ]);
-            
+
             // DISABLED: session()->regenerate() changes session ID
             // Apache in production doesn't send Set-Cookie header in AJAX responses
             // So browser keeps old session ID, causing authentication to fail
             // Security note: Auth::login() already migrates session for security
             // $this->session()->regenerate();
-            
+
             // Debug: Log after regenerate (skipped)
             \Log::info('SKIPPED session regenerate', [
                 'auth_check' => auth()->check(),
@@ -142,10 +139,10 @@ class LoginRequest extends FormRequest
             activity()->causedBy($user)->performedOn($user)->event('authentication')->log('Signed in from ' . $this->getClientIp() . ' as ' . $branchRole['role']->name . ' at ' . $branchRole['branch']->Name);
 
             ModuleService::clearNavbarCache($user);
-            
+
             // Force save session to DB immediately
             $this->session()->save();
-            
+
             // Debug: Check DB immediately after save
             $dbSession = DB::table(config('session.table', 't_SYSSessions'))
                 ->where('id', session()->getId())
@@ -156,7 +153,7 @@ class LoginRequest extends FormRequest
                 'db_user_id' => $dbSession ? $dbSession->user_id : null,
                 'auth_check' => auth()->check(),
             ]);
-            
+
             return;
         }
 

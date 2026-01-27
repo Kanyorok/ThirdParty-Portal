@@ -44,49 +44,34 @@ class ModuleSeeder extends Seeder
     protected function _thirdParty(bool $fresh): Collection
     {
         return collect([
-            ['ModuleID' => 100000, 'Name' => ModulesEnum::ThirdParty->description(), 'Icon' => '<i data-feather="users"></i>', 'Description' => '', 'ParentID' => null, 'Route' => 'thirdparty.parties.index', 'RequiredPermission' => PermissionEnum::ThirdPartyRead->value],
+            ['ModuleID' => 100000, 'Name' => ModulesEnum::ThirdParty->description(), 'Icon' => '<i data-feather="users"></i>', 'Description' => 'Manage third-party entities and integrations', 'ParentID' => null, 'Route' => 'thirdparty.parties.index', 'RequiredPermission' => PermissionEnum::ThirdPartyRead->value],
         ]);
     }
 
     protected function _crm(): Collection
     {
         return collect([
-            ['ModuleID' => 200000, 'Name' => ModulesEnum::CRM->description(), 'Icon' => '<i data-feather="share-2"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
-            ['ModuleID' => 200100, 'Name' => 'Third Parties', 'Icon' => '<i data-feather="users"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 200000],
-            ['ModuleID' => 200110, 'Name' => 'Clients', 'Icon' => null, 'Description' => '', 'Route' => 'clients.index', 'ParentID' => 200100, 'RequiredPermission' => PermissionEnum::ClientRead->value],
-            ['ModuleID' => 200120, 'Name' => 'Leads', 'Icon' => null, 'Description' => '', 'Route' => 'leads.index', 'ParentID' => 200100, 'RequiredPermission' => PermissionEnum::LeadRead->value],
-            ['ModuleID' => 200130, 'Name' => 'Board', 'Icon' => null, 'Description' => '', 'Route' => 'board.index', 'ParentID' => 200100, 'RequiredPermission' => PermissionEnum::BoardManage->value],
-            ['ModuleID' => 201000, 'Name' => 'Mailbox', 'Icon' => '<i class="fas fa-envelope"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'email-conversations.index', 'RequiredPermission' => PermissionEnum::EmailRead->value],
-
-            ['ModuleID' => 202000, 'Name' => 'Marketing Planner', 'Icon' => '<i class=" fa-solid fa-seedling"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'marketing-planner.index', 'RequiredPermission' => PermissionEnum::MarketingPlannerRead->value],
-            ['ModuleID' => 203000, 'Name' => 'Marketing Lists', 'Icon' => '<i class="fas fa-list-dots"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'marketing-list.index', 'RequiredPermission' => PermissionEnum::MarketingListRead->value],
-            ['ModuleID' => 204000, 'Name' => 'Campaigns', 'Icon' => '<i class="fas fa-copyright"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'campaigns.index', 'RequiredPermission' => PermissionEnum::CampaignRead->value],
-            ['ModuleID' => 205000, 'Name' => 'Competitors', 'Icon' => '<i class="fas fa-face-rolling-eyes"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'competitors.index', 'RequiredPermission' => PermissionEnum::Competitor->value],
-            ['ModuleID' => 206000, 'Name' => 'Social Media', 'Icon' => '<i class="fa-solid fa-icons"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'socials.index', 'RequiredPermission' => PermissionEnum::SocialRead->value],
-
-            ['ModuleID' => 207000, 'Name' => 'Feedback', 'Icon' => null, 'Description' => '', 'ParentID' => 200000, 'Route' => null],
-            ['ModuleID' => 207100, 'Name' => 'Surveys', 'Icon' => '<i class="fa-regular fa-circle-check"></i>', 'Description' => '', 'ParentID' => 207000, 'Route' => 'surveys.index', 'RequiredPermission' => PermissionEnum::SurveyRead->value],
-            ['ModuleID' => 207200, 'Name' => 'Reviews', 'Icon' => '<i class="fa-regular fa-comment"></i>', 'Description' => '', 'ParentID' => 207000, 'Route' => 'reviews.index', 'RequiredPermission' => PermissionEnum::ReviewsView->value],
-
+            ['ModuleID' => 200000, 'Name' => ModulesEnum::CRM->description(), 'Icon' => '<i data-feather="share-2"></i>', 'Description' => 'Customer Relationship Management', 'ParentID' => null, 'Route' => null],
+            ['ModuleID' => 200100, 'Name' => 'Third Parties', 'Icon' => '<i data-feather="users"></i>', 'Description' => 'Manage third-party contacts and organizations', 'Route' => null, 'ParentID' => 200000],
+            ['ModuleID' => 200110, 'Name' => 'Clients', 'Icon' => null, 'Description' => 'Manage client records and details', 'Route' => 'clients.index', 'ParentID' => 200100, 'RequiredPermission' => PermissionEnum::ClientRead->value],
+            ['ModuleID' => 200120, 'Name' => 'Leads', 'Icon' => null, 'Description' => 'Track and manage sales leads', 'Route' => 'leads.index', 'ParentID' => 200100, 'RequiredPermission' => PermissionEnum::LeadRead->value],
+            ['ModuleID' => 200130, 'Name' => 'Board', 'Icon' => null, 'Description' => 'Sales and opportunity board', 'Route' => 'board.index', 'ParentID' => 200100, 'RequiredPermission' => PermissionEnum::BoardManage->value],
+            ['ModuleID' => 201000, 'Name' => 'Mailbox', 'Icon' => '<i class="fas fa-envelope"></i>', 'Description' => 'Email communications and mailbox', 'ParentID' => 200000, 'Route' => 'email-conversations.index', 'RequiredPermission' => PermissionEnum::EmailRead->value],
+            ['ModuleID' => 202000, 'Name' => 'Marketing Planner', 'Icon' => '<i class=" fa-solid fa-seedling"></i>', 'Description' => 'Plan and manage marketing activities', 'ParentID' => 200000, 'Route' => 'marketing-planner.index', 'RequiredPermission' => PermissionEnum::MarketingPlannerRead->value],
+            ['ModuleID' => 203000, 'Name' => 'Marketing Lists', 'Icon' => '<i class="fas fa-list-dots"></i>', 'Description' => 'Manage marketing contact lists', 'ParentID' => 200000, 'Route' => 'marketing-list.index', 'RequiredPermission' => PermissionEnum::MarketingListRead->value],
+            ['ModuleID' => 204000, 'Name' => 'Campaigns', 'Icon' => '<i class="fas fa-copyright"></i>', 'Description' => 'Marketing campaigns management', 'ParentID' => 200000, 'Route' => 'campaigns.index', 'RequiredPermission' => PermissionEnum::CampaignRead->value],
+            ['ModuleID' => 205000, 'Name' => 'Competitors', 'Icon' => '<i class="fas fa-face-rolling-eyes"></i>', 'Description' => 'Track competitors and market analysis', 'ParentID' => 200000, 'Route' => 'competitors.index', 'RequiredPermission' => PermissionEnum::Competitor->value],
+            ['ModuleID' => 206000, 'Name' => 'Social Media', 'Icon' => '<i class="fa-solid fa-icons"></i>', 'Description' => 'Manage social media accounts and posts', 'ParentID' => 200000, 'Route' => 'socials.index', 'RequiredPermission' => PermissionEnum::SocialRead->value],
+            ['ModuleID' => 207000, 'Name' => 'Feedback', 'Icon' => null, 'Description' => 'Collect and manage customer feedback', 'ParentID' => 200000, 'Route' => null],
+            ['ModuleID' => 207100, 'Name' => 'Surveys', 'Icon' => '<i class="fa-regular fa-circle-check"></i>', 'Description' => 'Customer surveys and questionnaires', 'ParentID' => 207000, 'Route' => 'surveys.index', 'RequiredPermission' => PermissionEnum::SurveyRead->value],
+            ['ModuleID' => 207200, 'Name' => 'Reviews', 'Icon' => '<i class="fa-regular fa-comment"></i>', 'Description' => 'Customer reviews and ratings', 'ParentID' => 207000, 'Route' => 'reviews.index', 'RequiredPermission' => PermissionEnum::ReviewsView->value],
             //  ['ModuleID' => 208000, 'Name' => 'Product Development', 'Icon' => '<i class="fa-solid fa-cubes"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'product-development.index'],
-
-            ['ModuleID' => 209000, 'Name' => 'Debt Collection', 'Icon' => null, 'Description' => '', 'ParentID' => 200000, 'Route' => null],
-            ['ModuleID' => 209100, 'Name' => 'Notifications', 'Icon' => '<i class="fas fa-comment-dollar"></i>', 'Description' => '', 'ParentID' => 209000, 'Route' => 'debt-notification.index', 'RequiredPermission' => PermissionEnum::DebtNotificationView->value],
-            ['ModuleID' => 209200, 'Name' => 'Loans', 'Icon' => '<i class="fas fa-hands-helping"></i>', 'Description' => '', 'ParentID' => 209000, 'Route' => null],
-            ['ModuleID' => 209210, 'Name' => 'Lists', 'Icon' => null, 'Description' => '', 'ParentID' => 209200, 'Route' => 'loans-list.index', 'RequiredPermission' => PermissionEnum::DebtCollectionLists->value],
-            ['ModuleID' => 209220, 'Name' => 'Loans', 'Icon' => null, 'Description' => '', 'ParentID' => 209200, 'Route' => 'debt-collection.index', 'RequiredPermission' => PermissionEnum::DebtCollectionView->value],
-
-            // =========================================================
-            // Submenu: Policy & Training Repository
-            // =========================================================
-            /* ['ModuleID' => 209400, 'Name' => 'Training', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Policies, trainings, and staff acknowledgments', 'ParentID' => 200000, 'Route' => null],
-
-             // ['ModuleID' => 209405, 'Name' => 'Policies', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Org Policies', 'ParentID' => 209400, 'Route' => 'legal.compliance.policies.index'],
-             ['ModuleID' => 209410, 'Name' => 'Trainings', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff trainings', 'ParentID' => 209400, 'Route' => 'legal.compliance.trainings.index'],
-             ['ModuleID' => 209415, 'Name' => 'Certification', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff certifications', 'ParentID' => 209400, 'Route' => 'legal.compliance.certifications.index'],*/
-
-
-            ['ModuleID' => 299000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'crm-reports.index', 'RequiredPermission' => PermissionEnum::LeadRead->value],
+            ['ModuleID' => 209000, 'Name' => 'Debt Collection', 'Icon' => null, 'Description' => 'Debt collection and recovery', 'ParentID' => 200000, 'Route' => null],
+            ['ModuleID' => 209100, 'Name' => 'Notifications', 'Icon' => '<i class="fas fa-comment-dollar"></i>', 'Description' => 'Debt collection notifications', 'ParentID' => 209000, 'Route' => 'debt-notification.index', 'RequiredPermission' => PermissionEnum::DebtNotificationView->value],
+            ['ModuleID' => 209200, 'Name' => 'Loans', 'Icon' => '<i class="fas fa-hands-helping"></i>', 'Description' => 'Manage loan accounts', 'ParentID' => 209000, 'Route' => null],
+            ['ModuleID' => 209210, 'Name' => 'Lists', 'Icon' => null, 'Description' => 'Loan lists and details', 'ParentID' => 209200, 'Route' => 'loans-list.index', 'RequiredPermission' => PermissionEnum::DebtCollectionLists->value],
+            ['ModuleID' => 209220, 'Name' => 'Loans', 'Icon' => null, 'Description' => 'Debt collection loans', 'ParentID' => 209200, 'Route' => 'debt-collection.index', 'RequiredPermission' => PermissionEnum::DebtCollectionView->value],
+            ['ModuleID' => 299000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => 'CRM reports and analytics', 'ParentID' => 200000, 'Route' => 'crm-reports.index', 'RequiredPermission' => PermissionEnum::LeadRead->value],
         ]);
     }
 
@@ -414,21 +399,18 @@ class ModuleSeeder extends Seeder
     protected function _documentManagement(): Collection
     {
         return collect([
-            ['ModuleID' => 700000, 'Name' => ModulesEnum::DMS->description(), 'Icon' => '<i data-feather="file-text"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
-            ['ModuleID' => 701000, 'Name' => 'Recent Documents', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'repo.recent', 'RequiredPermission' => PermissionEnum::DMSView->value],
-            ['ModuleID' => 702000, 'Name' => 'Repository', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'repo.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
-            ['ModuleID' => 703000, 'Name' => 'Tags', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'file-tags.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
-            ['ModuleID' => 704000, 'Name' => 'Bulk Upload', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'files.upload', 'RequiredPermission' => PermissionEnum::DMSBulkUpload->value],
-            ['ModuleID' => 705000, 'Name' => 'Legal Hold', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'legal-hold.index', 'RequiredPermission' => PermissionEnum::DMSLegalHoldView->value],
-            ['ModuleID' => 706000, 'Name' => 'Document Validation', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'dms.validation.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
-
-            ['ModuleID' => 797000, 'Name' => 'Settings', 'Icon' => '<i class="fas fa-cogs"></i>', 'Description' => '', 'ParentID' => 700000, 'Route' => null, 'RequiredPermission' => PermissionEnum::DMSView->value],
-            ['ModuleID' => 797100, 'Name' => 'Signatures', 'Icon' => null, 'Description' => '', 'ParentID' => 797000, 'Route' => 'document-signature.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
-            ['ModuleID' => 797200, 'Name' => 'Validation Types', 'Icon' => null, 'Description' => '', 'ParentID' => 797000, 'Route' => 'document-validation-type.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
-
-            ['ModuleID' => 798000, 'Name' => 'Trash', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'document-trashed.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
-
-            ['ModuleID' => 799000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'dms-reports.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
+            ['ModuleID' => 700000, 'Name' => ModulesEnum::DMS->description(), 'Icon' => '<i data-feather="file-text"></i>', 'Description' => 'Central document management system for organizing, storing, and retrieving digital documents and files securely.', 'ParentID' => null, 'Route' => null],
+            ['ModuleID' => 701000, 'Name' => 'Recent Documents', 'Icon' => '<i class="fas fa-clock"></i>', 'Description' => 'Quick access to recently viewed and modified documents for improved workflow efficiency.', 'ParentID' => 700000, 'Route' => 'repo.recent', 'RequiredPermission' => PermissionEnum::DMSView->value],
+            ['ModuleID' => 702000, 'Name' => 'Repository', 'Icon' => '<i class="fas fa-folder-open"></i>', 'Description' => 'Main document repository with folder structure for organized document storage and management.', 'ParentID' => 700000, 'Route' => 'repo.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
+            ['ModuleID' => 703000, 'Name' => 'Tags', 'Icon' => '<i class="fas fa-tags"></i>', 'Description' => 'Tag management system for categorizing and quickly finding documents through metadata.', 'ParentID' => 700000, 'Route' => 'file-tags.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
+            ['ModuleID' => 704000, 'Name' => 'Bulk Upload', 'Icon' => '<i class="fas fa-file-upload"></i>', 'Description' => 'Efficiently upload multiple documents simultaneously with automatic organization features.', 'ParentID' => 700000, 'Route' => 'files.upload', 'RequiredPermission' => PermissionEnum::DMSBulkUpload->value],
+            ['ModuleID' => 705000, 'Name' => 'Legal Hold', 'Icon' => '<i class="fas fa-gavel"></i>', 'Description' => 'Manage documents under legal preservation orders to prevent alteration or deletion during litigation.', 'ParentID' => 700000, 'Route' => 'legal-hold.index', 'RequiredPermission' => PermissionEnum::DMSLegalHoldView->value],
+            ['ModuleID' => 706000, 'Name' => 'Document Validation', 'Icon' => '<i class="fas fa-check-circle"></i>', 'Description' => 'Validate document authenticity, integrity, and compliance with organizational standards.', 'ParentID' => 700000, 'Route' => 'dms.validation.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
+            ['ModuleID' => 797000, 'Name' => 'Settings', 'Icon' => '<i class="fas fa-cogs"></i>', 'Description' => 'Configuration and customization options for the document management system.', 'ParentID' => 700000, 'Route' => null, 'RequiredPermission' => PermissionEnum::DMSView->value],
+            ['ModuleID' => 797100, 'Name' => 'Signatures', 'Icon' => '<i class="fas fa-signature"></i>', 'Description' => 'Manage digital signatures, e-signatures, and document signing workflows.', 'ParentID' => 797000, 'Route' => 'document-signature.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
+            ['ModuleID' => 797200, 'Name' => 'Validation Types', 'Icon' => '<i class="fas fa-clipboard-check"></i>', 'Description' => 'Configure different document validation rules, requirements, and verification methods.', 'ParentID' => 797000, 'Route' => 'document-validation-type.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
+            ['ModuleID' => 798000, 'Name' => 'Trash', 'Icon' => '<i class="fas fa-trash-alt"></i>', 'Description' => 'Recover or permanently delete documents that have been moved to the recycle bin.', 'ParentID' => 700000, 'Route' => 'document-trashed.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
+            ['ModuleID' => 799000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => 'Generate analytical reports on document usage, storage metrics, and system activity.', 'ParentID' => 700000, 'Route' => 'dms-reports.index', 'RequiredPermission' => PermissionEnum::DMSView->value]
         ]);
     }
 
