@@ -85,27 +85,50 @@
         <div class="row">
             <div class="col-md-4 mb-3">
                 <label>Rent</label>
-                <input type="number" name="Rent" class="form-control" value="{{ $pricing->Rent }}" required>
+                <input type="number" name="Rent" id="Rent" class="form-control" value="{{ $pricing->Rent }}" required>
             </div>
 
             <div class="col-md-4 mb-3">
                 <label>Service Charge</label>
-                <input type="number" name="ServiceCharge" class="form-control" value="{{ $pricing->ServiceCharge }}">
+                <input type="number" name="ServiceCharge" id="ServiceCharge" class="form-control" value="{{ $pricing->ServiceCharge }}">
             </div>
 
             <div class="col-md-4 mb-3">
                 <label>Parking Fee</label>
-                <input type="number" name="ParkingFee" class="form-control" value="{{ $pricing->ParkingFee }}">
+                <input type="number" name="ParkingFee" id="ParkingFee" class="form-control" value="{{ $pricing->ParkingFee }}">
             </div>
 
             <div class="col-md-4 mb-3">
                 <label>Other Charges</label>
-                <input type="number" name="OtherCharges" class="form-control" value="{{ $pricing->OtherCharges }}">
+                <input type="number" name="OtherCharges" id="OtherCharges" class="form-control" value="{{ $pricing->OtherCharges }}">
             </div>
 
             <div class="col-md-4 mb-3">
                 <label>Deposit Amount</label>
-                <input type="number" name="DepositAmount" class="form-control" value="{{ $pricing->DepositAmount }}">
+                <input type="number" name="DepositAmount" id="DepositAmount" class="form-control" value="{{ $pricing->DepositAmount }}">
+            </div>
+        </div>
+
+        {{-- Total Amount --}}
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="card bg-light border-success">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Amount</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h3 class="text-success mb-0">
+                                    <span id="totalAmount">{{ number_format($pricing->Rent + $pricing->ParkingFee + $pricing->ServiceCharge + $pricing->OtherCharges + $pricing->DepositAmount, 2) }}</span>
+                                </h3>
+                                <small class="text-muted">(Rent + Parking + Service + Other + Deposit)</small>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <p class="mb-1"><strong>Monthly Charges:</strong> <span id="monthlyCharges">{{ number_format($pricing->Rent + $pricing->ParkingFee + $pricing->ServiceCharge + $pricing->OtherCharges, 2) }}</span></p>
+                                <p class="mb-0"><strong>Deposit:</strong> <span id="displayDeposit">{{ number_format($pricing->DepositAmount, 2) }}</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -123,6 +146,36 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedBlock = "{{ $pricing->BlockId }}";
     const selectedFloor = "{{ $pricing->FloorId }}";
     const selectedUnit  = "{{ $pricing->UnitId }}";
+
+    // Get price input fields
+    const rentInput = document.getElementById('Rent');
+    const parkingInput = document.getElementById('ParkingFee');
+    const serviceInput = document.getElementById('ServiceCharge');
+    const otherInput = document.getElementById('OtherCharges');
+    const depositInput = document.getElementById('DepositAmount');
+
+    // Calculate total
+    function calculateTotal() {
+        const rent = parseFloat(rentInput.value) || 0;
+        const parking = parseFloat(parkingInput.value) || 0;
+        const service = parseFloat(serviceInput.value) || 0;
+        const other = parseFloat(otherInput.value) || 0;
+        const deposit = parseFloat(depositInput.value) || 0;
+
+        const monthlyCharges = rent + parking + service + other;
+        const total = monthlyCharges + deposit;
+
+        document.getElementById('totalAmount').textContent = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('monthlyCharges').textContent = monthlyCharges.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('displayDeposit').textContent = deposit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // Add event listeners to all price fields
+    rentInput.addEventListener('input', calculateTotal);
+    parkingInput.addEventListener('input', calculateTotal);
+    serviceInput.addEventListener('input', calculateTotal);
+    otherInput.addEventListener('input', calculateTotal);
+    depositInput.addEventListener('input', calculateTotal);
 
     loadBlocks();
 

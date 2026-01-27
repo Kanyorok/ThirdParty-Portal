@@ -39,7 +39,7 @@ class PropertyLeaseRenewal extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'ScheduleRenewalId';
+        return 'LeaseRenewalId';
     }
     public function lease()
     {

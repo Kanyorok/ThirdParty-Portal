@@ -91,7 +91,7 @@
 
                     <div class="col-md-4">
                         <label class="form-label">Deposit Amount<span class="text-danger">*</span></label>
-                        <input type="number" name="DepositAmount" class="form-control" placeholder="e.g. 60000" required>
+                        <input type="number" name="DepositAmount" id="DepositAmount" class="form-control" placeholder="e.g. 60000" required>
                     </div>
 
                     <div class="col-md-4">
@@ -116,6 +116,29 @@
 
                 </div>
 
+                {{-- Row 5: Total Amount --}}
+                <div class="row g-2 mb-3">
+                    <div class="col-md-12">
+                        <div class="card bg-light border-success">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Amount</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h3 class="text-success mb-0">
+                                            <span id="totalAmount">0.00</span>
+                                        </h3>
+                                        <small class="text-muted">(Rent + Parking + Service + Other + Deposit)</small>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <p class="mb-1"><strong>Monthly Charges:</strong> <span id="monthlyCharges">0.00</span></p>
+                                        <p class="mb-0"><strong>Deposit:</strong> <span id="displayDeposit">0.00</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Submit --}}
                 <button type="submit"
                         class="btn btn-success"
@@ -138,6 +161,39 @@ document.addEventListener('DOMContentLoaded', function () {
     const blockSelect = document.getElementById('block-select');
     const floorSelect = document.getElementById('floor-select');
     const unitSelect = document.getElementById('unit-select');
+
+    // Get price input fields
+    const rentInput = document.querySelector('input[name="Rent"]');
+    const parkingInput = document.querySelector('input[name="ParkingFee"]');
+    const serviceInput = document.querySelector('input[name="ServiceCharge"]');
+    const otherInput = document.querySelector('input[name="OtherCharges"]');
+    const depositInput = document.getElementById('DepositAmount');
+
+    // Calculate total
+    function calculateTotal() {
+        const rent = parseFloat(rentInput.value) || 0;
+        const parking = parseFloat(parkingInput.value) || 0;
+        const service = parseFloat(serviceInput.value) || 0;
+        const other = parseFloat(otherInput.value) || 0;
+        const deposit = parseFloat(depositInput.value) || 0;
+
+        const monthlyCharges = rent + parking + service + other;
+        const total = monthlyCharges + deposit;
+
+        document.getElementById('totalAmount').textContent = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('monthlyCharges').textContent = monthlyCharges.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('displayDeposit').textContent = deposit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // Add event listeners to all price fields
+    rentInput.addEventListener('input', calculateTotal);
+    parkingInput.addEventListener('input', calculateTotal);
+    serviceInput.addEventListener('input', calculateTotal);
+    otherInput.addEventListener('input', calculateTotal);
+    depositInput.addEventListener('input', calculateTotal);
+
+    // Initial calculation
+    calculateTotal();
 
     // Reset dropdowns
     function reset(select, placeholder) {
