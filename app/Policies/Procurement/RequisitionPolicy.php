@@ -2,9 +2,9 @@
 
 namespace App\Policies\Procurement;
 
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Procurement\Requisitions;
-use App\Enums\Core\PermissionEnum;
 
 class RequisitionPolicy
 {

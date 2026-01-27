@@ -21,6 +21,7 @@ class PropertyNewTenantController extends Controller
     public function index()
     {
         $newtenants = PropertyNewTenant::with('type', 'thirdParty')->get();
+
         return view('property.tenantmanagement.tenantmaintenance.index', compact('newtenants'));
     }
 
@@ -56,7 +57,6 @@ class PropertyNewTenantController extends Controller
         return view('property.tenantmanagement.tenantmaintenance.create', compact('tenantTypes', 'tenants'));
     }
 
-
     public function edit($id)
     {
         $this->authorize(PermissionEnum::TenantMaintenanceUpdate, PropertyNewTenant::class);
@@ -70,6 +70,7 @@ class PropertyNewTenantController extends Controller
     {
         $this->authorize(PermissionEnum::TenantMaintenanceView, PropertyNewTenant::class);
         $newtenant = PropertyNewTenant::findOrFail($id);
+
         return view('property.tenantmanagement.tenantmaintenance.show', compact('newtenant'));
     }
 
@@ -93,7 +94,6 @@ class PropertyNewTenantController extends Controller
         );
 
         return redirect()->route('addtenant.index')->with('success', 'Tenant created successfully');
-
     }
 
     public function update(PropertyNewTenantRequest $request, $id)
@@ -119,6 +119,4 @@ class PropertyNewTenantController extends Controller
             ->route('addtenant.index')
             ->with('success', 'Tenant updated successfully.');
     }
-
-
 }

@@ -37,13 +37,14 @@ class LoanReAssignmentCommand extends Command
     {
         try {
             $dated = Carbon::parse(DebtProduct::query()->max('processdate'));
-            if (!$dated instanceof Carbon) {
+            if (! $dated instanceof Carbon) {
                 throw new Exception('No Debt Products found Date ISSUE');
             }
         } catch (Exception | InvalidFormatException) {
             Log::error('Loan Re-Assignment Error: No Debt Products found Date ISSUE');
+
             return;
-           // $dated = null;
+            // $dated = null;
         }
         $actor = SystemHelper::user();
 
@@ -57,7 +58,7 @@ class LoanReAssignmentCommand extends Command
         }
 
         //check non-extent and end assignment. Closed Loans
-        $assignments =  LoanAssignment::query()->whereNull('EndOn')->whereNotIn('AccountID', DebtProduct::query()->where('processDate', $dated)->select('AccountID'))->get();
+        $assignments = LoanAssignment::query()->whereNull('EndOn')->whereNotIn('AccountID', DebtProduct::query()->where('processDate', $dated)->select('AccountID'))->get();
         foreach ($assignments as $assignment) {
             if ($assignment instanceof LoanAssignment) {
                 $assignment->update(['EndOn' => Carbon::now(), 'ModifiedBy' => $actor->Id, 'Notes' => 'Closed']);

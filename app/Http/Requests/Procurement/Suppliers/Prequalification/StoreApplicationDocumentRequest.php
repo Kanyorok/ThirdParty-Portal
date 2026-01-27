@@ -8,7 +8,7 @@ class StoreApplicationDocumentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-    return true; // guarded by auth middleware on routes
+        return true; // guarded by auth middleware on routes
     }
 
     public function rules(): array

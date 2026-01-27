@@ -3,8 +3,8 @@
 namespace App\Policies\Procurement;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\Procurement\SchedulePlan;
 use App\Models\Auth\User;
+use App\Models\Procurement\SchedulePlan;
 
 class SchedulePlanPolicy
 {

@@ -33,7 +33,7 @@ class BRUser extends Model
     protected function casts(): array
     {
         return [
-                'Password'    => 'hashed',
+                'Password' => 'hashed',
                 'TrxPassword' => 'hashed',
                ];
     }

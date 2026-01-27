@@ -28,6 +28,7 @@ class ModuleCollection extends ResourceCollection
                         $icon = '<i class="fa fa-cube"></i>';
                     }
                 }
+
                 return [
                     'id' => $module->ModuleID,
                     'name' => $module->Name,
@@ -35,7 +36,7 @@ class ModuleCollection extends ResourceCollection
                     'description' => $module->Description ?? '',
                     'link' => $link,
                 ];
-            })
+            }),
         ];
     }
 }

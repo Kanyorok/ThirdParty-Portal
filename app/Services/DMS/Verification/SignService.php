@@ -87,15 +87,17 @@ abstract class SignService
                         'position' => [
                             'x' => $this->sign_start_h,
                             'y' => $this->sign_start_v,
-                        ]
+                        ],
                     ],
                     "Content" => $this->content,
                 ]);
+
                 return (new DocumentService($document))->newVersionFile($path, $actor);
             });
         } catch (Throwable $e) {
             Log::error('Error signing document: ' . $e);
         }
+
         throw new ErroredException('Signing document failed: DB');
     }
 
@@ -117,8 +119,10 @@ abstract class SignService
             $file = $docService->getTempPath();
             if (is_string($file) && file_exists($file)) {
                 $this->tempDocument = $docService->getTempPath();
+
                 return;
             }
+
             throw new ErroredException('Decrypting file failed, try again later.');
         }
 
@@ -126,6 +130,7 @@ abstract class SignService
         $file = (new FileConversionService($document))->convertToPdf();
         if (is_string($file) && file_exists($file)) {
             $this->tempDocument = $docService->getTempPath();
+
             return;
         }
 
@@ -148,7 +153,8 @@ abstract class SignService
 
         $this->content = Str::of($signature->Content)->trim()->replace(
             [" ", '#name#', '#userid#', '#datetime#', '#date#'],
-            ["\\n", $actor->Name, $actor->UserID, now()->format('d M Y H:i'), now()->format('d M Y')])->limit(100, '>>')->toString();
+            ["\\n", $actor->Name, $actor->UserID, now()->format('d M Y H:i'), now()->format('d M Y')]
+        )->limit(100, '>>')->toString();
     }
 
     public function getPagesCount(): int
@@ -156,15 +162,17 @@ abstract class SignService
         if (isset($this->docPages)) {
             return $this->docPages;
         }
-        if (!isset($this->tempDocument) || !file_exists($this->tempDocument)) {
+        if (! isset($this->tempDocument) || ! file_exists($this->tempDocument)) {
             return 0;
         }
 
         $string = shell_exec("pdfinfo {$this->tempDocument} | grep Pages");
         if (is_string($string) && preg_match('/Pages:\s+(\d+)/', $string, $matches)) {
             $this->docPages = (int)$matches[1];
+
             return $this->docPages;
         }
+
         return 0;
     }
 
@@ -177,11 +185,11 @@ abstract class SignService
 
         shell_exec("convert {$stamp} -stroke \"{$this->contentStoke}\" -strokewidth {$this->strokewidth} -font \"{$this->font_path}\" -weight Bold  -pointsize {$this->contentSize} -fill \"{$this->contentFill}\" -gravity {$this->contentLocation->name} -annotate +10+10 \"{$this->content}\" {$path}");
 
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             return '';
         }
 
-        if (!str_ends_with($stamp, 'blank_sign.png')) {
+        if (! str_ends_with($stamp, 'blank_sign.png')) {
             unlink($stamp);
         }
 
@@ -197,12 +205,14 @@ abstract class SignService
         //-rotate $rotate_degrees
         shell_exec("composite  -geometry {$this->sign_width}x{$this->sign_height}+{$this->sign_start_h}+{$this->sign_start_v} -dissolve {$this->opacity}% $signature $imagePath $path");
 
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             unlink($imagePath);
+
             throw new ErroredException('Failed to add stamp to page');
         }
         //remove tmp
         unlink($imagePath);
+
         return $path;
     }
 
@@ -221,9 +231,10 @@ abstract class SignService
 
         shell_exec("convert -density 300 {$this->tempDocument}[{$page}] {$path}");
 
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             throw new ErroredException("Page number {$page} is invalid");
         }
+
         return $path;
     }
 
@@ -237,11 +248,12 @@ abstract class SignService
 
         shell_exec("pdftk A={$this->tempDocument} B={$signedPath} shuffle B A2-end output {$path}");
 
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             return '';
         }
         //remove tmp
         unlink($signedPath);
+
         return $path;
     }
 
@@ -255,6 +267,6 @@ abstract class SignService
             unlink($imagePath);
         }
 
-        return (!file_exists($path)) ? '' : $path;
+        return (! file_exists($path)) ? '' : $path;
     }
 }

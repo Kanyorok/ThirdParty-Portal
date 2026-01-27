@@ -3,19 +3,18 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Enums\Procurement\DepartmentNeedsEnum;
-use App\Services\Core\WorkflowActionService;
 use App\Exceptions\ErroredException;
-use App\Services\Procurement\ProcurementPlan\DepartmentNeedsWorkflow;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\DepartmentNeed;
+use App\Services\Procurement\ProcurementPlan\DepartmentNeedsWorkflow;
 use App\Services\Workflow\ApprovalWorkflow;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Http\Request;
 use Exception;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DepartmentNeedApprovalController extends Controller
 {
@@ -26,7 +25,6 @@ class DepartmentNeedApprovalController extends Controller
         $this->workflow = $workflow;  // Injected with codeId via service container
     }
 
-
     /**
      * Display a listing of department needs pending approval.
      */
@@ -34,6 +32,7 @@ class DepartmentNeedApprovalController extends Controller
     {
         $this->authorize('viewAny', DepartmentNeed::class);
         $NeedsApprovalviews = DepartmentNeed::with('creator')->where('Status', DepartmentNeedsEnum::Pending)->get();
+
         return view('procurement.procurementplan.departmentneeds.approval.index', compact('NeedsApprovalviews'));
     }
 
@@ -58,7 +57,7 @@ class DepartmentNeedApprovalController extends Controller
 
         // Determine reason if cannot approve
         $cantApproveReason = null;
-        if (!$canApprove) {
+        if (! $canApprove) {
             if ($need->CreatedBy == $user->Id) {
                 $cantApproveReason = "You cannot approve your own request (Maker-Checker policy).";
             } else {
@@ -88,11 +87,11 @@ class DepartmentNeedApprovalController extends Controller
         Log::info("Can approve for user {$user->Id}: " . ($canApprove ? 'Yes' : 'No'));
 
         return view('procurement.procurementplan.departmentneeds.approval.show', data: [
-            'need'              => $need,
-            'canApprove'        => $canApprove,
+            'need' => $need,
+            'canApprove' => $canApprove,
             'cantApproveReason' => $cantApproveReason,
-            'workflowStatus'    => $workflowStatus,
-            'history'           => $this->workflow->historyForModel($need),
+            'workflowStatus' => $workflowStatus,
+            'history' => $this->workflow->historyForModel($need),
         ]);
     }
 
@@ -106,7 +105,7 @@ class DepartmentNeedApprovalController extends Controller
         $this->authorize('approve', $departmentNeed);
 
         $lock = Cache::lock('approve-DepartmentNeeds-' . $departmentNeed->NeedID, 5);
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             return redirect()
                 ->back()
                 ->with('error', 'Department Needs has been approved, or another user is working on it.');
@@ -128,6 +127,7 @@ class DepartmentNeedApprovalController extends Controller
                 ->with('error', $e->getMessage());
         } catch (\Throwable | Exception $e) {
             Log::error('Error approving department need: ' . $e->getMessage());
+
             return redirect()
                 ->back()
                 ->with('error', 'Unexpected error, try again later.');
@@ -141,12 +141,12 @@ class DepartmentNeedApprovalController extends Controller
         $user = Auth::user();
 
         // Maker-checker pre-check: Ensure user can approve (has pending, not submitter)
-        if (!$this->workflow->canApproveModel($departmentNeed, $user)) {
+        if (! $this->workflow->canApproveModel($departmentNeed, $user)) {
             return redirect()->back()->withErrors(['error' => 'You are not authorized to approve this need.']);
         }
 
         $lock = Cache::lock('approve-DepartmentNeeds-' . $departmentNeed->NeedID, 5);
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             return redirect()->back()->with('error', 'Department Needs has been approved, or another user is working on it.');
         }
 
@@ -159,6 +159,7 @@ class DepartmentNeedApprovalController extends Controller
             return redirect()->back()->with('error', $e->getMessage());
         } catch (\Throwable | Exception $e) {
             Log::error('Error approving department need: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Unexpected error, try again later.');
         }
 
@@ -176,7 +177,7 @@ class DepartmentNeedApprovalController extends Controller
         $user = Auth::user();
 
         // Maker-checker pre-check: Ensure user can reject (has pending, not submitter)
-        if (!$this->workflow->canApproveModel($departmentNeeds, $user)) {
+        if (! $this->workflow->canApproveModel($departmentNeeds, $user)) {
             return redirect()->back()->withErrors(['error' => 'You are not authorized to reject this need.']);
         }
 
@@ -192,6 +193,7 @@ class DepartmentNeedApprovalController extends Controller
             return redirect()->back()->with('error', $e->getMessage());
         } catch (Exception $e) {
             Log::error('Error reject department needs failed: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Unexpected error, try again later.');
         }
 

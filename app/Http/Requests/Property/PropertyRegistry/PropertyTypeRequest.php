@@ -28,7 +28,7 @@ class PropertyTypeRequest extends FormRequest
                 'required',
                 'string',
                 Rule::unique(PropertyType::class, 'PropertyTypeName')
-                    ->where(fn($query) => $query->where('PropertyCategoryId', $this->PropertyCategoryId)),
+                    ->where(fn ($query) => $query->where('PropertyCategoryId', $this->PropertyCategoryId)),
             ],
             'PropertyCategoryId' => 'required|exists:t_CategoryMaster,Id',
             'Description' => 'nullable|string|max:255',

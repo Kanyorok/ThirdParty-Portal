@@ -70,6 +70,7 @@ class LeadPolicy
         ) {
             return true;
         }
+
         return $user->can([PermissionEnum::LeadUpdate->value]);
     }
 

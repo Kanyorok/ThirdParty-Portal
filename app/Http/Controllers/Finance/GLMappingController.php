@@ -8,8 +8,6 @@ use App\Models\Core\Module;
 use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceGLMapping;
 use App\Models\Finance\FinanceModuleTransactions;
-use App\Models\Finance\FinanceTransactionTypes;
-use Database\Seeders\FinanceModuleTransactionSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -21,12 +19,12 @@ class GLMappingController extends Controller
     {
 
         $this->authorize(PermissionEnum::FinanceGLMappingView, FinanceGLMapping::class);
-        $mappings = FinanceGLMapping::with('modules:ModuleID,Name','transactions:Id,Name', 'debitAccount:Id,GLName,GLCode', 'creditAccount:Id,GLName,GLCode')
-            ->orderBy('Id','desc')->get();
+        $mappings = FinanceGLMapping::with('modules:ModuleID,Name', 'transactions:Id,Name', 'debitAccount:Id,GLName,GLCode', 'creditAccount:Id,GLName,GLCode')
+            ->orderBy('Id', 'desc')->get();
 
-        $glaccounts = FinanceGLAccounts::select('Id','GLName')->get();
-        $moduleIds=FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
-        $modules = Module::select('ModuleID','Name')->whereIn('ModuleID', $moduleIds)
+        $glaccounts = FinanceGLAccounts::select('Id', 'GLName')->get();
+        $moduleIds = FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
+        $modules = Module::select('ModuleID', 'Name')->whereIn('ModuleID', $moduleIds)
             ->where('ParentID', null)
             ->orderBy('Name', 'asc')->get();
         $transactionTypes = FinanceModuleTransactions::all();
@@ -38,13 +36,14 @@ class GLMappingController extends Controller
     {
 
         $this->authorize(PermissionEnum::FinanceGLMappingCreate, FinanceGLMapping::class);
-        $glaccounts = FinanceGLAccounts::select('Id','GLName')->get();
-        $moduleIds=FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
-        $modules = Module::select('ModuleID','Name')->whereIn('ModuleID', $moduleIds)
+        $glaccounts = FinanceGLAccounts::select('Id', 'GLName')->get();
+        $moduleIds = FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
+        $modules = Module::select('ModuleID', 'Name')->whereIn('ModuleID', $moduleIds)
 
             ->where('ParentID', null)
             ->orderBy('Name', 'asc')->get();
         $transactionTypes = FinanceModuleTransactions::all();
+
         return view('finance.integration.glmapping.create', compact('transactionTypes', 'modules', 'glaccounts'));
     }
 
@@ -58,7 +57,6 @@ class GLMappingController extends Controller
             $moduleCount = DB::table('t_Modules')->count();
             $transactionTypeCount = DB::table('t_FinanceTransactionTypes')->count();
             $glAccountCount = DB::table('t_FinanceGLAccounts')->count();
-
         } catch (\Exception $e) {
             Log::error('Database table check failed:', ['error' => $e->getMessage()]);
         }
@@ -74,14 +72,14 @@ class GLMappingController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('GL Mapping Validation Failed:', [
                 'errors' => $e->errors(),
-                'request_data' => $request->all()
+                'request_data' => $request->all(),
             ]);
 
             if (request()->expectsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
-                    'errors' => $e->errors()
+                    'errors' => $e->errors(),
                 ], 422);
             }
 
@@ -108,7 +106,7 @@ class GLMappingController extends Controller
             if (request()->expectsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'GL Mapping saved successfully.'
+                    'message' => 'GL Mapping saved successfully.',
                 ]);
             }
 
@@ -117,13 +115,13 @@ class GLMappingController extends Controller
             Log::error('GL Mapping Creation Error:', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all()
+                'request_data' => $request->all(),
             ]);
 
             if (request()->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to create GL Mapping: ' . $e->getMessage()
+                    'message' => 'Failed to create GL Mapping: ' . $e->getMessage(),
                 ], 500);
             }
 
@@ -144,7 +142,7 @@ class GLMappingController extends Controller
     {
         $this->authorize(PermissionEnum::FinanceGLMappingUpdate, FinanceGLMapping::class);
 
-        $mapping = FinanceGLMapping::with('modules:ModuleID,Name','transactions:Id,Name', 'debitAccount:Id,GLName', 'creditAccount:Id,GLName')->findOrFail($id);
+        $mapping = FinanceGLMapping::with('modules:ModuleID,Name', 'transactions:Id,Name', 'debitAccount:Id,GLName', 'creditAccount:Id,GLName')->findOrFail($id);
 
         // Check if this is an AJAX request
         if (request()->expectsJson()) {
@@ -157,9 +155,9 @@ class GLMappingController extends Controller
             ]);
         }
 
-        $glaccounts = FinanceGLAccounts::select('Id','GLName')->get();
-        $moduleIds=FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
-        $modules = Module::select('ModuleID','Name')->whereIn('ModuleID', $moduleIds)
+        $glaccounts = FinanceGLAccounts::select('Id', 'GLName')->get();
+        $moduleIds = FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
+        $modules = Module::select('ModuleID', 'Name')->whereIn('ModuleID', $moduleIds)
             ->where('ParentID', null)
             ->orderBy('Name', 'asc')->get();
         $transactionTypes = FinanceModuleTransactions::all();
@@ -199,7 +197,7 @@ class GLMappingController extends Controller
         if (request()->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'GL Mapping updated successfully.'
+                'message' => 'GL Mapping updated successfully.',
             ]);
         }
 
@@ -223,13 +221,12 @@ class GLMappingController extends Controller
         if (request()->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'GL Mapping deleted successfully.'
+                'message' => 'GL Mapping deleted successfully.',
             ]);
         }
 
         return redirect()->route('glpostingmap.index')->with('success', 'GL Mapping deleted successfully.');
     }
-
 
     public function list()
     {

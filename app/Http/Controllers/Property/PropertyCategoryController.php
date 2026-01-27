@@ -3,29 +3,30 @@
 namespace App\Http\Controllers\Property;
 
 use App\Enums\Core\PermissionEnum;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\PropertyRegistry\PropertyCategoryRequest;
 use App\Models\Core\CategoryMaster;
 use App\Services\Property\PropertyRegistry\PropertyCategoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PropertyCategoryController extends Controller
 {
-    //
     public function index()
     {
         $this->authorize(PermissionEnum::PropertyCategoryView, CategoryMaster::class);
         $categories = CategoryMaster::where('Code', '500000')->get();
+
         //dd($categories);
         return view('property.propertyregistry.propertycategory.index', compact('categories'));
     }
 
-    public function create(){
+    public function create()
+    {
         $this->authorize(PermissionEnum::PropertyCategoryCreate, CategoryMaster::class);
+
         return view('property.propertyregistry.propertycategory.create');
     }
 
@@ -90,6 +91,7 @@ class PropertyCategoryController extends Controller
     public function destroy($id)
     {
         $this->authorize(PermissionEnum::PropertyCategoryDelete, CategoryMaster::class);
+
         try {
             $category = CategoryMaster::findOrFail($id);
 
@@ -105,6 +107,7 @@ class PropertyCategoryController extends Controller
         } catch (\Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting property category: ' . $th->getMessage());
+
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to delete Property Category. Please try again.'])
                 ->withInput();

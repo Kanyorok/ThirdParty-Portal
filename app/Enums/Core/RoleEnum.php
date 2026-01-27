@@ -30,6 +30,7 @@ enum RoleEnum: string
                 return $description . ' (' . $append[$this->value] . ')';
             }
         }
+
         return $description;
     }
 }

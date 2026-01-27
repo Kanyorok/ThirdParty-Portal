@@ -5,31 +5,26 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetActivity;
-use App\Models\Budget\BudgetDriver;
-use App\Models\Budget\BudgetDriverRates;
 use App\Models\Budget\BudgetGLAccount;
 use App\Models\Budget\BudgetGLMaster;
-use App\Models\Budget\BudgetGLSubType;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLineCategories;
+use App\Models\Budget\BudgetLineProductTypes;
 use App\Models\Budget\BudgetLinesGLAccount;
 use App\Models\Budget\BudgetManualEntry;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
 use App\Models\Budget\BudgetProjection;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\HRM\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Calculation\Category;
-use App\Models\HRM\Department;
-use App\Models\Budget\BudgetGLAccountSubType;
-use App\Models\Budget\BudgetLineProductTypes;
 
 class BudgetLineMappingController extends Controller
 {
-    //
     public function index()
     {
         //Check if the user has permission to view using the enum set for budgetSetup
@@ -42,10 +37,11 @@ class BudgetLineMappingController extends Controller
         $budgetCategories = BudgetLineCategories::all();
 
         //Pull the GLS
-        $gls = BudgetGLMaster::select('BudgetGLID as Id', 'Description', 'GLAccountTypeID as GTType','AccountID')->get();
+        $gls = BudgetGLMaster::select('BudgetGLID as Id', 'Description', 'GLAccountTypeID as GTType', 'AccountID')->get();
 
         //Fetch Product type
         $productTypes = BudgetProductType::select('Id', 'Name')->get();
+
         return view('budgetandanalytics.budgetlinemapping.index', compact('budgetLines', 'gls', 'productTypes', 'budgetCategories'));
     }
 
@@ -73,6 +69,7 @@ class BudgetLineMappingController extends Controller
             ->get();
 
         $departments = Department::all();
+
         return view('budgetandanalytics.budgetlinemapping.create', compact(
             'gls',
             'productTypes',
@@ -87,7 +84,8 @@ class BudgetLineMappingController extends Controller
     {
         //Check Permissions
         $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetLine::class);
-        $validated = $request->validate([
+        $validated = $request->validate(
+            [
             //'BudgetLineCategoryID' => 'required|exists:t_BudgetLineCategories,Id',
             'LineName' => 'required|string|max:255',
             'DepartmentID' => 'required|exists:t_Departments,Id',
@@ -98,10 +96,12 @@ class BudgetLineMappingController extends Controller
             'GLS' => 'required|array|min:1|max:1',
             'GLS.*' => 'required|integer',
             // Add other fields and validation rules as needed
-        ],
+            ],
             [
-                'GLS.max' => 'You can only select one GL Account for each budget line.'
-        ]);
+                'GLS.max' => 'You can only select one GL Account for each budget line.',
+            ]
+        );
+
         try {
             DB::beginTransaction();
             //Check if there is a default so that we can drop the existing and add the one created
@@ -119,11 +119,13 @@ class BudgetLineMappingController extends Controller
                 'IsProductDriven' => $validated['IsProductDriven'],
 
                 'CreatedBy' => Auth::id(),
-                'ModifiedBy' => Auth::id()
+                'ModifiedBy' => Auth::id(),
             ]);
             //Store the mappings in BudgetLinesGLAccount
             foreach ($validated['GLS'] as $glId) {
-                if (!$glId) continue;
+                if (! $glId) {
+                    continue;
+                }
                 BudgetLinesGLAccount::create([
                     'BudgetLineID' => $budgetLine->Id,
                     'BudgetGLAccountID' => $glId,
@@ -140,7 +142,7 @@ class BudgetLineMappingController extends Controller
                         'BudgetLineId' => $budgetLine->Id,
                         'ProductTypeId' => $typeId,
                         'CreatedBy' => Auth::id(),
-                        'ModifiedBy' => Auth::id()
+                        'ModifiedBy' => Auth::id(),
                     ]);
                 }
             }
@@ -158,11 +160,11 @@ class BudgetLineMappingController extends Controller
             DB::rollBack();
             Log::error('Failed to store budget line mapping.', [
                 'error' => $th->getMessage(),
-                'stack' => $th->getTraceAsString()
+                'stack' => $th->getTraceAsString(),
             ]);
+
             return back()->with('error', 'An Error Occurred. Please try again');
         }
-
     }
 
     public function edit($id)
@@ -227,13 +229,13 @@ class BudgetLineMappingController extends Controller
         ));
     }
 
-
     public function update(Request $request, $id)
     {
         // Check Permissions
         $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetLine::class);
 
-        $validated = $request->validate([
+        $validated = $request->validate(
+            [
             //'BudgetLineCategoryID' => 'nullable|exists:t_BudgetLineCategories,Id',
             'LineName' => 'required|string|max:255',
             'DepartmentID' => 'required|exists:t_Departments,Id',
@@ -244,10 +246,11 @@ class BudgetLineMappingController extends Controller
             'GLS' => 'required|array|max:1',
             'GLS.*' => 'required|integer',
             // Add other fields and validation rules as needed
-        ],
+            ],
             [
-                'GLS.max' => 'You can only select one GL Account for each budget line.'
-            ]);
+                'GLS.max' => 'You can only select one GL Account for each budget line.',
+            ]
+        );
 
         try {
             DB::beginTransaction();
@@ -269,14 +272,14 @@ class BudgetLineMappingController extends Controller
                 'Description' => $validated['Description'],
                 'IsDefault' => $request->has('IsDefault') ? 1 : 0,
                 'IsProductDriven' => $validated['IsProductDriven'],
-                'ModifiedBy' => Auth::id()
+                'ModifiedBy' => Auth::id(),
             ]);
 
             // Sync GLS mappings
             $newGLIds = $validated['GLS'];
             $existingGLIds = BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)->pluck('BudgetGLAccountID')->toArray();
             $glsToDelete = array_diff($existingGLIds, $newGLIds);
-            if (!empty($glsToDelete)) {
+            if (! empty($glsToDelete)) {
                 BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)
                     ->whereIn('BudgetGLAccountID', $glsToDelete)
                     ->delete();
@@ -287,7 +290,7 @@ class BudgetLineMappingController extends Controller
                     'BudgetLineID' => $budgetLine->Id,
                     'BudgetGLAccountID' => $glId,
                     'CreatedBy' => Auth::id(),
-                    'ModifiedBy' => Auth::id()
+                    'ModifiedBy' => Auth::id(),
                 ]);
             }
 
@@ -301,7 +304,7 @@ class BudgetLineMappingController extends Controller
                         'BudgetLineId' => $budgetLine->Id,
                         'ProductTypeId' => $typeId,
                         'CreatedBy' => Auth::id(),
-                        'ModifiedBy' => Auth::id()
+                        'ModifiedBy' => Auth::id(),
                     ]);
                 }
             }
@@ -316,13 +319,12 @@ class BudgetLineMappingController extends Controller
             DB::commit();
 
             return redirect()->route('budgetlinemapping.index')->with('success', 'Budget Line Mapping updated successfully.');
-
         } catch (\Throwable $th) {
             DB::rollBack();
 
             Log::error('Failed to update budget line mapping.', [
                 'error' => $th->getMessage(),
-                'stack' => $th->getTraceAsString()
+                'stack' => $th->getTraceAsString(),
             ]);
 
             return back()->with('error', 'An error occurred while updating. Please try again.');
@@ -335,11 +337,14 @@ class BudgetLineMappingController extends Controller
         $subTypes = DB::table('t_BudgetGLSubTypes')
                     ->select('Id', 'GLAccountTypeID', 'GLSubAccountTypeID', 'Description')->where('GLAccountTypeID', $typeId)
                     ->get();
+
         return response()->json($subTypes);
     }
 
-    public function getGLTypes($typeId){
-        $glTypes=BudgetGLMaster::where('GLSubAccountTypeID',$typeId)->get();
+    public function getGLTypes($typeId)
+    {
+        $glTypes = BudgetGLMaster::where('GLSubAccountTypeID', $typeId)->get();
+
         return response()->json($glTypes);
     }
 
@@ -360,7 +365,6 @@ class BudgetLineMappingController extends Controller
         return view('budgetandanalytics.budgetlinemapping.show', compact('products', 'budgetLineName'));
     }
 
-
     public function destroy(Request $request, $id)
     {
         //Check if user has permissions
@@ -368,6 +372,7 @@ class BudgetLineMappingController extends Controller
 
         //Try deleting the Line and its associated mappings in BudgetLinesGLAccount
         DB::beginTransaction();
+
         try {
             //Check if the line is mapped to any budget so that it prevents deletion.
             $existActivity = BudgetActivity::where('BudgetLineId', $id)->exists();
@@ -400,9 +405,11 @@ class BudgetLineMappingController extends Controller
                 ->withProperties(['action' => 'delete'])
                 ->log('Delete a budget line mapping');
             DB::commit();
+
             return redirect()->back()->with('success', 'Budget Line and its mappings deleted successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return $th->getMessage();
 
             Log::error('Failed to delete Budget Line: ' . $th->getMessage());
@@ -411,7 +418,6 @@ class BudgetLineMappingController extends Controller
         }
     }
 
-
     public function destroyProduct(Request $request, $id)
     {
         //Check if user has permissions
@@ -419,6 +425,7 @@ class BudgetLineMappingController extends Controller
 
         //Try deleting the Line and its associated mappings in BudgetLinesGLAccount
         DB::beginTransaction();
+
         try {
             $budgetLineProduct = BudgetLineProductTypes::where('Id', $id)->delete();
             //Log the acitivity
@@ -428,9 +435,11 @@ class BudgetLineMappingController extends Controller
                 ->withProperties(['action' => 'delete'])
                 ->log('Delete a product from BudgetLine');
             DB::commit();
+
             return redirect()->back()->with('success', 'Product Detached from BudgetLine successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return $th->getMessage();
             Log::error('Failed to delete BudgetLine Product: ' . $th->getMessage());
 

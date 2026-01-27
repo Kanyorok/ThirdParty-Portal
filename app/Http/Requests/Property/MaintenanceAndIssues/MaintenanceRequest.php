@@ -34,5 +34,4 @@ class MaintenanceRequest extends FormRequest
             'Document.*' => 'file|max:25000',
         ];
     }
-
 }

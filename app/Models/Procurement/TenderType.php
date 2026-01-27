@@ -2,14 +2,15 @@
 
 namespace App\Models\Procurement;
 
+use App\Enums\TenderTypeEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Enums\TenderTypeEnum;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TenderType extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     protected $primaryKey = 'Id';
     protected $table = 't_TenderTypes';
@@ -17,7 +18,7 @@ class TenderType extends Model
 
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
 
 
     protected $fillable = [
@@ -34,7 +35,7 @@ class TenderType extends Model
 
     public static function generateTypeCode($tenderTypeValue = null)
     {
-        $prefix = match($tenderTypeValue) {
+        $prefix = match ($tenderTypeValue) {
             TenderTypeEnum::Open->value => 'OPT-',
             TenderTypeEnum::Restricted->value => 'RST-',
             default => 'TYP-'

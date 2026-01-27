@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\Log;
 
 class TaxRuleController extends Controller
 {
-    //
     public function index()
     {
         $this->authorize(PermissionEnum::FinanceTaxSettingView, FinanceTaxRuleConfiguration::class);
@@ -24,8 +23,9 @@ class TaxRuleController extends Controller
             'taxType:Id,TaxTypeName',
             'jurisdiction:Id,JurisdictionName',
             'taxPayableGLAccount:Id,GLCode,GLName',
-            'taxReceivableGLAccount:Id,GLCode,GLName'
+            'taxReceivableGLAccount:Id,GLCode,GLName',
         ])->get();
+
         return view('finance.taxmanagement.taxruleconfiguration.index', compact('taxRule'));
     }
 
@@ -36,7 +36,8 @@ class TaxRuleController extends Controller
         $taxTypes = FinanceTaxType::all();
         $jurisdictions = TaxJurisdiction::all();
         $glAccounts = FinanceGLAccounts::all();
-        return view('finance.taxmanagement.taxruleconfiguration.create', compact('taxTypes','jurisdictions','glAccounts'));
+
+        return view('finance.taxmanagement.taxruleconfiguration.create', compact('taxTypes', 'jurisdictions', 'glAccounts'));
     }
 
     public function store(Request $request)
@@ -75,6 +76,7 @@ class TaxRuleController extends Controller
         //     }
 
         DB::beginTransaction();
+
         try {
             $taxRule = FinanceTaxRuleConfiguration::create([
                 'TaxTypeId' => $validated['TaxTypeId'],
@@ -96,16 +98,17 @@ class TaxRuleController extends Controller
                 ->causedBy(Auth::user())
                 ->log('Created a new tax rule configuration.');
 
-            DB::commit();   
+            DB::commit();
 
-        return redirect()->route('taxruleconfig.index')->with('success', 'Tax Rule Configuration created successfully.');
+            return redirect()->route('taxruleconfig.index')->with('success', 'Tax Rule Configuration created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error Creating Tax Rule' . $e->getMessage());
+
             return redirect()->back()->withErrors(['error' => 'Failed to create tax rule configuration: ' . $e->getMessage()]);
         }
     }
-    
+
     public function edit($id)
     {
         $this->authorize(PermissionEnum::FinanceTaxSettingUpdate, FinanceTaxRuleConfiguration::class);
@@ -114,8 +117,9 @@ class TaxRuleController extends Controller
         $taxTypes = FinanceTaxType::all();
         $jurisdictions = TaxJurisdiction::all();
         $glAccounts = FinanceGLAccounts::all();
+
         return view('finance.taxmanagement.taxruleconfiguration.edit', compact('taxRule', 'taxTypes', 'jurisdictions', 'glAccounts'));
-    }   
+    }
 
     public function update(Request $request, $id)
     {
@@ -150,6 +154,7 @@ class TaxRuleController extends Controller
         // }
 
         DB::beginTransaction();
+
         try {
             $taxRule = FinanceTaxRuleConfiguration::findOrFail($id);
             $taxRule->update([
@@ -177,8 +182,9 @@ class TaxRuleController extends Controller
             return redirect()->route('taxruleconfig.index')->with('success', 'Tax Rule Configuration updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error Updating Tax Rule: '.$e->getMessage());
-            return redirect()->back()->withErrors(['error' => 'Failed to update tax rule configuration: '.$e->getMessage()]);
+            Log::error('Error Updating Tax Rule: ' . $e->getMessage());
+
+            return redirect()->back()->withErrors(['error' => 'Failed to update tax rule configuration: ' . $e->getMessage()]);
         }
     }
 
@@ -187,6 +193,7 @@ class TaxRuleController extends Controller
         $this->authorize(PermissionEnum::FinanceTaxSettingDelete, FinanceTaxRuleConfiguration::class);
 
         DB::beginTransaction();
+
         try {
             $taxRule = FinanceTaxRuleConfiguration::findOrFail($id);
             $taxRule->DeletedBy = Auth::Id();
@@ -203,8 +210,9 @@ class TaxRuleController extends Controller
             return redirect()->route('taxruleconfig.index')->with('success', 'Tax Rule Configuration deleted successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error Deleting Tax Rule: '.$e->getMessage());
-            return redirect()->back()->withErrors(['error' => 'Failed to delete tax rule configuration: '.$e->getMessage()]);
+            Log::error('Error Deleting Tax Rule: ' . $e->getMessage());
+
+            return redirect()->back()->withErrors(['error' => 'Failed to delete tax rule configuration: ' . $e->getMessage()]);
         }
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models\PropertyManagement;
 
 use App\Enums\Property\PropertyNewLeaseEnum;
+use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Currency;
 use App\Models\Finance\FinanceTaxRuleConfiguration;
@@ -10,11 +11,12 @@ use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Auth\User;
 
 class PropertyNewLease extends Model
 {
-    use SoftDeletes, UserActorTrait, DocumentsTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
 
     protected $table = 't_LeaseCreation';
     public const CREATED_AT = 'CreatedOn';
@@ -47,7 +49,7 @@ class PropertyNewLease extends Model
         'TaxId',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
@@ -58,6 +60,7 @@ class PropertyNewLease extends Model
     protected $casts = [
         'Status' => PropertyNewLeaseEnum::class,
     ];
+
     public function tenant()
     {
         return $this->belongsTo(PropertyNewTenant::class, 'Tenant', 'Id');
@@ -112,6 +115,4 @@ class PropertyNewLease extends Model
     {
         return $this->hasMany(PropertyInvoice::class, 'Lease', 'Id');
     }
-
-
 }

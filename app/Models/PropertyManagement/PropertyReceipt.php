@@ -2,16 +2,17 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Auth\User;
 
 class PropertyReceipt extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+
     protected $table = 't_RentReceipt';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
@@ -36,7 +37,7 @@ class PropertyReceipt extends Model
         'Remarks',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
@@ -53,14 +54,17 @@ class PropertyReceipt extends Model
     {
         return $this->belongsTo(PropertyNewTenant::class, 'TenantId', 'Id');
     }
+
     public function paymentmethod()
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentMethod', 'ID');
     }
+
     public static function getAmountPaidSoFar(int $invoiceId): float
     {
         return static::where('InvoiceID', $invoiceId)->sum('AmountPaidNow');
     }
+
     public function code()
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentMethod', 'ID');
@@ -75,6 +79,4 @@ class PropertyReceipt extends Model
     {
         return $this->belongsTo(User::class, 'ModifiedBy');
     }
-
-
 }

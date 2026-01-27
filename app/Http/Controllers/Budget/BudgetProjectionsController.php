@@ -12,7 +12,6 @@ use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLineProductTypes;
 use App\Models\Budget\BudgetMonthlyProjectionAllocation;
 use App\Models\Budget\BudgetProduct;
-use App\Models\Budget\BudgetProductType;
 use App\Models\Budget\BudgetProjection;
 use App\Models\Budget\BudgetProjectionData;
 use App\Models\Core\Currency;
@@ -33,7 +32,9 @@ class BudgetProjectionsController extends Controller
         $data = [];
         foreach ($budgetsIDS as $budgetID) {
             $budget = Budget::withoutTrashed()->find($budgetID);
-            if (!$budget) continue;
+            if (! $budget) {
+                continue;
+            }
             $data[] = [
                 'Name' => $budget->Name,
                 'ApprovalStatus' => $budget->Status,
@@ -48,12 +49,11 @@ class BudgetProjectionsController extends Controller
         ));
     }
 
-
     // Show form for new entry
     public function create()
     {
         $this->authorize(PermissionEnum::BudgetProjectionCreate, BudgetDriverProjections::class);
-        $budgets = Budget::select('Id', 'Name')->where('Status','draft')->get();
+        $budgets = Budget::select('Id', 'Name')->where('Status', 'draft')->get();
 
         $currencies = Currency::all();
         $products = BudgetProduct::all();
@@ -62,7 +62,10 @@ class BudgetProjectionsController extends Controller
         $budgetLines = BudgetLine::whereHas('productTypes')->with('productTypes')->get();
 
         return view('budgetandanalytics.budgetworkspace.entry.create', compact(
-            'budgets', 'currencies', 'products', 'budgetLines' // 'periods'
+            'budgets',
+            'currencies',
+            'products',
+            'budgetLines' // 'periods'
         ));
     }
 
@@ -74,6 +77,7 @@ class BudgetProjectionsController extends Controller
         $filteredProdID = array_intersect($productIDS, $productsIdWithRate);
 
         $product = BudgetProduct::whereIn('Id', $filteredProdID)->get();
+
         //$budgetLine = BudgetLine::with('products')->findOrFail($budgetLineId);
         return response()->json($product);
     }
@@ -82,7 +86,8 @@ class BudgetProjectionsController extends Controller
     public function store(Request $request)
     {
         $this->authorize(PermissionEnum::BudgetProjectionCreate, BudgetDriverProjections::class);
-        $validated = $request->validate([
+        $validated = $request->validate(
+            [
             'BudgetID' => 'required|exists:t_Budgets,Id',
             // 'CurrencyID' => 'required|exists:t_Currencies,Id', (currently we will use 1 as currency)
             // 'PeriodID'  => 'required|exists:t_BudgetPeriods,Id',
@@ -90,11 +95,12 @@ class BudgetProjectionsController extends Controller
             'Products.*.ProductID' => 'required|exists:t_BudgetProductTypes,Id',
             'Products.*.Volume' => 'required|integer|min:0',
             // 'Products.*.Value'     => 'required|numeric|min:0', (till  futher notice, we will use 1 as value)
-        ],
+            ],
             [
                 'Products.*.ProductID.required' => 'Please select a product',
                 'Products.*.Volume.required' => 'Please enter a volume',
-        ]);
+            ]
+        );
 
         DB::beginTransaction();
 
@@ -207,11 +213,12 @@ class BudgetProjectionsController extends Controller
             return back()->with('success', 'Budget projection saved successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return $e->getMessage();
+
             return back()->with('error', 'An error occurred while saving the projection.');
         }
     }
-
 
     public function update(Request $request, $id)
     {
@@ -276,13 +283,14 @@ class BudgetProjectionsController extends Controller
                 ->log('Updated Budget Projections');
 
             DB::commit();
+
             return redirect()->route('budgetprojections.index')->with('success', 'Budget projection updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->with('error', 'An error occurred while updating the projection: ' . $e->getMessage());
         }
     }
-
 
     public function show($id)
     {
@@ -305,7 +313,7 @@ class BudgetProjectionsController extends Controller
                 'Rate' => BudgetDriverRates::where('ProductTypeID', $productID)->pluck('RateValue')->first(),
                 'Value' => $budgetProjection->AllocationType === 'full' ? $budgetProjection->FullAllocation : $budgetProjection->total_allocation ?? 0.00,
                 'AllocationType' => $budgetProjection->AllocationType,
-                'allocations' => $budgetProjection->allocations, //
+                'allocations' => $budgetProjection->allocations,
             ];
         }
 
@@ -357,7 +365,6 @@ class BudgetProjectionsController extends Controller
         ));
     }
 
-
     public function updateOld(Request $request, $id)
     {
         $this->authorize(PermissionEnum::BudgetProjectionUpdate, BudgetDriverProjections::class);
@@ -371,6 +378,7 @@ class BudgetProjectionsController extends Controller
             'MonthlyAllocations.*' => 'nullable|numeric|min:0',
         ]);
         DB::beginTransaction();
+
         try {
             // Log::info('BudgetProjectionsController update request', [
             //     'CurrencyID' => $request->input('CurrencyID'),
@@ -428,9 +436,11 @@ class BudgetProjectionsController extends Controller
                 }
             }
             DB::commit();
+
             return redirect()->route('budgetprojections.index')->with('success', 'Budget entry updated successfully.');
         } catch (Throwable $th) {
             DB::rollBack();
+
             return back()->withErrors(['Error' => 'Failed to update: ' . $th->getMessage()])->withInput();
         }
     }
@@ -439,6 +449,7 @@ class BudgetProjectionsController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetProjectionDelete, BudgetDriverProjections::class);
         DB::beginTransaction();
+
         try {
             //Delete All Projections for that Budget
             $budgetProjection = BudgetProjection::where('BudgetID', $id)->update(['DeletedBy' => Auth::id()]);
@@ -455,11 +466,14 @@ class BudgetProjectionsController extends Controller
                 ->log('Deleted Budget Projections');
 
             DB::commit();
+
             return back()->with('success', 'Budget projections deleted successfully.');
         } catch (Throwable $th) {
             DB::rollBack();
+
             return $th->getMessage();
             Log::error('Failed to delete budget projection: ' . $th->getMessage());
+
             return back()->withErrors('error', 'Failed to delete: ' . $th->getMessage());
         }
     }
@@ -473,7 +487,8 @@ class BudgetProjectionsController extends Controller
             $budgetProjection = BudgetProjection::find($id);
             $budgetProjectionData = $budgetProjection;
             //Delete allocations
-            BudgetProjectionData::where('BudgetProjectionID', $id)->update(['DeletedBy' => Auth::id()]);;
+            BudgetProjectionData::where('BudgetProjectionID', $id)->update(['DeletedBy' => Auth::id()]);
+            ;
             BudgetProjectionData::where('BudgetProjectionID', $id)->delete();
             //Delete Projection
             $budgetProjection->DeletedBy = Auth::id();
@@ -486,10 +501,12 @@ class BudgetProjectionsController extends Controller
                 ->log('Deleted Budget Projection');
 
             DB::commit();
+
             return back()->with('success', 'Budget projection deleted successfully.');
         } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to delete budget projection: ' . $th->getMessage());
+
             return back()->with('error', 'Failed to delete: ' . $th->getMessage());
         }
     }

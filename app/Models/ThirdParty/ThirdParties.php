@@ -5,6 +5,8 @@ namespace App\Models\ThirdParty;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
 use App\Models\Core\Locality;
+use App\Models\Insurance\BancassuranceCustomer;
+use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\ImageTrait;
 use App\Traits\Model\UserActorTrait;
@@ -14,16 +16,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\PropertyManagement\PropertyNewTenant;
-use App\Models\Insurance\BancassuranceCustomer;
 
 class ThirdParties extends Model
 {
-    use SoftDeletes, UserActorTrait, DocumentsTrait, ImageTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
+    use ImageTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $table = 't_ThirdParties';
     protected $primaryKey = 'Id';
 
@@ -182,16 +185,17 @@ class ThirdParties extends Model
     //     );
     // }
 
-
     /**
      * Legacy category mappings (t_ThirdPartiesCategories -> CodeDetail) used by prequalification screen.
      */
     public function legacyCategories()
-    {  //todo move to supplier master model
+    {
+  //todo move to supplier master model
         return $this->hasMany(\App\Models\ThirdParty\ThirdPartyCategory::class, 'ThirdPartyId', 'Id')
             ->whereNull('DeletedOn')
             ->with('category');
     }
+
     public function isApproved(): bool
     {
         return $this->status?->Value === \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved->value;
@@ -205,6 +209,7 @@ class ThirdParties extends Model
                     || (isset($type->pivot->PartyType) && $type->pivot->PartyType === SupplierMaster::getPrimaryKey());
             });
         }
+
         return $this->ThirdPartyType === \App\Enums\ThirdParty\ThirdPartyTypeEnum::Supplier;
     }
 
@@ -215,6 +220,7 @@ class ThirdParties extends Model
                 return isset($type->pivot->PartyType) && $type->pivot->PartyType === PropertyNewTenant::getPrimaryKey();
             });
         }
+
         return false;
     }
 
@@ -225,6 +231,7 @@ class ThirdParties extends Model
                 return isset($type->pivot->PartyType) && $type->pivot->PartyType === BancassuranceCustomer::getPrimaryKey();
             });
         }
+
         return false;
     }
 }

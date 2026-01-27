@@ -44,6 +44,7 @@ class ContactRequest extends FormRequest
         if ($this->validated('contact_phone') === null) {
             return '';
         }
+
         try {
             return (new PhoneNumber($this->validated('contact_phone'), $countyCode))->formatE164();
         } catch (Exception) {
@@ -51,7 +52,6 @@ class ContactRequest extends FormRequest
 
         throw ValidationException::withMessages(['contact_phone' => 'invalid phone number']);
     }
-
 
     public function savable(string $phone, bool $update = false): array
     {

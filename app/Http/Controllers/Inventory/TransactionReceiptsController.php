@@ -12,11 +12,8 @@ use App\Models\Inventory\Store;
 use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionTransfer;
 use App\Services\Inventory\TransactionReceiptService;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Models\CodeDetail;
+use Illuminate\Validation\ValidationException;
 
 class TransactionReceiptsController extends Controller
 {
@@ -33,7 +30,7 @@ class TransactionReceiptsController extends Controller
 
         // Get current user's branch
         $currentBranch = Auth::user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -41,7 +38,7 @@ class TransactionReceiptsController extends Controller
 
         // Only show receipts for transfers to current user's branch
         $receipts = TransactionReceipt::with([
-            'transfer', 'transfer.fromBranch', 'items.transferItem', 'items.item'
+            'transfer', 'transfer.fromBranch', 'items.transferItem', 'items.item',
         ])
             ->whereHas('transfer', function ($query) use ($branchId) {
                 $query->where('ToBranch', $branchId);
@@ -56,8 +53,9 @@ class TransactionReceiptsController extends Controller
     {
         $this->authorize('create', TransactionReceipt::class);
         $currentBranch = Auth::user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             \Log::warning('TransactionReceiptsController::create - user has no branch', ['user_id' => Auth::id()]);
+
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -69,11 +67,11 @@ class TransactionReceiptsController extends Controller
             ->where('ToBranch', $branchId)
             ->where('Status', $inTransitValue)
             ->get();
-        
+
         $currentUser = Auth::user();
 
         return view('inventory.transactions.receipts.create', compact(
-            'transfers', 
+            'transfers',
             'currentUser'
         ));
     }
@@ -84,7 +82,7 @@ class TransactionReceiptsController extends Controller
 
         // Get current user's branch
         $currentBranch = Auth::user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -113,6 +111,7 @@ class TransactionReceiptsController extends Controller
 
         try {
             $receipt = $this->service->createReceipt($validatedData, $items);
+
             return redirect()
                 ->route('transactionsreceipts.index')
                 ->with('success', 'Transaction receipt posted successfully with FIFO costing.');
@@ -123,10 +122,11 @@ class TransactionReceiptsController extends Controller
 
                 $storeOptions = Store::where('BranchID', $branchId)
                     ->get(['Id', 'StoreName'])
-                    ->map(fn($s) => ['Id' => $s->Id, 'StoreName' => $s->StoreName])
+                    ->map(fn ($s) => ['Id' => $s->Id, 'StoreName' => $s->StoreName])
                     ->toArray();
 
                 $item['store_options'] = $storeOptions;
+
                 return $item;
             })->toArray();
 
@@ -143,19 +143,19 @@ class TransactionReceiptsController extends Controller
 
         // Get current user's branch
         $currentBranch = Auth::user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
         $branchId = $currentBranch->Id;
 
         $receipt = TransactionReceipt::with([
-            'transfer', 
-            'items.item', 
+            'transfer',
+            'items.item',
             'receivedBy',
-            'transfer.items' => function($query) {
+            'transfer.items' => function ($query) {
                 $query->with('item');
-            }
+            },
         ])->findOrFail($id);
 
         // Verify the receipt's transfer belongs to current user's branch
@@ -179,7 +179,7 @@ class TransactionReceiptsController extends Controller
 
         // Get current user's branch
         $currentBranch = Auth::user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -198,77 +198,77 @@ class TransactionReceiptsController extends Controller
     }
 
     public function getTransferItems($id)
-{
-    // Get current user's branch
-    $currentBranch = Auth::user()->branch;
-    if (!$currentBranch instanceof Branch) {
-        return response()->json(['error' => 'Current user branch not found.'], 403);
-    }
+    {
+        // Get current user's branch
+        $currentBranch = Auth::user()->branch;
+        if (! $currentBranch instanceof Branch) {
+            return response()->json(['error' => 'Current user branch not found.'], 403);
+        }
 
-    $branchId = $currentBranch->Id;
+        $branchId = $currentBranch->Id;
 
-    $transfer = TransactionTransfer::with([
-        'items.item.price',
-        'items.item.uom',
-        'ToBranch'
-    ])->findOrFail($id);
+        $transfer = TransactionTransfer::with([
+            'items.item.price',
+            'items.item.uom',
+            'ToBranch',
+        ])->findOrFail($id);
 
-    // Verify the transfer belongs to current user's branch
-    if ($transfer->ToBranch != $branchId) {
-        return response()->json(['error' => 'You can only access transfers destined for your branch.'], 403);
-    }
+        // Verify the transfer belongs to current user's branch
+        if ($transfer->ToBranch != $branchId) {
+            return response()->json(['error' => 'You can only access transfers destined for your branch.'], 403);
+        }
 
-    // Verify transfer is in transit
-    if ($transfer->Status != Transfers::InTransit->value) {
-        return response()->json(['error' => 'Only transfers in transit can be received.'], 403);
-    }
+        // Verify transfer is in transit
+        if ($transfer->Status != Transfers::InTransit->value) {
+            return response()->json(['error' => 'Only transfers in transit can be received.'], 403);
+        }
 
-    // Verify transfer doesn't already have a receipt
-    if ($transfer->receipt()->exists()) {
-        return response()->json(['error' => 'This transfer has already been received.'], 403);
-    }
+        // Verify transfer doesn't already have a receipt
+        if ($transfer->receipt()->exists()) {
+            return response()->json(['error' => 'This transfer has already been received.'], 403);
+        }
 
-    // Get the main store for the current branch
-    $mainStore = Store::where('BranchID', $branchId)
-        ->where('IsMainStore', true)
-        ->first();
+        // Get the main store for the current branch
+        $mainStore = Store::where('BranchID', $branchId)
+            ->where('IsMainStore', true)
+            ->first();
 
-    if (!$mainStore) {
-        return response()->json(['error' => 'No main store found for your branch. Please contact admin.'], 404);
-    }
+        if (! $mainStore) {
+            return response()->json(['error' => 'No main store found for your branch. Please contact admin.'], 404);
+        }
 
-    $itemsWithStores = $transfer->items->map(function ($transferItem) use ($mainStore) {
-        $item = $transferItem->item;
-        $batchAllocations = json_decode($transferItem->BatchAllocation, true) ?? [];
+        $itemsWithStores = $transfer->items->map(function ($transferItem) use ($mainStore) {
+            $item = $transferItem->item;
+            $batchAllocations = json_decode($transferItem->BatchAllocation, true) ?? [];
 
-        return [
-            'Item' => $item->Id,
-            'DispatchedQty' => $transferItem->DispatchedQty,
-            'item' => [
-                'ItemName' => $item->ItemName,
-                'Id' => $item->Id,
-                'uom' => [
-                    'Code' => $item->uom?->Code ?? 'N/A'
+            return [
+                'Item' => $item->Id,
+                'DispatchedQty' => $transferItem->DispatchedQty,
+                'item' => [
+                    'ItemName' => $item->ItemName,
+                    'Id' => $item->Id,
+                    'uom' => [
+                        'Code' => $item->uom?->Code ?? 'N/A',
+                    ],
                 ],
-            ],
-            'main_store' => [
-                'Id' => $mainStore->Id,
-                'StoreName' => $mainStore->StoreName,
-            ],
-            'UnitCost' => $transferItem->UnitCost ?? $item->price?->ActualPrice ?? 0,
-            'UOM' => $item->UOM,
-            'UOMCode' => $item->uom?->Code ?? 'N/A',
-            'PriceID' => $item->price?->Id ?? null,
-            'batch_allocation' => $batchAllocations,
-            'allocation_type' => !empty($batchAllocations) ? 'specific' : 'fifo',
-        ];
-    });
+                'main_store' => [
+                    'Id' => $mainStore->Id,
+                    'StoreName' => $mainStore->StoreName,
+                ],
+                'UnitCost' => $transferItem->UnitCost ?? $item->price?->ActualPrice ?? 0,
+                'UOM' => $item->UOM,
+                'UOMCode' => $item->uom?->Code ?? 'N/A',
+                'PriceID' => $item->price?->Id ?? null,
+                'batch_allocation' => $batchAllocations,
+                'allocation_type' => ! empty($batchAllocations) ? 'specific' : 'fifo',
+            ];
+        });
 
-    return response()->json([
-        'items' => $itemsWithStores,
-        'from_branch' => $branchId,
-        'transfer_id' => $transfer->TransferId,
-        'main_store' => $mainStore,
-    ]);
-}
+        return response()->json([
+            'items' => $itemsWithStores,
+            'from_branch' => $branchId,
+            'transfer_id' => $transfer->TransferId,
+            'main_store' => $mainStore,
+        ]);
+    }
 }

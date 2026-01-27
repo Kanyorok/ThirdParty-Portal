@@ -4,17 +4,18 @@ namespace App\Models\Legal;
 
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LegalClause extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     // Custom timestamp columns (match your DB)
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_LegalClauses';
     protected $primaryKey = 'Id';
@@ -79,6 +80,7 @@ class LegalClause extends Model
     public function getIsStandardBoolAttribute(): bool
     {
         $v = $this->attributes['IsStandard'] ?? 'No';
+
         return strcasecmp((string)$v, 'Yes') === 0 || $v === 1 || $v === true;
     }
 
@@ -111,7 +113,10 @@ class LegalClause extends Model
 
     public function scopeSearch($q, ?string $term)
     {
-        if (!$term) return $q;
+        if (! $term) {
+            return $q;
+        }
+
         return $q->where(function ($sub) use ($term) {
             $sub->where('Title', 'like', "%{$term}%")
                 ->orWhere('ClauseType', 'like', "%{$term}%")

@@ -13,6 +13,7 @@ class ClientCorporate extends Model
     //protected $connection = 'brcbs';
     protected $connection = 'sqlsrv';
     protected $table = 'syn_t_ClientCorporate';
+
     public static function getPrimaryKey(): string
     {
         return 'BR_ClientCorporate';

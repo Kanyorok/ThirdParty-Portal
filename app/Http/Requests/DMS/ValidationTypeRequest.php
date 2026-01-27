@@ -27,7 +27,7 @@ class ValidationTypeRequest extends FormRequest
     {
         $approvers = $this->array('Approvers');
         $Actors = collect();
-        if (!is_array($approvers)) {
+        if (! is_array($approvers)) {
             return $Actors;
         }
         foreach ($approvers as $approver) {
@@ -38,6 +38,7 @@ class ValidationTypeRequest extends FormRequest
             }
             $Actors->add($actor);
         }
+
         return $Actors;
     }
 }

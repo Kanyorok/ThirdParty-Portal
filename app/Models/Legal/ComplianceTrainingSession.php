@@ -13,16 +13,16 @@ class ComplianceTrainingSession extends Model
     protected $fillable = [
         'Topic','TrainingTypeID','Facilitator','SessionDate','Duration',
         'MaterialsFileName','MaterialsMimeType','MaterialsFilePath',
-        'CreatedBy','CreatedOn'
+        'CreatedBy','CreatedOn',
     ];
-    
+
     public function participants()
     {
-        return $this->hasMany(ComplianceTrainingParticipant::class,'TrainingID');
+        return $this->hasMany(ComplianceTrainingParticipant::class, 'TrainingID');
     }
 
     public function certifications()
     {
-        return $this->hasMany(ComplianceCertification::class,'TrainingID');
+        return $this->hasMany(ComplianceCertification::class, 'TrainingID');
     }
 }

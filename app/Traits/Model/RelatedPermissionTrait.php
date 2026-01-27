@@ -10,6 +10,7 @@ trait RelatedPermissionTrait
     public function scopeAccessibleToUser(Builder $query, User $user): Builder
     {
         $column = $this->permissionColum();
+
         return $query->where(function ($q) use ($column, $user) {
             $q->whereNull($column)
                 ->orWhere(function ($subQ) use ($column, $user) {

@@ -14,7 +14,6 @@ enum PropertyInvoiceEnum: string
 
     case PartialPaid = 'N';
 
-
     public function label(): string
     {
         return match ($this) {

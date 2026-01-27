@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\Criteria;
 use App\Models\Procurement\Section;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
 
 class CriteriaController extends Controller
 {
@@ -22,6 +22,7 @@ class CriteriaController extends Controller
     {
         $this->authorize('viewAny', Criteria::class);
         $criterias = $section->criteria;
+
         return view('procurement.tendering.settings.criterias', compact('criterias', 'section'));
     }
 
@@ -35,6 +36,7 @@ class CriteriaController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $criteria = $section->criteria()->create([
                 'CriteriaName' => $validated['CriteriaName'],
@@ -49,6 +51,7 @@ class CriteriaController extends Controller
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return back()->with('error', 'Failed to create criteria: ' . $th->getMessage());
         }
 
@@ -65,6 +68,7 @@ class CriteriaController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $oldValues = $criteria->getOriginal();
             // CORRECTED: The assignment now uses the correct validated keys
@@ -84,6 +88,7 @@ class CriteriaController extends Controller
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return back()->with('error', 'Failed to update criteria: ' . $th->getMessage());
         }
 
@@ -94,6 +99,7 @@ class CriteriaController extends Controller
     {
         $this->authorize('delete', $criteria);
         DB::beginTransaction();
+
         try {
             $criteriaName = $criteria->CriteriaName;
             $criteria->delete();
@@ -107,6 +113,7 @@ class CriteriaController extends Controller
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return back()->with('error', 'Failed to delete criteria: ' . $th->getMessage());
         }
 
@@ -116,6 +123,7 @@ class CriteriaController extends Controller
     public function fetchAll(Section $section): \Illuminate\Http\JsonResponse
     {
         $this->authorize('viewAny', Criteria::class);
+
         return response()->json($section->criteria()->select('Id', 'CriteriaName', 'Description')->get());
     }
 }

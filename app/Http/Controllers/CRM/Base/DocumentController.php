@@ -59,6 +59,7 @@ class DocumentController extends Controller
         $this->authorize('delete', $image->source);
 
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($image, $actor) {
                 $image->forceFill([
@@ -69,6 +70,7 @@ class DocumentController extends Controller
             });
         } catch (Exception $e) {
             Log::error('Error removing attachment :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         } catch (Throwable $e) {
         }

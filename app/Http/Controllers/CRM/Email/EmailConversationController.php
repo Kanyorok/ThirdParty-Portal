@@ -32,7 +32,7 @@ class EmailConversationController extends Controller
         if ($request->ajax()) {
             $query = EmailConversation::query()->with(['party', 'email'])->withCount(['emails', 'emails as unread_emails_count' => function (Builder $builder) {
                 $builder->where('t_Emails.Type', EmailTypeEnum::Incoming)->where('t_Emails.Status', EmailStatusEnum::Unread);
-            }
+            },
             ]);
             if ($request->searchByType === 'UNREAD') {
                 $query->whereHas('emails', function (Builder $builder) {
@@ -65,6 +65,7 @@ class EmailConversationController extends Controller
                     if ($conversation->unread_emails_count > 0) {
                         return 'mouse_pointer user-select-none click-email-details fw-bold';
                     }
+
                     return 'mouse_pointer user-select-none click-email-details';
                 })->setRowData([
                     'click_url' => function (EmailConversation $conversation) {
@@ -83,11 +84,12 @@ class EmailConversationController extends Controller
     public function show($conversation_id)
     {
         $conversation = EmailConversation::query()->where('t_EmailsConversations.Id', $conversation_id)->first();
-        if (!$conversation instanceof EmailConversation) {
+        if (! $conversation instanceof EmailConversation) {
             throw new RuntimeException('Conversation does not exist');
         }
 
         $StaticLists = StaticListsService::getList([StaticListsService::TicketCategories]);
+
         return view('crm.emails.conversations.show', compact('conversation'))
             ->with('TicketCategories', $StaticLists->where('CodeID', StaticListsService::TicketCategories))
             ->with('party', $conversation->party);
@@ -99,7 +101,7 @@ class EmailConversationController extends Controller
     public function summary($conversation_id)
     {
         $conversation = EmailConversation::query()->where('t_EmailsConversations.Id', $conversation_id)->first();
-        if (!$conversation instanceof EmailConversation) {
+        if (! $conversation instanceof EmailConversation) {
             throw new RuntimeException('Conversation does not exist');
         }
 
@@ -111,7 +113,6 @@ class EmailConversationController extends Controller
      */
     public function edit(EmailConversation $emailConversation)
     {
-        //
     }
 
     /**
@@ -119,7 +120,6 @@ class EmailConversationController extends Controller
      */
     public function update(Request $request, EmailConversation $emailConversation)
     {
-        //
     }
 
     /**
@@ -127,6 +127,5 @@ class EmailConversationController extends Controller
      */
     public function destroy(EmailConversation $emailConversation)
     {
-        //
     }
 }

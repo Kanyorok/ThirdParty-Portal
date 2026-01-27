@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use App\Http\Controllers\Controller;
-use App\Models\Procurement\ProcurementPlan;
-use App\Models\Procurement\ProcurementPeriod;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Inventory\ItemMasterList;
-use Illuminate\Http\Request;
 use App\enums\ProcurementPlanStatusEnum;
+use App\Http\Controllers\Controller;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Procurement\ProcurementPeriod;
+use App\Models\Procurement\ProcurementPlan;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProcurementPlanController extends Controller
 {
@@ -22,9 +22,10 @@ class ProcurementPlanController extends Controller
     {
         $this->authorize('create', ProcurementPlan::class);
         $items = ItemMasterList::orderBy('ItemName')->get();
+
         return view('procurement.procurement_plans.create', [
             'availableItems' => $items,
-            'period' =>  $procurementPeriod,
+            'period' => $procurementPeriod,
         ]);
     }
 
@@ -57,6 +58,7 @@ class ProcurementPlanController extends Controller
             'CreatedBy' => Auth::id(),
             'ModifiedBy' => Auth::id(),
         ]);
+
         return redirect()->route('procurement-periods.show', $procurementPeriod->Id)
             ->with('success', 'Procurement plan item added successfully.');
     }

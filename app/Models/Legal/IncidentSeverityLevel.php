@@ -13,6 +13,6 @@ class IncidentSeverityLevel extends Model
     protected $fillable = [
         'Name',
         'Description',
-        'IsActive'
+        'IsActive',
     ];
 }

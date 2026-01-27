@@ -36,10 +36,10 @@ class ConsolidatedPlanWorkflowService
 
         $allowedStatuses = [
             ProcurementPlanStatusEnum::Draft,
-            ProcurementPlanStatusEnum::Rejected
+            ProcurementPlanStatusEnum::Rejected,
         ];
 
-        if (!in_array($this->plan->Status, $allowedStatuses)) {
+        if (! in_array($this->plan->Status, $allowedStatuses)) {
             throw new ErroredException(
                 'Only draft or rejected plans can be submitted for approval. Current status: ' .
                     ($this->plan->Status->value ?? 'unknown')
@@ -71,6 +71,7 @@ class ConsolidatedPlanWorkflowService
                 $unitCost = ($item->AdjustedCost > 0)
                     ? $item->AdjustedCost
                     : ($item->EstimatedUnitCost ?? 0);
+
                 return $quantity * $unitCost;
             });
 
@@ -96,7 +97,7 @@ class ConsolidatedPlanWorkflowService
                 $remarks
             );
 
-            if (!$result) {
+            if (! $result) {
                 // throw new ErroredException('Failed to submit plan to workflow');
             }
 
@@ -143,7 +144,7 @@ class ConsolidatedPlanWorkflowService
                 $remarks
             );
 
-            if (!$result) {
+            if (! $result) {
                 throw new ErroredException('Failed to approve plan in workflow');
             }
 
@@ -173,7 +174,7 @@ class ConsolidatedPlanWorkflowService
     {
 
 
-        if (!$this->workflow->canApproveModel($this->plan, $actor)) {
+        if (! $this->workflow->canApproveModel($this->plan, $actor)) {
             throw new ErroredException('You do not have permission to reject this plan');
         }
 
@@ -194,7 +195,7 @@ class ConsolidatedPlanWorkflowService
                 $remarks
             );
 
-            if (!$result) {
+            if (! $result) {
                 throw new ErroredException('Failed to reject plan in workflow');
             }
 
@@ -209,6 +210,7 @@ class ConsolidatedPlanWorkflowService
                 'planId' => $this->plan->PlanID,
                 'error' => $e->getMessage(),
             ]);
+
             throw new ErroredException($e->getMessage());
         }
     }
@@ -233,7 +235,7 @@ class ConsolidatedPlanWorkflowService
             // Cancel workflow
             $result = $this->workflow->cancel($this->plan, $actor, $reason);
 
-            if (!$result) {
+            if (! $result) {
                 throw new ErroredException('Failed to cancel workflow');
             }
 
@@ -249,6 +251,7 @@ class ConsolidatedPlanWorkflowService
                 'planId' => $this->plan->PlanID,
                 'error' => $e->getMessage(),
             ]);
+
             throw new ErroredException($e->getMessage());
         }
     }

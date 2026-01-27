@@ -44,7 +44,7 @@ class LegalCaseCounselSeeder extends Seeder
                 ->where('CounselName', $item['CounselName'])
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('t_LegalCaseCounsels')->insert([
                     'LegalCaseID' => $item['LegalCaseID'],
                     'CounselName' => $item['CounselName'],

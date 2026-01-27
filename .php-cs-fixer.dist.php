@@ -48,7 +48,5 @@ return (new Config())
         'single_line_comment_style' => [
             'comment_types' => ['hash'],
         ],
-        // Prevent debug statements
-        'no_dump_statements' => false, // We'll use custom checks for Laravel specific
     ])
     ->setFinder($finder);

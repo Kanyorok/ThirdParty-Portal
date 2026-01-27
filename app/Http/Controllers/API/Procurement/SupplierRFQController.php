@@ -33,7 +33,7 @@ class SupplierRFQController extends Controller
             $user = Auth::guard('sanctum')->user();
             $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
 
-            if (!$thirdPartyId) {
+            if (! $thirdPartyId) {
                 return response()->json(['data' => []]);
             }
 
@@ -61,12 +61,12 @@ class SupplierRFQController extends Controller
                 ->get();
 
             return response()->json(['data' => $invitations]);
-
         } catch (\Exception $e) {
             Log::error('Error fetching RFQ invitations: ' . $e->getMessage());
+
             return response()->json([
                 'error' => 'Internal Server Error',
-                'message' => 'An error occurred while fetching RFQ invitations'
+                'message' => 'An error occurred while fetching RFQ invitations',
             ], 500);
         }
     }
@@ -81,14 +81,14 @@ class SupplierRFQController extends Controller
             $user = Auth::guard('sanctum')->user();
             $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
 
-            if (!$thirdPartyId) {
+            if (! $thirdPartyId) {
                 return response()->json(['error' => 'Authentication required'], 401);
             }
 
             // Load RFQ with its lines and unit of measure
             $rfqModel = RFQ::with(['rfqLines', 'rfqLines.uom'])->find($rfqId);
-            if (!$rfqModel) {
-                 return response()->json(['error' => 'RFQ not found'], 404);
+            if (! $rfqModel) {
+                return response()->json(['error' => 'RFQ not found'], 404);
             }
 
             // FIXED: Get supplier IDs through SupplierMaster
@@ -106,10 +106,10 @@ class SupplierRFQController extends Controller
                 ->select('SupplierId', 'Status', 'CreatedOn', 'ModifiedOn')
                 ->first();
 
-            if (!$invitation) {
+            if (! $invitation) {
                 return response()->json([
                     'error' => 'Not Found',
-                    'message' => 'RFQ not found or you do not have access to it'
+                    'message' => 'RFQ not found or you do not have access to it',
                 ], 404);
             }
 
@@ -179,20 +179,19 @@ class SupplierRFQController extends Controller
                     'Status' => $invitation->Status,
                     'CreatedOn' => $invitation->CreatedOn,
                     'ModifiedOn' => $invitation->ModifiedOn,
-                ]
+                ],
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error fetching RFQ invitation details', [
                 'rfq_id' => $rfq,
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'error' => 'Internal Server Error',
-                'message' => 'An error occurred while fetching RFQ details'
+                'message' => 'An error occurred while fetching RFQ details',
             ], 500);
         }
     }
@@ -216,13 +215,13 @@ class SupplierRFQController extends Controller
 
             $user = Auth::guard("sanctum")->user();
             $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
-            if (!$thirdPartyId) {
+            if (! $thirdPartyId) {
                 return response()->json(["error" => "Authentication required"], 401);
             }
 
             // Fix: Assuming RFQ model exists
             $rfq = \App\Models\Procurement\RFQ::find($request->rfqId);
-            if (!$rfq) {
+            if (! $rfq) {
                 return response()->json(['error' => 'RFQ not found'], 404);
             }
 
@@ -240,7 +239,7 @@ class SupplierRFQController extends Controller
                 ->whereIn('SupplierId', $mySupplierIds)
                 ->min('SupplierId');
 
-            if (!$supplierId) {
+            if (! $supplierId) {
                 return response()->json(['error' => 'No invitation found for this supplier'], 403);
             }
 
@@ -260,19 +259,18 @@ class SupplierRFQController extends Controller
                 ->first();
 
             if ($existing && strtoupper($existing->Status ?? 'FINAL') === 'FINAL') {
-                 return response()->json([
-                    'error' => 'Already Submitted',
-                    'message' => 'Response already submitted'
+                return response()->json([
+                   'error' => 'Already Submitted',
+                   'message' => 'Response already submitted',
                 ], 409);
             }
 
             // Logic to save response would go here (truncated in original file? Assuming placeholder)
-             return response()->json(['message' => 'Response submitted successfully'], 200);
-
+            return response()->json(['message' => 'Response submitted successfully'], 200);
         } catch (\Exception $e) {
-             return response()->json([
-                'error' => 'Internal Server Error',
-                'message' => $e->getMessage()
+            return response()->json([
+               'error' => 'Internal Server Error',
+               'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -291,7 +289,7 @@ class SupplierRFQController extends Controller
 
             $user = Auth::guard("sanctum")->user();
             $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
-            if (!$thirdPartyId) {
+            if (! $thirdPartyId) {
                 return response()->json(["error" => "Authentication required"], 401);
             }
 
@@ -309,7 +307,7 @@ class SupplierRFQController extends Controller
                 ->whereIn('SupplierId', $mySupplierIds)
                 ->min('SupplierId');
 
-            if (!$supplierId) {
+            if (! $supplierId) {
                 return response()->json(['error' => 'No invitation found for this supplier'], 403);
             }
 
@@ -335,11 +333,11 @@ class SupplierRFQController extends Controller
     public function listClarifications(int|string $rfq): JsonResponse
     {
         try {
-             $rfqId = (int) $rfq;
+            $rfqId = (int) $rfq;
             $user = Auth::guard('sanctum')->user();
             $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
 
-            if (!$thirdPartyId) {
+            if (! $thirdPartyId) {
                 return response()->json(['data' => []]);
             }
 
@@ -360,8 +358,7 @@ class SupplierRFQController extends Controller
 
             return response()->json(['data' => $clarifications]);
         } catch (\Exception $e) {
-             return response()->json(['error' => 'Failed to list clarifications'], 500);
+            return response()->json(['error' => 'Failed to list clarifications'], 500);
         }
     }
 }
-

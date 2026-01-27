@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\Log;
 
 class BudgetDriversController extends Controller
 {
-    //
     public function index()
     {
         //check Perm
@@ -23,11 +22,12 @@ class BudgetDriversController extends Controller
 
         $drivers = BudgetDriverMaster::with('driverType')->get();
         $driverTypes = BudgetDriver::where('IsActive', 1)->get();
+
         //$uom=UnitOfMeasure::all();
         return view('budgetandanalytics.budgetdrivers.index', compact(
             'drivers',
             'driverTypes',
-        //'uom'
+            //'uom'
         ));
     }
 
@@ -46,7 +46,7 @@ class BudgetDriversController extends Controller
             'DriverName' => 'required|string',
             'DriverType' => 'required|integer',
             //'UOM'=>'required|integer',
-            'Frequency' => 'required|string'
+            'Frequency' => 'required|string',
 
         ]);
 
@@ -60,7 +60,7 @@ class BudgetDriversController extends Controller
                 'IsActive' => $request->has('IsActive') ? 1 : 0,
 
                 'CreatedBy' => Auth::id(),
-                'ModifiedBy' => Auth::id()
+                'ModifiedBy' => Auth::id(),
             ]);
 
             DB::commit();
@@ -71,14 +71,17 @@ class BudgetDriversController extends Controller
                 ->event('create')
                 ->withProperties(['action' => 'create'])
                 ->log('Created a Budget Driver');
+
             return back()->with('success', 'Budget driver Created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return $th->getMessage();
             Log::error('Failed to store budget driver.', [
                 'error' => $th->getMessage(),
-                'stack' => $th->getTraceAsString()
+                'stack' => $th->getTraceAsString(),
             ]);
+
             return back()->with('error', 'An Error Occurred. Please try again');
         }
     }

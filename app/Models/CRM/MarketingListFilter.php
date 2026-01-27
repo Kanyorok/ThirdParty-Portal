@@ -8,12 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MarketingListFilter extends Model
-{ //todo v2 add Groups to be able to Group Queries.
-    use SoftDeletes, UserActorTrait;
+{
+ //todo v2 add Groups to be able to Group Queries.
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_MarketingListsFilters';
     protected $primaryKey = 'Id';

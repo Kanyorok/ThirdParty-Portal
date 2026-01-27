@@ -19,17 +19,17 @@ class UpdateBoardMeetingRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'BoardMeetingTitle'    => [
+                'BoardMeetingTitle' => [
                                            'required',
                                            'string',
                                            'max:200',
                                           ],
-                'BoardMeetingStart'    => [
+                'BoardMeetingStart' => [
                                            'required',
                                            'date_format:"Y-m-d H:i"',
                                            'before:end',
                                           ],
-                'BoardMeetingEnd'      => [
+                'BoardMeetingEnd' => [
                                            'required',
                                            'date_format:"Y-m-d H:i"',
                                            'after:start',
@@ -38,11 +38,11 @@ class UpdateBoardMeetingRequest extends FormRequest
                                            'required',
                                            'string',
                                           ],
-                'BoardMeetingAgenda'   => [
+                'BoardMeetingAgenda' => [
                                            'required',
                                            'string',
                                           ],
-                'BoardMeetingUpdate'   => [
+                'BoardMeetingUpdate' => [
                                            'required',
                                            Rule::in(['yes', 'no']),
                                           ],
@@ -58,6 +58,7 @@ class UpdateBoardMeetingRequest extends FormRequest
                 return $room;
             }
         }
+
         return $location;
     }
 
@@ -72,7 +73,7 @@ class UpdateBoardMeetingRequest extends FormRequest
     public function getEnd(Carbon $start): Carbon
     {
         $end = Carbon::createFromFormat('Y-m-d H:i', $this->validated('BoardMeetingEnd'));
-        if (!$end instanceof Carbon) {
+        if (! $end instanceof Carbon) {
             throw ValidationException::withMessages(['BoardMeetingEnd' => 'invalid date format']);
         }
 
@@ -102,6 +103,7 @@ class UpdateBoardMeetingRequest extends FormRequest
         if ($start instanceof Carbon) {
             return $start;
         }
+
         throw ValidationException::withMessages(['meeting_start' => 'invalid date format']);
     }
 }

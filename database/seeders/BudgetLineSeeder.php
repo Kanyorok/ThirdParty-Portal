@@ -24,13 +24,27 @@ class BudgetLineSeeder extends Seeder
         $productTypeIds = DB::table('t_BudgetProductTypes')->pluck('Id')->toArray();
 
         // Validate required data
-        if (empty($userIds)) throw new \Exception('No users found. Please seed t_Users.');
-        if (empty($categoryIds)) throw new \Exception('No budget line categories found. Please seed t_BudgetLineCategories.');
-        if (empty($departmentIds)) throw new \Exception('No departments found. Please seed t_Departments.');
-        if (empty($glTypeIds)) throw new \Exception('No GL account types found in t_CodeDetails.');
-        if (empty($glSubTypeIds)) throw new \Exception('No GL account subtypes found. Please seed t_GLAccountSubTypes.');
-        if (empty($glAccounts)) throw new \Exception('No GL accounts found. Please seed t_BudgetGLAccounts.');
-        if (empty($productTypeIds)) throw new \Exception('No product types found. Please seed t_BudgetProductTypes.');
+        if (empty($userIds)) {
+            throw new \Exception('No users found. Please seed t_Users.');
+        }
+        if (empty($categoryIds)) {
+            throw new \Exception('No budget line categories found. Please seed t_BudgetLineCategories.');
+        }
+        if (empty($departmentIds)) {
+            throw new \Exception('No departments found. Please seed t_Departments.');
+        }
+        if (empty($glTypeIds)) {
+            throw new \Exception('No GL account types found in t_CodeDetails.');
+        }
+        if (empty($glSubTypeIds)) {
+            throw new \Exception('No GL account subtypes found. Please seed t_GLAccountSubTypes.');
+        }
+        if (empty($glAccounts)) {
+            throw new \Exception('No GL accounts found. Please seed t_BudgetGLAccounts.');
+        }
+        if (empty($productTypeIds)) {
+            throw new \Exception('No product types found. Please seed t_BudgetProductTypes.');
+        }
 
         // Define 30 meaningful budget lines
         $budgetLines = [
@@ -386,6 +400,7 @@ class BudgetLineSeeder extends Seeder
                         return true;
                     }
                 }
+
                 return false;
             });
 
@@ -417,7 +432,7 @@ class BudgetLineSeeder extends Seeder
             }
 
             // Attach product types if product-driven
-            if (!empty($line['IsProductDriven'])) {
+            if (! empty($line['IsProductDriven'])) {
                 $prodCount = rand(1, 3);
                 $selectedProducts = $faker->randomElements($productTypeIds, $prodCount);
                 foreach ($selectedProducts as $prodId) {
@@ -433,7 +448,6 @@ class BudgetLineSeeder extends Seeder
                     ]);
                 }
             }
-
         }
     }
 }

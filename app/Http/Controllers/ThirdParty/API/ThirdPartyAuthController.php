@@ -19,29 +19,29 @@ class ThirdPartyAuthController extends Controller
             'thirdParty.types',
             'thirdParty.supplierMaster',
             'thirdParty.tenantProfile',
-            'thirdParty.customerProfile'
+            'thirdParty.customerProfile',
         ])
             ->where('Email', strtolower($request->email))
             ->first();
 
-        if (!$user || !Hash::check($request->password, $user->Password)) {
+        if (! $user || ! Hash::check($request->password, $user->Password)) {
             throw ValidationException::withMessages([
                 'email' => ['Failed to authenticate.'],
             ]);
         }
 
-        if (!$user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail()) {
             return response()->json([
                 'success' => false,
                 'message' => ('Unverified Email'),
-                'requires_verification' => true
+                'requires_verification' => true,
             ], 403);
         }
 
-        if (!$user->isActive()) {
+        if (! $user->isActive()) {
             return response()->json([
                 'success' => false,
-                'message' => ('Account inactive')
+                'message' => ('Account inactive'),
             ], 403);
         }
 
@@ -50,8 +50,8 @@ class ThirdPartyAuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => ('Login Succcessful'),
-            'user'    => new ThirdPartyUserResource($user),
-            'token'   => $token,
+            'user' => new ThirdPartyUserResource($user),
+            'token' => $token,
         ]);
     }
 
@@ -60,10 +60,10 @@ class ThirdPartyAuthController extends Controller
         try {
             $user = $request->user();
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthenticated'
+                    'message' => 'Unauthenticated',
                 ], 401);
             }
 
@@ -72,12 +72,12 @@ class ThirdPartyAuthController extends Controller
                 'thirdParty.types',
                 'thirdParty.supplierMaster',
                 'thirdParty.tenantProfile',
-                'thirdParty.customerProfile'
+                'thirdParty.customerProfile',
             ]);
 
             return response()->json([
                 'success' => true,
-                'user' => new ThirdPartyUserResource($user)
+                'user' => new ThirdPartyUserResource($user),
             ]);
         } catch (\Exception $e) {
             \Log::error('Error in /me endpoint', [
@@ -89,7 +89,7 @@ class ThirdPartyAuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'An error occurred',
-                'error' => config('app.debug') ? $e->getMessage() : null
+                'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
@@ -105,7 +105,7 @@ class ThirdPartyAuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => ('Logged out successfully.')
+            'message' => ('Logged out successfully.'),
         ]);
     }
 
@@ -113,10 +113,10 @@ class ThirdPartyAuthController extends Controller
     {
         $user = ThirdPartyUser::findOrFail($id);
 
-        if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+        if (! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid verification link.'
+                'message' => 'Invalid verification link.',
             ], 403);
         }
 
@@ -124,20 +124,20 @@ class ThirdPartyAuthController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Email already verified. You can now login.',
-                'already_verified' => true
+                'already_verified' => true,
             ]);
         }
 
         if ($user->markEmailAsVerified()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Email verified successfully! You can now login.'
+                'message' => 'Email verified successfully! You can now login.',
             ]);
         }
 
         return response()->json([
             'success' => false,
-            'message' => 'Unable to verify email. Please try again.'
+            'message' => 'Unable to verify email. Please try again.',
         ], 500);
     }
 
@@ -148,7 +148,7 @@ class ThirdPartyAuthController extends Controller
         if ($user->hasVerifiedEmail()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Email already verified.'
+                'message' => 'Email already verified.',
             ], 400);
         }
 
@@ -156,7 +156,7 @@ class ThirdPartyAuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Verification email sent! Please check your inbox.'
+            'message' => 'Verification email sent! Please check your inbox.',
         ]);
     }
 }

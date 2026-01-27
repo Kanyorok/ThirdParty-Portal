@@ -19,8 +19,7 @@ parameters:
         - node_modules
     
     # Laravel specific configurations
-    checkMissingIterableValueType: false
-    checkGenericClassInNonGenericObjectType: false
+    treatPhpDocTypesAsCertain: false
     
     # Custom rules to detect debug code
     ignoreErrors:

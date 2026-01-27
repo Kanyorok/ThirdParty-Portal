@@ -16,7 +16,7 @@ class FileConversionService
     public function __construct(protected Document $document)
     {
         $ex = $this->document->ext();
-        if (!$ex instanceof ExtensionsEnum) {
+        if (! $ex instanceof ExtensionsEnum) {
             throw new RuntimeException('Invalid file extension');
         }
         $this->extension = $ex;
@@ -44,8 +44,10 @@ class FileConversionService
     {
         if (shell_exec("command -v soffice") === null) {
             SystemHelper::notifyAdmin('libreoffice is not found. Please install libreoffice package.');
+
             return false;
         }
+
         return true;
     }
 
@@ -56,7 +58,7 @@ class FileConversionService
     private function _convertToPDf(): ?string
     {
         $fileToConvert = (new DocumentService($this->document))->getTempPath();
-        if ($fileToConvert === null || !file_exists($fileToConvert)) {
+        if ($fileToConvert === null || ! file_exists($fileToConvert)) {
             return null;
         }
         $path = Storage::disk('temp')->path('');
@@ -64,11 +66,10 @@ class FileConversionService
 
         $info = pathinfo($fileToConvert);
         $convertedFile = $path . $info['filename'] . '.pdf';
-        if (!file_exists($convertedFile)) {
+        if (! file_exists($convertedFile)) {
             return null;
         }
 
         return $convertedFile;
     }
-
 }

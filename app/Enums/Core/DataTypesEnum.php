@@ -47,7 +47,6 @@ enum DataTypesEnum: string
         } catch (Exception $e) {
             dd($value, $format, $this);
         }
-
     }
 
     public static function timeFormat(): string

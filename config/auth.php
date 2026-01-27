@@ -46,7 +46,7 @@ return [
             'driver' => 'sanctum',
             // 'provider' => 'thirdparties',
             'provider' => 'thirdparty_users',
-        ]
+        ],
     ],
 
     /*

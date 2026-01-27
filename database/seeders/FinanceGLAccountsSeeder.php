@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class FinanceGLAccountsSeeder extends Seeder
 {
@@ -21,14 +21,14 @@ class FinanceGLAccountsSeeder extends Seeder
             'L' => 'L', // Liability
             'I' => 'I', // Income
             'E' => 'E', // Expense
-            'S' => 'S'  // Share and Capital
+            'S' => 'S',  // Share and Capital
         ];
 
         // Helper to get IDs from code
-        $getGroupId = fn($code) =>
+        $getGroupId = fn ($code) =>
         DB::table('t_FinanceGLTypeGroups')->where('TypeGroupCode', $code)->value('Id');
 
-        $getSubTypeId = fn($code) =>
+        $getSubTypeId = fn ($code) =>
         DB::table('t_FinanceGLSubAccountTypes')->where('SubAccountCode', $code)->value('Id');
 
         $glAccounts = [
@@ -69,7 +69,7 @@ class FinanceGLAccountsSeeder extends Seeder
             }
 
             $typeId = $accountTypeMap[$typeCode] ?? null;
-            $groupId   = $getGroupId($groupCode);
+            $groupId = $getGroupId($groupCode);
             $subTypeId = $getSubTypeId($subCode);
 
             // Resolve parent ID (if any)

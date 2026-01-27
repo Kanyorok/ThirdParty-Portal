@@ -32,7 +32,7 @@ class CodeDetailController extends Controller
     public function index(Request $request): JsonResponse
     {
         $this->authorize('view', CodeDetail::class);
-        if (!in_array($request->_code, StaticListsService::getLists()->toArray())) {
+        if (! in_array($request->_code, StaticListsService::getLists()->toArray())) {
             throw new RuntimeException('Invalid list requested');
         }
 
@@ -47,14 +47,13 @@ class CodeDetailController extends Controller
                            ])->rawColumns(['action'])->make();
     }
 
-
     /**
      * @throws AuthorizationException
      */
     public function order(Request $request): JsonResponse
     {
         $codeDetail = CodeDetail::query()->where('ID', $request->get('CodeId'))->first();
-        if (!$codeDetail instanceof CodeDetail) {
+        if (! $codeDetail instanceof CodeDetail) {
             return $this->errored('could not change order.');
         }
         $this->authorize('update', $codeDetail);
@@ -72,6 +71,7 @@ class CodeDetailController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error create code detail :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -99,6 +99,7 @@ class CodeDetailController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error create code detail :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -113,17 +114,18 @@ class CodeDetailController extends Controller
     public function update(CodeDetailsRequest $request, $codeDetailId): JsonResponse
     {
         $codeDetail = CodeDetail::query()->where('ID', $codeDetailId)->first();
-        if (!$codeDetail instanceof CodeDetail) {
+        if (! $codeDetail instanceof CodeDetail) {
             return $this->errored('could not validate that item');
         }
         $this->authorize('update', $codeDetail);
         $description = $request->getDescription($codeDetail->CodeID, $codeDetailId);
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($codeDetail, $description, $actor) {
                 $codeDetail->update([
                                      'Description' => $description,
-                                     'ModifiedBy'  => $actor->Id,
+                                     'ModifiedBy' => $actor->Id,
                                     ]);
 
                 activity()->causedBy($actor)->performedOn($codeDetail)->event('update')->log('updated ' . $codeDetail->CodeID);
@@ -132,6 +134,7 @@ class CodeDetailController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error create code detail :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -145,7 +148,7 @@ class CodeDetailController extends Controller
     public function destroy(Request $request, $codeDetailId): JsonResponse
     {
         $codeDetail = CodeDetail::query()->where('ID', $codeDetailId)->first();
-        if (!$codeDetail instanceof CodeDetail) {
+        if (! $codeDetail instanceof CodeDetail) {
             return $this->errored('could not validate that  item');
         }
         $this->authorize('update', $codeDetail);
@@ -164,6 +167,7 @@ class CodeDetailController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error create code detail :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

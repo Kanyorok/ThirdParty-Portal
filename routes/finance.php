@@ -104,12 +104,12 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     Route::get('creditadjustment/create/{id}', [CreditAdjustmentController::class, 'createWithId'])->name('creditadjustment.createWithId');
     Route::post('creditadjustment/{id}/approve', [CreditAdjustmentController::class, 'approve'])->name('creditadjustment.approve');
 
-// Invoice generation with credit integration
+    // Invoice generation with credit integration
     Route::resource('invoicegeneration', InvoiceGenerationController::class);
     Route::post('invoicegeneration/check-credit', [InvoiceGenerationController::class, 'checkCredit'])->name('invoicegeneration.check-credit');
     Route::post('invoicegeneration/{id}/apply-credit', [InvoiceGenerationController::class, 'applyCredit'])->name('invoicegeneration.apply-credit');
 
-// Debug route to check credit utilization
+    // Debug route to check credit utilization
     Route::get('debug/credit-utilization/{creditId}', function ($creditId) {
         $credit = \App\Models\Finance\FinanceCreditManagement::with('customer')->findOrFail($creditId);
 
@@ -140,11 +140,11 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
                 'total_invoices_by_name' => $invoicesByName->count(),
                 'draft_with_credit_by_id' => $allInvoices->where('ApprovalStatus', 'draft')->where('UseCredit', true)->count(),
                 'draft_with_credit_by_name' => $invoicesByName->where('ApprovalStatus', 'draft')->where('UseCredit', true)->count(),
-            ]
+            ],
         ], 200, [], JSON_PRETTY_PRINT);
     });
 
-// Debug route to check invoices with credit applied
+    // Debug route to check invoices with credit applied
     Route::get('debug/invoices-with-credit', function () {
         $invoicesWithCredit = \App\Models\Finance\FinanceInvoice::with('customer')
             ->where('UseCredit', true)
@@ -153,7 +153,7 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
         return response()->json([
             'total_invoices_with_credit' => $invoicesWithCredit->count(),
             'total_amount' => $invoicesWithCredit->sum('TotalAmount'),
-            'invoices' => $invoicesWithCredit->toArray()
+            'invoices' => $invoicesWithCredit->toArray(),
         ], 200, [], JSON_PRETTY_PRINT);
     });
 
@@ -429,10 +429,13 @@ Route::prefix('finance')->name('finance.')->middleware('auth')->group(function (
     // Optional: spoil a specific unused leaf (mark as not usable)
     Route::post('chequebooks/{book}/leaves/{leaf}/spoil', function ($book, $leaf) {
         $l = \App\Models\Finance\ChequeLeaf::where('ChequeBookID', $book)->findOrFail($leaf);
-        if ($l->Status !== 'Unused') return back()->with('error', 'Only Unused leaves can be spoiled.');
+        if ($l->Status !== 'Unused') {
+            return back()->with('error', 'Only Unused leaves can be spoiled.');
+        }
         $l->Status = 'Spoiled';
         $l->Notes = 'Manually spoiled';
         $l->save();
+
         return back()->with('success', 'Leaf spoiled.');
     })->name('chequebooks.leaves.spoil');
 });

@@ -24,7 +24,7 @@ class InfobipService
     public function __construct()
     {
         $cred = APICredential::query()->where('Integration', IntegrationsEnum::InfoBip->value)->latest('Id')->first();
-        if (!$cred instanceof APICredential) {
+        if (! $cred instanceof APICredential) {
             throw new ErroredException('no InfoBip configuration Found');
         }
 
@@ -38,6 +38,7 @@ class InfobipService
     public static function testConfig(string $host, string $email, #[SensitiveParameter] string $ApiKey, User $actor): bool
     {
         $client = new \GuzzleHttp\Client();
+
         try {
             $response = $client->get($host);
 
@@ -78,23 +79,23 @@ class InfobipService
                 return $response->getMessages()[0]?->getMessageId();
             }
 
-           /*  {#2725
-                #bulkId: "jzynyb8dokpfd45xhurk"
-                #messages: array:1 [
-                0 => Infobip\Model\EmailResponseDetails {#2708
-                    #to: "mureithi.maina@craftsilicon.com"
-                    #messageId: "ebdju3zphhmuo8mnp4cq"
-                    #status: Infobip\Model\MessageStatus {#2699
-                    #groupId: 1
-                    #groupName: "PENDING"
-                    #id: 26
-                    #name: "PENDING_ACCEPTED"
-                    #description: "Message accepted, pending for delivery."
-                    #action: null
-                }
-                }
-              ]
-            }*/
+            /*  {#2725
+                 #bulkId: "jzynyb8dokpfd45xhurk"
+                 #messages: array:1 [
+                 0 => Infobip\Model\EmailResponseDetails {#2708
+                     #to: "mureithi.maina@craftsilicon.com"
+                     #messageId: "ebdju3zphhmuo8mnp4cq"
+                     #status: Infobip\Model\MessageStatus {#2699
+                     #groupId: 1
+                     #groupName: "PENDING"
+                     #id: 26
+                     #name: "PENDING_ACCEPTED"
+                     #description: "Message accepted, pending for delivery."
+                     #action: null
+                 }
+                 }
+               ]
+             }*/
         } catch (ApiException $e) {
             Log::error('Sending InfoBip Email:');
             Log::error($e);

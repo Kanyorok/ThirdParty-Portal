@@ -32,7 +32,7 @@ class OpeningStockSampleExport implements FromArray, WithHeadings
                 $stock?->Reorder ?? 0,
                 $stock?->Max ?? 0,
                 $item->uom->Code ?? '',
-                $item->price->ActualPrice ?? NULL,
+                $item->price->ActualPrice ?? null,
                 $stock?->LastReceived ?? now()->format('d/m/Y'),
                 $stock?->Status ?? 1,
             ];

@@ -6,15 +6,15 @@ use App\Exports\NeedsExport;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\DepartmentNeed;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ConsolidatedDashboardController extends Controller
 {
     public function index(Request $request)
     {
         $this->authorize('viewAny', DepartmentNeed::class);
-        
+
         // Normalize inputs
         $branchInput = trim((string)$request->input('branch', ''));
         $departmentInput = trim((string)$request->input('department', ''));
@@ -33,7 +33,7 @@ class ConsolidatedDashboardController extends Controller
             $map = [
                 'approved' => \App\Enums\Procurement\DepartmentNeedsEnum::Approved->value,
                 'rejected' => \App\Enums\Procurement\DepartmentNeedsEnum::Rejected->value,
-                'pending'  => \App\Enums\Procurement\DepartmentNeedsEnum::Pending->value,
+                'pending' => \App\Enums\Procurement\DepartmentNeedsEnum::Pending->value,
             ];
             $lower = strtolower($status);
             if (isset($map[$lower])) {
@@ -58,7 +58,7 @@ class ConsolidatedDashboardController extends Controller
         // Load filter dropdown options
         $branches = \App\Models\Core\Branch::orderBy('Name')->pluck('Name', 'Id');
         $departments = \App\Models\HRM\Department::orderBy('Name')->pluck('Name', 'Id');
-        
+
         $yearsCollection = DepartmentNeed::query()
             ->selectRaw('DISTINCT YEAR(RequestedDate) as yr')
             ->whereNotNull('RequestedDate')
@@ -89,14 +89,15 @@ class ConsolidatedDashboardController extends Controller
     {
         try {
             Log::info("Fetching need details for NeedID: {$needId}");
-            
+
             // Find the need with relationships
             $need = DepartmentNeed::with(['item', 'branch', 'department', 'creator'])
                 ->where('NeedID', $needId)
                 ->first();
 
-            if (!$need) {
+            if (! $need) {
                 Log::warning("Need not found: {$needId}");
+
                 return response()->json(['error' => 'Need not found'], 404);
             }
 
@@ -105,6 +106,7 @@ class ConsolidatedDashboardController extends Controller
 
             // Get status label safely
             $statusLabel = 'N/A';
+
             try {
                 if (is_object($need->Status) && method_exists($need->Status, 'label')) {
                     $statusLabel = $need->Status->label();
@@ -126,6 +128,7 @@ class ConsolidatedDashboardController extends Controller
 
             // Format date properly
             $requestedDate = null;
+
             try {
                 if ($need->RequestedDate) {
                     $requestedDate = \Carbon\Carbon::parse($need->RequestedDate)->format('Y-m-d');
@@ -136,6 +139,7 @@ class ConsolidatedDashboardController extends Controller
 
             // Calculate estimated cost safely
             $estimatedCost = 0;
+
             try {
                 $qty = floatval($need->RequestedQty ?? 0);
                 $unitCost = floatval($need->EstimatedUnitCost ?? 0);
@@ -145,30 +149,31 @@ class ConsolidatedDashboardController extends Controller
             }
 
             $response = [
-                'NeedID'         => $need->NeedID,
-                'ItemName'       => $need->item->ItemName ?? 'N/A',
-                'BranchName'     => $need->branch?->Name ?? 'N/A',
+                'NeedID' => $need->NeedID,
+                'ItemName' => $need->item->ItemName ?? 'N/A',
+                'BranchName' => $need->branch?->Name ?? 'N/A',
                 'DepartmentName' => $need->department?->Name ?? 'N/A',
-                'RequestedQty'   => $need->RequestedQty ?? 0,
-                'EstimatedCost'  => number_format($estimatedCost, 2),
-                'RequestedDate'  => $requestedDate,
-                'Status'         => $statusLabel,
-                'CreatedBy'      => $need->creator?->Name ?? $need->CreatedByName ?? 'N/A',
+                'RequestedQty' => $need->RequestedQty ?? 0,
+                'EstimatedCost' => number_format($estimatedCost, 2),
+                'RequestedDate' => $requestedDate,
+                'Status' => $statusLabel,
+                'CreatedBy' => $need->creator?->Name ?? $need->CreatedByName ?? 'N/A',
             ];
 
             Log::info("Successfully fetched need details", $response);
-            
+
             return response()->json($response);
-            
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             Log::error("Authorization failed for need {$needId}: " . $e->getMessage());
+
             return response()->json(['error' => 'Unauthorized access'], 403);
         } catch (\Exception $e) {
             Log::error("Error fetching need details for {$needId}: " . $e->getMessage());
             Log::error($e->getTraceAsString());
+
             return response()->json([
                 'error' => 'Failed to load data',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -181,7 +186,7 @@ class ConsolidatedDashboardController extends Controller
     public function create()
     {
         $this->authorize('create', DepartmentNeed::class);
-        
+
         $branches = DepartmentNeed::distinct()->pluck('branch');
         $departments = DepartmentNeed::distinct()->pluck('department');
 

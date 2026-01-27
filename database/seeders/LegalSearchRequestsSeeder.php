@@ -67,7 +67,7 @@ class LegalSearchRequestsSeeder extends Seeder
                 // ->where('RegistrationNumber', $request['RegistrationNumber'])
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('t_LegalSearchRequests')->insert([
                     'RequestType' => $request['RequestType'],
                     'EntityName' => $request['EntityName'],

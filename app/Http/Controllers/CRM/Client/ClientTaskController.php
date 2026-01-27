@@ -30,6 +30,7 @@ class ClientTaskController extends Controller
     public function index(Client $client): JsonResponse
     {
         $this->authorize('viewAny', Task::class);
+
         return $this->tasks($client->tasks());
     }
 
@@ -47,8 +48,9 @@ class ClientTaskController extends Controller
 
         try {
             $activity = $this->save($client, $notes, $dated, $assignee, $actor);
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error adding  Client Task. e: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 
@@ -66,15 +68,17 @@ class ClientTaskController extends Controller
         $actor = $request->user();
 
         $task = $client->tasks()->where('TaskID', $task_id)->first();
-        if (!$task instanceof Task) {
+        if (! $task instanceof Task) {
             return $this->errored('Task not found');
         }
         $this->authorize('update', $task);
         $dated = $request->getDated(/*$task->Dated*/ now());
+
         try {
             $this->change($task, $notes, $dated, $actor);
         } catch (Exception $e) {
             Log::error('Error updating  Client Task. e: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 

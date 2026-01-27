@@ -35,7 +35,6 @@ class Client extends Model
     protected $connection = 'sqlsrv';
     protected $table = 'syn_t_Client';
 
-
     public function photo(): BelongsTo
     {
         return $this->belongsTo(ImageAccount::class, 'PhotoID', 'ImageID');
@@ -132,6 +131,7 @@ class Client extends Model
         if ($photo instanceof ImageAccount) {
             return (new ImageService($photo))->get_image($attr, $placeholder);
         }
+
         return ($placeholder)
             ? '<img src="https://placehold.co/200x200?font=roboto&text=No+Image" ' . $attr . '/>'
             : '';
@@ -143,6 +143,7 @@ class Client extends Model
         if ($photo instanceof ImageAccount) {
             return (new ImageService($this->signature))->get_image($attr, $placeholder);
         }
+
         return ($placeholder)
             ? '<img src="https://placehold.co/200x200?font=roboto&text=No+Signature" ' . $attr . '/>'
             : '';
@@ -204,9 +205,9 @@ class Client extends Model
     protected function casts(): array
     {
         return [
-                'OpenedDate'   => 'datetime',
-                'CreatedOn'    => 'datetime',
-                'ModifiedOn'   => 'datetime',
+                'OpenedDate' => 'datetime',
+                'CreatedOn' => 'datetime',
+                'ModifiedOn' => 'datetime',
                 'SupervisedOn' => 'datetime',
                ];
     }

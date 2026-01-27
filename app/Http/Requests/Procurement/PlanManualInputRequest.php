@@ -35,6 +35,7 @@ class PlanManualInputRequest extends FormRequest
                 'notes' => 'nullable|string|max:1000',
             ];
         }
+
         return [
             'PlanID' => 'required|exists:t_ConsolidatedProcurementPlan,PlanID',
             'ItemID' => 'required|exists:t_items,Id',
@@ -62,7 +63,7 @@ class PlanManualInputRequest extends FormRequest
                     })
                     ->exists();
 
-                if (!$hasValidPrice) {
+                if (! $hasValidPrice) {
                     $validator->errors()->add('ItemID', 'Selected item has no estimated cost configured.');
                 }
             }

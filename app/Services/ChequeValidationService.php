@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Finance\ChequeBook;
 use App\Models\Finance\Cheque;
+use App\Models\Finance\ChequeBook;
 
 class ChequeValidationService
 {
@@ -50,7 +50,7 @@ class ChequeValidationService
         }
 
         // Check if transition exists in matrix
-        if (!isset(self::VALID_TRANSITIONS[$currentStatus])) {
+        if (! isset(self::VALID_TRANSITIONS[$currentStatus])) {
             return false;
         }
 
@@ -84,7 +84,7 @@ class ChequeValidationService
         if ($hasUsedLeaves) {
             return [
                 'canDelete' => false,
-                'reason' => 'Cannot delete cheque book: One or more leaves have been used or are not available.'
+                'reason' => 'Cannot delete cheque book: One or more leaves have been used or are not available.',
             ];
         }
 
@@ -157,10 +157,10 @@ class ChequeValidationService
     {
         $validSizes = [25, 50, 100];
 
-        if (!in_array($size, $validSizes)) {
+        if (! in_array($size, $validSizes)) {
             return [
                 'isValid' => false,
-                'reason' => 'Invalid book size. Allowed sizes are: 25, 50, or 100 leaves.'
+                'reason' => 'Invalid book size. Allowed sizes are: 25, 50, or 100 leaves.',
             ];
         }
 
@@ -176,10 +176,10 @@ class ChequeValidationService
      */
     public function canPost(string $currentStatus): array
     {
-        if (!in_array($currentStatus, ['U', 'PD'])) {
+        if (! in_array($currentStatus, ['U', 'PD'])) {
             return [
                 'canPost' => false,
-                'reason' => 'Cheque must be in "Used" or "Post-Dated" status before posting.'
+                'reason' => 'Cheque must be in "Used" or "Post-Dated" status before posting.',
             ];
         }
 
@@ -195,10 +195,10 @@ class ChequeValidationService
      */
     public function canClearOrBounce(string $currentStatus): array
     {
-        if (!in_array($currentStatus, ['P', 'PR'])) {
+        if (! in_array($currentStatus, ['P', 'PR'])) {
             return [
                 'canClearOrBounce' => false,
-                'reason' => 'Cheque must be in "Posted" or "Presented" status before clearing or bouncing.'
+                'reason' => 'Cheque must be in "Posted" or "Presented" status before clearing or bouncing.',
             ];
         }
 
@@ -241,7 +241,7 @@ class ChequeValidationService
         $errors = [];
 
         // Check if transition is valid
-        if (!$this->validateStatusTransition($cheque->Status, $newStatus)) {
+        if (! $this->validateStatusTransition($cheque->Status, $newStatus)) {
             $errors[] = sprintf(
                 'Invalid status transition from %s to %s',
                 $this->getStatusName($cheque->Status),
@@ -252,7 +252,7 @@ class ChequeValidationService
         // Special rule: Cannot post without being Used or PDC
         if ($newStatus === 'P') {
             $canPost = $this->canPost($cheque->Status);
-            if (!$canPost['canPost']) {
+            if (! $canPost['canPost']) {
                 $errors[] = $canPost['reason'];
             }
         }
@@ -260,14 +260,14 @@ class ChequeValidationService
         // Special rule: Cannot clear/bounce without being Posted or Presented
         if (in_array($newStatus, ['C', 'B'])) {
             $canClearBounce = $this->canClearOrBounce($cheque->Status);
-            if (!$canClearBounce['canClearOrBounce']) {
+            if (! $canClearBounce['canClearOrBounce']) {
                 $errors[] = $canClearBounce['reason'];
             }
         }
 
         return [
             'isValid' => empty($errors),
-            'errors' => $errors
+            'errors' => $errors,
         ];
     }
 }

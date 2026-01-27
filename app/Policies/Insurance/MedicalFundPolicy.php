@@ -20,14 +20,17 @@ class MedicalFundPolicy
     {
         return $user->can(PermissionEnum::MedicalFundCreate->value);
     }
+
     public function view(User $user, MedicalFund $medicalFund): bool
     {
         return $user->can(PermissionEnum::MedicalFundView->value);
     }
+
     public function update(User $user, MedicalFund $medicalFund): bool
     {
         return $user->can(PermissionEnum::MedicalFundUpdate->value);
     }
+
     public function destroy(User $user, MedicalFund $medicalFund): bool
     {
         return $user->can(PermissionEnum::MedicalFundDelete->value);

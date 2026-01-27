@@ -39,6 +39,7 @@ class TaskController extends Controller
             //tasks due this week and once completed today
             return $this->tasks($query);
         }
+
         return $this->errored('not allowed');
         //return view('crm.base.tasks.index');
     }
@@ -58,7 +59,7 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task): JsonResponse
     {
-        if (!is_null($task->CompletedOn) && $task->CompletedOn instanceof Carbon && $task->CompletedOn->lessThan(now()->subDay())) {
+        if (! is_null($task->CompletedOn) && $task->CompletedOn instanceof Carbon && $task->CompletedOn->lessThan(now()->subDay())) {
             return $this->errored('old task, cannot restore');
         }
         $message = is_null($task->CompletedOn) ? 'task completed' : 'task restored';
@@ -72,13 +73,15 @@ class TaskController extends Controller
      */
     public function destroy(Request $request, Task $task): JsonResponse
     {
-        if (!is_null($task->CompletedOn)) {
+        if (! is_null($task->CompletedOn)) {
             return $this->errored('closed task, cannot cancel');
         }
+
         try {
             $activity = $this->cancel($task, $request->user());
         } catch (Exception $e) {
             Log::error('Error canceling  Lead Task. e: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 

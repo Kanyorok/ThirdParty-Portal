@@ -43,7 +43,9 @@ class TicketService extends ApprovalWorkflowService
 
     public const string ALL = 'all';
 
-    public function __construct(public Ticket $ticket) {}
+    public function __construct(public Ticket $ticket)
+    {
+    }
 
     /**
      * @throws ErroredException
@@ -52,6 +54,7 @@ class TicketService extends ApprovalWorkflowService
     {
         $service = self::_create($client->ClientID, Client::getPrimaryKey(), $category, $title, $description, $actor, $Source, $SourceID, $priority, $start, $end, $SourceTicketID);
         $service->sendMessage('New ticket (Ticket ID: #' . $service->ticket->TicketID . ') has been created for your issue, you will receive updates', $actor, $client);
+
         return $service;
     }
 
@@ -83,6 +86,7 @@ class TicketService extends ApprovalWorkflowService
         ])->save();
 
         activity()->causedBy($actor)->performedOn($ticket->refresh())->event('create')->log('Created ticket ' . $ticket->TicketID);
+
         return (new self($ticket))->addWatcher($actor, RoleEnum::Write, SystemHelper::user(), false);
     }
 
@@ -112,6 +116,7 @@ class TicketService extends ApprovalWorkflowService
     public function addWatcher(User|Team $assignee, RoleEnum $role, User $actor, bool $notify = true): static
     {
         $this->_addPermissions($this->ticket, $assignee, $role, $actor, $notify);
+
         return $this;
     }
 
@@ -124,15 +129,18 @@ class TicketService extends ApprovalWorkflowService
         if (is_null($model)) {
             $loop++;
             $this->sendMessage($message, $actor, $this->ticket->party, $loop);
+
             return;
         }
 
         if ($model instanceof Client) {
             (new ClientService($model))->sendMessage($message, $actor);
+
             return;
         }
         if ($model instanceof User) {
             (new UserService($model))->sendMessage($message, $actor);
+
             return;
         }
         if ($model instanceof Lead) {
@@ -155,6 +163,7 @@ class TicketService extends ApprovalWorkflowService
     {
         $service = self::_create($lead->LeadID, Lead::getPrimaryKey(), $category, $title, $description, $actor, $Source, $SourceID, $priority, $start, $end);
         $service->sendMessage('New ticket (Ticket ID: #' . $service->ticket->TicketID . ') has been created for your issue, you will receive updates', $actor, $lead);
+
         return $service;
     }
 
@@ -168,11 +177,13 @@ class TicketService extends ApprovalWorkflowService
                 if (in_array('category', $with, true)) {
                     return $ticket->category?->Description;
                 }
+
                 return '';
             })->editColumn('party', function (Ticket $ticket) use ($with) {
                 if (in_array('party', $with, true)) {
                     return (new PartyService($ticket->party))->getDTRow();
                 }
+
                 return '';
             })->addColumn('Status', function (Ticket $ticket) {
                 return $ticket->status->Description;
@@ -188,11 +199,14 @@ class TicketService extends ApprovalWorkflowService
                 switch ($ticket->status->Value) {
                     case TicketStatusEnum::Cancelled->value:
                         $classes .= ' text-decoration-line-through';
+
                         break;
                     case TicketStatusEnum::Resolved->value:
                         $classes .= ' text-muted';
+
                         break;
                 }
+
                 return $classes;
             })->setRowData([
                 'dbl_click_url' => function (Ticket $ticket) {
@@ -269,6 +283,7 @@ class TicketService extends ApprovalWorkflowService
             'ModifiedBy' => $actor->Id,
         ]);
         activity()->causedBy($actor)->performedOn($this->ticket)->event('update')->log('Updated ticket ' . $this->ticket->TicketID);
+
         return $this;
     }
 
@@ -278,6 +293,7 @@ class TicketService extends ApprovalWorkflowService
     public function deleteWatcher(SpecialPermission $permission, User $actor): static
     {
         $this->ticket = $this->_trashPermissions($this->ticket, $permission, $actor);
+
         return $this;
     }
 
@@ -328,6 +344,7 @@ class TicketService extends ApprovalWorkflowService
         $this->ticket->update([
             'Priority' => $priority->value,
         ]);
+
         return $this;
     }
 
@@ -345,6 +362,7 @@ class TicketService extends ApprovalWorkflowService
 
         $this->sendMessage('Hello #name, Ticket ID: #' . $this->ticket->TicketID . ' has been resolved.', $actor);
         activity()->causedBy($actor)->performedOn($this->ticket)->event('closed')->log('Marked ticket ' . $this->ticket->TicketID . ' as resolved');
+
         return $this;
     }
 
@@ -391,6 +409,7 @@ class TicketService extends ApprovalWorkflowService
     public function comment(string $description, User $actor): Comment
     {
         activity()->causedBy($actor)->performedOn($this->ticket)->event('comment')->log('commented on ' . $this->ticket->TicketID);
+
         return CommentService::forTicket($this->ticket, $description, $actor)->comment;
     }
 
@@ -404,12 +423,12 @@ class TicketService extends ApprovalWorkflowService
         $this->ticket->forceFill([
             'StatusId' => $status->ID,
 
-            'ClosedOn' => null
+            'ClosedOn' => null,
         ])->save(['timestamps' => false]);
 
         $this->ticket->pendingWorkflows()->where('Stage', TicketStatusEnum::Approval)->update([
             'DeletedOn' => now(),
-            'DeletedBy' => $actor->Id
+            'DeletedBy' => $actor->Id,
         ]);
 
         $this->ticket->workflows()->create([
@@ -451,7 +470,7 @@ class TicketService extends ApprovalWorkflowService
 
         $this->ticket->pendingWorkflows()->where('Stage', TicketStatusEnum::Approval)->update([
             'DeletedOn' => now(),
-            'DeletedBy' => $actor->Id
+            'DeletedBy' => $actor->Id,
         ]);
 
         $this->ticket->workflows()->create([
@@ -491,6 +510,7 @@ class TicketService extends ApprovalWorkflowService
     {
         $document = ImageService::createUpload($file, Ticket::getPrimaryKey(), $this->ticket->Id, $actor)->image;
         activity()->causedBy($actor)->performedOn($this->ticket)->event('document')->log('added a document  ' . $document->Name . ' to ticket ' . Str::upper($this->ticket->TicketID));
+
         return $document;
     }
 
@@ -498,6 +518,7 @@ class TicketService extends ApprovalWorkflowService
     {
         $document = ImageService::create(Ticket::getPrimaryKey(), $this->ticket->Id, $content, $MimeType, $Name, $actor)->image;
         activity()->causedBy($actor)->performedOn($this->ticket)->event('document')->log('added a document  ' . $document->Name . ' to ticket ' . Str::upper($this->ticket->TicketID));
+
         return $document;
     }
 }

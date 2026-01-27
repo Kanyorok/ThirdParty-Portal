@@ -2,14 +2,13 @@
 
 namespace App\Services;
 
+use App\Models\Auth\User;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\ThirdParties\SupplierService;
 use App\Services\ThirdParties\TenantService;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use App\Models\Auth\User;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\DB;
 
 class RegistrationService
 {
@@ -20,15 +19,15 @@ class RegistrationService
             $systemUserId = $systemUser?->Id;
 
             // Fetch default Gender (required by DB) - Keep this as Step 1 still doesn't ask for Gender?
-            // User form (frontend) DOES NOT have Gender field? 
+            // User form (frontend) DOES NOT have Gender field?
             // Step 1 only has: Name, Email, Password, Phone.
             // So we still need a default Gender for the User record.
             $defaultGender = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'Gender')->where('Value', 'M')->first();
-            if (!$defaultGender) {
+            if (! $defaultGender) {
                 // Fallback or create? Best to just get any gender
                 $defaultGender = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'Gender')->first();
                 // If still null, create one?
-                if (!$defaultGender) {
+                if (! $defaultGender) {
                     // Risk of failure if table constrained. Assuming at least one exists or we create.
                     // For now, if null, we might still fail. Let's create dummy if desperately needed.
                     try {
@@ -58,7 +57,7 @@ class RegistrationService
                 'ModifiedBy' => $systemUserId ?? 1,
             ]);
 
-            if (!empty($userData['verification_base_url'])) {
+            if (! empty($userData['verification_base_url'])) {
                 $user->verificationBaseUrl = $userData['verification_base_url'];
             }
 
@@ -80,15 +79,15 @@ class RegistrationService
 
             // Fetch default BusinessType (e.g. Individual or first available)
             $businessTypeId = $thirdPartyData['BusinessType'] ?? null;
-            if (!$businessTypeId) {
+            if (! $businessTypeId) {
                 $bt = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'BusinessType')
                     ->where('Value', 'I') // Try Individual first
                     ->first();
-                if (!$bt) {
+                if (! $bt) {
                     $bt = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'BusinessType')->first();
                 }
 
-                if (!$bt) {
+                if (! $bt) {
                     try {
                         $bt = \App\Models\Core\Approval\CodeDetail::create([
                             'CodeID' => 'BusinessType',
@@ -107,10 +106,12 @@ class RegistrationService
 
             // Fetch default Country
             $countryId = $thirdPartyData['CountryId'] ?? null;
-            if (!$countryId) {
+            if (! $countryId) {
                 // Default to Kenya (KE) or first
                 $ct = \App\Models\Core\Country::where('CountryCode', 'KE')->first();
-                if (!$ct) $ct = \App\Models\Core\Country::first();
+                if (! $ct) {
+                    $ct = \App\Models\Core\Country::first();
+                }
                 $countryId = $ct?->Id ?? 1; // Hard fallback
             }
 
@@ -138,7 +139,7 @@ class RegistrationService
             $accountType = $thirdPartyData['accountType'] ?? 'supplier';
             $this->attachAccountType($thirdParty, $accountType, $user, $thirdPartyData);
 
-            if (!empty($thirdPartyData['ThirdPartyType'])) {
+            if (! empty($thirdPartyData['ThirdPartyType'])) {
                 DB::table('t_ThirdPartyType_ThirdParties')->insert([
                     'TypeId' => $thirdPartyData['ThirdPartyType'],
                     'ThirdPartyId' => $thirdParty->Id,
@@ -159,15 +160,16 @@ class RegistrationService
             case 'supplier':
                 SupplierService::createFromParty($thirdParty, $user);
 
-                if (!empty($data['supplierCategories'])) {
+                if (! empty($data['supplierCategories'])) {
                     $thirdParty->categories()->sync($data['supplierCategories']);
                 }
+
                 break;
 
             case 'tenant':
                 TenantService::createFromParty($thirdParty, $user);
 
-                if (!empty($data['tenantRemarks'])) {
+                if (! empty($data['tenantRemarks'])) {
                     $thirdParty->tenantProfile()->updateOrCreate(
                         ['ThirdPartyId' => $thirdParty->Id],
                         [
@@ -176,10 +178,12 @@ class RegistrationService
                         ]
                     );
                 }
+
                 break;
 
             case 'customer':
                 $this->attachCustomerType($thirdParty, $user, $data);
+
                 break;
         }
     }
@@ -188,9 +192,9 @@ class RegistrationService
     {
         $thirdParty->types()->syncWithoutDetaching([6 => [
             'PartyType' => 'ThirdPartyId',
-            'PartyID'   => $thirdParty->Id,
+            'PartyID' => $thirdParty->Id,
             'CreatedBy' => $user->Id,
-            'CreatedOn' => now()
+            'CreatedOn' => now(),
         ]]);
 
         $thirdParty->customerProfile()->updateOrCreate(

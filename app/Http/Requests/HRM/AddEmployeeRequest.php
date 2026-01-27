@@ -43,7 +43,7 @@ class AddEmployeeRequest extends FormRequest
             'DateOfBirth' => ['required'],
             'Address' => ['nullable', 'string', 'max:220'],
             'image' => ['nullable', Rule::imageFile()->max('2mb')],
-            'CreateUser' => ['sometimes', 'accepted']
+            'CreateUser' => ['sometimes', 'accepted'],
         ];
     }
 
@@ -57,6 +57,7 @@ class AddEmployeeRequest extends FormRequest
         if ($this->hasFile('image')) {
             return $this->file('image');
         }
+
         return null;
     }
 
@@ -79,9 +80,10 @@ class AddEmployeeRequest extends FormRequest
             throw ValidationException::withMessages([$name => 'invalid date format eg 2020-03-29']);
         }
 
-        if (!$date instanceof Carbon) {
+        if (! $date instanceof Carbon) {
             throw ValidationException::withMessages([$name => 'invalid date format eg 2020-03-29']);
         }
+
         return $date;
     }
 
@@ -102,6 +104,7 @@ class AddEmployeeRequest extends FormRequest
         if ($branch instanceof Branch) {
             return $branch;
         }
+
         throw ValidationException::withMessages(['Branch' => 'invalid branch']);
     }
 
@@ -111,6 +114,7 @@ class AddEmployeeRequest extends FormRequest
             return GenderEnum::fromValue($this->validated('Gender'));
         } catch (ErroredException) {
         }
+
         throw ValidationException::withMessages(['Gender' => 'invalid gender']);
     }
 
@@ -120,6 +124,7 @@ class AddEmployeeRequest extends FormRequest
         if ($department instanceof Department) {
             return $department;
         }
+
         throw ValidationException::withMessages(['Department' => 'invalid department']);
     }
 
@@ -129,7 +134,7 @@ class AddEmployeeRequest extends FormRequest
         // Trim spaces and enforce E.164 normalization
         $normalized = preg_replace('/\s+/', '', $input);
 
-        if (!is_string($normalized) || !preg_match('/^\+[1-9]\d{7,14}$/', $normalized)) {
+        if (! is_string($normalized) || ! preg_match('/^\+[1-9]\d{7,14}$/', $normalized)) {
             throw ValidationException::withMessages(['Phone' => 'invalid phone number, use E.164 e.g. +12025550123']);
         }
 
@@ -139,6 +144,7 @@ class AddEmployeeRequest extends FormRequest
         if ($userDup || $empDup) {
             throw ValidationException::withMessages(['Phone' => 'phone already exists']);
         }
+
         return $normalized;
     }
 
@@ -148,7 +154,7 @@ class AddEmployeeRequest extends FormRequest
         if (User::where('Email', $email)->exists() || Employee::where('Email', $email)->exists()) {
             throw ValidationException::withMessages(['Email' => 'email already exists']);
         }
-        return $email;
 
+        return $email;
     }
 }

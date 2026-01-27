@@ -16,6 +16,7 @@ class TenderInvitationPolicy
         if ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
             return true;
         }
+
         return $user->can(PermissionEnum::TenderInvitationRead->value);
     }
 

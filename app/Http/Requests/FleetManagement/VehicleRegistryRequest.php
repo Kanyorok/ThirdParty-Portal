@@ -33,5 +33,4 @@ class VehicleRegistryRequest extends FormRequest
 
         ];
     }
-
 }

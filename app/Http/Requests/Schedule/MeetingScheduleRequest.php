@@ -46,6 +46,7 @@ class MeetingScheduleRequest extends FormRequest
                 return $room;
             }
         }
+
         return $location;
     }
 
@@ -55,7 +56,7 @@ class MeetingScheduleRequest extends FormRequest
     public function getEnd(Carbon $start): Carbon
     {
         $end = Carbon::createFromFormat('Y-m-d H:i', $this->validated('meeting_end'));
-        if (!$end instanceof Carbon) {
+        if (! $end instanceof Carbon) {
             throw ValidationException::withMessages(['meeting_start' => 'invalid date format']);
         }
 
@@ -82,7 +83,7 @@ class MeetingScheduleRequest extends FormRequest
     public function getAssignees(): Collection
     {
         $users = User::query()->whereIn('t_Users.UserID', $this->validated('meeting_users'))->where('t_Users.UserID', '!=', SystemHelper::ID)->get(['Id', 'UserID']);
-        if (!$users->count() === 0) {
+        if (! $users->count() === 0) {
             throw ValidationException::withMessages(['meeting_users' => 'no users selected']);
         }
 
@@ -91,9 +92,10 @@ class MeetingScheduleRequest extends FormRequest
         }
 
 
-        if (!$this->user()->can(PermissionEnum::ScheduleWrite->value)) {
+        if (! $this->user()->can(PermissionEnum::ScheduleWrite->value)) {
             throw ValidationException::withMessages(['meeting_users' => 'You dont have permission to add people to meetings.']);
         }
+
         return $users;
     }
 
@@ -106,6 +108,7 @@ class MeetingScheduleRequest extends FormRequest
         if ($start instanceof Carbon) {
             return $start;
         }
+
         throw ValidationException::withMessages(['meeting_start' => 'invalid date format']);
     }
 }

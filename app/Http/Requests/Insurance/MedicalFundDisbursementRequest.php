@@ -22,15 +22,15 @@ class MedicalFundDisbursementRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'FundId'           => 'required|exists:t_MedicalFunds,Id',
-            'ContributorId'    => 'nullable|exists:t_MedicalFundContributors,Id',
-            'BeneficiaryId'    => 'required|exists:t_MedicalFundBeneficiaries,Id',
+            'FundId' => 'required|exists:t_MedicalFunds,Id',
+            'ContributorId' => 'nullable|exists:t_MedicalFundContributors,Id',
+            'BeneficiaryId' => 'required|exists:t_MedicalFundBeneficiaries,Id',
             // use Id suffix to match form inputs and controller usage
-            'CoverageId'       => 'nullable|exists:t_Coverages,Id',
-            'PackageId'        => 'nullable|exists:t_MedicalFundPackages,Id',
+            'CoverageId' => 'nullable|exists:t_Coverages,Id',
+            'PackageId' => 'nullable|exists:t_MedicalFundPackages,Id',
             'DisbursementDate' => 'required|date',
-            'Amount'           => 'required|numeric|min:0.01',
-            'Purpose'          => 'nullable|string|max:500',
+            'Amount' => 'required|numeric|min:0.01',
+            'Purpose' => 'nullable|string|max:500',
         ];
     }
 }

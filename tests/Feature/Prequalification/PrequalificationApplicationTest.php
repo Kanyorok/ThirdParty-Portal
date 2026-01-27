@@ -3,10 +3,9 @@
 namespace Tests\Feature\Prequalification;
 
 use App\Models\Auth\User;
-use App\Models\Procurement\Prequalification\PrequalificationRound;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
+use App\Models\Procurement\Prequalification\PrequalificationRound;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class PrequalificationApplicationTest extends TestCase
@@ -60,7 +59,7 @@ class PrequalificationApplicationTest extends TestCase
 
         $response->assertStatus(409)
             ->assertJsonStructure([
-                'message', 'applicationId', 'roundId'
+                'message', 'applicationId', 'roundId',
             ]);
     }
 

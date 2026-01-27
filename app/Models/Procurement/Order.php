@@ -3,9 +3,7 @@
 namespace App\Models\Procurement;
 
 use App\Models\Auth\User;
-use App\Models\Inventory\ItemMasterList;
 use App\Models\ThirdParty\Supplier;
-use App\Models\Core\Approval\WorkflowHistory;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,11 +12,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Order extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $connection = 'sqlsrv';
     protected $table = 't_Orders';
@@ -47,7 +46,7 @@ class Order extends Model
         'Notes',
         'DeliveryTerms',
         'CreatedBy',
-        'ModifiedBy'
+        'ModifiedBy',
     ];
 
     protected $casts = [
@@ -56,7 +55,7 @@ class Order extends Model
         'CreatedBy' => 'integer',
         'ModifiedBy' => 'integer',
         'AccountID' => 'integer',
-        'BranchID' => 'integer'
+        'BranchID' => 'integer',
     ];
 
     // **RELATIONSHIPS**
@@ -116,7 +115,7 @@ class Order extends Model
      */
     public function isContractBased(): bool
     {
-        return $this->OriginationType === 'contract' && !empty($this->ContractRef);
+        return $this->OriginationType === 'contract' && ! empty($this->ContractRef);
     }
 
     /**
@@ -124,7 +123,7 @@ class Order extends Model
      */
     public function isAwardBased(): bool
     {
-        return $this->OriginationType === 'award' && !empty($this->AwardRef);
+        return $this->OriginationType === 'award' && ! empty($this->AwardRef);
     }
 
     /**
@@ -132,7 +131,7 @@ class Order extends Model
      */
     public function isDirectProcurement(): bool
     {
-        return $this->OriginationType === 'direct_procurement' && !empty($this->PlanRef);
+        return $this->OriginationType === 'direct_procurement' && ! empty($this->PlanRef);
     }
 
     /**
@@ -140,7 +139,7 @@ class Order extends Model
      */
     public function isRFQBased(): bool
     {
-        return $this->OriginationType === 'rfq' && !empty($this->ExtOrdNum);
+        return $this->OriginationType === 'rfq' && ! empty($this->ExtOrdNum);
     }
 
     /**
@@ -178,6 +177,7 @@ class Order extends Model
     {
         $lastOrder = static::latest('Id')->first();
         $nextId = ($lastOrder?->Id ?? 0) + 1;
+
         return 'LPO-' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
     }
 
@@ -217,9 +217,9 @@ class Order extends Model
             ->whereNull('DeletedOn');
     }
 
-     /**
-     * Check if order is approved
-     */
+    /**
+    * Check if order is approved
+    */
     public function isApproved(): bool
     {
         return $this->DocStatus === 'a';
@@ -254,10 +254,9 @@ class Order extends Model
      */
     public function scopePending($query)
     {
-        return $query->where(function($q) {
+        return $query->where(function ($q) {
             $q->where('DocStatus', 'p')
               ->orWhereNull('DocStatus');
         });
     }
-
 }

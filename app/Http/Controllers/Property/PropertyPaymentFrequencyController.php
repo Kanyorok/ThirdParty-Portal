@@ -3,19 +3,20 @@
 namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\PropertyManagement\PropertyPaymentFrequency;
+use Illuminate\Http\Request;
 
 class PropertyPaymentFrequencyController extends Controller
 {
-    //
     public function index()
     {
         $properties = PropertyPaymentFrequency::all();
+
         return view('property.tenantmanagement.leasemanagement.paymentfrequency.index', compact('properties'));
     }
 
-    public function create(){
+    public function create()
+    {
         return view('property.tenantmanagement.leasemanagement.paymentfrequency.create');
     }
 
@@ -37,8 +38,8 @@ class PropertyPaymentFrequencyController extends Controller
             'CreatedBy' => auth()->user()->Id,
             'ModifiedBy' => auth()->user()->Id,
         ]);
+
         // dd('validation passed');
         return redirect()->route('paymentfrequency.index')->with('success', 'Payment frequency created successfully');
-
     }
 }

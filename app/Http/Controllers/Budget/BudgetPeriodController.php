@@ -6,25 +6,22 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetActivity;
-use App\Models\Budget\BudgetGLMaster;
 use App\Models\Budget\BudgetGLMasterAllocations;
 use App\Models\Budget\BudgetGLsAttachments;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetManualEntry;
-use App\Models\Budget\BudgetProjection;
-use App\Models\Budget\BudgetProjectionData;
-use Illuminate\Http\Request;
 use App\Models\Budget\BudgetPeriods;
 use App\Models\Budget\BudgetPeriodTypes;
-use App\Models\Budget\BudgetProductType;
+use App\Models\Budget\BudgetProjection;
+use App\Models\Budget\BudgetProjectionData;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BudgetPeriodController extends Controller
 {
-    //
     public function index()
     {
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetPeriods::class);
@@ -84,8 +81,6 @@ class BudgetPeriodController extends Controller
         return view('budgetandanalytics.budgetperiod.create', compact('types', 'glSubtypes', 'glAccounts'));
     }
 
-
-
     public function store(Request $request)
     {
         $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetLine::class);
@@ -108,6 +103,7 @@ class BudgetPeriodController extends Controller
             ],
         ]);
         DB::beginTransaction();
+
         try {
             // Create the budget
             $budget = Budget::create([
@@ -125,7 +121,7 @@ class BudgetPeriodController extends Controller
             // Handle selected GLs
             $selectedGls = json_decode($validated['selected_gls'] ?? '[]', true);
 
-            if (!empty($selectedGls)) {
+            if (! empty($selectedGls)) {
                 foreach ($selectedGls as $gl) {
                     BudgetGLsAttachments::create([
                         'BudgetID' => $budget->Id,
@@ -151,6 +147,7 @@ class BudgetPeriodController extends Controller
                 ->log('Created a budget');
 
             DB::commit();
+
             return redirect()->route('budgetperiod.index')->with('success', 'Budget created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -159,7 +156,6 @@ class BudgetPeriodController extends Controller
             return back()->withErrors(['error' => 'Failed to create Budget'])->withInput();
         }
     }
-
 
     public function show($id)
     {
@@ -183,11 +179,12 @@ class BudgetPeriodController extends Controller
             return view('budgetandanalytics.budgetperiod.show', compact('budget', 'glAttachments', 'glAccountTypes'));
         } catch (\Throwable $th) {
             Log::error('Failed to load budget: ' . $th->getMessage());
+
             return $th->getMessage();
+
             return redirect()->route('budgetperiod.index')->withErrors(['error' => 'Failed to load budget']);
         }
     }
-
 
     public function edit($id)
     {
@@ -212,6 +209,7 @@ class BudgetPeriodController extends Controller
             ->whereNotIn('AccountID', $attachedAccountIDs)
             ->get();
         $budget = Budget::find($id);
+
         return view('budgetandanalytics.budgetperiod.edit', compact('types', 'glSubtypes', 'glAccounts', 'budget'));
 
         //return$budgetGLAttachments=BudgetGLsAttachments::select('Id','BudgetID','AccountID','GLID','GLAccountTypeID','Description')->where('BudgetID',$id)->get();
@@ -220,7 +218,6 @@ class BudgetPeriodController extends Controller
         //        $types = BudgetPeriodTypes::all();
         //        return view('budgetandanalytics.budgetperiod.edit', compact('periods', 'types'));
     }
-
 
     public function update(Request $request, $id)
     {
@@ -265,11 +262,10 @@ class BudgetPeriodController extends Controller
         }
     }
 
-
-
     public function destroy(string $id)
     {
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetPeriods::class);
+
         try {
             $period = BudgetPeriods::findOrFail($id); // safer: throws 404 if not found
             $period->DeletedBy = Auth::Id();
@@ -284,10 +280,10 @@ class BudgetPeriodController extends Controller
             return redirect()->route('budgetperiod.index')->with('Success', 'Period Deleted Successfully');
         } catch (\Throwable $th) {
             Log::error('---DELETE PERIOD ERROR---' . $th->getMessage());
+
             return redirect()->route('budgetperiod.index')->with('error', 'Failed to delete Period. Please try again.');
         }
     }
-
 
     public function delGLAttachment($id)
     {
@@ -316,12 +312,15 @@ class BudgetPeriodController extends Controller
                 ->withProperties(['action' => 'delete'])
                 ->log('Deleted GL Attachment Successfully: ' . $id);
             DB::commit();
+
             return back()->with('success', 'GL Attachment deleted successfully.');
             //return response()->json(['success' => true, 'message' => 'GL Attachment deleted successfully.']);
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return $th->getMessage();
             Log::error('Failed to delete GL Attachment: ' . $th->getMessage());
+
             return response()->json(['success' => false, 'message' => 'Failed to delete GL Attachment.'], 500);
         }
     }
@@ -335,7 +334,7 @@ class BudgetPeriodController extends Controller
                 'string',
                 function ($attribute, $value, $fail) {
                     $gls = json_decode($value, true);
-                    if (!is_array($gls) || empty($gls)) {
+                    if (! is_array($gls) || empty($gls)) {
                         $fail('At least one GL account must be selected.');
                     }
                 },
@@ -344,6 +343,7 @@ class BudgetPeriodController extends Controller
 
         $budgetID = $request->budgetID;
         DB::beginTransaction();
+
         try {
             // Handle selected GLs
             $selectedGls = json_decode($validated['selected_gls'], true);
@@ -398,9 +398,11 @@ class BudgetPeriodController extends Controller
                 ->log('Created a budget');
 
             DB::commit();
+
             return redirect()->route('budgetperiod.index')->with('success', 'GL Attached Successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return $th->getMessage();
             Log::error('Failed to attach GLs: ' . $th->getMessage());
 
@@ -449,11 +451,13 @@ class BudgetPeriodController extends Controller
                 ->withProperties(['action' => 'delete'])
                 ->log('Deleted a budget');
             DB::commit();
+
             return back()->with('success', 'Budget Deleted Successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
             Log::error('Failed to delete Budget: ' . $th->getMessage());
+
             return back()->withErrors(['error' => 'Failed to delete Budget. Please try again.']);
         }
     }

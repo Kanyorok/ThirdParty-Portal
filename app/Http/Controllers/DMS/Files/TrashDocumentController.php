@@ -38,7 +38,6 @@ class TrashDocumentController extends Controller
      */
     public function store(Request $request)
     {
-        //
     }
 
     /**
@@ -48,19 +47,21 @@ class TrashDocumentController extends Controller
     {
         $actor = $request->user();
         $document = Document::onlyTrashed()->where('DocumentId', $documentId)->user($actor)->first();
-        if (!$document instanceof Document) {
+        if (! $document instanceof Document) {
             return $this->errored('file not found');
         }
 
         try {
             return DB::transaction(function () use ($document, $actor) {
                 (new DocumentService($document))->restore($actor);
+
                 return $this->succeeded('file restored successfully.');
             });
-        } catch (\Exception|\Throwable $e) {
+        } catch (\Exception | \Throwable $e) {
             Log::error("Error restoring document {$document->Id} : ");
             Log::error($e);
         }
+
         return $this->errored('an unexpected error occurred, try again later');
     }
 
@@ -69,6 +70,5 @@ class TrashDocumentController extends Controller
      */
     public function destroy(string $id)
     {
-        //
     }
 }

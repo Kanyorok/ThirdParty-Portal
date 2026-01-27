@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Collateral extends Model
 {
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
     public $incrementing = false;
     public $timestamps = false;
     //protected $connection = 'brcbs';
@@ -18,7 +18,7 @@ class Collateral extends Model
     protected $primaryKey = 'CollateralID';
 
     protected $casts = [
-                        'LodgedDate'      => 'datetime',
+                        'LodgedDate' => 'datetime',
                         'CollateralValue' => 'decimal:2',
                        ];
 

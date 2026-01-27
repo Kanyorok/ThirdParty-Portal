@@ -2,25 +2,24 @@
 
 namespace App\Http\Controllers\Procurement\ThirdParties;
 
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\ThirdParty\ThirdPartyUser;
-use App\Http\Requests\ThirdParty\RegisterThirdPartyUserRequest;
 use App\Http\Requests\ThirdParty\Api\LoginThirdPartyRequest;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use App\Http\Requests\ThirdParty\RegisterThirdPartyUserRequest;
 use App\Http\Resources\ThirdParty\Api\ThirdPartyResource;
-use App\Services\RegistrationService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Auth\Events\Verified;
-use Illuminate\Support\Facades\Log;
-use App\Models\ThirdParty\ThirdParties;
+use App\Models\Bancassurance\BancassuranceCustomer;
 use App\Models\Procurement\Suppliers\SupplierMaster;
 use App\Models\Property\PropertyNewTenant;
-
-use App\Models\Bancassurance\BancassuranceCustomer;
-use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Models\ThirdParty\ThirdParties;
+use App\Models\ThirdParty\ThirdPartyUser;
+use App\Services\RegistrationService;
+use Illuminate\Auth\Events\Verified;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class ThirdPartyAuthController extends Controller
 {
@@ -47,7 +46,7 @@ class ThirdPartyAuthController extends Controller
                     'email' => $user->Email,
                     'firstName' => $user->FirstName,
                     'lastName' => $user->LastName,
-                ]
+                ],
             ], 201);
         } catch (\Exception $e) {
             Log::channel('single')->error('Third-party registration failed', [
@@ -60,6 +59,7 @@ class ThirdPartyAuthController extends Controller
                 'route' => optional($request->route())->getName(),
                 'payload' => $request->except(['Password', 'Password_confirmation']),
             ]);
+
             return response()->json([
                 'message' => __('auth.registration_failed'),
                 'error' => config('app.debug') ? $e->getMessage() : null,
@@ -77,11 +77,11 @@ class ThirdPartyAuthController extends Controller
 
             if (! $user || ! Hash::check($request->password, $user->Password)) {
                 throw ValidationException::withMessages([
-                    'email' => __('auth.invalid_credentials')
+                    'email' => __('auth.invalid_credentials'),
                 ]);
             }
 
-            if (!$user->isActive()) {
+            if (! $user->isActive()) {
                 return response()->json(['message' => __('auth.account_inactive')], 403);
             }
             if (! $user->isApproved()) {
@@ -116,7 +116,7 @@ class ThirdPartyAuthController extends Controller
 
 
 
-            if (!$isAuthorized) {
+            if (! $isAuthorized) {
                 return response()->json(['message' => 'Your account is not authorized for the selected profile type.'], 403);
             }
 
@@ -180,6 +180,7 @@ class ThirdPartyAuthController extends Controller
             throw $e;
         } catch (\Exception $e) {
             Log::error("Third Party Login Failed: " . $e->getMessage(), ['exception' => $e]);
+
             return response()->json([
                 'message' => __('auth.login_failed'),
                 'error' => config('app.debug') ? $e->getMessage() : null,
@@ -191,7 +192,7 @@ class ThirdPartyAuthController extends Controller
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['valid' => false], 401);
         }
 
@@ -199,7 +200,7 @@ class ThirdPartyAuthController extends Controller
 
         $isActive = $user->isApproved();
 
-        if (!$isActive) {
+        if (! $isActive) {
             return response()->json(['valid' => false, 'message' => __('auth.account_unauthorized')], 403);
         }
 
@@ -217,7 +218,7 @@ class ThirdPartyAuthController extends Controller
         // If no third party, still valid user (Setup Phase)
         return response()->json([
             'valid' => true,
-            'thirdParty' => null
+            'thirdParty' => null,
         ]);
     }
 
@@ -226,6 +227,7 @@ class ThirdPartyAuthController extends Controller
         try {
             if (Auth::guard('sanctum')->check()) {
                 $request->user()->currentAccessToken()->delete();
+
                 return response()->json(['message' => __('auth.logout_successful')]);
             }
 
@@ -259,8 +261,8 @@ class ThirdPartyAuthController extends Controller
                 'message' => __('auth.email_verified'),
                 'user' => [
                     'id' => $user->Id,
-                    'email' => $user->Email
-                ]
+                    'email' => $user->Email,
+                ],
             ], 200);
         }
 
@@ -271,7 +273,7 @@ class ThirdPartyAuthController extends Controller
             return response()->json(['message' => __('auth.invalid_verification_link')], 403);
         }
 
-        if (!$thirdParty->hasVerifiedEmail()) {
+        if (! $thirdParty->hasVerifiedEmail()) {
             if ($thirdParty->markEmailAsVerified()) {
                 event(new Verified($thirdParty));
             }
@@ -280,8 +282,8 @@ class ThirdPartyAuthController extends Controller
         return response()->json([
             'message' => __('auth.email_verified'),
             'user' => [ // Fallback or maybe null if it's a party verification
-                'id' => null
-            ]
+                'id' => null,
+            ],
         ], 200);
     }
 
@@ -291,8 +293,9 @@ class ThirdPartyAuthController extends Controller
         // Step 1 user is logged in automatically after registration.
         // If request is from the "Check your email" screen, it's likely for the User.
         $user = Auth::guard('sanctum')->user();
-        if ($user instanceof ThirdPartyUser && !$user->hasVerifiedEmail()) {
+        if ($user instanceof ThirdPartyUser && ! $user->hasVerifiedEmail()) {
             $user->sendEmailVerificationNotification();
+
             return response()->json(['message' => __('auth.verification_link_sent')], 200);
         }
 
@@ -318,7 +321,7 @@ class ThirdPartyAuthController extends Controller
         // Check if user exists
         $user = ThirdPartyUser::where('Email', $request->email)->first();
 
-        if (!$user) {
+        if (! $user) {
             // Return success even if user not found to prevent enumeration
             return response()->json(['message' => __('passwords.sent')]);
         }
@@ -350,7 +353,7 @@ class ThirdPartyAuthController extends Controller
             $credentials,
             function ($user, $password) {
                 $user->forceFill([
-                    'Password' => Hash::make($password)
+                    'Password' => Hash::make($password),
                 ])->save();
 
                 $user->setRememberToken(Str::random(60));

@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewLease;
-use App\Models\Core\Approval\CodeDetail;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class PropertyLeaseScheduleSeeder extends Seeder
 {
@@ -16,8 +16,9 @@ class PropertyLeaseScheduleSeeder extends Seeder
 
         // Get existing lease
         $lease = PropertyNewLease::first(); // You can scope this more specifically
-        if (!$lease) {
+        if (! $lease) {
             $this->command->warn('No lease found. Seed PropertyNewLease first.');
+
             return;
         }
 
@@ -26,8 +27,9 @@ class PropertyLeaseScheduleSeeder extends Seeder
             ->where('Description', 'Monthly')
             ->first();
 
-        if (!$frequency) {
+        if (! $frequency) {
             $this->command->warn('Payment frequency "Monthly" not found.');
+
             return;
         }
 

@@ -8,7 +8,6 @@ use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
 use App\Http\Resources\ThirdParty\Api\ThirdPartyResource;
 use App\Models\ThirdParty\ThirdParties;
 use App\Services\ThirdParties\ThirdPartyService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -51,7 +50,7 @@ class ThirdPartiesController extends Controller
             $actor = $request->user();
         }
 
-        if (!$actor) {
+        if (! $actor) {
             return response()->json(['message' => 'User could not be identified.'], 401);
         }
 
@@ -78,7 +77,7 @@ class ThirdPartiesController extends Controller
                 'DateOfBirth' => $request->date('customer_DateOfBirth'),
                 'Gender' => $request->getGender('customer_Gender'),
                 'MaritalStatus' => $request->getMaritalStatus(),
-                'Occupation' => $request->getOccupation()
+                'Occupation' => $request->getOccupation(),
             ];
         }
 
@@ -119,7 +118,7 @@ class ThirdPartiesController extends Controller
                     );
                 } else {
                     // Create New Party for the authenticated User (Step 2 of Registration)
-                    // We need to use RegistrationService or ThirdPartyService manually? 
+                    // We need to use RegistrationService or ThirdPartyService manually?
                     // RegistrationService has 'createThirdPartyForUser' which links them.
 
                     // Let's use RegistrationService's logic here or replicate it via ThirdPartyService + Manual Link.
@@ -156,9 +155,9 @@ class ThirdPartiesController extends Controller
                     // But ThirdPartyService::create handles creation of sub-entities (Supplier/Tenant).
                     // Does it add the 'types' pivot?
                     // Earlier analysis suggested we might need to sync types.
-                    // Let's rely on standard logic. If ThirdPartyService handles it, great. 
+                    // Let's rely on standard logic. If ThirdPartyService handles it, great.
                     // If not, we can add:
-                    // $service->party->types()->sync($request->array('types')); 
+                    // $service->party->types()->sync($request->array('types'));
                     // But let's trust the service or check if 'create' does it.
                     // Referring back to 'ThirdPartyService::create': it does `match($type) -> addTenant/Supplier`.
                     // It does NOT seem to explicitly attach the `types` pivot unless `addTenant` does.
@@ -173,7 +172,7 @@ class ThirdPartiesController extends Controller
 
                     if ($request->has('types')) {
                         // RegistrationService uses direct DB insert. Eloquent sync is better.
-                        // But need to know 'TypeId' vs 'Code'. 
+                        // But need to know 'TypeId' vs 'Code'.
                         // The request sends 'types' as array of Codes (SU, TN, CU) or IDs?
                         // ThirdPartyService::create expects `array|string $types`.
                         // Frontend sends `types` as array of strings (codes) like ['SU', 'TN'].
@@ -209,6 +208,7 @@ class ThirdPartiesController extends Controller
             return response()->json(['message' => $e->getMessage()], 422);
         } catch (\Throwable $e) {
             Log::error('Failed to create/update third party: ' . $e->getMessage());
+
             return response()->json(['message' => 'An unexpected error occurred.'], 500);
         }
     }
@@ -222,11 +222,13 @@ class ThirdPartiesController extends Controller
     public function showMyThirdPartyDetails(Request $request)
     {
         $user = $request->user();
-        if (!$user || !$user->ThirdPartyId) {
+        if (! $user || ! $user->ThirdPartyId) {
             return response()->json(['message' => 'No third party associated.'], 404);
         }
         $party = ThirdParties::find($user->ThirdPartyId);
-        if (!$party) return response()->json(['message' => 'Party not found'], 404);
+        if (! $party) {
+            return response()->json(['message' => 'Party not found'], 404);
+        }
 
         return new ThirdPartyResource($party->load(['types', 'country']));
     }
@@ -255,6 +257,7 @@ class ThirdPartiesController extends Controller
     public function destroy(ThirdParties $thirdParty)
     {
         $thirdParty->delete();
+
         return response()->noContent();
     }
 }

@@ -23,6 +23,7 @@ class BudgetMonthlyProjectionController extends Controller
         } else {
             $monthlyAllocations = collect(); // Return empty if no projection specified
         }
+
         return view('budgetandanalytics.budgetworkspace.monthly.index', compact('monthlyAllocations', 'projectionID'));
     }
 
@@ -30,6 +31,7 @@ class BudgetMonthlyProjectionController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetMonthlyProjectionAllocation::class);
         $projectionID = $request->query('id');
+
         return view('budgetandanalytics.budgetworkspace.monthly.create', compact('projectionID'));
     }
 
@@ -43,15 +45,15 @@ class BudgetMonthlyProjectionController extends Controller
         // ]);
 
         DB::beginTransaction();
-        try {
 
+        try {
             $projecionId = $request->projectionID;
             //fetch BudgetId
             $budgetId = BudgetDriverProjections::where('Id', $projecionId)->value('BudgetID');
 
 
             $monthlyAllocation = $request->MonthlyAllocations;
-            if (!empty($monthlyAllocation)) {
+            if (! empty($monthlyAllocation)) {
                 foreach ($monthlyAllocation as $key => $value) {
                     //Store each monthly allocation
                     $allocation = BudgetMonthlyProjectionAllocation::create([
@@ -65,6 +67,7 @@ class BudgetMonthlyProjectionController extends Controller
                 }
             }
             DB::commit();
+
             return redirect()->route('budgetprojections.index')->with('success', 'Monthly projection allocation created successfully.');
         } catch (Exception $e) {
             DB::rollBack();
@@ -78,5 +81,4 @@ class BudgetMonthlyProjectionController extends Controller
             return redirect()->back()->withErrors(['error' => 'Failed to create monthly projection allocation: ' . $e->getMessage()]);
         }
     }
-
 }

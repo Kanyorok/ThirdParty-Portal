@@ -28,8 +28,5 @@ class UserSeeder extends Seeder
         //         'ModifiedBy' => $user->Id,
         //     ]);
         // }
-
-
-
     }
 }

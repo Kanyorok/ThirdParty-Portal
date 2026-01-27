@@ -37,7 +37,8 @@ class InsurancePricingRuleRequest extends FormRequest
                 'string',
                 'max:100',
                 Rule::unique(InsurancePricingRule::class, 'RuleName')
-                    ->where(fn ($query) =>
+                    ->where(
+                        fn ($query) =>
                         $query->where('InsuranceProviderId', $this->InsuranceProviderId)
                               ->where('Product', $this->Product)
                     ),
@@ -74,7 +75,7 @@ class InsurancePricingRuleRequest extends FormRequest
             'AgeMin' => [
                 'required',
                 'integer',
-                'min:0',              
+                'min:0',
                 'max:100',
                 'lte:AgeMax',
             ],
@@ -91,14 +92,14 @@ class InsurancePricingRuleRequest extends FormRequest
             'TenureMin' => [
                 'required',
                 'integer',
-                'min:1',             
+                'min:1',
                 'lte:TenureMax',
             ],
 
             'TenureMax' => [
                 'required',
                 'integer',
-                'max:100',             
+                'max:100',
                 'gte:TenureMin',
             ],
 

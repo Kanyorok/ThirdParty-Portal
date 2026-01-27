@@ -20,10 +20,10 @@ class SupplierProfileResource extends JsonResource
             'profileCompletion' => (int)($this->ProfileCompletion ?? 0),
 
             'categories' => $this->whenLoaded('categories', function () {
-                return $this->categories->map(fn($cat) => [
+                return $this->categories->map(fn ($cat) => [
                     'id' => $cat->Id,
                     'name' => $cat->Name,
-                    'code' => $cat->Code
+                    'code' => $cat->Code,
                 ]);
             }),
 
@@ -34,7 +34,7 @@ class SupplierProfileResource extends JsonResource
                 'name' => $this->thirdParty?->Name,
                 'registrationNumber' => $this->thirdParty?->RegistrationNumber,
                 'taxPIN' => $this->thirdParty?->TaxPIN,
-            ]
+            ],
         ];
     }
 }

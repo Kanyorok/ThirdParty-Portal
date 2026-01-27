@@ -170,7 +170,6 @@ class ModuleSeeder extends Seeder
         return $values;
     }
 
-
     protected function _inventory(bool $fresh): Collection
     {
         $values = collect([
@@ -276,7 +275,6 @@ class ModuleSeeder extends Seeder
         return $values;
     }
 
-
     protected function _propertyManagement(bool $fresh): Collection
     {
         $values = collect([
@@ -333,9 +331,9 @@ class ModuleSeeder extends Seeder
             /* ['ModuleID' => 50510, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 50500, 'Route' =>],
              ['ModuleID' => 50520, 'Name' => 'Analytics', 'Icon' => null, 'Description' => '', 'ParentID' => 50500, 'Route' => 'propertyanalytics.index'],*/
         ]);
+
         return $values;
     }
-
 
     protected function _fleetManagement(): Collection
     {
@@ -410,7 +408,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 797100, 'Name' => 'Signatures', 'Icon' => '<i class="fas fa-signature"></i>', 'Description' => 'Manage digital signatures, e-signatures, and document signing workflows.', 'ParentID' => 797000, 'Route' => 'document-signature.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
             ['ModuleID' => 797200, 'Name' => 'Validation Types', 'Icon' => '<i class="fas fa-clipboard-check"></i>', 'Description' => 'Configure different document validation rules, requirements, and verification methods.', 'ParentID' => 797000, 'Route' => 'document-validation-type.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
             ['ModuleID' => 798000, 'Name' => 'Trash', 'Icon' => '<i class="fas fa-trash-alt"></i>', 'Description' => 'Recover or permanently delete documents that have been moved to the recycle bin.', 'ParentID' => 700000, 'Route' => 'document-trashed.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
-            ['ModuleID' => 799000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => 'Generate analytical reports on document usage, storage metrics, and system activity.', 'ParentID' => 700000, 'Route' => 'dms-reports.index', 'RequiredPermission' => PermissionEnum::DMSView->value]
+            ['ModuleID' => 799000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => 'Generate analytical reports on document usage, storage metrics, and system activity.', 'ParentID' => 700000, 'Route' => 'dms-reports.index', 'RequiredPermission' => PermissionEnum::DMSView->value],
         ]);
     }
 
@@ -692,12 +690,12 @@ class ModuleSeeder extends Seeder
 
 
               ['ModuleID' => 1103700, 'Name' => 'Manage PettyCash', 'Icon' => '<i class="fas fa-wallet"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
-              ['ModuleID' => 1103705, 'Name' => 'Petty Cash', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.index', 'ParentID' => 1103700],
-              ['ModuleID' => 1103710, 'Name' => 'Petty Cash Floats', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettyfloats.index', 'ParentID' => 1103700],
-              ['ModuleID' => 1103715, 'Name' => 'New Disbursement', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.disbursement.create', 'ParentID' => 1103700],
-              ['ModuleID' => 1103720, 'Name' => 'New Replenishment', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.replenishment.create', 'ParentID' => 1103700],
-              ['ModuleID' => 1103725, 'Name' => 'Refund to Bank', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.refund.create', 'ParentID' => 1103700],
-              ['ModuleID' => 1103730, 'Name' => 'Replenishment Wizard', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.wizard', 'ParentID' => 1103700],
+              ['ModuleID' => 1103705, 'Name' => 'Petty Cash', 'Icon' => null, 'Description' => '', 'Route' => 'finance.pettycash.index', 'ParentID' => 1103700],
+              ['ModuleID' => 1103710, 'Name' => 'Petty Cash Floats', 'Icon' => null, 'Description' => '', 'Route' => 'finance.pettyfloats.index', 'ParentID' => 1103700],
+              ['ModuleID' => 1103715, 'Name' => 'New Disbursement', 'Icon' => null, 'Description' => '', 'Route' => 'finance.pettycash.disbursement.create', 'ParentID' => 1103700],
+              ['ModuleID' => 1103720, 'Name' => 'New Replenishment', 'Icon' => null, 'Description' => '', 'Route' => 'finance.pettycash.replenishment.create', 'ParentID' => 1103700],
+              ['ModuleID' => 1103725, 'Name' => 'Refund to Bank', 'Icon' => null, 'Description' => '', 'Route' => 'finance.pettycash.refund.create', 'ParentID' => 1103700],
+              ['ModuleID' => 1103730, 'Name' => 'Replenishment Wizard', 'Icon' => null, 'Description' => '', 'Route' => 'finance.pettycash.wizard', 'ParentID' => 1103700],
 
             ['ModuleID' => 1104000, 'Name' => 'Tax Management', 'Icon' => '<i class="fas fa-exchange-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000, 'RequiredPermission' => PermissionEnum::FinanceTaxSettingView->value],
             ['ModuleID' => 1104040, 'Name' => 'Jurisdiction Setup', 'Icon' => null, 'Description' => '', 'Route' => 'taxjurisdiction.index', 'ParentID' => 1104000, 'RequiredPermission' => PermissionEnum::FinanceTaxSettingView->value],
@@ -751,9 +749,9 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1003000, 'Name' => 'Committees', 'Icon' => '<i class="fas fa-building"></i>', 'Description' => '', 'ParentID' => 1000000, 'Route' => 'tendercommittee.index', 'RequiredPermission' => PermissionEnum::HRCommitteeView->value],
             ['ModuleID' => 1099000, 'Name' => 'Financial Reports', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'ParentID' => 1000000, 'Route' => null, 'RequiredPermission' => PermissionEnum::FinanceGeneralLedgerView->value],
         ]);
+
         return $values;
     }
-
 
     protected function _settings(bool $fresh): Collection
     {
@@ -770,6 +768,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 98006100, 'Name' => 'DocFlowSetup', 'Icon' => null, 'Description' => '', 'ParentID' => 98006000, 'Route' => 'settings.workflows.index', 'RequiredPermission' => PermissionEnum::WorkflowView->value],
             ['ModuleID' => 98006200, 'Name' => 'WorkFlowLimitSetup', 'Icon' => null, 'Description' => '', 'ParentID' => 98006000, 'Route' => 'settings.workflow_limits', 'RequiredPermission' => PermissionEnum::WorkflowView->value],
         ]);
+
         return $values;
     }
 

@@ -26,6 +26,7 @@ class PrequalificationRoundService
     {
         $Round = PrequalificationRound::findOrFail($Id);
         $Round->update($Data);
+
         return $Round;
     }
 

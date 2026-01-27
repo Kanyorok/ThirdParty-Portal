@@ -17,13 +17,12 @@ class InsuranceProductService
 
     public static function create(
         InsuranceProvider $InsuranceProviderID,
-        string            $Name,
-        string            $Type,
-        ?string           $Description = null,
-        ?bool             $IsActive = null,
-        User              $user
-    ): self
-    {
+        string $Name,
+        string $Type,
+        ?string $Description = null,
+        ?bool $IsActive = null,
+        User $user
+    ): self {
 
         $product = InsuranceProduct::create([
             'InsuranceProviderID' => $InsuranceProviderID->Id,
@@ -36,6 +35,7 @@ class InsuranceProductService
         ]);
 
         activity()->causedBy($user->Id)->performedOn($product)->event('create')->log("Added Provider {$product->Id}.");
+
         return new self($product);
     }
 }

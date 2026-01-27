@@ -97,12 +97,12 @@ class LicenseResult
      */
     public function getDaysUntilExpiry(): ?int
     {
-        if (!$this->valid || !$this->payload) {
+        if (! $this->valid || ! $this->payload) {
             return null;
         }
 
         $expiresAt = $this->getExpiresAt();
-        if (!$expiresAt) {
+        if (! $expiresAt) {
             return null;
         }
 
@@ -110,7 +110,7 @@ class LicenseResult
             $expiry = new \DateTime($expiresAt);
             $now = new \DateTime('now', new \DateTimeZone('UTC'));
             $diff = $now->diff($expiry);
-            
+
             return $diff->invert ? -$diff->days : $diff->days;
         } catch (\Exception $e) {
             return null;
@@ -123,7 +123,7 @@ class LicenseResult
     public function isInGracePeriod(int $graceDays = 7): bool
     {
         $daysUntilExpiry = $this->getDaysUntilExpiry();
-        
+
         if ($daysUntilExpiry === null) {
             return false;
         }

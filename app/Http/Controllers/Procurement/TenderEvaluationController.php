@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use App\Http\Controllers\Controller;
-use App\Models\Procurement\Tender;
-use App\Models\Procurement\BidSubmission;
-use App\Models\Procurement\TenderSection;
-use App\Models\Procurement\TenderCommitteeMember;
-use App\Models\Procurement\TenderCommitteeEvaluation;
 use App\Enums\Core\PermissionEnum;
+use App\Http\Controllers\Controller;
+use App\Models\Procurement\BidSubmission;
+use App\Models\Procurement\Tender;
+use App\Models\Procurement\TenderCommitteeEvaluation;
+use App\Models\Procurement\TenderCommitteeMember;
+use App\Models\Procurement\TenderSection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -36,19 +36,19 @@ class TenderEvaluationController extends Controller
         $currentUserId = Auth::id();
         $committeeMember = $this->findAcceptedCommitteeMember($tender->Id, $currentUserId);
 
-        if (!$committeeMember) {
+        if (! $committeeMember) {
             return redirect()->route('evaluationdashboard.index')
                 ->with('error', 'You are not authorized to evaluate this tender.');
         }
 
         // Filter out inactive or orphaned tender sections before readiness check
-        $tender->setRelation('tenderSections', $tender->tenderSections->filter(function($ts){
+        $tender->setRelation('tenderSections', $tender->tenderSections->filter(function ($ts) {
             return ($ts->IsActive ?? true) && $ts->sections; // ensure active and has linked Section
         })->values());
 
         // Check if tender has valid section configuration
         $readiness = $tender->getEvaluationReadiness();
-        if (!$readiness['ready']) {
+        if (! $readiness['ready']) {
             return redirect()->route('evaluationdashboard.index')
                 ->with('error', $readiness['message']);
         }
@@ -78,16 +78,17 @@ class TenderEvaluationController extends Controller
             ->where('IsActive', true)
             ->get(['SectionID','CriteriaID'])
             ->groupBy('SectionID')
-            ->map(fn($rows) => $rows->pluck('CriteriaID')->values());
+            ->map(fn ($rows) => $rows->pluck('CriteriaID')->values());
 
         // Filter each section's criteria collection in-place to only selected criteria
         $tender->setRelation('tenderSections', $tender->tenderSections->map(function ($ts) use ($selectedBySection) {
             $section = $ts->sections;
-            $allowed = collect($selectedBySection->get($section->Id, collect()))->map(fn($v) => (int)$v)->all();
+            $allowed = collect($selectedBySection->get($section->Id, collect()))->map(fn ($v) => (int)$v)->all();
             if ($section && $section->relationLoaded('criteria')) {
                 $filtered = $section->criteria->whereIn('Id', $allowed)->values();
                 $section->setRelation('criteria', $filtered);
             }
+
             return $ts;
         }));
 
@@ -104,7 +105,7 @@ class TenderEvaluationController extends Controller
             'committeeMember' => $committeeMember,
             'existingScores' => $existingScores,
             'allMembers' => $allMembers,
-            'evaluationProgress' => $this->getEvaluationProgress($tender->Id, $committeeMember->Id)
+            'evaluationProgress' => $this->getEvaluationProgress($tender->Id, $committeeMember->Id),
         ]);
     }
 
@@ -124,7 +125,7 @@ class TenderEvaluationController extends Controller
         $currentUserId = Auth::id();
         $committeeMember = $this->findAcceptedCommitteeMember($tender->Id, $currentUserId);
 
-        if (!$committeeMember) {
+        if (! $committeeMember) {
             return response()->json(['error' => 'Unauthorized: Not an accepted committee member'], 403);
         }
 
@@ -134,7 +135,7 @@ class TenderEvaluationController extends Controller
             'Id' => $committeeMember->Id ?? 'NULL',
             'primary_key' => $committeeMember->getKey(),
             'all_attributes' => $committeeMember->getAttributes(),
-            'exists' => $committeeMember->exists
+            'exists' => $committeeMember->exists,
         ]);
 
         // Validate request data
@@ -144,7 +145,7 @@ class TenderEvaluationController extends Controller
             'scores.*.criteria_id' => 'required|exists:t_Criterias,Id',
             'scores.*.score' => 'required|numeric|min:0|max:10',
             'evaluation_notes' => 'nullable|string|max:2000',
-            'evaluation_type' => 'required|in:draft,final'
+            'evaluation_type' => 'required|in:draft,final',
         ]);
 
         DB::beginTransaction();
@@ -169,10 +170,10 @@ class TenderEvaluationController extends Controller
             // For final submission, ensure all criteria are scored
             if ($validated['evaluation_type'] === 'final') {
                 $missingScores = array_diff($requiredScores, $submittedScores->keys()->toArray());
-                if (!empty($missingScores)) {
+                if (! empty($missingScores)) {
                     return response()->json([
                         'error' => 'Please score all criteria before final submission.',
-                        'missing_criteria' => $missingScores
+                        'missing_criteria' => $missingScores,
                     ], 422);
                 }
             }
@@ -219,11 +220,11 @@ class TenderEvaluationController extends Controller
                 TenderCommitteeEvaluation::create($insertData);
 
                 // Track section scores for weighted calculation
-                if (!isset($sectionScores[$sectionId])) {
+                if (! isset($sectionScores[$sectionId])) {
                     $sectionScores[$sectionId] = [
                         'total_score' => 0,
                         'criteria_count' => 0,
-                        'weight' => $tenderSections->firstWhere('SectionID', $sectionId)->Weight ?? 0
+                        'weight' => $tenderSections->firstWhere('SectionID', $sectionId)->Weight ?? 0,
                     ];
                 }
 
@@ -268,7 +269,7 @@ class TenderEvaluationController extends Controller
                     'evaluation_type' => $validated['evaluation_type'],
                     'total_score' => $totalWeightedScore,
                     'sections_evaluated' => count($sectionScores),
-                    'criteria_scored' => count($validated['scores'])
+                    'criteria_scored' => count($validated['scores']),
                 ])
                 ->log("Section-based evaluation " . ($validated['evaluation_type'] === 'final' ? 'completed' : 'saved as draft') .
                     " for {$bid->SupplierName} - Score: " . round($totalWeightedScore, 2));
@@ -284,9 +285,8 @@ class TenderEvaluationController extends Controller
                 'evaluation_type' => $validated['evaluation_type'],
                 'redirect' => $validated['evaluation_type'] === 'final'
                     ? route('evaluationdashboard.index')
-                    : null
+                    : null,
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -295,13 +295,13 @@ class TenderEvaluationController extends Controller
                 ->withProperties([
                     'action' => 'section_based_evaluation_failed',
                     'bid_id' => $bidId,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ])
                 ->log('Failed to submit section-based evaluation: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to submit evaluation: ' . $e->getMessage()
+                'error' => 'Failed to submit evaluation: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -348,7 +348,7 @@ class TenderEvaluationController extends Controller
         return [
             'total' => $totalCriteria,
             'completed' => $completedCriteria,
-            'percentage' => $totalCriteria > 0 ? round(($completedCriteria / $totalCriteria) * 100, 1) : 0
+            'percentage' => $totalCriteria > 0 ? round(($completedCriteria / $totalCriteria) * 100, 1) : 0,
         ];
     }
 
@@ -385,7 +385,7 @@ class TenderEvaluationController extends Controller
                 $bidEvaluations[] = [
                     'member_id' => $memberId,
                     'member_name' => $memberEvaluations->first()->tenderCommitteeMember->employee->full_name ?? 'Unknown',
-                    'score' => $memberScore
+                    'score' => $memberScore,
                 ];
             }
 
@@ -393,7 +393,7 @@ class TenderEvaluationController extends Controller
                 'bid' => $bid,
                 'evaluations' => $bidEvaluations,
                 'average_score' => collect($bidEvaluations)->avg('score'),
-                'score_variance' => $this->calculateScoreVariance($bidEvaluations)
+                'score_variance' => $this->calculateScoreVariance($bidEvaluations),
             ];
         }
 
@@ -405,13 +405,15 @@ class TenderEvaluationController extends Controller
      */
     private function calculateScoreVariance($evaluations)
     {
-        if (count($evaluations) < 2) return 0;
+        if (count($evaluations) < 2) {
+            return 0;
+        }
 
         $scores = collect($evaluations)->pluck('score');
         $mean = $scores->avg();
         $variance = $scores->map(function ($score) use ($mean) {
-                return pow($score - $mean, 2);
-            })->sum() / (count($evaluations) - 1);
+            return pow($score - $mean, 2);
+        })->sum() / (count($evaluations) - 1);
 
         return sqrt($variance); // Standard deviation
     }

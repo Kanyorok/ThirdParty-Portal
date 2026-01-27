@@ -19,11 +19,11 @@ class OnBoardingRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'MemberClass'  => [
+                'MemberClass' => [
                                    'required',
                                    'string',
                                   ],
-                'Branch'       => [
+                'Branch' => [
                                    'required',
                                    'string',
                                   ],
@@ -31,25 +31,25 @@ class OnBoardingRequest extends FormRequest
                                    'required',
                                    'string',
                                   ],
-                'TaxNo'        => [
+                'TaxNo' => [
                                    'required',
                                    'string',
                                   ],
-                'DoB'          => [
+                'DoB' => [
                                    'required',
                                    'string',
                                    'date',
                                    'date_format:Y-m-d',
                                   ],
-                'County'       => [
+                'County' => [
                                    'required',
                                    'string',
                                   ],
-                'Address1'     => [
+                'Address1' => [
                                    'required',
                                    'string',
                                   ],
-                'Address2'     => [
+                'Address2' => [
                                    'required',
                                    'string',
                                   ],
@@ -75,6 +75,7 @@ class OnBoardingRequest extends FormRequest
         if (SystemCodeDetail::query()->where('ID', 'MemberClassID')->where('SubCodeID', $this->validated('MemberClass'))->exists()) {
             return $this->validated('MemberClass');
         }
+
         throw ValidationException::withMessages(['MemberClassID' => 'Member Class may be invalid.']);
     }
 
@@ -100,6 +101,7 @@ class OnBoardingRequest extends FormRequest
             return Carbon::createFromFormat('Y-m-d', $this->validated('DoB'));
         } catch (\Exception) {
         }
+
         throw ValidationException::withMessages(['DOB' => 'Invalid Date format eg 2000-01-31']);
     }
 }

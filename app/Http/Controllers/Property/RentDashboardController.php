@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
 use App\Models\PropertyManagement\PropertyInvoice;
-use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\PropertyManagement\PropertyRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +18,7 @@ class RentDashboardController extends Controller
             'receipts',
             'lease.property',
             'lease.unit',
-            'lease.tenant.thirdParty'
+            'lease.tenant.thirdParty',
         ]);
 
         // ---- Filters (ALL by default) ----
@@ -71,7 +71,8 @@ class RentDashboardController extends Controller
         });
 
         // ---- Monthly chart data ----
-        $invoiceByMonth = $invoices->groupBy(fn ($i) =>
+        $invoiceByMonth = $invoices->groupBy(
+            fn ($i) =>
             Carbon::parse($i->InvoiceDate)->format('Y-m')
         )->map(fn ($g) => $g->sum('DerivedDue'));
 
@@ -88,7 +89,8 @@ class RentDashboardController extends Controller
             );
         }
 
-        $receiptByMonth = $allocations->groupBy(fn ($r) =>
+        $receiptByMonth = $allocations->groupBy(
+            fn ($r) =>
             Carbon::parse($r->ReceiptDate)->format('Y-m')
         )->map(fn ($g) => $g->sum('AmountAllocated'));
 
@@ -98,17 +100,19 @@ class RentDashboardController extends Controller
             $m => [
                 'invoiced' => $invoiceByMonth->get($m, 0),
                 'collected' => $receiptByMonth->get($m, 0),
-            ]
+            ],
         ]);
 
         // ---- Summary cards ----
         $collected = (float)$allocations->sum('AmountAllocated');
 
-        $overdue = $invoices->sum(fn ($i) =>
+        $overdue = $invoices->sum(
+            fn ($i) =>
             max(($i->DerivedDue ?? 0) - ($i->DerivedPaid ?? 0), 0)
         );
 
-        $partial = $invoices->sum(fn ($i) =>
+        $partial = $invoices->sum(
+            fn ($i) =>
             ($i->DerivedPaid > 0 && $i->DerivedPaid < $i->DerivedDue)
                 ? $i->DerivedPaid
                 : 0

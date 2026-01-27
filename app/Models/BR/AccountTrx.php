@@ -13,7 +13,6 @@ class AccountTrx extends Model
     protected $table = 'v_AccountTrx';
     protected $primaryKey = 'TrxRowID';
 
-
     protected function casts(): array
     {
         return ['ValueDate' => 'datetime'];

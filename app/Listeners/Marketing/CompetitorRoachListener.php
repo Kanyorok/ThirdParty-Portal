@@ -20,6 +20,7 @@ class CompetitorRoachListener implements ShouldQueue
 {
     //   use InteractsWithQueue;
     public ?Competitor $competitor = null;
+
     /**
      * Create the event listener.
      */
@@ -95,18 +96,18 @@ class CompetitorRoachListener implements ShouldQueue
 
                 if (array_key_exists('products', $data)) {
                     foreach ($data['products'] as $product) {
-                        if (!array_key_exists('name', $product)) {
+                        if (! array_key_exists('name', $product)) {
                             continue;
                         }
                         //"", "Limit", "", "OtherCharges", "", "", "Clients",
                         $competitor->products()->create([
-                                                         'Name'             => $product['name'],
-                                                         'Notes'            => array_key_exists('description', $product) ? ($product['description']) : null,
-                                                         'InterestRate'     => array_key_exists('interest', $product) ? ($product['interest']) : null,
-                                                         'RepaymentPeriod'  => array_key_exists('period', $product) ? ($product['period']) : null,
+                                                         'Name' => $product['name'],
+                                                         'Notes' => array_key_exists('description', $product) ? ($product['description']) : null,
+                                                         'InterestRate' => array_key_exists('interest', $product) ? ($product['interest']) : null,
+                                                         'RepaymentPeriod' => array_key_exists('period', $product) ? ($product['period']) : null,
                                                          'SecurityRequired' => array_key_exists('security', $product) ? ($product['security']) : null,
-                                                         'CreatedBy'        => SystemHelper::user()->Id,
-                                                         'ModifiedBy'       => SystemHelper::user()->Id,
+                                                         'CreatedBy' => SystemHelper::user()->Id,
+                                                         'ModifiedBy' => SystemHelper::user()->Id,
                                                         ]);
                     }
                 }

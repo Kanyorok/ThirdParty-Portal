@@ -2,14 +2,13 @@
 
 namespace App\Services\FleetManagement;
 
-use App\Models\Fleet\FleetVehicleRequest;
-use App\Models\Core\Workflow;
-use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\PendingWorkflow;
+use App\Models\Core\Workflow;
+use App\Models\Fleet\FleetVehicleRequest;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Exception;
 
 class FleetVehicleRequestService
 {
@@ -20,7 +19,7 @@ class FleetVehicleRequestService
     {
         $latest = FleetVehicleRequest::withTrashed()->latest('CreatedOn')->first();
 
-        if (!$latest || !$latest->Id) {
+        if (! $latest || ! $latest->Id) {
             return 'VR-0001';
         }
 
@@ -29,7 +28,6 @@ class FleetVehicleRequestService
 
         return 'VR' . '-' . $newNumber;
     }
-
 
     public function create(array $validated)
     {
@@ -208,7 +206,6 @@ class FleetVehicleRequestService
             ->event('deleted')
             ->log("Vehicle Request {$request->RequestID} deleted.");
     }
-
 
     private function getStatusValue(string $description): ?string
     {

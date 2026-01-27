@@ -15,7 +15,8 @@ class DocumentRecentController extends Controller
      * Handle the incoming request.
      */
     public function __invoke(Request $request): View|FilesCollection
-    {//->where('event', 'view')
+    {
+//->where('event', 'view')
 
 
         if ($request->ajax()) {
@@ -44,8 +45,10 @@ class DocumentRecentController extends Controller
                 ->whereHas('current')
                 ->with(['current'])
                 ->orderByDesc('recent_activity.created_at')->paginate(40);
+
             return new FilesCollection($documents);
         }
+
         return view('dms.files.recent');
     }
 }

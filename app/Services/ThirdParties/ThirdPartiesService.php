@@ -17,13 +17,13 @@ use App\Models\ThirdParty\ThirdPartyTypeTypes;
 use App\Models\ThirdParty\ThirdPartyUser;
 use Illuminate\Support\Collection;
 
-
 abstract class ThirdPartiesService
 {
-    public function __construct(public ThirdParties $party) {}
+    public function __construct(public ThirdParties $party)
+    {
+    }
 
     abstract public static function getType(): ThirdPartyType;
-
 
     /**
      * @throws ErroredException
@@ -38,6 +38,7 @@ abstract class ThirdPartiesService
         if ($partyTypes->isEmpty()) {
             throw new ErroredException('Invalid | no types provided');
         }
+
         return $partyTypes;
     }
 
@@ -62,6 +63,7 @@ abstract class ThirdPartiesService
         }
 
         activity()->causedBy($actor)->performedOn($user)->event('create')->log("Created user {$user->FirstName} {$user->LastName} to thirdparty {$this->party->ThirdPartyName}");
+
         return $this;
     }
 
@@ -69,7 +71,7 @@ abstract class ThirdPartiesService
      * @throws ErroredException
      */
     public static function create(
-        string  $name,
+        string $name,
         ?string $tradingName,
         CodeDetail $businessType,
         string $registrationNumber,
@@ -120,6 +122,7 @@ abstract class ThirdPartiesService
         }
         if ($create) {
             $actor = SystemHelper::user();
+
             return CodeDetail::create([
                 'CodeID' => 'ThirdPartyStatus',
                 'Value' => $status->value,
@@ -130,12 +133,14 @@ abstract class ThirdPartiesService
                 'ModifiedBy' => $actor->Id,
             ]);
         }
+
         throw new ErroredException('Invalid Status, not set and could not create');
     }
 
     public function setLogo(\Illuminate\Http\UploadedFile $image, User|ThirdPartyUser $actor): self
     {
         $this->party->setImage($image, $actor, 'ImageId');
+
         return $this;
     }
 
@@ -168,6 +173,7 @@ abstract class ThirdPartiesService
             'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
             'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
         ]);
+
         return $this;
     }
 }

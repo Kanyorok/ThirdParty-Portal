@@ -14,7 +14,6 @@ enum InsuranceClosureEnum: string
 
     case Escalated = 'E';
 
-
     public function label(): string
     {
         return match ($this) {

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Legal\Setup;
 
-
 use App\Http\Controllers\Controller;
 use App\Models\Legal\ComplianceArea;
 use Illuminate\Http\Request;
@@ -12,6 +11,7 @@ class ComplianceAreaController extends Controller
     public function index()
     {
         $areas = ComplianceArea::orderBy('Name')->get();
+
         return view('legal.setup.compliance_areas.index', compact('areas'));
     }
 
@@ -28,6 +28,7 @@ class ComplianceAreaController extends Controller
         ]);
 
         ComplianceArea::create($validated + ['IsActive' => 1]);
+
         return redirect()->route('legal.setup.compliance_areas.index')
             ->with('success', 'Compliance Area added successfully.');
     }
@@ -35,6 +36,7 @@ class ComplianceAreaController extends Controller
     public function edit($id)
     {
         $area = ComplianceArea::findOrFail($id);
+
         return view('legal.setup.compliance_areas.edit', compact('area'));
     }
 
@@ -48,6 +50,7 @@ class ComplianceAreaController extends Controller
         ]);
 
         $area->update($validated);
+
         return redirect()->route('legal.setup.compliance_areas.index')
             ->with('success', 'Compliance Area updated successfully.');
     }
@@ -56,6 +59,7 @@ class ComplianceAreaController extends Controller
     {
         $area = ComplianceArea::findOrFail($id);
         $area->delete();
+
         return back()->with('success', 'Compliance Area deleted.');
     }
 }

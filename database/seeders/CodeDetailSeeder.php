@@ -6,6 +6,7 @@ use App\Enums\BusinessTypeEnum;
 use App\Enums\CampaignStatusEnum;
 use App\Enums\Core\ApprovalEnum;
 use App\Enums\DMS\DocumentCheckOutStatusEnum;
+use App\Enums\Inventory\InterBranchRequisitionEnum;
 use App\Enums\LeadStatusEnum;
 use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Enums\Procurement\PrequalificationApplicationEnum;
@@ -20,7 +21,6 @@ use App\Enums\TenderCategoryEnum;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyTypeEnum;
-use App\Enums\Inventory\InterBranchRequisitionEnum;
 use App\Enums\TicketStatusEnum;
 use App\Helpers\SystemHelper;
 use App\Services\StaticListsService;
@@ -751,9 +751,9 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'JournalEntryStatus', 'Description' => 'Reject', 'Value' => 'r', 'DisplayOrder' => 5],
 
             //tender Approval Status
-            ['CodeID' => 'TenderStatus', 'Description' => 'Pending', 'Value'=> 'P','DisplayOrder' => 53],
-            ['CodeID' => 'TenderStatus', 'Description' => 'Approved', 'Value'=> 'A','DisplayOrder' => 54],
-            ['CodeID' => 'TenderStatus', 'Description' => 'Rejected', 'Value'=> 'R','DisplayOrder' => 55],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Pending', 'Value' => 'P','DisplayOrder' => 53],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Approved', 'Value' => 'A','DisplayOrder' => 54],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Rejected', 'Value' => 'R','DisplayOrder' => 55],
 
 
 
@@ -766,7 +766,7 @@ class CodeDetailSeeder extends Seeder
 
         foreach ($entries as $entry) {
             $exists = DB::table('t_CodeDetails')->where('CodeID', $entry['CodeID'])->where('Description', $entry['Description'])->exists();
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('t_CodeDetails')->insert([
                     'CodeID' => $entry['CodeID'],
                     'Value' => $entry['Value'] ?? null,

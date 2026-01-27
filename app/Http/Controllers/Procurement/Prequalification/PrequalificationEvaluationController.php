@@ -2,24 +2,24 @@
 
 namespace App\Http\Controllers\Procurement\Prequalification;
 
+use App\Enums\Procurement\PrequalificationApplicationEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\Prequalification\ApplicationCategoryStatus;
+use App\Models\Procurement\Prequalification\CategoryProgressHistory;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\Procurement\Prequalification\PrequalificationCriteria;
 use App\Models\Procurement\Prequalification\PrequalificationEvaluation;
 use App\Models\Procurement\Prequalification\PrequalificationResult;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
-use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParies\Supplier;
+use App\Models\ThirdParty\ThirdParties;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use App\Enums\Procurement\PrequalificationApplicationEnum;
-use App\Models\Procurement\Prequalification\ApplicationCategoryStatus;
-use App\Models\Procurement\Prequalification\CategoryProgressHistory;
 
 class PrequalificationEvaluationController extends Controller
 {
@@ -77,7 +77,7 @@ class PrequalificationEvaluationController extends Controller
 
                 // Hide prequalify button only if supplier already prequalified for this specific category
                 // Allow both Passed (normal prequalify) and Failed (force prequalify) actions when not yet prequalified
-                $prequalifyAllowed = !$categoryPrequalified;
+                $prequalifyAllowed = ! $categoryPrequalified;
 
                 return [
                     'application_no' => $app->applicationNo,
@@ -90,7 +90,7 @@ class PrequalificationEvaluationController extends Controller
                     'supplier_id' => $partyId,
                     'round_id' => $app->RoundID,
                     'category_id' => $app->CategoryID,
-                    'is_prequalified' => !$prequalifyAllowed, // kept for backward compatibility but now means 'button hidden'
+                    'is_prequalified' => ! $prequalifyAllowed, // kept for backward compatibility but now means 'button hidden'
                     'category_prequalified' => $categoryPrequalified,
                     'supplier_active' => $supplierActive,
                     'prequalify_allowed' => $prequalifyAllowed,
@@ -100,6 +100,7 @@ class PrequalificationEvaluationController extends Controller
             return response()->json(['data' => $data]);
         } catch (\Throwable $e) {
             Log::error('Prequalification datatable error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
             return response()->json(['data' => [], 'error' => 'Failed to load data'], 200);
         }
     }
@@ -114,7 +115,7 @@ class PrequalificationEvaluationController extends Controller
 
         // Validate round existence before proceeding to avoid FK violations
         $round = \App\Models\Procurement\Prequalification\PrequalificationRound::find($roundId);
-        if (!$round) {
+        if (! $round) {
             Log::warning('Bulk prequalify aborted: Round not found', [
                 'roundId' => $roundId,
                 'userId' => $userId,
@@ -125,19 +126,21 @@ class PrequalificationEvaluationController extends Controller
                     'message' => "Round $roundId not found. Please provide a valid RoundID.",
                 ], 422);
             }
+
             return back()->with('error', "Round $roundId not found. Please provide a valid RoundID.");
         }
         // Get applications with passed decision
         // Eager load supplier to access ThirdPartyId
         $passedApps = PrequalificationApplication::with(['result', 'supplier'])
             ->where('RoundID', $roundId)
-            ->whereHas('result', fn($q) => $q->where('Decision', 'Passed'))
+            ->whereHas('result', fn ($q) => $q->where('Decision', 'Passed'))
             ->get();
 
         if ($passedApps->isEmpty()) {
             if (request()->expectsJson()) {
                 return response()->json(['status' => 'warning', 'message' => 'No passed applications to prequalify.']);
             }
+
             return back()->with('warning', 'No passed applications to prequalify.');
         }
 
@@ -145,12 +148,13 @@ class PrequalificationEvaluationController extends Controller
             foreach ($passedApps as $app) {
                 // Resolve ThirdPartyId from SupplierMaster (supplier relationship)
                 $thirdPartyId = $app->supplier?->ThirdPartyId;
-                
-                if (!$thirdPartyId) {
+
+                if (! $thirdPartyId) {
                     Log::warning('Bulk prequalify skipped: No ThirdPartyId for SupplierMaster', [
                          'supplierMasterId' => $app->SupplierID,
-                         'applicationId' => $app->ApplicationID
+                         'applicationId' => $app->ApplicationID,
                     ]);
+
                     continue;
                 }
 
@@ -191,6 +195,7 @@ class PrequalificationEvaluationController extends Controller
                         'ModifiedBy' => $userId,
                     ]
                 );
+
                 // Upsert per-category progress to Approved and add history
                 try {
                     $acs = ApplicationCategoryStatus::firstOrNew([
@@ -199,7 +204,7 @@ class PrequalificationEvaluationController extends Controller
                     ]);
                     $prevStatus = $acs->exists ? $acs->Status : null;
                     $prevProgress = $acs->exists ? (float)$acs->ProgressPercent : 0.0;
-                    if (!$acs->exists) {
+                    if (! $acs->exists) {
                         $acs->CreatedBy = $userId;
                         $acs->CreatedOn = $now;
                     }
@@ -230,6 +235,7 @@ class PrequalificationEvaluationController extends Controller
                         'error' => $e->getMessage(),
                     ]);
                 }
+
                 // Set application status to Prequalified for the same triplet
                 try {
                     PrequalificationApplication::where('ApplicationID', $app->ApplicationID)
@@ -246,6 +252,7 @@ class PrequalificationEvaluationController extends Controller
         if (request()->expectsJson()) {
             return response()->json(['status' => 'success', 'message' => 'Suppliers prequalified successfully for this round.', 'count' => $passedApps->count()]);
         }
+
         return back()->with('success', 'Suppliers prequalified successfully for this round.');
     }
 
@@ -259,7 +266,7 @@ class PrequalificationEvaluationController extends Controller
         $userId = Auth::id();
         // Validate round existence before proceeding to avoid FK violations
         $round = \App\Models\Procurement\Prequalification\PrequalificationRound::find($roundId);
-        if (!$round) {
+        if (! $round) {
             Log::warning('Single prequalify aborted: Round not found', [
                 'roundId' => $roundId,
                 'thirdPartyId' => $thirdPartyId,
@@ -272,12 +279,13 @@ class PrequalificationEvaluationController extends Controller
                     'message' => "Round $roundId not found. Please refresh and try again.",
                 ], 422);
             }
+
             return back()->with('error', "Round $roundId not found. Please refresh and try again.");
         }
 
         // Validate third party (supplier) existence to ensure correct mapping
         $thirdParty = ThirdParties::find($thirdPartyId);
-        if (!$thirdParty) {
+        if (! $thirdParty) {
             Log::warning('Single prequalify aborted: ThirdParty not found', [
                 'roundId' => $roundId,
                 'thirdPartyId' => $thirdPartyId,
@@ -290,16 +298,18 @@ class PrequalificationEvaluationController extends Controller
                     'message' => "Supplier (ThirdParty) $thirdPartyId not found.",
                 ], 422);
             }
+
             return back()->with('error', "Supplier (ThirdParty) $thirdPartyId not found.");
         }
 
         // Resolve SupplierMaster from ThirdPartyId
         $supplierMaster = \App\Models\ThirdParty\SupplierMaster::where('ThirdPartyId', $thirdPartyId)->first();
-        if (!$supplierMaster) {
+        if (! $supplierMaster) {
             Log::warning('Single prequalify aborted: SupplierMaster not found for ThirdParty', ['thirdPartyId' => $thirdPartyId]);
             if (request()->expectsJson()) {
                 return response()->json(['status' => 'error', 'message' => "Supplier Master record not found for ThirdParty $thirdPartyId."], 422);
             }
+
             return back()->with('error', "Supplier Master record not found for this party.");
         }
         $supplierMasterId = $supplierMaster->Id;
@@ -308,7 +318,7 @@ class PrequalificationEvaluationController extends Controller
         $categoryExists = DB::table('t_SupplierCategories')
             ->where('SupplierCategoryID', $categoryId)
             ->exists();
-        if (!$categoryExists) {
+        if (! $categoryExists) {
             Log::warning('Single prequalify aborted: Category not found', [
                 'roundId' => $roundId,
                 'thirdPartyId' => $thirdPartyId,
@@ -321,6 +331,7 @@ class PrequalificationEvaluationController extends Controller
                     'message' => "Category $categoryId not found.",
                 ], 422);
             }
+
             return back()->with('error', "Category $categoryId not found.");
         }
 
@@ -371,6 +382,7 @@ class PrequalificationEvaluationController extends Controller
                     'ModifiedBy' => $userId,
                 ]
             );
+
             // Upsert per-category progress to Approved and add history
             try {
                 // Try to find a matching application for audit linkage
@@ -393,7 +405,7 @@ class PrequalificationEvaluationController extends Controller
                     ]);
                     $prevStatus = $acs->exists ? $acs->Status : null;
                     $prevProgress = $acs->exists ? (float)$acs->ProgressPercent : 0.0;
-                    if (!$acs->exists) {
+                    if (! $acs->exists) {
                         $acs->CreatedBy = $auditUserId;
                         $acs->CreatedOn = $now;
                     }
@@ -426,6 +438,7 @@ class PrequalificationEvaluationController extends Controller
                     'error' => $e->getMessage(),
                 ]);
             }
+
             // After transaction, set any matching application(s) to Prequalified
             try {
                 PrequalificationApplication::where([
@@ -445,6 +458,7 @@ class PrequalificationEvaluationController extends Controller
         if (request()->expectsJson()) {
             return response()->json(['status' => 'success', 'message' => 'Supplier prequalified for this category.']);
         }
+
         return back()->with('success', 'Supplier prequalified for this category.');
     }
 
@@ -464,6 +478,7 @@ class PrequalificationEvaluationController extends Controller
             'ModifiedOn' => $now,
             'ModifiedBy' => $userId,
         ]);
+
         return back()->with('success', 'Expired round suppliers deactivated.');
     }
 
@@ -472,7 +487,7 @@ class PrequalificationEvaluationController extends Controller
         $application = PrequalificationApplication::with('supplier.party', 'category')->findOrFail($applicationId);
         $round = $application->round;
 
-        if (!$round) {
+        if (! $round) {
             return redirect()->back()->with('error', 'The prequalification round for this application could not be found.');
         }
 
@@ -484,13 +499,14 @@ class PrequalificationEvaluationController extends Controller
 
         // Ensure only valid, included criteria with a master record are presented
         $sections->each(function ($section) {
-            if (!($section->criteria instanceof \Illuminate\Support\Collection)) {
+            if (! ($section->criteria instanceof \Illuminate\Support\Collection)) {
                 $section->setRelation('criteria', collect($section->criteria ?? []));
             }
             $cleaned = $section->criteria
                 ->filter(function ($c) {
                     // Included flag (default true if null) and must resolve to a masterCriteria
                     $included = is_null($c->Included) ? true : (bool) $c->Included;
+
                     return $included && $c->masterCriteria;
                 })
                 ->unique('CriteriaId')
@@ -555,15 +571,15 @@ class PrequalificationEvaluationController extends Controller
             $prequalificationCriteria = PrequalificationCriteria::where('CriteriaId', $criteriaId)
                 ->first();
 
-            if (!$prequalificationCriteria) {
+            if (! $prequalificationCriteria) {
                 continue;
             }
 
             $sectionId = $prequalificationCriteria->SectionId;
 
-            if (!is_null($scoreAwarded) && $scoreAwarded > $maxScore) {
+            if (! is_null($scoreAwarded) && $scoreAwarded > $maxScore) {
                 throw ValidationException::withMessages([
-                    "criteria_scores.{$criteriaId}.score" => "Score awarded cannot exceed the max score of {$maxScore}."
+                    "criteria_scores.{$criteriaId}.score" => "Score awarded cannot exceed the max score of {$maxScore}.",
                 ]);
             }
 
@@ -603,8 +619,12 @@ class PrequalificationEvaluationController extends Controller
                 $sectionTotal = 0.0;
                 foreach ($sectionEvaluations as $eval) {
                     $raw = (float)($eval->Score ?? 0);
-                    if ($raw < 0) $raw = 0;
-                    if ($raw > 10) $raw = 10;
+                    if ($raw < 0) {
+                        $raw = 0;
+                    }
+                    if ($raw > 10) {
+                        $raw = 10;
+                    }
                     $sectionTotal += $perCriterionWeight * ($raw / 10);
                 }
                 $grandTotal += round($sectionTotal, 6);
@@ -632,6 +652,7 @@ class PrequalificationEvaluationController extends Controller
                     'error' => $e->getMessage(),
                 ]);
             }
+
             // Upsert per-category progress to Under Review and add history
             try {
                 $acs = ApplicationCategoryStatus::firstOrNew([
@@ -640,7 +661,7 @@ class PrequalificationEvaluationController extends Controller
                 ]);
                 $prevStatus = $acs->exists ? $acs->Status : null;
                 $prevProgress = $acs->exists ? (float)$acs->ProgressPercent : 0.0;
-                if (!$acs->exists) {
+                if (! $acs->exists) {
                     $acs->CreatedBy = Auth::id();
                     $acs->CreatedOn = now();
                 }

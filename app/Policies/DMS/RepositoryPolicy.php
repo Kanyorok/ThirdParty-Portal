@@ -44,7 +44,6 @@ class RepositoryPolicy
         }
 
         return Repository::query()->userRole($user, [RoleEnum::Admin->value, RoleEnum::Share->value, RoleEnum::Write->value])->where('Id', $repository->Id)->exists();
-
     }
 
     public function share(User $user, Repository $repository): bool

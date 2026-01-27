@@ -3,17 +3,15 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Insurance\BancassuranceCommissionPayoutRequest;
+use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Currency;
 use App\Models\Insurance\BancassuranceCommissionPayout;
 use App\Models\Insurance\BancassuranceCommissionRule;
 use App\Models\Insurance\BancassurancePolicy;
-use App\Http\Requests\Insurance\BancassuranceCommissionPayoutRequest;
 use App\Services\Insurance\BancassuranceCommissionPayoutService;
-use App\Models\Auth\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
 
 class CommissionPayoutController extends Controller
 {
@@ -22,10 +20,11 @@ class CommissionPayoutController extends Controller
         $paymentmodes = CodeDetail::where('CodeID', 'PaymentMode')->get();
         $policies = BancassurancePolicy::all();
         $payouts = BancassuranceCommissionPayout::all();
-        
+
 
         return view('bancassurance.commissions.payouts.index', compact('payouts', 'policies', 'paymentmodes'));
     }
+
     public function pay()
     {
         $paymentmodes = CodeDetail::where('CodeID', 'PaymentModes')->get();
@@ -34,8 +33,8 @@ class CommissionPayoutController extends Controller
         $currencies = Currency::all();
         $commissionRules = BancassuranceCommissionRule::all();
         $PaidTo = User::all();
-        return view('bancassurance.commissions.payouts.pay', compact('payout', 'policies', 'paymentmodes', 'PaidTo', 'currencies', 'commissionRules'));
 
+        return view('bancassurance.commissions.payouts.pay', compact('payout', 'policies', 'paymentmodes', 'PaidTo', 'currencies', 'commissionRules'));
     }
 
     public function store(BancassuranceCommissionPayoutRequest $request)

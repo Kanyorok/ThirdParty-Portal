@@ -39,9 +39,9 @@ class BudgetProductEntryController extends Controller
                 return (float)$item->Value;
             });
         }
+
         return view('budgetandanalytics.budgetworkspace.entry.index', compact('projections'));
     }
-
 
     // Show form for new entry
     public function create()
@@ -52,7 +52,10 @@ class BudgetProductEntryController extends Controller
         $periods = BudgetPeriods::all();
 
         return view('budgetandanalytics.budgetworkspace.entry.create', compact(
-            'scenarios', 'currencies', 'products', 'periods'
+            'scenarios',
+            'currencies',
+            'products',
+            'periods'
         ));
     }
 

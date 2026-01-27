@@ -18,9 +18,9 @@ class Account extends Model
     protected function casts(): array
     {
         return [
-                'ClearBalance'      => 'decimal:4',
+                'ClearBalance' => 'decimal:4',
                 'LastCreditTrxDate' => 'datetime',
-                'LastDebitTrxDate'  => 'datetime',
+                'LastDebitTrxDate' => 'datetime',
                ];
     }
 

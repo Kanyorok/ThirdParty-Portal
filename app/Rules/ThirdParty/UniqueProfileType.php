@@ -12,16 +12,17 @@ class UniqueProfileType implements ValidationRule
     public function __construct(
         protected ThirdPartyUser $user,
         protected ThirdPartyTypeEnum $profileType
-    ) {}
+    ) {
+    }
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!$this->user->hasProfile()) {
+        if (! $this->user->hasProfile()) {
             return;
         }
 
         $thirdParty = $this->user->thirdParty;
-        if (!$thirdParty) {
+        if (! $thirdParty) {
             return;
         }
 

@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers\Insurance;
 
+use App\Enums\Core\PermissionEnum;
 use App\Enums\Insurance\InsurancePolicyStatus;
 use App\Http\Controllers\Controller;
-use App\Models\Core\Currency;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Insurance\PremiumManagement\BancassurancePremiumPaymentsRequest;
-use Illuminate\Support\Facades\Log;
-use App\Models\Insurance\BancassurancePolicy;
-use App\Services\Insurance\PremiumManagement\BancassurancePremiumPaymentsService;
 use App\Models\Core\Approval\CodeDetail;
-use App\Enums\Core\PermissionEnum;
+use App\Models\Core\Currency;
+use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancassurancePremiumPayments;
+use App\Services\Insurance\PremiumManagement\BancassurancePremiumPaymentsService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PremiumController extends Controller
 {
-    //
     public function create()
     {
         $this->authorize(PermissionEnum::BancassurancePremiumPaymentsView, BancassurancePremiumPayments::class);
@@ -35,6 +34,7 @@ class PremiumController extends Controller
             }
             $balance = ($policy->PremiumAmount + $riderPremium) - $totalPaid;
             $balances[$policy->Id] = $balance;
+
             return $balance != 0;
         });
         $paymentModes = CodeDetail::where('CodeID', 'PaymentModes')->get();
@@ -73,6 +73,7 @@ class PremiumController extends Controller
             $validated['Notes'] ?? '',
             Auth::user(),
         );
+
         return redirect()->route('bancassurance.premiums.index')->with('success', 'Premium payment recorded successfully.');
     }
 
@@ -98,10 +99,10 @@ class PremiumController extends Controller
         return view('bancassurance.premiums.receipt', compact('payment'));
     }
 
-
     public function destroy($id)
     {
         $this->authorize(PermissionEnum::BancassurancePremiumPaymentsDelete, BancassurancePremiumPayments::class);
+
         try {
             $payment = BancassurancePremiumPayments::findOrFail($id);
             $payment->delete();
@@ -111,6 +112,7 @@ class PremiumController extends Controller
         } catch (\Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting Premium Payments contacts: ' . $th->getMessage());
+
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to delete Premium Payments Contacts. Please try again.'])
                 ->withInput();

@@ -2,13 +2,10 @@
 
 namespace App\Http\Requests\Inventory;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use App\Models\Auth\User;
-use App\Models\HRM\Department;
-use App\Models\HRM\Employee;
 use App\Models\Core\Approval\CodeDetail;
-
+use App\Models\HRM\Department;
+use Illuminate\Foundation\Http\FormRequest;
 
 class StockConsumptionRequest extends FormRequest
 {
@@ -31,28 +28,29 @@ class StockConsumptionRequest extends FormRequest
                 function ($attribute, $value, $fail) {
                     $type = $this->input('IssuedToType');
                     $typeDetail = CodeDetail::find($type);
-                    
-                    if (!$typeDetail) {
+
+                    if (! $typeDetail) {
                         $fail('Invalid issued to type.');
+
                         return;
                     }
-                    
+
                     $typeName = strtoupper($typeDetail->Description);
-                    
+
                     if ($typeName === 'EMPLOYEE') {
                         // Check if it's a valid user ID
-                        if (!User::where('Id', $value)->exists()) {
+                        if (! User::where('Id', $value)->exists()) {
                             $fail('The selected issued to employee is invalid.');
                         }
                     } elseif ($typeName === 'DEPARTMENT') {
                         // Check if it's a valid department ID
-                        if (!Department::where('Id', $value)->exists()) {
+                        if (! Department::where('Id', $value)->exists()) {
                             $fail('The selected issued to department is invalid.');
                         }
                     } else {
                         $fail('Invalid issued to type.');
                     }
-                }
+                },
             ],
             'IssuedBy' => 'required|exists:t_Users,Id',
             'IssuedOn' => 'required|date',

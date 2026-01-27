@@ -56,7 +56,7 @@ class LoanNotificationController extends Controller
     {
         $this->authorize('create', BulkNotification::class);
         $dated = $request->getDated();
-        if (!$dated instanceof Carbon) {
+        if (! $dated instanceof Carbon) {
             throw ValidationException::withMessages(['Label' => 'request date may be invalid']);
         }
 
@@ -69,6 +69,7 @@ class LoanNotificationController extends Controller
 
         $actor = $request->user();
         $values = $request->getValues();
+
         //create bulk sms and send one.
         try {
             $Bulk = DB::transaction(static function () use ($dated, $loans, $actor, $request, $values) {
@@ -84,10 +85,12 @@ class LoanNotificationController extends Controller
 
                 //run event to start work.
                 event(new BulkNotificationEvent($Bulk, $actor, $values, $dated));
+
                 return $Bulk;
             });
         } catch (Exception $e) {
             Log::error('Error sending loan bulk notification : ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -110,8 +113,10 @@ class LoanNotificationController extends Controller
             } else {
                 $query = collect();
             }
+
             return $this->getLoans($query);
         }
+
         try {
             $dated = Carbon::parse(DebtProduct::query()->max('processdate'));
         } catch (Exception $exception) {
@@ -131,7 +136,7 @@ class LoanNotificationController extends Controller
     public function show($bulkNotificationID): RedirectResponse|View
     {
         $bulkNotification = BulkNotification::query()->where('BulkNotificationID', $bulkNotificationID)->first();
-        if (!$bulkNotification instanceof BulkNotification) {
+        if (! $bulkNotification instanceof BulkNotification) {
             return redirect()->back()->with('fail', 'loan not found, maybe closed.');
         }
         $this->authorize('view', $bulkNotification);
@@ -146,7 +151,7 @@ class LoanNotificationController extends Controller
     public function edit($bulkNotificationID): JsonResponse
     {
         $bulkNotification = BulkNotification::query()->where('BulkNotificationID', $bulkNotificationID)->first();
-        if (!$bulkNotification instanceof BulkNotification) {
+        if (! $bulkNotification instanceof BulkNotification) {
             return $this->errored('Notification not found, maybe closed');
         }
         $this->authorize('view', $bulkNotification);
@@ -169,7 +174,7 @@ class LoanNotificationController extends Controller
     public function messages($bulkNotificationID): JsonResponse
     {
         $bulkNotification = BulkNotification::query()->where('BulkNotificationID', $bulkNotificationID)->first();
-        if (!$bulkNotification instanceof BulkNotification) {
+        if (! $bulkNotification instanceof BulkNotification) {
             return $this->errored('Notification not found, maybe closed');
         }
         $this->authorize('view', $bulkNotification);

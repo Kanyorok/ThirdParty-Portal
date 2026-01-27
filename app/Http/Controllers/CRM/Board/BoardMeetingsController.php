@@ -42,6 +42,7 @@ class BoardMeetingsController extends Controller
     public function index(): JsonResponse
     {
         $this->authorize('viewAny', Board::class);
+
         return $this->meetings(Meeting::query()->where('t_Meetings.Type', Board::getPrimaryKey())->where('t_Meetings.EndOn', '>=', Carbon::now()));
     }
 
@@ -75,6 +76,7 @@ class BoardMeetingsController extends Controller
             return $e->toJson();
         } catch (\Exception | \Throwable $e) {
             Log::error('Error scheduling board meeting failed:  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 
@@ -88,17 +90,17 @@ class BoardMeetingsController extends Controller
     {
         $this->authorize('viewAny', Board::class);
         $meeting = Meeting::query()->where('t_Meetings.Type', Board::getPrimaryKey())->where('t_Meetings.MeetingID', $meetingId)->lock('WITH(NOLOCK)')->first();
-        if (!$meeting instanceof Meeting) {
+        if (! $meeting instanceof Meeting) {
             return redirect()->back()->with(['fail' => 'meeting not found']);
         }
         if ($meeting->StatusID !== MeetingStatusEnum::Scheduled) {
             return redirect()->back()->with(['fail' => 'meeting is ' . $meeting->StatusID->name]);
         }
+
         return view('crm.board.meetings.show')
             ->with('meeting', $meeting)
             ->with('rooms', MeetingRoom::query()->get(['RoomID', 'Name', 'Capacity']));
     }
-
 
     /**
      * Update Scheduled Meetings
@@ -107,7 +109,7 @@ class BoardMeetingsController extends Controller
     {
         $this->authorize('meeting', Board::class);
         $meeting = Meeting::query()->where('t_Meetings.Type', Board::getPrimaryKey())->where('t_Meetings.MeetingID', $meetingId)->lock('WITH(NOLOCK)')->first();
-        if (!$meeting instanceof Meeting) {
+        if (! $meeting instanceof Meeting) {
             return $this->errored('meeting not found');
         }
 
@@ -125,7 +127,7 @@ class BoardMeetingsController extends Controller
                 if ($schedule instanceof Schedule) {
                     $schedule->update([
                                        'StartOn' => $start,
-                                       'EndOn'   => $end,
+                                       'EndOn' => $end,
                                       ]);
                 }
                 if ($request->sendNotification()) {
@@ -136,6 +138,7 @@ class BoardMeetingsController extends Controller
             });
         } catch (\Throwable | \Exception $e) {
             Log::error('Error updating meeting Schedule : ' . $e->getMessage());
+
             return $this->br_response(400, 'unexpected error, try again later');
         }
 
@@ -149,7 +152,7 @@ class BoardMeetingsController extends Controller
     {
         $this->authorize('meeting', Board::class);
         $meeting = Meeting::query()->where('t_Meetings.Type', Board::getPrimaryKey())->where('t_Meetings.MeetingID', $meetingId)->lock('WITH(NOLOCK)')->first();
-        if (!$meeting instanceof Meeting) {
+        if (! $meeting instanceof Meeting) {
             return $this->errored('meeting not found');
         }
 
@@ -173,6 +176,7 @@ class BoardMeetingsController extends Controller
             });
         } catch (\Throwable | \Exception $e) {
             Log::error('Error updating meeting Schedule : ' . $e->getMessage());
+
             return $this->br_response(400, 'unexpected error, try again later');
         }
 

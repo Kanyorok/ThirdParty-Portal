@@ -53,6 +53,7 @@ class ClientCallController extends Controller
             //$call = $this->startCall($client->calls(), $current_start, $actor, $schedule);
         } catch (\Throwable | Exception $e) {
             Log::error('Error starting call ' . $e->getMessage());
+
             return $this->errored('unexpected error start call, try again latter');
         }
 
@@ -79,14 +80,14 @@ class ClientCallController extends Controller
                                                   'min:5',
                                                   'max:5000',
                                                  ],
-                            'private_notes'   => [
+                            'private_notes' => [
                                                   'nullable',
                                                   'max:5000',
                                                  ],
                            ]);
 
         $call = $client->calls()->where('t_Calls.CallID', $callID)->first();
-        if (!$call instanceof Call) {
+        if (! $call instanceof Call) {
             throw ValidationException::withMessages(['call_discussion' => 'call selected could have been deleted.']);
         }
 
@@ -96,6 +97,7 @@ class ClientCallController extends Controller
             $this->endCall($call, Carbon::now()->subSeconds(3), $actor, $request->call_discussion, $request->private_notes);
         } catch (\Throwable | Exception $e) {
             Log::error('Error call ' . $e->getMessage());
+
             return $this->errored('unexpected error saving, try again latter');
         }
 

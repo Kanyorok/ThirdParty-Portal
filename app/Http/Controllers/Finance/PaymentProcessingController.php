@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Finance;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Finance\FinanceInvoiceEntry;
-use App\Models\Finance\FinanceTransaction;
 use App\Models\Finance\FinanceVoucher;
 use App\Services\Finance\TransactionService;
 use Illuminate\Http\Request;
@@ -20,17 +19,27 @@ class PaymentProcessingController extends Controller
         $this->authorize(PermissionEnum::PaymentProcessingView, FinanceVoucher::class);
 
         $query = FinanceVoucher::with('invoice:Id,InvoiceNumber')
-            ->select('Id', 'VoucherNo', 'InvoiceNo', 'TotalAmount', 'PaymentMethod',
-                'ApprovalStatus','PaymentType', 'Description','Status','IsProcessed')
+            ->select(
+                'Id',
+                'VoucherNo',
+                'InvoiceNo',
+                'TotalAmount',
+                'PaymentMethod',
+                'ApprovalStatus',
+                'PaymentType',
+                'Description',
+                'Status',
+                'IsProcessed'
+            )
             ->where('ApprovalStatus', 'posted');
 
         if ($request->filled('voucher_no')) {
-            $query->where('VoucherNo', 'like', '%'.$request->voucher_no.'%');
+            $query->where('VoucherNo', 'like', '%' . $request->voucher_no . '%');
         }
         if ($request->filled('invoice_number')) {
             $invNum = $request->invoice_number;
-            $query->whereHas('invoice', function($q) use ($invNum){
-                $q->where('InvoiceNumber', 'like', '%'.$invNum.'%');
+            $query->whereHas('invoice', function ($q) use ($invNum) {
+                $q->where('InvoiceNumber', 'like', '%' . $invNum . '%');
             });
         }
         if ($request->filled('payment_method')) {
@@ -53,14 +62,15 @@ class PaymentProcessingController extends Controller
         $perPage = (int)($request->per_page ?? 10);
         $vouchers = $query->paginate($perPage)->withQueryString();
 
-        return view('finance.accountspayable.paymentprocessing.index',compact('vouchers'));
+        return view('finance.accountspayable.paymentprocessing.index', compact('vouchers'));
     }
 
-    public function create(){
+    public function create()
+    {
 
         $this->authorize(PermissionEnum::PaymentProcessingCreate, FinanceVoucher::class);
         $vouchers = FinanceVoucher::select('Id', 'VoucherNo', 'InvoiceNo', 'TotAmnt')
-            ->where('Status','Approved')
+            ->where('Status', 'Approved')
             ->get();
 
         return view('finance.accountspayable.paymentprocessing.create', compact('vouchers'));
@@ -71,12 +81,13 @@ class PaymentProcessingController extends Controller
         $this->authorize(PermissionEnum::PaymentProcessingView, FinanceVoucher::class);
 
         $voucher = FinanceVoucher::with('invoice.supplier')->findOrFail($id);
-        $amtPaidOnInvoice=FinanceVoucher::where('InvoiceNo', $voucher->InvoiceNo)->where('ApprovalStatus','posted')->sum('TotalAmount');
+        $amtPaidOnInvoice = FinanceVoucher::where('InvoiceNo', $voucher->InvoiceNo)->where('ApprovalStatus', 'posted')->sum('TotalAmount');
 
         return view('finance.accountspayable.paymentprocessing.show', compact('voucher', 'amtPaidOnInvoice'));
     }
 
-    public function postVoucher(Request $request, TransactionService $svc){
+    public function postVoucher(Request $request, TransactionService $svc)
+    {
         // $this->authorize(PermissionEnum::PaymentProcessingCreate, FinanceVoucher::class);
 
         $validated = $request->validate([
@@ -85,12 +96,12 @@ class PaymentProcessingController extends Controller
             'VoucherID' => 'required|integer|exists:t_FinanceVoucher,Id',
         ]);
 
-        $invoiceID=$validated['InvoiceID'];
-        $voucherID=$validated['VoucherID'];
+        $invoiceID = $validated['InvoiceID'];
+        $voucherID = $validated['VoucherID'];
 
         // Configure your module + transaction type mapping IDs
         // Make sure these exist in t_Modules and t_FinanceTransactionTypes
-        $MODULE_ID          = 1100000; // Finance module
+        $MODULE_ID = 1100000; // Finance module
         $TRANSACTION_TYPEID = 17;    // "AP Voucher Processing"
 
         try {
@@ -110,9 +121,9 @@ class PaymentProcessingController extends Controller
                 $voucher = FinanceVoucher::findOrFail($voucherID);
 
                 //Record as Scheduled or Not scheduled Voucher
-                $isScheduled=false;
-                if($voucher->PaymentType==='Scheduled'){
-                    $isScheduled=true;
+                $isScheduled = false;
+                if ($voucher->PaymentType === 'Scheduled') {
+                    $isScheduled = true;
                 }
 
                 // Guard: already posted?
@@ -122,24 +133,24 @@ class PaymentProcessingController extends Controller
 
                 // Build payload for TransactionService (service does idempotency)
                 $payload = [
-                    'ModuleID'          => $MODULE_ID,
+                    'ModuleID' => $MODULE_ID,
                     'ThirdPartyID' => $invoice->ThirdPartyID,
-                    'IsScheduled'=>$isScheduled,
-                    'VoucherID'=>$voucherID,
+                    'IsScheduled' => $isScheduled,
+                    'VoucherID' => $voucherID,
                     'TransactionTypeID' => $TRANSACTION_TYPEID,
-                    'TransactionType'   => 'Voucher Processing',
-                    'ReferenceNumber'   => $voucher->VoucherNo,
-                    'TransactionDate'   => $invoice->InvoiceDate ?? now()->toDateString(),
-                    'Amount'            => (float)($voucher->TotalAmount ?? 0),   // net (excl. tax) if that's your model
-                    'TaxAmount'         => (float)($invoice->TaxAmount ?? 0),      // 0 if not captured
-                    'BranchID'          => session('LoginBranchId', 1),
-                    'DepartmentID'      => $invoice->DepartmentID ?? null,
-                    'CurrencyID'        => $invoice->CurrencyID ?? 1,
-                    'CurrencyCode'      => optional($invoice->currency)->Code ?? 'KES',
-                    'ExchangeRate'      => (float)($invoice->ExchangeRate ?? 1),
-                    'Narration'         => trim(($voucher->Description ?? '').' '.$validated['Reason']),
-                    'SourceTable'       => 't_FinanceVoucher',
-                    'SystemDescription' => 'Voucher Processing: '.$voucher->VoucherNo,
+                    'TransactionType' => 'Voucher Processing',
+                    'ReferenceNumber' => $voucher->VoucherNo,
+                    'TransactionDate' => $invoice->InvoiceDate ?? now()->toDateString(),
+                    'Amount' => (float)($voucher->TotalAmount ?? 0),   // net (excl. tax) if that's your model
+                    'TaxAmount' => (float)($invoice->TaxAmount ?? 0),      // 0 if not captured
+                    'BranchID' => session('LoginBranchId', 1),
+                    'DepartmentID' => $invoice->DepartmentID ?? null,
+                    'CurrencyID' => $invoice->CurrencyID ?? 1,
+                    'CurrencyCode' => optional($invoice->currency)->Code ?? 'KES',
+                    'ExchangeRate' => (float)($invoice->ExchangeRate ?? 1),
+                    'Narration' => trim(($voucher->Description ?? '') . ' ' . $validated['Reason']),
+                    'SourceTable' => 't_FinanceVoucher',
+                    'SystemDescription' => 'Voucher Processing: ' . $voucher->VoucherNo,
                     // Optional one‑off overrides if needed:
                     // 'DebitGLAccountID'  => 5_001,
                     // 'CreditGLAccountID' => 3_001,
@@ -156,8 +167,8 @@ class PaymentProcessingController extends Controller
                 if (in_array($result['status'], ['success', 'exists'], true)) {
                     $voucher->update([
                         'IsProcessed' => true,
-                        'ModifiedBy'     => Auth::id(),
-                        'ModifiedOn'     => now(),
+                        'ModifiedBy' => Auth::id(),
+                        'ModifiedOn' => now(),
                     ]);
                 }
 
@@ -177,10 +188,11 @@ class PaymentProcessingController extends Controller
                 return back()->with($flashKey, $message);
             });
         } catch (\Throwable $e) {
-            Log::error('Voucher Processing Error', ['err'=>$e->getMessage()]);
+            Log::error('Voucher Processing Error', ['err' => $e->getMessage()]);
+
             return $e->getMessage();
-            return back()->with('error', "Processing failed: ".$e->getMessage());
+
+            return back()->with('error', "Processing failed: " . $e->getMessage());
         }
     }
-
 }

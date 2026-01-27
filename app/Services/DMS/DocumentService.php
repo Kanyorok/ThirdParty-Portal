@@ -38,7 +38,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 use Illuminate\Support\Str;
-
 use Ramsey\Uuid\Uuid;
 use Throwable;
 
@@ -57,7 +56,6 @@ class DocumentService extends PermissionsService
         try {
             $type = ExtensionsEnum::fromMimeType($this->document->MimeType);
         } catch (ErroredException $e) {
-
             $type = ExtensionsEnum::None;
         }
         $this->type = $type;
@@ -84,10 +82,11 @@ class DocumentService extends PermissionsService
      */
     public function sign(DMSSignature $signature, User $actor, int $Pages): static
     {
-        if (!$this->type->canSign()) {
+        if (! $this->type->canSign()) {
             throw new ErroredException('Document cannot be signed');
         }
         (new SignatureService($signature))->sign($this->document, $actor, $Pages);
+
         return $this;
     }
 
@@ -105,6 +104,7 @@ class DocumentService extends PermissionsService
             }
             self::userPermissions($service->document, $permissions, RoleEnum::Read, $actor);
         }
+
         return $service;
     }
 
@@ -135,6 +135,7 @@ class DocumentService extends PermissionsService
     public function addPermission(User|Team $assignee, RoleEnum $role, User $actor, bool $notify = true): static
     {
         $this->_addPermissions($this->document, $assignee, $role, $actor, $notify);
+
         return $this;
     }
 
@@ -155,9 +156,10 @@ class DocumentService extends PermissionsService
         $checksum2 = hash_file(self::CHECKSUM, Storage::disk($disk->value)->path($path));
         $checksum = base64_encode($checksum1 . '|' . $checksum2);
 
-        if (!str_ends_with(strtolower($fileName), '.' . strtolower($extension->value))) {
+        if (! str_ends_with(strtolower($fileName), '.' . strtolower($extension->value))) {
             $fileName .= '.' . $extension->value;
         }
+
         return self::_create($repository, $actor, $disk, $fileName, $extension, $path, Storage::disk($disk->value)->size($path), $checksum, copyPermissions: $copyRepoPermissions);
     }
 
@@ -188,6 +190,7 @@ class DocumentService extends PermissionsService
         if (Storage::disk($disk->value)->put($path, (new EncryptionService())->encrypt($contents))) {
             return $path;
         }
+
         throw new ErroredException('Saving file failed.');
     }
 
@@ -195,7 +198,7 @@ class DocumentService extends PermissionsService
      * @throws ErroredException
      */
     private static function _create(
-        Repository     $repository,
+        Repository $repository,
         User $actor,
         DisksEnum $disk,
         string $name,
@@ -230,11 +233,13 @@ class DocumentService extends PermissionsService
                 if ($repository->Visibility->value === VisibilityEnum::Public->value) {
                     $service->addPermission($actor, RoleEnum::Admin, SystemHelper::user(), false);
                 }
+
                 return $service->_newVersion($disk, $path, $name, $sizeInBytes, $actor, $properties, $checksum);
             });
         } catch (Exception | Throwable $e) {
             Log::error('Error creating document: ');
             Log::error($e);
+
             throw new ErroredException('Saving file failed.');
         }
     }
@@ -280,6 +285,7 @@ class DocumentService extends PermissionsService
         if ($this->isCheckedOut()) {
             throw new ErroredException('document is already checked out !');
         }
+
         try {
             return DB::transaction(function () use ($actor, $remark) {
                 $date = now();
@@ -292,11 +298,13 @@ class DocumentService extends PermissionsService
                     'Dated' => $date,
                 ]);
                 activity()->causedBy($actor)->performedOn($this->document)->event('checked-out')->log('document checked out');
+
                 return $this;
             });
         } catch (Throwable $e) {
             Log::error('Error checking out document: ' . $e);
         }
+
         throw new ErroredException('checking out document failed');
     }
 
@@ -313,7 +321,7 @@ class DocumentService extends PermissionsService
      */
     public function isCheckedOut(User $actor = null): int
     {
-        if (!$this->type->canCheckOut()) {
+        if (! $this->type->canCheckOut()) {
             return 0;
         }
         if (is_null($actor)) {
@@ -338,7 +346,7 @@ class DocumentService extends PermissionsService
             throw new ErroredException('document is on legal hold !');
         }
         $checkOut = $this->document->checkouts()->where('Status', DocumentCheckOutStatusEnum::CheckOut->value)->where('t_DocumentCheckOuts.CreatedBy', $actor->Id)->first();
-        if (!$checkOut instanceof DocumentCheckOut) {
+        if (! $checkOut instanceof DocumentCheckOut) {
             throw new ErroredException('you don\'t have an active checkout for this document.');
         }
         $extension = ExtensionsEnum::fromMimeType($file->getMimeType() ?? $file->getClientMimeType());
@@ -346,6 +354,7 @@ class DocumentService extends PermissionsService
         $checksum1 = hash_file(self::CHECKSUM, $file->getRealPath());
         $path = self::_saveFile($disk, $file->getContent());
         $checksum2 = hash_file(self::CHECKSUM, Storage::disk($disk->value)->path($path));
+
         try {
             return DB::transaction(function () use ($file, $actor, $remark, $checkOut, $path, $checksum1, $checksum2, $extension, $disk) {
                 $checkOut->update([
@@ -362,6 +371,7 @@ class DocumentService extends PermissionsService
         } catch (Throwable $e) {
             Log::error('Error checking in document: ' . $e);
         }
+
         throw new ErroredException('checking in document failed');
     }
 
@@ -371,7 +381,7 @@ class DocumentService extends PermissionsService
      */
     public function newVersionFile(string $filePath, User $actor): static
     {
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             throw new ErroredException('File does not exist. !');
         }
 
@@ -383,6 +393,7 @@ class DocumentService extends PermissionsService
         $size = (int)filesize($filePath);
         $name = "Signed " . pathinfo($this->document->Name, PATHINFO_FILENAME) . '.' . $extension->value;
         unlink($filePath);
+
         return $this->_newVersion($disk, $path, $name, $size, $actor, checksum: base64_encode($checksum1 . '|' . $checksum2));
     }
 
@@ -426,6 +437,7 @@ class DocumentService extends PermissionsService
         }
         $expire = new DateTime();
         $expire->setTimestamp($key[2]);
+
         return ($expire > now() && $key[0] === $user->UserID && $key[1] === $this->document->DocumentId);
     }
 
@@ -437,6 +449,7 @@ class DocumentService extends PermissionsService
         $encryptedKey = Crypt::encryptString($key);
 
         Cache::put($user->Id . '-download-' . $this->document->Id, $encryptedKey, $expire);
+
         return $encryptedKey;
     }
 
@@ -445,7 +458,7 @@ class DocumentService extends PermissionsService
      */
     public function preview(string $attr): string
     {
-        if (!$this->isPrevieable()) {
+        if (! $this->isPrevieable()) {
             return '';
         }
 
@@ -459,12 +472,12 @@ class DocumentService extends PermissionsService
 
         if ($this->type->value === ExtensionsEnum::Pdf->value) {
             return '<iframe src="data:application/pdf;base64,' . $this->getFileContent() . '#toolbar=0&navpanes=0" ' . $attr . '></iframe>'; //todo fix for pdf
-
         }
 
         if ($this->type->value === ExtensionsEnum::Txt->value) {
             return '<textarea readonly disabled ' . $attr . '>' . $this->getFileContent(false) . '</textarea>';
         }
+
         return '';
     }
 
@@ -479,10 +492,11 @@ class DocumentService extends PermissionsService
     public function getFileContent(bool $base64 = true): string
     {
         $currentVersion = $this->document->current;
-        if (!$currentVersion instanceof DocumentVersion) {
+        if (! $currentVersion instanceof DocumentVersion) {
             throw new ErroredException('No file found, decrypting the file.');
         }
         $content = (new EncryptionService())->decrypt(Storage::disk($currentVersion->Disk->value)->get($currentVersion->Path));
+
         return ($base64) ? base64_encode($content) : $content;
     }
 
@@ -570,11 +584,13 @@ class DocumentService extends PermissionsService
                 ]);
 
                 activity()->causedBy($actor)->performedOn($this->document)->event('update')->log('Updated file ' . $this->document->Name . ' visibility : ' . $visibility->description());
+
                 return $this;
             });
         } catch (Exception | Throwable $e) {
             Log::error('Error update document visibility: ');
             Log::error($e);
+
             throw new ErroredException();
         }
     }
@@ -585,6 +601,7 @@ class DocumentService extends PermissionsService
     public function removePermission(SpecialPermission $permission, User $actor): static
     {
         $this->document = $this->_trashPermissions($this->document, $permission, $actor);
+
         return $this;
     }
 
@@ -597,7 +614,7 @@ class DocumentService extends PermissionsService
 
     public function restore(User $actor): static
     {
-        if (!$this->document->trashed()) {
+        if (! $this->document->trashed()) {
             return $this;
         }
 

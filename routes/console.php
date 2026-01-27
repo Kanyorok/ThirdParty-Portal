@@ -60,11 +60,13 @@ Schedule::command('app:fleet-day-playback-command')->dailyAt('00:30')->withoutOv
 
     // Submit RFQ if not already pending
     $pending = \Illuminate\Support\Facades\DB::table('t_WorkFlowPending')->where('Source', 't_RFQ')->where('SourceID', 1)->exists();
-    if (!$pending) {
+    if (! $pending) {
         $s = app(\App\Services\Procurement\RFQ\RFQWorkflowService::class);
         $r = \App\Models\Procurement\RFQ::find(1);
         $u = \App\Models\Auth\User::find(4);
-        if (!$u) $u = \App\Models\Auth\User::first();
+        if (! $u) {
+            $u = \App\Models\Auth\User::first();
+        }
         $s->submit($r, $u, 'Manual Fix Submission');
         $this->info('Submitted RFQ 1');
     } else {

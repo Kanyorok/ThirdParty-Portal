@@ -19,6 +19,7 @@ class BudgetMonthlyAllocationsSeeder extends Seeder
         $userIds = User::pluck('Id')->toArray();
         if (empty($userIds)) {
             echo "❌ No users found in t_Users table.\n";
+
             return;
         }
 
@@ -52,8 +53,9 @@ class BudgetMonthlyAllocationsSeeder extends Seeder
         foreach ($activityMap as $activityName => $config) {
             // Get the ActivityID from the master table
             $activityMaster = DB::table('t_BudgetActivityMaster')->where('ActivityName', $activityName)->first();
-            if (!$activityMaster) {
+            if (! $activityMaster) {
                 echo "⚠️ Skipping: '{$activityName}' not found in t_BudgetActivityMaster.\n";
+
                 continue;
             }
 

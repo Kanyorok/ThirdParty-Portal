@@ -7,17 +7,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\PlanManualInputRequest;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
-use App\Models\Procurement\BudgetMaster;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-
 class PlanManualInputController extends Controller
 {
-    //
     public function index(Request $request)
     {
         $this->authorize('viewAny', PlanLineItem::class);
@@ -117,7 +114,6 @@ class PlanManualInputController extends Controller
         return redirect()
             ->route('procurement.procurementplan.planconsolidation.manualentry.index', ['plan_id' => $validated['PlanID']])
             ->with('success', 'Line item added successfully.');
-
     }
 
     public function edit($lineItemId)
@@ -153,33 +149,43 @@ class PlanManualInputController extends Controller
             switch ($key) {
                 case 'PlanID':
                     $lineItem->PlanID = $value;
+
                     break;
                 case 'ItemID':
                     $lineItem->ItemID = $value;
+
                     break;
                 case 'CategoryID':
                     $lineItem->CategoryID = $value;
+
                     break;
                 case 'quantity':
                     $lineItem->MergedQty = $value;
+
                     break;
                 case 'unit_of_measure':
                     $lineItem->UnitOfMeasure = $value;
+
                     break;
                 case 'estimated_cost':
                     $lineItem->EstimatedUnitCost = $value;
+
                     break;
                 case 'schedule_period':
                     $lineItem->SchedulePeriod = $value;
+
                     break;
                 case 'expected_delivery_date':
                     $lineItem->ExpectedDeliveryDate = $value;
+
                     break;
                 case 'budget_line_id':
                     $lineItem->BudgetLineID = $value;
+
                     break;
                 case 'notes':
                     $lineItem->ChangeRemarks = $value;
+
                     break;
             }
         }
@@ -211,7 +217,5 @@ class PlanManualInputController extends Controller
         return redirect()
             ->route('procurement.procurementplan.planconsolidation.manualentry.index', ['plan_id' => $lineItem->PlanID])
             ->with('success', 'Line item deleted successfully.');
-
     }
-
 }

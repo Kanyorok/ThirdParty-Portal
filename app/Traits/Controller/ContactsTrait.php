@@ -28,9 +28,10 @@ trait ContactsTrait
                 if ($contact->PartyID === '0') {
                     return '<a href="' . route('unattached.contacts.show', [$contact->ContactID]) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</a>';
                 }
+
                 return '<button type="button"  data-click_url="' . route('contacts.show', [$contact->ContactID]) . '" data-summary_title="contact details" class="btn btn-info btn-sm click-summary-data"><i class="fas fa-eye"></i> details</button>';
             })->editColumn('Email', function (Contact $contact) {
-                if (!filter_var($contact->Email, FILTER_VALIDATE_EMAIL)) {
+                if (! filter_var($contact->Email, FILTER_VALIDATE_EMAIL)) {
                     return '';
                 }
 
@@ -42,6 +43,7 @@ trait ContactsTrait
                     return '<a  href="javascript:void(0)" data-info="' . route('client-mail.store', [$contact->party->ClientID]) . '~' . $contact->Label . '~' . $contact->Email . '"
                                class="btn btn-lg btn-link me-1 my-1 send-mail-to-action">' . $contact->Email . '</a>';
                 }
+
                 /* if ($contact->party instanceof Client){
 
                  }*/
@@ -81,6 +83,7 @@ trait ContactsTrait
                             </div>
                         </div>';
                 }
+
                 /* if ($contact->party instanceof Client){
 
                  }*/

@@ -3,42 +3,35 @@
 namespace App\Models\Procurement;
 
 use App\Enums\TenderApprovalStatusEnum;
-use App\Enums\TenderCategoryEnum;
 use App\Enums\TenderStatusEnum;
 use App\Enums\TenderTypeEnum;
+use App\Models\Auth\User;
+use App\Models\Core\Approval\Workflow;
+use App\Models\Core\Approval\WorkflowHistory;
+use App\Models\Core\Approval\WorkflowPending;
+use App\Models\Core\Currency;
+use App\Models\Inventory\ItemCategories;
 use App\Models\ThirdParies\Supplier;
-use App\Models\Core\Approval\CodeDetail;
+use App\Traits\Model\DocumentsTrait;
+use App\Traits\Model\UserActorTrait;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Auth\User;
-use App\Models\Core\Currency;
-use App\Models\Inventory\ItemCategories;
-use App\Models\Procurement\ProcurementMode;
-use App\Models\Procurement\ProcurementPlan;
-use App\Models\Procurement\TenderItems;
-use App\Models\Procurement\TenderAward;
-use App\Models\Procurement\TenderSection;
-use App\Models\Procurement\TenderSupplier;
-use App\Models\Core\Approval\WorkflowHistory;
-use App\Models\Core\Approval\Workflow;
-use App\Models\DMS\Document;
-use App\Models\Core\Approval\WorkflowPending;
-use App\Traits\Model\UserActorTrait;
-use App\Traits\Model\DocumentsTrait;
-use Carbon\Carbon;
 
 class Tender extends Model
 {
-    use SoftDeletes, UserActorTrait, DocumentsTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Tenders';
     protected $primaryKey = 'Id';
@@ -115,7 +108,7 @@ class Tender extends Model
                 'ResponseStatus',
                 'ResponseDate',
                 'DeclineReason',
-                'ConfirmationAttachment'
+                'ConfirmationAttachment',
             ]);
     }
 
@@ -130,12 +123,13 @@ class Tender extends Model
     }
 
     public function procurementPlan(): BelongsTo
-{
-    return $this->belongsTo(ConsolidatedProcurementPlan::class, 'ProcurementModeId', 'PlanID');
-}
-/**
- * Returns all submissions for a tender given by its tender reference.
- */
+    {
+        return $this->belongsTo(ConsolidatedProcurementPlan::class, 'ProcurementModeId', 'PlanID');
+    }
+
+    /**
+     * Returns all submissions for a tender given by its tender reference.
+     */
     public function submissions(): HasMany
     {
         return $this->hasMany(\App\Models\Procurement\BidSubmission::class, 'TenderRef', 'TenderNo');
@@ -184,7 +178,7 @@ class Tender extends Model
             'ready' => true,
             'message' => "Ready: {$responsiveBids} responsive bid(s), {$this->tenderSections->count()} section(s)",
             'responsive_bids' => $responsiveBids,
-            'sections_count' => $this->tenderSections->count()
+            'sections_count' => $this->tenderSections->count(),
         ];
     }
 
@@ -209,7 +203,7 @@ class Tender extends Model
     {
         return $query->where(function ($q) use ($Id) {
             $q->where('TenderType', TenderTypeEnum::Open->value)
-                ->orWhereHas('suppliers', fn($q) => $q->where('Id', $Id));
+                ->orWhereHas('suppliers', fn ($q) => $q->where('Id', $Id));
         });
     }
 
@@ -223,9 +217,10 @@ class Tender extends Model
         if ($this->Status !== TenderStatusEnum::Published) {
             return false;
         }
-        if (!$this->SubmissionDeadline) {
+        if (! $this->SubmissionDeadline) {
             return true;
         }
+
         return Carbon::now()->lte(Carbon::parse($this->SubmissionDeadline)->endOfDay());
     }
 
@@ -295,30 +290,26 @@ class Tender extends Model
      * Workflow history relationship - FIXED
      * The morphMany relationship should use 'source' as the method name in WorkflowHistory
      */
-   public function workflowHistory()
+    public function workflowHistory()
     {
         return $this->hasMany(WorkflowHistory::class, 'SourceID', 'Id')
             ->where('Source', 'tender')
             ->whereNull('DeletedOn');
-            
     }
 
-    
     public function workflowPending()
     {
         return $this->hasMany(WorkflowPending::class, 'SourceID', 'Id')
             ->where('Source', 'tender')
             ->whereNull('DeletedOn');
     }
-    
-    
 
-public function currentStage()
-{
-    return $this->workflowHistory()
-        ->orderBy('CreatedOn', 'desc')
-        ->first();
-}
+    public function currentStage()
+    {
+        return $this->workflowHistory()
+            ->orderBy('CreatedOn', 'desc')
+            ->first();
+    }
 
     /**
      * Get all awards for this tender (HasMany relationship)
@@ -336,17 +327,17 @@ public function currentStage()
         return $this->hasOne(TenderAward::class, 'TenderID', 'Id');
     }
 
-     /**
-     * Check if tender is approved
-     */
+    /**
+    * Check if tender is approved
+    */
     public function isApproved(): bool
     {
         return $this->ApprovalStatus === TenderApprovalStatusEnum::APPROVED;
     }
 
-     /**
-     * Check if tender is rejected
-     */
+    /**
+    * Check if tender is rejected
+    */
     public function isRejected(): bool
     {
         return $this->ApprovalStatus === TenderApprovalStatusEnum::REJECTED;
@@ -357,12 +348,11 @@ public function currentStage()
      */
     public function getApprovalStatusBadgeAttribute(): string
     {
-        return match($this->ApprovalStatus) {
+        return match ($this->ApprovalStatus) {
             TenderApprovalStatusEnum::PENDING => 'warning',
             TenderApprovalStatusEnum::APPROVED => 'success',
             TenderApprovalStatusEnum::REJECTED => 'danger',
             default => 'secondary',
         };
     }
-
 }

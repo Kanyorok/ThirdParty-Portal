@@ -43,12 +43,14 @@ class GlobalPlannerController extends Controller
             $planner = DB::transaction(static function () use ($plans, $request, $actor) {
                 $planner = PlannerService::createMaster($request->validated('Name'), $plans, ($request->validated('Notes')) ?? "", $actor)->planner;
                 activity()->causedBy($request->user())->performedOn($planner)->event('create')->log('created master  marketing plan ' . $planner->PlannerID);
+
                 return $planner;
             });
         } catch (ErroredException $e) {
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error creating master planner failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -64,7 +66,7 @@ class GlobalPlannerController extends Controller
         $this->authorize('marketingManager', User::class);
         $planner = MarketingPlanner::query()->where('PlannerID', $planner_id)->where('OwnerId', $request->user()->Id)
             ->where('Type', PlannerTypeEnum::MasterPlanner->value)->where('Status', PlannerStatus::Draft->value)->first();
-        if (!$planner instanceof MarketingPlanner) {
+        if (! $planner instanceof MarketingPlanner) {
             return redirect()->route('marketing-planner.index')->with('fail', 'Cannot edit a plan already submitted');
         }
 
@@ -81,7 +83,7 @@ class GlobalPlannerController extends Controller
     {
         $this->authorize('marketingManager', User::class);
         $data = $request->validate([
-                                    'Name'  => [
+                                    'Name' => [
                                                 'required',
                                                 'string',
                                                 'max:200',
@@ -94,7 +96,7 @@ class GlobalPlannerController extends Controller
 
         $planner = MarketingPlanner::query()->where('PlannerID', $planner_id)->where('OwnerId', $request->user()->Id)
             ->where('Type', PlannerTypeEnum::MasterPlanner->value)->where('Status', PlannerStatus::Draft->value)->first();
-        if (!$planner instanceof MarketingPlanner) {
+        if (! $planner instanceof MarketingPlanner) {
             return $this->errored('plan cannot be updated');
         }
 
@@ -113,7 +115,7 @@ class GlobalPlannerController extends Controller
         $actor = $request->user();
         $planner = MarketingPlanner::query()->where('PlannerID', $planner_id)->where('OwnerId', $actor->Id)
             ->where('Type', PlannerTypeEnum::MasterPlanner->value)->where('Status', PlannerStatus::Draft->value)->first();
-        if (!$planner instanceof MarketingPlanner) {
+        if (! $planner instanceof MarketingPlanner) {
             return $this->errored('plan cannot be trashed');
         }
 
@@ -125,6 +127,7 @@ class GlobalPlannerController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error removing master planner failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

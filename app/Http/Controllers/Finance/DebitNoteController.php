@@ -19,19 +19,19 @@ class DebitNoteController extends Controller
     public function index(Request $request)
     {
         $this->authorize(PermissionEnum::DebitNoteView, FinanceCDNotes::class);
-        $invoices = FinanceInvoice::select('Id','InvoiceNumber','InvoiceTitle','TotalAmount')->get();
+        $invoices = FinanceInvoice::select('Id', 'InvoiceNumber', 'InvoiceTitle', 'TotalAmount')->get();
 
         $query = FinanceCDNotes::with('invoiceDebit:Id,InvoiceNumber')
-            ->select('Id', 'CDNumber', 'NoteType', 'InvoiceRefNo', 'NoteDate', 'NoteAmount', 'Description','ApprovalStatus')
-            ->where('NoteType','debit');
+            ->select('Id', 'CDNumber', 'NoteType', 'InvoiceRefNo', 'NoteDate', 'NoteAmount', 'Description', 'ApprovalStatus')
+            ->where('NoteType', 'debit');
 
         if ($request->filled('cd_number')) {
-            $query->where('CDNumber', 'like', '%'.$request->cd_number.'%');
+            $query->where('CDNumber', 'like', '%' . $request->cd_number . '%');
         }
         if ($request->filled('invoice_number')) {
             $invNum = $request->invoice_number;
-            $query->whereHas('invoiceDebit', function($q) use ($invNum) {
-                $q->where('InvoiceNumber', 'like', '%'.$invNum.'%');
+            $query->whereHas('invoiceDebit', function ($q) use ($invNum) {
+                $q->where('InvoiceNumber', 'like', '%' . $invNum . '%');
             });
         }
         if ($request->filled('date_from')) {
@@ -54,9 +54,9 @@ class DebitNoteController extends Controller
         $perPage = (int)($request->per_page ?? 10);
         $notes = $query->paginate($perPage)->withQueryString();
 
-        $approvalStatuses = FinanceCDNotes::where('NoteType','debit')->distinct()->pluck('ApprovalStatus')->filter()->unique()->values();
+        $approvalStatuses = FinanceCDNotes::where('NoteType', 'debit')->distinct()->pluck('ApprovalStatus')->filter()->unique()->values();
 
-        return view('finance.accountsreceivable.debitnote.index', compact('notes','invoices','approvalStatuses'));
+        return view('finance.accountsreceivable.debitnote.index', compact('notes', 'invoices', 'approvalStatuses'));
     }
 
     /**
@@ -87,6 +87,7 @@ class DebitNoteController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             // $cdNumber = str_pad(rand(0,999999), 6, '0', STR_PAD_LEFT);
 
@@ -119,10 +120,13 @@ class DebitNoteController extends Controller
                 ->withProperties(['action' => 'create'])
                 ->log('Created Note Sucessfully:' . $notes->id);
             DB::commit();
+
             return redirect()->route('debitnote.index')->with('success', 'Debit Note created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return $th->getMessage();
+
             return back()->with('error', $th->getMessage());
         }
     }
@@ -145,19 +149,17 @@ class DebitNoteController extends Controller
             'invoiceDebit.currency:Id,Code',
             // audit
             'createdBy:Id,Name',
-            'modifiedBy:Id,Name'
+            'modifiedBy:Id,Name',
         ])->findOrFail($id);
 
         return view('finance.accountspayable.creditnote.show', compact('note'));
     }
-
 
     /**
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)
     {
-        //
     }
 
     /**
@@ -169,13 +171,14 @@ class DebitNoteController extends Controller
 
         $validated = $request->validate([
             'InvoiceRefNo' => 'required|exists:t_FinanceInvoices,Id',
-            'NoteDate'     => 'required|date',
-            'NoteAmount'   => 'required|numeric|min:0.00',
-            'Description'  => 'nullable|string',
-            'NoteType'     => 'required|in:credit,debit',
+            'NoteDate' => 'required|date',
+            'NoteAmount' => 'required|numeric|min:0.00',
+            'Description' => 'nullable|string',
+            'NoteType' => 'required|in:credit,debit',
         ]);
 
         DB::beginTransaction();
+
         try {
             $note = FinanceCDNotes::where('Id', $id)->update([
                 'InvoiceRefNo' => $validated['InvoiceRefNo'],
@@ -192,14 +195,16 @@ class DebitNoteController extends Controller
                 ->log('Updated Note successfully: ');
 
             DB::commit();
+
             return redirect()->route('debitnote.index')->with('success', 'Debit Note updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return $th->getMessage();
+
             return back()->with('error', $th->getMessage());
         }
     }
-
 
     /**
      * Remove the specified resource from storage.
@@ -209,6 +214,7 @@ class DebitNoteController extends Controller
         $this->authorize(PermissionEnum::DebitNoteDelete, FinanceCDNotes::class);
         $note = FinanceCDNotes::findOrFail($id);
         $note->delete();
+
         return redirect()->route('debitnote.index')->with('success', 'Debit Note deleted successfully.');
     }
 }

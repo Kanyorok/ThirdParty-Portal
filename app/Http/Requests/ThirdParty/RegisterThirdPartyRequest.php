@@ -15,10 +15,10 @@ class RegisterThirdPartyRequest extends FormRequest
     {
         return [
             'FirstName' => ['required', 'string', 'max:100'],
-            'LastName'  => ['required', 'string', 'max:100'],
-            'Email'     => ['required', 'email', 'unique:t_ThirdPartyUsers,Email'],
-            'Phone'     => ['required', 'string', 'max:20'],
-            'Password'  => ['required', 'string', 'min:8', 'confirmed'],
+            'LastName' => ['required', 'string', 'max:100'],
+            'Email' => ['required', 'email', 'unique:t_ThirdPartyUsers,Email'],
+            'Phone' => ['required', 'string', 'max:20'],
+            'Password' => ['required', 'string', 'min:8', 'confirmed'],
         ];
     }
 

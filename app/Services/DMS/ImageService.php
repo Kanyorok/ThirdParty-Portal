@@ -28,7 +28,6 @@ class ImageService
         $this->type = $type;
     }
 
-
     public static function createUpload(UploadedFile $file, string $Type, string $TypeID, User $actor): self
     {
         return self::create($Type, $TypeID, $file->getContent(), $file->getMimeType() ?? $file->getClientMimeType(), $file->getClientOriginalName(), $actor);
@@ -67,7 +66,7 @@ class ImageService
 
     public function preview(string $attr): string
     {
-        if (!$this->type->isPreview()) {
+        if (! $this->type->isPreview()) {
             return '';
         }
 

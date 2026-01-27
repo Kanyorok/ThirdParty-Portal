@@ -3,26 +3,24 @@
 namespace App\Models\Procurement;
 
 use App\Models\Auth\User;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
 use App\Models\Inventory\ItemMasterList;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
-
-
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PlanLineItem extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_PlanLineItem';
     protected $primaryKey = 'LineItemID';
@@ -63,6 +61,7 @@ class PlanLineItem extends Model
     {
         return $this->belongsTo(ConsolidatedProcurementPlan::class, 'PlanID');
     }
+
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'BranchID');
@@ -125,25 +124,28 @@ class PlanLineItem extends Model
     {
         return $this->hasMany(\App\Models\Procurement\Order::class, 'PlanRef', 'LineItemID');
     }
+
     /**
      * Get the total amount for this line item
      */
     public function getTotalAmountAttribute(): float
     {
-       $quantity = $this->MergedQty ?? $this->OriginalQTY ?? 0;
+        $quantity = $this->MergedQty ?? $this->OriginalQTY ?? 0;
 
-    // Use AdjustedCost only if it is > 0
-    $unitCost = ($this->AdjustedCost > 0)
-        ? $this->AdjustedCost
-        : ($this->EstimatedUnitCost ?? 0);
+        // Use AdjustedCost only if it is > 0
+        $unitCost = ($this->AdjustedCost > 0)
+            ? $this->AdjustedCost
+            : ($this->EstimatedUnitCost ?? 0);
 
-    return (float) $quantity * (float) $unitCost;
+        return (float) $quantity * (float) $unitCost;
     }
+
     public function tenderItems()
     {
         return $this->hasMany(TenderItems::class, 'PlanItemID', 'LineItemID');
     }
-      /**
+
+    /**
      * Get the procurement plan this line item belongs to
      */
     public function procurementPlan(): BelongsTo
@@ -154,5 +156,4 @@ class PlanLineItem extends Model
             'PlanID'       // Primary key in t_ConsolidatedProcurementPlans (or whatever your table is)
         );
     }
-
 }

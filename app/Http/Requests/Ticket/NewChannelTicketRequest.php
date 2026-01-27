@@ -18,12 +18,12 @@ class NewChannelTicketRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'ticket_id'          => [
+                'ticket_id' => [
                                          'required',
                                          'string',
                                          'max:100',
                                         ],
-                'ticket_title'       => [
+                'ticket_title' => [
                                          'required',
                                          'string',
                                          'max:255',
@@ -32,7 +32,7 @@ class NewChannelTicketRequest extends FormRequest
                                          'required',
                                          'string',
                                         ],
-                'ticket_category'    => ['required'],
+                'ticket_category' => ['required'],
                ];
     }
 
@@ -45,6 +45,7 @@ class NewChannelTicketRequest extends FormRequest
         if ($category instanceof CodeDetail) {
             return $category;
         }
+
         throw ValidationException::withMessages(['ticket_category' => 'Category may be invalid']);
     }
 }

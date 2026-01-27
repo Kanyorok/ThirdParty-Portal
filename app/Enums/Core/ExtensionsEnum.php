@@ -51,6 +51,7 @@ enum ExtensionsEnum: string
             }
             $data->add($value->getMimeType());
         }
+
         return $data->toArray();
     }
 
@@ -117,6 +118,7 @@ enum ExtensionsEnum: string
                 return $value;
             }
         }
+
         throw new ErroredException('Unknown mime type');
     }
 
@@ -125,6 +127,7 @@ enum ExtensionsEnum: string
         if ($type === 'img') {
             return $this->images();
         }
+
         return $this->_fa();
     }
 
@@ -148,7 +151,8 @@ enum ExtensionsEnum: string
     }
 
     private function images(): string
-    {//source https://dryicons.com/free-icons/file-calendar
+    {
+//source https://dryicons.com/free-icons/file-calendar
         return match ($this) {
             self::Jpeg, self::Png, self::Gif, self::Bmp, self::Svg => asset('assets/img/files/img-file-img.svg'),
             self::Mp4, self::Webm, self::AVI, self::Mpeg => asset('assets/img/files/img-file-video.svg'),
@@ -241,7 +245,6 @@ enum ExtensionsEnum: string
         };
     }
 
-
     public function isAudio(): bool
     {
         return in_array($this->value, [self::Mp3->value, self::Wav->value, self::Ogg->value, self::M4a->value], true);
@@ -251,37 +254,37 @@ enum ExtensionsEnum: string
     {
         return [
             'Images' => [
-                'extensions' => implode(', ', array_map(static fn($ext) => $ext->value, [self::Jpeg, self::Png, self::Gif, self::Bmp, self::Svg])),
-                'description' => 'Image files'
+                'extensions' => implode(', ', array_map(static fn ($ext) => $ext->value, [self::Jpeg, self::Png, self::Gif, self::Bmp, self::Svg])),
+                'description' => 'Image files',
             ],
             'Videos' => [
-                'extensions' => implode(', ', array_map(static fn($ext) => $ext->value, [self::Mp4, self::Webm, self::AVI, self::Mpeg])),
-                'description' => 'Video files'
+                'extensions' => implode(', ', array_map(static fn ($ext) => $ext->value, [self::Mp4, self::Webm, self::AVI, self::Mpeg])),
+                'description' => 'Video files',
             ],
             'Documents' => [
-                'extensions' => implode(', ', array_map(static fn($ext) => $ext->value, [self::Doc, self::Docx, self::RTF, self::Odt, self::Pdf])),
-                'description' => 'Document files'
+                'extensions' => implode(', ', array_map(static fn ($ext) => $ext->value, [self::Doc, self::Docx, self::RTF, self::Odt, self::Pdf])),
+                'description' => 'Document files',
             ],
             'Spreadsheets' => [
-                'extensions' => implode(', ', array_map(static fn($ext) => $ext->value, [self::Xls, self::Xlsx, self::Ods, self::Csv])),
-                'description' => 'Spreadsheet files'
+                'extensions' => implode(', ', array_map(static fn ($ext) => $ext->value, [self::Xls, self::Xlsx, self::Ods, self::Csv])),
+                'description' => 'Spreadsheet files',
             ],
             'Presentations' => [
-                'extensions' => implode(', ', array_map(static fn($ext) => $ext->value, [self::PPt, self::Pptx, self::Odp])),
-                'description' => 'Presentation files'
+                'extensions' => implode(', ', array_map(static fn ($ext) => $ext->value, [self::PPt, self::Pptx, self::Odp])),
+                'description' => 'Presentation files',
             ],
             'Audio' => [
-                'extensions' => implode(', ', array_map(static fn($ext) => $ext->value, [self::Mp3, self::Wav, self::Ogg, self::M4a])),
-                'description' => 'Audio files'
+                'extensions' => implode(', ', array_map(static fn ($ext) => $ext->value, [self::Mp3, self::Wav, self::Ogg, self::M4a])),
+                'description' => 'Audio files',
             ],
             'Archives' => [
-                'extensions' => implode(', ', array_map(static fn($ext) => $ext->value, [self::Rar, self::Zip, self::SevenZ])),
-                'description' => 'Archive files'
+                'extensions' => implode(', ', array_map(static fn ($ext) => $ext->value, [self::Rar, self::Zip, self::SevenZ])),
+                'description' => 'Archive files',
             ],
             'Other' => [
-                'extensions' => implode(', ', array_map(static fn($ext) => $ext->value, [self::Txt, self::ICS, self::Json])),
-                'description' => 'Other files'
-            ]
+                'extensions' => implode(', ', array_map(static fn ($ext) => $ext->value, [self::Txt, self::ICS, self::Json])),
+                'description' => 'Other files',
+            ],
         ];
     }
 }

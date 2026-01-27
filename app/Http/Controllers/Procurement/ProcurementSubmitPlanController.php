@@ -11,7 +11,6 @@ use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ProcurementSubmitPlanController extends Controller
@@ -20,6 +19,7 @@ class ProcurementSubmitPlanController extends Controller
     {
         $this->authorize('viewAny', ConsolidatedProcurementPlan::class);
         $draftedplans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
+
         return view('procurement.procurementplan.submitplan.index', compact('draftedplans'));
     }
 
@@ -30,7 +30,7 @@ class ProcurementSubmitPlanController extends Controller
             'lineItems.setMethod',
             'lineItems.budgetline',
             'lineItems.schedulePlan.periods',
-            'creator'
+            'creator',
         ])->findOrFail($PlanId);
 
         $this->authorize('submit', $plan);
@@ -43,7 +43,7 @@ class ProcurementSubmitPlanController extends Controller
         $this->authorize('submit', $plan);
 
         $lock = Cache::lock('submitted-Plan-' . $plan->PlanID, 5);
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             return redirect()
                 ->back()
                 ->with('error', 'Plan has been submitted, or another user is working on it.');
@@ -66,6 +66,7 @@ class ProcurementSubmitPlanController extends Controller
                 'planId' => $plan->PlanID,
                 'error' => $e->getMessage(),
             ]);
+
             return redirect()->back()->with('error', $e->getMessage());
         } catch (Exception $e) {
             $lock->release();
@@ -74,6 +75,7 @@ class ProcurementSubmitPlanController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return redirect()->back()->with('error', 'Unexpected error, try again later.');
         }
     }

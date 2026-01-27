@@ -14,9 +14,10 @@ use App\Http\Controllers\Inventory\OpeningStockController;
 use App\Http\Controllers\Inventory\PriceManagementController;
 use App\Http\Controllers\Inventory\ReportsController;
 use App\Http\Controllers\Inventory\SKUController;
-use App\Http\Controllers\Inventory\StockIssueController;
-use App\Http\Controllers\Inventory\StockTakeController;
 use App\Http\Controllers\Inventory\StockConsumptionController;
+use App\Http\Controllers\Inventory\StockIssueController;
+use App\Http\Controllers\Inventory\StockMovementController;
+use App\Http\Controllers\Inventory\StockTakeController;
 use App\Http\Controllers\Inventory\StockValuationHistoryController;
 use App\Http\Controllers\Inventory\StoreController;
 use App\Http\Controllers\Inventory\TransactionAdjustmentController;
@@ -25,10 +26,7 @@ use App\Http\Controllers\Inventory\TransactionReceiptsController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\UOMController;
 use App\Http\Controllers\Inventory\UOMConversionController;
-use App\Http\Controllers\Inventory\StockMovementController;
-
 use Illuminate\Support\Facades\Route;
-
 
 //use App\Http\Controllers\Inventory\ReceiptController;
 
@@ -36,8 +34,8 @@ Route::middleware(['module:400000'])->namespace('Inventory')->prefix('inventory'
     // Route::resource('receipts', ReceiptController::class);
     Route::get('itemmasterlist/export', [ItemMasterListController::class, 'export'])
     ->name('itemmasterlist.export');
-Route::post('itemmasterlist/import', [ItemMasterListController::class, 'import'])
-    ->name('itemmasterlist.import');
+    Route::post('itemmasterlist/import', [ItemMasterListController::class, 'import'])
+        ->name('itemmasterlist.import');
     Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
     //Route::resource('itemmaster', ItemMasterController::class);
     Route::get('/itemmaster', [ItemMasterListController::class, 'index'])->name('itemmaster.index');
@@ -50,7 +48,7 @@ Route::post('itemmasterlist/import', [ItemMasterListController::class, 'import']
     Route::get('/get-subcategory', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
 
 
-    
+
     Route::get('/stores', [StoreController::class, 'index'])->name('stores.index');
     Route::get('/stores/create', [StoreController::class, 'create'])->name('stores.create');
     Route::post('/stores', [StoreController::class, 'store'])->name('stores.store');
@@ -178,8 +176,8 @@ Route::post('itemmasterlist/import', [ItemMasterListController::class, 'import']
     Route::get('/transaction-transfers/grn-batches', [TransactionTransfersController::class, 'getGRNBatches'])
         ->name('transaction-transfers.grn-batches');
 
-        
-        
+
+
 
 
     //Route::resource('transactionsreceipts', TransactionReceiptsController::class);
@@ -191,7 +189,7 @@ Route::post('itemmasterlist/import', [ItemMasterListController::class, 'import']
     Route::put('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'update'])->name('transactionsreceipts.update');
     Route::delete('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'destroy'])->name('transactionsreceipts.destroy');
     Route::get('/transactionsreceipts/transfer-items/{Id}', [TransactionReceiptsController::class, 'getTransferItems'])->name('transactionsreceipts.get-transfer-items');
-    
+
 
     Route::resource('stockissue', StockIssueController::class);
 
@@ -271,6 +269,6 @@ Route::post('itemmasterlist/import', [ItemMasterListController::class, 'import']
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('inventory-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'inventory-reports.index',
-        'show' => 'inventory-reports.show'
+        'show' => 'inventory-reports.show',
     ]);
 });

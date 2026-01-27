@@ -26,15 +26,17 @@ class TenderScoringService
                 ->where('IsActive', 1)
                 ->where('Response', 1)
                 ->pluck('Id')
-                ->map(fn($v)=>(int)$v)
+                ->map(fn ($v) => (int)$v)
                 ->all();
         }
 
         // Group evaluations Supplier -> Member -> Section -> Criteria
         $evalsQuery = DB::table('t_TenderCommitteeEvaluations')
-            ->select('SupplierId','MemberID','SectionID','CriteriaID','Score','MaxScore')
+            ->select('SupplierId', 'MemberID', 'SectionID', 'CriteriaID', 'Score', 'MaxScore')
             ->where('TenderID', $tenderId)
-            ->when($onlyAccepted && !empty($accepted), function($q) use ($accepted){ $q->whereIn('MemberID', $accepted); })
+            ->when($onlyAccepted && ! empty($accepted), function ($q) use ($accepted) {
+                $q->whereIn('MemberID', $accepted);
+            })
             ->get()
             ->groupBy(['SupplierId','MemberID','SectionID','CriteriaID']);
         $evals = $evalsQuery;
@@ -45,7 +47,7 @@ class TenderScoringService
         $results = [];
         foreach ($evals as $supplierId => $memberGroups) {
             $memberTotals = [];
-            $sectionSums = array_fill_keys(array_map(fn($s)=>$s['id'],$sections), 0.0);
+            $sectionSums = array_fill_keys(array_map(fn ($s) => $s['id'], $sections), 0.0);
             $memberCount = 0;
 
             foreach ($memberGroups as $memberId => $sectionGroups) {
@@ -79,7 +81,7 @@ class TenderScoringService
                 'final' => $final,
                 'section_avgs' => $sectionAvgs,
                 'member_totals' => $memberTotals,
-                'sections' => array_map(fn($s)=>['id'=>$s['id'],'name'=>$s['name'],'weight'=>$s['weight']], $sections),
+                'sections' => array_map(fn ($s) => ['id' => $s['id'],'name' => $s['name'],'weight' => $s['weight']], $sections),
             ];
         }
 
@@ -90,12 +92,12 @@ class TenderScoringService
     {
         // Pull sections + tender criteria (MaxScore), exclude soft-deleted/disabled and dedupe
         $rows = DB::table('t_TenderSection as ts')
-            ->join('t_Sections as s','s.Id','=','ts.SectionID')
+            ->join('t_Sections as s', 's.Id', '=', 'ts.SectionID')
             ->where('ts.TenderID', $tenderId)
-            ->where('ts.IsActive',1)
+            ->where('ts.IsActive', 1)
             ->whereNull('ts.DeletedOn')
             ->orderByDesc('ts.Id')
-            ->select('ts.Id as TSID','ts.SectionID as Id','s.SectionName as Name','ts.Weight')
+            ->select('ts.Id as TSID', 'ts.SectionID as Id', 's.SectionName as Name', 'ts.Weight')
             ->get()
             ->unique('Id')
             ->sortByDesc('Weight')
@@ -104,18 +106,19 @@ class TenderScoringService
         $sections = [];
         foreach ($rows as $row) {
             $criteria = DB::table('t_TenderCriteria as tc')
-                ->join('t_Criterias as c','c.Id','=','tc.CriteriaID')
+                ->join('t_Criterias as c', 'c.Id', '=', 'tc.CriteriaID')
                 ->where('tc.TenderID', $tenderId)
                 ->where('tc.SectionID', $row->Id)
-                ->where('tc.IsActive',1)
+                ->where('tc.IsActive', 1)
                 ->whereNull('tc.DeletedOn')
-                ->select('tc.CriteriaID as Id','c.CriteriaName as Name','tc.MaxScore')
+                ->select('tc.CriteriaID as Id', 'c.CriteriaName as Name', 'tc.MaxScore')
                 ->get()
-                ->map(fn($r)=>['id'=>(int)$r->Id,'name'=>$r->Name,'max_score'=>(float)($r->MaxScore ?? 10)])
+                ->map(fn ($r) => ['id' => (int)$r->Id,'name' => $r->Name,'max_score' => (float)($r->MaxScore ?? 10)])
                 ->values()
                 ->all();
-            $sections[] = ['id'=>(int)$row->Id,'name'=>$row->Name,'weight'=>(float)($row->Weight ?? 100),'criteria'=>$criteria];
+            $sections[] = ['id' => (int)$row->Id,'name' => $row->Name,'weight' => (float)($row->Weight ?? 100),'criteria' => $criteria];
         }
+
         return $sections;
     }
 }

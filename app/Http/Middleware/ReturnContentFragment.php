@@ -18,7 +18,7 @@ class ReturnContentFragment
 
         // Only act on AJAX/XHR requests that explicitly request a partial fragment
         // (we use a custom header X-Partial to avoid interfering with other AJAX endpoints)
-        if (!$request->ajax() || !$request->headers->has('X-Partial')) {
+        if (! $request->ajax() || ! $request->headers->has('X-Partial')) {
             return $response;
         }
 
@@ -28,9 +28,10 @@ class ReturnContentFragment
                 $sections = $response->renderSections();
                 $payload = $sections['content'] ?? $response->render();
                 // If the view rendered a scripts section (e.g. @push('scripts')), include it
-                if (!empty($sections['scripts'])) {
+                if (! empty($sections['scripts'])) {
                     $payload .= $sections['scripts'];
                 }
+
                 return response($payload);
             } catch (\Throwable $e) {
                 // fall through to default handling
@@ -51,6 +52,7 @@ class ReturnContentFragment
                         foreach ($node->childNodes as $child) {
                             $inner .= $doc->saveHTML($child);
                         }
+
                         return response($inner, $response->getStatusCode(), $response->headers->all());
                     }
                 }

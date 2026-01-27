@@ -11,15 +11,14 @@ use App\Services\Procurement\ProcurementPlan\ProcurementMethodService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-
 class ProcurementSetMethodController extends Controller
 {
-    //
     public function index()
     {
         $this->authorize('viewAny', ConsolidatedProcurementPlan::class);
         $approvedPlans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
         $procurementModes = CodeDetail::where('CodeID', 'ProcurementMethod')->get();
+
         return view('procurement.procurementplan.planneditemsandactivities.assignprocurementmethod.index', compact('approvedPlans', 'procurementModes'));
     }
 

@@ -4,20 +4,22 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\ThirdParty\SupplierMaster;
-use App\Models\ThirdParty\ThirdParties;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Yajra\DataTables\Facades\DataTables;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\StoreSupplierRequest;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\UpdateSupplierRequest;
+use App\Models\ThirdParty\SupplierMaster;
+use App\Models\ThirdParty\ThirdParties;
 use App\Services\ThirdParties\SupplierWorkflowService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Yajra\DataTables\Facades\DataTables;
 
 class SupplierController extends Controller
 {
-    public function __construct(protected SupplierWorkflowService $workflowService) {}
+    public function __construct(protected SupplierWorkflowService $workflowService)
+    {
+    }
 
     public function index(Request $request)
     {
@@ -71,13 +73,13 @@ class SupplierController extends Controller
                     return $supplier->IsPrequalified ? 'Yes' : 'No';
                 })
                 ->addColumn('category_names', function (SupplierMaster $supplier) {
-                    if (!$supplier->IsPrequalified) {
+                    if (! $supplier->IsPrequalified) {
                         return '<span class="text-muted">Not prequalified</span>';
                     }
                     // Categories via active t_Suppliers entries (Prequalified)
                     $categories = $supplier->suppliers
                         ->where('Active_Status', true)
-                        ->map(fn($s) => $s->category)
+                        ->map(fn ($s) => $s->category)
                         ->filter()
                         ->unique('SupplierCategoryID');
 
@@ -94,10 +96,12 @@ class SupplierController extends Controller
                         $itemList = $count > 0 ? e($itemCats->pluck('Name')->filter()->unique()->implode(', ')) : 'No specific items';
                         $html .= "<dt class=\"fw-semibold\">{$catName}{$badge}</dt><dd class=\"mb-1\">{$itemList}</dd>";
                     }
+
                     return $html . '</dl>';
                 })
                 ->addColumn('PrimaryContact', function (SupplierMaster $supplier) {
                     $full = trim(($supplier->PrimaryFirstName ?? '') . ' ' . ($supplier->PrimaryLastName ?? ''));
+
                     return $full !== '' ? $full : 'N/A';
                 })
                 ->addColumn('PrimaryEmail', function (SupplierMaster $supplier) {
@@ -161,6 +165,7 @@ class SupplierController extends Controller
     public function show(ThirdParties $supplier)
     {
         $supplier->load('categories', 'types');
+
         return view('procurement.suppliers.show', compact('supplier'));
     }
 
@@ -190,7 +195,7 @@ class SupplierController extends Controller
             'PhysicalAddress',
             'Email',
             'Phone',
-            'Website'
+            'Website',
         ])->toArray();
 
         $partyData['ModifiedBy'] = $userId;
@@ -241,14 +246,17 @@ class SupplierController extends Controller
     public function destroy(ThirdParties $supplier)
     {
         $supplier->delete();
+
         return redirect()->route('suppliers.index')->with('success', 'Supplier deleted successfully.');
     }
 
     public function submit($id)
     {
         $supplier = SupplierMaster::where('ThirdPartyId', $id)->firstOrFail();
+
         try {
             $this->workflowService->submit($supplier, Auth::user());
+
             return redirect()->back()->with('success', 'Supplier submitted for approval.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Submission failed: ' . $e->getMessage());
@@ -273,6 +281,7 @@ class SupplierController extends Controller
                 return redirect()->back()->with('success', 'Supplier approved successfully.');
             } else {
                 $msg = $this->workflowService->getApprovalDetailsMessage(SupplierMaster::getPrimaryKey(), $supplier->SupplierID);
+
                 return redirect()->back()->with('error', "You are not authorized to approve. " . $msg);
             }
         } catch (\Exception $e) {
@@ -283,10 +292,12 @@ class SupplierController extends Controller
     public function reject($id)
     {
         $supplier = SupplierMaster::where('ThirdPartyId', $id)->firstOrFail();
+
         try {
             if ($this->workflowService->canApproveSupplier($supplier, Auth::user())) {
                 // Logic to capture reject reason? For now, generic.
                 $this->workflowService->reject($supplier, Auth::user(), 'Rejected from List');
+
                 return redirect()->back()->with('success', 'Supplier rejected.');
             } else {
                 return redirect()->back()->with('error', 'Authentication failed');
@@ -350,7 +361,7 @@ class SupplierController extends Controller
         }
 
         // Submit Button: If not approved, not submitted, and no active workflow (redundant if checking submitted)
-        if (!$isApproved && !$isSubmitted && !$hasWorkflow) {
+        if (! $isApproved && ! $isSubmitted && ! $hasWorkflow) {
             $buttons .= '
                 <form action="' . $submitUrl . '" method="POST" class="inline-block ms-1">
                     ' . csrf_field() . '
@@ -358,7 +369,7 @@ class SupplierController extends Controller
                 </form>';
         }
 
-        if (!$isApproved && $canApprove) {
+        if (! $isApproved && $canApprove) {
             $buttons .= '
                 <form action="' . $activateUrl . '" method="POST" class="inline-block ms-1">
                     ' . csrf_field() . '

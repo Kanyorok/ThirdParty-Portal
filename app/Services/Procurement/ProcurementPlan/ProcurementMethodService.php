@@ -13,7 +13,6 @@ class ProcurementMethodService
     /**
      * Create a new class instance.
      */
-
     public function create(array $data, User $actor, ConsolidatedProcurementPlan $consolidatedProcurementPlan, PlanLineItem $planLineItems): ProcurementMethod
     {
         $procurementMethod = ProcurementMethod::create([

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
@@ -7,7 +8,8 @@ use Illuminate\Queue\SerializesModels;
 
 class StageDeadlineReminder extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
     public $stage;
     public $tender;

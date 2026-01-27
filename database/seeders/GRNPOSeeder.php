@@ -23,7 +23,7 @@ class GRNPOSeeder extends Seeder
         $supplierIds = [];
         foreach ($supplierSeeds as $seed) {
             $thirdPartyId = DB::table('t_ThirdParties')->where('RegistrationNumber', $seed['reg'])->value('Id');
-            if (!$thirdPartyId) {
+            if (! $thirdPartyId) {
                 $thirdPartyId = DB::table('t_ThirdParties')->insertGetId([
                     'ThirdPartyName' => $seed['name'],
                     'TradingName' => $seed['trade'],
@@ -47,7 +47,7 @@ class GRNPOSeeder extends Seeder
                 ]);
             }
             $supplierId = DB::table('t_Suppliers')->where('ThirdPartyID', $thirdPartyId)->value('Id');
-            if (!$supplierId) {
+            if (! $supplierId) {
                 $supplierId = DB::table('t_Suppliers')->insertGetId([
                     'ThirdPartyID' => $thirdPartyId,
                     'Active_Status' => 1,
@@ -77,26 +77,52 @@ class GRNPOSeeder extends Seeder
                     'OrderNo' => $orderNo,
                     'AccountID' => $supplierId,
                 ];
-                if (Schema::hasColumn('t_Orders', 'OrderDate')) $order['OrderDate'] = $now->copy()->subDays(14 - ($sIdx * 2) - $j);
-                if (Schema::hasColumn('t_Orders', 'Terms')) $order['Terms'] = 'PaymentTerm';
-                if (Schema::hasColumn('t_Orders', 'Priority')) $order['Priority'] = 'Normal';
-                if (Schema::hasColumn('t_Orders', 'ExtOrdNum')) $order['ExtOrdNum'] = 'RFQ-' . str_pad((string)($sIdx * 100 + $j), 4, '0', STR_PAD_LEFT);
-                if (Schema::hasColumn('t_Orders', 'Status')) $order['Status'] = 'open';
-                if (Schema::hasColumn('t_Orders', 'Notes')) $order['Notes'] = 'Seeded order S' . ($sIdx + 1) . ' #' . $j;
-                if (Schema::hasColumn('t_Orders', 'Description')) $order['Description'] = 'Seeded order S' . ($sIdx + 1) . ' #' . $j;
-                if (Schema::hasColumn('t_Orders', 'DeliveryTerms')) $order['DeliveryTerms'] = 'Within 7 days';
-                if (Schema::hasColumn('t_Orders', 'BranchID')) $order['BranchID'] = 1;
-                if (Schema::hasColumn('t_Orders', 'CreatedBy')) $order['CreatedBy'] = $actorId;
-                if (Schema::hasColumn('t_Orders', 'CreatedOn')) $order['CreatedOn'] = $now;
-                if (Schema::hasColumn('t_Orders', 'ModifiedBy')) $order['ModifiedBy'] = $actorId;
-                if (Schema::hasColumn('t_Orders', 'ModifiedOn')) $order['ModifiedOn'] = $now;
+                if (Schema::hasColumn('t_Orders', 'OrderDate')) {
+                    $order['OrderDate'] = $now->copy()->subDays(14 - ($sIdx * 2) - $j);
+                }
+                if (Schema::hasColumn('t_Orders', 'Terms')) {
+                    $order['Terms'] = 'PaymentTerm';
+                }
+                if (Schema::hasColumn('t_Orders', 'Priority')) {
+                    $order['Priority'] = 'Normal';
+                }
+                if (Schema::hasColumn('t_Orders', 'ExtOrdNum')) {
+                    $order['ExtOrdNum'] = 'RFQ-' . str_pad((string)($sIdx * 100 + $j), 4, '0', STR_PAD_LEFT);
+                }
+                if (Schema::hasColumn('t_Orders', 'Status')) {
+                    $order['Status'] = 'open';
+                }
+                if (Schema::hasColumn('t_Orders', 'Notes')) {
+                    $order['Notes'] = 'Seeded order S' . ($sIdx + 1) . ' #' . $j;
+                }
+                if (Schema::hasColumn('t_Orders', 'Description')) {
+                    $order['Description'] = 'Seeded order S' . ($sIdx + 1) . ' #' . $j;
+                }
+                if (Schema::hasColumn('t_Orders', 'DeliveryTerms')) {
+                    $order['DeliveryTerms'] = 'Within 7 days';
+                }
+                if (Schema::hasColumn('t_Orders', 'BranchID')) {
+                    $order['BranchID'] = 1;
+                }
+                if (Schema::hasColumn('t_Orders', 'CreatedBy')) {
+                    $order['CreatedBy'] = $actorId;
+                }
+                if (Schema::hasColumn('t_Orders', 'CreatedOn')) {
+                    $order['CreatedOn'] = $now;
+                }
+                if (Schema::hasColumn('t_Orders', 'ModifiedBy')) {
+                    $order['ModifiedBy'] = $actorId;
+                }
+                if (Schema::hasColumn('t_Orders', 'ModifiedOn')) {
+                    $order['ModifiedOn'] = $now;
+                }
                 $orders[] = $order;
             }
         }
 
         foreach ($orders as $order) {
             $exists = DB::table('t_Orders')->where('OrderNo', $order['OrderNo'])->exists();
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('t_Orders')->insert($order);
             }
         }
@@ -147,9 +173,13 @@ class GRNPOSeeder extends Seeder
             ], $lineB);
             $total = (float)DB::table('t_OrderLines')->where('iOrderID', $row->Id)->sum('LineTotal');
             $update = [];
-            if ($hasTotalAmount) $update['TotalAmount'] = $total;
-            if ($hasOrdTotExcl) $update['OrdTotExcl'] = $total;
-            if (!empty($update)) {
+            if ($hasTotalAmount) {
+                $update['TotalAmount'] = $total;
+            }
+            if ($hasOrdTotExcl) {
+                $update['OrdTotExcl'] = $total;
+            }
+            if (! empty($update)) {
                 DB::table('t_Orders')->where('Id', $row->Id)->update($update);
             }
         }
@@ -160,7 +190,9 @@ class GRNPOSeeder extends Seeder
         foreach ($supplierIds as $sIdx => $supplierId) {
             for ($j = 1; $j <= 8; $j++) {
                 $orderNo = sprintf('PO-%d%03d', ($sIdx + 1), $j);
-                if (!isset($ordersByNo[$orderNo])) continue;
+                if (! isset($ordersByNo[$orderNo])) {
+                    continue;
+                }
                 $row = $ordersByNo[$orderNo];
                 $grnId = 'GRN-' . substr($orderNo, -4) . '-1';
                 $lines = DB::table('t_OrderLines')->where('iOrderID', $row->Id)->get(['iStockCodeID', 'fQuantity']);

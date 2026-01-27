@@ -15,11 +15,11 @@ use Throwable;
 
 class BudgetSceneriosController extends Controller
 {
-    //
     public function index()
     {
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetScenarioPlanning::class);
         $scenarios = BudgetScenarioPlanning::with(['budgetPeriodRef', 'planningMethodRef'])->get();
+
         return view('budgetandanalytics.scenarioplanning.index', compact('scenarios'));
     }
 
@@ -27,6 +27,7 @@ class BudgetSceneriosController extends Controller
     {
         $periods = BudgetPeriods::all();
         $methods = BudgetPlanningMethods::all();
+
         return view('budgetandanalytics.scenarioplanning.create', compact('methods', 'periods'));
     }
 
@@ -41,6 +42,7 @@ class BudgetSceneriosController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $scenario = BudgetScenarioPlanning::create([
                 'scenarioName' => $validated['scenarioName'],
@@ -62,8 +64,10 @@ class BudgetSceneriosController extends Controller
             return redirect()->route('budgetscenerios.index')->with('Success', 'Scenario successfully created');
         } catch (Throwable $th) {
             DB::rollBack();
+
             return $th->getMessage();
             Log::error('Fialed to create scenario:' . $th->getMessage());
+
             return back()->withErrors(['error' => 'Failed to create budget scenario']);
         }
     }
@@ -125,6 +129,7 @@ class BudgetSceneriosController extends Controller
     public function destroy(string $id)
     {
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetScenarioPlanning::class);
+
         try {
             $scenario = BudgetScenarioPlanning::find($id)->delete();
             //$scenario->delete();
@@ -138,8 +143,8 @@ class BudgetSceneriosController extends Controller
             return redirect()->route('budgetscenerios.index')->with('Success', 'Scenario Deleted Successfully');
         } catch (Throwable $th) {
             Log::error('---DELETE SCENARIO ERROR---' . $th->getMessage());
+
             return redirect()->route('budgetscenerios.index')->with('error', 'Failed to delete Scenario. Please try again.');
         }
     }
-
 }

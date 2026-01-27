@@ -12,7 +12,7 @@ class SocialService
     public static function validateImage(string $imagePath): bool
     {
         // Check file existence
-        if (!file_exists($imagePath)) {
+        if (! file_exists($imagePath)) {
             return false;
         }
 
@@ -45,7 +45,7 @@ class SocialService
      */
     public function createPost(string $message, Carbon $publish_at, Collection $medias = null): object
     {
-        if (!$publish_at->between(now()->addMinutes(10), now()->addDays(29)->endOfDay())) {
+        if (! $publish_at->between(now()->addMinutes(10), now()->addDays(29)->endOfDay())) {
             throw new ErroredException('Scheduled time invalid, between 15 minutes and 29 days');
         }
 

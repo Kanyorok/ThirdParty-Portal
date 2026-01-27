@@ -7,7 +7,6 @@ use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Arr;
 use Spatie\Permission\Guard;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -15,16 +14,16 @@ use Spatie\Permission\Models\Role;
 class RolePermissionSeeder extends Seeder
 {
     /**
-     * Run the database seeds. 
+     * Run the database seeds.
      */
     public function run(): void
     {
         $actor = SystemHelper::user();
-        $now   = now();
+        $now = now();
         $guard = Guard::getDefaultName(User::class);
 
         // Ensure baseline roles
-        if (!Role::query()->where('name', 'Default')->exists()) {
+        if (! Role::query()->where('name', 'Default')->exists()) {
             Role::create([
                 'name' => 'Default',
                 'guard_name' => $guard,
@@ -68,11 +67,12 @@ class RolePermissionSeeder extends Seeder
 
         // 3. Prepare rows for Upsert (excluding workflow permissions)
         $rows = [];
-        
+
         foreach (PermissionEnum::cases() as $perm) {
             // Skip if this permission is used in workflow stages
             if (in_array($perm->value, $workflowPermissionNames)) {
                 echo "  - Skipping workflow permission: {$perm->value}" . PHP_EOL;
+
                 continue;
             }
 
@@ -89,7 +89,7 @@ class RolePermissionSeeder extends Seeder
         // 5 columns per row here => safe chunk ~400 rows
         $chunkSize = 400;
 
-        if (!empty($rows)) {
+        if (! empty($rows)) {
             DB::connection()->disableQueryLog();
             DB::transaction(function () use ($table, $rows, $chunkSize) {
                 foreach (array_chunk($rows, $chunkSize) as $chunk) {
@@ -140,7 +140,7 @@ class RolePermissionSeeder extends Seeder
                 foreach ($users as $u) {
                     // t_ModelRoles does not have CreatedBy/ModifiedBy; only use existing columns
                     $payload[$adminRole->id] = [
-                        'BranchId'  => $u->BranchId ?? 1,
+                        'BranchId' => $u->BranchId ?? 1,
                         'CreatedOn' => $now,
                         'ModifiedOn' => $now,
                     ];

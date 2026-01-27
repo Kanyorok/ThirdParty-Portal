@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests\Insurance;
 
-use App\Enums\Insurance\InsuranceReferralStatus;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Enum;
 
 class BancAssuranceReferralRequest extends FormRequest
 {

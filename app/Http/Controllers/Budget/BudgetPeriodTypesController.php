@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Budget;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Models\Budget\BudgetPeriodTypes;
 use App\Enums\Core\PermissionEnum;
+use App\Http\Controllers\Controller;
+use App\Models\Budget\BudgetPeriodTypes;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BudgetPeriodTypesController extends Controller
@@ -51,6 +51,7 @@ class BudgetPeriodTypesController extends Controller
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'create'])
                 ->log('create period types');
+
             return redirect()->route('periodtypes.index')->with('success', 'Budget Period Type created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -60,11 +61,11 @@ class BudgetPeriodTypesController extends Controller
         }
     }
 
-
     public function edit($id)
     {
 
         $type = BudgetPeriodTypes::find($id);
+
         return view('budgetandanalytics.settings.periodtypes.edit', compact('type'));
     }
 
@@ -112,6 +113,7 @@ class BudgetPeriodTypesController extends Controller
     public function destroy(string $id)
     {
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetPeriodTypes::class);
+
         try {
             $type = BudgetPeriodTypes::find($id)->delete();
             //$type->delete();
@@ -125,8 +127,8 @@ class BudgetPeriodTypesController extends Controller
             return redirect()->route('periodtypes.index')->with('Success', 'Period Type Deleted Successfully');
         } catch (\Throwable $th) {
             Log::error('---DELETE PERIOD TYPE ERROR---' . $th->getMessage());
+
             return redirect()->route('periodtypes.index')->with('error', 'Failed to delete Period Type. Please try again.');
         }
     }
-
 }

@@ -13,7 +13,6 @@ class SMSSendListener implements ShouldQueue
      */
     public function __construct()
     {
-        //
     }
 
     /**

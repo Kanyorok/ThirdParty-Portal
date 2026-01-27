@@ -36,7 +36,7 @@ class ProductDevelopmentActionsController extends Controller
     public function activity(string $product_id): JsonResponse
     {
         $product = ProductDevelopment::where('ProductID', $product_id)->first();
-        if (!$product instanceof ProductDevelopment) {
+        if (! $product instanceof ProductDevelopment) {
             return $this->errored('Product development not found', status: 404);
         }
         $this->authorize('view', $product);
@@ -50,7 +50,7 @@ class ProductDevelopmentActionsController extends Controller
     public function workflow(string $product_id): JsonResponse
     {
         $product = ProductDevelopment::where('ProductID', $product_id)->first();
-        if (!$product instanceof ProductDevelopment) {
+        if (! $product instanceof ProductDevelopment) {
             return $this->errored('Product development not found', status: 404);
         }
 
@@ -65,7 +65,7 @@ class ProductDevelopmentActionsController extends Controller
     public function upload(UploadDocumentRequest $request, string $product_id): JsonResponse
     {
         $product = ProductDevelopment::where('ProductID', $product_id)->first();
-        if (!$product instanceof ProductDevelopment) {
+        if (! $product instanceof ProductDevelopment) {
             return $this->errored('Product development not found', status: 404);
         }
 
@@ -79,6 +79,7 @@ class ProductDevelopmentActionsController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error upload product development document : ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -90,12 +91,12 @@ class ProductDevelopmentActionsController extends Controller
     public function enableComment(Request $request, string $product_id): JsonResponse
     {
         $product = ProductDevelopment::where('ProductID', $product_id)->first();
-        if (!$product instanceof ProductDevelopment) {
+        if (! $product instanceof ProductDevelopment) {
             return $this->errored('Product development not found', status: 404);
         }
         $this->authorize('update', $product);
 
-        if (!is_null($product->CommentStart)) {
+        if (! is_null($product->CommentStart)) {
             return $this->errored('comments already enabled');
         }
 
@@ -115,6 +116,7 @@ class ProductDevelopmentActionsController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error enable commenting product development : ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -124,7 +126,7 @@ class ProductDevelopmentActionsController extends Controller
     public function disableComment(Request $request, string $product_id): JsonResponse
     {
         $product = ProductDevelopment::where('ProductID', $product_id)->first();
-        if (!$product instanceof ProductDevelopment) {
+        if (! $product instanceof ProductDevelopment) {
             return $this->errored('Product development not found', status: 404);
         }
         $this->authorize('update', $product);
@@ -133,7 +135,7 @@ class ProductDevelopmentActionsController extends Controller
             return $this->errored('comments  not enabled');
         }
 
-        if (!is_null($product->CommentEnd)) {
+        if (! is_null($product->CommentEnd)) {
             return $this->errored('commenting is already ended');
         }
 
@@ -153,12 +155,12 @@ class ProductDevelopmentActionsController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error disable commenting product development : ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
         return $this->succeeded('comments disabled', route: route('product-development.show', $product->ProductID));
     }
-
 
     /**
      * @throws AuthorizationException
@@ -167,7 +169,7 @@ class ProductDevelopmentActionsController extends Controller
     {
         $actor = $request->user();
         $product = ProductDevelopment::where('ProductID', $product_id)->where('User_ID', $actor->Id)->first();
-        if (!$product instanceof ProductDevelopment) {
+        if (! $product instanceof ProductDevelopment) {
             return $this->errored('product could be invalid or no permission', status: 404);
         }
 
@@ -181,11 +183,13 @@ class ProductDevelopmentActionsController extends Controller
                 ])->save(['timestamps' => false]);
 
                 activity()->causedBy($actor)->performedOn($product)->event('archived')->log('Archived product (' . $product->ProductID . ') in development .');
+
                 return $this->succeeded('product submitted successfully.', route('product-development.index'));
             });
         } catch (Throwable $e) {
             Log::error('Error submitting product failed: ');
         }
+
         return $this->errored('unexpected error, try again later');
     }
 }

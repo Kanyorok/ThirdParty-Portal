@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HRM\EmployeeInternalCommitteeController;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['module:1000000'])->namespace('HRM')->prefix('hrm')->group(function () {
 
@@ -17,5 +17,4 @@ Route::middleware(['module:1000000'])->namespace('HRM')->prefix('hrm')->group(fu
     Route::resource('payrolldashboard', PayrollDashboardController::class);
     Route::resource('generatepayslip', GeneratePaySlipController::class);
     Route::resource('payrollsettings', PayRollSettingsController::class);*/
-
 });

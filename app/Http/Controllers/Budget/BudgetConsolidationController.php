@@ -5,9 +5,7 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
-use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetDriverRates;
-use App\Models\Budget\BudgetGLAccount;
 use App\Models\Budget\BudgetGLAccountSubType;
 use App\Models\Budget\BudgetGLMaster;
 use App\Models\Budget\BudgetGLSubType;
@@ -18,16 +16,15 @@ use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
 use App\Models\Budget\BudgetProjection;
 use App\Models\Budget\BudgetProjectionData;
-use App\Models\Core\Branch;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Branch;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Shuchkin\SimpleXLSXGen;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class BudgetConsolidationController extends Controller
 {
-    //
     public function index()
     {
         $this->authorize(PermissionEnum::BudgetConsolidationView, BudgetConsolidationController::class);
@@ -40,10 +37,9 @@ class BudgetConsolidationController extends Controller
         $period = null;
         //check if request comes with a budget id
         if (request()->has('BudgetLineID')) {
-
             $budgetId = request()->get('BudgetLineID');
             $budget = Budget::find($budgetId);
-            if (!$budget) {
+            if (! $budget) {
                 return redirect()->back()->with('error', 'Budget not found');
             } else {
                 //Fetching the GLACCountTypes From Core details
@@ -112,7 +108,9 @@ class BudgetConsolidationController extends Controller
                         //return $entry;
                         //Have a check to filter based on the GLType
                         $typeCheck = BudgetLine::find($entry->BudgetLineID)->GLAccountTypeID;
-                        if ($typeCheck !== $type->Value) continue;
+                        if ($typeCheck !== $type->Value) {
+                            continue;
+                        }
                         $budgetLine = BudgetLine::find($entry->BudgetLineID);
                         if ($budgetLine) {
                             //$glAccountSubType = BudgetGLAccountSubType::find($budgetLine->glSubType)->GLAccountSubTypeName ?? 'Entry By Line';
@@ -268,7 +266,9 @@ class BudgetConsolidationController extends Controller
         }
 
         $budgets = Budget::select('Id', 'Name')->get();
-        return view('budgetandanalytics.budgetworkspace.budgetconsolidation.index',
+
+        return view(
+            'budgetandanalytics.budgetworkspace.budgetconsolidation.index',
             compact('budgets', 'data', 'isSet', 'budgetId', 'budgetName', 'period')
         );
     }
@@ -286,6 +286,7 @@ class BudgetConsolidationController extends Controller
         $safeName = $safeName !== '' ? $safeName : 'Budget';
         $filename = $safeName . '-budget-consolidation-' . now()->format('Ymd_His') . '.xlsx';
         $xlsx = SimpleXLSXGen::fromArray($rows)->download($filename);
+
         // SimpleXLSXGen::download() echoes and exits; as a fallback return a standard response
         return response()->noContent();
     }
@@ -299,6 +300,7 @@ class BudgetConsolidationController extends Controller
         $safeName = trim(preg_replace('/[^A-Za-z0-9\- _\.]+/', '', $rawName));
         $safeName = $safeName !== '' ? $safeName : 'Budget';
         $filename = $safeName . '-budget-consolidation-' . now()->format('Ymd_His') . '.pdf';
+
         return $pdf->download($filename);
     }
 
@@ -321,6 +323,7 @@ class BudgetConsolidationController extends Controller
                 $r['change'] ?? '',
             ];
         }
+
         return $rows;
     }
 }

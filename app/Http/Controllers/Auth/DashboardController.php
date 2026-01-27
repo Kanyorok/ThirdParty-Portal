@@ -39,9 +39,9 @@ class DashboardController extends Controller
         $actor = $request->user();
         //$actorId = $actor?->Id ?? 1; DON'T DO THIS, CHECK IF USER IS NOT LOGOUT.
         $data = [
-            'leads'     => [
-                'line'  => [
-                    'labels'    => [],
+            'leads' => [
+                'line' => [
+                    'labels' => [],
                     'converted' => [],
                 ],
                 'donut' => ['labels' => []],
@@ -49,14 +49,14 @@ class DashboardController extends Controller
             ],
             'campaigns' => [
                 'active' => 0,
-                'sent'   => 0,
+                'sent' => 0,
             ],
-            'schedule'  => [
-                'calls'        => 0,
+            'schedule' => [
+                'calls' => 0,
                 'appointments' => 0,
-                'total'        => 0,
+                'total' => 0,
             ],
-            'tickets'   => ['active' => 0],
+            'tickets' => ['active' => 0],
         ];
 
         //Fetch Number of open budgets, Total GLS
@@ -137,6 +137,7 @@ class DashboardController extends Controller
             $dateTime->addMonth();
             $dates->add($dateTime->format('M y'));
         }
+
         return $dates->toArray();
     }
 
@@ -147,6 +148,7 @@ class DashboardController extends Controller
         for ($i = 1; $i <= self::MONTHS; $i++) {
             $dateTime->addMonth();
             $converted = 0;
+
             try {
                 $converted = Lead::withTrashed()->whereBetween('DeletedOn', [$dateTime->copy()->startOfMonth(), $dateTime->copy()->endOfMonth()])
                     ->where('Status', LeadStatusEnum::Won->value)->where('RelationshipManagerID', $actor->Id)->count();
@@ -264,7 +266,6 @@ class DashboardController extends Controller
             'message' => 'Layout saved successfully',
         ]);
     }
-
 
     public function search(Request $request): ModuleCollection
     {

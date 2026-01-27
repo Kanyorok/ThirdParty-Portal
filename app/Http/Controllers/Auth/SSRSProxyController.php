@@ -13,12 +13,11 @@ use GuzzleHttp\Cookie\SetCookie;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class SSRSProxyController extends Controller
 {
-
     public function fetchReport(Request $request)
     {
         $ssrsUrl = "http://172.16.2.13:7092/ReportServer?/BRERP/Inventory/ItemCatalogue&rs:embed=true";
@@ -31,7 +30,7 @@ class SSRSProxyController extends Controller
         $response = $client->get($ssrsUrl);
 
         return response($response->getBody(), $response->getStatusCode(), [
-            'Content-Type' => $response->getHeader('Content-Type')[0]
+            'Content-Type' => $response->getHeader('Content-Type')[0],
         ]);
     }
 
@@ -43,6 +42,7 @@ class SSRSProxyController extends Controller
         session()?->forget(['ssrs_cookies', 'ssrs_report_url', 'ssrs_report_path']);
 
         $service = new SSRSService();
+
         try {
             $metadata = $service->getReportByPath($report->Path);
             if ($metadata['Type'] !== "Report") {
@@ -60,8 +60,6 @@ class SSRSProxyController extends Controller
         // $cookieJar = new CookieJar();
         // Make the request with basic auth
         try {
-
-
             $response = $service->getQuery()->get($metadata['Route']);
         } catch (ConnectionException $e) {
             Log::error($e);
@@ -87,7 +85,6 @@ class SSRSProxyController extends Controller
             ]);
     }
 
-
     public function assets(Request $request, string $asset = null)
     {
         if (is_null($asset)) {
@@ -97,7 +94,7 @@ class SSRSProxyController extends Controller
         if (str_starts_with($asset, 'assets')) {
             //$asset = str_replace('assets/', '', $asset);
             $path = '/reports/' . $asset;
-        } else if (!str_contains($asset, '/')) {
+        } elseif (! str_contains($asset, '/')) {
             $path = '/reports/assets/' . $asset;
         } else {
             $path = '/reports/' . $asset;
@@ -117,7 +114,6 @@ class SSRSProxyController extends Controller
 
 
         try {
-
             $response = $service->getQuery()->{strtolower($request->method())}($assetUrl);
         } catch (ConnectionException $e) {
             return response('Failed to load asset: ' . $e->getMessage(), 500);
@@ -167,6 +163,7 @@ class SSRSProxyController extends Controller
             // dd($request->server('HTTP_COOKIE'));
         }
         $service = new SSRSService();
+
         try {
             $metadata = $service->getReportByPath('/' . $path);
             if ($metadata['Type'] !== "Report") {
@@ -188,7 +185,6 @@ class SSRSProxyController extends Controller
 
         // Make the request with basic auth
         try {
-
             $response = $service->getQuery(true)->{strtolower($request->method())}($completePath);
         } catch (ConnectionException $e) {
             Log::error($e);
@@ -216,7 +212,7 @@ class SSRSProxyController extends Controller
         return response($body, $response->status())
             ->withHeaders(array_merge($response->headers(), [
                 'Content-Security-Policy' => "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://172.16.2.13:7092 data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://172.16.2.13:7092; frame-src 'self' http://172.16.2.13:7092;",
-                'X-Content-Security-Policy' => "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://172.16.2.13:7092 data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://172.16.2.13:7092; frame-src 'self' http://172.16.2.13:7092;"
+                'X-Content-Security-Policy' => "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://172.16.2.13:7092 data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://172.16.2.13:7092; frame-src 'self' http://172.16.2.13:7092;",
 
             ]));
     }
@@ -265,7 +261,6 @@ class SSRSProxyController extends Controller
         return $proxyResponse;
     }
 
-
     public function handleAxd(Request $request)
     {
         $service = new SSRSService();
@@ -285,7 +280,7 @@ class SSRSProxyController extends Controller
                     $item = explode('=', $item);
                     $key = Str::trim($item[0]);
 
-                    if (!Str::startsWith($key, 'ai_')) {
+                    if (! Str::startsWith($key, 'ai_')) {
                         return null;
                     }
 
@@ -294,13 +289,12 @@ class SSRSProxyController extends Controller
                         'value' => Str::trim($item[1]),
                     ];
                 })->filter()->toArray();
-                #
-                foreach ($cookies as $cookie) {
 
+                foreach ($cookies as $cookie) {
                     $jar->setCookie(new SetCookie([
                         'Name' => $cookie['key'],
                         'Value' => $cookie['value'],
-                        'Domain' => parse_url($service->serverURL, PHP_URL_HOST)
+                        'Domain' => parse_url($service->serverURL, PHP_URL_HOST),
                     ]));
                     $cookiesValues .= $cookie['key'] . '=' . $cookie['value'] . ';';
                 }
@@ -312,7 +306,7 @@ class SSRSProxyController extends Controller
                 'User-Agent' => $request->header('User-Agent'),
                 'Content-Type' => $request->header('Content-Type', 'application/x-www-form-urlencoded'),
             ];
-            if (!empty($cookiesValues)) {
+            if (! empty($cookiesValues)) {
                 $headers['Cookie'] = $cookiesValues;
             }
 
@@ -324,7 +318,7 @@ class SSRSProxyController extends Controller
                 'auth' => [$service->getUsername(), $service->getPassword(), 'ntlm'],
                 'verify' => false,
                 'headers' => $headers,
-                'cookies' => $jar
+                'cookies' => $jar,
             ];
 
 
@@ -347,13 +341,13 @@ class SSRSProxyController extends Controller
                     : $client->post($targetUrl, $options);
             } catch (Exception | GuzzleException $e) {
                 Log::error($e);
+
                 return response('Proxy Error', 500);
             }
 
 
             if ($request->isMethod('POST')) {
                 // dd($ssrsResponse->getBody(), 'ssrsResponse', $ssrsResponse->getHeaders(), 'ssrsResponse Headers', $ssrsResponse->getStatusCode());
-
             }
             if ($request->query('OpType') === 'SessionKeepAlive') {
                 // Return a plain text 'OK' response which is what the client expects
@@ -366,8 +360,8 @@ class SSRSProxyController extends Controller
             return response($ssrsResponse->getBody(), $ssrsResponse->getStatusCode())
                 ->withHeaders($ssrsResponse->getHeaders());
         } catch (Exception $e) {
-
             Log::error('SSRS Proxy Error: ' . $e->getMessage() . ' URL: ' . $targetUrl);
+
             return response('Error proxying to SSRS server: ' . $e->getMessage());
         }
     }

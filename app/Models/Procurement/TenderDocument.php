@@ -5,11 +5,12 @@ namespace App\Models\Procurement;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class TenderDocument extends Model{
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
-    
+class TenderDocument extends Model
+{
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
+
     protected $table = 't_TenderDocument';
     protected $primaryKey = 'TenderDocumentID';
     protected $keyType = 'integer';
@@ -34,19 +35,23 @@ class TenderDocument extends Model{
         'TenderID' => 'integer',
     ];
 
-    public function tender(): BelongsTo {
+    public function tender(): BelongsTo
+    {
         return $this->belongsTo(Tender::class, 'TenderID', 'TenderID');
     }
 
-    public function creator(): BelongsTo {
+    public function creator(): BelongsTo
+    {
         return $this->belongsTo(User::class, 'CreatedBy', 'UserID');
     }
 
-    public function modifier(): BelongsTo {
+    public function modifier(): BelongsTo
+    {
         return $this->belongsTo(User::class, 'ModifiedBy', 'UserID');
     }
 
-    public function deleter(): BelongsTo {
+    public function deleter(): BelongsTo
+    {
         return $this->belongsTo(User::class, 'DeletedBy', 'UserID');
     }
 
@@ -57,7 +62,7 @@ class TenderDocument extends Model{
     {
         return route('tender.documents.download', [
             'tender' => $this->TenderID,
-            'document' => $this->TenderDocumentID
+            'document' => $this->TenderDocumentID,
         ]);
     }
 

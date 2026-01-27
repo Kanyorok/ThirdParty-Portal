@@ -22,11 +22,11 @@ class DebtProduct extends Model
     protected $primaryKey = 'AccountID';//null;
 
     protected $casts = [
-                        'MaturityDate'       => 'datetime',
-                        'processDate'        => 'datetime',
+                        'MaturityDate' => 'datetime',
+                        'processDate' => 'datetime',
                         'OutstandingBalance' => 'decimal:2',
-                        'ArrearsAmount'      => 'decimal:2',
-                        'ArrearsDays'        => 'integer',
+                        'ArrearsAmount' => 'decimal:2',
+                        'ArrearsDays' => 'integer',
                        ];
 
     public static function getPrimaryKey(): string

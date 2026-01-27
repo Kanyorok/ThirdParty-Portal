@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 use Yajra\DataTables\DataTables;
 
-
 class DocumentCheckOutController extends Controller
 {
     public function __construct()
@@ -42,6 +41,7 @@ class DocumentCheckOutController extends Controller
                     return '<details><summary>' . $checkOut->CreatedOn->format('M Y, D H:i') . '</summary><b>Notes:</b> ' . $checkOut->CheckOutRemark . '</details>';
                 })->editColumn('Status', function (DocumentCheckOut $checkOut) use ($document, $request) {
                     $action = ($request->user()->Id === $checkOut->CreatedBy || $request->user()->can('destroy', $document)) ? '<a href="javascript:void(0)" class="btn btn-sm btn-outline-danger action-checkout-cancel" data-action="' . route('document-checkouts.destroy', [$document->DocumentId, $checkOut->Id]) . '"><i class="fas fa-trash-alt"></i></a>' : '';
+
                     return match ($checkOut->Status->value) {
                         DocumentCheckOutStatusEnum::CheckOut->value => 'CheckedOut &nbsp;' . $action,
                         DocumentCheckOutStatusEnum::CheckIn->value => '<details><summary>Checked In</summary><b>Dated:</b> ' . $checkOut->Dated->format('M Y, D H:i') . '<br><b>Notes:</b> ' . $checkOut->CheckInRemark . '</details>',
@@ -55,6 +55,7 @@ class DocumentCheckOutController extends Controller
                 })->rawColumns(['creator', 'CheckOutRemark', 'Status'])->make();
         } catch (Exception) {
         }
+
         return $this->errored('cannot retrieve checkout history for this document.');
     }
 
@@ -82,11 +83,13 @@ class DocumentCheckOutController extends Controller
     public function update(DocumentCheckInRequest $request, Document $document, string $holder): JsonResponse
     {
         $actor = $request->user();
+
         try {
             (new DocumentService($document))->checkin($request->getFile($document), $actor, $request->string('CheckInRemark', '')->trim()->limit(500, '')->toString());
         } catch (ErroredException $e) {
             return $e->toJson();
         }
+
         return $this->succeeded('document checked in successfully', route: route('files.show', [$document->repository->RepositoryId, $document->DocumentId]));
     }
 
@@ -98,7 +101,7 @@ class DocumentCheckOutController extends Controller
         $request->validate(['CheckOutCancelReason' => 'required|string|max:500']);
         $actor = $request->user();
         $checkOut = $document->checkouts()->where('Status', DocumentCheckOutStatusEnum::CheckOut->value)->first();
-        if (!$checkOut instanceof DocumentCheckOut) {
+        if (! $checkOut instanceof DocumentCheckOut) {
             return $this->errored('you don\'t have an active checkout for this document.');
         }
 
@@ -118,14 +121,17 @@ class DocumentCheckOutController extends Controller
                 activity()->causedBy($actor)->performedOn($document)->event('canceled')->log('canceled  document  checkout .');
 
                 if ($checkOut->CreatedBy !== $actor->Id) {
-                    (new UserService($actor))->sendEmail('Document Checkout Canceled',
+                    (new UserService($actor))->sendEmail(
+                        'Document Checkout Canceled',
                         '<p>Heads up ' . $actor->Name . ', <br>
                         We would like to inform you that the document you had previously checked out  — <strong>' . $document->Name . '</strong> — has been <strong>canceled</strong> and is no longer available for editing or review. <br>
-                        Thank you for your attention.</p>')?->send();
+                        Thank you for your attention.</p>'
+                    )?->send();
                 }
+
                 return $this->succeeded('document trashed successfully', route: route('files.show', [$document->repository->RepositoryId, $document->DocumentId]));
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('cancel document checkout failed :');
             Log::error($e);
         }

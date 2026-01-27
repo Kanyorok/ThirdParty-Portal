@@ -39,7 +39,6 @@ use App\Http\Controllers\FleetManagement\UtilizationController;
 use App\Http\Controllers\FleetManagement\VehicleManagementController;
 use Illuminate\Support\Facades\Route;
 
-
 Route::middleware(['module:600000'])->namespace('Fleet')->prefix('fleet')->group(function () {
     Route::namespace('Fleet')->name('fleet.')->group(function () {
 
@@ -219,7 +218,7 @@ Route::middleware(['module:600000'])->namespace('Fleet')->prefix('fleet')->group
     Route::get('fleet/contracted_drivers/available', [FleetTripLogController::class, 'getAvailableContractedDrivers'])->name('fleet.contracted_drivers.available');
     Route::patch('fleet/trip-logs/{Id}/approve', [FleetTripLogController::class, 'approve'])->name('fleet.trip_logs.approve');
     Route::patch('fleet/trip-logs/{Id}/reject', [FleetTripLogController::class, 'reject'])->name('fleet.trip_logs.reject');
-    
+
 
 
 
@@ -322,6 +321,6 @@ Route::middleware(['module:600000'])->namespace('Fleet')->prefix('fleet')->group
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('fleet-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'fleet-reports.index',
-        'show' => 'fleet-reports.show'
+        'show' => 'fleet-reports.show',
     ]);
 });

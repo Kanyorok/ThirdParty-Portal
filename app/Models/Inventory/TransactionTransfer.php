@@ -2,23 +2,21 @@
 
 namespace App\Models\Inventory;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
-use App\Models\Inventory\TransactionTransferItem;
-use App\Models\Inventory\TransactionReceipt;
 use App\Models\Workflow\CodeDetail;
-
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TransactionTransfer extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Transfers';
     protected $connection = 'sqlsrv';
@@ -48,7 +46,6 @@ class TransactionTransfer extends Model
     {
         return $this->hasOne(TransactionReceipt::class, 'TransferId', 'Id');
     }
-
 
     public function creator()
     {
@@ -80,11 +77,11 @@ class TransactionTransfer extends Model
         return $this->hasMany(TransactionTransferItem::class, 'TransferId', 'Id')->whereNull('DeletedOn');
     }
 
-
     public function fromBranch()
     {
         return $this->belongsTo(Branch::class, 'FromBranch', 'Id');
     }
+
     public function toBranch()
     {
         return $this->belongsTo(Branch::class, 'ToBranch', 'Id');
@@ -100,6 +97,4 @@ class TransactionTransfer extends Model
     {
         return 'TransferId';
     }
-
-
 }

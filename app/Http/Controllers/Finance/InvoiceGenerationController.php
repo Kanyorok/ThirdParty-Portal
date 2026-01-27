@@ -4,16 +4,16 @@ namespace App\Http\Controllers\Finance;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Finance\FinanceInvoice;
-use App\Models\Finance\FinanceInvoiceEntry;
-use App\Models\Finance\FinanceTransaction;
 use App\Models\Finance\FinanceCreditManagement;
 use App\Models\Finance\FinanceCreditMovement;
+use App\Models\Finance\FinanceInvoice;
+use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Finance\FinanceInvoiceLine;
 use App\Models\Finance\FinanceTaxRuleConfiguration;
+use App\Models\Finance\FinanceTransaction;
 use App\Models\Finance\InvoiceTax;
-use App\Services\Finance\TransactionService;
 use App\Services\Finance\CreditCalculationService;
+use App\Services\Finance\TransactionService;
 use App\Services\ThirdParties\ThirdPartyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -49,19 +49,19 @@ class InvoiceGenerationController extends Controller
             ->with([
                 'customer:Id,ThirdPartyName',
                 'source:ModuleID,Name',
-                'currency:Id,Code'
+                'currency:Id,Code',
             ]);
 
         if ($request->filled('request_id')) {
-            $query->where('RequestID', 'like', '%'.$request->request_id.'%');
+            $query->where('RequestID', 'like', '%' . $request->request_id . '%');
         }
         if ($request->filled('invoice_number')) {
-            $query->where('InvoiceNumber', 'like', '%'.$request->invoice_number.'%');
+            $query->where('InvoiceNumber', 'like', '%' . $request->invoice_number . '%');
         }
         if ($request->filled('customer')) {
             $customer = $request->customer;
-            $query->whereHas('customer', function($q) use ($customer){
-                $q->where('ThirdPartyName', 'like', '%'.$customer.'%');
+            $query->whereHas('customer', function ($q) use ($customer) {
+                $q->where('ThirdPartyName', 'like', '%' . $customer . '%');
             });
         }
         if ($request->filled('status') && $request->status !== 'all') {
@@ -84,7 +84,8 @@ class InvoiceGenerationController extends Controller
         return view('finance.accountsreceivable.invoicegeneration.index', compact('invoices'));
     }
 
-    public function create(){
+    public function create()
+    {
         $this->authorize(PermissionEnum::FinanceAccountsReceivableCreate, FinanceInvoice::class);
         // Get customers with their credit information
         $customers = DB::table('t_ThirdParties as tp')
@@ -100,7 +101,7 @@ class InvoiceGenerationController extends Controller
                 'tp.RegistrationNumber',
                 'tp.Email',
                 'fcm.CreditLimit',
-                'fcm.EffectiveFrom as CreditEffectiveFrom'
+                'fcm.EffectiveFrom as CreditEffectiveFrom',
             ])
             ->orderBy('tp.ThirdPartyName')
             ->get();
@@ -127,12 +128,13 @@ class InvoiceGenerationController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             // Check credit availability if customer wants to use credit
             if ($validated['use_credit'] ?? false) {
                 $creditCheck = $this->checkCreditAvailability($validated['CustomerID'], $validated['TotalAmount']);
 
-                if (!$creditCheck['available']) {
+                if (! $creditCheck['available']) {
                     return back()
                         ->withErrors(['credit' => $creditCheck['message']])
                         ->withInput();
@@ -199,13 +201,12 @@ class InvoiceGenerationController extends Controller
                 ->route('invoicegeneration.show', $invoice->Id)
                 ->with('success', "Invoice {$invoiceNumber} created successfully" .
                     ($validated['use_credit'] ? ' using customer credit.' : '.'));
-
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Invoice creation failed', [
                 'error' => $th->getMessage(),
                 'customer_id' => $validated['CustomerID'] ?? null,
-                'amount' => $validated['TotalAmount'] ?? null
+                'amount' => $validated['TotalAmount'] ?? null,
             ]);
 
             return back()
@@ -221,7 +222,7 @@ class InvoiceGenerationController extends Controller
             'customer.country',
             'source:ModuleID,Name',
             'currency:Id,Code,Symbol,Name',
-            'lines:Id,InvoiceID,InvoiceLineName,Description,UnitCost,Quantity,Tax,TaxAmount,Discount,Total'
+            'lines:Id,InvoiceID,InvoiceLineName,Description,UnitCost,Quantity,Tax,TaxAmount,Discount,Total',
         ])->findOrFail($id);
 
         // Get customer's credit information using the service
@@ -244,14 +245,13 @@ class InvoiceGenerationController extends Controller
             } else {
                 $creditInfo = [
                     'hasCredit' => false,
-                    'message' => 'Customer has no active credit profile'
+                    'message' => 'Customer has no active credit profile',
                 ];
             }
         }
 
         return view('finance.accountsreceivable.invoicegeneration.show', compact('invoice', 'creditInfo'));
     }
-
 
     public function approve(Request $request, int $id, TransactionService $svc)
     {
@@ -298,15 +298,15 @@ class InvoiceGenerationController extends Controller
 
                 // Build payload for TransactionService (service does idempotency)
                 $payload = [
-                    'ModuleID'          => $MODULE_ID,
-                    'ThirdPartyID'      => $invoice->CustomerID,
+                    'ModuleID' => $MODULE_ID,
+                    'ThirdPartyID' => $invoice->CustomerID,
                     // Nullable is OK; TransactionService validates existence only if value is present.
-                    'ThirdPartyTypeID'  => $thirdPartyTypeId,
+                    'ThirdPartyTypeID' => $thirdPartyTypeId,
                     'TransactionTypeID' => $TRANSACTION_TYPEID,
                     'TransactionType' => 'Account Receivables Invoice',
                     'ReferenceNumber' => $invoice->InvoiceNumber,
                     'TransactionDate' => $invoice->InvoiceDate ?? now()->toDateString(),
-                    'Amount' => (float)($invoice->TotalAmount ?? 0) - (float)($invoice->TaxAmount ?? 0),   //
+                    'Amount' => (float)($invoice->TotalAmount ?? 0) - (float)($invoice->TaxAmount ?? 0),
                     'TaxAmount' => (float)($invoice->TaxAmount ?? 0),      // 0 if not captured
                     'BranchID' => session('LoginBranchId', 1),
                     'DepartmentID' => $invoice->DepartmentID ?? null,
@@ -381,16 +381,17 @@ class InvoiceGenerationController extends Controller
         } catch (\Throwable $e) {
             // Log if you want: Log::error('AP approve error', ['id'=>$id, 'err'=>$e->getMessage()])
             return $e->getMessage();
+
             return back()->with('error', "Approval/Post failed: " . $e->getMessage());
         }
     }
-
 
     public function reject(Request $request, $id)
     {
         $validated = $request->validate([
             'Reason' => 'required|string|max:1000',
         ]);
+
         try {
             return DB::transaction(function () use ($validated, $id) {
                 // Lock the row for update to avoid race conditions
@@ -407,6 +408,7 @@ class InvoiceGenerationController extends Controller
                 // If already processed, prevent duplicate rejection
                 if (in_array($invoice->ApprovalStatus, ['posted', 'rejected'], true)) {
                     $apStatus = ucfirst($invoice->ApprovalStatus);
+
                     return back()->with('error', "Invoice {$invoice->InvoiceNumber} is already {$apStatus}.");
                 }
 
@@ -428,6 +430,7 @@ class InvoiceGenerationController extends Controller
             });
         } catch (\Throwable $e) {
             Log::error('AP reject error', ['id' => $id, 'err' => $e->getMessage()]);
+
             return back()->with('error', "Approval/Post failed: " . $e->getMessage());
         }
     }
@@ -507,12 +510,12 @@ class InvoiceGenerationController extends Controller
                 'credit_id' => $credit->Id,
                 'customer_id' => $customerId,
                 'invoice_id' => $invoiceId,
-                'amount' => $amount
+                'amount' => $amount,
             ]);
         } else {
             Log::warning('No approved credit found for customer', [
                 'customer_id' => $customerId,
-                'invoice_id' => $invoiceId
+                'invoice_id' => $invoiceId,
             ]);
         }
     }
@@ -549,7 +552,7 @@ class InvoiceGenerationController extends Controller
     {
         $request->validate([
             'customer_id' => 'required|integer|exists:t_ThirdParties,Id',
-            'amount' => 'required|numeric|min:0.01'
+            'amount' => 'required|numeric|min:0.01',
         ]);
 
         $creditCheck = $this->checkCreditAvailability($request->customer_id, $request->amount);
@@ -570,7 +573,7 @@ class InvoiceGenerationController extends Controller
         $request->validate([
             'apply_credit' => 'required|boolean',
             'reason' => 'required|string|max:500',
-            'proceed_to_approval' => 'nullable|boolean'
+            'proceed_to_approval' => 'nullable|boolean',
         ]);
 
         $invoice = FinanceInvoice::findOrFail($id);
@@ -581,19 +584,20 @@ class InvoiceGenerationController extends Controller
         }
 
         DB::beginTransaction();
+
         try {
             if ($request->apply_credit) {
                 // Resolve the correct customer ID for credit operations
                 $creditCustomerId = $this->resolveCustomerIdForCredit($invoice);
 
-                if (!$creditCustomerId) {
+                if (! $creditCustomerId) {
                     return back()->with('error', 'No active credit profile found for this customer.');
                 }
 
                 // Check credit availability using resolved customer ID
                 $creditCheck = $this->checkCreditAvailability($creditCustomerId, $invoice->TotalAmount);
 
-                if (!$creditCheck['available']) {
+                if (! $creditCheck['available']) {
                     return back()->with('error', $creditCheck['message']);
                 }
 
@@ -620,12 +624,13 @@ class InvoiceGenerationController extends Controller
                 if ($request->proceed_to_approval) {
                     $this->approveInvoiceWithCredit($invoice, $request->reason);
                     DB::commit();
+
                     return back()->with('success', "Credit applied and invoice {$invoice->InvoiceNumber} has been posted successfully.");
                 }
 
                 DB::commit();
-                return back()->with('success', "Credit successfully applied to invoice {$invoice->InvoiceNumber}");
 
+                return back()->with('success', "Credit successfully applied to invoice {$invoice->InvoiceNumber}");
             } else {
                 // Remove credit from invoice
                 $invoice->update([
@@ -649,15 +654,15 @@ class InvoiceGenerationController extends Controller
                     ->log("Removed credit from invoice {$invoice->InvoiceNumber}");
 
                 DB::commit();
+
                 return back()->with('success', "Credit removed from invoice {$invoice->InvoiceNumber}");
             }
-
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Credit application failed', [
                 'invoice_id' => $id,
                 'customer_id' => $invoice->CustomerID,
-                'error' => $th->getMessage()
+                'error' => $th->getMessage(),
             ]);
 
             return back()->with('error', 'Failed to apply credit: ' . $th->getMessage());

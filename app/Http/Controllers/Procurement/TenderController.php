@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
+use App\Enums\EmailPriorityEnum;
 use App\Enums\ProcurementPlanStatusEnum;
 use App\Enums\TenderApprovalStatusEnum;
 use App\Enums\TenderCategoryEnum;
@@ -20,41 +22,32 @@ use App\Models\Procurement\ProcurementMode;
 use App\Models\Procurement\ProcurementPlan;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderCategory;
+use App\Models\Procurement\TenderInvitation;
 use App\Models\Procurement\TenderItems;
 use App\Models\Procurement\TenderStage;
 use App\Models\Procurement\TenderSupplier;
 use App\Models\ThirdParies\Supplier;
+use App\Services\Workflow\ApprovalWorkflow;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
 use Throwable;
-use App\Models\Procurement\TenderInvitation;
-use App\Services\Workflow\ApprovalWorkflow;
-use App\Mail\TenderInvitation as TenderInvitationMail;
-use Illuminate\Support\Facades\Mail;
-use App\Models\Auth\User;
-use Illuminate\Http\UploadedFile;
-use App\Models\Procurement\TenderDocument;
-use App\Enums\EmailPriorityEnum;
-use App\Enums\Core\ModulesEnum;
-use App\Models\DMS\Image;
-
 
 class TenderController extends Controller
 {
-
     protected ApprovalWorkflow $workflow;
+
     public function __construct(ApprovalWorkflow $workflow)
     {
         $this->workflow = $workflow;  // Injected with codeId via service container
         $this->middleware('auth');
     }
+
     public function index()
     {
         $this->authorize(PermissionEnum::TenderRead, Tender::class);
@@ -127,7 +120,7 @@ class TenderController extends Controller
             ->select('PlanItemID', DB::raw('SUM(QtyToTender) as UsedQty'))
             ->groupBy('PlanItemID')
             ->pluck('UsedQty', 'PlanItemID')
-            ->map(fn($val) => (float)$val);
+            ->map(fn ($val) => (float)$val);
 
 
 
@@ -140,7 +133,7 @@ class TenderController extends Controller
                 'procurementMode',
                 'departmentNeed' => function ($q) {
                     $q->select('NeedID', 'ItemID', 'BranchID', 'DepartmentID');
-                }
+                },
             ])
             ->whereIn('PlanID', $approvedPlanIds)
             ->whereHas('procurementMode', function ($q) {
@@ -158,8 +151,9 @@ class TenderController extends Controller
             $planId = $lineItem->PlanID;
             $item = $lineItem->item;
 
-            if (!$item) {
+            if (! $item) {
                 Log::warning("Skipping line item {$lineItem->LineItemID}: No item found");
+
                 continue;
             }
 
@@ -172,7 +166,6 @@ class TenderController extends Controller
 
             //  Use a small threshold (0.01) instead of strict > 0
             if ($remainingQty < 0.01) {
-
                 continue;
             }
 
@@ -269,7 +262,7 @@ class TenderController extends Controller
             $procurementPlanId = null;
             $planItems = $request->input('plan_items', []);
 
-            if (!empty($planItems)) {
+            if (! empty($planItems)) {
                 $firstPlanItem = reset($planItems);
                 $procurementPlanId = $firstPlanItem['plan_id'] ?? null;
 
@@ -288,7 +281,7 @@ class TenderController extends Controller
                 ->pluck('UsedQty', 'PlanItemID');
 
             // Process plan items
-            if (!empty($planItems)) {
+            if (! empty($planItems)) {
                 $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
 
                 foreach ($planItems as $compositeKey => $item) {
@@ -299,8 +292,9 @@ class TenderController extends Controller
 
                     // Validate remaining quantity
                     $planLineItem = PlanLineItem::find($planItemId);
-                    if (!$planLineItem) {
+                    if (! $planLineItem) {
                         Log::warning("Plan line item not found: {$planItemId}");
+
                         continue;
                     }
 
@@ -310,14 +304,16 @@ class TenderController extends Controller
 
                     if ($qtyRequested > $remainingQty) {
                         DB::rollBack();
+
                         return redirect()->back()
                             ->withErrors(['error' => "Item '{$planLineItem->item->ItemName}' only has {$remainingQty} remaining, but {$qtyRequested} was requested."])
                             ->withInput();
                     }
 
                     // Validate item type
-                    if ($itemId && !$this->isItemAllowedForTender((int)$itemId, (int)$tender->ItemCategoryId, $allowedTypeIds)) {
+                    if ($itemId && ! $this->isItemAllowedForTender((int)$itemId, (int)$tender->ItemCategoryId, $allowedTypeIds)) {
                         Log::warning("Plan item $itemId rejected for tender due to category/type mismatch");
+
                         continue;
                     }
                     //plan item reference
@@ -347,7 +343,7 @@ class TenderController extends Controller
 
             // Process manual items
             $manualItems = $request->input('manual_items', []);
-            if (!empty($manualItems)) {
+            if (! empty($manualItems)) {
                 $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
                 $manualCounter = 1;
                 foreach ($manualItems as $manualItem) {
@@ -355,8 +351,9 @@ class TenderController extends Controller
                         continue;
                     }
 
-                    if (!$this->isItemAllowedForTender((int)$manualItem['item_id'], (int)$tender->ItemCategoryId, $allowedTypeIds)) {
+                    if (! $this->isItemAllowedForTender((int)$manualItem['item_id'], (int)$tender->ItemCategoryId, $allowedTypeIds)) {
                         Log::warning("Manual item {$manualItem['item_id']} rejected for tender due to category/type mismatch");
+
                         continue;
                     }
                     //auto generated pr reference
@@ -380,7 +377,7 @@ class TenderController extends Controller
 
             // Process suppliers
             $suppliers = $request->input('suppliers', []);
-            if (!empty($suppliers)) {
+            if (! empty($suppliers)) {
                 foreach ($suppliers as $supplierId) {
                     TenderSupplier::create([
                         'TenderID' => $tenderId,
@@ -404,6 +401,7 @@ class TenderController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             Log::error("--- CREATE TENDER ERROR --- " . $e->getMessage());
+
             return redirect()->route('initiatetender.index')->with('error', 'Failed to create Tender. Please try again.');
         }
     }
@@ -414,6 +412,7 @@ class TenderController extends Controller
         $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
 
         DB::beginTransaction();
+
         try {
             $tender = Tender::findOrFail($id);
             $user = Auth::user();
@@ -459,7 +458,7 @@ class TenderController extends Controller
                 'Tender submitted for approval'
             );
 
-            if (!$submitted) {
+            if (! $submitted) {
                 throw new \Exception('Failed to submit to workflow');
             }
 
@@ -470,7 +469,7 @@ class TenderController extends Controller
                 ->causedBy($user)
                 ->withProperties([
                     'action' => 'submit_for_approval',
-                    'previous_status' => 'Draft'
+                    'previous_status' => 'Draft',
                 ])
                 ->log('Tender submitted for approval: ' . $tender->TenderNo);
 
@@ -482,22 +481,24 @@ class TenderController extends Controller
                 'tender_id' => $id,
                 'error' => $e->getMessage(),
             ]);
+
             return redirect()->back()->with('error', 'Failed to submit tender: ' . $e->getMessage());
         }
     }
+
     public function show(string $id)
     {
         $this->authorize(PermissionEnum::TenderRead, Tender::class);
 
         try {
-            if (!Auth::check()) {
+            if (! Auth::check()) {
                 return redirect()->route('login')->with('error', 'Please login to view tenders');
             }
 
             $user = Auth::user();
             $userId = $user->Id ?? null;
 
-            if (!$userId) {
+            if (! $userId) {
                 return redirect()->route('login')->with('error', 'Session error. Please login again.');
             }
 
@@ -526,7 +527,7 @@ class TenderController extends Controller
                     $canApprove = false;
                 }
 
-                $showApprovalButtons = $canApprove && !$isSubmitter;
+                $showApprovalButtons = $canApprove && ! $isSubmitter;
             }
 
 
@@ -539,15 +540,16 @@ class TenderController extends Controller
                     'planLineItem' => function ($query) {
                         $query->with([
                             'procurementPlan:PlanID,ReferenceNumber,Title',
-                            'departmentNeed:NeedID,ItemID,BranchID,DepartmentID'
+                            'departmentNeed:NeedID,ItemID,BranchID,DepartmentID',
                         ]);
-                    }
+                    },
                 ])
                 ->get();
 
             // Separate plan and manual items
             $planItems = $items->where('SourceType', 'PLAN')->map(function ($tenderItem) {
                 $planLineItem = $tenderItem->planLineItem;
+
                 return [
                     'id' => $tenderItem->Id,
                     'item' => $tenderItem->item,
@@ -618,14 +620,13 @@ class TenderController extends Controller
                 'tender_id' => $id,
                 'error' => $e->getMessage(),
             ]);
+
             return redirect()->route('initiatetender.index')
                 ->with('error', 'Failed to load tender: ' . $e->getMessage());
         }
     }
 
     ////before
-
-
 
     public function edit(string $id)
     {
@@ -659,7 +660,7 @@ class TenderController extends Controller
         $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
 
         // If no type restrictions configured, allow all items in category**
-        $checkItemTypes = !empty($allowedTypeIds);
+        $checkItemTypes = ! empty($allowedTypeIds);
 
         // Get items matching category (and optionally type)
         // If Tender is linked to a Procurement Plan, ONLY show items from that Plan
@@ -677,10 +678,14 @@ class TenderController extends Controller
 
             $otherItemsForThatTender = $planItems->filter(function ($planItem) use ($categoryToTopLevel, $tender, $allowedTypeIds, $checkItemTypes, $existingItemIds) {
                 $item = $planItem->item;
-                if (!$item) return false;
+                if (! $item) {
+                    return false;
+                }
 
                 // Exclude already added items
-                if (in_array($item->Id, $existingItemIds)) return false;
+                if (in_array($item->Id, $existingItemIds)) {
+                    return false;
+                }
 
                 // Check if item's top-level category matches tender's category
                 $itemTopCategory = $categoryToTopLevel[$item->Category] ?? $item->Category;
@@ -689,7 +694,7 @@ class TenderController extends Controller
                 }
 
                 // If type checking is disabled (no mappings), allow all items in category
-                if (!$checkItemTypes) {
+                if (! $checkItemTypes) {
                     return true;
                 }
 
@@ -702,6 +707,7 @@ class TenderController extends Controller
             })
                 ->map(function ($planItem) {
                     $item = $planItem->item;
+
                     return [
                         'Id' => $item->Id,
                         'ItemName' => $item->ItemName . ' (Plan Ref: ' . $planItem->Id . ')', // Add visual cue
@@ -725,7 +731,7 @@ class TenderController extends Controller
                     }
 
                     // If type checking is disabled (no mappings), allow all items in category
-                    if (!$checkItemTypes) {
+                    if (! $checkItemTypes) {
                         return true;
                     }
 
@@ -760,7 +766,7 @@ class TenderController extends Controller
             $documents = collect();
         }
 
-        $existingSupplierIds = collect($suppliers)->pluck('SupplierID')->map(fn($v) => (int)$v)->values();
+        $existingSupplierIds = collect($suppliers)->pluck('SupplierID')->map(fn ($v) => (int)$v)->values();
         $topCategoryId = (int) $tender->ItemCategoryId;
         $prequalified = $this->getPrequalifiedSuppliers();
 
@@ -768,8 +774,9 @@ class TenderController extends Controller
             ->filter(function ($s) use ($topCategoryId, $existingSupplierIds) {
                 $id = (int) ($s['Id'] ?? 0);
                 $cats = collect($s['ItemCategoryIds'] ?? []);
+
                 return $id > 0
-                    && !$existingSupplierIds->contains($id)
+                    && ! $existingSupplierIds->contains($id)
                     && ($topCategoryId ? $cats->contains($topCategoryId) : true);
             })
             ->map(function ($s) {
@@ -832,7 +839,7 @@ class TenderController extends Controller
                 $tender->CurrencyId = $validated['currency_id'];
                 $tender->SubmissionDeadline = $validated['submission_deadline'];
                 $tender->OpeningDate = $validated['opening_date'];
-                if (!empty($validated['TenderType'])) {
+                if (! empty($validated['TenderType'])) {
                     $tender->TenderType = TenderTypeEnum::from($validated['TenderType']);
                 }
 
@@ -855,6 +862,7 @@ class TenderController extends Controller
             } catch (Exception $e) {
                 DB::rollBack();
                 Log::error('--- UPDATE TENDER ERROR --- ' . $e->getMessage());
+
                 return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to update Tender. Please try again.');
             }
         } elseif ($type == 'crudItem') {
@@ -868,6 +876,7 @@ class TenderController extends Controller
 
 
                 DB::beginTransaction();
+
                 try {
                     $tenderItem = new TenderItems();
                     $tenderItem->TenderID = $id;
@@ -904,10 +913,12 @@ class TenderController extends Controller
                     DB::rollBack();
                     Log::error("--- CREATE TENDER ITEM ERROR --- " . $e->getMessage());
                     Log::error($e);
+
                     return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to create Tender Item. Please try again.');
                 }
             } elseif ($crudType == 'deleteItem') {
                 DB::beginTransaction();
+
                 try {
                     $tenderItem = TenderItems::findOrFail($request->item_id);
                     $tenderItem->delete();
@@ -925,6 +936,7 @@ class TenderController extends Controller
                     DB::rollBack();
                     Log::error("--- DELETE TENDER ITEM ERROR --- " . $e->getMessage());
                     Log::error($e);
+
                     return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to delete Tender Item. Please try again.');
                 }
             } // Add this to your update() method in the 'updateQty' section:
@@ -936,6 +948,7 @@ class TenderController extends Controller
                 ]);
 
                 DB::beginTransaction();
+
                 try {
                     $tenderItem = TenderItems::findOrFail($validated['item_id']);
 
@@ -972,6 +985,7 @@ class TenderController extends Controller
                 } catch (Exception $e) {
                     DB::rollBack();
                     Log::error("--- UPDATE TENDER ITEM QTY ERROR --- " . $e->getMessage());
+
                     return redirect()->route('initiatetender.edit', $id)
                         ->with('error', 'Failed to update quantity.');
                 }
@@ -983,6 +997,7 @@ class TenderController extends Controller
                     'supplier_id' => 'required|integer|exists:t_Suppliers,Id',
                 ]);
                 DB::beginTransaction();
+
                 try {
                     $tenderSupplier = new TenderSupplier();
                     $tenderSupplier->TenderID = $id;
@@ -1004,10 +1019,12 @@ class TenderController extends Controller
                     DB::rollBack();
                     Log::error("--- CREATE TENDER SUPPLIER ERROR --- " . $e->getMessage());
                     Log::error($e);
+
                     return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to create Tender Supplier. Please try again.');
                 }
             } elseif ($crudType == 'deleteSupplier') {
                 DB::beginTransaction();
+
                 try {
                     $tenderSupplier = TenderSupplier::findOrFail($request->supplier_id);
                     $tenderSupplier->delete();
@@ -1025,6 +1042,7 @@ class TenderController extends Controller
                     DB::rollBack();
                     Log::error("--- DELETE TENDER SUPPLIER ERROR --- " . $e->getMessage());
                     Log::error($e);
+
                     return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to delete Tender Supplier. Please try again.');
                 }
             }
@@ -1049,6 +1067,7 @@ class TenderController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $tender = Tender::findOrFail($id);
             $tender->fill($request->only([
@@ -1060,7 +1079,7 @@ class TenderController extends Controller
                 'RelatedPRID',
                 'ProcurementModeId',
                 'EstimatedValue',
-                'StartDate'
+                'StartDate',
             ]));
 
             $fillData['CurrencyId'] = $request->Currency;
@@ -1069,7 +1088,7 @@ class TenderController extends Controller
             $tender->TenderType = TenderTypeEnum::from($request->TenderType);
             // Store TenderCategory as FK Id instead of enum code
             $catId = $request->input('tender_category_id') ?? $request->input('TenderCategory');
-            if (!is_null($catId) && !is_numeric($catId)) {
+            if (! is_null($catId) && ! is_numeric($catId)) {
                 $label = match ((string)$catId) {
                     'G', 'Goods', 'goods' => 'Goods',
                     'S', 'Services', 'services' => 'Services',
@@ -1098,11 +1117,13 @@ class TenderController extends Controller
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'update'])
                 ->log('Tender updated successfully with ID: ' . $id);
+
             return redirect()->route('initiatetender.index')->with('success', 'Tender updated successfully.');
         } catch (Exception $e) {
             DB::rollBack();
             Log::error("--- UPDATE TENDER ERROR --- " . $e->getMessage());
             Log::error($e);
+
             return redirect()->route('initiatetender.index')->with('error', 'Failed to update Tender. Please try again.');
         }
     }
@@ -1125,12 +1146,14 @@ class TenderController extends Controller
     private function generateManualItemPRReference(string $tenderNo, int $counter): string
     {
         $shortTenderNo = str_replace('TNDR-', '', $tenderNo);
+
         return sprintf('%s-M%03d', $shortTenderNo, $counter);
     }
 
     public function destroy(string $id)
     {
         $this->authorize(PermissionEnum::TenderDelete, Tender::class);
+
         try {
             $tender = Tender::findOrFail($id);
             $tender->delete();
@@ -1139,10 +1162,12 @@ class TenderController extends Controller
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'delete'])
                 ->log('Tender deleted successfully with ID: ' . $id);
+
             return redirect()->route('initiatetender.index')->with('success', 'Tender deleted successfully.');
         } catch (Throwable $th) {
             Log::error("--- DELETE TENDER ERROR --- " . $th->getMessage());
             Log::error($th);
+
             return redirect()->route('initiatetender.index')->with('error', 'Failed to delete Tender. Please try again.');
         }
     }
@@ -1177,6 +1202,7 @@ class TenderController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $tender = Tender::findOrFail($request->tender_id);
             $user = Auth::user();
@@ -1188,7 +1214,7 @@ class TenderController extends Controller
             // ]);
 
             // Check permission
-            if (!$this->workflow->canApproveModel($tender, $user)) {
+            if (! $this->workflow->canApproveModel($tender, $user)) {
                 throw new Exception('You are not authorized to approve this tender');
             }
 
@@ -1206,11 +1232,12 @@ class TenderController extends Controller
                 'ApprovalStatus'
             );
 
-            if (!$result) {
+            if (! $result) {
                 Log::error("Workflow approval returned false", [
                     'result' => $result,
-                    'type' => gettype($result)
+                    'type' => gettype($result),
                 ]);
+
                 throw new Exception('Workflow approval failed - workflow service returned false');
             }
 
@@ -1236,7 +1263,7 @@ class TenderController extends Controller
                 ->withProperties([
                     'action' => 'approve',
                     'remarks' => $request->reason,
-                    'invitations_sent' => $invitationsSent
+                    'invitations_sent' => $invitationsSent,
                 ])
                 ->log('Tender approved: ' . $tender->TenderNo);
 
@@ -1249,6 +1276,7 @@ class TenderController extends Controller
         } catch (Throwable $e) {
             DB::rollBack();
             Log::error('Approval failed: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to approve: ' . $e->getMessage());
         }
     }
@@ -1259,11 +1287,11 @@ class TenderController extends Controller
         try {
             $tenderCategoryId = $request->input('tender_category_id');
 
-            if (!$tenderCategoryId || !is_numeric($tenderCategoryId)) {
+            if (! $tenderCategoryId || ! is_numeric($tenderCategoryId)) {
                 return response()->json([
                     'ok' => false,
                     'message' => 'Valid Tender category ID is required',
-                    'categories' => []
+                    'categories' => [],
                 ], 400);
             }
 
@@ -1274,7 +1302,7 @@ class TenderController extends Controller
                 ->where('TenderCategoryId', $tenderCategoryId)
                 ->where('IsActive', 1)
                 ->pluck('ItemTypeId')
-                ->map(fn($id) => (int)$id)
+                ->map(fn ($id) => (int)$id)
                 ->toArray();
 
             // Log::info("Found ItemType record IDs", ['item_type_record_ids' => $allowedItemTypeIds]);
@@ -1283,7 +1311,7 @@ class TenderController extends Controller
                 return response()->json([
                     'ok' => true,
                     'message' => 'No item types configured for this tender category',
-                    'categories' => []
+                    'categories' => [],
                 ]);
             }
 
@@ -1292,7 +1320,7 @@ class TenderController extends Controller
                 ->whereIn('Id', $allowedItemTypeIds)
                 ->where('Active', 1)
                 ->pluck('TypeName')
-                ->map(fn($id) => (int)$id)
+                ->map(fn ($id) => (int)$id)
                 ->toArray();
 
             // Log::info("Found CodeDetail IDs for item types", ['code_detail_ids' => $codeDetailIds]);
@@ -1301,7 +1329,7 @@ class TenderController extends Controller
                 return response()->json([
                     'ok' => true,
                     'message' => 'No valid item types found',
-                    'categories' => []
+                    'categories' => [],
                 ]);
             }
 
@@ -1314,7 +1342,7 @@ class TenderController extends Controller
                 ->whereIn('ItemTypeId', $allowedItemTypeIds)
                 ->whereNull('DeletedBy')
                 ->pluck('Id')
-                ->map(fn($id) => (int)$id)
+                ->map(fn ($id) => (int)$id)
                 ->toArray();
 
             // B) Legacy Item-based linkage
@@ -1325,7 +1353,7 @@ class TenderController extends Controller
                 ->whereNull('ic.DeletedBy')
                 ->distinct()
                 ->pluck('ic.Id')
-                ->map(fn($id) => (int)$id)
+                ->map(fn ($id) => (int)$id)
                 ->toArray();
 
             // Merge and unique
@@ -1368,18 +1396,18 @@ class TenderController extends Controller
             return response()->json([
                 'ok' => true,
                 'categories' => $topLevelCategories,
-                'message' => 'Categories retrieved successfully'
+                'message' => 'Categories retrieved successfully',
             ]);
         } catch (\Exception $e) {
             Log::error("Error fetching allowed categories", [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'ok' => false,
                 'message' => 'An error occurred while fetching categories',
-                'categories' => []
+                'categories' => [],
             ], 500);
         }
     }
@@ -1395,12 +1423,13 @@ class TenderController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $tender = Tender::findOrFail($request->tender_id);
             $user = Auth::user();
 
             // Check permission
-            if (!$this->workflow->canApproveModel($tender, $user)) {
+            if (! $this->workflow->canApproveModel($tender, $user)) {
                 throw new Exception('You are not authorized to reject this tender');
             }
 
@@ -1417,7 +1446,7 @@ class TenderController extends Controller
                 'ApprovalStatus'
             );
 
-            if (!$rejected) {
+            if (! $rejected) {
                 throw new Exception('Workflow rejection failed');
             }
 
@@ -1436,7 +1465,7 @@ class TenderController extends Controller
                 ->causedBy($user)
                 ->withProperties([
                     'action' => 'reject',
-                    'remarks' => $request->reason
+                    'remarks' => $request->reason,
                 ])
                 ->log('Tender rejected: ' . $tender->TenderNo);
 
@@ -1445,10 +1474,10 @@ class TenderController extends Controller
         } catch (Throwable $e) {
             DB::rollBack();
             Log::error('Rejection failed: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to reject: ' . $e->getMessage());
         }
     }
-
 
     /**
      * Get prequalified suppliers based on active prequalification rounds
@@ -1473,7 +1502,9 @@ class TenderController extends Controller
 
         foreach ($prequalifiedSuppliers as $supplier) {
             // Check if relationships exist
-            if (!$supplier->thirdParty || !$supplier->thirdParty->party) continue;
+            if (! $supplier->thirdParty || ! $supplier->thirdParty->party) {
+                continue;
+            }
 
             $supplierMaster = $supplier->thirdParty;
             $thirdParty = $supplier->thirdParty->party;
@@ -1482,7 +1513,7 @@ class TenderController extends Controller
             $itemCategoryIds = [];
 
             // Start item categories with supplier's direct CategoryId (if present)
-            if (!empty($supplier->CategoryId)) {
+            if (! empty($supplier->CategoryId)) {
                 $itemCategoryIds[] = (int) $supplier->CategoryId;
                 // include first-level subcategories
                 $directSubcats = \App\Models\Inventory\ItemCategories::where('ParentId', $supplier->CategoryId)->pluck('Id');
@@ -1493,9 +1524,10 @@ class TenderController extends Controller
 
             // Build supplierCategoryIds from either direct SupplierCategoryID or pivot mapping
             $supplierCategoryIds = collect();
-            if (!empty($supplier->SupplierCategoryID)) {
+            if (! empty($supplier->SupplierCategoryID)) {
                 $supplierCategoryIds->push($supplier->SupplierCategoryID);
             }
+
             // Add any categories from pivot tables (resilient across DB schemas)
             try {
                 // CRITICAL FIX: Pass both ThirdPartyId and SupplierMaster.Id
@@ -1531,7 +1563,7 @@ class TenderController extends Controller
             }
 
             // Also include top-level ancestors for all collected categories so UI top-level filter matches
-            if (!empty($itemCategoryIds)) {
+            if (! empty($itemCategoryIds)) {
                 $topLevelSet = [];
                 foreach ($itemCategoryIds as $cid) {
                     $top = $this->resolveTopLevelCategoryId((int)$cid);
@@ -1570,6 +1602,7 @@ class TenderController extends Controller
 
         // Remove duplicates based on supplier ID (a supplier might have multiple records)
         $result = $suppliers->unique('Id')->values();
+
         // Log::info('Suppliers prepared for UI: ' . $result->count());
         try {
             if ($result->isNotEmpty()) {
@@ -1579,6 +1612,7 @@ class TenderController extends Controller
         } catch (\Throwable $e) {
             // guard
         }
+
         return $result;
     }
 
@@ -1611,7 +1645,7 @@ class TenderController extends Controller
 
                 $common = array_intersect($supplierCategoryIdsInt, $validCategoryIds);
 
-                if (!empty($common)) {
+                if (! empty($common)) {
                     return true;
                 }
 
@@ -1657,14 +1691,16 @@ class TenderController extends Controller
     // Return allowed ItemType IDs for a tender category (FK Id)
     private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
     {
-        if (!$tenderCategoryId) return [];
+        if (! $tenderCategoryId) {
+            return [];
+        }
 
         // **FIX: Map results to integers**
         $ids = DB::table('t_TenderCategoryItemTypes')
             ->where('TenderCategoryId', $tenderCategoryId)
             ->where('IsActive', 1)
             ->pluck('ItemTypeId')
-            ->map(fn($id) => (int)$id)  // Ensure integers
+            ->map(fn ($id) => (int)$id)  // Ensure integers
             ->toArray();
 
         // Log::info("Allowed ItemType IDs for tender category {$tenderCategoryId}", ['type_ids' => $ids]);
@@ -1674,7 +1710,7 @@ class TenderController extends Controller
             $types = DB::table('t_ItemTypes')
                 ->join('t_CodeDetails', 't_ItemTypes.TypeName', '=', 't_CodeDetails.Id')
                 ->pluck('t_ItemTypes.Id', 't_CodeDetails.Description')
-                ->map(fn($id) => (int)$id);  // Ensure integers here too
+                ->map(fn ($id) => (int)$id);  // Ensure integers here too
 
             return match (strtoupper((string)$label)) {
                 'GOODS' => array_values(array_filter([
@@ -1692,8 +1728,10 @@ class TenderController extends Controller
                 default => [],
             };
         }
+
         return $ids;
     }
+
     // Validate an item is within tender's top-level category and allowed item types
     // Replace your isItemAllowedForTender method with this debug version:
     // Replace your existing isItemAllowedForTender method with this version
@@ -1702,8 +1740,9 @@ class TenderController extends Controller
     {
         $item = ItemMasterList::select('Id', 'Category', 'ItemType')->find($itemId);
 
-        if (!$item) {
+        if (! $item) {
             Log::error("Item not found", ['item_id' => $itemId]);
+
             return false;
         }
 
@@ -1719,23 +1758,25 @@ class TenderController extends Controller
         //     'allowed_type_ids' => $allowedTypeIds
         // ]);
 
-        if (!empty($allowedTypeIds) && !in_array($itemTypeId, $allowedTypeIds, true)) {
+        if (! empty($allowedTypeIds) && ! in_array($itemTypeId, $allowedTypeIds, true)) {
             Log::warning("Item rejected: type not allowed", [
                 'item_id' => $itemId,
                 'item_type_id' => $itemTypeId,
-                'allowed_type_ids' => $allowedTypeIds
+                'allowed_type_ids' => $allowedTypeIds,
             ]);
+
             return false;
         }
 
         return true;
     }
 
-
     private function resolveTopLevelCategoryId(?int $categoryId): ?int
     {
         // Resolve root ancestor, treating ParentId NULL or 0 as root across environments
-        if (!$categoryId) return null;
+        if (! $categoryId) {
+            return null;
+        }
         $seen = [];
         $current = (int)$categoryId;
         while (true) {
@@ -1749,7 +1790,7 @@ class TenderController extends Controller
             }
             $seen[] = $current;
             $row = ItemCategories::select('Id', 'ParentId')->find($current);
-            if (!$row) {
+            if (! $row) {
                 // missing link; return last known good
                 return (int)($seen[count($seen) - 1] ?? $categoryId);
             }
@@ -1768,7 +1809,9 @@ class TenderController extends Controller
     private function getAllDescendantCategoryIds(array|int $categoryIds, bool $includeSelf = true): array
     {
         $start = array_values(array_unique(array_map('intval', is_array($categoryIds) ? $categoryIds : [$categoryIds])));
-        if (empty($start)) return [];
+        if (empty($start)) {
+            return [];
+        }
 
         $all = $includeSelf ? $start : [];
         $queue = collect($start);
@@ -1782,6 +1825,7 @@ class TenderController extends Controller
                 $queue = $queue->merge($ids);
             }
         }
+
         return $all;
     }
 
@@ -1856,7 +1900,7 @@ class TenderController extends Controller
                     $approversNeeded = $fullCurrentStage->Count ?? 0;
 
                     // Fetch Workflow Type from Stage directly (since t_WorkflowStages has WorkFlowTypeId)
-                    if (!empty($fullCurrentStage->WorkFlowTypeId)) {
+                    if (! empty($fullCurrentStage->WorkFlowTypeId)) {
                         $typeModel = \App\Models\Settings\WorkFlowType::find($fullCurrentStage->WorkFlowTypeId);
                         if ($typeModel) {
                             $approvalType = $typeModel->Name;
@@ -1901,6 +1945,7 @@ class TenderController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to load workflow history: ' . $e->getMessage());
             Log::error($e->getTraceAsString());
+
             return redirect()->back()->with('error', 'Failed to load workflow history: ' . $e->getMessage());
         }
     }
@@ -1924,16 +1969,18 @@ class TenderController extends Controller
             'ModifiedBy' => Auth::id(),
         ]);
     }
+
     private function createTenderItems(Request $request, Tender $tender): void
     {
-        if (!empty($request->plan_items)) {
+        if (! empty($request->plan_items)) {
             $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
             foreach ($request->plan_items as $compositeKey => $item) {
                 $split = explode('-', $compositeKey);
                 $planItemId = (int)end($split);
                 $itemId = $item['item_id'] ?? null;
-                if ($itemId && !$this->isItemAllowedForTender((int)$itemId, (int)$tender->ItemCategoryId, $allowedTypeIds)) {
+                if ($itemId && ! $this->isItemAllowedForTender((int)$itemId, (int)$tender->ItemCategoryId, $allowedTypeIds)) {
                     Log::warning("Plan item $itemId rejected for tender due to category/type mismatch");
+
                     continue;
                 }
                 TenderItems::create([
@@ -1951,14 +1998,15 @@ class TenderController extends Controller
             }
         }
 
-        if (!empty($request->manual_items)) {
+        if (! empty($request->manual_items)) {
             $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
             foreach ($request->manual_items as $manualItem) {
                 if (empty($manualItem['item_id'])) {
                     continue;
                 }
-                if (!$this->isItemAllowedForTender((int)$manualItem['item_id'], (int)$tender->ItemCategoryId, $allowedTypeIds)) {
+                if (! $this->isItemAllowedForTender((int)$manualItem['item_id'], (int)$tender->ItemCategoryId, $allowedTypeIds)) {
                     Log::warning("Manual item {$manualItem['item_id']} rejected for tender due to category/type mismatch");
+
                     continue;
                 }
                 TenderItems::create([
@@ -1977,7 +2025,7 @@ class TenderController extends Controller
 
     private function createTenderSuppliers(Request $request, Tender $tender): void
     {
-        if (!empty($request->suppliers)) {
+        if (! empty($request->suppliers)) {
             foreach ($request->suppliers as $supplierId) {
                 TenderSupplier::create([
                     'TenderID' => $tender->Id,
@@ -1991,7 +2039,7 @@ class TenderController extends Controller
 
     private function attachDocuments(Request $request, Tender $tender): void
     {
-        if (!$request->hasFile('documents')) {
+        if (! $request->hasFile('documents')) {
             return;
         }
 
@@ -1999,11 +2047,12 @@ class TenderController extends Controller
         $failedCount = 0;
 
         foreach ((array) $request->file('documents') as $uploadedFile) {
-            if (!$uploadedFile || !$uploadedFile->isValid()) {
+            if (! $uploadedFile || ! $uploadedFile->isValid()) {
                 Log::warning('Invalid file upload detected', [
                     'tender_id' => $tender->Id,
-                    'file' => $uploadedFile ? $uploadedFile->getClientOriginalName() : 'null'
+                    'file' => $uploadedFile ? $uploadedFile->getClientOriginalName() : 'null',
                 ]);
+
                 continue;
             }
 
@@ -2034,7 +2083,7 @@ class TenderController extends Controller
                     'tender_id' => $tender->Id,
                     'filename' => $uploadedFile->getClientOriginalName(),
                     'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
+                    'trace' => $e->getTraceAsString(),
                 ]);
 
                 // Don't throw - allow tender creation to continue
@@ -2061,6 +2110,7 @@ class TenderController extends Controller
                 ->log('Tender submitted for approval with ID: ' . $tender->Id);
         } catch (Throwable $wfEx) {
             Log::error('Failed to initiate workflow for Tender ID ' . $tender->Id . ': ' . $wfEx->getMessage());
+
             throw new Exception('Failed to initiate approval workflow. Please contact the system administrator.');
         }
     }
@@ -2068,7 +2118,7 @@ class TenderController extends Controller
     private function sendSupplierNotifications(Request $request, Tender $tender): void
     {
         try {
-            $selectedSupplierIds = collect($request->suppliers ?? [])->map(fn($v) => (int)$v)->unique()->values()->all();
+            $selectedSupplierIds = collect($request->suppliers ?? [])->map(fn ($v) => (int)$v)->unique()->values()->all();
 
             if (empty($selectedSupplierIds)) {
                 return;
@@ -2094,13 +2144,13 @@ class TenderController extends Controller
             $usedEmails = [];
             foreach ($recipientRows as $row) {
                 $email = trim((string)$row->Email);
-                if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) && !in_array(strtolower($email), $usedEmails, true)) {
+                if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) && ! in_array(strtolower($email), $usedEmails, true)) {
                     $supplierList[] = ['name' => $row->TradingName, 'email' => $email];
                     $usedEmails[] = strtolower($email);
                 }
             }
 
-            if (!empty($supplierList)) {
+            if (! empty($supplierList)) {
                 $this->sendEmailsToSuppliers($tender, $supplierList);
             }
         } catch (Throwable $mailEx) {
@@ -2126,12 +2176,13 @@ class TenderController extends Controller
             '</ul>' .
             '<p>Please log in to the procurement portal to view full details and respond accordingly.</p>';
 
-        $uniqueEmails = array_values(array_unique(array_map(fn($s) => strtolower($s['email']), $supplierList)));
+        $uniqueEmails = array_values(array_unique(array_map(fn ($s) => strtolower($s['email']), $supplierList)));
         foreach ($uniqueEmails as $recipientEmail) {
             $recipientName = null;
             foreach ($supplierList as $s) {
                 if (strtolower($s['email']) === $recipientEmail) {
                     $recipientName = $s['name'];
+
                     break;
                 }
             }
@@ -2159,12 +2210,14 @@ class TenderController extends Controller
 
             if ($selectedSuppliers->isEmpty()) {
                 Log::warning("No suppliers found for restricted tender ID: {$tender->Id}");
+
                 return 0;
             }
 
             foreach ($selectedSuppliers as $tenderSupplier) {
-                if (!$tenderSupplier->supplier || !$tenderSupplier->supplier->party) {
+                if (! $tenderSupplier->supplier || ! $tenderSupplier->supplier->party) {
                     Log::warning("Missing supplier or party data for TenderSupplier ID: {$tenderSupplier->id}");
+
                     continue;
                 }
 
@@ -2172,8 +2225,9 @@ class TenderController extends Controller
                 $thirdParty = $masterSupplier->party;
 
                 // Skip if no email address
-                if (!$thirdParty->Email) {
+                if (! $thirdParty->Email) {
                     Log::warning("No email address for supplier {$thirdParty->ThirdPartyName} (ID: {$masterSupplier->Id})");
+
                     continue;
                 }
 
@@ -2186,12 +2240,13 @@ class TenderController extends Controller
                     ->first();
 
                 // Fallback: If no category-specific match, take ANY active supplier record for this master
-                if (!$validSupplierCategory) {
+                if (! $validSupplierCategory) {
                     $validSupplierCategory = \App\Models\ThirdParies\Supplier::where('SupplierMasterId', $masterSupplier->Id)->first();
                 }
 
-                if (!$validSupplierCategory) {
+                if (! $validSupplierCategory) {
                     Log::error("Cannot send invitation to Supplier Master ID {$masterSupplier->Id}: No enabling record found in t_Suppliers.");
+
                     continue;
                 }
 
@@ -2254,6 +2309,7 @@ class TenderController extends Controller
             // Log::info("Restricted tender invitations process completed. Total sent: {$invitationsSent}");
         } catch (Exception $e) {
             Log::error("Error in sendRestrictedTenderInvitations: " . $e->getMessage());
+
             throw $e; // Re-throw to be caught by the main transaction
         }
 

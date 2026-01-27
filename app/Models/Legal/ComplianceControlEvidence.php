@@ -12,7 +12,7 @@ class ComplianceControlEvidence extends Model
 
     protected $fillable = [
         'ControlID', 'FileName', 'MimeType', 'FilePath',
-        'Version', 'UploadedBy', 'UploadedOn'
+        'Version', 'UploadedBy', 'UploadedOn',
     ];
 
     public function control()

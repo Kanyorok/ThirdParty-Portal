@@ -12,7 +12,7 @@ class UserDashboardController extends Controller
     public function widgets(Request $request)
     {
         $available = DashboardWidget::query()->where('IsActive', true)->get()
-            ->map(function($w){
+            ->map(function ($w) {
                 return [
                     'key' => $w->Key,
                     'name' => $w->Name,
@@ -26,6 +26,7 @@ class UserDashboardController extends Controller
             ->where('user_id', $request->user()->Id)
             ->orderBy('sort_order')
             ->get();
+
         return response()->json([
             'available' => $available,
             'layout' => $layout,
@@ -63,9 +64,10 @@ class UserDashboardController extends Controller
                 'updated_at' => now(),
             ];
         }
-        if (!empty($insert)) {
+        if (! empty($insert)) {
             UserDashboardWidget::insert($insert);
         }
+
         return response()->json(['status' => 'ok']);
     }
 }

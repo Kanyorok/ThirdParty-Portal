@@ -8,8 +8,6 @@ use App\Models\Core\Approval\WorkflowHistory;
 use App\Models\Core\Approval\WorkflowPending;
 use App\Models\Core\Workflow;
 use App\Models\Inventory\ItemMasterList;
-use App\Models\Procurement\PlanLineItem;
-use App\Models\Procurement\TenderItems;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -17,11 +15,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ConsolidatedProcurementPlan extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_ConsolidatedProcurementPlan';
     protected $primaryKey = 'PlanID';
@@ -38,7 +37,7 @@ class ConsolidatedProcurementPlan extends Model
         'CurrentApprLevel',
         'Remarks',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
@@ -51,7 +50,7 @@ class ConsolidatedProcurementPlan extends Model
         'SubmittedDate',
         'CreatedOn',
         'ModifiedOn',
-        'DeletedOn'
+        'DeletedOn',
     ];
 
     protected $casts = [
@@ -120,7 +119,6 @@ class ConsolidatedProcurementPlan extends Model
             ->value('total') ?? 0.0;
     }
 
-
     // User relationships
     public function createdBy()
     {
@@ -178,7 +176,7 @@ class ConsolidatedProcurementPlan extends Model
         $lineItemIds = PlanLineItem::where('PlanID', $this->PlanID)->pluck('LineItemID');
         $used = $lineItemIds->isNotEmpty() && TenderItems::whereIn('PlanItemID', $lineItemIds)->exists();
         $this->attributes['is_used_cached'] = $used ? 1 : 0;
+
         return $used;
     }
-
 }

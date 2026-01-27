@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\PropertyManagement\PropertyUnit;
-use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
+use App\Models\PropertyManagement\PropertyRegistry;
+use App\Models\PropertyManagement\PropertyUnit;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class PropertyUnitSeeder extends Seeder
 {
@@ -17,8 +17,9 @@ class PropertyUnitSeeder extends Seeder
 
         // Fetch the property
         $property = PropertyRegistry::where('PropertyName', 'Kilimani Towers')->first();
-        if (!$property) {
+        if (! $property) {
             $this->command->warn('Property "Kilimani Towers" not found. Skipping PropertyUnit seeding.');
+
             return;
         }
 

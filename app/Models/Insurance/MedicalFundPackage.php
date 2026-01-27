@@ -2,27 +2,26 @@
 
 namespace App\Models\Insurance;
 
-
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Auth;
 
 class MedicalFundPackage extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     protected $table = 't_MedicalFundPackages';
     protected $primaryKey = 'Id';
 
     public $timestamps = true;
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'FundId','Name','CoverageDescription','Premium','IsCompulsory',
-        'CreatedBy','ModifiedBy','DeletedBy'
+        'CreatedBy','ModifiedBy','DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
@@ -30,7 +29,10 @@ class MedicalFundPackage extends Model
         return 'MedicalFundPackageId';
     }
 
-    public function fund() { return $this->belongsTo(MedicalFund::class, 'FundId','Id'); }
+    public function fund()
+    {
+        return $this->belongsTo(MedicalFund::class, 'FundId', 'Id');
+    }
 
     public function contributors()
     {
@@ -46,14 +48,13 @@ class MedicalFundPackage extends Model
             'CreatedBy',
             'CreatedOn',
             'ModifiedBy',
-            'ModifiedOn'
+            'ModifiedOn',
         ])->withTimestamps('CreatedOn', 'ModifiedOn');
     }
-   
-public function coverages() {
-    return $this->belongsToMany(Coverage::class, 't_MedicalFundPackageCoverages', 'PackageId', 'CoverageId')
-        ->withPivot(['AnnualLimit','PerVisitLimit','WaitingPeriodDays','Scope','IsActive']);
-}
 
-
+    public function coverages()
+    {
+        return $this->belongsToMany(Coverage::class, 't_MedicalFundPackageCoverages', 'PackageId', 'CoverageId')
+            ->withPivot(['AnnualLimit','PerVisitLimit','WaitingPeriodDays','Scope','IsActive']);
+    }
 }

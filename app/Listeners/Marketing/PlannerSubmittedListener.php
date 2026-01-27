@@ -27,7 +27,6 @@ class PlannerSubmittedListener implements ShouldQueue
      */
     public function __construct()
     {
-        //
     }
 
     /**
@@ -41,14 +40,14 @@ class PlannerSubmittedListener implements ShouldQueue
 
             foreach ($event->planner->plans as $plan) {
                 $Workflows->add([
-                                 'Source'     => MarketingPlanner::getPrimaryKey(),
-                                 'SourceID'   => $plan->Id,
-                                 'Stage'      => PlannerStatus::MarketingManager->name,
-                                 'Status'     => WorkflowStatus::Accepted->value,
-                                 'Notes'      => 'Marketing Manager Approval',
-                                 'CreatedBy'  => $event->actor->Id,
+                                 'Source' => MarketingPlanner::getPrimaryKey(),
+                                 'SourceID' => $plan->Id,
+                                 'Stage' => PlannerStatus::MarketingManager->name,
+                                 'Status' => WorkflowStatus::Accepted->value,
+                                 'Notes' => 'Marketing Manager Approval',
+                                 'CreatedBy' => $event->actor->Id,
                                  'ModifiedBy' => $event->actor->Id,
-                                 'CreatedOn'  => $date,
+                                 'CreatedOn' => $date,
                                  'ModifiedOn' => $date,
                                 ]);
             }
@@ -59,15 +58,15 @@ class PlannerSubmittedListener implements ShouldQueue
             DB::table('t_Workflows')->insert($Workflows->toArray());
 
             $event->planner->workflows()->create([
-                                                  'Stage'      => PlannerStatus::MarketingManager->name,
-                                                  'Status'     => WorkflowStatus::Accepted->value,
-                                                  'Notes'      => 'Submitted Master Plan',
-                                                  'CreatedBy'  => $event->actor->Id,
+                                                  'Stage' => PlannerStatus::MarketingManager->name,
+                                                  'Status' => WorkflowStatus::Accepted->value,
+                                                  'Notes' => 'Submitted Master Plan',
+                                                  'CreatedBy' => $event->actor->Id,
                                                   'ModifiedBy' => $event->actor->Id,
                                                  ]);
             $users = User::query()->lock('WITH(NOLOCK)')->hasPermission(PermissionEnum::Ceo->value)->get(["Id", "UserID", "Name", "Email"]);
             foreach ($users as $user) {
-                if (!$user instanceof User) {
+                if (! $user instanceof User) {
                     continue;
                 }
                 if (in_array($user->UserID, [$event->actor->UserID, SystemHelper::ID], true)) {//skip sys and submitter
@@ -75,9 +74,9 @@ class PlannerSubmittedListener implements ShouldQueue
                 }
 
                 $event->planner->pendingWorkflows()->create([
-                                                             'Stage'      => PlannerStatus::Ceo->name,
-                                                             'UserId'     => $user->Id,
-                                                             'CreatedBy'  => $event->actor->Id,
+                                                             'Stage' => PlannerStatus::Ceo->name,
+                                                             'UserId' => $user->Id,
+                                                             'CreatedBy' => $event->actor->Id,
                                                              'ModifiedBy' => $event->actor->Id,
                                                             ]);
 
@@ -105,10 +104,10 @@ class PlannerSubmittedListener implements ShouldQueue
             }
 
             $event->planner->workflows()->create([
-                                                  'Stage'      => PlannerStatus::MarketingManager->name,
-                                                  'Status'     => WorkflowStatus::Accepted->value,
-                                                  'Notes'      => 'Marketing Manager Approval',
-                                                  'CreatedBy'  => $event->actor->Id,
+                                                  'Stage' => PlannerStatus::MarketingManager->name,
+                                                  'Status' => WorkflowStatus::Accepted->value,
+                                                  'Notes' => 'Marketing Manager Approval',
+                                                  'CreatedBy' => $event->actor->Id,
                                                   'ModifiedBy' => $event->actor->Id,
                                                  ]);
 

@@ -9,11 +9,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LoanSecurity extends Model
 {
-    use SoftDeletes, UserActorTrait, DocumentsTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_LegalLoanSecurities';
     protected $primaryKey = 'Id';
@@ -36,5 +38,4 @@ class LoanSecurity extends Model
     {
         return 'LegalLoanSecuritiesId';
     }
-
 }

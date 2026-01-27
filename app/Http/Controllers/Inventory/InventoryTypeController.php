@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
-use App\Models\Inventory\InventoryType;
 use App\Http\Requests\Inventory\InventoryTypeRequest;
-use App\Services\Inventory\InventoryTypeService;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Inventory\InventoryType;
+use App\Services\Inventory\InventoryTypeService;
 
 class InventoryTypeController extends Controller
 {
@@ -52,6 +52,7 @@ class InventoryTypeController extends Controller
             ->whereNotIn('ID', InventoryType::whereNull('DeletedOn')->pluck('Type'))
             ->get();
         $this->authorize('update', $type);
+
         return view('inventory.itemmaster.inventorytype.edit', compact('type', 'inventoryTypes'));
     }
 

@@ -26,7 +26,7 @@ class BoardMeetingActionController extends Controller
     {
         $this->authorize('meeting', Board::class);
         $meeting = Meeting::query()->where('t_Meetings.Type', Board::getPrimaryKey())->where('t_Meetings.MeetingID', $meetingId)->lock('WITH(NOLOCK)')->first();
-        if (!$meeting instanceof Meeting) {
+        if (! $meeting instanceof Meeting) {
             return $this->errored('meeting not found');
         }
 
@@ -36,8 +36,9 @@ class BoardMeetingActionController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error upload meeting document : ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

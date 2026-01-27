@@ -41,14 +41,14 @@ class ProfileController extends Controller
 
         $request->validate([
                             'current_password' => 'required',
-                            'password'         => [
+                            'password' => [
                                                    'required',
                                                    'confirmed',
                                                    Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),
                                                   ],
                            ], ['current_password.required' => 'Please enter current password']);
 
-        if (!(BREncryption::checkAuthUser($user, $request->current_password))) {
+        if (! (BREncryption::checkAuthUser($user, $request->current_password))) {
             throw ValidationException::withMessages(['current_password' => 'Current password is incorrect']);
         }
 
@@ -60,6 +60,7 @@ class ProfileController extends Controller
 
         return $this->succeeded('password updated successfully');
     }
+
     /**
      * Update User Profile
      *
@@ -72,6 +73,7 @@ class ProfileController extends Controller
         $email = $request->getUserEmail($user);
         $userID = $request->getUserID($user);
         $ClintID = $request->validated('ClientID');
+
         try {
             DB::transaction(static function () use ($ClintID, $user, $userID, $email, $gender, $request) {
                 (new UserService($user))
@@ -92,6 +94,7 @@ class ProfileController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error create user ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
         //$request->save($request->user());

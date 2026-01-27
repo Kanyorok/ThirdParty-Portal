@@ -31,7 +31,6 @@ class CampaignRunListener implements ShouldQueue
      */
     public function __construct()
     {
-        //
     }
 
     /**
@@ -42,11 +41,13 @@ class CampaignRunListener implements ShouldQueue
 
         if ($event->campaign->Type->value === CampaignTypeEnum::Email->value) {
             $this->_email($event->campaign, $event->actor);
+
             return;
         }
 
         if ($event->campaign->Type->value === CampaignTypeEnum::SMS->value) {
             $this->_sms($event->campaign, $event->actor);
+
             return;
         }
 
@@ -73,15 +74,16 @@ class CampaignRunListener implements ShouldQueue
             $LoansActivity = collect();
 
             foreach ($contacts as $contact) {
-                if (!$contact instanceof CampaignParty) {
+                if (! $contact instanceof CampaignParty) {
                     continue;
                 }
 
                 $body = str_replace(['#name', '#date', '#org'], [$contact->party->Name, Carbon::now()->format('M d, Y'), config('org.name')], $campaign->Details);
 
                 if ($contact->party instanceof Lead) {
-                    if (!filter_var($contact->party->Email, FILTER_VALIDATE_EMAIL)) {
+                    if (! filter_var($contact->party->Email, FILTER_VALIDATE_EMAIL)) {
                         $campaign_failed->add($contact->Id);
+
                         continue;
                     }
                     //smtp
@@ -111,8 +113,9 @@ class CampaignRunListener implements ShouldQueue
                     continue;
                 }
                 if ($contact->party instanceof Client) {
-                    if (!filter_var($contact->party->Email, FILTER_VALIDATE_EMAIL)) {
+                    if (! filter_var($contact->party->Email, FILTER_VALIDATE_EMAIL)) {
                         $campaign_failed->add($contact->Id);
+
                         continue;
                     }
                     //smtp
@@ -144,14 +147,16 @@ class CampaignRunListener implements ShouldQueue
                 }
 
                 if ($contact->party instanceof DebtProduct) {
-                    if (!$contact->party->client instanceof Client) {
+                    if (! $contact->party->client instanceof Client) {
                         $campaign_failed->add($contact->Id);
+
                         continue;
                     }
 
                     $email = (new ClientService($contact->party->client))->getEmail();
-                    if (is_null($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    if (is_null($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                         $campaign_failed->add($contact->Id);
+
                         continue;
                     }
                     $body = (new LoanService($contact->party))->placeholders($contact->party->client, $body);
@@ -174,7 +179,7 @@ class CampaignRunListener implements ShouldQueue
                         'ModifiedOn' => $date,
                         'Status' => EmailStatusEnum::Sending->value,
                     ]);
-                    //
+
 
                     $LoansActivity->add([
                         'Party' => Client::getPrimaryKey(),
@@ -217,6 +222,7 @@ class CampaignRunListener implements ShouldQueue
 
         if ($LoansActivity->count() > 0) {
             DB::table('t_PartyActivities')->lock('WITH(NOLOCK)')->insert($LoansActivity->toArray());
+
             return;
         }
 
@@ -250,7 +256,7 @@ class CampaignRunListener implements ShouldQueue
 
 
             foreach ($contacts as $contact) {
-                if (!$contact instanceof CampaignParty) {
+                if (! $contact instanceof CampaignParty) {
                     continue;
                 }
 
@@ -258,6 +264,7 @@ class CampaignRunListener implements ShouldQueue
                     $phoneNo = $contact->party->Phone;
                     if (Str::length($phoneNo) < 9) {
                         $campaign_failed->add($contact->Id);
+
                         continue;
                     }
 
@@ -283,6 +290,7 @@ class CampaignRunListener implements ShouldQueue
                     $phoneNo = (new ClientService($contact->party))->phoneNo();
                     if (is_null($phoneNo) || Str::length($phoneNo) < 9) {
                         $campaign_failed->add($contact->Id);
+
                         continue;
                     }
 
@@ -320,19 +328,22 @@ class CampaignRunListener implements ShouldQueue
                     continue;
                 }
                 if ($contact->party instanceof DebtProduct) {
-                    if (!$contact->party->client instanceof Client) {
+                    if (! $contact->party->client instanceof Client) {
                         $campaign_failed->add($contact->Id);
+
                         continue;
                     }
 
                     $phoneNo = (new ClientService($contact->party->client))->phoneNo();
                     if (is_null($phoneNo) || Str::length($phoneNo) < 9) {
                         $campaign_failed->add($contact->Id);
+
                         continue;
                     }
 
-                    if (!is_string($campaign->Details) || Str::length($campaign->Details) < 3) {
+                    if (! is_string($campaign->Details) || Str::length($campaign->Details) < 3) {
                         $campaign_failed->add($contact->Id);
+
                         continue;
                     }
 
@@ -365,6 +376,7 @@ class CampaignRunListener implements ShouldQueue
 
                     $campaign_sending->add($contact->Id);
                     $clientID_sent->add($contact->party->ClientID);
+
                     continue;
                 }
 

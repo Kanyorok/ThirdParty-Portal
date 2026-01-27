@@ -10,9 +10,9 @@ class Guarantor extends Model
 {
     use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedDate';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedDate';
     public $incrementing = false;
     public $timestamps = false;
     //protected $connection = 'brcbs';
@@ -23,7 +23,7 @@ class Guarantor extends Model
 
     protected $casts = [
                         'GuaranteeAmount' => 'decimal:2',
-                        'CreatedOn'       => 'datetime',
+                        'CreatedOn' => 'datetime',
                        ];
 
     public static function primaryKey(): string

@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Enums\Core\PermissionEnum;
 use App\Helpers\SystemHelper;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -46,7 +45,7 @@ class EmployeePermissionsSeeder extends Seeder
         if ($adminRole) {
             // Assign permissions to admin role (syncWithoutDetaching won't remove existing permissions)
             $adminRole->givePermissionTo($employeePermissions);
-            
+
             $this->command->info('✓ Employee permissions created and assigned to admin role');
         } else {
             $this->command->warn('⚠ Admin role not found. Please run RolePermissionSeeder first.');
@@ -54,7 +53,7 @@ class EmployeePermissionsSeeder extends Seeder
 
         // Clear permission cache
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-        
+
         $this->command->info('✓ Permission cache cleared');
     }
 }

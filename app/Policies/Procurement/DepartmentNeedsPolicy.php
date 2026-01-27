@@ -51,4 +51,3 @@ class DepartmentNeedsPolicy
         return $user->can(PermissionEnum::DepartmentNeedsApproval->value);
     }
 }
-

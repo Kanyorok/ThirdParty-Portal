@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models\Procurement;
+
 use App\Models\Core\Approval\WorkflowHistory;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -8,14 +9,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RFQAward extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     protected $table = 't_RFQAward';
     protected $primaryKey = 'Id';
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'RFQId',
@@ -65,9 +67,9 @@ class RFQAward extends Model
         return $this->belongsTo(\App\Models\ThirdParies\Supplier::class, 'SupplierId', 'Id');
     }
 
-     /**
-     * Workflow history relationship
-     */
+    /**
+    * Workflow history relationship
+    */
     public function workflowHistory()
     {
         return $this->morphMany(
@@ -107,8 +109,6 @@ class RFQAward extends Model
 
     public function hasContract()
     {
-        return !empty($this->ContractStatus);
+        return ! empty($this->ContractStatus);
     }
 }
-
-

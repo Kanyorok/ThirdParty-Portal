@@ -9,6 +9,7 @@ class StoreThirdPartyCategoryRequest extends FormRequest
     public function authorize(): bool
     {
         $user = auth()->guard('sanctum')->user();
+
         return $user !== null && $user->thirdParty !== null;
     }
 

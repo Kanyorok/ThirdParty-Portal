@@ -4,9 +4,10 @@ namespace App\Models\Procurement;
 
 use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Enums\WorkflowStatus;
-use App\Models\Core\Branch;
 use App\Models\Core\Approval\Workflow;
 use App\Models\Core\Approval\WorkflowHistory;
+use App\Models\Core\Approval\WorkflowPending;
+use App\Models\Core\Branch;
 use App\Models\HRM\Department;
 use App\Models\Inventory\ItemMasterList;
 use App\Services\Procurement\DepartmentNeedsWorkflow;
@@ -14,17 +15,16 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Exports\NeedsExport;
-use App\Models\Core\Approval\WorkflowPending;
 use Illuminate\Support\Facades\Log;
 
 class DepartmentNeed extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $table = 't_DepartmentNeeds';
     protected $primaryKey = 'Id';
 
@@ -57,8 +57,8 @@ class DepartmentNeed extends Model
     public function workflows(): MorphMany
     {
         return $this->morphMany(
-            Workflow::class, 
-            'source', 
+            Workflow::class,
+            'source',
             'Source',      // Column name in t_Workflow table
             id: 'SourceID',    // ID column in t_Workflow table
             localKey: 'Id'           // Local key
@@ -71,8 +71,8 @@ class DepartmentNeed extends Model
     public function pendingWorkflows(): MorphMany
     {
         return $this->morphMany(
-            WorkflowPending::class, 
-            'source', 
+            WorkflowPending::class,
+            'source',
             'Source',      // Column name in t_WorkFlowPending table
             'SourceID',    // ID column in t_WorkFlowPending table
             'Id'           // Local key
@@ -155,8 +155,8 @@ class DepartmentNeed extends Model
         //             /** @var DepartmentNeedsWorkflow $workflowService */
         //             $workflowService = app(DepartmentNeedsWorkflow::class);
         //             $workflowService->submit(
-        //                 $departmentNeed, 
-        //                 $departmentNeed->creator, 
+        //                 $departmentNeed,
+        //                 $departmentNeed->creator,
         //                 'Initial submission'
         //             );
 

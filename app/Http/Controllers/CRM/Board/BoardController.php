@@ -33,7 +33,7 @@ class BoardController extends Controller
      */
     public function index(Request $request): JsonResponse|View
     {
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return view('crm.board.index')
                 ->with('rooms', MeetingRoom::query()->get(['RoomID', 'Name', 'Capacity']))
                 ->with('committees', Committee::query()->get(['t_Committees.CommitteeID', 't_Committees.Name']))
@@ -75,7 +75,6 @@ class BoardController extends Controller
             ->make();
     }
 
-
     /**
      * Store a newly created resource in storage.
      */
@@ -105,11 +104,13 @@ class BoardController extends Controller
 
                 activity()->causedBy($actor)->performedOn($board)->event('create')->log('Created board member ' . $board->BoardMemberID . '.');
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('creating board member.');
             Log::error($e);
+
             return $this->errored('an unexpected error occurred');
         }
+
         return $this->succeeded('board member added successfully');
     }
 
@@ -137,6 +138,7 @@ class BoardController extends Controller
     public function update(BoardUpdateRequest $request, Board $board): JsonResponse
     {
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($board, $actor, $request) {
                 $board->update([
@@ -154,11 +156,13 @@ class BoardController extends Controller
 
                 activity()->causedBy($actor)->performedOn($board)->event('update')->log('Updated board member ' . $board->BoardMemberID . '.');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('update board member.');
             Log::error($e);
+
             return $this->errored('an unexpected error occurred');
         }
+
         return $this->succeeded('board member updated successfully');
     }
 
@@ -168,6 +172,7 @@ class BoardController extends Controller
     public function destroy(Request $request, Board $board): JsonResponse
     {
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($board, $actor, $request) {
                 $board->forceFill([
@@ -176,11 +181,13 @@ class BoardController extends Controller
                 ])->save();
                 activity()->causedBy($actor)->performedOn($board)->event('delete')->log('removed board member ' . $board->BoardMemberID . '.');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('trash board member.');
             Log::error($e);
+
             return $this->errored('an unexpected error occurred');
         }
+
         return $this->succeeded('board member trashed successfully');
     }
 }

@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Budget;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Budget\BudgetRates;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BudgetRatesController extends Controller
@@ -16,6 +16,7 @@ class BudgetRatesController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetRates::class);
         $rates = BudgetRates::all();
+
         return view('budgetandanalytics.settings.rates.index', compact('rates'));
     }
 
@@ -65,6 +66,7 @@ class BudgetRatesController extends Controller
     public function edit($id)
     {
         $rate = BudgetRates::find($id);
+
         return view('budgetandanalytics.settings.rates.edit', compact('rate'));
     }
 
@@ -111,10 +113,10 @@ class BudgetRatesController extends Controller
         }
     }
 
-
     public function destroy(string $id)
     {
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetRates::class);
+
         try {
             $rate = BudgetRates::find($id)->delete();
             //$rate->delete();
@@ -129,8 +131,8 @@ class BudgetRatesController extends Controller
         } catch (\Throwable $th) {
             Log::error('---DELETE RATE ERROR---' . $th->getMessage());
             Log::error($th);
+
             return redirect()->route('rates.index')->with('error', 'Failed to delete Rate. Please try again.');
         }
     }
-
 }

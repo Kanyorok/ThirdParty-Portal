@@ -16,7 +16,7 @@ class PresentationExtraction extends FileExtraction
 {
     public function processContent(): bool
     {
-        if (!$this->extension->isPresentation()) {
+        if (! $this->extension->isPresentation()) {
             return false;
         }
         $name = $this->createTempFile();
@@ -25,14 +25,16 @@ class PresentationExtraction extends FileExtraction
         if ($content !== '') {
             return $this->handleContent($content);
         }
+
         return $this->handleContent();
     }
 
     public function extractText(string $filePath): string
     {
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             return '';
         }
+
         try {
             $presentation = IOFactory::load($filePath);
             $text = '';
@@ -44,9 +46,11 @@ class PresentationExtraction extends FileExtraction
                     $text .= $this->extractShapeText($shape);
                 }
             }
+
             return trim($text);
         } catch (Throwable $e) {
             Log::error('Error extracting text from presentation: ' . $e->getMessage());
+
             return '';
         }
     }
@@ -54,6 +58,7 @@ class PresentationExtraction extends FileExtraction
     private function extractShapeText(AbstractShape $shape): string
     {
         $text = '';
+
         try {
             if ($shape instanceof RichText) {
                 foreach ($shape->getParagraphs() as $paragraph) {
@@ -73,15 +78,17 @@ class PresentationExtraction extends FileExtraction
             }
         } catch (Throwable $e) {
             Log::warning('Error extracting text from shape: ' . get_class($shape), [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
+
         return $text;
     }
 
     private function extractRichTextElement($element): string
     {
         $text = '';
+
         try {
             if ($element instanceof TextElement) {
                 $text .= $element->getText() . ' ';
@@ -97,9 +104,10 @@ class PresentationExtraction extends FileExtraction
             }
         } catch (Throwable $e) {
             Log::warning('Error extracting text from rich text element: ' . get_class($element), [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
+
         return $text;
     }
 }

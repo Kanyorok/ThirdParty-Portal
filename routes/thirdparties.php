@@ -1,12 +1,12 @@
 <?php
 
 use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
-use App\Http\Controllers\Procurement\ThirdParties\ThirdPartyAuthController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
-use App\Http\Controllers\Procurement\ThirdParties\ThirdPartiesController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyProfileController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyDocumentsController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyProfileController;
+use App\Http\Controllers\Procurement\ThirdParties\ThirdPartiesController;
+use App\Http\Controllers\Procurement\ThirdParties\ThirdPartyAuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -45,13 +45,13 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
             $query->where('Id', $thirdPartyId);
         })->first();
 
-        if (!$supplier) {
+        if (! $supplier) {
             return response()->json([
                 'debug' => 'No supplier found',
                 'third_party_id' => $thirdPartyId,
                 'third_parties_count' => DB::table('t_ThirdParties')->count(),
                 'suppliers_count' => DB::table('t_Suppliers')->count(),
-                'sample_third_party' => DB::table('t_ThirdParties')->first()
+                'sample_third_party' => DB::table('t_ThirdParties')->first(),
             ]);
         }
 
@@ -71,15 +71,15 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
                     'InvitationID' => $inv->InvitationID,
                     'TenderId' => (int)$inv->TenderId,
                     'ResponseStatus' => strtolower($inv->ResponseStatus),
-                    'tender_title' => $inv->tender ? $inv->tender->Title : 'No tender loaded'
+                    'tender_title' => $inv->tender ? $inv->tender->Title : 'No tender loaded',
                 ];
-            })
+            }),
         ]);
     } catch (\Exception $e) {
         return response()->json([
             'debug' => 'Error in debug endpoint',
             'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
+            'trace' => $e->getTraceAsString(),
         ]);
     }
 });
@@ -92,7 +92,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
     // Token validation for session checks
     Route::post('auth/validate-token', function (Request $request) {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json(['valid' => false], 401);
         }
 
@@ -100,7 +100,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
         $isActive = method_exists($user, 'isActive') ? $user->isActive() : (bool)($user->IsActive ?? $user->isActive ?? false);
         $isApproved = method_exists($user, 'isApproved') ? $user->isApproved() : (bool)($user->isApproved ?? false);
 
-        if (!$isActive || !$isApproved) {
+        if (! $isActive || ! $isApproved) {
             return response()->json(['valid' => false], 403);
         }
 

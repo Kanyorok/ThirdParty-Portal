@@ -8,7 +8,6 @@ use App\Models\Insurance\BancassuranceClaim;
 use App\Models\Insurance\BancassuranceClaimPayment;
 use Illuminate\Support\Carbon;
 
-
 class BancassuranceClaimPaymentService
 {
     /**
@@ -16,7 +15,6 @@ class BancassuranceClaimPaymentService
      */
     public function __construct(public BancassuranceClaimPayment $bancassuranceclaimpayment)
     {
-        //
     }
 
     public static function create(
@@ -28,7 +26,7 @@ class BancassuranceClaimPaymentService
         User $PaidTo,
         CodeDetail $PaymentMethod,
         User $user
-    ):self{
+    ): self {
         $payment = BancassuranceClaimPayment::create([
             'ClaimId' => $ClaimId->Id,
             'PaymentDate' => $PaymentDate,

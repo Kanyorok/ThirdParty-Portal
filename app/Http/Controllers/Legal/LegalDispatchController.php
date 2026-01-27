@@ -59,4 +59,3 @@ class LegalDispatchController extends Controller
         return view('legal.dispatch.index');
     }
 }
-

@@ -2,17 +2,16 @@
 
 namespace App\Services\FleetManagement;
 
-use App\Models\Fleet\FleetTripLog;
-use App\Models\Core\Workflow;
-use App\Models\Core\PendingWorkflow;
-use App\Enums\WorkflowStatus;
-use App\Models\Core\Approval\CodeDetail;
-use App\Services\Workflow\ApprovalWorkflow;
 use App\Enums\Core\ApprovalEnum;
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\PendingWorkflow;
+use App\Models\Core\Workflow;
+use App\Models\Fleet\FleetTripLog;
+use App\Services\Workflow\ApprovalWorkflow;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Exception;
 use Throwable;
 
 class FleetTripLogService
@@ -31,7 +30,7 @@ class FleetTripLogService
     {
         $latestTrip = FleetTripLog::withTrashed()->latest('CreatedOn')->first();
 
-        if (!$latestTrip || !$latestTrip->TripNo) {
+        if (! $latestTrip || ! $latestTrip->TripNo) {
             return 'TRP-0001';
         }
 
@@ -49,37 +48,38 @@ class FleetTripLogService
         Log::info('Creating new parent trip', $data);
 
         DB::beginTransaction();
+
         try {
             $scheduledStatus = $this->getTripStatusId('Scheduled');
 
             $tripLog = FleetTripLog::create([
-                'TripNo'           => $this->generateTripNo(),
-                'ParentTripID'     => null,
-                'TripType'         => $data['TripType'],
-                'TripCode'         => $data['TripCode'] ?? null,
-                'VehicleType'      => $data['VehicleType'],
-                'LoadType'         => $data['LoadType'] ?? null,
-                'TripStartDate'    => $data['TripStartDate'] ?? now(),
-                'TripEndDate'      => $data['TripEndDate'] ?? $data['TripStartDate'] ?? now(),
-                'StartTime'        => $data['StartTime'] ?? null,
-                'EndTime'          => $data['EndTime'] ?? null,
-                'StartLocation'    => $data['StartLocation'] ?? null,
-                'EndLocation'      => $data['EndLocation'] ?? null,
-                'Route'            => $data['Route'] ?? null,
-                'DistanceCovered'  => $data['DistanceCovered'] ?? null,
-                'Purpose'          => $data['Purpose'] ?? null,
-                'Notes'            => $data['Notes'] ?? null,
-                'Status'           => $scheduledStatus,
-                'CreatedBy'        => Auth::id(),
-                'CreatedOn'        => now(),
-                'ModifiedBy'       => Auth::id(),
-                'ModifiedOn'       => now(),
+                'TripNo' => $this->generateTripNo(),
+                'ParentTripID' => null,
+                'TripType' => $data['TripType'],
+                'TripCode' => $data['TripCode'] ?? null,
+                'VehicleType' => $data['VehicleType'],
+                'LoadType' => $data['LoadType'] ?? null,
+                'TripStartDate' => $data['TripStartDate'] ?? now(),
+                'TripEndDate' => $data['TripEndDate'] ?? $data['TripStartDate'] ?? now(),
+                'StartTime' => $data['StartTime'] ?? null,
+                'EndTime' => $data['EndTime'] ?? null,
+                'StartLocation' => $data['StartLocation'] ?? null,
+                'EndLocation' => $data['EndLocation'] ?? null,
+                'Route' => $data['Route'] ?? null,
+                'DistanceCovered' => $data['DistanceCovered'] ?? null,
+                'Purpose' => $data['Purpose'] ?? null,
+                'Notes' => $data['Notes'] ?? null,
+                'Status' => $scheduledStatus,
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
             ]);
 
             Log::info('Parent trip created successfully', [
                 'trip_id' => $tripLog->Id,
                 'trip_no' => $tripLog->TripNo,
-                'status' => $tripLog->Status
+                'status' => $tripLog->Status,
             ]);
 
             // Submit for approval workflow
@@ -106,13 +106,13 @@ class FleetTripLogService
                 ->log("Created parent trip {$tripLog->TripNo} and submitted for approval");
 
             return $tripLog;
-
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to create parent trip', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             throw $e;
         }
     }
@@ -125,10 +125,11 @@ class FleetTripLogService
         Log::info('Creating child trips', [
             'parent_trip_id' => $parent->Id,
             'child_count' => count($childData),
-            'user_id' => Auth::id()
+            'user_id' => Auth::id(),
         ]);
 
         DB::beginTransaction();
+
         try {
             $scheduledStatus = $this->getTripStatusId('Scheduled');
 
@@ -176,16 +177,16 @@ class FleetTripLogService
 
             Log::info('Child trips created successfully', [
                 'parent_trip_id' => $parent->Id,
-                'child_count' => count($childData)
+                'child_count' => count($childData),
             ]);
-
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to create child trips', [
                 'parent_trip_id' => $parent->Id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             throw $e;
         }
     }
@@ -198,7 +199,7 @@ class FleetTripLogService
         Log::info('=== FleetTripLogService::approveTrip START ===', [
             'trip_id' => $tripId,
             'user_id' => Auth::id(),
-            'comments' => $comments
+            'comments' => $comments,
         ]);
 
         DB::beginTransaction();
@@ -211,14 +212,14 @@ class FleetTripLogService
                 'trip_id' => $parentTrip->Id,
                 'trip_no' => $parentTrip->TripNo,
                 'current_status' => $parentTrip->Status,
-                'child_count' => $parentTrip->childTrips->count()
+                'child_count' => $parentTrip->childTrips->count(),
             ]);
 
             // Use workflow to approve parent trip
             $this->workflow->approve(
-                $parentTrip, 
-                $user, 
-                ApprovalEnum::Approved, 
+                $parentTrip,
+                $user,
+                ApprovalEnum::Approved,
                 $comments ?? 'Trip Approved',
                 'Status'
             );
@@ -235,7 +236,7 @@ class FleetTripLogService
 
             Log::info('Parent trip approved', [
                 'trip_id' => $parentTrip->Id,
-                'new_status' => $parentTrip->Status
+                'new_status' => $parentTrip->Status,
             ]);
 
             // Approve all child trips
@@ -263,7 +264,7 @@ class FleetTripLogService
 
                 Log::info('Child trips approved', [
                     'parent_trip_id' => $parentTrip->Id,
-                    'child_count' => $parentTrip->childTrips->count()
+                    'child_count' => $parentTrip->childTrips->count(),
                 ]);
             }
 
@@ -278,11 +279,10 @@ class FleetTripLogService
 
             Log::info('=== FleetTripLogService::approveTrip SUCCESS ===', [
                 'trip_id' => $parentTrip->Id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return $parentTrip->fresh(['childTrips']);
-
         } catch (Throwable $th) {
             DB::rollBack();
             Log::error('=== FleetTripLogService::approveTrip FAILED ===', [
@@ -290,8 +290,9 @@ class FleetTripLogService
                 'user_id' => Auth::id(),
                 'error' => $th->getMessage(),
                 'exception' => $th,
-                'trace' => $th->getTraceAsString()
+                'trace' => $th->getTraceAsString(),
             ]);
+
             throw $th;
         }
     }
@@ -304,7 +305,7 @@ class FleetTripLogService
         Log::info('=== FleetTripLogService::rejectTrip START ===', [
             'trip_id' => $tripId,
             'user_id' => Auth::id(),
-            'comments' => $comments
+            'comments' => $comments,
         ]);
 
         DB::beginTransaction();
@@ -316,14 +317,14 @@ class FleetTripLogService
             Log::info('Found trip for rejection', [
                 'trip_id' => $parentTrip->Id,
                 'trip_no' => $parentTrip->TripNo,
-                'current_status' => $parentTrip->Status
+                'current_status' => $parentTrip->Status,
             ]);
 
             // Use workflow to reject parent trip
             $this->workflow->reject(
-                $parentTrip, 
-                $user, 
-                ApprovalEnum::Rejected, 
+                $parentTrip,
+                $user,
+                ApprovalEnum::Rejected,
                 $comments ?? 'Trip Rejected',
                 'Status'
             );
@@ -361,11 +362,10 @@ class FleetTripLogService
 
             Log::info('=== FleetTripLogService::rejectTrip SUCCESS ===', [
                 'trip_id' => $parentTrip->Id,
-                'new_status' => $parentTrip->Status
+                'new_status' => $parentTrip->Status,
             ]);
 
             return $parentTrip->fresh(['childTrips']);
-
         } catch (Throwable $th) {
             DB::rollBack();
             Log::error('=== FleetTripLogService::rejectTrip FAILED ===', [
@@ -373,8 +373,9 @@ class FleetTripLogService
                 'user_id' => Auth::id(),
                 'error' => $th->getMessage(),
                 'exception' => $th,
-                'trace' => $th->getTraceAsString()
+                'trace' => $th->getTraceAsString(),
             ]);
+
             throw $th;
         }
     }
@@ -387,7 +388,7 @@ class FleetTripLogService
         Log::info('Updating trip', [
             'trip_id' => $tripLog->Id,
             'data_keys' => array_keys($data),
-            'user_id' => Auth::id()
+            'user_id' => Auth::id(),
         ]);
 
         return DB::transaction(function () use ($tripLog, $data) {
@@ -409,7 +410,7 @@ class FleetTripLogService
                 'ModifiedOn' => now(),
             ]);
 
-            if (!empty($data['childTrips'])) {
+            if (! empty($data['childTrips'])) {
                 foreach ($data['childTrips'] as $childId => $childData) {
                     if (is_numeric($childId)) {
                         $child = FleetTripLog::find($childId);
@@ -421,7 +422,10 @@ class FleetTripLogService
             }
 
             // Log workflow for trip update
-            $this->workflow->update($tripLog, Auth::user(), ApprovalEnum::from($tripLog->Status),
+            $this->workflow->update(
+                $tripLog,
+                Auth::user(),
+                ApprovalEnum::from($tripLog->Status),
                 'Trip Updated'
             );
 
@@ -443,7 +447,7 @@ class FleetTripLogService
         Log::info('Deleting trip', [
             'trip_id' => $tripLog->Id,
             'trip_no' => $tripLog->TripNo,
-            'user_id' => Auth::id()
+            'user_id' => Auth::id(),
         ]);
 
         DB::transaction(function () use ($tripLog) {
@@ -464,7 +468,7 @@ class FleetTripLogService
             $tripLog->DeletedBy = Auth::id();
             $tripLog->DeletedOn = now();
             $tripLog->save();
-            
+
             activity()
                 ->causedBy(Auth::user())
                 ->performedOn($tripLog)
@@ -483,7 +487,7 @@ class FleetTripLogService
             ->where('Description', $description)
             ->first();
 
-        if (!$status) {
+        if (! $status) {
             throw new Exception("Trip status '{$description}' not found in system configuration.");
         }
 
@@ -496,7 +500,7 @@ class FleetTripLogService
     public function getApprovedTrips()
     {
         $approvedStatusId = $this->getTripStatusId('Approved');
-        
+
         return FleetTripLog::where('Status', $approvedStatusId)
             ->whereNull('ParentTripID') // Only parent trips
             ->orderByDesc('CreatedOn')

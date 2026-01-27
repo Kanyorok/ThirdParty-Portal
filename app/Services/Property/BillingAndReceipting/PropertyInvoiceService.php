@@ -12,7 +12,6 @@ use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Services\Finance\InvoiceIntakeService;
 use Illuminate\Support\Facades\DB;
 
-
 class PropertyInvoiceService
 {
     protected $invoice;
@@ -26,10 +25,10 @@ class PropertyInvoiceService
         PropertyNewLease $Lease,
         string $BillingMonth,
         string $InvoiceDate,
-        float  $RentAmount,
-        float  $ServicesCharge = null,
-        float  $OtherCharges = null,
-        float  $ParkingFee = null,
+        float $RentAmount,
+        float $ServicesCharge = null,
+        float $OtherCharges = null,
+        float $ParkingFee = null,
         string $InvoiceNotes = null,
         string $Description = null, // invoice-level description
         ?string $DescriptionRent = null,
@@ -39,9 +38,8 @@ class PropertyInvoiceService
         ?Currency $Currency = null,
         ?FinanceTaxRuleConfiguration $Tax = null,
         PropertyInvoiceEnum $Status,
-        User   $user
-    ): self
-    {
+        User $user
+    ): self {
         // Get the latest invoice number
         $lastInvoice = PropertyInvoice::withTrashed()
             ->selectRaw("CAST(SUBSTRING(InvoiceNumber, 5, 5) AS INT) as num")
@@ -62,10 +60,10 @@ class PropertyInvoiceService
                 'ServicesCharge' => $ServicesCharge,
                 'OtherCharges' => $OtherCharges,
                 'InvoiceNotes' => $InvoiceNotes,
-                'ParkingFee'   =>  $ParkingFee,
-                'Description'  =>  $Description,
-                'Currency' =>  $Currency->Id ?? null,
-                'Tax' =>  $Tax->Id ?? null,
+                'ParkingFee' => $ParkingFee,
+                'Description' => $Description,
+                'Currency' => $Currency->Id ?? null,
+                'Tax' => $Tax->Id ?? null,
                 'Status' => PropertyInvoiceEnum::Pending->value,
                 'CreatedBy' => $user->Id,
                 'ModifiedBy' => $user->Id,
@@ -76,7 +74,7 @@ class PropertyInvoiceService
             //Posting to financee invoicee table
             $finance = app(InvoiceIntakeService::class);
             //Get the tenantID
-            $tenantID =PropertyNewLease::find($Lease->Id)->Tenant;
+            $tenantID = PropertyNewLease::find($Lease->Id)->Tenant;
             $thirdPartyID = PropertyNewTenant::find($tenantID)->ThirdPartyId;
             // Build Finance lines (include only non-zero lines)
             $lines = [];
@@ -85,24 +83,24 @@ class PropertyInvoiceService
                 if ($amt > 0) {
                     $lines[] = [
                         'InvoiceLineName' => $name,
-                        'Description'     => trim("Lease #{$Lease->Id} $lineDescription" ?: "Lease #{$Lease->Id} {$name}"),
-                        'UnitCost'        => $amt,
-                        'Quantity'        => 1,
-                        'Tax'             => null,
-                        'TaxID'           => (string) ($LineTax->Id),
-                        'TaxAmount'       => '0',
-                        'Discount'        => 0,
-                        'Total'           => $amt,
+                        'Description' => trim("Lease #{$Lease->Id} $lineDescription" ?: "Lease #{$Lease->Id} {$name}"),
+                        'UnitCost' => $amt,
+                        'Quantity' => 1,
+                        'Tax' => null,
+                        'TaxID' => (string) ($LineTax->Id),
+                        'TaxAmount' => '0',
+                        'Discount' => 0,
+                        'Total' => $amt,
                     ];
                 }
             };
-            $addLine('Monthly Rent',  (float) $RentAmount, $DescriptionRent, $Tax);
-            $addLine('Service Charge',(float) $ServicesCharge, $DescriptionService, $Tax);
-            $addLine('Parking Fee',   (float) $ParkingFee, $DescriptionParking, $Tax);
+            $addLine('Monthly Rent', (float) $RentAmount, $DescriptionRent, $Tax);
+            $addLine('Service Charge', (float) $ServicesCharge, $DescriptionService, $Tax);
+            $addLine('Parking Fee', (float) $ParkingFee, $DescriptionParking, $Tax);
             $addLine('Other Charges', (float) $OtherCharges, $DescriptionOther, $Tax);
 
             //dd($lines);
-            if (!empty($lines)) {
+            if (! empty($lines)) {
                 $total = array_sum(array_column($lines, 'Total'));
                 $taxAmount = 0.0;
                 $invoiceAmount = (float) $total;
@@ -144,15 +142,14 @@ class PropertyInvoiceService
                 $result = $finance->intake($payload, true);
 
                 //dd($payload);
-                
+
                 // Store only the RequestID back into t_RentInvoice
-                if (!empty($result['request_id'])) {
+                if (! empty($result['request_id'])) {
                     $invoice->RequestID = $result['request_id'];
                     $invoice->save();
                 }
             }
             DB::commit();
-
         } catch (\Illuminate\Database\QueryException $e) {
             DB::rollBack();
             if (str_contains($e->getMessage(), 't_rentinvoice_invoicenumber_unique')) {
@@ -165,7 +162,7 @@ class PropertyInvoiceService
         }
 
         activity()->causedBy($user->Id)->performedOn($invoice)->event('create')->log("Added Property Invoice {$invoice->Id}.");
+
         return new self($invoice);
     }
-
 }

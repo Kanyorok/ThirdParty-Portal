@@ -23,7 +23,7 @@ class DynamicListService
      */
     public function addFilter(SysFilter $filter, string|array $values, User $actor, string $boolean = 'and'): static
     {
-        if (!in_array($boolean, ['and', 'or'])) {
+        if (! in_array($boolean, ['and', 'or'])) {
             throw new ErroredException('operation should be either `and` / `or`');
         }
 
@@ -32,20 +32,19 @@ class DynamicListService
         }
 
         $this->list->filters()->create([
-                                        'FilterId'     => $filter->Id,
-                                        'FilterValue'  => is_array($values) ? null : $values,
+                                        'FilterId' => $filter->Id,
+                                        'FilterValue' => is_array($values) ? null : $values,
                                         'FilterValues' => is_array($values) ? $values : null,
-                                        'After'        => $boolean,
+                                        'After' => $boolean,
                                         'DisplayOrder' => $this->list->filters()->count() + 1,
-                                        'CreatedBy'    => $actor->Id,
-                                        'ModifiedBy'   => $actor->Id,
+                                        'CreatedBy' => $actor->Id,
+                                        'ModifiedBy' => $actor->Id,
                                        ]);
 
         activity()->causedBy($actor)->performedOn($this->list)->event('create')->log('added filter on (' . $filter->FieldName . ') in a marketing list');
 
         return $this;
     }
-
 
     public function rmFilter(MarketingListFilter $listFilter, User $actor): static
     {
@@ -58,7 +57,6 @@ class DynamicListService
 
         return $this;
     }
-
 
     /**
      * @throws ErroredException
@@ -85,6 +83,7 @@ class DynamicListService
         if ($this->list->Source === Lead::getPrimaryKey()) {
             return Lead::query();
         }
+
         throw new ErroredException('Unknown source.');
     }
 

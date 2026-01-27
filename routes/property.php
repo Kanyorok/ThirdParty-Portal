@@ -16,7 +16,7 @@ use App\Http\Controllers\Property\PropertyMaintenanceWorkCompletionController;
 use App\Http\Controllers\Property\PropertyNewLeaseController;
 use App\Http\Controllers\Property\PropertyNewTenantController;
 use App\Http\Controllers\Property\PropertyRateAndPricingControllert;
-use App\Http\Controllers\Property\PropertyRatesAndPricingControllert;
+use App\Http\Controllers\Property\PropertyReceiptController;
 use App\Http\Controllers\Property\PropertyRegistryController;
 use App\Http\Controllers\Property\PropertyReportsController;
 use App\Http\Controllers\Property\PropertyReportsVisualController;
@@ -26,10 +26,7 @@ use App\Http\Controllers\Property\PropertyUnitController;
 use App\Http\Controllers\Property\RentDashboardController;
 use App\Http\Controllers\Property\ReportsController;
 use App\Http\Controllers\Property\TenantStatementController;
-use App\Http\Controllers\Property\PropertyReceiptController;
-
 use Illuminate\Support\Facades\Route;
-
 
 Route::middleware(['module:500000'])->namespace('Property')->prefix('property')->group(function () {
 
@@ -92,7 +89,7 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
 
     //Property Settings
     Route::resource('propertysettings', PropertyUnitController::class);
-    
+
 
     //Property Rate and Pricing
     Route::get('propertyrateandpricing', [PropertyRateAndPricingControllert::class, 'index'])->name('propertyrateandpricing.index');
@@ -172,7 +169,7 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('/propertyaddlease/pricing/{UnitId}', [PropertyNewLeaseController::class, 'getPricingUnit'])->name('getpricingunit.lease');
     Route::get('lease-offer/{Id}', [PropertyNewLeaseController::class, 'leaseOfferLetter'])->name('addlease.offer');
 
-    
+
 
 
     //Route::resource('terminatelease', PropertyLeaseTerminationController::class);
@@ -216,7 +213,7 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::resource('approvals', PropertyApprovalController::class)->only([
         'index',
     ])->names([
-        'index' => 'propertyapproval.index'
+        'index' => 'propertyapproval.index',
     ]);
     // Approval actions: view, approve, reject
     Route::post('approvals/offer/approve/{Id}', [PropertyApprovalController::class, 'approve'])->name('propertyapproval.approve');
@@ -225,7 +222,7 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::post('approvals/terminate/reject/{Id}', [PropertyApprovalController::class, 'rejectTermination'])->name('propertyapproval.rejectTermination');
     Route::post('approvals/renewal/approve/{Id}', [PropertyApprovalController::class, 'approveRenewal'])->name('propertyapproval.approveRenewal');
     Route::post('approvals/renewal/reject/{Id}', [PropertyApprovalController::class, 'rejectRenewal'])->name('propertyapproval.rejectRenewal');
-    
+
 
     //Route::resource('rentinvoice', PropertyInvoiceController::class);
     Route::get('rentinvoice', [PropertyInvoiceController::class, 'index'])->name('rentinvoice.index');
@@ -250,7 +247,7 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     //Route::resource('tenantledger', TenantStatementController::class);
     Route::get('tenantledger', [TenantStatementController::class, 'index'])->name('tenantledger.index');
     // Route::get('tenantledger/create', [TenantStatementController::class,'create'])->name('tenantledger.create');
-    // Route::get('tenantledger/store', [TenantStatementController::class,'store'])->name('tenantledger.store');   
+    // Route::get('tenantledger/store', [TenantStatementController::class,'store'])->name('tenantledger.store');
     Route::get('tenantledger/pdf', [TenantStatementController::class, 'exportpdf'])->name('tenantledger.pdf');
 
     //Route::resource('maintenancerequest', PropertyMaintenanceRequestController::class);
@@ -294,6 +291,6 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('property-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'property-reports.index',
-        'show' => 'property-reports.show'
+        'show' => 'property-reports.show',
     ]);
 });

@@ -26,7 +26,7 @@ class RFQResponse extends Model
         'RequisitionItems',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
 
     protected $casts = [
@@ -52,6 +52,4 @@ class RFQResponse extends Model
     {
         return $this->belongsTo(UnitOfMeasure::class, 'UOMId', 'Id');
     }
-
-
 }
