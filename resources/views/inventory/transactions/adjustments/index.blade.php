@@ -27,7 +27,7 @@
                 <th>#</th>
                 <th>Adjustment Id</th>
                 <th>Date</th>
-                <th>Store</th>
+                <th>Branch</th>
                 <th>Adjusted By</th>
                 <th>Status</th>
                 <th>Actions</th>

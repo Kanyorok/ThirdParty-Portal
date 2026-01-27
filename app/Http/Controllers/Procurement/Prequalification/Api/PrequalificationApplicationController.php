@@ -7,11 +7,7 @@ use App\Enums\Procurement\PrequalificationRoundEnum;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\StorePrequalificationApplicationRequest;
-use App\Http\Resources\Procurement\PrequalificationRoundResource;
-use App\Models\Procurement\Prequalification\ApplicationCategoryStatus;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
-use App\Models\Procurement\Prequalification\PrequalificationApplicationDocument;
-use App\Models\Procurement\Prequalification\PrequalificationResult;
 use App\Models\Procurement\Prequalification\PrequalificationRound;
 use App\Models\ThirdParty\SupplierMaster;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +15,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class PrequalificationApplicationController extends Controller
@@ -49,13 +44,13 @@ class PrequalificationApplicationController extends Controller
 
             $supplierId = null;
             $supplierEligible = false;
-            $thirdPartyId = $user->third_party_id ?? ($user->thirdParty ? $user->thirdParty->Id : null);
+            $thirdPartyId = $user->third_party_id ?? ($user->thirdParty->id ?? null);
 
             if ($thirdPartyId) {
                 $supplierMaster = SupplierMaster::where('ThirdPartyId', $thirdPartyId)->first();
                 if ($supplierMaster) {
                     $supplierId = $supplierMaster->Id;
-                    $supplierEligible = ($supplierMaster->ApprovalStatus === ThirdPartyApprovalStatusEnum::Approved);
+                    $supplierEligible = $supplierMaster->ApprovalStatus === ThirdPartyApprovalStatusEnum::Approved;
                 }
             }
 
@@ -76,46 +71,41 @@ class PrequalificationApplicationController extends Controller
                 });
             }
 
-            if (!empty($search)) {
+            if ($search !== '') {
                 $query->where('Title', 'LIKE', "%{$search}%");
             }
 
             $rounds = $query->latest('CreatedOn')->paginate($pageSize, ['*'], 'page', $page);
             $roundIds = $rounds->pluck('RoundID')->filter()->values();
 
-            // Category Resolution Logic
             $categoriesByRound = collect();
-            if ($roundIds->isNotEmpty()) {
-                $supplierCats = $thirdPartyId ? DB::table('t_ThirdParty_SupplierCategory as tpsc')
+            if ($roundIds->isNotEmpty() && $thirdPartyId) {
+                $supplierCats = DB::table('t_ThirdParty_SupplierCategory as tpsc')
                     ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'tpsc.supplier_category_id')
                     ->where('tpsc.third_party_id', $thirdPartyId)
                     ->whereNull('sc.DeletedOn')
                     ->select('sc.SupplierCategoryID', 'sc.CategoryName')
-                    ->get() : collect();
+                    ->get();
 
-                $categoriesByRound = $roundIds->mapWithKeys(function ($rid) use ($supplierCats) {
-                    return [$rid => $supplierCats];
-                });
+                $categoriesByRound = $roundIds->mapWithKeys(fn ($rid) => [$rid => $supplierCats]);
             }
 
-            $applications = $supplierId ? PrequalificationApplication::where('SupplierID', $supplierId)
-                ->whereIn('RoundID', $roundIds)
-                ->get() : collect();
+            $applications = $supplierId
+                ? PrequalificationApplication::where('SupplierID', $supplierId)->whereIn('RoundID', $roundIds)->get()
+                : collect();
 
-            $appsByKey = $applications->keyBy(fn($a) => "{$a->RoundID}:{$a->CategoryID}");
-
-
+            $appsByKey = $applications->keyBy(fn ($a) => "{$a->RoundID}:{$a->CategoryID}");
 
             $data = $rounds->map(function ($round) use ($categoriesByRound, $appsByKey, $supplierEligible) {
                 $roundCats = $categoriesByRound->get($round->RoundID, collect());
 
-                $mappedCats = $roundCats->map(function ($cat) use ($round, $appsByKey) {
+                $categories = $roundCats->map(function ($cat) use ($round, $appsByKey) {
                     $app = $appsByKey->get("{$round->RoundID}:{$cat->SupplierCategoryID}");
                     return [
                         'id' => (int) $cat->SupplierCategoryID,
                         'name' => $cat->CategoryName,
-                        'hasApplied' => (bool)$app,
-                        'applicationId' => $app ? (string)$app->ApplicationID : null,
+                        'hasApplied' => (bool) $app,
+                        'applicationId' => $app ? (string) $app->ApplicationID : null,
                         'status' => $app ? ($app->Status->value ?? 'SUBMITTED') : 'NOT_APPLIED',
                     ];
                 });
@@ -128,7 +118,7 @@ class PrequalificationApplicationController extends Controller
                     'title' => $round->Title,
                     'startDate' => $round->StartDate?->format('Y-m-d'),
                     'endDate' => $round->EndDate?->format('Y-m-d'),
-                    'categories' => $mappedCats,
+                    'categories' => $categories,
                     'canApply' => $supplierEligible && !$isExpired && $round->Status === PrequalificationRoundEnum::Open,
                     'supplierEligible' => $supplierEligible,
                 ];
@@ -149,10 +139,20 @@ class PrequalificationApplicationController extends Controller
     public function store(StorePrequalificationApplicationRequest $request): JsonResponse
     {
         $user = Auth::user();
-        $supplierMaster = SupplierMaster::where('ThirdPartyId', $user->third_party_id)->first();
+        $thirdPartyId = $user->third_party_id ?? null;
+
+        if (!$thirdPartyId) {
+            return response()->json(['error' => 'No organization profile found'], 400);
+        }
+
+        $supplierMaster = SupplierMaster::where('ThirdPartyId', $thirdPartyId)->first();
 
         if (!$supplierMaster) {
-            return response()->json(['error' => 'No supplier profile found'], 400);
+            return response()->json(['error' => 'Supplier onboarding incomplete'], 400);
+        }
+
+        if ($supplierMaster->ApprovalStatus !== ThirdPartyApprovalStatusEnum::Approved) {
+            return response()->json(['error' => 'Supplier profile not approved'], 403);
         }
 
         $validated = $request->validated();
@@ -168,7 +168,7 @@ class PrequalificationApplicationController extends Controller
                     'CategoryID' => $cid,
                     'Status' => PrequalificationApplicationEnum::Submitted,
                     'SubmittedOn' => now(),
-                    'CreatedBy' => $user->Id,
+                    'CreatedBy' => $user->user_id ?? $user->id,
                 ]);
                 $ids[] = $app->ApplicationID;
             }

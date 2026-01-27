@@ -26,14 +26,18 @@ class StockTakeController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::StockTakeView, StockTake::class);
-        $stocks = StockTake::with('branch', 'store', 'createdby', 'countedby')->get();
+        $branchId = session('LoginBranchId');
+        $stocks = StockTake::with('branch', 'store', 'createdby', 'countedby')
+            ->where('BranchId', $branchId)
+            ->get();
         return view('inventory.stockmanagement.stocktake.index', compact('stocks'));
     }
 
     public function create()
     {
         $this->authorize(PermissionEnum::StockTakeCreate, StockTake::class);
-        $branches = Branch::all();
+        $branchId = session('LoginBranchId');
+        $branches = Branch::where('Id', $branchId)->get();
         $users = User::all();
         $stocks = collect();
         return view('inventory.stockmanagement.stocktake.create', compact('branches', 'stocks', 'users'));
@@ -83,7 +87,10 @@ class StockTakeController extends Controller
     public function show($id)
     {
          $this->authorize(PermissionEnum::StockTakeView, StockTake::class);
-        $stock = StockTake::with(['branch', 'store', 'lines.item.item'])->findOrFail($id);
+        $branchId = session('LoginBranchId');
+        $stock = StockTake::with(['branch', 'store', 'lines.item.item'])
+            ->where('BranchId', $branchId)
+            ->findOrFail($id);
         return view('inventory.stockmanagement.stocktake.show', compact('stock'));
     }
 
@@ -91,71 +98,81 @@ class StockTakeController extends Controller
     public function edit($id)
     {
         $this->authorize(PermissionEnum::StockTakeUpdate, StockTake::class);
-        $stock = StockTake::with('branch', 'store')->findOrFail($id);
-        $branches = Branch::all();
-        $stores = Store::all();
+        $branchId = session('LoginBranchId');
+        $stock = StockTake::with('branch', 'store')
+            ->where('BranchId', $branchId)
+            ->findOrFail($id);
+        $branches = Branch::where('Id', $branchId)->get();
+        $stores = Store::where('BranchID', $branchId)->get();
         $users = User::all();
 
         return view('inventory.stockmanagement.stocktake.edit', compact('stock', 'branches', 'stores', 'users'));
     }
 
-    public function update(Request $request, $id)
-    {
-         $this->authorize(PermissionEnum::StockTakeUpdate, StockTake::class);
-        $validated = $request->validate([
-            'BranchId' => 'required|exists:t_Branches,Id',
-            'StoreId' => 'required|exists:t_Stores,Id',
-            'CountedBy' => 'required|exists:t_Users,Id',
-            'CountDate' => 'required|date',
+public function update(Request $request, $id)
+{
+    $this->authorize('update', StockTake::class);
+    
+    $validated = $request->validate([
+        'BranchId' => 'required|exists:t_Branches,Id',
+        'StoreId' => 'required|exists:t_Stores,Id',
+        'CountedBy' => 'required|exists:t_Users,Id',
+        'CountDate' => 'required|date',
+        'lines' => 'sometimes|array',
+        'lines.*.Id' => 'sometimes|required|exists:t_StockTakeLines,Id',
+        'lines.*.CountedQuantity' => ['required', 'numeric', 'min:0'],
+        'lines.*.Remarks' => 'nullable|string',
+    ], [
+        'lines.*.CountedQuantity.min' => 'Counted quantity cannot be less than zero.',
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        $stock = StockTake::findOrFail($id);
+
+        // Update the stock take header
+        $stock->update([
+            'BranchId' => $validated['BranchId'],
+            'StoreId' => $validated['StoreId'],
+            'CountedBy' => $validated['CountedBy'],
+            'CountDate' => $validated['CountDate'],
+            'ModifiedBy' => Auth::id(),
         ]);
 
-        DB::beginTransaction();
+        // ✅ Update lines
+        if (isset($validated['lines'])) {
+            foreach ($validated['lines'] as $lineData) {
+                if (!empty($lineData['Id'])) {
+                    $line = StockTakeLines::find($lineData['Id']);
 
-        try {
-            $stock = StockTake::findOrFail($id);
-
-            // Update the stock take header
-            $stock->update([
-                'BranchId' => $validated['BranchId'],
-                'StoreId' => $validated['StoreId'],
-                'CountedBy' => $validated['CountedBy'],
-                'CountDate' => $validated['CountDate'],
-                'ModifiedBy' => Auth::id(),
-            ]);
-
-            // ✅ Update lines
-            if ($request->has('lines')) {
-                foreach ($request->lines as $lineData) {
-                    if (!empty($lineData['Id'])) {
-                        $line = StockTakeLines::find($lineData['Id']);
-
-                        if ($line) {
-                            $line->update([
-                                'CountedQuantity' => $lineData['CountedQuantity'],
-                                'Remarks' => $lineData['Remarks'] ?? null,
-                                'ModifiedBy' => Auth::id(),
-                                'ModifiedOn' => now(),
-                            ]);
-                        }
+                    if ($line) {
+                        $line->update([
+                            'CountedQuantity' => $lineData['CountedQuantity'],
+                            'Remarks' => $lineData['Remarks'] ?? null,
+                            'ModifiedBy' => Auth::id(),
+                            'ModifiedOn' => now(),
+                        ]);
                     }
                 }
             }
-
-            DB::commit();
-
-            activity()
-                ->performedOn($stock)
-                ->causedBy(Auth::user())
-                ->withProperties(['action' => 'update'])
-                ->log('Updated Stock Take and lines');
-
-            return redirect()->route('stocktake.index')->with('success', 'Stock Take updated successfully');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::error('Failed to Update Stock Take: ' . $th->getMessage());
-            return back()->withErrors(['error' => 'Failed to update Stock Take'])->withInput();
         }
+
+        DB::commit();
+
+        activity()
+            ->performedOn($stock)
+            ->causedBy(Auth::user())
+            ->withProperties(['action' => 'update'])
+            ->log('Updated Stock Take and lines');
+
+        return redirect()->route('stocktake.index')->with('success', 'Stock Take updated successfully');
+    } catch (\Throwable $th) {
+        DB::rollBack();
+        Log::error('Failed to Update Stock Take: ' . $th->getMessage());
+        return back()->withErrors(['error' => 'Failed to update Stock Take'])->withInput();
     }
+}
 
     public function destroy($id)
     {
@@ -163,7 +180,8 @@ class StockTakeController extends Controller
         //Check if user has permission to delete property categories
         //$this->authorize(PermissionEnum::PropertyTypeDelete , PropertyType::class);
         try {
-            $stock = StockTake::findOrFail($id);
+            $branchId = session('LoginBranchId');
+            $stock = StockTake::where('BranchId', $branchId)->findOrFail($id);
             $stock->delete();
 
             return redirect()->route('stocktake.index')

@@ -5,15 +5,6 @@
 
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    <style>
-        table.dataTable,
-        .dataTables_wrapper .dataTables_length,
-        .dataTables_wrapper .dataTables_filter,
-        .dataTables_wrapper .dataTables_info,
-        .dataTables_wrapper .dataTables_paginate {
-            font-size: 0.875rem;
-        }
-    </style>
 @endsection
 
 @section('content')
@@ -97,7 +88,8 @@
     </div>
 
     {{-- Scripts --}}
-    @section('scripts')
+
+      @section('scripts')
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
         <script>
@@ -112,8 +104,8 @@
                         emptyTable: ""
                     }
                 });
-            @endif
-        </script>
+                @endif
+            });
+    </script>
     @endsection
-
 @endsection

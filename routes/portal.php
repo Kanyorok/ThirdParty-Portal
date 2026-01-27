@@ -11,43 +11,37 @@ use App\Http\Controllers\ThirdParty\API\ThirdPartyAuthController;
 use App\Http\Controllers\ThirdParty\API\LookupController;
 use App\Http\Controllers\ThirdParty\API\ThirdPartyPasswordController;
 
-use App\Http\Controllers\Procurement\Prequalification\Api\PrequalificationRoundController;
-use App\Http\Controllers\Procurement\Prequalification\Api\PreqApplicationController;
+use App\Http\Controllers\Procurement\TenderApiController;
+use App\Http\Controllers\Procurement\Prequalification\Api\PrequalificationApplicationController;
+
 use App\Http\Controllers\API\Procurement\SupplierRFQController;
+use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
+use App\Http\Controllers\API\Procurement\TenderSubmissionApiController;
+use App\Http\Controllers\API\Procurement\TenderInvitationResponseApiController;
 
 use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
 
 Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
 
-    Route::post('register', [NewThirdPartyController::class, 'store'])
-        ->middleware(['throttle:5,1'])
-        ->name('register');
+    Route::post('register', [NewThirdPartyController::class, 'store'])->middleware(['throttle:5,1'])->name('register');
+    Route::post('login', [ThirdPartyAuthController::class, 'login'])->middleware(['throttle:10,1'])->name('login');
 
-    Route::post('login', [ThirdPartyAuthController::class, 'login'])
-        ->middleware(['throttle:10,1'])
-        ->name('login');
+    Route::get(
+        'email/verify/{user}/{hash}',
+        [ThirdPartyAuthController::class, 'verifyEmail']
+    )->name('portal.auth.email.verify');
 
-    Route::get('verify-email/{id}/{hash}', function (EmailVerificationRequest $request) {
-        $request->fulfill();
-        return response()->json(['message' => 'Email verified successfully.']);
-    })->middleware(['signed'])->name('verification.verify');
+    Route::post(
+        'email/resend',
+        [ThirdPartyAuthController::class, 'resendVerification']
+    )->middleware(['throttle:3,10']);
 
-    Route::post('verification-notification', function (Request $request) {
-        $request->user()->sendEmailVerificationNotification();
-        return response()->json(['message' => 'Verification link sent!']);
-    })->middleware(['auth.thirdparty', 'throttle:6,1'])->name('verification.send');
+    Route::post('password/forgot', [ThirdPartyPasswordController::class, 'forgotPassword'])->middleware(['throttle:5,1'])->name('password.forgot');
+    Route::post('password/reset', [ThirdPartyPasswordController::class, 'resetPassword'])->middleware(['throttle:5,1'])->name('password.reset');
 
-    Route::post('password/forgot', [ThirdPartyPasswordController::class, 'forgotPassword'])
-        ->middleware(['throttle:5,1'])
-        ->name('password.forgot');
-
-    Route::post('password/reset', [ThirdPartyPasswordController::class, 'resetPassword'])
-        ->middleware(['throttle:5,1'])
-        ->name('password.reset');
-
-    Route::prefix('lookups')->name('lookups.')->group(function () {
-        Route::get('bulk', [LookupController::class, 'bulk'])->name('bulk');
-        Route::get('{codeId}', [LookupController::class, '__invoke'])->name('show');
+    Route::prefix('lookups')->group(function () {
+        Route::get('bulk', [LookupController::class, 'bulk']);
+        Route::get('{codeId}', [LookupController::class, '__invoke']);
     });
 
     Route::prefix('metadata')->group(function () {
@@ -59,30 +53,9 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
         Route::get('code-details/{group}', [MetadataController::class, 'getCodeDetails']);
     });
 
-    Route::controller(ThirdPartyAuthController::class)
-        ->middleware(['auth.thirdparty'])
-        ->group(function () {
-            Route::post('logout', 'logout')->name('logout');
-            Route::get('me', 'me')->name('me');
-        });
-
-    Route::controller(ProfileController::class)
-        ->prefix('profile')
-        ->name('profile.')
-        ->middleware(['auth.thirdparty'])
-        ->group(function () {
-            Route::get('/', 'show')->name('show');
-            Route::put('/', 'updateProfile')->name('update');
-            Route::get('/available', 'getAvailableProfiles')->name('available');
-            Route::get('/supplier', 'getSupplierProfile')->name('supplier.show');
-            Route::put('/supplier', 'updateSupplierProfile')->name('supplier.update');
-            Route::get('/tenant', 'getTenantProfile')->name('tenant.show');
-            Route::put('/tenant', 'updateTenantProfile')->name('tenant.update');
-            Route::get('/customer', 'getCustomerProfile')->name('customer.show');
-            Route::put('/customer', 'updateCustomerProfile')->name('customer.update');
-        });
-
     Route::middleware(['auth.thirdparty'])->group(function () {
+        Route::post('logout', [ThirdPartyAuthController::class, 'logout']);
+        Route::get('me', [ThirdPartyAuthController::class, 'me']);
         Route::get('validate-token', function (Request $request) {
             $user = $request->user()->load([
                 'thirdParty.types',
@@ -96,23 +69,49 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
                 'valid' => true,
                 'user' => new ThirdPartyUserResource($user),
             ]);
-        })->name('validate_token');
+        });
+    });
+
+    Route::prefix('profile')->middleware(['auth.thirdparty'])->group(function () {
+        Route::get('/', [ProfileController::class, 'show']);
+        Route::put('/', [ProfileController::class, 'updateProfile']);
+        Route::get('available', [ProfileController::class, 'getAvailableProfiles']);
+        Route::get('supplier', [ProfileController::class, 'getSupplierProfile']);
+        Route::put('supplier', [ProfileController::class, 'updateSupplierProfile']);
+        Route::get('tenant', [ProfileController::class, 'getTenantProfile']);
+        Route::put('tenant', [ProfileController::class, 'updateTenantProfile']);
+        Route::get('customer', [ProfileController::class, 'getCustomerProfile']);
+        Route::put('customer', [ProfileController::class, 'updateCustomerProfile']);
     });
 });
 
-Route::middleware(['auth.thirdparty'])->group(function () {
+Route::middleware(['auth.thirdparty'])->prefix('supplier')->group(function () {
 
-    Route::prefix('prequalification')->name('prequalification.')->group(function () {
-        Route::get('applications', [PreqApplicationController::class, 'apiIndex'])->name('applications.index');
-        Route::post('applications', [PreqApplicationController::class, 'store'])->name('applications.store');
+    Route::get('rfqs', [SupplierRFQController::class, 'listInvitations']);
+    Route::get('rfqs/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
+    Route::get('rfqs/{rfq}/clarifications', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
+    Route::post('rfqs/responses', [SupplierRFQController::class, 'submitResponse']);
+    Route::post('rfqs/clarifications', [SupplierRFQController::class, 'postClarification']);
+
+    Route::prefix('prequalification')->group(function () {
+        Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex']);
+        Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->whereNumber('round');
+        Route::post('applications', [PrequalificationApplicationController::class, 'store']);
     });
 
-    Route::prefix('supplier')->group(function () {
-        Route::get('rfqs', [SupplierRFQController::class, 'listInvitations']);
-        Route::get('rfqs/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
-        Route::get('rfqs/{rfq}/clarifications', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
-        Route::post('rfqs/responses', [SupplierRFQController::class, 'submitResponse']);
-        Route::post('rfqs/clarifications', [SupplierRFQController::class, 'postClarification']);
+    Route::prefix('tenders')->group(function () {
+        Route::get('/', [TenderApiController::class, 'index']);
+        Route::get('{tender}', [TenderApiController::class, 'show'])->whereNumber('tender');
+        Route::post('respond', [TenderInvitationResponseApiController::class, 'respond']);
     });
 
+    Route::prefix('tender-clarifications')->group(function () {
+        Route::get('/', [TenderClarificationApiController::class, 'getClarifications']);
+        Route::post('/', [TenderClarificationApiController::class, 'submitClarification']);
+    });
+
+    Route::prefix('bid-submissions')->group(function () {
+        Route::get('/', [TenderSubmissionApiController::class, 'index']);
+        Route::post('/', [TenderSubmissionApiController::class, 'store']);
+    });
 });

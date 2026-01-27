@@ -113,14 +113,6 @@ class ItemMasterListController extends Controller
                 return back()->with('warning', $successMessage)->with('error_details', $errorMessage);
             }
 
-            \Log::info('Item Master List Import Statistics', [
-                'processed' => $processed,
-                'created' => $created,
-                'updated' => $updated,
-                'skipped' => $skipped,
-                'imported_by' => Auth::id(),
-            ]);
-
             return back()->with('success', $successMessage);
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             $errors = collect($e->failures())->map(function ($failure) {
@@ -131,10 +123,6 @@ class ItemMasterListController extends Controller
 
             return back()->with('error', "Validation errors:<br>{$errors}");
         } catch (\Exception $e) {
-            \Log::error('Item Master List Import Failed', [
-                'error' => $e->getMessage(),
-                'file' => $request->file('file')?->getClientOriginalName(),
-            ]);
 
             return back()->with('error', config('app.debug') ? "Import failed: " . $e->getMessage() : "Import failed. Please check the file format.");
         }

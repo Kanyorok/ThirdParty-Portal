@@ -100,13 +100,7 @@ class PropertyFloorController extends Controller
         try {
             $floor = PropertyFloor::findOrFail($id);
 
-            $floor->update([
-                'PropertyID' => $validated['PropertyID'],
-                'BlockID' => $validated['BlockID'],
-                'FloorLabel' => $validated['FloorLabel'],
-                'FloorNotes' => $validated['FloorNotes'] ?? '',
-                'ModifiedBy' => Auth::Id(),
-            ]);
+            $floor->update();
 
             DB::commit();
             activity()
@@ -133,7 +127,7 @@ class PropertyFloorController extends Controller
                     ->withErrors(['error' => 'This Property Floor is in use and cannot be deleted.']);
             }
 
-            $floor->delete();
+            $floor->delete($floor->id);
 
             return redirect()->route('addfloor.index')
                 ->with('success', 'Property Floor Deleted Successfully!');

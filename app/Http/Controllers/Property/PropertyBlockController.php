@@ -79,13 +79,7 @@ class PropertyBlockController extends Controller
         try {
             $block = PropertyBlock::findOrFail($id);
 
-            $block->update([
-                'PropertyID' => $validated['PropertyID'],
-                'BlockName' => $validated['BlockName'],
-                'Description' => $validated['Description'] ?? '',
-                'CreatedBy' => Auth::Id(),
-                'ModifiedBy' => Auth::Id(),
-            ]);
+            $block->update();
 
             DB::commit();
             activity()

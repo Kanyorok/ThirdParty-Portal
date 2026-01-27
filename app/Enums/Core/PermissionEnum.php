@@ -401,7 +401,7 @@ enum PermissionEnum: string
     case StockConsumptionView = 'stockConsumption-view';
     case StockConsumptionUpdate = 'stockConsumption-update';
     case StockConsumptionCreate = 'stockConsumption-create';
-    case StockConsumptionDestroy = 'stockConsumption-destroy';
+    case StockConsumptionDelete = 'stockConsumption-delete';
 
     case TransactionReceiptView = 'transactionReceipt-view';
     case TransactionReceiptUpdate = 'transactionReceipt-update';
@@ -422,9 +422,9 @@ enum PermissionEnum: string
 
 
     case InventoryHoldReviewView = 'inventoryHoldReview-view';
-    case InventoryHoldReviewUpdate = 'inventoryHoldReview-update';
+    // case InventoryHoldReviewUpdate = 'inventoryHoldReview-update';
     case InventoryHoldReviewCreate = 'inventoryHoldReview-create';
-    case InventoryHoldReviewDestroy = 'inventoryHoldReview-destroy';
+    // case InventoryHoldReviewDestroy = 'inventoryHoldReview-destroy';
 
     case UOMConversionView = 'uomConversion-view';
     case UOMConversionUpdate = 'uomConversion-update';
@@ -1077,9 +1077,10 @@ enum PermissionEnum: string
             [self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy],
             [self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy],
             [self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval],
+            [self::StockConsumptionView, self::StockConsumptionUpdate, self::StockConsumptionCreate, self::StockConsumptionDelete],
 
             [self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy, self::StockAdjustmentApproval],
-            [self::InventoryHoldReviewView, self::InventoryHoldReviewUpdate, self::InventoryHoldReviewCreate, self::InventoryHoldReviewDestroy],
+            [self::InventoryHoldReviewView, self::InventoryHoldReviewCreate, /*self::InventoryHoldReviewUpdate, self::InventoryHoldReviewDestroy*/],
             [self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDestroy],
 
             [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
@@ -1314,13 +1315,14 @@ enum PermissionEnum: string
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy,
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,
             self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy, self::InterBranchRequisitionApproval,
-            self::InventoryHoldReviewView, self::InventoryHoldReviewUpdate, self::InventoryHoldReviewCreate, self::InventoryHoldReviewDestroy,
+            self::InventoryHoldReviewView, /*self::InventoryHoldReviewUpdate,*/ self::InventoryHoldReviewCreate, /*self::InventoryHoldReviewDestroy,*/
             self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDestroy,
 
             self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy,
             self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy,
             self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy,
             self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval,
+            self::StockConsumptionView, self::StockConsumptionUpdate, self::StockConsumptionCreate, self::StockConsumptionDelete,
             self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy, self::StockAdjustmentApproval => ModulesEnum::Inventory,
             //Fleet Management
             self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy,
@@ -1518,10 +1520,10 @@ enum PermissionEnum: string
             self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy => 'Receipt',
             self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy => 'Stock Take',
             self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval => 'Transfer',
+            self::StockConsumptionView, self::StockConsumptionUpdate, self::StockConsumptionCreate, self::StockConsumptionDelete => 'Stock Consumption',
 
             self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy, self::StockAdjustmentApproval => 'Stock Adjustment',
-            //self::InventoryHoldView, self::InventoryHoldUpdate, self::InventoryHoldCreate, self::InventoryHoldDestroy => 'Inventory Hold',
-            self::InventoryHoldReviewView, self::InventoryHoldReviewUpdate, self::InventoryHoldReviewCreate, self::InventoryHoldReviewDestroy => 'Inventory Hold Review',
+            self::InventoryHoldReviewView, /*self::InventoryHoldReviewUpdate,*/ self::InventoryHoldReviewCreate /*, self::InventoryHoldReviewDestroy*/ => 'Stock Defects Review',
             self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDestroy => 'UOM Conversion',
 
             //Fleet Management

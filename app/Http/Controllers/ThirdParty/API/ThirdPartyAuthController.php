@@ -17,7 +17,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Validation\ValidationException;
 use App\Http\Requests\ThirdParty\ResetPasswordRequest;
 
 class ThirdPartyAuthController extends Controller
@@ -32,24 +31,22 @@ class ThirdPartyAuthController extends Controller
     public function register(NewThirdPartyRequest $request): JsonResponse
     {
         try {
-            $userData = $this->registrationService->registerThirdParty($request->validated());
+            $user = $this->registrationService->registerThirdParty($request->validated());
 
             return response()->json([
                 'success' => true,
-                'message' => __('auth.registration_personal_successful'),
-                'userId' => $userData->UserID,
-                'redirectUrl' => '/register/third-party-details?user_id=' . $userData->UserID,
+                'email_verification_required' => true,
+                'userId' => $user->UserID,
             ], 201);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Third-party registration failed', [
                 'error' => $e->getMessage(),
-                'payload' => $request->except(['user_Password', 'user_Password_confirmation']),
             ]);
 
             return response()->json([
                 'success' => false,
+                'error' => 'REGISTRATION_FAILED',
                 'message' => __('auth.registration_failed'),
-                'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
@@ -60,34 +57,47 @@ class ThirdPartyAuthController extends Controller
             'thirdParty.types',
             'thirdParty.supplierMaster',
             'thirdParty.tenantProfile',
-            'thirdParty.customerProfile'
+            'thirdParty.customerProfile',
         ])
             ->where('Email', strtolower($request->email))
             ->first();
 
-        if (!$user || !Hash::check($request->password, $user->Password)) {
-            throw ValidationException::withMessages([
-                'email' => [__('auth.invalid_credentials')],
-            ]);
-        }
-
-        if (!$user->isActive()) {
+        if (! $user || ! Hash::check($request->password, $user->Password)) {
             return response()->json([
                 'success' => false,
-                'message' => __('auth.account_inactive')
+                'error' => 'INVALID_CREDENTIALS',
+                'message' => __('auth.invalid_credentials'),
+            ], 401);
+        }
+
+        if (! $user->EmailVerifiedOn) {
+            return response()->json([
+                'success' => false,
+                'error' => 'EMAIL_NOT_VERIFIED',
+                'message' => __('auth.email_not_verified'),
             ], 403);
         }
 
-        if (!$user->isApproved()) {
+        if (! $user->IsActive) {
             return response()->json([
                 'success' => false,
-                'message' => __('auth.acc_not_approved')
+                'error' => 'ACCOUNT_DISABLED',
+                'message' => __('auth.account_inactive'),
+            ], 403);
+        }
+
+        if (! $user->isApproved()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'ACCOUNT_NOT_APPROVED',
+                'message' => __('auth.acc_not_approved'),
             ], 403);
         }
 
         $profileType = $request->input('profile_type');
+
         if ($profileType) {
-            $isAuthorized = match ($profileType) {
+            $authorized = match ($profileType) {
                 'Supplier' => SupplierMaster::where('ThirdPartyId', $user->ThirdPartyId)
                     ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved->value)
                     ->exists(),
@@ -99,10 +109,11 @@ class ThirdPartyAuthController extends Controller
                 default => false,
             };
 
-            if (!$isAuthorized) {
+            if (! $authorized) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Your account is not authorized for the selected profile type.'
+                    'error' => 'PROFILE_NOT_AUTHORIZED',
+                    'message' => __('auth.profile_not_authorized'),
                 ], 403);
             }
         }
@@ -112,8 +123,7 @@ class ThirdPartyAuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('auth.login_successful'),
-            'user' => new ThirdPartyUserResource($user),
+            'user' => (new ThirdPartyUserResource($user))->resolve(),
             'token' => $token,
             'token_type' => 'Bearer',
         ]);
@@ -123,10 +133,11 @@ class ThirdPartyAuthController extends Controller
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthenticated'
+                'error' => 'UNAUTHENTICATED',
+                'message' => __('auth.unauthenticated'),
             ], 401);
         }
 
@@ -134,12 +145,12 @@ class ThirdPartyAuthController extends Controller
             'thirdParty.types',
             'thirdParty.supplierMaster',
             'thirdParty.tenantProfile',
-            'thirdParty.customerProfile'
+            'thirdParty.customerProfile',
         ]);
 
         return response()->json([
             'success' => true,
-            'user' => new ThirdPartyUserResource($user)
+            'user' => new ThirdPartyUserResource($user),
         ]);
     }
 
@@ -147,7 +158,7 @@ class ThirdPartyAuthController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || !$user->isActive() || !$user->isApproved()) {
+        if (! $user || ! $user->IsActive || ! $user->EmailVerifiedOn) {
             return response()->json(['valid' => false], 403);
         }
 
@@ -168,7 +179,7 @@ class ThirdPartyAuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('auth.logout_successful')
+            'message' => __('auth.logout_successful'),
         ]);
     }
 
@@ -189,10 +200,9 @@ class ThirdPartyAuthController extends Controller
     {
         $status = Password::broker('thirdparties')->reset(
             $request->validated(),
-
             function ($user, $password) {
                 $user->forceFill([
-                    'Password' => Hash::make($password)
+                    'Password' => Hash::make($password),
                 ])->save();
             }
         );

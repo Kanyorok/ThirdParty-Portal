@@ -33,7 +33,7 @@ class ItemTypeController extends Controller
         $this->authorize('create', ItemType::class);
         $itemtypes = ItemType::with('type')->get();
         $itmTypes = CodeDetail::where('CodeID', 'ItemTypeStatus')
-            ->whereNotIn('ID', ItemType::pluck('TypeName'))
+            ->whereNotIn('ID', ItemType::whereNull('DeletedOn')->pluck('TypeName'))
             ->get();
         return view('inventory.itemmaster.itemtype.create', compact('itmTypes'));
     }
@@ -57,7 +57,7 @@ class ItemTypeController extends Controller
     public function edit($Id)
     {
         $itemtype = ItemType::findOrFail($Id);
-        $itmTypes = CodeDetail::where('CodeID', 'ItemTypeStatus')->whereNotIn('ID', ItemType::pluck('TypeName'))
+        $itmTypes = CodeDetail::where('CodeID', 'ItemTypeStatus')->whereNotIn('ID', ItemType::whereNull('DeletedOn')->pluck('TypeName'))
             ->get();
         $this->authorize('update', $itemtype);
         return response()->json($itemtype);

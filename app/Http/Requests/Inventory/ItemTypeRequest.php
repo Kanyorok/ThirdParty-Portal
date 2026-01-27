@@ -29,7 +29,7 @@ class ItemTypeRequest extends FormRequest
             'TypeName' => ['required', 'exists:t_CodeDetails,ID',
                 'string',
                 'max:255',
-                Rule::unique('t_ItemTypes', 'TypeName')->ignore($this->route('Id')),
+                Rule::unique('t_ItemTypes', 'TypeName')->ignore($this->route('Id'))->whereNull('DeletedOn'),
             ],
             'StockTracked' => 'required|boolean',
             'RequiresTagging' => 'required|boolean',
