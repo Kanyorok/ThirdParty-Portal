@@ -94,7 +94,7 @@
                                                   @csrf
                                                   <input type="hidden" name="Comments" value="Awarded via evaluation list">
                                                   <button type="submit" class="dropdown-item">
-                                                      {{ $supplierEntry['supplier']?->thirdParty?->ThirdPartyName ?? $supplierEntry['supplier']?->thirdParty?->TradingName ?? 'Unknown' }}
+                                                      {{ $supplierEntry['supplier']?->thirdParty?->thirdParty?->ThirdPartyName ?? $supplierEntry['supplier']?->thirdParty?->thirdParty?->TradingName ?? 'Unknown' }}
                                                       <small class="text-muted">({{ $supplierEntry['weightedTotal'] }}%)</small>
                                                   </button>
                                               </form>
@@ -141,7 +141,7 @@
                 <td>{{ $Index + 1 }}</td>
                 <td>{{ $evaluation->CommitteeMemberName }}</td>
                 <td>{{ $rfqNumber }}</td>
-                  <td>{{ $response?->supplier?->thirdParty?->ThirdPartyName ?? $response?->supplier?->thirdParty?->TradingName ?? $response?->SupplierName ?? 'N/A' }}</td>
+                  <td>{{ $response?->supplier?->thirdParty?->thirdParty?->ThirdPartyName ?? $response?->supplier?->thirdParty?->thirdParty?->TradingName ?? $response?->SupplierName ?? 'N/A' }}</td>
                 <td>{{ number_format($response->TotalPayable ?? 0, 2) }}</td>
                 <td>{{ $response->DurationDays ?? '-' }} Days</td>
                 <td>{{ $weightedTotal }}%</td>
@@ -181,7 +181,7 @@
     @foreach ($grouped as $supplierId => $evalGroup)
       @php
         $supplier = $evalGroup->first()->supplier;
-        $response = \App\Models\Procurement\RFQResponse::with('items.uom')
+        $response = \App\Models\Procurement\RFQResponse::with(['items.uom', 'supplier.thirdParty.thirdParty'])
             ->where('SupplierId', $supplierId)
             ->where('RFQId', $evaluation->RFQId)
             ->first();
@@ -219,7 +219,7 @@
                 <hr>
               <div class="card mb-4">
                 <div class="card-header bg-light fw-bold">
-                    Supplier: {{ $response?->supplier?->thirdParty?->ThirdPartyName ?? $response?->supplier?->thirdParty?->TradingName ?? $response?->SupplierName ?? 'N/A' }}
+                    Supplier: {{ $response?->supplier?->thirdParty?->thirdParty?->ThirdPartyName ?? $response?->supplier?->thirdParty?->thirdParty?->TradingName ?? $response?->SupplierName ?? 'N/A' }}
                 </div>
                 <div class="card-body">
                   <p><strong>Total Quoted:</strong> KES {{ number_format($response->TotalPayable ?? 0, 2) }}</p>

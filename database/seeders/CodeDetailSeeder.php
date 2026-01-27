@@ -15,6 +15,7 @@ use App\Enums\Procurement\SchedulePlanEnum;
 use App\Enums\Property\PropertyInvoiceEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Enums\Property\TenantClearanceEnum;
+use App\Enums\RFQAwardStatusEnum;
 use App\Enums\TenderApprovalStatusEnum;
 use App\Enums\TenderCategoryEnum;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
@@ -169,6 +170,15 @@ class CodeDetailSeeder extends Seeder
             ]);
         }
 
+        foreach (RFQAwardStatusEnum::cases() as $index => $rfqAwardStatusEnum) {
+            $entries->push([
+                'CodeID' => 'rfq_award',
+                'Value' => $rfqAwardStatusEnum->value,
+                'Description' => $rfqAwardStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+                'IsActive' => 1,
+            ]);
+        }
 
         foreach (BusinessTypeEnum::cases() as $index => $businessTypeEnum) {
             $entries->push([
