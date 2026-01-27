@@ -33,7 +33,7 @@
             @csrf
 
             <div class="mb-3">
-                <label for="InventoryHoldID" class="form-label">Select Item to Review</label>
+                <label for="InventoryHoldID" class="form-label">Select Item to Review<span class="text-danger">*</span></label>
                 <select name="InventoryHoldID" id="InventoryHoldID" class="form-control" required>
                     <option value="">-- Select --</option>
                     @foreach($holds as $hold)
@@ -76,19 +76,19 @@
                 <h6 class="mb-3">Item Details</h6>
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Item Name</label>
+                        <label class="form-label">Item Name<span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="ItemName" disabled>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Quantity</label>
+                        <label class="form-label">Quantity<span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="Quantity" disabled>
                     </div>
                 </div>
                 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Source / Transfer Path</label>
+                        <label class="form-label">Source / Transfer Path<span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="SourceDisplay" disabled>
                     </div>
                     
@@ -100,14 +100,14 @@
                 
                 <div class="row mb-3">
                     <div class="col-12">
-                        <label class="form-label">Defect Reason</label>
+                        <label class="form-label">Defect Reason<span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="Defect" disabled>
                     </div>
                 </div>
             </div>
 
             <div class="mb-3 mt-4">
-                <label for="Condition" class="form-label">Condition Assessment</label>
+                <label for="Condition" class="form-label">Condition Assessment<span class="text-danger">*</span></label>
                 <select name="Condition" id="Condition" class="form-control" required>
                     <option value="">-- Select Condition --</option>
                     @php

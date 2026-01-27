@@ -13,7 +13,7 @@
                 @csrf
 
                 <div class="mb-3">
-                    <label for="Code" class="form-label">UOM Code</label>
+                    <label for="Code" class="form-label">UOM Code<span class="text-danger">*</span></label>
                     <input type="text" class="form-control @error('Code') is-invalid @enderror" id="Code" name="Code" 
                            value="{{ old('Code') }}" placeholder="e.g., PCS" required>
                     @error('Code')
@@ -24,7 +24,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="Name" class="form-label">UOM Name</label>
+                    <label for="Name" class="form-label">UOM Name<span class="text-danger">*</span></label>
                     <input type="text" class="form-control @error('Name') is-invalid @enderror" id="Name" name="Name" 
                            value="{{ old('Name') }}" placeholder="e.g., Pieces" required>
                     @error('Name')

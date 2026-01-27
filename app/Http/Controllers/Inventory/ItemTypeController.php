@@ -48,25 +48,25 @@ class ItemTypeController extends Controller
 
     public function show($Id)
     {
+        $this->authorize('view', ItemType::class);
         $itemtypes = ItemType::with('type')->get();
         $itmTypes = CodeDetail::where('CodeID', 'ItemTypeStatus')->get();
-        $this->authorize('view', $itemtypes);
         return response()->json($itemtypes);
     }
 
     public function edit($Id)
     {
+        $this->authorize('update', ItemType::class);
         $itemtype = ItemType::findOrFail($Id);
         $itmTypes = CodeDetail::where('CodeID', 'ItemTypeStatus')->whereNotIn('ID', ItemType::whereNull('DeletedOn')->pluck('TypeName'))
             ->get();
-        $this->authorize('update', $itemtype);
         return response()->json($itemtype);
     }
 
     public function update(ItemTypeRequest $request, $Id)
     {
+        $this->authorize('update', ItemType::class);
         $itemtype = ItemType::findOrFail($Id);
-        $this->authorize('update', $itemtype);
 
         $this->service->update($itemtype, $request->validated());
 
@@ -75,8 +75,8 @@ class ItemTypeController extends Controller
 
     public function destroy($Id)
     {
+        $this->authorize('delete', ItemType::class);
         $itemtype = ItemType::findOrFail($Id);
-        $this->authorize('destroy', $itemtype);
 
         $this->service->delete($itemtype);
 

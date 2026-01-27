@@ -375,7 +375,7 @@ enum PermissionEnum: string
     case ItemTypeView = 'itemType-view';
     case ItemTypeUpdate = 'itemType-update';
     case ItemTypeCreate = 'itemType-create';
-    case ItemTypeDestroy = 'itemType-destroy';
+    case ItemTypeDelete = 'itemType-delete';
 
     case UOMView = 'uom-view';
     case UOMUpdate = 'uom-update';
@@ -1071,7 +1071,7 @@ enum PermissionEnum: string
             [self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDestroy],
             [self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDestroy],
             [self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy],
-            [self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy],
+            [self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDelete],
             [self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy],
             [self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy, self::InterBranchRequisitionApproval],
             [self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy],
@@ -1312,7 +1312,7 @@ enum PermissionEnum: string
             self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDestroy,
             self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDestroy,
             self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy,
-            self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy,
+            self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDelete,
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,
             self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy, self::InterBranchRequisitionApproval,
             self::InventoryHoldReviewView, /*self::InventoryHoldReviewUpdate,*/ self::InventoryHoldReviewCreate, /*self::InventoryHoldReviewDestroy,*/
@@ -1514,7 +1514,7 @@ enum PermissionEnum: string
             self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDestroy => 'Store',
             self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy => 'Inventory Type',
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy => 'UOM',
-            self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy => 'Item Type',
+            self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDelete => 'Item Type',
             self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy, self::InterBranchRequisitionApproval => 'InterBranch Requisition',
             self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy => 'Price Management',
             self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy => 'Receipt',

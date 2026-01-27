@@ -21,7 +21,7 @@ class ItemTypePolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, ItemType $itemType): bool
+    public function view(User $user): bool
     {
         return $user->can(PermissionEnum::ItemTypeView->value);
     }
@@ -37,7 +37,7 @@ class ItemTypePolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, ItemType $itemType): bool
+    public function update(User $user): bool
     {
         return $user->can(PermissionEnum::ItemTypeUpdate->value);
     }
@@ -47,15 +47,15 @@ class ItemTypePolicy
      */
     public function destroy(User $user): bool
     {
-        return $user->can(PermissionEnum::ItemTypeDestroy->value);
+        return $user->can(PermissionEnum::ItemTypeDelete->value);
     }
 
     /**
      * Determine whether the user can restore the model.
      */
-    public function edit(User $user, ItemType $itemType): bool
+    public function edit(User $user): bool
     {
-        return $user->can(PermissionEnum::ItemTypeRestore->value);
+        return $user->can(PermissionEnum::ItemTypeUpdate->value);
     }
 
 }

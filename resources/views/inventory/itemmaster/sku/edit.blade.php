@@ -23,11 +23,11 @@
 
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <label for="skuCode" class="form-label">SKU Code</label>
+                            <label for="skuCode" class="form-label">SKU Code</label><span class="text-danger">*</span>
                             <input type="text" name="SKUCode" class="form-control" id="skuCode" value="{{ $item->SKUCode }}" readonly>
                         </div>
                         <div class="col-md-4">
-                            <label for="Category" class="form-label">Category</label>
+                            <label for="Category" class="form-label">Category</label><span class="text-danger">*</span>
                             <select name="Category" id="Category" class="form-select" required>
                                 <option value="">-- Select Category --</option>
                                 @foreach($categories as $category)
@@ -48,20 +48,20 @@
 
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <label for="ItemID" class="form-label">Item</label>
+                            <label for="ItemID" class="form-label">Item</label><span class="text-danger">*</span>
                             <select name="ItemID" id="Item" class="form-select" required>
                                 <option value="">-- Select Item --</option>
                                 {{-- Items will be populated by JavaScript --}}
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label for="Branch" class="form-label">Branch</label>
+                            <label for="Branch" class="form-label">Branch</label><span class="text-danger">*</span>
                             <select name="Branch" id="Branch" class="form-select" required>
                                 <option value="{{ $branch->Id }}" selected>{{ $branch->Name }}</option>
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label for="Store" class="form-label">Store</label>
+                            <label for="Store" class="form-label">Store</label><span class="text-danger">*</span>
                             <select name="Store" id="Store" class="form-select">
                                 <option value="">-- Select Store --</option>
                                 {{-- Stores will be populated by JavaScript --}}
@@ -71,7 +71,7 @@
 
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <label for="currentQty" class="form-label">Current Qty</label>
+                            <label for="currentQty" class="form-label">Current Qty</label><span class="text-danger">*</span>
                             <input type="number" name="CurrentQty" class="form-control" id="currentQty" 
                                    value="{{ $item->CurrentQty }}" min="0" step="1" required
                                    oninput="validateQuantity(this)">
@@ -101,7 +101,7 @@
 
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="lastReceivedDate" class="form-label">Last Received Date</label>
+                            <label for="lastReceivedDate" class="form-label">Last Received Date</label><span class="text-danger">*</span>
                             <input type="date" name="LastReceived" id="lastReceivedDate" 
                                    class="form-control @error('LastReceived') is-invalid @enderror" 
                                    value="{{ old('LastReceived', $item->LastReceived) }}" 
@@ -117,7 +117,7 @@
                                 <input type="hidden" name="Status" value="0">
                                 <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status" 
                                     {{ $item->Status ? 'checked' : '' }}>
-                                <label class="form-check-label" for="Status">Is Active</label>
+                                <label class="form-check-label" for="Status">Is Active</label><span class="text-danger">*</span>
                             </div>
                         </div>
                     </div>
