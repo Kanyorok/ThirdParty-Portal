@@ -44,7 +44,6 @@ class TenderCommitteeController extends Controller
                 'appointment_date' => $item->AppointmentDate,
             ];
         });
-        //dd($rfqCommittees);
         // Combine both and sort
         $committeesCollection = collect($tenderCommittees)
             ->merge($rfqCommittees)
@@ -77,7 +76,6 @@ class TenderCommitteeController extends Controller
 
     public function store(Request $request)
     {
-        //dd($request->all());
         $request->validate([
             'committeeType' => 'required|in:tender,rfq',
             'referenceId' => 'required|integer',

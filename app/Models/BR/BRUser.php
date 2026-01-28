@@ -10,8 +10,6 @@ class BRUser extends Model
     public $incrementing = false;
     protected $keyType = 'string';
     protected $primaryKey = 'OperatorID';
-    //protected $connection = 'brcbs';
-    //protected $table = 't_User';
     protected $connection = 'sqlsrv';
     protected $table = 'syn_csb_t_User';
 

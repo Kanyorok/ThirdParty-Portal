@@ -43,7 +43,6 @@ class TeamController extends Controller
                                                                                                    },
                                                                                                   ])->rawColumns(['action'])->make();
 
-        //return view('settings.teams.index');
     }
 
     /**

@@ -19,7 +19,6 @@ class PropertyCategoryController extends Controller
         $this->authorize(PermissionEnum::PropertyCategoryView, CategoryMaster::class);
         $categories = CategoryMaster::where('Code', '500000')->get();
 
-        //dd($categories);
         return view('property.propertyregistry.propertycategory.index', compact('categories'));
     }
 

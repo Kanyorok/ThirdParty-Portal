@@ -13,8 +13,6 @@ class CollateralType extends Model
     public $timestamps = false;
     protected $keyType = 'string';
     protected $primaryKey = 'CollateralTypeID';
-    //protected $connection = 'brcbs';
-    //protected $table = 't_CollateralType';
     protected $connection = 'sqlsrv';
     protected $table = 'syn_t_CollateralType';
 

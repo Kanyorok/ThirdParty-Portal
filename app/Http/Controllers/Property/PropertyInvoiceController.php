@@ -121,40 +121,27 @@ class PropertyInvoiceController extends Controller
     }
 
 
-    // public function edit($id)
     // {
-    //     $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
 
-    //     $invoice = PropertyInvoice::with(['lease.tenant.thirdParty'])->findOrFail($id);
 
-    //     $leases = PropertyNewLease::where('IsActive', true)
     //         ->where('Status', '!=', PropertyNewLeaseEnum::Terminate)
     //         ->with('tenant.thirdParty')
     //         ->orderBy('LeaseNumber')
     //         ->get();
 
-    //     $currencies = Currency::orderBy('Code')->get();
-    //     $taxTypes = FinanceTaxRuleConfiguration::with('taxType')->get();
 
-    //     return view(
     //         'property.billingandreceipting.invoicing.edit',
     //         compact('invoice', 'leases', 'currencies', 'taxTypes')
     //     );
     // }
 
 
-    // public function update(PropertyInvoiceRequest $request, $id)
     // {
-    //     $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
-    //     $validated = $request->validated();
 
     //     DB::beginTransaction();
 
     //     try {
-    //         $invoice = PropertyInvoice::findOrFail($id);
-    //         $Lease = PropertyNewLease::findOrFail($validated['Lease']);
 
-    //         $invoice->update([
     //             'Lease' => $Lease->Id,
     //             'BillingMonth' => $validated['BillingMonth'],
     //             'InvoiceDate' => $validated['InvoiceDate'],
@@ -174,12 +161,10 @@ class PropertyInvoiceController extends Controller
     //             ->withProperties(['action' => 'update'])
     //             ->log('Updated Invoice Details');
 
-    //         return redirect()->route('rentinvoice.index')
     //             ->with('success', 'Invoice updated successfully');
 
     //     } catch (Throwable $th) {
     //         DB::rollBack();
-    //         return back()
     //             ->withErrors(['error' => $th->getMessage()])
     //             ->withInput();
     //     }

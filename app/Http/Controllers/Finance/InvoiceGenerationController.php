@@ -255,7 +255,6 @@ class InvoiceGenerationController extends Controller
 
     public function approve(Request $request, int $id, TransactionService $svc)
     {
-        // $this->authorize('approve-ap-invoice', FinanceInvoiceEntry::class);
 
         $validated = $request->validate([
             'Reason' => 'required|string|max:255',

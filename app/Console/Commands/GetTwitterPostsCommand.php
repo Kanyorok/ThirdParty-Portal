@@ -47,9 +47,6 @@ class GetTwitterPostsCommand extends Command
             return;
         }
 
-        // $posts = json_decode(file_get_contents(storage_path('test.json')), true, 512, JSON_THROW_ON_ERROR);
-        //$posts =str_replace(PHP_EOL,'', $content);
-        //$posts = ((object)json_decode(json_encode($posts, JSON_THROW_ON_ERROR | JSON_FORCE_OBJECT), false, 512, JSON_THROW_ON_ERROR));
 
         $actor = SystemHelper::user();
         foreach ($posts->includes->tweets as $tweet) {

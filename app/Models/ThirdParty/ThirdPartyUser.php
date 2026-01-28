@@ -23,7 +23,6 @@ use Laravel\Sanctum\HasApiTokens;
 
 class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract, CanResetPasswordContract
 {
-    // use HasApiTokens, Notifiable, SoftDeletes, MustVerifyEmail;
     use HasApiTokens;
     use Notifiable;
     use SoftDeletes;

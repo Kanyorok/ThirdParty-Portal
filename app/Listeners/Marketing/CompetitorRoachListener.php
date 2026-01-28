@@ -18,7 +18,6 @@ use RoachPHP\Spider\Configuration\Overrides;
 
 class CompetitorRoachListener implements ShouldQueue
 {
-    //   use InteractsWithQueue;
     public ?Competitor $competitor = null;
 
     /**

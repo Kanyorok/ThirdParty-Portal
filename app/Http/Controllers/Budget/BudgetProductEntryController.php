@@ -22,7 +22,6 @@ class BudgetProductEntryController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetDriverProjections::class);
-        //$projections = BudgetDriverProjections::with(['scenario', 'product', 'period'])->get();
         $projections = BudgetDriverProjections::with(
             'projections',
             'scenario:Id,scenarioName',

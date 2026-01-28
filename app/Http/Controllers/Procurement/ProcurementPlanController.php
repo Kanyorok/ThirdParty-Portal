@@ -12,10 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 class ProcurementPlanController extends Controller
 {
-    // public function index()
     // {
-    //     $procurementPlans = ProcurementPlan::with(['item', 'procurementPeriod'])->get();
-    //     return view('procurement.procurement_plans.index', compact('procurementPlans'));
     // }
 
     public function create(ProcurementPeriod $procurementPeriod)

@@ -22,14 +22,12 @@ class PropertyPaymentFrequencyController extends Controller
 
     public function store(Request $request)
     {
-        //dd($request->all());
         $request->validate([
             'FrequencyName' => 'required|string|max:50',
             'FrequencyCode' => 'required|string|max:50',
             'NumberOfMonths' => 'required|integer',
             'Description' => 'required|string|max:250',
         ]);
-        //dd('validation passed');
         $property = PropertyPaymentFrequency::create([
             'FrequencyName' => $request->FrequencyName,
             'FrequencyCode' => $request->FrequencyCode,
@@ -39,7 +37,6 @@ class PropertyPaymentFrequencyController extends Controller
             'ModifiedBy' => auth()->user()->Id,
         ]);
 
-        // dd('validation passed');
         return redirect()->route('paymentfrequency.index')->with('success', 'Payment frequency created successfully');
     }
 }

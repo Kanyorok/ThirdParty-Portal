@@ -15,7 +15,6 @@ use RoachPHP\Spider\ParseResult;
 
 class CompetitorSpider extends BasicSpider
 {
-    //public array $startUrls = [''];
 
     public array $downloaderMiddleware = [
                                           RequestDeduplicationMiddleware::class,

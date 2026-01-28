@@ -89,7 +89,6 @@ class DebitNoteController extends Controller
         DB::beginTransaction();
 
         try {
-            // $cdNumber = str_pad(rand(0,999999), 6, '0', STR_PAD_LEFT);
 
             if ($request->NoteType == 'Credit') {
                 $notes = FinanceCDNotes::create([

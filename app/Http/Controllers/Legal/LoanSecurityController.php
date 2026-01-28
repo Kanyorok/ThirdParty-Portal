@@ -182,7 +182,6 @@ class LoanSecurityController extends Controller
 
             DB::commit();
 
-            // dd($security);
             return redirect()->route('legal.securities.index')->with('success', 'Security updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();

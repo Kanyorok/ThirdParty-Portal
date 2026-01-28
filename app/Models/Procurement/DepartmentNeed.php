@@ -145,7 +145,6 @@ class DepartmentNeed extends Model
 
         // // Auto-submit for approval when created with pending status
         // static::created(function (DepartmentNeed $departmentNeed) {
-        //     if ($departmentNeed->isPendingApproval()) {
         //         try {
         //             Log::info('Auto-submitting department need for approval', [
         //                 'needId' => $departmentNeed->Id,
@@ -153,10 +152,6 @@ class DepartmentNeed extends Model
         //             ]);
 
         //             /** @var DepartmentNeedsWorkflow $workflowService */
-        //             $workflowService = app(DepartmentNeedsWorkflow::class);
-        //             $workflowService->submit(
-        //                 $departmentNeed,
-        //                 $departmentNeed->creator,
         //                 'Initial submission'
         //             );
 

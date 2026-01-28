@@ -64,12 +64,7 @@ class CheckEmailCommand extends Command
             return;
         }
 
-        //  dd($mailbox->checkMailbox());
-        //dd($mailbox->getMailboxInfo());
-        //dd($mailbox->getMailboxes());
-        // dd($mailbox->searchMailbox('UNSEEN'));
 
-        // dd($mailbox->getMail(41, false));
 
         try {
             $mailIds = $mailbox->searchMailbox('UNSEEN');

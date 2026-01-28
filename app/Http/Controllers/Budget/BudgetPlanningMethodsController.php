@@ -116,7 +116,6 @@ class BudgetPlanningMethodsController extends Controller
 
         try {
             $method = BudgetPlanningMethods::find($id)->delete();
-            //$method->delete();
 
             activity()
                 ->performedOn(new BudgetPlanningMethods())

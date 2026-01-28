@@ -55,7 +55,6 @@ class InvoiceEntryController extends Controller
     public function store(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
-        // return$request->all();
         $validated = $request->validate([
             'InvoiceNumber' => 'required|string',
             'ThirdPartyID' => 'required|exists:t_ThirdParties,Id',
@@ -80,7 +79,6 @@ class InvoiceEntryController extends Controller
         $poId = Order::where('OrderNo', $poOrderNo)->value('Id');
         $grnId = $validated['GRNReference'];
 
-        // $poItemsID = FacadesDB::table('t_OrderLines')
         //     ->where('iOrderID', $poId)
         //     ->pluck('Id') //represents the unique Orderline Ids based on
         //     ->toArray();
@@ -155,7 +153,6 @@ class InvoiceEntryController extends Controller
             return redirect()->route('invoiceentry.index')->with('success', 'Invoice created successfully');
         } catch (\Throwable $th) {
             FacadesDB::rollback();
-            //return $th->getMessage();
             Log::error('Failed to Create Invoice' . $th->getMessage());
 
             return back()->withError('error', 'Failed to create Invoice:' . $th->getMessage());
@@ -178,7 +175,6 @@ class InvoiceEntryController extends Controller
     public function getGRNs($selectedPO)
     {
 
-        // return $selectedPO;
         $grns = FacadesDB::table('t_GoodsReceipts')
             ->select(FacadesDB::raw('MIN(id) as id'), 'GRNID')
             ->where('POID', $selectedPO)
@@ -279,7 +275,6 @@ class InvoiceEntryController extends Controller
         $poId = $request->input('POReference');
         $grnId = $request->input('GRNReference');
 
-        // $poItemsID = FacadesDB::table('t_OrderLines')
         //     ->where('iOrderID', $poId)
         //     ->pluck('Id') //represents the unique Orderline Ids based on
         //     ->toArray();
@@ -373,7 +368,6 @@ class InvoiceEntryController extends Controller
 
     public function approve(Request $request, int $id, TransactionService $svc)
     {
-        // $this->authorize('approve-ap-invoice', FinanceInvoiceEntry::class);
 
         $validated = $request->validate([
             'Reason' => 'required|string|max:255',
@@ -461,7 +455,6 @@ class InvoiceEntryController extends Controller
             });
         } catch (\Throwable $e) {
             // Log if you want: Log::error('AP approve error', ['id'=>$id, 'err'=>$e->getMessage()])
-            //return $e->getMessage();
             return back()->with('error', "Approval/Post failed: " . $e->getMessage());
         }
     }

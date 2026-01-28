@@ -22,7 +22,6 @@ class CodeDetailController extends Controller
     public function __construct()
     {
         $this->middleware('ajax');
-        //$this->authorizeResource(CodeDetail::class);
     }
 
     /**

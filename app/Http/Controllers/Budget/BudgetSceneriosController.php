@@ -132,7 +132,6 @@ class BudgetSceneriosController extends Controller
 
         try {
             $scenario = BudgetScenarioPlanning::find($id)->delete();
-            //$scenario->delete();
 
             activity()
                 ->performedOn(new BudgetScenarioPlanning())

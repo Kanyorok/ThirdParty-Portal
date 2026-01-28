@@ -31,7 +31,6 @@ trait DocumentsTrait
      */
     public function newDocument(ModulesEnum $module, UploadedFile $file, array|string $permissions, User $actor): Document
     {
-        // if (method_exists($this, 'getPrimaryKey')) {
         //     throw new ErroredException("Implement UserActorTrait in model");
         // }
 

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Settings;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\BranchRequest;
-//use App\Models\BR\Branch;
 use App\Models\Core\Branch;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -17,14 +16,12 @@ use Illuminate\View\View;
 use Throwable;
 use Yajra\DataTables\DataTables;
 
-//use App\Models\BR\Branch;
 
 class CrmBranchController extends Controller
 {
     public function __construct()
     {
         $this->middleware('ajax')->except('index');
-        // $this->authorizeResource(Branch::class);
     }
 
     /**

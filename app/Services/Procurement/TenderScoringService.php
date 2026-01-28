@@ -42,7 +42,6 @@ class TenderScoringService
         $evals = $evalsQuery;
 
         // No per-criterion normalization here to keep parity with consolidation:
-        // use the average of recorded criterion scores (out of 10) within a section
 
         $results = [];
         foreach ($evals as $supplierId => $memberGroups) {

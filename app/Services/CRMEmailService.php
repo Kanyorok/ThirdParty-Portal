@@ -276,7 +276,6 @@ class CRMEmailService
             }
         }
 
-        //if no conversation and search party and create a conversation.
 
         //search client
         $client = Client::query()->where('Email', $this->crmEmail->From)->first(['ClientID', 'Name', 'Email']);
@@ -441,7 +440,6 @@ class CRMEmailService
     protected function _send(): static
     {
 
-        //$mailable = Mail::send(new DefaultEmail($this->crmEmail));
         try {
             $mailable = $this->_sendNewConfig();
         } catch (ErroredException $e) {

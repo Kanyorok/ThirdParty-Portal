@@ -112,7 +112,6 @@ class YieldRateController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetDriverRates::class);
 
-        //    return $id;
         DB::beginTransaction();
 
         try {
@@ -177,7 +176,6 @@ class YieldRateController extends Controller
     public function update(Request $request, $id)
     {
         //Check permissions
-        //return $request;
         $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetDriverRates::class);
 
         //Validate request

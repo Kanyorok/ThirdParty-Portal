@@ -30,8 +30,6 @@ class Client extends Model
     public $timestamps = false;
     protected $keyType = 'string';
     protected $primaryKey = 'ClientID';
-    // protected $table = 't_Client';
-    //  protected $connection = 'brcbs';
     protected $connection = 'sqlsrv';
     protected $table = 'syn_t_Client';
 

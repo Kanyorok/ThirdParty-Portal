@@ -23,7 +23,6 @@ class LegalHoldController extends Controller
     public function __construct()
     {
         $this->middleware('ajax')->except(['index', 'create', 'show']);
-        //$this->authorizeResource(LegalHold::class);
     }
 
     /**

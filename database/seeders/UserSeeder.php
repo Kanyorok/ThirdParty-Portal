@@ -14,8 +14,6 @@ class UserSeeder extends Seeder
     {
         SystemHelper::user();
 
-        // $brUser = BRUser::query()->where('OperatorID', 'CSADM')->with('client')->first();
-        // if ($brUser instanceof BRUser) {
         //     User::create([
         //         'UserID' => $brUser->OperatorID,
         //         'Name' => $brUser->client->Name,

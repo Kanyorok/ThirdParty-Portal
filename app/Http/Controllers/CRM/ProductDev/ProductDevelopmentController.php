@@ -26,7 +26,6 @@ class ProductDevelopmentController extends Controller
     public function __construct()
     {
         $this->middleware('ajax')->except(['index', 'show']);
-        // $this->authorizeResource(ProductDevelopment::class);
     }
 
     /**

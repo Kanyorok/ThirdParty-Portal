@@ -38,10 +38,6 @@ class ScheduleResource extends JsonResource
                                   'cancelable' => $scheduleService->cancelable(),
                                   'actionable' => $scheduleService->actionable(),
                                  ],
-            /* 'clients' => new ClientCollection($scheduleService->clients()->dd()),
-             'users' => new UserCollection($scheduleService->users()->paginate(10)),*/
-            /*'clients' => new ClientCollection($this->resource->clients()->limit(20)->lock('WITH(NOLOCK)')->get()),
-            'users' => new UserCollection($this->resource->users()->limit(20)->lock('WITH(NOLOCK)')->get())*/
                ];
     }
 }

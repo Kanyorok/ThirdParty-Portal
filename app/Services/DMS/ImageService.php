@@ -80,7 +80,6 @@ class ImageService
 
         if ($this->type->value === ExtensionsEnum::Pdf->value) {
             return '<iframe src="data:application/pdf;base64,' . $this->image->Image . '" ' . $attr . '></iframe>';
-            //return '<embed width="100%" height="100%" "data:application/pdf;base64,'.$this->image->Image.' type="application/pdf" />';
         }
 
         return '';

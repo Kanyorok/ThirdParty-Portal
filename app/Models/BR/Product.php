@@ -10,8 +10,6 @@ class Product extends Model
     protected $primaryKey = 'ProductID';
     public $incrementing = false;
     protected $keyType = 'string';
-    //protected $connection = 'brcbs';
-    //protected $table = 't_Product';
     protected $connection = 'sqlsrv';
     protected $table = 'syn_t_Product';
 

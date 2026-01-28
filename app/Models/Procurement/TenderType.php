@@ -29,7 +29,6 @@ class TenderType extends Model
         'ModifiedBy',
     ];
 
-    // protected $casts = [
     //     'TenderType' => TenderTypeEnum::class,
     // ];
 

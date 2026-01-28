@@ -96,7 +96,6 @@ class LoginRequest extends FormRequest
             // Apache in production doesn't send Set-Cookie header in AJAX responses
             // So browser keeps old session ID, causing authentication to fail
             // Security note: Auth::login() already migrates session for security
-            // $this->session()->regenerate();
 
             // CRITICAL: Generate session_token for EnsureSingleActiveSession middleware
             // This middleware was added on Sept 23, 2025 but login was never updated

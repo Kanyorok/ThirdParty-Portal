@@ -42,9 +42,6 @@ class LegalContractController extends Controller
     public function store(Request $request)
     {
         // Placeholder implementation - ensure Initial Status is set
-        // $contract = LegalDocument::create($request->all());
-        // $contract->ReviewStatus = ApprovalEnum::Pending->value;
-        // $contract->save();
 
         return redirect()->route('legal.contracts.index')
             ->with('success', 'Contract created successfully');

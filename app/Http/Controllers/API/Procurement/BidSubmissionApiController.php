@@ -4,7 +4,6 @@ namespace App\Http\Controllers\API\Procurement;
 
 use App\Enums\Core\PermissionEnum;
 use App\Enums\TenderStatusEnum;
-// use App\Models\Procurement\Bid; // Using BidSubmission instead
 use App\Http\Controllers\Controller;
 use App\Models\Auth\User;
 use App\Models\Procurement\BidSubmission;
@@ -28,7 +27,6 @@ class BidSubmissionApiController extends Controller
     public function store(Request $request)
     {
         // Authorization check - TEMPORARILY DISABLED FOR PORTAL TESTING
-        // $this->authorize(PermissionEnum::BidSubmissionWrite, BidSubmission::class);
 
         // Get authenticated user via Sanctum
         $user = Auth::guard('sanctum')->user();

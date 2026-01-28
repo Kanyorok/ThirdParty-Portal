@@ -24,7 +24,6 @@ class ProcurementSetMethodController extends Controller
 
     public function create()
     {
-        //return view('procurement.procurementplan.planneditemsandactivities.assignprocurementmethod.create');
     }
 
     public function getPlanItems($planId)

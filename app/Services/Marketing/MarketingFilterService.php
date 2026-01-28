@@ -38,7 +38,6 @@ class MarketingFilterService
                     return $query->lock('WITH(NOLOCK)')->whereBetween($this->_filter->FieldName, $this->listFilter->FilterValues, $this->listFilter->After);
                 }
 
-                //if ($this->_filter->Operator->isBasic()) {
                 return $query->lock('WITH(NOLOCK)')->where($this->_filter->FieldName, $this->_filter->Operator->symbol(), $this->listFilter->FilterValue, $this->listFilter->After);
                 // }
             });

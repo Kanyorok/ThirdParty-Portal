@@ -94,10 +94,6 @@ class BudgetPeriodController extends Controller
             'selected_gls' => [
                 'nullable',
                 'string',
-                //                function ($attribute, $value, $fail) {
-                //                    $gls = json_decode($value, true);
-                //                    if (!is_array($gls) || empty($gls)) {
-                //                        $fail('At least one GL account must be selected.');
                 //                    }
                 //                },
             ],
@@ -212,11 +208,7 @@ class BudgetPeriodController extends Controller
 
         return view('budgetandanalytics.budgetperiod.edit', compact('types', 'glSubtypes', 'glAccounts', 'budget'));
 
-        //return$budgetGLAttachments=BudgetGLsAttachments::select('Id','BudgetID','AccountID','GLID','GLAccountTypeID','Description')->where('BudgetID',$id)->get();
 
-        //        $periods = BudgetPeriods::findOrFail($id);
-        //        $types = BudgetPeriodTypes::all();
-        //        return view('budgetandanalytics.budgetperiod.edit', compact('periods', 'types'));
     }
 
     public function update(Request $request, $id)
@@ -314,7 +306,6 @@ class BudgetPeriodController extends Controller
             DB::commit();
 
             return back()->with('success', 'GL Attachment deleted successfully.');
-            //return response()->json(['success' => true, 'message' => 'GL Attachment deleted successfully.']);
         } catch (\Throwable $th) {
             DB::rollBack();
 

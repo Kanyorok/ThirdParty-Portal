@@ -185,7 +185,6 @@ class DocumentService extends PermissionsService
      */
     private static function _saveFile(DisksEnum $disk, string $contents): string
     {
-        // $path = $disk->path() . '/' . Uuid::uuid4()->toString() . '.' . $extension->value;
         $path = $disk->path() . '/' . Uuid::uuid4()->toString() . '.data';
         if (Storage::disk($disk->value)->put($path, (new EncryptionService())->encrypt($contents))) {
             return $path;

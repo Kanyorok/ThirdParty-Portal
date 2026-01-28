@@ -16,7 +16,6 @@ class BudgetGLAccountSubType extends Model
     public const DELETED_AT = 'DeletedOn';
     protected $table = 't_BudgetGLSubTypes';
     protected $primaryKey = 'Id';
-    //    protected $fillable = [
     //        'GLAccountTypeValue',
     //        'GLAccountSubTypeName',
     //        'CreatedBy',

@@ -23,7 +23,6 @@ class BudgetDriversController extends Controller
         $drivers = BudgetDriverMaster::with('driverType')->get();
         $driverTypes = BudgetDriver::where('IsActive', 1)->get();
 
-        //$uom=UnitOfMeasure::all();
         return view('budgetandanalytics.budgetdrivers.index', compact(
             'drivers',
             'driverTypes',

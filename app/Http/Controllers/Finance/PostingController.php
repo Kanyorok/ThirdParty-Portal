@@ -82,7 +82,6 @@ class PostingController extends Controller
                 if ($result) {
                     //Update Status Column to Pending
                     FinanceJournalEntry::where('Id', $validated['journalID'])->update(['Status' => 'pending']);
-                    //return FinanceJournalEntry::where('Id', $validated['journalID'])->update(['ApprovalStatus' => 'pending']);
                     activity('Journal Entry Approval')
                         ->performedOn($journal)
                         ->causedBy(Auth::id())
@@ -222,15 +221,11 @@ class PostingController extends Controller
     public function approve($journalId)
     {
         $journal = FinanceJournalEntry::findOrFail($journalId);
-        //$approvalService = new ApprovalService();
-        // $approvalService->approve($journal);
     }
 
     public function reject($journalId)
     {
         $journal = FinanceJournalEntry::findOrFail($journalId);
-        // $approvalService = new ApprovalService();
-        // $approvalService->reject($journal);
     }
 
     /**

@@ -30,7 +30,6 @@ class MedicalFundBeneficiaryController extends Controller
 
         $medical_fund = $contributor->fund;
 
-        // dd($contributor);
 
         return view('bancassurance.medical_fund_beneficiaries.index', compact(
             'beneficiaries',

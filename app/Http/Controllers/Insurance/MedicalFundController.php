@@ -17,10 +17,6 @@ class MedicalFundController extends Controller
     public function __construct()
     {
         $this->middleware(['auth']);
-        // $this->middleware('permission:bancassurance.medicalfunds.view')->only('index','show');
-        // $this->middleware('permission:bancassurance.medicalfunds.create')->only('create','store');
-        // $this->middleware('permission:bancassurance.medicalfunds.edit')->only('edit','update');
-        // $this->middleware('permission:bancassurance.medicalfunds.delete')->only('destroy');
     }
 
     public function index(Request $request)

@@ -116,7 +116,6 @@ class BudgetPeriodTypesController extends Controller
 
         try {
             $type = BudgetPeriodTypes::find($id)->delete();
-            //$type->delete();
 
             activity()
                 ->performedOn(new BudgetPeriodTypes())

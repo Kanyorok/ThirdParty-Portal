@@ -125,7 +125,6 @@ class ConsolidatedPlanWorkflowService
     {
 
 
-        // if (!$this->workflow->canApproveModel($this->plan, $actor)) {
         //     throw new ErroredException('You do not have permission to approve this plan');
         // }
 

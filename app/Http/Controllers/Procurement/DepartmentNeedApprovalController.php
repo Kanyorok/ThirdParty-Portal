@@ -118,7 +118,6 @@ class DepartmentNeedApprovalController extends Controller
                 $workflow = app(DepartmentNeedsWorkflow::class);
 
                 // Submit then approve using the new unified workflow service
-                // $workflow->submit($departmentNeed, $actor, 'Submitted for approval');
                 $workflow->approve($departmentNeed, $actor, 'Approved');
             });
         } catch (\App\Exceptions\ErroredException $e) {

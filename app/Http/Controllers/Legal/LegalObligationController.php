@@ -256,30 +256,18 @@ class LegalObligationController extends Controller
         }
     }
 
-    // public function markComplete($id)
     // {
-    //     $obligation = LegalObligation::findOrFail($id);
-    //     $obligation->Status = 'Completed';
-    //     $obligation->ModifiedBy = Auth::id();
-    //     $obligation->ModifiedOn = now();
-    //     $obligation->save();
 
-    //     return redirect()->back()->with('success', 'Obligation marked as completed.');
     // }
 
 
-    // public function calendar()
     // {
-    //     $obligations = LegalObligation::whereNull('DeletedOn')->get();
 
-    //     $calendarEvents = $obligations->map(function ($obligation) {
-    //         return [
     //             'title' => $obligation->ObligationTitle,
     //             'start' => $obligation->DueDate,
     //             'url' => route('legal.obligations.show', $obligation->ID),
     //         ];
     //     });
 
-    //     return view('legal.obligations.calendar', compact('calendarEvents'));
     // }
 }

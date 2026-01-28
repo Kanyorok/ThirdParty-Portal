@@ -27,7 +27,6 @@ class BidOpeningCeremonyController extends Controller
     public function index(Request $request)
     {
         $this->authorize(\App\Enums\Core\PermissionEnum::BidOpeningRead->value);
-        //$this->authorize(PermissionEnum::BidSubmissionRead);
 
         // Get tenders ready for opening (past submission deadline with submitted bids)
         $tenders = Tender::whereHas('submissions', function ($query) {

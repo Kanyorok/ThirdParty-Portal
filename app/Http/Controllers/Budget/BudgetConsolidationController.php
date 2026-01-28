@@ -55,11 +55,8 @@ class BudgetConsolidationController extends Controller
                         ->select('Id', 'Description', 'BudgetLineID', 'BranchID', 'AllocationType', 'FullAllocation', 'ActivityID')
                         ->get();
 
-                    //return $budgetActivities;
                     foreach ($budgetActivities as $activity) {
                         //Get the name for the GLAccountSubType
-                        //return $activity;
-                        //$glAccountSubType = BudgetGLSubType::find($activity->budgetLine->GLAccountSubTypeID)->Description ?? 'N/A';
                         $glAccountSubType = $activity->budgetLine->LineName ?? 'N/A';
                         $budgetLineName = $activity->activity->ActivityName ?? 'N/A';
                         //Fetch allocation values if allocationType is monthly
@@ -81,7 +78,6 @@ class BudgetConsolidationController extends Controller
                             [$budgetLineID, $b_id, $asDate, 'L']
                         );
 
-                        // $result is an array of objects
                         $actual = ($result[0]->ClosingBalance == '.00' ? 0.00 : $result[0]->ClosingBalance) ?? 0.00;
 
                         $actual = abs($actual);
@@ -105,7 +101,6 @@ class BudgetConsolidationController extends Controller
                         ->latest()->get();
                     //Get allocation for this lines and place them in data array
                     foreach ($entriesByLine as $entry) {
-                        //return $entry;
                         //Have a check to filter based on the GLType
                         $typeCheck = BudgetLine::find($entry->BudgetLineID)->GLAccountTypeID;
                         if ($typeCheck !== $type->Value) {
@@ -113,7 +108,6 @@ class BudgetConsolidationController extends Controller
                         }
                         $budgetLine = BudgetLine::find($entry->BudgetLineID);
                         if ($budgetLine) {
-                            //$glAccountSubType = BudgetGLAccountSubType::find($budgetLine->glSubType)->GLAccountSubTypeName ?? 'Entry By Line';
                             $glAccountSubType = $budgetLine->glSubType->Description;
                             $budgetLineName = $budgetLine->LineName ?? 'N/A';
                             //fetch allocations
@@ -127,11 +121,9 @@ class BudgetConsolidationController extends Controller
                                 $allocationValues = $values;
                             }
                             $fullAllocation = BudgetManualEntry::where('Id', $entry->Id)->pluck('Amount')->first() ?? 0;
-                            //return $glAccountSubType;
 
                             //Fetch Actuals
                             //For Just pick for branch
-                            //$b_id = Branch::find(session('LoginBranchId'))->BranchID ?? 1;
                             $b_id = '001';// Branch::find(session('LoginBranchId'))->BranchID ?? 1;
                             $asDate = date('Y-m-d');
                             $budgetLineID = $entry->BudgetLineID;
@@ -140,7 +132,6 @@ class BudgetConsolidationController extends Controller
                                 [$budgetLineID, $b_id, $asDate, 'L']
                             );
 
-                            // $result is an array of objects
                             $actual = ($result[0]->ClosingBalance == '.00' ? 0.00 : $result[0]->ClosingBalance) ?? 0.00;
 
                             $actual = abs($actual);
@@ -198,7 +189,6 @@ class BudgetConsolidationController extends Controller
                         [$budgetLineID, $b_id, $asDate, 'L']
                     );
 
-                    // $result is an array of objects
                     $actual = ($result[0]->ClosingBalance == '.00' ? 0.00 : $result[0]->ClosingBalance) ?? 0.00;
 
                     $actual = abs($actual);
@@ -231,7 +221,6 @@ class BudgetConsolidationController extends Controller
                     } else {
                         $budgetLineGLType = 'INCOME';
                     }
-                    //$budgetLineGLType=CodeDetail::where('CodeID', 'GLAccountType')->where('Value', $budgetLineGLType)->pluck('Description')->first();
                     $budgetLineGLName = $budgetLineGLData->Description;
                     $budgetLineName = $budgetlineData->LineName;
                     //Get the Product rate value

@@ -185,7 +185,6 @@ class BudgetReallocationController extends Controller
 
         $this->authorize(PermissionEnum::BudgetReallocationCreate, BudgetReallocationController::class);
 
-        //return $request;
         // 1) Validate input
         $validated = $request->validate([
             'BudgetID' => ['required', 'integer', 'exists:t_Budgets,Id'],
@@ -327,11 +326,8 @@ class BudgetReallocationController extends Controller
             // Helper to insert pending monthly limits
             $insertLimits = function (array $arr, BudgetLine $line, int $reallocId, $ledgerID) use ($validated, $months) {
                 foreach ($arr as $idx => $val) {
-                    //if ($val === null || $val === '' || (float)$val <= 0) continue;
 
-                    // $idx is 1..12 per your field names (e.g., FromAllocations[9])
                     $month = $months[(int)$idx] ?? null;
-                    //if (!$month instanceof Carbon) continue;
 
                     $erpLedgerId = BudgetLinesGLAccount::where('BudgetLineID', $line->Id)->pluck('BudgetGLAccountID')->first();
                     BudgetLineLedgerLimit::create([
@@ -584,8 +580,6 @@ class BudgetReallocationController extends Controller
         }
 
         //Check if the Line is Activity driven so as to know where to fetch the Total amount from
-        //        $check=BudgetActivityMaster::where('BudgetLineID',$validated['BudgetLineID'])->where('IsActive',true)->exists();
-        //        if($check){ //Is activity driven
         //
         //        }else{ //We pick from Manul entry by line
         //
@@ -608,7 +602,6 @@ class BudgetReallocationController extends Controller
             [$validated['BudgetLineID'], $b_id, $asDate, 'L']
         );
 
-        // $result is an array of objects
         $totUsage = ($result[0]->ClosingBalance == '.00' ? 0.00 : $result[0]->ClosingBalance) ?? 0.00;
 
         //Push all the data collected in the data array

@@ -14,9 +14,7 @@ class PropertyNewTenantController extends Controller
 {
     protected $service;
 
-    // public function __construct(PropertyNewTenantService $service)
     // {
-    //     $this->service = $service;
     // }
     public function index()
     {
@@ -35,18 +33,13 @@ class PropertyNewTenantController extends Controller
         $assignedTenantIds = PropertyNewTenant::pluck('ThirdPartyId')->toArray();
 
         // // Fetch only tenants with active Tenant type
-        // $tenants = ThirdParties::whereHas('types', function ($q) {
-        //         $q->whereNull('t_ThirdPartyType_ThirdParties.DeletedOn')
         //         ->whereNull('t_ThirdPartyTypes.DeletedOn')
         //         ->whereHas('category', function ($sub) {
-        //             $sub->where('Name', 'Tenant');
         //         });
         //     })
         //     ->with(['types' => function ($q) {
-        //         $q->whereNull('t_ThirdPartyType_ThirdParties.DeletedOn')
         //         ->whereNull('t_ThirdPartyTypes.DeletedOn')
         //         ->whereHas('category', function ($sub) {
-        //             $sub->where('Name', 'Tenant');
         //         });
         //     }])
         //     ->whereNotIn('Id', $assignedTenantIds)

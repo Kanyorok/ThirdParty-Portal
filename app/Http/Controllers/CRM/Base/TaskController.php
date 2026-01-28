@@ -41,7 +41,6 @@ class TaskController extends Controller
         }
 
         return $this->errored('not allowed');
-        //return view('crm.base.tasks.index');
     }
 
     /**

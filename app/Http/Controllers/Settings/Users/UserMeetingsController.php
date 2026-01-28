@@ -30,7 +30,6 @@ class UserMeetingsController extends Controller
     public function __construct()
     {
         $this->middleware('ajax')->except('show');
-        // $this->authorizeResource(Board::class);
     }
 
     /**

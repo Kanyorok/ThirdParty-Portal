@@ -39,7 +39,6 @@ class BudgetMonthlyProjectionController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetMonthlyProjectionAllocation::class);
 
-        // $validated = $request->validate([
         //     'BudgetID' => 'required|exists:t_Budgets,Id',
         //     'BudgetProjectionID' => 'required',
         // ]);

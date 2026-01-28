@@ -8,8 +8,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Account extends Model
 {
     protected $primaryKey = 'AccountID';
-    //protected $table = 't_AccountCustomer';
-    //protected $connection = 'brcbs';
     protected $table = 'syn_t_AccountCustomer';
     protected $connection = 'sqlsrv';
     public $incrementing = false;

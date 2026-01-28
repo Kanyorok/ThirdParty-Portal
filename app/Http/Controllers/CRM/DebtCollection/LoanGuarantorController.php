@@ -56,7 +56,6 @@ class LoanGuarantorController extends Controller
                 return $btn;
             })->editColumn('client', function (Guarantor $guarantor) {
                 return (new PartyService($guarantor->client))->getDTRow();
-                //  return '<a href="javascript:void(0)" data-click_url="' . route('clients.summary', $guarantor->GuarantorID) . '" data-summary_title="member summary" class="click-summary-data">' . $guarantor->client?->Name . '</a>';
             })->editColumn('GuaranteeAmount', function (Guarantor $guarantor) {
                 return number_format($guarantor->GuaranteeAmount, 2);
             })->editColumn('CreatedOn', function (Guarantor $guarantor) {

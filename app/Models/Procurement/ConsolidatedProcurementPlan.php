@@ -69,9 +69,7 @@ class ConsolidatedProcurementPlan extends Model
 
     // Workflow relationships - commented out as not needed for approval workflow
     // The approval workflow uses t_WorkFlowHistory and t_WorkFlowPending tables directly
-    // public function workflows(): MorphMany
     // {
-    //     return $this->morphMany(Workflow::class, 'source', 'Source', 'SourceID');
     // }
 
     /**

@@ -15,7 +15,6 @@ class Guarantor extends Model
     public const DELETED_AT = 'DeletedDate';
     public $incrementing = false;
     public $timestamps = false;
-    //protected $connection = 'brcbs';
     protected $connection = 'sqlsrv';
     protected $keyType = 'string';
     protected $table = 'syn_t_AccountGuarantor';

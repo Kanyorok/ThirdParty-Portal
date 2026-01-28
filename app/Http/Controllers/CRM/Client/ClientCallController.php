@@ -50,7 +50,6 @@ class ClientCallController extends Controller
             $call = DB::transaction(static function () use ($client, $current_start, $actor, $schedule) {
                 return CallService::createClient($client, CallStatusEnum::SuccessOngoing, CallTypeEnum::Incoming, $current_start, $actor, $schedule)->call;
             });
-            //$call = $this->startCall($client->calls(), $current_start, $actor, $schedule);
         } catch (\Throwable | Exception $e) {
             Log::error('Error starting call ' . $e->getMessage());
 

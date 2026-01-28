@@ -82,9 +82,7 @@ class LegalTemplateController extends Controller
         return view('legal.templates.create', compact('clauses', 'docTypes'));
     }
 
-    //    public function store(Request $request)
     //    {
-    //            $request->validate([
     //                'TemplateName' => 'required|string|max:255',
     //                'DocumentType' => 'required|string|max:100',
     //                'Version' => 'required|string|max:20',
@@ -105,7 +103,6 @@ class LegalTemplateController extends Controller
     //
     //        LegalTemplate::create($request->all());
     //
-    //        return redirect()->route('legal.templates.index')->with('success', 'Template created successfully.');
     //    }
 
     public function store(Request $request)

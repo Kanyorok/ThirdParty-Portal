@@ -70,7 +70,6 @@ class LegalCounselController extends Controller
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ]);
-            // return $counsel;
             activity()
                 ->performedOn(new LegalCaseCounsel())
                 ->causedBy(Auth::user())

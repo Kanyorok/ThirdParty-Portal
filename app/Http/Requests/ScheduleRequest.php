@@ -112,6 +112,5 @@ class ScheduleRequest extends FormRequest
 
         return $clients;
 
-        //$clients = Client::query()->whereIn('ClientID',$ids)->lock('WITH(NOLOCK)')->select(['ClientID','Name'])->get();
     }
 }

@@ -69,7 +69,6 @@ class PropertyInvoiceService
                 'ModifiedBy' => $user->Id,
             ]);
 
-            //dd($invoice);
 
             //Posting to financee invoicee table
             $finance = app(InvoiceIntakeService::class);
@@ -99,7 +98,6 @@ class PropertyInvoiceService
             $addLine('Parking Fee', (float) $ParkingFee, $DescriptionParking, $Tax);
             $addLine('Other Charges', (float) $OtherCharges, $DescriptionOther, $Tax);
 
-            //dd($lines);
             if (! empty($lines)) {
                 $total = array_sum(array_column($lines, 'Total'));
                 $taxAmount = 0.0;
@@ -141,7 +139,6 @@ class PropertyInvoiceService
                 // Finance service will internally generate RequestID
                 $result = $finance->intake($payload, true);
 
-                //dd($payload);
 
                 // Store only the RequestID back into t_RentInvoice
                 if (! empty($result['request_id'])) {

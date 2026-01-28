@@ -139,10 +139,8 @@ class PaymentVoucherController extends Controller
 
         DB::beginTransaction();
 
-        // $partial = $request->input('PartialAmnt');
         $startdate = $request->input('StartDate');
         $frequency = $request->input('Frequency');
-        // $api = $request->input('AmntPerInst');
 
         try {
             if ($validated['PaymentType'] == 'Full') {
@@ -182,7 +180,6 @@ class PaymentVoucherController extends Controller
             DB::rollBack();
             Log::error($th->getMessage());
 
-            //            return back()->with('error', $th->getMessage());
             return back()->with('error', 'Ooops! An error occurred, Please try again later.');
         }
     }
@@ -326,7 +323,6 @@ class PaymentVoucherController extends Controller
         };
 
         // Convert Amount into words using inbuilt php function
-        //$amountInWords = number_format($voucher->TotalAmount, 2, '.', ',');
 
         $amountInWords = $this->numberToWords($voucher->TotalAmount);
 
@@ -452,7 +448,6 @@ class PaymentVoucherController extends Controller
 
     public function approve(Request $request, $id)
     {
-        // $this->authorize(PermissionEnum::PaymentVoucherApprove, FinanceVoucher::class);
         $voucher = FinanceVoucher::findOrFail($id);
         $voucher->ApprovalStatus = 'posted';
         // Optionally log reason: $request->input('reason')

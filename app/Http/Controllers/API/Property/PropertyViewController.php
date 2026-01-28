@@ -28,15 +28,11 @@ class PropertyViewController extends Controller
     }
 
 
-    // public function propertyStructure($id): JsonResponse
     //     {
-    //         $property = PropertyRegistry::with([
     //             'getBlockByProperty.floor.units' => function ($query) {
-    //                 $query->where('IsRentable', true)
     //                     ->where('CurrentStatus', true);
     //             }
     //         ])->findOrFail($id);
 
-    //         return new PropertyViewResource($property);
     //     }
 }

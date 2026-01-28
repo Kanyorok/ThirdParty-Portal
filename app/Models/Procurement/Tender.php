@@ -268,9 +268,7 @@ class Tender extends Model
     {
         return 'tender'; // This is the morph alias for workflow, not the database column
     }
-    // public function workflows()
     // {
-    //     return $this->morphMany(
     //         Workflow::class,
     //         'source',
     //         'Source',   // morph type column

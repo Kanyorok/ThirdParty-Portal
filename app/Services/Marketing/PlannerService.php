@@ -336,7 +336,6 @@ class PlannerService
                 'ModifiedBy' => $actor->Id,
             ]);
 
-            //$this->_sendMail($user);
             (new UserService($user))->sendEmail(
                 subject: 'Marketing Plan submitted for review and approval',
                 body: '<p>Hello</p><p>The plan <b>' . Str::upper($this->planner->PlannerID) . '</b> has been submitted for your review. Click the link below to review</p>

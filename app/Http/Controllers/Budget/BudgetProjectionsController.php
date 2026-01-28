@@ -57,7 +57,6 @@ class BudgetProjectionsController extends Controller
 
         $currencies = Currency::all();
         $products = BudgetProduct::all();
-        // $periods = BudgetPeriods::all();
         //Select the budget lines and their products driving them
         $budgetLines = BudgetLine::whereHas('productTypes')->with('productTypes')->get();
 
@@ -78,7 +77,6 @@ class BudgetProjectionsController extends Controller
 
         $product = BudgetProduct::whereIn('Id', $filteredProdID)->get();
 
-        //$budgetLine = BudgetLine::with('products')->findOrFail($budgetLineId);
         return response()->json($product);
     }
 
@@ -107,7 +105,6 @@ class BudgetProjectionsController extends Controller
         try {
             $ScenarioId = $validated['BudgetID'];
             $CurrencyId = 1;
-            // $PeriodId   = $validated['PeriodID'];
 
             //Store T1
             $projection = BudgetDriverProjections::create([
@@ -317,9 +314,7 @@ class BudgetProjectionsController extends Controller
             ];
         }
 
-        //return $products;
 
-        //$budget = BudgetDriverProjections::findOrFail($id);
         $budget = Budget::findOrFail($id);
 
         $rate = BudgetProduct::with(['rate'])

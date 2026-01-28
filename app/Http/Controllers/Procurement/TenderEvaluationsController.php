@@ -118,7 +118,6 @@ class TenderEvaluationsController extends Controller
             ];
         }
 
-        //return$data;
         return view('procurement.tendering.tendersetup.evaluationcriteriasetup.tenderevaluations', compact(
             'tenders',
             'sections',

@@ -119,7 +119,6 @@ class BudgetRatesController extends Controller
 
         try {
             $rate = BudgetRates::find($id)->delete();
-            //$rate->delete();
 
             activity()
                 ->performedOn(new BudgetRates())

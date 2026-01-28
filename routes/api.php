@@ -6,13 +6,11 @@ use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
 use App\Http\Controllers\API\Procurement\SupplierRFQController;
 use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
-// use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyDocumentsController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyProfileController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
-// use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationProgressController;
 use App\Http\Controllers\Procurement\SupplierCategoryApiController;
 use App\Http\Controllers\Procurement\SupplierCategoryController;
@@ -20,13 +18,11 @@ use App\Http\Controllers\Procurement\SupplierController;
 use App\Http\Controllers\Procurement\TenderApiController;
 use App\Http\Controllers\Procurement\TenderInvitationController;
 use App\Http\Controllers\Procurement\ThirdParties\ThirdPartiesController;
-// use App\Http\Controllers\Procurement\TenderDocumentController;
 use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
-// use App\Http\Controllers\Settings\WorkFlowController;
 
 // Token validation (Sanctum) for frontend session checks
 Route::post('auth/validate-token', function (Request $request) {

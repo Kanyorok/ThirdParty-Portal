@@ -28,11 +28,7 @@ class FinanceGlTransactionsMappingSeeder extends Seeder
         ];
 
         foreach ($mappings as [$transactionTypeId, $debitCode, $creditCode]) {
-            //            $debitId = DB::table('t_FinanceGLAccounts')->where('AccountCode', $debitCode)->value('Id');
-            //            $creditId = DB::table('t_FinanceGLAccounts')->where('AccountCode', $creditCode)->value('Id');
 
-            //            if (!$debitId || !$creditId) {
-            //                $this->command->warn("Skipping TransactionTypeID {$transactionTypeId} — GL not found ({$debitCode} or {$creditCode})");
             //                continue;
             //            }
 

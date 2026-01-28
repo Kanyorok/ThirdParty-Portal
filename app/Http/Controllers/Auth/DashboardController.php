@@ -37,7 +37,6 @@ class DashboardController extends Controller
     public function __invoke(Request $request): View
     {
         $actor = $request->user();
-        //$actorId = $actor?->Id ?? 1; DON'T DO THIS, CHECK IF USER IS NOT LOGOUT.
         $data = [
             'leads' => [
                 'line' => [

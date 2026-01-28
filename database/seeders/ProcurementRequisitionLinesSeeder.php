@@ -19,7 +19,6 @@ class ProcurementRequisitionLinesSeeder extends Seeder
 
 
         if (! $requisitionId || ! $itemId || ! $urgencyId || ! $statusId || ! $userId || ! $uomCode) {
-            // dump('Missing required line item dependencies.');
             return;
         }
 

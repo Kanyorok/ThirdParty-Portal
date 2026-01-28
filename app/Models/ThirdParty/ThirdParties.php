@@ -137,19 +137,13 @@ class ThirdParties extends Model
         });
     }
 
-    // public function isSupplier(): bool
     // {
-    //     return $this->types()->wherePivot('PartyType', 'SupplierId')->exists();
     // }
 
-    // public function isTenant(): bool
     // {
-    //     return $this->types()->where('t_ThirdPartyTypes.TypeId', 4)->exists();
     // }
 
-    // public function isCustomer(): bool
     // {
-    //     return $this->types()->where('t_ThirdPartyTypes.TypeId', 6)->exists();
     // }
 
     protected function getImageName(): string
@@ -173,11 +167,9 @@ class ThirdParties extends Model
      */
 
 
-    // public function categories(): BelongsToMany
     // {
     //     // Pivot uses snake_case columns in this table: third_party_id, supplier_category_id
     //     //todo move to supplier master model
-    //     return $this->belongsToMany(
     //         SupplierCategory::class,
     //         't_ThirdParty_SupplierCategory',
     //         'third_party_id',

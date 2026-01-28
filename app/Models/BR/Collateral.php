@@ -11,7 +11,6 @@ class Collateral extends Model
     public const UPDATED_AT = 'ModifiedOn';
     public $incrementing = false;
     public $timestamps = false;
-    //protected $connection = 'brcbs';
     protected $connection = 'sqlsrv';
     protected $keyType = 'string';
     protected $table = 'syn_t_Collateral';

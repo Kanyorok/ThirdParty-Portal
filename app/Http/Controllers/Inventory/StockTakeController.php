@@ -179,7 +179,6 @@ class StockTakeController extends Controller
         $this->authorize(PermissionEnum::StockTakeDestroy, StockTake::class);
 
         //Check if user has permission to delete property categories
-        //$this->authorize(PermissionEnum::PropertyTypeDelete , PropertyType::class);
         try {
             $branchId = session('LoginBranchId');
             $stock = StockTake::where('BranchId', $branchId)->findOrFail($id);

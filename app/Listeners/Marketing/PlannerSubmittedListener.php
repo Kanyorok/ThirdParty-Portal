@@ -80,7 +80,6 @@ class PlannerSubmittedListener implements ShouldQueue
                                                              'ModifiedBy' => $event->actor->Id,
                                                             ]);
 
-                //$event->_sendMail($user);
                 (new UserService($user))->sendEmail(
                     subject: 'Marketing Plan submitted for review and approval',
                     body: '<p>Hello</p><p>The plan <b>' . Str::upper($event->planner->PlannerID) . '</b> has been submitted for your review. Click the link below to review</p>

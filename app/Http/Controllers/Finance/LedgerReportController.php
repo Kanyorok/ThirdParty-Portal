@@ -19,7 +19,6 @@ class LedgerReportController extends Controller
         $departments = Department::select('Id', 'Name')->get();
 
         // // If dates must be required, keep this
-        // $request->validate([
         //     'FromDate' => 'required|date',
         //     'ToDate'   => 'required|date|after_or_equal:FromDate',
         // ]);

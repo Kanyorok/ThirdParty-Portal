@@ -157,7 +157,6 @@ class ThirdPartiesController extends Controller
                     // Earlier analysis suggested we might need to sync types.
                     // Let's rely on standard logic. If ThirdPartyService handles it, great.
                     // If not, we can add:
-                    // $service->party->types()->sync($request->array('types'));
                     // But let's trust the service or check if 'create' does it.
                     // Referring back to 'ThirdPartyService::create': it does `match($type) -> addTenant/Supplier`.
                     // It does NOT seem to explicitly attach the `types` pivot unless `addTenant` does.

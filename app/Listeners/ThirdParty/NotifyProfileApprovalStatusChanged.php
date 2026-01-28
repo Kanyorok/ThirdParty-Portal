@@ -19,10 +19,6 @@ class NotifyProfileApprovalStatusChangedListener
         ]);
 
         // TODO: Send email/SMS notification to user
-        // if ($event->newStatus === ThirdPartyApprovalStatusEnum::Approved) {
-        //     $user = $event->supplier->party->users()->first();
-        //     if ($user) {
-        //         $user->notify(new ProfileApprovedNotification($event->supplier));
         //     }
         // }
     }

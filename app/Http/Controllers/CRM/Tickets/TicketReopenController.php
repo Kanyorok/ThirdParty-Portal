@@ -27,7 +27,6 @@ class TicketReopenController extends Controller
      */
     public function update(Request $request, Ticket $ticket): JsonResponse
     {
-        //$this->authorize('approve', $ticket); todo tests
         $actor = $request->user();
 
         try {

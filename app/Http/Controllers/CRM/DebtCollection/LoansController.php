@@ -113,7 +113,6 @@ class LoansController extends Controller
             $assignment = null;
         }
 
-        //dd($loan->branch);
         return view('crm.debt-collection.show', compact('loan'))
             ->with('client', Client::query()->where('ClientID', $loan->ClientID)->with('type')->first(['ClientTypeID', 'Name', 'ClientID', 'PhotoID', 'Mobile', 'Phone1', 'Phone2', 'Email']))
             ->with('assignment', $assignment);

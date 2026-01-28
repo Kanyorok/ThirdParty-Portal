@@ -729,7 +729,6 @@ class SSRSService
             );
         }
 
-        //dd($response->json());
         return collect($response->json()['value'] ?? []);
     }
 

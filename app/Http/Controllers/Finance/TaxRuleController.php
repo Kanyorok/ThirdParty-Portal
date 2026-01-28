@@ -57,7 +57,6 @@ class TaxRuleController extends Controller
             'TaxReceivableGLID' => 'required|exists:t_FinanceGLAccounts,Id',
         ]);
 
-        // $exists= FinanceTaxRuleConfiguration::where('TaxTypeId', $validated['TaxTypeId'])
         //     ->where('JurisdictionId', $validated['JurisdictionId'])
         //     ->where('Rate', $validated['Rate'])
         //     ->where('AppliesTo', $validated['AppliesTo'])
@@ -69,8 +68,6 @@ class TaxRuleController extends Controller
         //     ->where('TaxReceivableGLID', $validated['TaxReceivableGLID'])
         //     ->exists();
 
-        //     if ($exists) {
-        //         return back()
         //         ->withInput()
         //         ->withErrors(['error' => 'Tax Rule Configuration already exists for the given parameters.']);
         //     }
@@ -140,15 +137,12 @@ class TaxRuleController extends Controller
             // 'Status' => 'required|boolean',
         ]);
 
-        // $exists = FinanceTaxRuleConfiguration::where('TaxTypeId', $validated['TaxTypeId'])
         //     ->where('JurisdictionId', $validated['JurisdictionId'])
         //     ->where('AppliesTo', $validated['AppliesTo'])
         //     ->where('ApplyTaxPer', $validated['ApplyTaxPer'])
         //     ->where('Id', '!=', $id)
         //     ->exists();
 
-        // if ($exists) {
-        //     return back()
         //         ->withInput()
         //         ->withErrors(['error' => 'Tax Rule Configuration already exists for the given parameters.']);
         // }

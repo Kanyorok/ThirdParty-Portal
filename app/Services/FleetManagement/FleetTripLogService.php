@@ -120,12 +120,6 @@ class FleetTripLogService
      */
     public function createChildTrips(FleetTripLog $parent, array $childData): void
     {
-        Log::info('Creating child trips', [
-            'parent_trip_id' => $parent->Id,
-            'child_count' => count($childData),
-            'user_id' => Auth::id(),
-        ]);
-
         DB::beginTransaction();
 
         try {

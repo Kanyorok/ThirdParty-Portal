@@ -110,7 +110,6 @@ class CallController extends Controller
             }
 
 
-            //if($contact->PartyID == 0){//Unattached call
             $call = $query->where('t_Calls.PartyID', $contact->ContactID)->where('t_Calls.Party', Contact::getPrimaryKey())->first();
             $service = ($call instanceof Call)
                 ? (new CallService($call))

@@ -4,7 +4,6 @@ namespace App\Http\Requests\ThirdPartyAuth;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-// use Illuminate\Validation\Rule;
 
 class LoginThirdPartyRequest extends FormRequest
 {

@@ -52,12 +52,10 @@ class SSRSProxyController extends Controller
             return redirect()->back()->with('fail', $e->getMessage());
         }
 
-        //  dd($metadata);
         // Credentials
         /* $username = $service->getUsername();
          $password = $service->getPassword();*/
 
-        // $cookieJar = new CookieJar();
         // Make the request with basic auth
         try {
             $response = $service->getQuery()->get($metadata['Route']);
@@ -92,7 +90,6 @@ class SSRSProxyController extends Controller
         }
 
         if (str_starts_with($asset, 'assets')) {
-            //$asset = str_replace('assets/', '', $asset);
             $path = '/reports/' . $asset;
         } elseif (! str_contains($asset, '/')) {
             $path = '/reports/assets/' . $asset;
@@ -160,7 +157,6 @@ class SSRSProxyController extends Controller
     public function report(Request $request, string $path)
     {
         if (Str::contains($request->server('HTTP_COOKIE'), 'AIConnectionString')) {
-            // dd($request->server('HTTP_COOKIE'));
         }
         $service = new SSRSService();
 
@@ -192,7 +188,6 @@ class SSRSProxyController extends Controller
         }
 
         if ($response->hasHeader('ControlID')) {
-            // dd($response->headers(), 'Headers');
         }
 
 
@@ -205,7 +200,6 @@ class SSRSProxyController extends Controller
 
 
 
-        //  dd($response);
 
 
         // Return response with proper headers
@@ -311,7 +305,6 @@ class SSRSProxyController extends Controller
             }
 
             // Remove null or empty values
-            //  $headers = array_filter($headers);
 
 
             $options = [
@@ -347,7 +340,6 @@ class SSRSProxyController extends Controller
 
 
             if ($request->isMethod('POST')) {
-                // dd($ssrsResponse->getBody(), 'ssrsResponse', $ssrsResponse->getHeaders(), 'ssrsResponse Headers', $ssrsResponse->getStatusCode());
             }
             if ($request->query('OpType') === 'SessionKeepAlive') {
                 // Return a plain text 'OK' response which is what the client expects

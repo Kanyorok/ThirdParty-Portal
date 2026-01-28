@@ -25,7 +25,6 @@ class BudgetTopDownAllocationController extends Controller
         $branches = Branch::all();
 
         //Read data for GL master
-        // $glsMaster=BudgetGLMaster::select(
         //     'BudgetGLID',
         //     'AccountID',
         //     'Description',
@@ -101,7 +100,6 @@ class BudgetTopDownAllocationController extends Controller
                 ->where('BranchID', $branchId)
                 ->get();
 
-            //            $glsMaster = collect(DB::select("EXEC GetBudgetWorkspace :budgetId, :branchId", [
             //                'budgetId' => $budgetId,
             //                'branchId' => $branchId
             //            ]));

@@ -36,7 +36,6 @@ class LegalCaseOutcomeController extends Controller
     {
         $this->authorize(PermissionEnum::DisputeLitigationCreate, LegalCaseOutcome::class);
 
-        // dd($request->all());
         $validated = $request->validate([
             'LegalCaseID' => 'required|exists:t_LegalCases,ID',
             'Outcome' => 'required|string|max:255',

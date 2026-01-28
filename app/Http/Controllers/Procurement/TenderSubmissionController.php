@@ -59,7 +59,6 @@ class TenderSubmissionController extends Controller
     public function edit($Id)
     {
         $submission = BidSubmission::findOrFail($Id);
-        //return view('procurement.tendering.suppliermanagement.bidsubmission.edit', compact('submission'));
     }
 
     public function store(Request $request)

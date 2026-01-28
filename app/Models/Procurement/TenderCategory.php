@@ -27,7 +27,6 @@ class TenderCategory extends Model
         'ModifiedBy',
     ];
 
-    // protected $casts = [
     //     'TenderCategory' => TenderCategoryEnum::class,
     // ];
 

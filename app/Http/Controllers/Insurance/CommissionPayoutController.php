@@ -39,7 +39,6 @@ class CommissionPayoutController extends Controller
 
     public function store(BancassuranceCommissionPayoutRequest $request)
     {
-        //$this->authorize(PermissionEnum::BancassuranceCustomersCreate, BancassuranceCustomer::class);
         $validated = $request->validated();
 
         $PolicyId = BancassurancePolicy::findOrFail($validated['PolicyId']);

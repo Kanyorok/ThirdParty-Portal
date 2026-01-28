@@ -88,7 +88,6 @@ class PaymentProcessingController extends Controller
 
     public function postVoucher(Request $request, TransactionService $svc)
     {
-        // $this->authorize(PermissionEnum::PaymentProcessingCreate, FinanceVoucher::class);
 
         $validated = $request->validate([
             'Reason' => 'required|string|max:255',

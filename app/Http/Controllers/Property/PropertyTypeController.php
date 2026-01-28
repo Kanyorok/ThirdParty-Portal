@@ -20,7 +20,6 @@ class PropertyTypeController extends Controller
         $this->authorize(PermissionEnum::PropertyTypeView, PropertyType::class);
         $types = PropertyType::with('propertycategory')->get();
 
-        //dd($properties);
         return view('property.propertyregistry.propertytype.index', compact('types'));
     }
 
@@ -46,7 +45,6 @@ class PropertyTypeController extends Controller
             auth()->user()
         );
 
-        //$this->authorize('store', $propertyType);
 
         return redirect()->route('propertytype.index')->with('success', 'Property type created successfully');
     }

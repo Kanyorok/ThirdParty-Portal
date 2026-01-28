@@ -86,7 +86,6 @@ class CreditNoteController extends Controller
         DB::beginTransaction();
 
         try {
-            // $cdNumber = str_pad(rand(0,999999), 6, '0', STR_PAD_LEFT);
 
             if ($request->NoteType == 'Credit') {
                 $notes = FinanceCDNotes::create([
@@ -143,7 +142,6 @@ class CreditNoteController extends Controller
 
     public function approve(Request $request, int $id, TransactionService $svc)
     {
-        // $this->authorize('approve-ap-invoice', FinanceInvoiceEntry::class);
 
         $validated = $request->validate([
             'Reason' => 'required|string|max:255',

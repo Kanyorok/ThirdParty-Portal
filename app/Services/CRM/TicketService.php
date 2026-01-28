@@ -191,7 +191,6 @@ class TicketService extends ApprovalWorkflowService
                 return $ticket->Priority->name;
             })->addColumn('TicketID', function (Ticket $ticket) {
                 return '<a href="javascript:void(0)" data-click_url="' . route('tickets.edit', [$ticket->TicketID]) . '" data-summary_title="Ticket ' . $ticket->TicketID . ' summary" class="click-summary-data">' . $ticket->TicketID . '</a>';
-                //  return '<a href="' . route('tickets.show', [$ticket->TicketID]) . '"">' . $ticket->TicketID . '</a>';
             })->editColumn('CreatedOn', function (Ticket $ticket) {
                 return $ticket->CreatedOn?->format('F d, Y h:i A');
             })->setRowClass(function (Ticket $ticket) {

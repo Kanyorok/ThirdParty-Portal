@@ -56,14 +56,12 @@ class BudgetLineMappingController extends Controller
         $budgetCategories = BudgetLineCategories::all();
 
         //Fetch Product type
-        //$productTypes=BudgetProductType::select('Id','Name')->get();
         $productTypes = BudgetProduct::select('Id', 'Description')->get();
 
         //Fetch GL Account Types
         $glAccountTypes = CodeDetail::select('Id', 'CodeID', 'Value', 'Description')->where('CodeID', 'GLAccountType')->get();
 
         //Fetch GLAccountSubType
-        //$glSubtype = Budget::select('Id', 'GLAccountTypeID', 'Description')->get();
         $glSubtype = DB::table('t_BudgetGLSubTypes')
             ->select('Id', 'GLAccountTypeID', 'GLSubAccountTypeID', 'Description')
             ->get();
@@ -154,7 +152,6 @@ class BudgetLineMappingController extends Controller
                 ->withProperties(['action' => 'create'])
                 ->log('Create a budget line mapping');
 
-            //return back()->with('success', 'Budget Line Mapping created successfully.');
             return redirect()->route('budgetlinemapping.index')->with('success', 'Budget Line Mapping created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -333,7 +330,6 @@ class BudgetLineMappingController extends Controller
 
     public function getGLAccountSubTypes($typeId)
     {
-        //$subTypes = \App\Models\Budget\BudgetGLAccountSubType::where('GLAccountTypeValue', $typeId)->get();
         $subTypes = DB::table('t_BudgetGLSubTypes')
                     ->select('Id', 'GLAccountTypeID', 'GLSubAccountTypeID', 'Description')->where('GLAccountTypeID', $typeId)
                     ->get();
@@ -361,7 +357,6 @@ class BudgetLineMappingController extends Controller
             ->get();
 
         // Eager load productTypes for the given budget line
-        // $budgetLine = BudgetLine::with(['productTypes'])->where('Id',$id)->firstOrFail();
         return view('budgetandanalytics.budgetlinemapping.show', compact('products', 'budgetLineName'));
     }
 

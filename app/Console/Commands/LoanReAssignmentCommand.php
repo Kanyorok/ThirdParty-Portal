@@ -44,7 +44,6 @@ class LoanReAssignmentCommand extends Command
             Log::error('Loan Re-Assignment Error: No Debt Products found Date ISSUE');
 
             return;
-            // $dated = null;
         }
         $actor = SystemHelper::user();
 

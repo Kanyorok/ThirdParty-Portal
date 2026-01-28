@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-//use App\Services\Procurement\SupplierRFQService;
 
 class SupplierRFQController extends Controller
 {
@@ -250,7 +249,6 @@ class SupplierRFQController extends Controller
                 ->where('s.Id', $supplierId)
                 ->value('tp.TradingName');
 
-            // $actor = SystemHelper::user(); // Assuming SystemHelper is not imported or needed for API if we use Auth
             $actorId = $user->Id ?? 0; // Fallback
 
             $existing = \App\Models\Procurement\RFQResponse::where('RFQId', $rfq->Id)

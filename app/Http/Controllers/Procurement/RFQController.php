@@ -185,13 +185,6 @@ class RFQController extends Controller
             ->whereNull('DeletedOn')
             ->value('Value');
 
-        Log::info('Creating RFQ', [
-            'rfq_number' => $newRFQNumber,
-            'requisition_id' => $request->RequisitionId,
-            'pending_status_value' => $pendingStatus,
-            'user_id' => Auth::user()->Id,
-        ]);
-
         // Create the RFQ
         $rfq = RFQ::create([
             'RFQNumber' => $newRFQNumber,

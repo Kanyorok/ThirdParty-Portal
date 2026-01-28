@@ -97,7 +97,6 @@ class ProfileController extends Controller
 
             return $this->errored('unexpected error, try again later');
         }
-        //$request->save($request->user());
 
         return $this->succeeded('account updated successfully.', route('profile'));
     }

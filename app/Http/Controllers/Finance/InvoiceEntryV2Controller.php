@@ -362,9 +362,7 @@ class InvoiceEntryV2Controller extends Controller
                 ->get()
                 ->map(function ($order) use ($defaultCurrency) {
                     // TODO: Uncomment when CurrencyID column is available
-                    // $currency = $order->CurrencyID ?
                     //     Currency::find($order->CurrencyID) :
-                    //     $defaultCurrency;
 
                     // For now, manually set to currency ID 56 (or default)
                     $currency = Currency::find(56) ?: $defaultCurrency;

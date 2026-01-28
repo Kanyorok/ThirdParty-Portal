@@ -15,7 +15,6 @@ class DebtProduct extends Model
 {
     public $incrementing = false;
     public $timestamps = false;
-    //protected $connection = 'brcbs';
     protected $connection = 'sqlsrv';
     protected $keyType = 'string';
     protected $table = 't_AdvancesReport';//synnym

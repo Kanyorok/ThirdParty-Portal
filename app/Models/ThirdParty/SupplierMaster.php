@@ -87,8 +87,6 @@ class SupplierMaster extends Model
 
     // Note: ApprovalStatus is a string enum (e.g., 'P', 'A', 'R'), not a foreign key
     // Commenting out incorrect relationship to prevent SQL errors
-    // public function status(): BelongsTo
     // {
-    //     return $this->belongsTo(CodeDetail::class, 'ApprovalStatus', 'Id');
     // }
 }

@@ -19,8 +19,6 @@ class EmailConversationController extends Controller
 {
     public function __construct()
     {
-        //$this->middleware('ajax');
-        //$this->authorizeResource(EmailConversation::class);
     }
 
     /**

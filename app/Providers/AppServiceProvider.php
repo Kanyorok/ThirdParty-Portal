@@ -297,9 +297,7 @@ use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
 
-//use App\Policies\FleetManagement\DriverPolicy;
 
-//use App\Policies\Procurement\PrequalificationPeriodPolicy;
 
 
 class AppServiceProvider extends ServiceProvider

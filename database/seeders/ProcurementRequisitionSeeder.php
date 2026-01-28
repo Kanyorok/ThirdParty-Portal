@@ -16,7 +16,6 @@ class ProcurementRequisitionSeeder extends Seeder
         $userId = DB::table('t_Users')->value('Id');
 
         if (! $statusId || ! $branchId || ! $departmentId || ! $userId) {
-            // dump('Missing required related data for seeding.');
             return;
         }
 

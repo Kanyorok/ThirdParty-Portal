@@ -88,7 +88,6 @@ class ThirdPartyAuthController extends Controller
                 return response()->json(['message' => __('auth.acc_not_approved')], 403);
             }
 
-            // $thirdParty = ThirdParties::find($user->ThirdPartyId);
 
             // Allow login for users who haven't completed setup (No ThirdPartyId)
             // They will be redirected to the setup page by the frontend

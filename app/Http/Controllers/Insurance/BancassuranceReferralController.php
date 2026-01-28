@@ -200,7 +200,6 @@ class BancassuranceReferralController extends Controller
             $employee = $items->first()->referredByEmployee->employee;
             $branch = $employee?->branch;
 
-            // dd($employee, $branch);
 
             return [
                 'StaffName' => $employee ? $employee->FirstName . ' ' . $employee->LastName : 'Unknown',

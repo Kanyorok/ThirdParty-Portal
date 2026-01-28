@@ -319,12 +319,6 @@ class TenderController extends Controller
                     //plan item reference
                     $prReference = $this->generatePlanItemPRReference($planLineItem->PlanID, $planItemId);
 
-                    // Log::info('Creating PLAN item with auto-generated PR', [
-                    //     'plan_id' => $planLineItem->PlanID,
-                    //     'plan_item_id' => $planItemId,
-                    //     'pr_reference' => $prReference
-                    // ]);
-
                     TenderItems::create([
                         'TenderID' => $tenderId,
                         'SourceType' => 'PLAN',

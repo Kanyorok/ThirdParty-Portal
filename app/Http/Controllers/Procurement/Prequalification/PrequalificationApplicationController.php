@@ -35,8 +35,6 @@ class PrequalificationApplicationController extends Controller
 
     public function show(PrequalificationApplication $application): View
     {
-        // $application->load('round.masterSections.criteria');
-        // return view('procurement.suppliers.prequalification.supplier-applications.show', compact('application'));
 
         $application->load('round.prequalificationSections.masterSection.criteria', 'category', 'supplier.party');
 

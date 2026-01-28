@@ -28,7 +28,6 @@ class DocumentController extends Controller
      */
     public function show(Image $image): View
     {
-        //   $this->authorize('view', $image->source); todo fix for emails here
         return view('crm.base.documents.show', compact('image'))
             ->with('service', (new ImageService($image)));
     }

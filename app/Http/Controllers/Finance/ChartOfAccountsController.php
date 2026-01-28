@@ -291,7 +291,6 @@ class ChartOfAccountsController extends Controller
 
         try {
             $gl = FinanceGLAccounts::findOrFail($id);
-            //$branchID = ModelRole::where('model_id', Auth::id())->pluck('BranchID')->first();
 
             //Get the type values TO  be used in creating an account code
             $GLAccountTypeValue = CodeDetail::where('CodeID', 'GLAccountType')->where('Value', $validated['GLAccountTypeID'])->pluck('DisplayOrder')->first();

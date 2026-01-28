@@ -274,7 +274,6 @@ class LegalDocumentController extends Controller
                 ->with('success', 'Document registered.');
         } catch (\Throwable $e) {
             DB::rollBack();
-            //return $e->getMessage();
             // log the actual DB error for debugging
             Log::error('Failed to save legal document', [
                 'error' => $e->getMessage(),
@@ -287,10 +286,7 @@ class LegalDocumentController extends Controller
         }
     }
 
-    //    public function show($id)
     //    {
-    //        $document = LegalDocument::findOrFail($id);
-    //        return view('legal.documents.show', compact('document'));
     //    }
 
     public function edit(int $id)
@@ -307,7 +303,6 @@ class LegalDocumentController extends Controller
         // Option sets for your selects (same as in create/edit blades)
         $docTypes = CodeDetail::where('CodeID', 'LegalDocumentType')->get();
         $sources = ['Legal', 'Procurement', 'Property', 'HR', 'Insurance'];
-        //$reviewStatuses = ['Draft', 'In Review', 'Approved', 'Rejected'];
         $execStatuses = CodeDetail::where('CodeID', 'LegalExecutionStatusType')->get();
         $moduleIds = FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
         $modules = Module::select('ModuleID', 'Name')->whereIn('ModuleID', $moduleIds)
@@ -321,7 +316,6 @@ class LegalDocumentController extends Controller
             ->get();
 
         // If you want a dropdown for SourceID (FK to t_Modules), uncomment:
-        // $modules = Module::select('ModuleID as id','ModuleName as name')
         //     ->orderBy('ModuleName')->get();
 
         return view('legal.documents.edit', [
