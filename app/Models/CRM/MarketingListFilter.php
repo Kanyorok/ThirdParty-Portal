@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MarketingListFilter extends Model
 {
- //todo v2 add Groups to be able to Group Queries.
+    //todo v2 add Groups to be able to Group Queries.
     use SoftDeletes;
     use UserActorTrait;
 

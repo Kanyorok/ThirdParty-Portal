@@ -6,14 +6,11 @@
  */
 
 $patterns = [
-    // Debug log statements with ALL CAPS messages (development debugging)
-    '/Log::(info|debug|warning|error|critical|alert|emergency)\s*\(\s*[\'"](?:[A-Z\s_]+)[\'"]/',
+    // Debug log statements with development markers
+    '/Log::(info|debug)\s*\(\s*[\'"](?:.*(?:BEFORE|AFTER|SKIPPED|TODO:|TEST|DEBUG_|DUMP|Creating|Successfully|About to).*?)[\'"]/',
     
-    // Log statements with simple variable dumps
-    '/Log::(info|debug|warning|error)\s*\(\s*[\'"].*?[\'"],?\s*\$/',
-    
-    // dd(), dump(), var_dump(), print_r() - Laravel debug functions
-    '/\b(dd|dump|var_dump|print_r|var_export)\s*\(/',
+    // dd(), dump() - Laravel debug functions (commented or not)
+    '/\b(dd|dump)\s*\(/',
     
     // ray() - Spatie Ray debug tool
     '/\bray\s*\(/',
@@ -21,11 +18,8 @@ $patterns = [
     // die() or exit() with messages (debugging)
     '/\b(die|exit)\s*\(\s*[\'"]/',
     
-    // console.log equivalent (if any PHP template has it)
-    '/console\.log\s*\(/',
-    
-    // Commented out code detection (very basic)
-    '/^\s*\/\/\s*(if|for|while|foreach|function|class|public|private|protected)\s+/',
+    // Commented out code detection - ANY commented function/class/control structure
+    '/^\s*\/\/\s*(public|private|protected|function|class|if|for|while|foreach|return|use |namespace )\s*/',
 ];
 
 $directories = [

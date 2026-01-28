@@ -214,8 +214,6 @@ class TenderEvaluationController extends Controller
                     $insertData['SupplierId'] = $bid->SupplierId;
                 }
 
-                Log::info('About to insert TenderCommitteeEvaluation with data:', $insertData);
-
                 // Create committee evaluation record
                 TenderCommitteeEvaluation::create($insertData);
 

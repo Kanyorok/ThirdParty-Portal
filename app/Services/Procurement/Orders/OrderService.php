@@ -74,9 +74,6 @@ class OrderService
         }
     }
 
-
-
-
     public static function addPOLines($item, $quantity, $price, $taxId, $discount, $linetotal, User $actor, $orderId)
     {
         try {

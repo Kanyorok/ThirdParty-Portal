@@ -190,7 +190,7 @@ class ThirdParties extends Model
      */
     public function legacyCategories()
     {
-  //todo move to supplier master model
+        //todo move to supplier master model
         return $this->hasMany(\App\Models\ThirdParty\ThirdPartyCategory::class, 'ThirdPartyId', 'Id')
             ->whereNull('DeletedOn')
             ->with('category');

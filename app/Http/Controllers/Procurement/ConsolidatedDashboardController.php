@@ -160,8 +160,6 @@ class ConsolidatedDashboardController extends Controller
                 'CreatedBy' => $need->creator?->Name ?? $need->CreatedByName ?? 'N/A',
             ];
 
-            Log::info("Successfully fetched need details", $response);
-
             return response()->json($response);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             Log::error("Authorization failed for need {$needId}: " . $e->getMessage());

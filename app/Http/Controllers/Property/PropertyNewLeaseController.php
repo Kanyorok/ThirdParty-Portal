@@ -33,7 +33,6 @@ class PropertyNewLeaseController extends Controller
         $this->service = $service;
     }
 
-
     public function index()
     {
         $this->authorize(PermissionEnum::PropertyNewLeaseView, PropertyNewLease::class);

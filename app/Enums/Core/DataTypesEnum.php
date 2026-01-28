@@ -45,7 +45,15 @@ enum DataTypesEnum: string
                 default => false,
             };
         } catch (Exception $e) {
-            dd($value, $format, $this);
+            // Log error and return false for invalid format
+            \Log::error('DataTypesEnum format validation failed', [
+                'value' => $value,
+                'format' => $format,
+                'type' => $this->value,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
         }
     }
 

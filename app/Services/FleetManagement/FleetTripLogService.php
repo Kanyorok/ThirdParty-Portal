@@ -45,8 +45,6 @@ class FleetTripLogService
      */
     public function createParentTrip(array $data): FleetTripLog
     {
-        Log::info('Creating new parent trip', $data);
-
         DB::beginTransaction();
 
         try {

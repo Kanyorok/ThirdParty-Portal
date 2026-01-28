@@ -16,7 +16,7 @@ class DocumentRecentController extends Controller
      */
     public function __invoke(Request $request): View|FilesCollection
     {
-//->where('event', 'view')
+        //->where('event', 'view')
 
 
         if ($request->ajax()) {

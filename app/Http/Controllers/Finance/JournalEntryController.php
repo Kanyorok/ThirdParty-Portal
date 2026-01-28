@@ -20,7 +20,6 @@ class JournalEntryController extends Controller
 {
     protected $workflowService;
 
-
     public function __construct(ApprovalWorkflow $workflowService)
     {
         $this->workflowService = $workflowService;

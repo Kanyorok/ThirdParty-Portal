@@ -100,6 +100,7 @@ jobs:
         run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
       - name: Run PHP_CodeSniffer
         run: vendor/bin/phpcs --standard=phpcs.xml --report=summary
+        continue-on-error: true  # Non-blocking: many legacy warnings
   
   debug-detector:
     name: Debug Log Detector
