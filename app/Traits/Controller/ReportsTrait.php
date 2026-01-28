@@ -33,6 +33,7 @@ trait ReportsTrait
                     })->rawColumns(['action', 'Name'])->make();
             } catch (Exception) {
             }
+
             return $this->errored('cannot retrieve ' . Str::lower($module->description()) . ' reports.');
         }
 
@@ -46,7 +47,7 @@ trait ReportsTrait
         }
 
         $user = $request->user();
-        if ($report->PermissionName && !$user->hasPermissionTo($report->PermissionName)) {
+        if ($report->PermissionName && ! $user->hasPermissionTo($report->PermissionName)) {
             return redirect()->back()->with('fail', 'unauthorized access.');
         }
 
@@ -54,20 +55,21 @@ trait ReportsTrait
             try {
                 $service = new SSRSService();
                 $ssrsReport = $service->getReportByPath($report->Path);
-                if (!array_key_exists('Type', $ssrsReport) || $ssrsReport['Type'] !== "Report") {
+                if (! array_key_exists('Type', $ssrsReport) || $ssrsReport['Type'] !== "Report") {
                     throw new ErroredException('invalid report.');
                 }
 
                 $parameters = $service->getReportParametersValidated($ssrsReport['Id'], $request->all(), $user);
 
                 $xmlResponse = $service->exportReport($report->Path, parameters: $parameters->toArray(), content: true);
-                if (!str_contains($xmlResponse, 'xml')) {
+                if (! str_contains($xmlResponse, 'xml')) {
                     throw new ErroredException('invalid report.');
                 }
                 $data = $service->parseReportXml($xmlResponse);
             } catch (ConnectionException | ErroredException $e) {
                 Log::error('Error Load Report :');
                 Log::error($e);
+
                 try {
                     $service = new SSRSService();
                     $ssrsReport = $service->getReportByPath($report->Path);
@@ -75,15 +77,18 @@ trait ReportsTrait
                 } catch (ErroredException $e) {
                     Log::error('Error Load Report :');
                     Log::error($e);
+
                     return view('snippets.errors')->with('message', 'cannot connect to the report server.');
                 } catch (ConnectionException $e) {
                     return view('snippets.errors')->with('message', 'cannot reach the report server.');
                 }
+
                 return view('reports.table', compact('report'))->with('data', collect())->with('params', SSRSService::queryParams($parameters->put('_key', md5($report->Path))->toArray()))
                     ->with('module', Str::lower(self::MODULE->name))->with('message', 'Cannot generate preview, try export');
             } catch (Throwable | Exception $e) {
                 Log::error('Error Load Report :');
                 Log::error($e);
+
                 return view('snippets.errors')->with('message', 'cannot retrieve report data.');
             }
 
@@ -95,7 +100,7 @@ trait ReportsTrait
         try {
             $service = new SSRSService();
             $ssrsReport = $service->getReportByPath($report->Path);
-            if (!array_key_exists('Type', $ssrsReport) || $ssrsReport['Type'] !== "Report") {
+            if (! array_key_exists('Type', $ssrsReport) || $ssrsReport['Type'] !== "Report") {
                 throw new ErroredException('invalid report.');
             }
             $parameters = (array_key_exists('HasParameters', $ssrsReport) && $ssrsReport['HasParameters'] === true) ?
@@ -104,10 +109,11 @@ trait ReportsTrait
             return redirect()->back()->with('fail', 'cannot connect to the report server.');
         } catch (ErroredException $e) {
             return redirect()->back()->with('fail', $e->getMessage() ?? 'cannot retrieve report data.');
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             if ($e->getCode() === 404) {
                 return redirect()->back()->with('fail', 'report not found.');
             }
+
             return redirect()->back()->with('fail', 'cannot retrieve report data.');
         }
 
@@ -117,7 +123,7 @@ trait ReportsTrait
     public function export(Request $request, Report $report, string $format): StreamedResponse|RedirectResponse
     {
         $user = $request->user();
-        if ($report->PermissionName && !$user->hasPermissionTo($report->PermissionName)) {
+        if ($report->PermissionName && ! $user->hasPermissionTo($report->PermissionName)) {
             return redirect()->back()->with('fail', 'unauthorized access.');
         }
 
@@ -125,13 +131,14 @@ trait ReportsTrait
             return redirect()->back()->with('fail', 'invalid report.');
         }
 
-        if (!$request->has('_key') || md5($report->Path) !== $request->get('_key')) {
+        if (! $request->has('_key') || md5($report->Path) !== $request->get('_key')) {
             return redirect()->back()->with('fail', 'download link expired. please refresh the report page and try again..');
         }
 
         try {
             $service = new SSRSService();
             $ssrsReport = $service->getReportByPath($report->Path);
+
             return $service->exportReport($report->Path, parameters: $service->getReportParametersValidated($ssrsReport['Id'], $request->all(), $user)->toArray(), format: $format);
         } catch (ConnectionException $e) {
             return redirect()->back()->with('fail', 'cannot connect to the report server.');

@@ -28,7 +28,6 @@ class ImageService
         $this->type = $type;
     }
 
-
     public static function createUpload(UploadedFile $file, string $Type, string $TypeID, User $actor): self
     {
         return self::create($Type, $TypeID, $file->getContent(), $file->getMimeType() ?? $file->getClientMimeType(), $file->getClientOriginalName(), $actor);
@@ -67,7 +66,7 @@ class ImageService
 
     public function preview(string $attr): string
     {
-        if (!$this->type->isPreview()) {
+        if (! $this->type->isPreview()) {
             return '';
         }
 
@@ -81,7 +80,6 @@ class ImageService
 
         if ($this->type->value === ExtensionsEnum::Pdf->value) {
             return '<iframe src="data:application/pdf;base64,' . $this->image->Image . '" ' . $attr . '></iframe>';
-            //return '<embed width="100%" height="100%" "data:application/pdf;base64,'.$this->image->Image.' type="application/pdf" />';
         }
 
         return '';

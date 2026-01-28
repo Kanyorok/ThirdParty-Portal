@@ -12,7 +12,6 @@ enum TenantClearanceEnum: string
 
     case Cleared = 'c';
 
-
     public function label(): string
     {
         return match ($this) {

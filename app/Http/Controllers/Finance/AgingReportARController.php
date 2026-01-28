@@ -54,7 +54,7 @@ class AgingReportARController extends Controller
                 $referenceDate,
             ])
             ->whereBetween('t_FinanceInvoices.DueDate', [$fromDate->toDateString(), $toDate->toDateString()])
-            ->when($customerId, fn($query) => $query->where('t_FinanceInvoices.CustomerID', $customerId))
+            ->when($customerId, fn ($query) => $query->where('t_FinanceInvoices.CustomerID', $customerId))
             ->whereNull('t_FinanceInvoices.DeletedOn')
             ->groupBy(
                 't_FinanceInvoices.CustomerID',

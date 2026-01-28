@@ -38,7 +38,9 @@ class TenderBidResponsivenessController extends Controller
         $bidResponses = $query->get();
 
         // Distinct tender list for dropdown
-        $tenders = Tender::whereIn('Id', TenderSupplier::select('TenderID')
+        $tenders = Tender::whereIn(
+            'Id',
+            TenderSupplier::select('TenderID')
         )->pluck('TenderNo');
 
 
@@ -62,10 +64,10 @@ class TenderBidResponsivenessController extends Controller
         $userId = Auth::id();
 
         $bid = BidResponsiveness::firstOrNew([
-            'TenderSupplierID' => $request->TenderSupplierID
+            'TenderSupplierID' => $request->TenderSupplierID,
         ]);
 
-        $isNew = !$bid->exists;
+        $isNew = ! $bid->exists;
         $updated = false;
 
         foreach (['SubmittedTimely', 'HasMandatoryDocuments', 'IsEligible', 'IsResponsive', 'Remarks'] as $field) {
@@ -201,7 +203,7 @@ class TenderBidResponsivenessController extends Controller
         $updated = 0;
         foreach ($tenderSuppliers as $tenderSupplier) {
             $responsiveness = BidResponsiveness::firstOrNew([
-                'TenderSupplierID' => $tenderSupplier->id
+                'TenderSupplierID' => $tenderSupplier->id,
             ]);
 
             if ($action === 'approve_all') {
@@ -218,7 +220,7 @@ class TenderBidResponsivenessController extends Controller
                 $responsiveness->Remarks = 'Bulk rejected - does not meet basic requirements';
             }
 
-            if (!$responsiveness->exists) {
+            if (! $responsiveness->exists) {
                 $responsiveness->CreatedBy = $userId;
             }
             $responsiveness->ModifiedBy = $userId;

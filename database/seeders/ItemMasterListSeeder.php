@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\ItemMasterList;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -15,24 +15,24 @@ class ItemMasterListSeeder extends Seeder
         $now = Carbon::now();
         $createdBy = 1;
 
-         $activeStatusId = DB::table('t_CodeDetails')
-            ->where('CodeID', 'ItemStatus')
-            ->where('Description', 'Active')
-            ->value('ID');
+        $activeStatusId = DB::table('t_CodeDetails')
+           ->where('CodeID', 'ItemStatus')
+           ->where('Description', 'Active')
+           ->value('ID');
 
-        if (!$activeStatusId) {
+        if (! $activeStatusId) {
             throw new \Exception("Active status not found in t_CodeDetails. Please seed it first.");
         }
 
-    $itemTypeId = DB::table('t_CodeDetails')
-    ->where('CodeID', 'ItemTypeStatus')
-    ->where('Description', 'Stock')
-    ->value('ID');
-
-    $inventoryTypeId = DB::table('t_CodeDetails')
-        ->where('CodeID', 'InventoryTypeStatus')
-        ->where('Description', 'Durable')
+        $itemTypeId = DB::table('t_CodeDetails')
+        ->where('CodeID', 'ItemTypeStatus')
+        ->where('Description', 'Stock')
         ->value('ID');
+
+        $inventoryTypeId = DB::table('t_CodeDetails')
+            ->where('CodeID', 'InventoryTypeStatus')
+            ->where('Description', 'Durable')
+            ->value('ID');
 
         // Preload categories and UOMs
         $categories = ItemCategories::with('parent')->whereNotNull('ParentId')->get();
@@ -88,8 +88,9 @@ class ItemMasterListSeeder extends Seeder
 
             $uomId = $uoms[$uomCode] ?? null;
 
-            if (!$category || !$uomId) {
+            if (! $category || ! $uomId) {
                 echo "Skipping item '$name': category or UOM not found.\n";
+
                 continue;
             }
 
@@ -113,7 +114,7 @@ class ItemMasterListSeeder extends Seeder
 
             // Then update the ItemCode based on the newly created ID
             $item->update([
-                'ItemCode' => 'ITM-' . str_pad($item->Id, 5, '0', STR_PAD_LEFT)
+                'ItemCode' => 'ITM-' . str_pad($item->Id, 5, '0', STR_PAD_LEFT),
             ]);
         }
     }

@@ -29,10 +29,10 @@ trait DMSTagTrait
                         ->where('CreatedBy', $actor->Id);
                 });
         });*/
-        if (!empty($with)) {
+        if (! empty($with)) {
             $query->with($with);
         }
-        if (!empty($withCount)) {
+        if (! empty($withCount)) {
             $query->withCount($withCount);
         }
 
@@ -50,7 +50,6 @@ trait DMSTagTrait
         }
     }
 
-
     /**
      * @throws ErroredException
      */
@@ -63,13 +62,15 @@ trait DMSTagTrait
                 if ($document instanceof Document) {
                     $service->attach($document, $actor);
                 }
+
                 return $service->tag;
             });
         } catch (ErroredException $e) {
             throw new ErroredException($e->getMessage());
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error create Document Tag :  ');
             Log::error($e);
+
             throw new ErroredException('unexpected error, try again later');
         }
     }

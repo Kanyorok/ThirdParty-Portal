@@ -18,7 +18,6 @@ class EmailSendEvent
      */
     public function __construct(public Email $crmEmail)
     {
-        //
     }
 
     /**

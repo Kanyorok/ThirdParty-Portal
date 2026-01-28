@@ -31,7 +31,7 @@ class ContractedDriversRequest extends FormRequest
             'Notes' => 'nullable|string|max:1000',
             'IsActive' => 'required|boolean',
             'Document' => 'nullable|file|max:2048',
-            //
+
         ];
     }
 }

@@ -19,7 +19,6 @@ class ClientMessageController extends Controller
         $this->middleware('ajax');
     }
 
-
     /**
      * Display a listing of the resource.
      * @throws Exception
@@ -43,10 +42,12 @@ class ClientMessageController extends Controller
                 $service = SMSService::createClient($client, $request->validated('message_content'), $request->user(), $phone);
                 $activity = $service->addActivity(now());
                 $service->send();
+
                 return $activity;
             });
         } catch (Exception $e) {
             Log::error('Error sending sms to client ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

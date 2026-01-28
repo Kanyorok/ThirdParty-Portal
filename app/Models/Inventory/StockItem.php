@@ -9,11 +9,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StockItem extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $table = 't_StockItems';
     protected $primaryKey = 'Id';
 
@@ -70,7 +71,6 @@ class StockItem extends Model
         'ModifiedOn' => 'datetime',
     ];
 
-
     public function store()
     {
         return $this->belongsTo(Store::class, 'Store', 'Id');
@@ -90,6 +90,4 @@ class StockItem extends Model
     {
         return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
     }
-
-
 }

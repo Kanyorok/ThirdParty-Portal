@@ -54,7 +54,7 @@ class ScheduleService
 
     public function cancelLink(string $modelID): string
     {
-        if (!$this->cancelable()) {
+        if (! $this->cancelable()) {
             return '';
         }
 
@@ -62,14 +62,14 @@ class ScheduleService
             Client::getPrimaryKey() => route('client-schedule.destroy', [$modelID, $this->schedule->ScheduleID]),
             Lead::getPrimaryKey() => route('lead-schedule.destroy', [$modelID, $this->schedule->ScheduleID]),
             User::getPrimaryKey() => route('user-meetings.destroy', [$this->schedule->scheduled?->MeetingID]),
-            Board::getPrimaryKey()  => route('board-meetings.destroy', [$this->schedule->scheduled?->MeetingID]), 
+            Board::getPrimaryKey() => route('board-meetings.destroy', [$this->schedule->scheduled?->MeetingID]),
             default => '',
         };
     }
 
     public function actionLink(string $modelID): string
     {
-        if (!$this->actionable()) {
+        if (! $this->actionable()) {
             return '';
         }
 
@@ -79,7 +79,6 @@ class ScheduleService
             default => '',
         };
     }
-
 
     public function colour(): string
     {
@@ -112,7 +111,6 @@ class ScheduleService
             ->lock('WITH(NOLOCK)');
     }
 
-
     private static function _createNew(
         string $type,
         string $title,
@@ -125,29 +123,29 @@ class ScheduleService
         string $Source = null,
         string $SourceID = null
     ): ScheduleService {
-        if (!in_array($scheduledType, [Call::getPrimaryKey(), Meeting::getPrimaryKey()], true)) {
+        if (! in_array($scheduledType, [Call::getPrimaryKey(), Meeting::getPrimaryKey()], true)) {
             throw new RuntimeException('invalid scheduler');
         }
-        if (!in_array($type, [Lead::getPrimaryKey(), Client::getPrimaryKey(), Board::getPrimaryKey(), User::getPrimaryKey()], true)) {
+        if (! in_array($type, [Lead::getPrimaryKey(), Client::getPrimaryKey(), Board::getPrimaryKey(), User::getPrimaryKey()], true)) {
             throw new RuntimeException('invalid scheduled');
         }
 
         $dated = now();
         $scheduleID = Schedule::insertGetId([
-                                             'Title'            => $title,
-                                             'Type'             => $type,
-                                             'Notes'            => $notes,
-                                             'ScheduledType'    => $scheduledType,
-                                             'ScheduledTypeID'  => $scheduledTypeID,
+                                             'Title' => $title,
+                                             'Type' => $type,
+                                             'Notes' => $notes,
+                                             'ScheduledType' => $scheduledType,
+                                             'ScheduledTypeID' => $scheduledTypeID,
                                              'ScheduleStatusID' => ScheduleStatusEnum::Scheduled->value,
-                                             'StartOn'          => $start,
-                                             'EndOn'            => $end,
-                                             'Source'           => $Source,
-                                             'SourceID'         => $SourceID,
-                                             'CreatedBy'        => $actor->Id,
-                                             'ModifiedBy'       => $actor->Id,
-                                             'CreatedOn'        => $dated,
-                                             'ModifiedOn'       => $dated,
+                                             'StartOn' => $start,
+                                             'EndOn' => $end,
+                                             'Source' => $Source,
+                                             'SourceID' => $SourceID,
+                                             'CreatedBy' => $actor->Id,
+                                             'ModifiedBy' => $actor->Id,
+                                             'CreatedOn' => $dated,
+                                             'ModifiedOn' => $dated,
                                             ]);
 
 
@@ -254,22 +252,20 @@ class ScheduleService
         return $service;
     }
 
-
     public function boards()
-{
-    return Board::query()
-        ->whereIn('BoardMemberID', DB::table('t_ScheduleBoard')
+    {
+        return Board::query()
+            ->whereIn('BoardMemberID', DB::table('t_ScheduleBoard')
+                ->where('ScheduleId', $this->schedule->ScheduleID)
+                ->pluck('BoardMemberId'));
+    }
+
+    public function boardsCount(): int
+    {
+        return DB::table('t_ScheduleBoard')
             ->where('ScheduleId', $this->schedule->ScheduleID)
-            ->pluck('BoardMemberId'));
-}
-
-public function boardsCount(): int
-{
-    return DB::table('t_ScheduleBoard')
-        ->where('ScheduleId', $this->schedule->ScheduleID)
-        ->count();
-}
-
+            ->count();
+    }
 
     public static function userMeeting(array $UserIds, string $title, string|MeetingRoom $location, string $agenda, Carbon $start, Carbon $end, User $actor): ScheduleService
     {
@@ -280,7 +276,6 @@ public function boardsCount(): int
 
         return $service;
     }
-
 
     protected static function _meeting(
         string $type,
@@ -299,7 +294,6 @@ public function boardsCount(): int
 
         return self::_createNew(type: $type, title: $title, scheduledType: Meeting::getPrimaryKey(), start: $start, end: $end, actor: $actor, scheduledTypeID: $meeting->MeetingID, notes: $description, Source: $source, SourceID: $sourceID);
     }
-
 
     /**
      * @deprecated
@@ -322,15 +316,16 @@ public function boardsCount(): int
 
         if (is_string($MemberIds)) {
             DB::table('t_ScheduleBoard')->insert([
-                                                  'ScheduleId'     => $this->schedule->ScheduleID,
-                                                  'BoardMemberId'  => $MemberIds,
+                                                  'ScheduleId' => $this->schedule->ScheduleID,
+                                                  'BoardMemberId' => $MemberIds,
                                                   'ScheduleStatus' => ScheduleUserStatusEnum::Accepted->value,
-                                                  'DecidedOn'      => $dated,
-                                                  'CreatedOn'      => $dated,
-                                                  'CreatedBy'      => $actor->Id,
-                                                  'ModifiedOn'     => $dated,
-                                                  'ModifiedBy'     => $actor->Id,
+                                                  'DecidedOn' => $dated,
+                                                  'CreatedOn' => $dated,
+                                                  'CreatedBy' => $actor->Id,
+                                                  'ModifiedOn' => $dated,
+                                                  'ModifiedBy' => $actor->Id,
                                                  ]);
+
             return $this;
         }
 
@@ -340,14 +335,14 @@ public function boardsCount(): int
             foreach ($Members->chunk(700) as $chunk) {
                 foreach ($chunk as $memberID) {
                     $data->add([
-                                'ScheduleId'     => $this->schedule->ScheduleID,
-                                'BoardMemberId'  => $memberID,
+                                'ScheduleId' => $this->schedule->ScheduleID,
+                                'BoardMemberId' => $memberID,
                                 'ScheduleStatus' => ScheduleUserStatusEnum::Accepted->value,
-                                'DecidedOn'      => $dated,
-                                'CreatedOn'      => $dated,
-                                'CreatedBy'      => $actor->Id,
-                                'ModifiedOn'     => $dated,
-                                'ModifiedBy'     => $actor->Id,
+                                'DecidedOn' => $dated,
+                                'CreatedOn' => $dated,
+                                'CreatedBy' => $actor->Id,
+                                'ModifiedOn' => $dated,
+                                'ModifiedBy' => $actor->Id,
                                ]);
                 }
 
@@ -374,9 +369,9 @@ public function boardsCount(): int
                     $dataClients->add($ClientID);
                     $data->add([
                                 'ScheduleId' => $this->schedule->ScheduleID,
-                                'ClientID'   => $ClientID,
-                                'CreatedOn'  => $dated,
-                                'CreatedBy'  => $actor->Id,
+                                'ClientID' => $ClientID,
+                                'CreatedOn' => $dated,
+                                'CreatedBy' => $actor->Id,
                                 'ModifiedOn' => $dated,
                                 'ModifiedBy' => $actor->Id,
                                ]);
@@ -388,14 +383,15 @@ public function boardsCount(): int
                     $dataClients = collect();
                 }
             }
+
             return $this;
         }
 
         DB::table('t_ScheduleClients')->insert([
                                                 'ScheduleId' => $this->schedule->ScheduleID,
-                                                'ClientID'   => $ClientIDs,
-                                                'CreatedOn'  => $dated,
-                                                'CreatedBy'  => $actor->Id,
+                                                'ClientID' => $ClientIDs,
+                                                'CreatedOn' => $dated,
+                                                'CreatedBy' => $actor->Id,
                                                 'ModifiedOn' => $dated,
                                                 'ModifiedBy' => $actor->Id,
                                                ]);
@@ -418,9 +414,9 @@ public function boardsCount(): int
                     $dataLeads->add($LeadId);
                     $data->add([
                                 'ScheduleId' => $this->schedule->ScheduleID,
-                                'LeadId'     => $LeadId,
-                                'CreatedOn'  => $dated,
-                                'CreatedBy'  => $actor->Id,
+                                'LeadId' => $LeadId,
+                                'CreatedOn' => $dated,
+                                'CreatedBy' => $actor->Id,
                                 'ModifiedOn' => $dated,
                                 'ModifiedBy' => $actor->Id,
                                ]);
@@ -432,14 +428,15 @@ public function boardsCount(): int
                     $dataLeads = collect();
                 }
             }
+
             return $this;
         }
 
         DB::table('t_ScheduleLeads')->insert([
                                               'ScheduleId' => $this->schedule->ScheduleID,
-                                              'LeadId'     => $LeadIds,
-                                              'CreatedOn'  => $dated,
-                                              'CreatedBy'  => $actor->Id,
+                                              'LeadId' => $LeadIds,
+                                              'CreatedOn' => $dated,
+                                              'CreatedBy' => $actor->Id,
                                               'ModifiedOn' => $dated,
                                               'ModifiedBy' => $actor->Id,
                                              ]);
@@ -453,15 +450,16 @@ public function boardsCount(): int
     {
         if (is_string($UserIds)) {
             DB::table('t_ScheduleUsers')->insert([
-                                                  'ScheduleId'         => $this->schedule->ScheduleID,
-                                                  'UserID'             => $UserIds,
+                                                  'ScheduleId' => $this->schedule->ScheduleID,
+                                                  'UserID' => $UserIds,
                                                   'ScheduleUserStatus' => ScheduleUserStatusEnum::Accepted->value,
-                                                  'DecidedOn'          => $dated,
-                                                  'CreatedOn'          => $dated,
-                                                  'CreatedBy'          => $actor->Id,
-                                                  'ModifiedOn'         => $dated,
-                                                  'ModifiedBy'         => $actor->Id,
+                                                  'DecidedOn' => $dated,
+                                                  'CreatedOn' => $dated,
+                                                  'CreatedBy' => $actor->Id,
+                                                  'ModifiedOn' => $dated,
+                                                  'ModifiedBy' => $actor->Id,
                                                  ]);
+
             return $this;
         }
 
@@ -471,14 +469,14 @@ public function boardsCount(): int
             foreach ($users->chunk(1000) as $chunk) {
                 foreach ($chunk as $userId) {
                     $data->add([
-                                'ScheduleId'         => $this->schedule->ScheduleID,
-                                'UserID'             => $userId,
+                                'ScheduleId' => $this->schedule->ScheduleID,
+                                'UserID' => $userId,
                                 'ScheduleUserStatus' => ScheduleUserStatusEnum::Accepted->value,
-                                'DecidedOn'          => $dated,
-                                'CreatedOn'          => $dated,
-                                'CreatedBy'          => $actor->Id,
-                                'ModifiedOn'         => $dated,
-                                'ModifiedBy'         => $actor->Id,
+                                'DecidedOn' => $dated,
+                                'CreatedOn' => $dated,
+                                'CreatedBy' => $actor->Id,
+                                'ModifiedOn' => $dated,
+                                'ModifiedBy' => $actor->Id,
                                ]);
                 }
 
@@ -491,7 +489,6 @@ public function boardsCount(): int
 
         return $this;
     }
-
 
     public function getEmailContent(bool $reminder = false): string
     {
@@ -518,6 +515,7 @@ public function boardsCount(): int
                 if ($lead instanceof Lead) {
                     return Str::replace(["##NAME", "##USER", "##RELATEDID"], [$lead->Name, 'lead', Str::padLeft($lead->LeadID, 5, '0')], $body);
                 }
+
                 return Str::replace(["##NAME", "##USER", "##RELATEDID"], ['unknown', 'lead', ''], $body);
             }
 
@@ -544,11 +542,13 @@ public function boardsCount(): int
                     if ($client instanceof Client) {
                         return Str::replace(["##NAME", "##USER", "##RELATEDID"], [$client->Name, '(member)', '(' . $client->ClientID . ')'], $body);
                     }
+
                     return Str::replace(["##NAME", "##USER", "##RELATEDID"], ['a', 'member', ''], $body);
                 }
                 if ($clients_count > 0) {
                     return Str::replace(["##NAME", "##USER", "##RELATEDID"], [implode(', ', $this->schedule->scheduleClients()->limit(5)->get(['ClientID'])->toArray()), '(members)', ($clients_count >= 5) ? '....(' . $clients_count . ')' : ''], $body);
                 }
+
                 return Str::replace(["##NAME", "##USER", "##RELATEDID"], ['multiple', 'members', ''], $body);
             }
 
@@ -559,14 +559,17 @@ public function boardsCount(): int
                     if ($lead instanceof Lead) {
                         return Str::replace(["##NAME", "##USER", "##RELATEDID"], [$lead->Name, 'lead', Str::padLeft($lead->LeadID, 5, '0')], $body);
                     }
+
                     return Str::replace(["##NAME", "##USER", "##RELATEDID"], ['a', 'lead', ''], $body);
                 }
                 if ($leads_count > 0) {
                     $leadIds = $this->schedule->leads()->limit(5)->get(['LeadID'])->map(function (string $LeadID) {
                         return Str::padLeft($LeadID, 5, '0');
                     })->toArray();
+
                     return Str::replace(["##NAME", "##USER", "##RELATEDID"], [implode(', ', $leadIds), 'leads', ($leads_count >= 5) ? '....(' . $leads_count . ')' : ''], $body);
                 }
+
                 return Str::replace(["##NAME", "##USER", "##RELATEDID"], ['multiple leads', 'lead', ''], $body);
             }
 
@@ -580,6 +583,7 @@ public function boardsCount(): int
         $body .= "<p> Details:</p>
             <ul><li><b>Date</b>&nbsp;" . $this->schedule->StartOn?->format('l, jS F Y') . "</li><li><b>Time</b>&nbsp;" . $this->schedule->StartOn?->format('h:i A') . "</li>
             <li><b>Notes</b>&nbsp;" . $this->schedule->Notes . "</li> </ul><p>More details are available on the crm dashboard</p>";
+
         return $body;
     }
 
@@ -631,6 +635,7 @@ public function boardsCount(): int
         $event->name($name)->createdAt($this->schedule->CreatedOn)
             ->organizer($this->schedule->creator->Email, $this->schedule->creator->Name)
             ->attendee($this->schedule->creator->Email, $this->schedule->creator->Name, ParticipationStatus::accepted());
+
         return Str::of(Calendar::create($name)->event($event)->get())->replace('spatie/icalendar-generator', '-//' . config('org.name') . '//Banking Realm CRM//EN')->toString();
     }
 

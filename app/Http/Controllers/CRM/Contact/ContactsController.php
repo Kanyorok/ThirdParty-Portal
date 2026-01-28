@@ -26,12 +26,14 @@ class ContactsController extends Controller
     {
         return view('crm.contacts.create');
     }
+
     /**
      * Display the specified resource.
      */
     public function show(Request $request, Contact $contact): View
     {
         activity()->causedBy($request->user())->performedOn($contact)->event('view')->log('Viewed contact details');
+
         return view('crm.contacts.summary')->with('contact', $contact)
             ->with('party', $contact->party);
     }
@@ -42,10 +44,12 @@ class ContactsController extends Controller
     public function update(ContactRequest $request, Contact $contact): JsonResponse
     {
         $phone = $request->getPhone(SystemHelper::CountyCode);
+
         try {
             $this->change($contact, $request->savable($phone, true));
         } catch (Exception $e) {
             Log::error('Error updating contact. e: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 
@@ -61,6 +65,7 @@ class ContactsController extends Controller
             $this->trash($contact, $request->user());
         } catch (Exception $e) {
             Log::error('Error delete contact. e: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 

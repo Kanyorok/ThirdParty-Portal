@@ -30,6 +30,7 @@ class AttachContactLeadRequest extends FormRequest
         if ($lead instanceof Lead) {
             return $lead;
         }
+
         throw ValidationException::withMessages(['lead' => 'lead not found, or invalid.']);
     }
 }

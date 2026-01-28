@@ -47,14 +47,16 @@ class LeadMeetingController extends Controller
         $meeting = null;
         if ($schedule instanceof Schedule) {
             $meeting = $schedule->scheduled;
-            if (!$meeting instanceof Meeting) {
+            if (! $meeting instanceof Meeting) {
                 throw ValidationException::withMessages(['meeting_initiated' => 'invalid schedule provide']);
             }
         }
+
         try {
             $meeting = $this->startLeadMeeting($lead, $request->validated('meeting_initiated_title'), $location, $current_start, $actor, $meeting, $schedule);
         } catch (Exception $e) {
             Log::error('Error starting meeting  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -76,7 +78,7 @@ class LeadMeetingController extends Controller
         ]);
 
         $meeting = $lead->meetings()->where('t_Meetings.MeetingID', $meeting_id)->first();
-        if (!$meeting instanceof Meeting) {
+        if (! $meeting instanceof Meeting) {
             return $this->errored('unexpected error saving, with meeting');
         }
         $userIds = User::query()->whereIn('t_Users.UserID', $request->get('ongoing_meeting_users'))->pluck('Id')->toArray();
@@ -90,6 +92,7 @@ class LeadMeetingController extends Controller
             $this->endMeeting($meeting, $request->ongoing_meeting_title, $request->ongoing_meeting_location, $lead->LeadID, Carbon::now()->subSeconds(3), $actor, $request->ongoing_meeting_discussion, $userIds, $request->ongoing_meeting_notes);
         } catch (Exception $e) {
             Log::error('Error end Meeting ' . $e->getMessage());
+
             return $this->errored('unexpected error saving, try again latter');
         }
 

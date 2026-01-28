@@ -37,11 +37,11 @@ class UserController extends Controller
                 return UserService::dt(User::query(), ['photo']);
             } catch (Exception $e) {
             }
+
             return $this->errored('unexpected error, try again later');
         }
 
         return view('settings.users.index');
-
     }
 
     /**
@@ -50,19 +50,19 @@ class UserController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-    $validated = $request->validate([
-            'Role' => ['required', 'string', 'max:20'],
-            'Employee' => ['required', 'string', 'max:20'],
-            'BranchId' => ['required', 'integer', 'exists:t_Branches,Id'],
-        ]);
+        $validated = $request->validate([
+                'Role' => ['required', 'string', 'max:20'],
+                'Employee' => ['required', 'string', 'max:20'],
+                'BranchId' => ['required', 'integer', 'exists:t_Branches,Id'],
+            ]);
 
         $role = Role::query()->where('id', $validated['Role'])->first();
-        if (!$role instanceof Role) {
+        if (! $role instanceof Role) {
             throw ValidationException::withMessages(['Role' => 'invalid role defined']);
         }
 
         $branch = Branch::query()->where('Id', $validated['BranchId'])->first();
-        if (!$branch instanceof Branch) {
+        if (! $branch instanceof Branch) {
             throw ValidationException::withMessages(['BranchId' => 'branch not found']);
         }
 
@@ -75,23 +75,25 @@ class UserController extends Controller
                 $q->select('Email')->from('t_Users');
             })
             ->first();
-        if (!$employee instanceof Employee) {
+        if (! $employee instanceof Employee) {
             throw ValidationException::withMessages(['Employee' => 'employee not found or already has an account/email in use.']);
         }
 
         $actor = $request->user();
+
         try {
             return DB::transaction(function () use ($actor, $role, $employee, $branch) {
                 UserService::create($employee, $actor)
                     ->setRole($role, $branch, $actor)
                     ->welcomeEmail();
+
                 return $this->succeeded('user added successfully');
             });
         } catch (ErroredException $e) {
             return $e->toJson();
         } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
             return $this->errored('This email already exists for another user.');
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error create user ' . $e->getMessage());
             Log::error($e);
         }
@@ -160,12 +162,12 @@ class UserController extends Controller
             DB::transaction(static function () use ($branch, $user, $userID, $email, $gender, $request, $phone, $clientID) {
                 (new UserService($user))
                     ->update($userID, $request->validated('Name'), $email, $phone, $gender, $request->user(), ($user->Email_Signature) ?? '', ($request->validated('Notes')) ?? '', $branch, $clientID);
-
             });
         } catch (ErroredException $e) {
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error create user ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

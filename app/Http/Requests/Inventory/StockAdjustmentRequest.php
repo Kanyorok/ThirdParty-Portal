@@ -55,7 +55,7 @@ class StockAdjustmentRequest extends FormRequest
             $items = $this->input('items');
             $branchId = $this->input('Branch');
 
-            if (!$items || !is_array($items) || !$branchId) {
+            if (! $items || ! is_array($items) || ! $branchId) {
                 return;
             }
 

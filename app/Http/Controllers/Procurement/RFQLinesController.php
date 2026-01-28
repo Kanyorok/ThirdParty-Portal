@@ -7,7 +7,6 @@ use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\RFQLine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
 
 class RFQLinesController extends Controller
@@ -39,8 +38,8 @@ class RFQLinesController extends Controller
 
         // Step 2: Get the requisition ID from the RFQ
         $rfq = DB::table('t_RFQ')->where('Id', $request->RFQId)->first();
-        
-        if (!$rfq || !$rfq->RequisitionId) {
+
+        if (! $rfq || ! $rfq->RequisitionId) {
             return redirect()->back()->with('error', 'Invalid RFQ or no requisition linked.');
         }
 
@@ -61,7 +60,7 @@ class RFQLinesController extends Controller
             $existsInRFQLines = RFQLine::where('RequisitionLineId', $line->Id)->exists();
 
             // Exclude if already associated
-            return $isInCategory && !$existsInRFQLines;
+            return $isInCategory && ! $existsInRFQLines;
         });
 
         // Step 5: If no matching items, redirect with warning
@@ -72,6 +71,7 @@ class RFQLinesController extends Controller
         // Step 6: Group items by ItemId and sum quantities (in case same item appears multiple times)
         $groupedItems = $filteredItems->groupBy('Item')->map(function ($group) {
             $firstItem = $group->first();
+
             return [
                 'RequisitionLineIds' => $group->pluck('Id')->toArray(), // Store all line IDs
                 'ItemId' => $firstItem->Item,
@@ -108,7 +108,7 @@ class RFQLinesController extends Controller
                 'CreatedBy' => \Illuminate\Support\Facades\Auth::user()->Id,
                 'ModifiedBy' => \Illuminate\Support\Facades\Auth::user()->Id,
             ]);
-            
+
             $createdCount++;
         }
 
@@ -117,47 +117,46 @@ class RFQLinesController extends Controller
     }
 
     public function getRequisitionCategories(Request $request, $requisitionId)
-{
-    try {
-        Log::info('getRequisitionCategories called', [
-            'requisitionId' => $requisitionId
-        ]);
+    {
+        try {
+            Log::info('getRequisitionCategories called', [
+                'requisitionId' => $requisitionId,
+            ]);
 
-        // Get distinct item categories from requisition lines
-        $categories = DB::table('t_RequisitionLines as rl')
-            ->join('t_Items as i', 'rl.Item', '=', 'i.Id')
-            ->join('t_ItemCategories as ic', 'i.Category', '=', 'ic.Id')
-            ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
-            ->where('rl.RequisitionID', $requisitionId)
-            ->whereNull('rl.DeletedOn')
-            ->whereNull('i.DeletedOn')
-            ->whereNull('ic.DeletedOn')
-            ->whereNull('rfql.Id') // Only get categories not already in RFQ
-            ->select('ic.Id', 'ic.Name')
-            ->distinct()
-            ->get();
+            // Get distinct item categories from requisition lines
+            $categories = DB::table('t_RequisitionLines as rl')
+                ->join('t_Items as i', 'rl.Item', '=', 'i.Id')
+                ->join('t_ItemCategories as ic', 'i.Category', '=', 'ic.Id')
+                ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
+                ->where('rl.RequisitionID', $requisitionId)
+                ->whereNull('rl.DeletedOn')
+                ->whereNull('i.DeletedOn')
+                ->whereNull('ic.DeletedOn')
+                ->whereNull('rfql.Id') // Only get categories not already in RFQ
+                ->select('ic.Id', 'ic.Name')
+                ->distinct()
+                ->get();
 
-        Log::info('Categories fetched', [
-            'requisitionId' => $requisitionId,
-            'count' => $categories->count()
-        ]);
+            Log::info('Categories fetched', [
+                'requisitionId' => $requisitionId,
+                'count' => $categories->count(),
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'categories' => $categories
-        ]);
-    } catch (\Exception $e) {
-        Log::error('Error in getRequisitionCategories', [
-            'requisitionId' => $requisitionId,
-            'error' => $e->getMessage()
-        ]);
-        
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to load categories',
-            'categories' => []
-        ], 500);
+            return response()->json([
+                'success' => true,
+                'categories' => $categories,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in getRequisitionCategories', [
+                'requisitionId' => $requisitionId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load categories',
+                'categories' => [],
+            ], 500);
+        }
     }
-}
-
 }

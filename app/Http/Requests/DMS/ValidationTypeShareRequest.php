@@ -21,7 +21,7 @@ class ValidationTypeShareRequest extends FormRequest
     {
         return [
             'approver' => ['required', 'string', 'max:200'],
-            'role' => ['required', 'string', 'max:200']
+            'role' => ['required', 'string', 'max:200'],
         ];
     }
 
@@ -38,8 +38,7 @@ class ValidationTypeShareRequest extends FormRequest
         }
 
         throw ValidationException::withMessages([
-            'role' => 'invalid or role not allowed.'
+            'role' => 'invalid or role not allowed.',
         ]);
     }
-
 }

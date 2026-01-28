@@ -8,7 +8,6 @@ use Illuminate\Validation\Rule;
 
 class UpdateThirdPartyStatusRequest extends FormRequest
 {
-
     public function rules(): array
     {
         return [

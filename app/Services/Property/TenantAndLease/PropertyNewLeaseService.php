@@ -108,17 +108,17 @@ class PropertyNewLeaseService
             );
         }
 
-            
+
         //create workflow instance and submit for approval
-        $leaseWorkflow = new ApprovalWorkflow('ApprovalStatus',  'ApprovalStatus' );
+        $leaseWorkflow = new ApprovalWorkflow('ApprovalStatus', 'ApprovalStatus');
         $leaseWorkflow->submit(
             $newlease,
             $user,
             ApprovalEnum::Pending,
             'Lease Submitted for Approval'
         );
-            
-           
+
+
         PropertyLeaseScheduleService::create(
             leaseId: $newlease->Id,
             paymentFrequencyId: $PaymentFrequency->ID,
@@ -138,7 +138,6 @@ class PropertyNewLeaseService
 
         return new self($newlease, $this->workflow);
     }
-
 
     //Update
     public function update(
@@ -214,6 +213,4 @@ class PropertyNewLeaseService
 
         return new self($lease, $this->workflow);
     }
-
-
 }

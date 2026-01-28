@@ -39,7 +39,7 @@ class LoginRequest extends FormRequest
     public function getBranch(User $user): array
     {
         $branch = Branch::query()->where('BranchID', $this->string('branch'))->first();
-        if (!$branch instanceof Branch) {
+        if (! $branch instanceof Branch) {
             throw ValidationException::withMessages([
                 'branch' => 'Branch not found or not authorized.',
             ]);
@@ -50,7 +50,7 @@ class LoginRequest extends FormRequest
             ->where('BranchId', $branch->Id)->with('role')->first();
 
         $role = $modelRole?->role;
-        if (!$modelRole instanceof ModelRole || !$role instanceof Role) {
+        if (! $modelRole instanceof ModelRole || ! $role instanceof Role) {
             throw ValidationException::withMessages([
                 'branch' => 'Branch not found or not authorized.',
             ]);
@@ -89,35 +89,13 @@ class LoginRequest extends FormRequest
                 'BranchId' => $branchRole['branch']->Id,
             ])->save();
 
-            // Debug: Log before login
-            \Log::info('BEFORE Auth::login', [
-                'user_id' => $user->Id,
-                'session_id' => session()->getId(),
-                'auth_check' => auth()->check(),
-            ]);
-
             //new session
             Auth::guard('web')->login($user, $branchRole['role']->hasPermissionTo(PermissionEnum::UsersSessions));
-
-            // Debug: Log immediately after login
-            \Log::info('AFTER Auth::login', [
-                'auth_check' => auth()->check(),
-                'auth_id' => auth()->id(),
-                'session_id' => session()->getId(),
-            ]);
 
             // DISABLED: session()->regenerate() changes session ID
             // Apache in production doesn't send Set-Cookie header in AJAX responses
             // So browser keeps old session ID, causing authentication to fail
             // Security note: Auth::login() already migrates session for security
-            // $this->session()->regenerate();
-
-            // Debug: Log after regenerate (skipped)
-            \Log::info('SKIPPED session regenerate', [
-                'auth_check' => auth()->check(),
-                'auth_id' => auth()->id(),
-                'session_id' => session()->getId(),
-            ]);
 
             // CRITICAL: Generate session_token for EnsureSingleActiveSession middleware
             // This middleware was added on Sept 23, 2025 but login was never updated
@@ -143,21 +121,11 @@ class LoginRequest extends FormRequest
             // Force save session to DB immediately
             $this->session()->save();
 
-            // Debug: Check DB immediately after save
-            $dbSession = DB::table(config('session.table', 't_SYSSessions'))
-                ->where('id', session()->getId())
-                ->first();
-            \Log::info('AFTER session save', [
-                'session_id' => session()->getId(),
-                'db_found' => (bool)$dbSession,
-                'db_user_id' => $dbSession ? $dbSession->user_id : null,
-                'auth_check' => auth()->check(),
-            ]);
-
             return;
         }
 
         RateLimiter::hit($this->throttleKey());
+
         throw ValidationException::withMessages([
             'UserID' => trans('auth.failed'),
         ]);
@@ -172,7 +140,7 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (!RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
             return;
         }
 

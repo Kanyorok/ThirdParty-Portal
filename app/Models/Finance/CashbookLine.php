@@ -10,11 +10,11 @@ class CashbookLine extends Model
     protected $primaryKey = 'LineID';
 
     public $timestamps = true;
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
 
     protected $fillable = [
-        'CashbookID', 'GLAccountID', 'Description', 'AmountDr', 'AmountCr'
+        'CashbookID', 'GLAccountID', 'Description', 'AmountDr', 'AmountCr',
     ];
 
     protected $casts = [

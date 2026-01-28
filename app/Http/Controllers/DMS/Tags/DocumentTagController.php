@@ -22,6 +22,7 @@ class DocumentTagController extends Controller
     public function __invoke(Request $request, DMSTags $dMSTags)
     {
         $this->authorize('view', $dMSTags);
+
         return $this->documents($dMSTags->documents(), $request->user());
     }
 }

@@ -2,14 +2,11 @@
 
 namespace App\Policies\FleetManagement;
 
-use App\Models\Auth\User;
 use App\Enums\Core\PermissionEnum;
-use App\Models\Fleet\FleetServiceAlert;
-use Illuminate\Auth\Access\Response;
+use App\Models\Auth\User;
 
 class FleetServiceAlertPolicy
 {
-
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::FleetServiceAlertView->value);
@@ -22,5 +19,4 @@ class FleetServiceAlertPolicy
     {
         return $user->can(PermissionEnum::FleetServiceAlertAcknowledge->value);
     }
-
 }

@@ -3,19 +3,19 @@
 namespace App\Services\Property\PropertyRegistry;
 
 use App\Models\Auth\User;
-use App\Models\PropertyManagement\PropertyRegistry;
+use App\Models\Core\CategoryMaster;
 use App\Models\Core\Country;
 use App\Models\Core\Locality;
+use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyType;
-use App\Models\Core\CategoryMaster;
-use Illuminate\Support\Carbon;
 use Exception;
+use Illuminate\Support\Carbon;
 
 class PropertyBulkService
 {
     /**
      * Process bulk property upload from CSV/Excel data
-     * 
+     *
      * Expected columns:
      * - PropertyName
      * - PropertyCode
@@ -34,7 +34,7 @@ class PropertyBulkService
             'successful' => 0,
             'failed' => 0,
             'errors' => [],
-            'created_properties' => []
+            'created_properties' => [],
         ];
 
         foreach ($data as $index => $row) {
@@ -63,12 +63,12 @@ class PropertyBulkService
                 $propertyType = null;
                 if (is_numeric($row['PropertyType'])) {
                     $propertyType = PropertyType::find($row['PropertyType']);
-                    if (!$propertyType) {
+                    if (! $propertyType) {
                         throw new Exception("Error in row " . ($index + 1) . ": PropertyType ID {$row['PropertyType']} does not exist. Please enter a valid PropertyType ID.");
                     }
                 } else {
                     $propertyType = PropertyType::where('PropertyTypeName', $row['PropertyType'])->first();
-                    if (!$propertyType) {
+                    if (! $propertyType) {
                         throw new Exception("Error in row " . ($index + 1) . ": PropertyType '{$row['PropertyType']}' does not exist. Please enter a valid PropertyType name.");
                     }
                 }
@@ -77,14 +77,14 @@ class PropertyBulkService
                 $category = null;
                 if (is_numeric($row['Category'])) {
                     $category = CategoryMaster::where('Type', 'PropertyCategory')->find($row['Category']);
-                    if (!$category) {
+                    if (! $category) {
                         throw new Exception("Error in row " . ($index + 1) . ": Category ID {$row['Category']} does not exist. Please enter a valid Category ID.");
                     }
                 } else {
                     $category = CategoryMaster::where('Name', $row['Category'])
                         ->where('Type', 'PropertyCategory')
                         ->first();
-                    if (!$category) {
+                    if (! $category) {
                         throw new Exception("Error in row " . ($index + 1) . ": Category '{$row['Category']}' does not exist. Please enter a valid Category name.");
                     }
                 }
@@ -93,12 +93,12 @@ class PropertyBulkService
                 $country = null;
                 if (is_numeric($row['CountryId'])) {
                     $country = Country::find($row['CountryId']);
-                    if (!$country) {
+                    if (! $country) {
                         throw new Exception("Error in row " . ($index + 1) . ": Country ID {$row['CountryId']} does not exist. Please enter a valid Country ID.");
                     }
                 } else {
                     $country = Country::where('Name', $row['CountryId'])->first();
-                    if (!$country) {
+                    if (! $country) {
                         throw new Exception("Error in row " . ($index + 1) . ": Country '{$row['CountryId']}' does not exist. Please enter a valid Country name.");
                     }
                 }
@@ -107,14 +107,14 @@ class PropertyBulkService
                 $locality = null;
                 if (is_numeric($row['LocationId'])) {
                     $locality = Locality::where('CountryId', $country->Id)->find($row['LocationId']);
-                    if (!$locality) {
+                    if (! $locality) {
                         throw new Exception("Error in row " . ($index + 1) . ": Locality ID {$row['LocationId']} does not exist in Country {$row['CountryId']}. Please enter a valid Locality ID.");
                     }
                 } else {
                     $locality = Locality::where('Name', $row['LocationId'])
                         ->where('CountryId', $country->Id)
                         ->first();
-                    if (!$locality) {
+                    if (! $locality) {
                         throw new Exception("Error in row " . ($index + 1) . ": Locality '{$row['LocationId']}' does not exist in Country {$row['CountryId']}. Please enter a valid Locality name.");
                     }
                 }
@@ -142,7 +142,7 @@ class PropertyBulkService
                     'PropertyDescription' => $row['PropertyDescription'] ?? '',
                     'CreatedBy' => $user->Id,
                     'ModifiedBy' => $user->Id,
-                    'IsActive' => 1
+                    'IsActive' => 1,
                 ]);
 
                 activity()
@@ -153,12 +153,11 @@ class PropertyBulkService
 
                 $results['successful']++;
                 $results['created_properties'][] = $property->Id;
-
             } catch (Exception $e) {
                 $results['failed']++;
                 $results['errors'][] = [
                     'row' => $index + 1,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -186,6 +185,7 @@ class PropertyBulkService
             // Adjust for Excel's leap year bug (1900 is not a leap year in Excel)
             $excelDateBase = 25569; // Days between 1900-01-01 and 1970-01-01
             $timestamp = ($date - $excelDateBase) * 86400; // 86400 seconds per day
+
             return Carbon::createFromTimestamp($timestamp);
         }
 

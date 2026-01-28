@@ -14,8 +14,8 @@ class BankBranch extends Model
     protected $primaryKey = 'BranchID';
 
     public $timestamps = true;
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
 
     protected $fillable = [
         'BankID', 'BranchCode', 'BranchName', 'Address1', 'Address2',

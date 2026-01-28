@@ -34,6 +34,7 @@ class MarketingListFilterController extends Controller
     public function index(MarketingList $list): JsonResponse
     {
         $this->authorize('create', MarketingListFilter::class);
+
         return Datatables::of($list->filters()->lock('WITH(NOLOCK)')->orderBy('t_MarketingListsFilters.DisplayOrder')->with('filter')->get())
             ->addColumn('action', function (MarketingListFilter $listFilter) use ($list) {
                 return '<button type="button" class="btn btn-danger btn-sm trash-filter-modal" data-info="' . route('marketing-list-filters.destroy', [$list->slug, $listFilter->Id]) . '~' . $listFilter->filter->FieldName . '-' . $listFilter->filter->Operator->name . '"><i class="fas fa-trash"></i></button>';
@@ -44,8 +45,10 @@ class MarketingListFilterController extends Controller
                     foreach ($values as $value) {
                         $data->add(MarketingFilterService::getSource($listFilter->filter, $value));
                     }
+
                     return implode(', ', $data->toArray());
                 }
+
                 return $listFilter->FilterValues;
             })->addIndexColumn()->rawColumns(['action'])->make();
     }
@@ -58,11 +61,11 @@ class MarketingListFilterController extends Controller
     {
         $this->authorize('create', MarketingListFilter::class);
 
-        if (!$request->has('filter')) {
+        if (! $request->has('filter')) {
             return $this->errored('unknown filter given.');
         }
         $filter = SysFilter::query()->where('Source', $list->Source)->where('Id', $request->get('filter'))->first();
-        if (!$filter instanceof SysFilter) {
+        if (! $filter instanceof SysFilter) {
             return $this->errored('unknown filter given.');
         }
 
@@ -90,12 +93,12 @@ class MarketingListFilterController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error adding filter :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
         return $this->succeeded('filter added successfully.');
     }
-
 
     /**
      * Remove Filter from List.
@@ -104,12 +107,13 @@ class MarketingListFilterController extends Controller
     public function destroy(Request $request, MarketingList $list, $marketingListFilterId): JsonResponse
     {
         $marketingListFilter = $list->filters()->where('t_MarketingListsFilters.Id', $marketingListFilterId)->first();
-        if (!$marketingListFilter instanceof MarketingListFilter) {
+        if (! $marketingListFilter instanceof MarketingListFilter) {
             return $this->errored('unknown filter given.');
         }
         $this->authorize('update', $marketingListFilter);
 
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($marketingListFilter, $list, $actor) {
                 (new DynamicListService($list))->rmFilter($marketingListFilter, $actor);
@@ -118,6 +122,7 @@ class MarketingListFilterController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error removing filter :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

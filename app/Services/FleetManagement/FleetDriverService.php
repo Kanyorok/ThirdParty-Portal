@@ -2,13 +2,13 @@
 
 namespace App\Services\FleetManagement;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Fleet\FleetDriver;
-use App\Models\Core\Approval\CodeDetail;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\Fleet\FleetDriver;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class FleetDriverService
 {
@@ -116,7 +116,7 @@ class FleetDriverService
     {
         $latestDriver = FleetDriver::withTrashed()->latest('CreatedOn')->first();
 
-        if (!$latestDriver || !$latestDriver->DriverNo) {
+        if (! $latestDriver || ! $latestDriver->DriverNo) {
             return 'DRV-0001';
         }
 
@@ -131,7 +131,9 @@ class FleetDriverService
      */
     private function getStatusIdByValue(?string $value): ?int
     {
-        if (!$value) return null;
+        if (! $value) {
+            return null;
+        }
 
         return CodeDetail::where('CodeID', 'DriverAvailabilityStatus')
             ->where('Value', $value)
@@ -143,7 +145,9 @@ class FleetDriverService
      */
     private function getStatusValueById(?int $id): ?string
     {
-        if (!$id) return null;
+        if (! $id) {
+            return null;
+        }
 
         return CodeDetail::where('CodeID', 'DriverAvailabilityStatus')
             ->where('Id', $id)

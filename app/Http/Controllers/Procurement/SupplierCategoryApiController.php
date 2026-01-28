@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Models\ThirdParty\SupplierCategory;
-use Illuminate\Http\Request;
 use App\Http\Requests\Procurement\Suppliers\StoreSupplierCategoryRequest;
 use App\Http\Requests\Procurement\Suppliers\UpdateSupplierCategoryRequest;
+use App\Models\ThirdParty\SupplierCategory;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class SupplierCategoryApiController extends Controller
 {

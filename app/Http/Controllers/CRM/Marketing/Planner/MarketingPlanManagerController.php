@@ -35,14 +35,14 @@ class MarketingPlanManagerController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error manager approval planner failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
         return $this->succeeded('plan approved successfully.', route('marketing-planner.index'));
     }
-
 
     /**
      * @throws AuthorizationException
@@ -66,8 +66,9 @@ class MarketingPlanManagerController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error manager reject planner failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

@@ -10,11 +10,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Report extends Model
 {
-    use SoftDeletes, UserActorTrait, RelatedPermissionTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use RelatedPermissionTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const string CREATED_AT = 'CreatedOn';
+    public const string UPDATED_AT = 'ModifiedOn';
+    public const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Reports';
     protected $primaryKey = 'Id';
@@ -37,7 +39,6 @@ class Report extends Model
     {
         return $this->belongsTo(Module::class, 'ModuleId', 'ModuleID');
     }
-
 
     public function permissionColum(): string
     {

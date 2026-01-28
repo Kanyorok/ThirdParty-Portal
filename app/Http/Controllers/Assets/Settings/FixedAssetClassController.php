@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Assets\Settings;
 
 use App\Http\Controllers\Controller;
@@ -7,18 +8,24 @@ use Illuminate\Http\Request;
 
 class FixedAssetClassController extends Controller
 {
-    public function index(Request $request) {
+    public function index(Request $request)
+    {
         $q = $request->get('q');
-        $rows = FixedAssetClass::when($q, fn($qq) =>
-                $qq->where('Code','like',"%$q%")
-                   ->orWhere('Name','like',"%$q%"))
+        $rows = FixedAssetClass::when($q, fn ($qq) =>
+                $qq->where('Code', 'like', "%$q%")
+                   ->orWhere('Name', 'like', "%$q%"))
             ->orderBy('Name')->paginate(20);
-        return view('assets.settings.classes.index', compact('rows','q'));
+
+        return view('assets.settings.classes.index', compact('rows', 'q'));
     }
 
-    public function create() { return view('assets.settings.classes.create'); }
+    public function create()
+    {
+        return view('assets.settings.classes.create');
+    }
 
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
         $data = $request->validate([
             'Code' => 'required|max:30|unique:t_FixedAssetClasses,Code',
             'Name' => 'required|max:150',
@@ -35,18 +42,22 @@ class FixedAssetClassController extends Controller
         $data['RevaluationAllowed'] = $request->boolean('RevaluationAllowed');
         $data['IsActive'] = $request->boolean('IsActive');
         FixedAssetClass::create($data);
-        return redirect()->route('assets.settings.classes.index')->with('success','Class created.');
+
+        return redirect()->route('assets.settings.classes.index')->with('success', 'Class created.');
     }
 
-    public function edit(int $id) {
+    public function edit(int $id)
+    {
         $row = FixedAssetClass::findOrFail($id);
+
         return view('assets.settings.classes.edit', compact('row'));
     }
 
-    public function update(Request $request, int $id) {
+    public function update(Request $request, int $id)
+    {
         $row = FixedAssetClass::findOrFail($id);
         $data = $request->validate([
-            'Code' => 'required|max:30|unique:t_FixedAssetClasses,Code,'.$row->Id.',Id',
+            'Code' => 'required|max:30|unique:t_FixedAssetClasses,Code,' . $row->Id . ',Id',
             'Name' => 'required|max:150',
             'DepMethod' => 'required|in:SL,DB,SUA',
             'UsefulLifeMonths' => 'nullable|integer|min:0',
@@ -61,11 +72,14 @@ class FixedAssetClassController extends Controller
         $data['RevaluationAllowed'] = $request->boolean('RevaluationAllowed');
         $data['IsActive'] = $request->boolean('IsActive');
         $row->update($data);
-        return redirect()->route('assets.settings.classes.index')->with('success','Class updated.');
+
+        return redirect()->route('assets.settings.classes.index')->with('success', 'Class updated.');
     }
 
-    public function destroy(int $id) {
-        FixedAssetClass::where('Id',$id)->delete();
-        return redirect()->route('assets.settings.classes.index')->with('success','Class deleted.');
+    public function destroy(int $id)
+    {
+        FixedAssetClass::where('Id', $id)->delete();
+
+        return redirect()->route('assets.settings.classes.index')->with('success', 'Class deleted.');
     }
 }

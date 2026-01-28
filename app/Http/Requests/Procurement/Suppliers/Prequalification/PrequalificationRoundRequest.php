@@ -4,10 +4,10 @@ namespace App\Http\Requests\Procurement\Suppliers\Prequalification;
 
 use App\Enums\Procurement\PrequalificationRoundEnum;
 use App\Models\Procurement\Prequalification\PrequalificationRound;
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Validator;
-use Carbon\Carbon;
 
 abstract class PrequalificationRoundRequest extends FormRequest
 {
@@ -34,15 +34,18 @@ abstract class PrequalificationRoundRequest extends FormRequest
             'sections.*.included' => ['nullable', 'boolean'],
             'sections.*.weight' => [
                 function ($attribute, $value, $fail) use ($isDraft) {
-                    if ($isDraft) return; // skip weight validation when saving as draft
+                    if ($isDraft) {
+                        return;
+                    } // skip weight validation when saving as draft
 
                     $sections = $this->input('sections', []);
                     preg_match('/sections\.(\d+)\.weight/', $attribute, $matches);
                     $sectionIndex = $matches[1] ?? null;
 
-                    if ($sectionIndex !== null && !empty($sections[$sectionIndex]['included'])) {
-                        if (empty($value) && !is_numeric($value)) {
+                    if ($sectionIndex !== null && ! empty($sections[$sectionIndex]['included'])) {
+                        if (empty($value) && ! is_numeric($value)) {
                             $fail('Weight is required when section is included.');
+
                             return;
                         }
                         if ((int) $value < 0 || (int) $value > 100) {
@@ -60,16 +63,19 @@ abstract class PrequalificationRoundRequest extends FormRequest
             'sections.*.criteria.*.included' => ['nullable', 'boolean'],
             'sections.*.criteria.*.weight' => [
                 function ($attribute, $value, $fail) use ($isDraft) {
-                    if ($isDraft) return; // skip criteria score enforcement for drafts
+                    if ($isDraft) {
+                        return;
+                    } // skip criteria score enforcement for drafts
 
                     $sections = $this->input('sections', []);
                     preg_match('/sections\.(\d+)\.criteria\.(\d+)\.weight/', $attribute, $matches);
                     $sectionIndex = $matches[1] ?? null;
                     $criteriaIndex = $matches[2] ?? null;
 
-                    if ($sectionIndex !== null && $criteriaIndex !== null && !empty($sections[$sectionIndex]['criteria'][$criteriaIndex]['included'])) {
-                        if (!is_numeric($value)) {
+                    if ($sectionIndex !== null && $criteriaIndex !== null && ! empty($sections[$sectionIndex]['criteria'][$criteriaIndex]['included'])) {
+                        if (! is_numeric($value)) {
                             $fail('Criteria score must be 10.');
+
                             return;
                         }
                         if ((int)$value !== 10) {
@@ -93,11 +99,12 @@ abstract class PrequalificationRoundRequest extends FormRequest
 
             // Only consider sections that are marked as "included"
             $includedSections = $sections->filter(function ($section) {
-                return !empty($section['included']);
+                return ! empty($section['included']);
             });
 
             if ($includedSections->isEmpty()) {
                 $validator->errors()->add('sections', 'At least one section must be included.');
+
                 return;
             }
 
@@ -114,12 +121,13 @@ abstract class PrequalificationRoundRequest extends FormRequest
             // Prevent overlapping rounds: only one round can exist for a given window
             $startInput = $this->input('StartDate');
             $endInput = $this->input('EndDate');
-            if (!empty($startInput) && !empty($endInput)) {
+            if (! empty($startInput) && ! empty($endInput)) {
                 try {
                     $start = Carbon::parse($startInput);
                     $end = Carbon::parse($endInput);
                     if ($end->lt($start)) {
                         $validator->errors()->add('EndDate', 'End Date must be after or equal to Start Date.');
+
                         return;
                     }
 
@@ -131,7 +139,7 @@ abstract class PrequalificationRoundRequest extends FormRequest
                     }
 
                     $overlap = PrequalificationRound::query()
-                        ->when($excludeId, fn($q) => $q->where('RoundID', '!=', $excludeId))
+                        ->when($excludeId, fn ($q) => $q->where('RoundID', '!=', $excludeId))
                         ->where(function ($q) use ($start, $end) {
                             // Overlap if new.start <= existing.EndDate AND new.end >= existing.StartDate
                             $q->where('StartDate', '<=', $end)
@@ -161,6 +169,7 @@ abstract class PrequalificationRoundRequest extends FormRequest
         // If explicitly saving as draft via button or Status set to Draft
         $status = $this->input('Status');
         $savingAsDraft = filter_var($this->input('save_as_draft'), FILTER_VALIDATE_BOOLEAN) || $this->input('save_as_draft') === '1';
+
         return $savingAsDraft || (is_string($status) && $status === PrequalificationRoundEnum::Draft->value);
     }
 }

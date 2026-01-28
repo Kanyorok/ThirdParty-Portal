@@ -2,19 +2,12 @@
 
 namespace App\Services\FleetManagement;
 
-
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Models\FleetManagement\DriverManagement;
-use App\Models\Auth\User;
-use App\Http\Requests\FleetManagement\DriverManagementRequest;
-use App\Traits\Model\UserActorTrait;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DriverManagementService
 {
-
     public function createDriver(array $data): DriverManagement
     {
         return DB::transaction(function () use ($data) {
@@ -37,12 +30,11 @@ class DriverManagementService
             ->log('Driver Created');
     }
 
-
     private function generateDriverID(): string
     {
         $latestDriver = DriverManagement::withTrashed()->latest('CreatedOn')->first();
 
-        if (!$latestDriver || !$latestDriver->DriverID) {
+        if (! $latestDriver || ! $latestDriver->DriverID) {
             return 'DRV-0001';
         }
 
@@ -52,7 +44,6 @@ class DriverManagementService
         return 'DRV-' . str_pad($newId, 4, '0', STR_PAD_LEFT);
     }
 
-
     public function updateDriver(DriverManagement $driver, array $data): DriverManagement
     {
         return DB::transaction(function () use ($driver, $data) {
@@ -61,6 +52,7 @@ class DriverManagementService
             $driver->ModifiedBy = Auth::id();
             $driver->ModifiedOn = now();
             $driver->save();
+
             return $driver;
         });
         activity()
@@ -89,5 +81,3 @@ class DriverManagementService
         });
     }
 }
-
-

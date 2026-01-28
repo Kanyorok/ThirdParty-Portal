@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Auth\User;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
-use App\Models\Auth\User;
 
 class BudgetDriverProjectionsSeeder extends Seeder
 {

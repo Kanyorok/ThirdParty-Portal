@@ -4,7 +4,6 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use Illuminate\Support\Facades\DB;
 
 class Kernel extends ConsoleKernel
 {
@@ -28,6 +27,7 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('trips:start-pending')->everyMinute();
     }
+
     // ✅ Register commands from the app/Console/Commands directory
     protected function commands()
     {

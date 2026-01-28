@@ -24,18 +24,14 @@ trait DocumentsTrait
             'Id', // Local key on current model
             'DocumentId' // Local key on DocumentRelation table
         )->where('t_DocumentRelations.Related', self::getPrimaryKey());
-
     }
-
 
     /**
      * @throws ErroredException
      */
     public function newDocument(ModulesEnum $module, UploadedFile $file, array|string $permissions, User $actor): Document
     {
-        // if (method_exists($this, 'getPrimaryKey')) {
         //     throw new ErroredException("Implement UserActorTrait in model");
-        // }
 
         $RelatedId = $this->{$this->primaryKey};
 
@@ -48,6 +44,7 @@ trait DocumentsTrait
     public function newDocumentFromContent(ModulesEnum $module, ExtensionsEnum $extension, string $fileName, string $content, User $actor, array|string $permissions): Document
     {
         $RelatedId = $this->{$this->primaryKey};
+
         return DocumentService::createInternalFileContent($module, $extension, $fileName, $content, $actor, $permissions, self::getPrimaryKey(), $RelatedId)->document;
     }
 
@@ -57,6 +54,7 @@ trait DocumentsTrait
     public function newVersionFromUpload(Document $document, UploadedFile $file, User $actor): Document
     {
         $RelatedId = $this->{$this->primaryKey};
+
         return (new DocumentService($document))->newVersionUpload($file, $actor, self::getPrimaryKey(), $RelatedId)->document;
     }
 }

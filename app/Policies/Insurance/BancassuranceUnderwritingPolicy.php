@@ -11,7 +11,6 @@ class BancassuranceUnderwritingPolicy
     /**
      * Create a new policy instance.
      */
-
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::BancassuranceUnderwritingView->value);
@@ -36,5 +35,4 @@ class BancassuranceUnderwritingPolicy
     {
         return $user->can(PermissionEnum::BancassuranceUnderwritingDelete->value);
     }
-
 }

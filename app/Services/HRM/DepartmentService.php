@@ -12,20 +12,21 @@ class DepartmentService
     {
     }
 
-    public static function create(string $name, User $actor, string $description=null): self
+    public static function create(string $name, User $actor, string $description = null): self
     {
-        $department  = Department::create([
+        $department = Department::create([
             'Name' => $name,
             'DepartmentID' => self::_id(),
             'Description' => $description,
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
         ]);
-        activity()->causedBy($actor)->performedOn($department)->event('create')->log('Created Department '.$department->DepartmentID);
+        activity()->causedBy($actor)->performedOn($department)->event('create')->log('Created Department ' . $department->DepartmentID);
+
         return new self($department);
     }
 
-    public function setHOD(User $hod, User $actor):static
+    public function setHOD(User $hod, User $actor): static
     {
         /*$this->department->update([
             'HeadId' => $hod->Id,
@@ -36,7 +37,7 @@ class DepartmentService
         return $this;
     }
 
-    public function setDeputyHOD(User $user, User $actor):static
+    public function setDeputyHOD(User $user, User $actor): static
     {
         /*$this->department->update([
             'DeputyHeadId' => $user->Id,
@@ -47,7 +48,7 @@ class DepartmentService
         return $this;
     }
 
-    protected static function _id():string
+    protected static function _id(): string
     {
         $number = Department::query()->withTrashed()->count();
         do {

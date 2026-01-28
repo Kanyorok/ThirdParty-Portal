@@ -2,15 +2,15 @@
 
 namespace App\Policies\PropertyManagement;
 
-use App\Models\Auth\User;
 use App\Enums\Core\PermissionEnum;
+use App\Models\Auth\User;
 
 class PropertyAttachmentsPolicy
 {
     /**
      * Create a new policy instance.
      */
- public function viewAny(User $user): bool
+    public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::PropertyAttachmentsView->value);
     }
@@ -35,5 +35,3 @@ class PropertyAttachmentsPolicy
         return $user->can(PermissionEnum::PropertyAttachmentsDelete->value);
     }
 }
-
-

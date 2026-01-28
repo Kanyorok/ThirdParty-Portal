@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Exports\SasraAuditorsExport;
 use App\Http\Controllers\Controller;
+use App\Imports\SasraAuditorsImport;
+use App\Models\Procurement\SasraAuditor;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\SasraAuditorsImport;
-use App\Exports\SasraAuditorsExport;
-use App\Models\Procurement\SasraAuditor;
 
 class SasraAuditorController extends Controller
 {
@@ -17,6 +17,7 @@ class SasraAuditorController extends Controller
     public function index()
     {
         $auditors = SasraAuditor::orderBy('created_at', 'desc')->paginate(20);
+
         return view('procurement.sasra-auditors.index', compact('auditors'));
     }
 
@@ -37,7 +38,7 @@ class SasraAuditorController extends Controller
             'file' => 'required|file|mimes:xlsx,csv,xls',
         ]);
 
-        Excel::import(new SasraAuditorsImport, $request->file('file'));
+        Excel::import(new SasraAuditorsImport(), $request->file('file'));
 
         return redirect()->route('sasra-auditors.index')->with('success', 'SASRA auditor list uploaded successfully.');
     }
@@ -47,6 +48,6 @@ class SasraAuditorController extends Controller
      */
     public function download()
     {
-        return Excel::download(new SasraAuditorsExport, 'sasra_auditors.xlsx');
+        return Excel::download(new SasraAuditorsExport(), 'sasra_auditors.xlsx');
     }
 }

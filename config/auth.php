@@ -46,7 +46,7 @@ return [
             'driver' => 'sanctum',
             // 'provider' => 'thirdparties',
             'provider' => 'thirdparty_users',
-        ]
+        ],
     ],
 
     /*
@@ -79,7 +79,6 @@ return [
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',
-        // ],
     ],
 
     /*

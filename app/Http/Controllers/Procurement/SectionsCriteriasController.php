@@ -7,13 +7,11 @@ use Illuminate\Http\Request;
 
 class SectionsCriteriasController extends Controller
 {
-
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
     }
 
     /**
@@ -21,7 +19,6 @@ class SectionsCriteriasController extends Controller
      */
     public function create()
     {
-        //
     }
 
     /**
@@ -29,7 +26,6 @@ class SectionsCriteriasController extends Controller
      */
     public function store(Request $request)
     {
-        //
     }
 
     /**
@@ -45,7 +41,6 @@ class SectionsCriteriasController extends Controller
      */
     public function edit(string $id)
     {
-        //
     }
 
     /**
@@ -53,7 +48,6 @@ class SectionsCriteriasController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
     }
 
     /**
@@ -61,6 +55,5 @@ class SectionsCriteriasController extends Controller
      */
     public function destroy(string $id)
     {
-        //
     }
 }

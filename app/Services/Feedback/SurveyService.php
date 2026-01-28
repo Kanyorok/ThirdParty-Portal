@@ -17,12 +17,15 @@ use Illuminate\Support\Str;
 
 class SurveyService
 {
-    public function __construct(public Survey $survey) {}
+    public function __construct(public Survey $survey)
+    {
+    }
 
     public static function active(): ?SurveyService
     {
         $survey = Survey::query()->where('t_Surveys.StartOn', '<=', now())->where('t_Surveys.EndOn', '>=', now())
             ->where('t_Surveys.Status', SurveyStatusEnum::Active->value)->latest()->with(['questions'])->first();
+
         return ($survey instanceof Survey)
             ? new self($survey)
             : null;
@@ -121,7 +124,7 @@ class SurveyService
         $users = User::query()->lock('WITH(NOLOCK)')->hasPermission(PermissionEnum::SurveyApproval->value)->get(["Id", "UserID", "Name", "Email"]);
         DB::transaction(function () use ($actor, $users) {
             foreach ($users as $user) {
-                if (!$user instanceof User) {
+                if (! $user instanceof User) {
                     continue;
                 }
                 if (in_array($user->UserID, [$actor->UserID, SystemHelper::ID], true)) { //skip sys and submitter

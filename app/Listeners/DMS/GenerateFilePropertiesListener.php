@@ -18,7 +18,6 @@ class GenerateFilePropertiesListener implements ShouldQueue
      */
     public function __construct()
     {
-        //
     }
 
     /**

@@ -12,7 +12,7 @@ class ComplianceAlert extends Model
 
     protected $fillable = [
         'CalendarEntryID', 'DaysBefore', 'EscalationLevel', 'Channel',
-        'IsActive', 'CreatedBy', 'CreatedOn'
+        'IsActive', 'CreatedBy', 'CreatedOn',
     ];
 
     public function calendarEntry()

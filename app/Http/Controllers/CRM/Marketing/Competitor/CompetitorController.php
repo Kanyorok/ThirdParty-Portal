@@ -53,6 +53,7 @@ class CompetitorController extends Controller
     public function store(CompetitorRequest $request): JsonResponse
     {
         $actor = $request->user();
+
         try {
             $request->save($actor);
         } catch (ErroredException $e) {
@@ -73,7 +74,7 @@ class CompetitorController extends Controller
             'competitor' => $competitor,
             'location' => (new LocalityService($competitor->location))->getLocation(),
             'Countries' => Country::query()->select(['Name', 'CountryCode', 'Id', 'PhoneCode', 'Flag'])->whereHas('localities')->orderBy('t_Countries.Name')->get(),
-            'hasProgress' => (is_array($competitor->Processing))
+            'hasProgress' => (is_array($competitor->Processing)),
         ]);
     }
 
@@ -83,6 +84,7 @@ class CompetitorController extends Controller
     public function update(CompetitorRequest $request, Competitor $competitor): JsonResponse
     {
         $actor = $request->user();
+
         try {
             $request->save($actor, $competitor);
         } catch (ErroredException $e) {
@@ -104,8 +106,9 @@ class CompetitorController extends Controller
             ])->save();
 
             activity()->causedBy($request->user())->performedOn($competitor)->event('delete')->log('Deleted  competitor (' . $competitor->CompetitorID . ').');
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error adding a competitor ' . $e->getMessage());
+
             return $this->errored('unexpected error updating competitor, try again latter');
         }
 

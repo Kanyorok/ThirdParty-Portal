@@ -11,7 +11,6 @@ use Illuminate\Validation\ValidationException;
 
 class MoveRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -30,6 +29,7 @@ class MoveRequest extends FormRequest
         if ($repo instanceof Repository) {
             return $repo;
         }
+
         throw ValidationException::withMessages([
             'MoveRepository' => 'The specified repository does not exist or you do not have access to it.',
         ]);

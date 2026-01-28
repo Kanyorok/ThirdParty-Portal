@@ -7,12 +7,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\CommissionRuleRequest;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Currency;
+use App\Models\Insurance\BancassuranceCommissionRule;
+use App\Models\Insurance\InsuranceProduct;
 use App\Services\Insurance\CommissionRuleService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\Insurance\BancassuranceCommissionRule;
-use App\Models\Insurance\InsuranceProduct;
 
 class CommissionRuleController extends Controller
 {
@@ -59,6 +59,7 @@ class CommissionRuleController extends Controller
         $policytypes = CodeDetail::where('CodeID', 'PolicyTypeId')->get();
         $assignto = CodeDetail::where('CodeID', 'AppliesTo')->get();
         $currencies = Currency::all();
+
         return view('bancassurance.commissions.rules.index', compact('rules', 'policytypes', 'assignto', 'currencies'));
     }
 
@@ -70,6 +71,7 @@ class CommissionRuleController extends Controller
         $policytypes = CodeDetail::where('CodeID', 'PolicyTypeId')->get();
         $assignto = CodeDetail::where('CodeID', 'AppliesTo')->get();
         $currencies = Currency::all();
+
         return view('bancassurance.commissions.rules.edit', compact('rule', 'products', 'policytypes', 'assignto', 'currencies'));
     }
 
@@ -115,6 +117,7 @@ class CommissionRuleController extends Controller
     public function destroy($id)
     {
         $this->authorize(PermissionEnum::CommissionRuleDelete, BancassuranceCommissionRule::class);
+
         try {
             $rule = BancassuranceCommissionRule::findOrFail($id);
             $rule->delete();
@@ -124,6 +127,7 @@ class CommissionRuleController extends Controller
         } catch (\Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting Rule: ' . $th->getMessage());
+
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to delete Rule. Please try again.'])
                 ->withInput();

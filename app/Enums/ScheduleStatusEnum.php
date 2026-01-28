@@ -31,6 +31,7 @@ enum ScheduleStatusEnum: string
         if ($this->value === self::Scheduled->value && $past) {
             return '#ff0000';//red
         }
+
         return match ($this) {
             self::Canceled => '#708090',//grey
             self::Scheduled => '#4a6edb',//blue

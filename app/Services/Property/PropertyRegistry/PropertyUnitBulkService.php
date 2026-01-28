@@ -3,17 +3,17 @@
 namespace App\Services\Property\PropertyRegistry;
 
 use App\Models\Auth\User;
-use App\Models\PropertyManagement\PropertyUnit;
-use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyBlock;
+use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyRegistry;
+use App\Models\PropertyManagement\PropertyUnit;
 use Exception;
 
 class PropertyUnitBulkService
 {
     /**
      * Process bulk unit upload from CSV/Excel data
-     * 
+     *
      * Expected columns:
      * - PropertyID (property code or Id)
      * - BlockID (block name or Id)
@@ -30,7 +30,7 @@ class PropertyUnitBulkService
             'successful' => 0,
             'failed' => 0,
             'errors' => [],
-            'created_units' => []
+            'created_units' => [],
         ];
 
         foreach ($data as $index => $row) {
@@ -59,12 +59,12 @@ class PropertyUnitBulkService
                 $property = null;
                 if (is_numeric($row['PropertyID'])) {
                     $property = PropertyRegistry::find($row['PropertyID']);
-                    if (!$property) {
+                    if (! $property) {
                         throw new Exception("Error in row " . ($index + 1) . ": PropertyID {$row['PropertyID']} does not exist. Please enter a valid PropertyID.");
                     }
                 } else {
                     $property = PropertyRegistry::where('PropertyCode', $row['PropertyID'])->first();
-                    if (!$property) {
+                    if (! $property) {
                         throw new Exception("Error in row " . ($index + 1) . ": PropertyCode '{$row['PropertyID']}' does not exist. Please enter a valid PropertyCode.");
                     }
                 }
@@ -73,14 +73,14 @@ class PropertyUnitBulkService
                 $block = null;
                 if (is_numeric($row['BlockID'])) {
                     $block = PropertyBlock::where('PropertyID', $property->Id)->find($row['BlockID']);
-                    if (!$block) {
+                    if (! $block) {
                         throw new Exception("Error in row " . ($index + 1) . ": BlockID {$row['BlockID']} does not exist in Property {$row['PropertyID']}. Please enter a valid BlockID.");
                     }
                 } else {
                     $block = PropertyBlock::where('BlockName', $row['BlockID'])
                         ->where('PropertyID', $property->Id)
                         ->first();
-                    if (!$block) {
+                    if (! $block) {
                         throw new Exception("Error in row " . ($index + 1) . ": Block '{$row['BlockID']}' does not exist in Property {$row['PropertyID']}. Please enter a valid BlockName.");
                     }
                 }
@@ -89,14 +89,14 @@ class PropertyUnitBulkService
                 $floor = null;
                 if (is_numeric($row['FloorID'])) {
                     $floor = PropertyFloor::where('BlockID', $block->Id)->find($row['FloorID']);
-                    if (!$floor) {
+                    if (! $floor) {
                         throw new Exception("Error in row " . ($index + 1) . ": FloorID {$row['FloorID']} does not exist in Block {$row['BlockID']}. Please enter a valid FloorID.");
                     }
                 } else {
                     $floor = PropertyFloor::where('FloorLabel', $row['FloorID'])
                         ->where('BlockID', $block->Id)
                         ->first();
-                    if (!$floor) {
+                    if (! $floor) {
                         throw new Exception("Error in row " . ($index + 1) . ": Floor '{$row['FloorID']}' does not exist in Block {$row['BlockID']}. Please enter a valid FloorLabel.");
                     }
                 }
@@ -112,7 +112,7 @@ class PropertyUnitBulkService
                 }
 
                 // Validate UnitSize is integer
-                if (!is_numeric($row['UnitSize'])) {
+                if (! is_numeric($row['UnitSize'])) {
                     throw new Exception("UnitSize must be a number");
                 }
 
@@ -142,12 +142,11 @@ class PropertyUnitBulkService
 
                 $results['successful']++;
                 $results['created_units'][] = $unit->Id;
-
             } catch (Exception $e) {
                 $results['failed']++;
                 $results['errors'][] = [
                     'row' => $index + 1,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -165,7 +164,7 @@ class PropertyUnitBulkService
         }
 
         $value = strtolower(trim((string)$value));
-        
+
         if (in_array($value, ['1', 'yes', 'true', 'on'], true)) {
             return 1;
         }

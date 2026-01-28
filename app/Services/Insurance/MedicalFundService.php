@@ -12,7 +12,7 @@ class MedicalFundService
     /**
      * Create a new class instance.
      */
-    public function __construct( public MedicalFund $medicalfund)
+    public function __construct(public MedicalFund $medicalfund)
     {
     }
 
@@ -25,19 +25,20 @@ class MedicalFundService
         bool $IsActive,
         User $user
     ): self {
-         
+
         $medicalfund = MedicalFund::create([
-            'FundName'      => $FundName,
-            'ProviderId'    => $ProviderId->Id,
-            'CoverageType'  => $CoverageType->ID,
+            'FundName' => $FundName,
+            'ProviderId' => $ProviderId->Id,
+            'CoverageType' => $CoverageType->ID,
             'CoverageLimit' => $CoverageLimit,
-            'Description'   => $Description,
-            'IsActive'      => $IsActive ? 1 : 0,
-            'CreatedBy'     => $user->Id,
-            'ModifiedBy'    => $user->Id,
+            'Description' => $Description,
+            'IsActive' => $IsActive ? 1 : 0,
+            'CreatedBy' => $user->Id,
+            'ModifiedBy' => $user->Id,
         ]);
 
         activity()->causedBy($user->Id)->performedOn($medicalfund)->event('create')->log("Added Medical Fund {$medicalfund->Id}.");
+
         return new self($medicalfund);
     }
 
@@ -53,16 +54,17 @@ class MedicalFundService
     ): self {
         // Update the provided model instance (do not call update statically)
         $medicalfund->update([
-            'FundName'      => $FundName,
-            'ProviderId'    => $ProviderId->Id,
-            'CoverageType'  => $CoverageType->ID,
+            'FundName' => $FundName,
+            'ProviderId' => $ProviderId->Id,
+            'CoverageType' => $CoverageType->ID,
             'CoverageLimit' => $CoverageLimit,
-            'Description'   => $Description,
-            'IsActive'      => $IsActive ? 1 : 0,
-            'ModifiedBy'    => $user->Id,
+            'Description' => $Description,
+            'IsActive' => $IsActive ? 1 : 0,
+            'ModifiedBy' => $user->Id,
         ]);
 
         activity()->causedBy($user->Id)->performedOn($medicalfund)->event('update')->log("Updated Medical Fund {$medicalfund->Id}.");
+
         return new self($medicalfund);
     }
 }

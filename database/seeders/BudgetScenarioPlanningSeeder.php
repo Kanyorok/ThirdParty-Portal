@@ -17,13 +17,9 @@ class BudgetScenarioPlanningSeeder extends Seeder
 
         // Ensure dependencies exist
         $userId = DB::table('t_Users')->value('Id');
-        //$budgetPeriods = DB::table('t_BudgetPeriods')->pluck('Id')->toArray();
         $planningMethods = DB::table('t_BudgetPlanningMethods')->pluck('Id')->toArray();
 
-        // if (!$userId || empty($budgetPeriods) || empty($planningMethods)) {
         //     echo "❌ Missing required data: Users, BudgetPeriods, or PlanningMethods.\n";
-        //     return;
-        // }
 
         $scenarios = [
             'Base Case',

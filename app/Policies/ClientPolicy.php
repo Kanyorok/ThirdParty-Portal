@@ -22,9 +22,10 @@ class ClientPolicy
      */
     public function view(User $user, Client $client): bool
     {
-        if (!$user->can(PermissionEnum::Managers->value) && (User::query()->where('ClientID', $client->ClientID)->exists() || Board::query()->where('ClientID', $client->ClientID)->exists())) {
+        if (! $user->can(PermissionEnum::Managers->value) && (User::query()->where('ClientID', $client->ClientID)->exists() || Board::query()->where('ClientID', $client->ClientID)->exists())) {
             return false;
         }
+
         return $user->can(PermissionEnum::Members->value);
     }
 

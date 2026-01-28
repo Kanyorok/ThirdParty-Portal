@@ -110,6 +110,7 @@ class IntegrationRequest extends FormRequest
             return IntegrationsEnum::fromValue($this->validated('Integration'));
         } catch (ErroredException) {
         }
+
         throw new ErroredException('unknown integration given');
     }
 
@@ -120,7 +121,7 @@ class IntegrationRequest extends FormRequest
     {
         try {
             return Provider::from($this->validated('LLM_Provider'));
-        } catch (Exception|Throwable) {
+        } catch (Exception | Throwable) {
         }
 
         throw ValidationException::withMessages(['LLM_Provider' => 'unknown provider given']);
@@ -133,7 +134,7 @@ class IntegrationRequest extends FormRequest
     {
         try {
             return EmailEncryptionEnum::fromValue($this->validated('Outgoing_Encryption'));
-        } catch (Exception|Throwable) {
+        } catch (Exception | Throwable) {
         }
 
         throw ValidationException::withMessages(['Outgoing_Encryption' => 'unknown encryption given']);
@@ -146,7 +147,7 @@ class IntegrationRequest extends FormRequest
     {
         try {
             return EmailEncryptionEnum::fromValue($this->validated('Incoming_Encryption'));
-        } catch (Exception|Throwable) {
+        } catch (Exception | Throwable) {
         }
 
         throw ValidationException::withMessages(['Incoming_Encryption' => 'unknown encryption given']);
@@ -161,7 +162,7 @@ class IntegrationRequest extends FormRequest
             if (Http::get($this->validated('Channel_Callback'))->successful()) {
                 return $this->validated('Channel_Callback');
             }
-        } catch (Exception|Throwable) {
+        } catch (Exception | Throwable) {
         }
 
         throw ValidationException::withMessages(['Channel_Callback' => 'url given may not not reachable']);
@@ -173,7 +174,7 @@ class IntegrationRequest extends FormRequest
             if (Http::get($this->validated('iTrack_URl'))->successful()) {
                 return $this->validated('iTrack_URl');
             }
-        } catch (Exception|Throwable) {
+        } catch (Exception | Throwable) {
         }
 
         throw ValidationException::withMessages(['iTrack_URl' => 'url given may not not reachable']);
@@ -193,7 +194,6 @@ class IntegrationRequest extends FormRequest
         return $this->validated('SSRS_Host');
     }
 
-
     public function getCBSHost(): string
     {
         $credentials = collect([
@@ -212,8 +212,9 @@ class IntegrationRequest extends FormRequest
             if ($client->post($this->validated('CBS_Host') . '/Login', ['body' => $credentials->toJson()])->getStatusCode() === Response::HTTP_OK) {
                 return $this->validated('CBS_Host');
             }
-        } catch (GuzzleException|Exception) {
+        } catch (GuzzleException | Exception) {
         }
+
         throw ValidationException::withMessages([
             'CBS_Host' => 'host or credentials may be invalid ',
             'CBS_ConsumerKey' => 'key may be invalid',

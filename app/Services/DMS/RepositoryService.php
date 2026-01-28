@@ -39,7 +39,7 @@ class RepositoryService extends PermissionsService
     public static function getUserQuery(User $actor, array $parents = []): Builder
     {
         $query = Repository::query();
-        if (!empty($parents)) {
+        if (! empty($parents)) {
             $query->where(function (Builder $query) use ($parents) {
                 if (in_array(null, $parents, true)) {
                     $query->whereNull('ParentId');
@@ -47,7 +47,7 @@ class RepositoryService extends PermissionsService
                 $parents = array_filter($parents, static function ($var) {
                     return $var !== null;
                 });
-                if (!empty($parents)) {
+                if (! empty($parents)) {
                     $query->orWhereIn('ParentId', $parents);
                 }
             });
@@ -60,6 +60,7 @@ class RepositoryService extends PermissionsService
     {
         return Repository::query()->where('RepositoryId', (string)$module->value)->withTrashed()->firstOr(function () use ($module) {
             $actor = SystemHelper::user();
+
             return (new self(self::_create(Name: $module->description(), actor: $actor, repository: self::internal(), Description: $module->description() . ' Uploaded files', RepoId: $module->value)))
                 ->visibility(VisibilityEnum::Private, $actor)->repo;
         });
@@ -73,6 +74,7 @@ class RepositoryService extends PermissionsService
         if ($this->isRoot()) {
             throw new ErroredException('Cannot update root folder');
         }
+
         try {
             return DB::transaction(function () use ($visibility, $actor) {
                 $this->repo->update([
@@ -81,11 +83,13 @@ class RepositoryService extends PermissionsService
                 ]);
 
                 activity()->causedBy($actor)->performedOn($this->repo)->event('update')->log('Updated folder ' . $this->repo->Name . ' visibility : ' . $visibility->value);
+
                 return $this;
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error update repository visibility: ');
             Log::error($e);
+
             throw new ErroredException();
         }
     }
@@ -104,16 +108,16 @@ class RepositoryService extends PermissionsService
         try {
             $path = collect(DB::select(
                 "SELECT RepositoryId, Name FROM f_parent_repositories(?) WHERE RepositoryId <> 'root' ORDER BY ParentId",
-                [$this->repo->Id]));
+                [$this->repo->Id]
+            ));
 
             return '/' . $path->implode(function ($item) {
-                    return $item->Name;
-                }, '/');
-        } catch (Exception|Throwable $e) {
+                return $item->Name;
+            }, '/');
+        } catch (Exception | Throwable $e) {
             return '/??';
         }
     }
-
 
     /**
      * @throws ErroredException
@@ -123,6 +127,7 @@ class RepositoryService extends PermissionsService
         if ($this->isRoot()) {
             throw new ErroredException('Cannot update root folder');
         }
+
         try {
             return DB::transaction(function () use ($Name, $Description, $actor) {
                 $this->repo->update([
@@ -132,11 +137,13 @@ class RepositoryService extends PermissionsService
                 ]);
 
                 activity()->causedBy($actor)->performedOn($this->repo)->event('update')->log('Updated folder name : ' . $this->repo->Name);
+
                 return $this;
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error update repository: ');
             Log::error($e);
+
             throw new ErroredException();
         }
     }
@@ -149,6 +156,7 @@ class RepositoryService extends PermissionsService
         if (is_null($repository) && $RepoId !== self::ROOT) {
             throw new ErroredException('Please provide a repository to create a folder under');
         }
+
         try {
             return DB::transaction(static function () use ($repository, $Name, $Description, $actor, $RepoId) {
                 $visibility = (($repository instanceof Repository) && $repository->Visibility->value === VisibilityEnum::Private->value) ?
@@ -170,11 +178,13 @@ class RepositoryService extends PermissionsService
                 }
 
                 activity()->causedBy($actor)->performedOn($repo)->event('create')->log('Created folder : ' . $repo->Name);
+
                 return $repo;
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error creating repository: ');
             Log::error($e);
+
             throw new ErroredException();
         }
     }
@@ -194,6 +204,7 @@ class RepositoryService extends PermissionsService
     public function addPermission(User|Team $assignee, RoleEnum $role, User $actor, bool $notify = true): static
     {
         $this->_addPermissions($this->repo, $assignee, $role, $actor, $notify);
+
         return $this;
     }
 
@@ -205,6 +216,7 @@ class RepositoryService extends PermissionsService
     {
         return Repository::query()->where('RepositoryId', self::Internal)->withTrashed()->firstOr(function () {
             $actor = SystemHelper::user();
+
             return (new self(self::_create(Name: 'Internal', actor: $actor, repository: self::root(), Description: 'Internal Uploaded', RepoId: self::Internal)))
                 ->visibility(VisibilityEnum::Private, $actor)->repo;
         });
@@ -215,6 +227,7 @@ class RepositoryService extends PermissionsService
         if ($validationType === null) {
             return Repository::query()->where('RepositoryId', self::Validation)->withTrashed()->firstOr(function () {
                 $actor = SystemHelper::user();
+
                 return (new self(self::_create(Name: 'Document Validation', actor: $actor, repository: self::root(), Description: 'Document Validation', RepoId: self::Validation)))
                     ->visibility(VisibilityEnum::Public, $actor)->repo;
             });
@@ -222,11 +235,10 @@ class RepositoryService extends PermissionsService
 
         return Repository::query()->where('RepositoryId', $validationType->value)->withTrashed()->firstOr(function () use ($validationType) {
             $actor = SystemHelper::user();
+
             return (new self(self::_create(Name: $validationType->description(), actor: $actor, repository: self::validation(), Description: $validationType->description() . ' Uploaded files', RepoId: $validationType->value)))
                 ->visibility(VisibilityEnum::Public, $actor)->repo;
         });
-
-
     }
 
     public static function root(): Repository
@@ -248,6 +260,7 @@ class RepositoryService extends PermissionsService
     public function removePermission(SpecialPermission $permission, User $actor): static
     {
         $this->repo = $this->_trashPermissions($this->repo, $permission, $actor);
+
         return $this;
     }
 }

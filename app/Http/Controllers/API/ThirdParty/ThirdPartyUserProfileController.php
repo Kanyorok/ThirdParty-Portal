@@ -7,13 +7,12 @@ use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyUserProfileRequest as Third
 use App\Http\Resources\ThirdParty\ThirdPartyUserResource;
 use App\Models\ThirdParty\ThirdPartyUser;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Hash;
-
 
 class ThirdPartyUserProfileController extends Controller
 {
@@ -24,8 +23,8 @@ class ThirdPartyUserProfileController extends Controller
      */
     public function show(): JsonResponse
     {
-    /** @var ThirdPartyUser $user */
-    $user = Auth::guard('sanctum')->user();
+        /** @var ThirdPartyUser $user */
+        $user = Auth::guard('sanctum')->user();
         $user->load('thirdParty.categories');
 
         return response()->json([
@@ -41,11 +40,11 @@ class ThirdPartyUserProfileController extends Controller
      */
     public function update(ThirdPartyAuthUpdateThirdPartyUserProfileRequest $request): JsonResponse
     {
-    /** @var ThirdPartyUser $user */
-    $user = Auth::guard('sanctum')->user();
+        /** @var ThirdPartyUser $user */
+        $user = Auth::guard('sanctum')->user();
         $thirdParty = $user->thirdParty;
 
-        if (!$thirdParty) {
+        if (! $thirdParty) {
             return response()->json(['message' => __('auth.3rd_party_not_found')], 404);
         }
 
@@ -84,6 +83,7 @@ class ThirdPartyUserProfileController extends Controller
             });
         } catch (\Exception $e) {
             Log::error('Profile update failed: ' . $e->getMessage(), ['user_id' => Auth::id(), 'exception' => $e]);
+
             return response()->json(['message' => __('auth.profile_update_failed')], 500);
         }
 
@@ -104,11 +104,11 @@ class ThirdPartyUserProfileController extends Controller
      */
     public function partialUpdate(Request $request): JsonResponse
     {
-    /** @var ThirdPartyUser $user */
-    $user = Auth::guard('sanctum')->user();
+        /** @var ThirdPartyUser $user */
+        $user = Auth::guard('sanctum')->user();
         $thirdParty = $user->thirdParty;
 
-        if (!$thirdParty) {
+        if (! $thirdParty) {
             return response()->json(['message' => __('auth.3rd_party_not_found')], 404);
         }
 
@@ -153,7 +153,7 @@ class ThirdPartyUserProfileController extends Controller
                     'ImageId' => $validatedData['imageId'] ?? null,
                 ]);
 
-                if (!empty($userUpdateFields)) {
+                if (! empty($userUpdateFields)) {
                     $userUpdateFields['ModifiedBy'] = Auth::id();
                     $userUpdateFields['ModifiedOn'] = now();
                     $user->fill($userUpdateFields)->save();
@@ -172,7 +172,7 @@ class ThirdPartyUserProfileController extends Controller
                     'Website' => $validatedData['website'] ?? null,
                 ]);
 
-                if (!empty($thirdPartyUpdateFields)) {
+                if (! empty($thirdPartyUpdateFields)) {
                     $thirdPartyUpdateFields['ModifiedBy'] = Auth::id();
                     $thirdPartyUpdateFields['ModifiedOn'] = now();
                     $thirdParty->fill($thirdPartyUpdateFields)->save();
@@ -190,6 +190,7 @@ class ThirdPartyUserProfileController extends Controller
             ], 422);
         } catch (\Exception $e) {
             Log::error('Profile partial update failed: ' . $e->getMessage(), ['user_id' => Auth::id(), 'exception' => $e]);
+
             return response()->json(['message' => __('auth.profile_update_failed')], 500);
         }
 
@@ -210,8 +211,8 @@ class ThirdPartyUserProfileController extends Controller
      */
     public function changePassword(Request $request): JsonResponse
     {
-    /** @var ThirdPartyUser $user */
-    $user = Auth::guard('sanctum')->user();
+        /** @var ThirdPartyUser $user */
+        $user = Auth::guard('sanctum')->user();
 
         try {
             $request->validate([
@@ -219,7 +220,7 @@ class ThirdPartyUserProfileController extends Controller
                 'new_password' => ['required', 'string', 'min:8', 'confirmed'],
             ]);
 
-            if (!Hash::check($request->current_password, $user->Password)) {
+            if (! Hash::check($request->current_password, $user->Password)) {
                 throw ValidationException::withMessages([
                     'current_password' => [__('auth.password_mismatch')],
                 ]);
@@ -239,6 +240,7 @@ class ThirdPartyUserProfileController extends Controller
             ], 422);
         } catch (\Exception $e) {
             Log::error('Password change failed: ' . $e->getMessage(), ['user_id' => Auth::id(), 'exception' => $e]);
+
             return response()->json(['message' => __('auth.password_change_failed')], 500);
         }
     }
@@ -251,8 +253,8 @@ class ThirdPartyUserProfileController extends Controller
      */
     public function destroy(Request $request): JsonResponse
     {
-    /** @var ThirdPartyUser $user */
-    $user = Auth::guard('sanctum')->user();
+        /** @var ThirdPartyUser $user */
+        $user = Auth::guard('sanctum')->user();
 
         try {
             DB::transaction(function () use ($user, $request) {
@@ -265,6 +267,7 @@ class ThirdPartyUserProfileController extends Controller
             });
         } catch (\Exception $e) {
             Log::error('Profile deletion failed: ' . $e->getMessage(), ['user_id' => Auth::id(), 'exception' => $e]);
+
             return response()->json(['message' => __('auth.profile_delete_failed')], 500);
         }
 

@@ -2,28 +2,25 @@
 
 namespace App\Models\Inventory;
 
+use App\Models\Core\Branch;
 use App\Models\Procurement\GoodsReceipt;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Inventory\StockItem;
-use App\Models\Inventory\Store;
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Core\Branch;
 
 class StockGRNLedger extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_StockGRNLedger';
     protected $primaryKey = 'Id';
 
-    protected $fillable = [    
+    protected $fillable = [
         'GRNID',
         'GoodsReceiptId',
         'StockItemId',
@@ -40,7 +37,7 @@ class StockGRNLedger extends Model
         'ParentLedgerId',
         'CreatedBy',
         'CreatedOn',
-        'ModifiedOn',   
+        'ModifiedOn',
         'DeletedOn',
         'ModifiedBy',
         'DeletedBy',
@@ -95,6 +92,7 @@ class StockGRNLedger extends Model
         while ($current->parentLedger) {
             $current = $current->parentLedger;
         }
+
         return $current->GRNID;
     }
 
@@ -105,6 +103,7 @@ class StockGRNLedger extends Model
         while ($current->parentLedger) {
             $current = $current->parentLedger;
         }
+
         return $current->goodsReceipt;
     }
 }

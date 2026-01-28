@@ -3,10 +3,7 @@
 namespace App\Http\Requests\Inventory;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class StoreRequest extends FormRequest
 {
@@ -35,7 +32,7 @@ class StoreRequest extends FormRequest
                 Rule::unique('t_Stores', 'StoreName')
                     ->ignore($storeId)
                     ->where('BranchID', $this->BranchID)
-                    ->whereNull('DeletedOn'), 
+                    ->whereNull('DeletedOn'),
             ],
             'BranchID' => 'required|integer|exists:t_Branches,Id',
             'Status' => 'required|boolean',
@@ -48,6 +45,7 @@ class StoreRequest extends FormRequest
                         $branchId = $this->BranchID ?? null;
                         if (! $branchId) {
                             $fail('Branch must be specified when marking a store as main.');
+
                             return;
                         }
 

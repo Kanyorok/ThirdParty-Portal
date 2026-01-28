@@ -2,14 +2,11 @@
 
 namespace App\Policies\FleetManagement;
 
-use App\Models\Auth\User;
 use App\Enums\Core\PermissionEnum;
-use App\Models\Fleet\FleetVehicleInspection;
-use Illuminate\Auth\Access\Response;
+use App\Models\Auth\User;
 
 class FleetVehicleInspectionPolicy
 {
-
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::VehicleInspectionView->value);
@@ -55,8 +52,4 @@ class FleetVehicleInspectionPolicy
     {
         return $user->can(PermissionEnum::VehicleInspectionUpdate->value);
     }
-
 }
-
-
-

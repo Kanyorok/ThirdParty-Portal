@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Models\Auth\User;
 use App\Models\HRM\Employee;
+use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQCommittee;
 use App\Models\Procurement\RFQCommitteeMember;
 use App\Models\Procurement\Tender;
@@ -16,12 +16,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Procurement\RFQ;
 
 class TenderCommitteeController extends Controller
 {
-    //
-
     public function index(Request $request)
     {
         // Tender Committees
@@ -47,7 +44,6 @@ class TenderCommitteeController extends Controller
                 'appointment_date' => $item->AppointmentDate,
             ];
         });
-//dd($rfqCommittees);
         // Combine both and sort
         $committeesCollection = collect($tenderCommittees)
             ->merge($rfqCommittees)
@@ -73,14 +69,13 @@ class TenderCommitteeController extends Controller
         ));
     }
 
-    public function create(){
+    public function create()
+    {
         return view('procurement.tendering.bidopeningandevaluation.committeeappointment.create');
     }
 
-
     public function store(Request $request)
     {
-        //dd($request->all());
         $request->validate([
             'committeeType' => 'required|in:tender,rfq',
             'referenceId' => 'required|integer',
@@ -89,6 +84,7 @@ class TenderCommitteeController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $userId = Auth::id();
             $now = Carbon::now();
@@ -160,9 +156,7 @@ class TenderCommitteeController extends Controller
 
             return redirect()->back()->with('error', 'Failed to appoint Committee: ' . $th->getMessage());
         }
-
     }
-
 
     public function show($id, $type)
     {
@@ -171,7 +165,7 @@ class TenderCommitteeController extends Controller
 
         if ($type === 'tender') {
             $tender = Tender::find($id);
-            if (!$tender) {
+            if (! $tender) {
                 return redirect()->back()->with('error', 'Tender not found with ID: ' . $id);
             }
             $title = $tender->Title;
@@ -180,7 +174,7 @@ class TenderCommitteeController extends Controller
                 ->get();
         } elseif ($type === 'rfq') {
             $rfq = RFQ::find($id);
-            if (!$rfq) {
+            if (! $rfq) {
                 return redirect()->back()->with('error', 'RFQ not found with ID: ' . $id);
             }
             $title = $rfq->RFQNumber;
@@ -188,6 +182,7 @@ class TenderCommitteeController extends Controller
                 ->with(['user.employee'])
                 ->get();
         }
+
         return view('procurement.tendering.bidopeningandevaluation.committeeappointment.TenderMembers', [
             'committeeMembers' => $committeeMembers,
             'tenderTitle' => $title,
@@ -195,7 +190,6 @@ class TenderCommitteeController extends Controller
             'committeeType' => $type,
         ]);
     }
-
 
     public function membersAdd(Request $request)
     {
@@ -210,6 +204,7 @@ class TenderCommitteeController extends Controller
         $userId = Auth::id();
 
         DB::beginTransaction();
+
         try {
             foreach ($request->memberID as $index => $userID) {
                 $role = $request->memberRole[$index];
@@ -220,7 +215,7 @@ class TenderCommitteeController extends Controller
                         ->update([
                             'Role' => $role,
                             'ModifiedBy' => $userId,
-                            'ModifiedOn' => $now
+                            'ModifiedOn' => $now,
                         ]);
                 } elseif ($request->committeeType === 'rfq') {
                     \App\Models\Procurement\RFQCommitteeMember::where('RFQID', $request->tenderID)
@@ -228,7 +223,7 @@ class TenderCommitteeController extends Controller
                         ->update([
                             'Role' => $role,
                             'ModifiedBy' => $userId,
-                            'ModifiedOn' => $now
+                            'ModifiedOn' => $now,
                         ]);
                 }
             }
@@ -264,6 +259,4 @@ class TenderCommitteeController extends Controller
 
         return response()->json($data);
     }
-
-
 }

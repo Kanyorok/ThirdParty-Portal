@@ -2,9 +2,8 @@
 
 namespace App\Models\Finance;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Core\Currency;
-use App\Models\Finance\FinanceGLAccounts;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class BankAccount extends Model
@@ -14,8 +13,8 @@ class BankAccount extends Model
 
     // Map timestamps to your audit columns
     public $timestamps = true;
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
 
     protected $fillable = [
         'BankID', 'BranchID', 'AccountName', 'AccountNumber', 'IBAN',

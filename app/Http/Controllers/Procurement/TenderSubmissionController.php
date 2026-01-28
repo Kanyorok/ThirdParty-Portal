@@ -4,12 +4,11 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\BidSubmission;
-use Illuminate\Http\Request;
 use App\Models\Procurement\Tender;
 use App\Models\ThirdParies\Supplier;
 use App\Services\Procurement\EncryptedBidDocumentService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
 
 class TenderSubmissionController extends Controller
 {
@@ -19,10 +18,11 @@ class TenderSubmissionController extends Controller
         $submissions = BidSubmission::with([
             'submissionMode',
             'createdByUser',
-            'supplier.supplierMaster.party'
+            'supplier.supplierMaster.party',
         ])
             ->orderBy('CreatedOn', 'desc')
             ->get();
+
         return view('procurement.tendering.suppliermanagement.bidsubmission.index', compact('submissions'));
     }
 
@@ -45,19 +45,22 @@ class TenderSubmissionController extends Controller
         $submissionModes = DB::table('t_CodeDetails')
             ->where('CodeID', 'SubmissionMode')
             ->get(['ID', 'Description']);
+
         return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes'));
     }
+
     public function view($Id)
     {
         $submission = BidSubmission::findOrFail($Id);
+
         return view('procurement.tendering.suppliermanagement.bidsubmission.view', compact('submission'));
     }
 
     public function edit($Id)
     {
         $submission = BidSubmission::findOrFail($Id);
-        //return view('procurement.tendering.suppliermanagement.bidsubmission.edit', compact('submission'));
     }
+
     public function store(Request $request)
     {
         // Validate the input
@@ -77,7 +80,7 @@ class TenderSubmissionController extends Controller
             ->where('Description', $request->submission_mode)
             ->value('ID');
 
-        if (!$submissionModeId) {
+        if (! $submissionModeId) {
             return redirect()->back()->withErrors(['submission_mode' => 'Invalid submission mode selected.']);
         }
 
@@ -103,6 +106,7 @@ class TenderSubmissionController extends Controller
         }
 
         DB::beginTransaction();
+
         try {
             // Create bid submission record
             $bidSubmission = BidSubmission::create([

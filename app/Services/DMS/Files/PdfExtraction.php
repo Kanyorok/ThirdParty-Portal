@@ -30,6 +30,7 @@ class PdfExtraction extends FileExtraction
         if ($content !== '') {
             return $this->handleContent($content);
         }
+
         return $this->handleContent();
     }
 
@@ -39,7 +40,7 @@ class PdfExtraction extends FileExtraction
             return '';
         }
 
-        if (!self::isInstalled()) {
+        if (! self::isInstalled()) {
             return '';
         }
 
@@ -55,14 +56,16 @@ class PdfExtraction extends FileExtraction
     {
         if (shell_exec("command -v pdfinfo") === null) {
             SystemHelper::notifyAdmin('pdfinfo command not found. Please install poppler-utils package.');
+
             return false;
         }
+
         return true;
     }
 
     public function ocr(string $filePath): string
     {
-        if (!self::isInstalled()) {
+        if (! self::isInstalled()) {
             return '';
         }
 
@@ -92,6 +95,7 @@ class PdfExtraction extends FileExtraction
 
         if (str_contains($output, 'Error:')) {
             Log::error("Error executing pdftocairo: " . $output);
+
             return '';
         }
 
@@ -99,7 +103,7 @@ class PdfExtraction extends FileExtraction
         $id = 1;
         $filename = $outputPrefix . '-' . $id . '.jpg';
         $filePath = $outputDir . $filename;
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             return '';
         }
         do {
@@ -112,5 +116,4 @@ class PdfExtraction extends FileExtraction
 
         return $content;
     }
-
 }

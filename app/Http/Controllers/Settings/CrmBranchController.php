@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Settings;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\BranchRequest;
-
-//use App\Models\BR\Branch;
 use App\Models\Core\Branch;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -18,14 +16,11 @@ use Illuminate\View\View;
 use Throwable;
 use Yajra\DataTables\DataTables;
 
-#use App\Models\BR\Branch;
-
 class CrmBranchController extends Controller
 {
     public function __construct()
     {
         $this->middleware('ajax')->except('index');
-        // $this->authorizeResource(Branch::class);
     }
 
     /**
@@ -50,6 +45,7 @@ class CrmBranchController extends Controller
                     if (auth()->user()->can(PermissionEnum::BranchDelete->value)) {
                         $actions .= '<button type="button" class="btn btn-danger btn-sm branch-action-trash" data-info="' . $branch->BranchID . '~' . $branch->Name . '"  data-route="' . route('branches.destroy', [$branch->Id]) . '"><i class="fas fa-trash"></i> Trash</button>';
                     }
+
                     return $actions;
                 })->addColumn('Manager', function (Branch $branch) {
                     return $branch->manager?->Name;
@@ -61,6 +57,7 @@ class CrmBranchController extends Controller
                     return $branch->operation?->Name;
                 })->rawColumns(['action', 'Manager', 'Operation'])->make();
         }
+
         return view('settings.branches.index');
     }
 
@@ -75,6 +72,7 @@ class CrmBranchController extends Controller
         $Operation = $request->getOperation()?->Id ?? null;
         $branchID = $request->getBranchID();
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($branchID, $Operation, $actor, $request, $userID) {
                 $crmBranch = Branch::create([
@@ -96,6 +94,7 @@ class CrmBranchController extends Controller
             });
         } catch (Throwable | Exception $e) {
             Log::error('Error creating branch failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -108,6 +107,7 @@ class CrmBranchController extends Controller
         $userID = $request->getManager()?->Id ?? null;
         $Operation = $request->getOperation()?->Id ?? null;
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($crmBranch, $Operation, $actor, $request, $userID) {
 
@@ -126,6 +126,7 @@ class CrmBranchController extends Controller
             });
         } catch (Throwable | Exception $e) {
             Log::error('Error updating branch failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -135,6 +136,7 @@ class CrmBranchController extends Controller
     public function destroy(Request $request, Branch $crmBranch): JsonResponse
     {
         $this->authorize('delete', $crmBranch);
+
         try {
             DB::transaction(static function () use ($request, $crmBranch) {
                 $crmBranch->forceFill([
@@ -144,6 +146,7 @@ class CrmBranchController extends Controller
             });
         } catch (Throwable | Exception $e) {
             Log::error('Error trashing branch failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

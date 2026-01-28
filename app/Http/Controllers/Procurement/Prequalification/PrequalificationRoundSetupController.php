@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Procurement\Prequalification;
 
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\Criteria;
 use App\Models\Procurement\Prequalification\PrequalificationRound;
 use App\Models\Procurement\Section;
-use App\Models\Procurement\Criteria;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class PrequalificationRoundSetupController extends Controller
 {
@@ -51,9 +51,11 @@ class PrequalificationRoundSetupController extends Controller
         ]);
 
         // Enforce: total section weights must equal 100 (tolerance 0.01)
-        $totalWeight = collect($validatedData['sections'] ?? [])->sum(function ($s) { return (float)($s['weight'] ?? 0); });
+        $totalWeight = collect($validatedData['sections'] ?? [])->sum(function ($s) {
+            return (float)($s['weight'] ?? 0);
+        });
         if (abs($totalWeight - 100.0) > 0.01) {
-            return back()->withInput()->withErrors(['sections' => 'Total section weight must equal 100%. Current total is '.number_format($totalWeight,2).'%.']);
+            return back()->withInput()->withErrors(['sections' => 'Total section weight must equal 100%. Current total is ' . number_format($totalWeight, 2) . '%.']);
         }
 
         // Enforce: each selected section must have at least one included criterion
@@ -64,12 +66,12 @@ class PrequalificationRoundSetupController extends Controller
             // Need to map criteriaId -> SectionId; fetch minimal map once
             $criteriaBySection[$criteriaId] = $criteriaBySection[$criteriaId] ?? null;
         }
-        if (!empty($sectionsSubmitted)) {
+        if (! empty($sectionsSubmitted)) {
             // Build CriteriaId -> SectionId map for submitted criteria set
             $map = DB::table('t_Criterias as c')
-                ->select('c.Id as CriteriaId','c.SectionID as SectionId')
+                ->select('c.Id as CriteriaId', 'c.SectionID as SectionId')
                 ->whereIn('c.Id', array_keys($criteriaSubmitted))
-                ->pluck('SectionId','CriteriaId');
+                ->pluck('SectionId', 'CriteriaId');
 
             $errors = [];
             foreach ($sectionsSubmitted as $sectionId) {
@@ -78,14 +80,15 @@ class PrequalificationRoundSetupController extends Controller
                     $included = (bool)($payload['included'] ?? false);
                     if ($included && (int)($map[$criteriaId] ?? 0) === (int)$sectionId) {
                         $hasIncluded = true;
+
                         break;
                     }
                 }
-                if (!$hasIncluded) {
+                if (! $hasIncluded) {
                     $errors["sections.$sectionId"] = 'At least one criterion must be included for this section.';
                 }
             }
-            if (!empty($errors)) {
+            if (! empty($errors)) {
                 return back()->withInput()->withErrors($errors);
             }
         }
@@ -120,6 +123,7 @@ class PrequalificationRoundSetupController extends Controller
                 ->with('success', 'Prequalification criteria configured successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->with('error', 'Failed to configure criteria: ' . $e->getMessage());
         }
     }

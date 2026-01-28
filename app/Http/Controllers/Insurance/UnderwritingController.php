@@ -40,7 +40,7 @@ class UnderwritingController extends Controller
             ->where('p.Id', $id)
             ->first();
 
-        if (!$policy) {
+        if (! $policy) {
             abort(404, 'Policy not found');
         }
 
@@ -53,7 +53,7 @@ class UnderwritingController extends Controller
         $request->validate([
             'UnderwriterComments' => 'required|string',
             'RiskRating' => 'required|string',
-            'Decision' => 'required|string'
+            'Decision' => 'required|string',
         ]);
 
         // Insert into underwriting table
@@ -64,7 +64,7 @@ class UnderwritingController extends Controller
             'Decision' => $request->Decision,
             'DecisionDate' => now(),
             'DecidedBy' => auth()->id(),
-            'CreatedAt' => now()
+            'CreatedAt' => now(),
         ]);
 
         // Update policy status based on decision
@@ -79,7 +79,7 @@ class UnderwritingController extends Controller
             ->update([
                 'Status' => $status,
                 'ModifiedBy' => auth()->id(),
-                'ModifiedOn' => now()
+                'ModifiedOn' => now(),
             ]);
 
         return redirect()->route('bancassurance.underwriting.index')

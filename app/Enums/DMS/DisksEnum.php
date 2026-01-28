@@ -20,12 +20,13 @@ enum DisksEnum: string
     {
         if ($this->value === self::Local->value) {
             $path = date('Y') . '/' . date('m');
-            if (!Storage::disk($this->value)->exists($path) && !Storage::disk($this->value)->makeDirectory($path)) {
+            if (! Storage::disk($this->value)->exists($path) && ! Storage::disk($this->value)->makeDirectory($path)) {
                 throw new ErroredException('Could not create directory');
             }
 
             return $path;
         }
+
         throw new ErroredException('Could not create directory');
     }
 }

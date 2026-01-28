@@ -17,6 +17,7 @@ class RFQSettingSectionController extends Controller
     public function index()
     {
         $sections = RFQSettingSection::all();
+
         return view('procurement.rfqs.settings.sections', compact('sections'));
     }
 
@@ -31,6 +32,7 @@ class RFQSettingSectionController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             RFQSettingSection::create([
                 'SectionName' => $request->input('name'),
@@ -45,6 +47,7 @@ class RFQSettingSectionController extends Controller
                 ->log('Created a new RFQ section: ' . $request->input('name'));
 
             DB::commit();
+
             return back()->with('success', 'Section created successfully');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -81,7 +84,7 @@ class RFQSettingSectionController extends Controller
             ->causedBy(auth()->user())
             ->withProperties([
                 'old' => $oldValues,
-                'new' => $section->getChanges()
+                'new' => $section->getChanges(),
             ])
             ->log('Updated RFQ section: ' . $section->SectionName);
 
@@ -109,6 +112,7 @@ class RFQSettingSectionController extends Controller
 
         return redirect()->back()->with('success', 'Section deleted successfully.');
     }
+
     public function show(string $id)
     {
         Log::info('Show method called with ID: ' . $id);
@@ -123,4 +127,3 @@ class RFQSettingSectionController extends Controller
         return view('procurement.rfqs.settings.section-show', compact('section'));
     }
 }
-

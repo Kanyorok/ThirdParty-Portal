@@ -10,12 +10,15 @@ use Illuminate\Queue\SerializesModels;
 
 class ProfileApprovalStatusChangedEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     public function __construct(
         public SupplierMaster $supplier,
         public ThirdPartyApprovalStatusEnum $oldStatus,
         public ThirdPartyApprovalStatusEnum $newStatus,
         public ?int $approvedBy = null
-    ) {}
+    ) {
+    }
 }

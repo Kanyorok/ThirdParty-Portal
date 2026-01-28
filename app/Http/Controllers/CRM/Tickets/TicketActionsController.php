@@ -69,8 +69,9 @@ class TicketActionsController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error update ticket assignee ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -81,40 +82,40 @@ class TicketActionsController extends Controller
      * @throws ValidationException
      * @throws AuthorizationException
      */
-   public function priority(Request $request, Ticket $ticket): JsonResponse
-{
-    $this->authorize('update', $ticket);
+    public function priority(Request $request, Ticket $ticket): JsonResponse
+    {
+        $this->authorize('update', $ticket);
 
-    $request->validate([
-        'ticket_priority' => ['required', Rule::enum(TicketPriorityEnum::class)],
-    ]);
-
-    try {
-        $priority = TicketPriorityEnum::fromValue($request->get('ticket_priority'));
-    } catch (ErroredException $e) {
-        throw ValidationException::withMessages([
-            'ticket_priority' => 'Invalid priority value.',
+        $request->validate([
+            'ticket_priority' => ['required', Rule::enum(TicketPriorityEnum::class)],
         ]);
+
+        try {
+            $priority = TicketPriorityEnum::fromValue($request->get('ticket_priority'));
+        } catch (ErroredException $e) {
+            throw ValidationException::withMessages([
+                'ticket_priority' => 'Invalid priority value.',
+            ]);
+        }
+
+        if ($ticket->status->ID !== TicketStatusEnum::Active->codeDetail()->ID) {
+            return $this->errored('Ticket is not active');
+        }
+
+        try {
+            DB::transaction(function () use ($priority, $ticket) {
+                $this->service($ticket)->priority($priority);
+            });
+        } catch (ErroredException $e) {
+            return $e->toJson();
+        } catch (Exception | Throwable $e) {
+            Log::error('Error updating ticket priority: ' . $e->getMessage());
+
+            return $this->errored('Unexpected error, try again later');
+        }
+
+        return $this->succeeded('Ticket priority changed', route('tickets.show', [$ticket->TicketID]));
     }
-
-    if ($ticket->status->ID !== TicketStatusEnum::Active->codeDetail()->ID) {
-        return $this->errored('Ticket is not active');
-    }
-
-    try {
-        DB::transaction(function () use ($priority, $ticket) {
-            $this->service($ticket)->priority($priority);
-        });
-    } catch (ErroredException $e) {
-        return $e->toJson();
-    } catch (Exception|Throwable $e) {
-        Log::error('Error updating ticket priority: ' . $e->getMessage());
-        return $this->errored('Unexpected error, try again later');
-    }
-
-    return $this->succeeded('Ticket priority changed', route('tickets.show', [$ticket->TicketID]));
-}
-
 
     /**
      * @throws AuthorizationException|ErroredException
@@ -139,14 +140,14 @@ class TicketActionsController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error update ticket priority ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
         return $this->succeeded('ticket resolved.', route('tickets.show', [$ticket->TicketID]));
     }
-
 
     /**
      * @throws AuthorizationException
@@ -161,8 +162,9 @@ class TicketActionsController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error upload ticket document : ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

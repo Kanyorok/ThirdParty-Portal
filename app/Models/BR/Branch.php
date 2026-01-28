@@ -13,7 +13,6 @@ class Branch extends Model
     protected $primaryKey = 'OurBranchID';
     public $incrementing = false;
     protected $keyType = 'string';
-    //protected $connection = 'brcbs';
     // //protected $table = 't_SystemBranchSetting';
 
     public static function getPrimaryKey(): string

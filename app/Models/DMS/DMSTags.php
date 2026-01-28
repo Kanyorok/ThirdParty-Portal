@@ -14,11 +14,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DMSTags extends Model
 {
-    use SoftDeletes, UserActorTrait, SpecialPermissionTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use SpecialPermissionTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const string CREATED_AT = 'CreatedOn';
+    public const string UPDATED_AT = 'ModifiedOn';
+    public const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_DMSTags';
     protected $primaryKey = 'Id';

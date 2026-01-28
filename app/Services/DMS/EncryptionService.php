@@ -7,7 +7,8 @@ use SensitiveParameter;
 
 class EncryptionService
 {
-    protected string $Key, $Cypher;
+    protected string $Key;
+    protected string $Cypher;
 
     public function __construct()
     {
@@ -24,5 +25,4 @@ class EncryptionService
     {
         return (new Encrypter($this->Key, $this->Cypher))->decryptString($crypticKey);
     }
-
 }

@@ -45,10 +45,10 @@ class ListService
     public function update(string $label, User $actor, VisibilityEnum $visibility, string $notes = ''): static
     {
         $this->list->update([
-                             'Label'      => $label,
-                             'Notes'      => $notes,
+                             'Label' => $label,
+                             'Notes' => $notes,
                              'Visibility' => $visibility->value,
-                             'CreatedBy'  => $actor->Id,
+                             'CreatedBy' => $actor->Id,
                              'ModifiedBy' => $actor->Id,
                             ]);
 
@@ -78,13 +78,13 @@ class ListService
     {
         $list = new MarketingList();
         $list->fill([
-                     'slug'       => Str::slug(Str::limit($label, 70, '') . ' ' . Str::random(7)),
-                     'Label'      => $label,
-                     'Type'       => $type->value,
+                     'slug' => Str::slug(Str::limit($label, 70, '') . ' ' . Str::random(7)),
+                     'Label' => $label,
+                     'Type' => $type->value,
                      'Visibility' => $visibility->value,
-                     'Notes'      => $notes,
-                     'Source'     => $Source,
-                     'CreatedBy'  => $actor->Id,
+                     'Notes' => $notes,
+                     'Source' => $Source,
+                     'CreatedBy' => $actor->Id,
                      'ModifiedBy' => $actor->Id,
                     ])->save();
 
@@ -100,6 +100,7 @@ class ListService
         }
 
         $this->_removeParty($ClientIDs, Client::getPrimaryKey(), $actor);
+
         return $this;
     }
 
@@ -127,6 +128,7 @@ class ListService
         }
 
         $this->_removeParty($AccountIDs, DebtProduct::getPrimaryKey(), $actor);
+
         return $this;
     }
 
@@ -150,12 +152,12 @@ class ListService
             foreach ($chunk as $PartyID) {
                 $data->add([
                             'MarketingListId' => $this->list->MarketingListID,
-                            "Party"           => $Party,
-                            "PartyID"         => $PartyID,
-                            'CreatedBy'       => $actor->Id,
-                            'ModifiedBy'      => $actor->Id,
-                            'CreatedOn'       => $dated,
-                            'ModifiedOn'      => $dated,
+                            "Party" => $Party,
+                            "PartyID" => $PartyID,
+                            'CreatedBy' => $actor->Id,
+                            'ModifiedBy' => $actor->Id,
+                            'CreatedOn' => $dated,
+                            'ModifiedOn' => $dated,
                            ]);
             }
 
@@ -178,8 +180,10 @@ class ListService
                 return (new DynamicListService($this->list))->query()->count();
             } catch (ErroredException $e) {
             }
+
             return 0;
         }
+
         return $this->list->parties()->count();
     }
 
@@ -217,6 +221,7 @@ class ListService
         }
 
         $this->_removeParty($LeadIDs, Lead::getPrimaryKey(), $actor);
+
         return $this;
     }
 }

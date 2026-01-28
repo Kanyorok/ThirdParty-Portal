@@ -16,12 +16,13 @@ class RepositoryResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return array_merge(($this->minified) ? [] :
+        return array_merge(
+            ($this->minified) ? [] :
             [
                 'files' => [
                     'count' => (int)$this->documents_count,
-                    'string' => number_format((int)$this->documents_count)
-                ]
+                    'string' => number_format((int)$this->documents_count),
+                ],
             ],
             [
                 'id' => $this->RepositoryId,
@@ -39,14 +40,16 @@ class RepositoryResource extends JsonResource
                 'links' => [
                     'route' => route('repo.show', $this->RepositoryId),
                     'summary' => route('repo.edit', $this->RepositoryId),
-                    'move' => route('repo-move.index', $this->RepositoryId)
-                ]
-            ]);
+                    'move' => route('repo-move.index', $this->RepositoryId),
+                ],
+            ]
+        );
     }
 
     public function setMinified(bool $minified = false): static
     {
         $this->minified = $minified;
+
         return $this;
     }
 }

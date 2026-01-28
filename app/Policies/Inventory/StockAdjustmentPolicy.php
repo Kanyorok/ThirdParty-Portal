@@ -5,7 +5,6 @@ namespace App\Policies\Inventory;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Inventory\StockAdjustment;
-use Illuminate\Auth\Access\Response;
 
 class StockAdjustmentPolicy
 {
@@ -64,11 +63,4 @@ class StockAdjustmentPolicy
     {
         return $user->can(PermissionEnum::StockAdjustmentApproval->value);
     }
-
-
 }
-
-
-
-
-

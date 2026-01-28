@@ -40,7 +40,7 @@ class NewThirdPartyRequest extends FormRequest
                 Rule::email()->rfcCompliant(strict: false)->preventSpoofing(),
                 'max:250',
             ],
-            'Phone' => ['required', (new Phone)->countryField('Country')],
+            'Phone' => ['required', (new Phone())->countryField('Country')],
             'PhysicalAddress' => ['nullable', 'string', 'max:200'],
             'types' => ['required', 'array', 'min:1'],
             'logo' => ['nullable', Rule::imageFile()->max(9000)],
@@ -58,12 +58,12 @@ class NewThirdPartyRequest extends FormRequest
             'user_Gender' => ['nullable', Rule::requiredIf($this->boolean('createUser')), 'string', 'max:200'],
             'user_Password' => [
                 'nullable',
-                Rule::requiredIf($this->boolean('createUser') && !$this->user()),
+                Rule::requiredIf($this->boolean('createUser') && ! $this->user()),
                 'string',
                 'min:8',
-                'confirmed'
+                'confirmed',
             ],
-            'user_Password_confirmation' => ['nullable', Rule::requiredIf($this->boolean('createUser') && !$this->user()), 'string'],
+            'user_Password_confirmation' => ['nullable', Rule::requiredIf($this->boolean('createUser') && ! $this->user()), 'string'],
 
             'customer_DateOfBirth' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'date'],
             'customer_Gender' => ['nullable', Rule::requiredIf(in_array(ThirdPartyService::TypeCustomer, $this->array('types'), true)), 'string', 'max:200'],
@@ -80,6 +80,7 @@ class NewThirdPartyRequest extends FormRequest
         if ($occupation instanceof CodeDetail) {
             return $occupation;
         }
+
         throw ValidationException::withMessages(['customer_Occupation' => 'Occupation is not a valid Occupation.']);
     }
 
@@ -89,6 +90,7 @@ class NewThirdPartyRequest extends FormRequest
         if ($maritalStatus instanceof CodeDetail) {
             return $maritalStatus;
         }
+
         throw ValidationException::withMessages(['customer_MaritalStatus' => 'Marital Status is not a valid Marital Status.']);
     }
 
@@ -98,6 +100,7 @@ class NewThirdPartyRequest extends FormRequest
         if ($gender instanceof CodeDetail) {
             return $gender;
         }
+
         throw ValidationException::withMessages(['Gender' => 'Gender is not a valid Gender.']);
     }
 
@@ -107,6 +110,7 @@ class NewThirdPartyRequest extends FormRequest
         if ($image instanceof UploadedFile) {
             return $image;
         }
+
         return null;
     }
 
@@ -116,6 +120,7 @@ class NewThirdPartyRequest extends FormRequest
         if ($type instanceof CodeDetail) {
             return $type;
         }
+
         throw ValidationException::withMessages(['BusinessType' => 'Business Type is not a valid Business Type.']);
     }
 
@@ -125,6 +130,7 @@ class NewThirdPartyRequest extends FormRequest
         if ($country instanceof Country) {
             return $country;
         }
+
         throw ValidationException::withMessages(['Country' => 'Country is not a valid country.']);
     }
 
@@ -134,6 +140,7 @@ class NewThirdPartyRequest extends FormRequest
         if ($phoneNumber->isValid()) {
             return $phoneNumber->formatE164();
         }
+
         throw ValidationException::withMessages([$field => 'invalid phone number provided.']);
     }
 
@@ -151,7 +158,7 @@ class NewThirdPartyRequest extends FormRequest
     {
         return [
             'Phone.*' => 'invalid phone number provided.',
-            'user_Phone.*' => 'invalid phone number provided.'
+            'user_Phone.*' => 'invalid phone number provided.',
         ];
     }
 }

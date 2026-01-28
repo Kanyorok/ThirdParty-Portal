@@ -11,7 +11,7 @@ class RFQResponseItem extends Model
     protected $primaryKey = 'Id';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'RfqResponseId', 'ItemName', 'UOM', 'Quantity', 'QuotedPrice', 'TotalPayable', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
@@ -26,5 +26,4 @@ class RFQResponseItem extends Model
     {
         return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
     }
-
 }

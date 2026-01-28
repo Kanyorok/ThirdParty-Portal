@@ -38,9 +38,10 @@ class CallService
     public function setSource(string $Source, string $SourceID): static
     {
         $this->call->update([
-                             'Source'   => $Source,
+                             'Source' => $Source,
                              'SourceID' => $SourceID,
                             ]);
+
         return $this;
     }
 
@@ -61,23 +62,23 @@ class CallService
 
     private static function _start(CallStatusEnum $callStatus, CallTypeEnum $callTypeEnum, string $Party, string $PartyID, Carbon $start, User $actor, Schedule $schedule = null): CallService
     {
-        $call =  Call::create([
-                               'ScheduleID'   => ($schedule instanceof Schedule) ? $schedule->ScheduleID : null,
-                               "Party"        => $Party,
-                               "PartyID"      => $PartyID,
-                               'UserID'       => $actor->Id,
-                               'StartOn'      => $start,
+        $call = Call::create([
+                               'ScheduleID' => ($schedule instanceof Schedule) ? $schedule->ScheduleID : null,
+                               "Party" => $Party,
+                               "PartyID" => $PartyID,
+                               'UserID' => $actor->Id,
+                               'StartOn' => $start,
                                'CallStatusID' => $callStatus->value,
-                               'CallTypeID'   => $callTypeEnum->value,
-                               'CreatedBy'    => $actor->Id,
-                               'ModifiedBy'   => $actor->Id,
+                               'CallTypeID' => $callTypeEnum->value,
+                               'CreatedBy' => $actor->Id,
+                               'ModifiedBy' => $actor->Id,
                               ]);
 
 
         if ($schedule instanceof Schedule) {
             $schedule->update([
                                'ScheduleStatusID' => ScheduleStatusEnum::Success,
-                               'ScheduledTypeID'  => $call->CallID,
+                               'ScheduledTypeID' => $call->CallID,
                               ]);
         }
 
@@ -102,17 +103,17 @@ class CallService
     public function discussion(string $discussion, User $actor, string $notes = null): static
     {
         $d = $this->call->discussion()->first();
-        if (!$d instanceof Discussion) {
+        if (! $d instanceof Discussion) {
             $discussionID = Discussion::insertGetId([
-                                                     'CreatedBy'    => $actor->Id,
-                                                     'SourceType'   => Call::getPrimaryKey(),
+                                                     'CreatedBy' => $actor->Id,
+                                                     'SourceType' => Call::getPrimaryKey(),
                                                      'SourceTypeID' => $this->call->CallID,
-                                                     "Party"        => $this->call->Party,
-                                                     "PartyID"      => $this->call->PartyID,
-                                                     'ModifiedBy'   => $actor->Id,
-                                                     'Discussion'   => $discussion,
-                                                     'CreatedOn'    => now(),
-                                                     'ModifiedOn'   => now(),
+                                                     "Party" => $this->call->Party,
+                                                     "PartyID" => $this->call->PartyID,
+                                                     'ModifiedBy' => $actor->Id,
+                                                     'Discussion' => $discussion,
+                                                     'CreatedOn' => now(),
+                                                     'ModifiedOn' => now(),
                                                     ]);
         } else {
             $d->update([
@@ -123,27 +124,28 @@ class CallService
         }
 
         $du = DiscussionUser::query()->where('DiscussionId', $discussionID)->where('t_DiscussionsUsers.UserID', $actor->Id)->first();
-        if (!$du instanceof DiscussionUser) {
+        if (! $du instanceof DiscussionUser) {
             DiscussionUser::create([
                                     'DiscussionId' => $discussionID,
-                                    'UserID'       => $actor->Id,
-                                    'CreatedBy'    => $actor->Id,
-                                    'ModifiedBy'   => $actor->Id,
-                                    'CreatedOn'    => now(),
-                                    'ModifiedOn'   => now(),
+                                    'UserID' => $actor->Id,
+                                    'CreatedBy' => $actor->Id,
+                                    'ModifiedBy' => $actor->Id,
+                                    'CreatedOn' => now(),
+                                    'ModifiedOn' => now(),
                                    ]);
         }
 
         if (is_string($notes)) {
             Notes::create([
                            'DiscussionID' => $discussionID,
-                           "Party"        => $this->call->Party,
-                           "PartyID"      => $this->call->PartyID,
-                           'Notes'        => $notes,
-                           'CreatedBy'    => $actor->Id,
-                           'ModifiedBy'   => $actor->Id,
+                           "Party" => $this->call->Party,
+                           "PartyID" => $this->call->PartyID,
+                           'Notes' => $notes,
+                           'CreatedBy' => $actor->Id,
+                           'ModifiedBy' => $actor->Id,
                           ]);
         }
+
         return $this;
     }
 
@@ -164,18 +166,19 @@ class CallService
     protected function _endCall(Carbon $end, CallStatusEnum $status, User $actor): static
     {
         $this->call->update([
-                             'EndOn'        => $end,
+                             'EndOn' => $end,
                              'CallStatusID' => $status->value,
-                             'ModifiedBy'   => $actor->Id,
+                             'ModifiedBy' => $actor->Id,
                             ]);
 
         $schedule = $this->call->schedule;
         if ($schedule instanceof Schedule) {
             $schedule->update([
                                'ScheduleStatusID' => ($status->value === CallStatusEnum::SuccessDiscussion->value) ? ScheduleStatusEnum::Success->value : ScheduleStatusEnum::PartialSuccess->value,
-                               'ScheduledTypeID'  => $this->call->CallID,
+                               'ScheduledTypeID' => $this->call->CallID,
                               ]);
         }
+
         return $this;
     }
 }

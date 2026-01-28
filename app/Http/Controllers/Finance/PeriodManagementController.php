@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class PeriodManagementController extends Controller
 {
@@ -11,6 +10,7 @@ class PeriodManagementController extends Controller
     {
         return view('finance.periodmanagement.index');
     }
+
     public function create()
     {
         return view('finance.periodmanagement.create');

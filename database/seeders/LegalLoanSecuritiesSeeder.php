@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class LegalLoanSecuritiesSeeder extends Seeder
 {
@@ -29,7 +29,7 @@ class LegalLoanSecuritiesSeeder extends Seeder
                 'CreatedOn' => $now,
                 'ModifiedOn' => $now,
                 'DeletedBy' => null,
-                'DeletedOn' => null
+                'DeletedOn' => null,
             ],
             [
                 'SecurityType' => 'Securities Pledge',
@@ -47,8 +47,8 @@ class LegalLoanSecuritiesSeeder extends Seeder
                 'CreatedOn' => $now,
                 'ModifiedOn' => $now,
                 'DeletedBy' => null,
-                'DeletedOn' => null
-            ]
+                'DeletedOn' => null,
+            ],
         ];
 
         DB::table('t_LegalLoanSecurities')->insert($data);

@@ -19,7 +19,6 @@ class UserMessageController extends Controller
         $this->middleware('ajax');
     }
 
-
     /**
      * Display a listing of the resource.
      * @throws \Exception
@@ -37,6 +36,7 @@ class UserMessageController extends Controller
     {
         $request->getUserPhone($user);
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($user, $actor, $request) {
                 (new UserService($user))->sendMessage($request->validated('message_content'), $actor);
@@ -45,6 +45,7 @@ class UserMessageController extends Controller
             });
         } catch (\Throwable | \Exception $e) {
             Log::error('Error sending sms to users/staff ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

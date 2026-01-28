@@ -2,8 +2,8 @@
 
 namespace App\Policies\Insurance;
 
-use App\Models\Auth\User;
 use App\Enums\Core\PermissionEnum;
+use App\Models\Auth\User;
 use App\Models\Insurance\InsurancePricingRule;
 
 class InsurancePricingRulePolicy
@@ -35,5 +35,4 @@ class InsurancePricingRulePolicy
     {
         return $user->can(PermissionEnum::InsurancePricingRuleDelete->value);
     }
-
 }

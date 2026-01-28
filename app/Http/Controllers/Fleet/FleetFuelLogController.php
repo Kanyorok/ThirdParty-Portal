@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
+use App\Models\Fleet\FleetFuelLog;
+use App\Models\Fleet\FleetRunningCost;
+use App\Models\Fleet\FleetTripLog;
+use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FuelType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Fleet\FleetFuelLog;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\FleetTripLog;
-use App\Models\Fleet\FleetRunningCost;
-use App\Models\Fleet\FuelType;
 
 class FleetFuelLogController extends Controller
 {
@@ -17,6 +17,7 @@ class FleetFuelLogController extends Controller
     public function index()
     {
         $fuelLogs = FleetFuelLog::with(['vehicle', 'trip'])->orderByDesc('LogDate')->get();
+
         return view('fleet.fuel_logs.index', compact('fuelLogs'));
     }
 
@@ -49,9 +50,9 @@ class FleetFuelLogController extends Controller
         // Compute fuel efficiency if possible
         $efficiency = null;
         if (
-            !empty($validated['OdometerStart']) &&
-            !empty($validated['OdometerEnd']) &&
-            !empty($validated['FuelAmount']) &&
+            ! empty($validated['OdometerStart']) &&
+            ! empty($validated['OdometerEnd']) &&
+            ! empty($validated['FuelAmount']) &&
             strtolower($validated['FuelUnit']) === 'litres'
         ) {
             $distance = $validated['OdometerEnd'] - $validated['OdometerStart'];
@@ -69,7 +70,7 @@ class FleetFuelLogController extends Controller
         ]);
 
         // Add fuel cost to running costs if applicable (assuming unit cost logic is not yet implemented)
-        if (!empty($validated['FuelAmount'])) {
+        if (! empty($validated['FuelAmount'])) {
             FleetRunningCost::create([
                 'VehicleID' => $validated['VehicleID'],
                 'CostType' => 'Fuel',
@@ -84,5 +85,4 @@ class FleetFuelLogController extends Controller
 
         return redirect()->route('fleet.fuel_logs.index')->with('success', 'Fuel log recorded successfully.');
     }
-
 }

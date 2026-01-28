@@ -52,7 +52,7 @@ class AgingReportController extends Controller
                 $referenceDate,
             ])
             ->whereBetween('t_FinanceInvoiceEntry.DueDate', [$fromDate->toDateString(), $toDate->toDateString()])
-            ->when($supplierId, fn($query) => $query->where('t_FinanceInvoiceEntry.SupplierID', $supplierId))
+            ->when($supplierId, fn ($query) => $query->where('t_FinanceInvoiceEntry.SupplierID', $supplierId))
             ->whereNull('t_FinanceInvoiceEntry.DeletedOn')
             ->groupBy(
                 't_FinanceInvoiceEntry.SupplierID',
@@ -130,6 +130,7 @@ class AgingReportController extends Controller
 
                 $invoice->invoice_date_formatted = $invoiceDate?->toDateString();
                 $invoice->due_date_formatted = $dueDate?->toDateString();
+
                 return $invoice;
             });
 

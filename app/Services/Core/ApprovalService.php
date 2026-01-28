@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Log;
 
 class ApprovalService
 {
-
     public function isDocumentApproved(string $docType, float $amount, User $actor, int $documentId): array
     {
         try {
@@ -41,7 +40,7 @@ class ApprovalService
     {
         $group = DB::table('t_ApprovalGroups')->where('DocType', $docType)->first();
 
-        if (!$group) {
+        if (! $group) {
             return false;
         }
 
@@ -57,12 +56,14 @@ class ApprovalService
     private function isAmtDocumentApproved(string $docType, float $amount, User $actor): bool
     {
         $permissionId = $this->getRequiredPermissionId($docType, $amount);
+
         return $permissionId && $this->userHasPermission($actor, $permissionId);
     }
 
     private function isAnyApproved(string $docType, User $actor): bool
     {
         $permissionId = $this->getApprovalGroupPermission($docType);
+
         return $permissionId && $this->userHasPermission($actor, $permissionId);
     }
 
@@ -70,7 +71,7 @@ class ApprovalService
     {
         $permissionId = $this->getApprovalGroupPermission($docType);
 
-        $userIds = array_map(fn($user) => $user->Id, $actors);
+        $userIds = array_map(fn ($user) => $user->Id, $actors);
         $count = DB::table('t_ModelRoles as mr')
             ->join('t_RolePermissions as rp', 'mr.role_id', '=', 'rp.role_id')
             ->where('mr.model_type', 'UserID')
@@ -85,10 +86,14 @@ class ApprovalService
     private function isAllApproved(string $docType, int $documentId): bool
     {
         $permissionId = $this->getApprovalGroupPermission($docType);
-        if (!$permissionId) return false;
+        if (! $permissionId) {
+            return false;
+        }
 
         $approverIds = $this->getApproverIds($permissionId);
-        if (empty($approverIds)) return false;
+        if (empty($approverIds)) {
+            return false;
+        }
 
         $approvedUserIds = DB::table('t_Approvals')
             ->where('DocType', $docType)
@@ -104,6 +109,7 @@ class ApprovalService
 
         return $approverIds === $approvedUserIds;
     }
+
     private function getRequiredPermissionId(string $docType, float $amount): ?int
     {
         return DB::table('t_ApprovalLimits')
@@ -135,7 +141,9 @@ class ApprovalService
     public function getPendingApprovers(string $docType, int $documentId): array
     {
         $permissionId = $this->getApprovalGroupPermission($docType);
-        if (!$permissionId) return [];
+        if (! $permissionId) {
+            return [];
+        }
 
         $allApprovers = DB::table('t_ModelRoles as mr')
             ->join('t_RolePermissions as rp', 'mr.role_id', '=', 'rp.role_id')
@@ -152,13 +160,15 @@ class ApprovalService
             ->pluck('UserId')
             ->toArray();
 
-        return $allApprovers->filter(fn($user) => !in_array($user->Id, $approvedUserIds))->values()->toArray();
+        return $allApprovers->filter(fn ($user) => ! in_array($user->Id, $approvedUserIds))->values()->toArray();
     }
 
     public function isFullyApproved(string $docType, int $documentId, float $amount): bool
     {
         $group = DB::table('t_ApprovalGroups')->where('DocType', $docType)->first();
-        if (!$group) return false;
+        if (! $group) {
+            return false;
+        }
 
         return match ($group->ApprovalType) {
             'ALL' => $this->isAllApproved($docType, $documentId),
@@ -172,6 +182,7 @@ class ApprovalService
     private function isAnyAlreadyApproved(string $docType, int $documentId): bool
     {
         $permissionId = $this->getApprovalGroupPermission($docType);
+
         return DB::table('t_Approvals')
             ->where('DocType', $docType)
             ->where('DocumentId', $documentId)
@@ -191,6 +202,7 @@ class ApprovalService
     private function isAmtAlreadyApproved(string $docType, int $documentId, float $amount): bool
     {
         $permissionId = $this->getRequiredPermissionId($docType, $amount);
+
         return DB::table('t_Approvals')
             ->where('DocType', $docType)
             ->where('DocumentId', $documentId)
@@ -208,7 +220,6 @@ class ApprovalService
             ->unique()
             ->toArray();
     }
-
 
     private function getApprovedUserIds(string $docType, int $documentId, array $approverIds): array
     {

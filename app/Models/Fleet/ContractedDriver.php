@@ -2,32 +2,21 @@
 
 namespace App\Models\Fleet;
 
+use App\Models\ThirdParty\SupplierMaster;
+use App\Traits\Model\DocumentsTrait;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use App\Models\Fleet\FleetTripLog;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\FleetVehicleAssignment;
-use App\Models\Fleet\FleetContractedDriverLicense;
-use App\Models\Fleet\FleetContractedDriverAssignment;
-use App\Models\Core\Approval\CodeDetail;
-use App\Models\ThirdParies\Supplier;
-use App\Traits\Model\DocumentsTrait;
-use App\Models\ThirdParty\ThirdParties;
-use App\Models\ThirdParty\SupplierMaster;
-
 
 class ContractedDriver extends Model
 {
+    use UserActorTrait;
+    use SoftDeletes;
+    use DocumentsTrait;
 
-    use UserActorTrait, SoftDeletes, DocumentsTrait;
-
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_ContractedDrivers';
     protected $primaryKey = 'Id';
@@ -62,7 +51,6 @@ class ContractedDriver extends Model
         return $this->belongsTo(SupplierMaster::class, 'CompanyID', 'Id');
     }
 
-
     public function tripLogs()
     {
         return $this->hasManyThrough(
@@ -76,7 +64,7 @@ class ContractedDriver extends Model
         ->whereNull('t_TripLogs.DeletedOn');
     }
 
-    public function licenses()  
+    public function licenses()
     {
         return $this->hasMany(FleetContractedDriverLicense::class, 'ContractedDriverID', 'Id');
     }
@@ -97,5 +85,4 @@ class ContractedDriver extends Model
             'VehicleID'
         );
     }
-
 }

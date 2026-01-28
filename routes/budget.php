@@ -13,6 +13,7 @@ use App\Http\Controllers\Budget\BudgetGLMappingController;
 use App\Http\Controllers\Budget\BudgetKPIscorecardsController;
 use App\Http\Controllers\Budget\BudgetKPIscorecardsOfficerController;
 use App\Http\Controllers\Budget\BudgetLineCategoriesController;
+use App\Http\Controllers\Budget\BudgetLineLedgerLimitController;
 use App\Http\Controllers\Budget\BudgetLineMappingController;
 use App\Http\Controllers\Budget\BudgetLinesController;
 use App\Http\Controllers\Budget\BudgetMonthlyProjectionController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\Budget\BudgetProductMasterController;
 use App\Http\Controllers\Budget\BudgetProductTypeController;
 use App\Http\Controllers\Budget\BudgetProjectionsController;
 use App\Http\Controllers\Budget\BudgetRatesController;
+use App\Http\Controllers\Budget\BudgetReallocationController;
 use App\Http\Controllers\Budget\BudgetSceneriosController;
 use App\Http\Controllers\Budget\BudgetSubmitController;
 use App\Http\Controllers\Budget\BudgetTopDownAllocationController;
@@ -63,15 +65,13 @@ use App\Http\Controllers\Budget\TopLoansController;
 use App\Http\Controllers\Budget\TopSavingAccountsController;
 use App\Http\Controllers\Budget\TrendAndGrowthController;
 use App\Http\Controllers\Budget\YieldRateController;
-use App\Http\Controllers\Budget\BudgetLineLedgerLimitController;
-use App\Http\Controllers\Budget\BudgetReallocationController;
 use Illuminate\Support\Facades\Route;
-
 
 Route::middleware(['module:1200000'])->namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('budgetline', BudgetLinesController::class);
     Route::resource('budgetperiod', BudgetPeriodController::class);
-    Route::post('/budgetperiod/attachGL', [BudgetPeriodController::class, 'attachGL'])->name('budgetperiod.attachGL');;
+    Route::post('/budgetperiod/attachGL', [BudgetPeriodController::class, 'attachGL'])->name('budgetperiod.attachGL');
+    ;
     Route::resource('budgetproductmaster', BudgetProductMasterController::class);
     Route::resource('budgetproducttype', BudgetProductTypeController::class);
     Route::resource('budgetlinemapping', BudgetLineMappingController::class);
@@ -99,7 +99,7 @@ Route::middleware(['module:1200000'])->namespace('Budget')->prefix('budget')->gr
     Route::resource('budgetscenerios', BudgetSceneriosController::class);
     Route::resource('budgetformula', BudgetFormulaController::class);
     Route::resource('budgetconsolidation', BudgetConsolidationController::class);
-// Export routes (no CDN libs; server-side using local packages)
+    // Export routes (no CDN libs; server-side using local packages)
     Route::post('budgetconsolidation/export/excel', [BudgetConsolidationController::class, 'exportExcel'])->name('budgetconsolidation.export.excel');
     Route::post('budgetconsolidation/export/pdf', [BudgetConsolidationController::class, 'exportPdf'])->name('budgetconsolidation.export.pdf');
     Route::resource('budgetvsactualdashboard', BudgetvsActualDashboardController::class);
@@ -163,7 +163,7 @@ Route::middleware(['module:1200000'])->namespace('Budget')->prefix('budget')->gr
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('budgetline-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'budgetline-reports.index',
-        'show' => 'budgetline-reports.show'
+        'show' => 'budgetline-reports.show',
     ]);
 
     Route::delete('/budget/deleteProjection/{id}', [BudgetProjectionsController::class, 'deleteProjection'])->name('budgetprojections.deleteProjection');

@@ -21,20 +21,20 @@ class ListFilterRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'filter'    => 'required',
-                'Start'     => [
+                'filter' => 'required',
+                'Start' => [
                                 'nullable',
                                 'string',
                                ],
-                'End'       => [
+                'End' => [
                                 'nullable',
                                 'string',
                                ],
-                'Value'     => [
+                'Value' => [
                                 'nullable',
                                 'string',
                                ],
-                'Values'    => [
+                'Values' => [
                                 'nullable',
                                 'array',
                                 'min:1',
@@ -55,7 +55,7 @@ class ListFilterRequest extends FormRequest
 
         if ($filter->Operator->value === ComparisonOperatorsEnum::In->value) {
             $values = $this->validated('Values');
-            if (!is_array($values)) {
+            if (! is_array($values)) {
                 throw ValidationException::withMessages(['Values' => 'select one at least one value']);
             }
 
@@ -77,16 +77,17 @@ class ListFilterRequest extends FormRequest
             $start = $this->validated('Start');
             $end = $this->validated('End');
 
-            if (!$filter->DataType->isValid($start)) {
+            if (! $filter->DataType->isValid($start)) {
                 throw ValidationException::withMessages([
                                                          'Start' => 'invalid format of ' . $filter->DataType->name,
                                                         ]);
             }
-            if (!$filter->DataType->isValid($end)) {
+            if (! $filter->DataType->isValid($end)) {
                 throw ValidationException::withMessages([
                                                          'End' => 'invalid format of ' . $filter->DataType->name,
                                                         ]);
             }
+
             return [
                     $start,
                     $end,
@@ -97,6 +98,7 @@ class ListFilterRequest extends FormRequest
             if ($filter->DataType->isValid($this->validated('Value'))) {
                 return $this->validated('Value');
             }
+
             throw ValidationException::withMessages([
                                                      'Value' => 'invalid format of ' . $filter->DataType->name,
                                                     ]);
@@ -104,7 +106,6 @@ class ListFilterRequest extends FormRequest
 
         throw ValidationException::withMessages(['filter' => 'issue with type in filter']);
     }
-
 
     /**
      * @throws ValidationException

@@ -9,8 +9,6 @@ use Illuminate\Validation\ValidationException;
 
 class RepositoryRequest extends FormRequest
 {
-
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -30,6 +28,7 @@ class RepositoryRequest extends FormRequest
         if ($repo instanceof Repository) {//todo check permission for this repo.
             return $repo;
         }
+
         throw ValidationException::withMessages(['repository_parent' => 'invalid reo, refresh and try again']);
     }
 }

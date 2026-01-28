@@ -12,7 +12,6 @@ class CrmBranchPolicy
     {
         // Legacy fallback or SuperAdmin check can go here if needed.
         // For now, we rely on individual checks.
-        // return $user->can(PermissionEnum::Branches->value);
         return false; // Don't block, but don't auto-grant everything based on legacy
     }
 

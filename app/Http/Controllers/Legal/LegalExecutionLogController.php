@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
-use App\Models\Legal\LegalExecutionLog;
 use App\Models\Legal\LegalDocument;
+use App\Models\Legal\LegalExecutionLog;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class LegalExecutionLogController extends Controller
 {
@@ -22,6 +22,7 @@ class LegalExecutionLogController extends Controller
     public function create($documentId)
     {
         $document = LegalDocument::findOrFail($documentId);
+
         return view('legal.execution_logs.create', compact('document'));
     }
 
@@ -41,7 +42,7 @@ class LegalExecutionLogController extends Controller
             'Remarks' => $request->Remarks,
             'CreatedBy' => Auth::id(),
             'CreatedOn' => now(),
-            'IsActive' => 1
+            'IsActive' => 1,
         ]);
 
         return redirect()->route('legal.documents.execution_logs.index', $documentId)

@@ -17,24 +17,24 @@ class ClientCollection extends ResourceCollection
     {
         return [
                 'data' => $this->collection->transform(function ($client) {
-                /* $govtNo =  match ($client->ClientTypeID) {
-                     'E', 'I', 'G', 'M' => $client->resource->individual?->PassportNo,
-                     'CH', 'C', 'JNT' => $client->resource->corporate?->CertificateNo,
-                     default => '?',
-                 };*/
+                    /* $govtNo =  match ($client->ClientTypeID) {
+                         'E', 'I', 'G', 'M' => $client->resource->individual?->PassportNo,
+                         'CH', 'C', 'JNT' => $client->resource->corporate?->CertificateNo,
+                         default => '?',
+                     };*/
                     return  [
-                             'id'       => $client->ClientID,
+                             'id' => $client->ClientID,
                     //'GovtNo' => ($govtNo)??'?',
-                             'name'     => $client->Name,
-                             'type'     => $client->type->Description,
+                             'name' => $client->Name,
+                             'type' => $client->type->Description,
                              'contacts' => [
-                                            'email'  => $client->Email,
-                                            'main'   => (new ClientService($client->resource))->phoneNo(),
+                                            'email' => $client->Email,
+                                            'main' => (new ClientService($client->resource))->phoneNo(),
                                             'phone1' => ($client->Phone1) ?? '',
                                             'phone2' => ($client->Phone2) ?? '',
                                             'mobile' => ($client->Mobile) ?? '',
                                            ],
-                             'url'      => route('clients.show', $client->ClientID),
+                             'url' => route('clients.show', $client->ClientID),
                             ];
                 }),
                ];

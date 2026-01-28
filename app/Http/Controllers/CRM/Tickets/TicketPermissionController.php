@@ -30,6 +30,7 @@ class TicketPermissionController extends Controller
     public function index(Request $request, Ticket $ticket): JsonResponse
     {
         $this->authorize('view', $ticket);
+
         return $this->permissions($ticket->permissions(), $request->user()->can('delete', $ticket));
     }
 
@@ -45,13 +46,14 @@ class TicketPermissionController extends Controller
         try {
             return DB::transaction(function () use ($ticket, $assignee, $permission, $request) {
                 (new TicketService($ticket))->addWatcher($assignee, $permission, $request->user());
+
                 return $this->succeeded('ticket watcher added');
             });
-
         } catch (ErroredException $e) {
             return $e->toJson();
         } catch (Throwable $e) {
             Log::error("Error adding ticket watcher: " . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
     }
@@ -63,19 +65,21 @@ class TicketPermissionController extends Controller
     {
         $this->authorize('share', $ticket);
         $specialPermission = $ticket->permissions()->where('Id', $permission_id)->first();
-        if (!$specialPermission instanceof SpecialPermission) {
+        if (! $specialPermission instanceof SpecialPermission) {
             return $this->errored('watcher not found');
         }
 
         try {
             return DB::transaction(function () use ($specialPermission, $ticket, $request) {
                 (new TicketService($ticket))->deleteWatcher($specialPermission, $request->user());
+
                 return $this->succeeded('ticket watchers updated');
             });
         } catch (ErroredException $e) {
             return $e->toJson();
         } catch (Throwable $e) {
             Log::error("Error remove ticket watcher: " . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
     }

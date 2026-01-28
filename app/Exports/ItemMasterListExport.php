@@ -2,9 +2,9 @@
 
 namespace App\Exports;
 
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\ItemCategories;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -32,7 +32,7 @@ class ItemsSheet implements FromArray, WithHeadings, WithTitle
             'inventoryType', // Relationship to CodeDetails for InventoryType
             'status', // Relationship to CodeDetails for Status
             'price',
-            'category.parent'
+            'category.parent',
         ])->get();
 
         $data = [];
@@ -43,19 +43,19 @@ class ItemsSheet implements FromArray, WithHeadings, WithTitle
 
             // Determine whether the assigned category is a parent or child
             $categoryName = $parent ? $category->Name : ($category?->Name ?? '-');
-            $parentName = $parent?->Name ?? ($category && !$parent ? $category->Name : '-');
+            $parentName = $parent?->Name ?? ($category && ! $parent ? $category->Name : '-');
 
             $data[] = [
                 $item->ItemCode ?? '-',
                 $item->BarCode ?? '-',
                 $item->ItemName ?? '-',
-                $item->itemType?->Description ?? '-', 
+                $item->itemType?->Description ?? '-',
                 $item->uom?->Code ?? '-',
-                $item->inventoryType?->Description ?? '-', 
+                $item->inventoryType?->Description ?? '-',
                 $categoryName,
                 $parentName,
-                $item->price?->ActualPrice ?? '-', 
-                $item->status?->Description ?? '-', 
+                $item->price?->ActualPrice ?? '-',
+                $item->status?->Description ?? '-',
                 $item->ItemDescription ?? '-',
             ];
         }
@@ -91,7 +91,7 @@ class ReferenceDataSheet implements FromArray, WithHeadings, WithTitle
     public function array(): array
     {
         $data = [];
-        
+
         // Header
         $data[] = ['--- Available Options for Reference ---'];
         $data[] = ['(This sheet is for reference only - do not import this data)'];

@@ -34,6 +34,4 @@ class BancassurancePoliciesPolicy
     {
         return $user->can(PermissionEnum::BancassurancePolicyDelete->value);
     }
-
-
 }
