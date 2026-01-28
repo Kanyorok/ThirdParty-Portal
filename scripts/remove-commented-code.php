@@ -22,12 +22,14 @@ $excludePatterns = [
 
 // Patterns for lines to remove
 $removePatterns = [
-    // Commented out functions, classes, control structures
-    '/^\s*\/\/\s*(public|private|protected|function|class|if|for|while|foreach|return|use |namespace |protected )\s*/',
+    // Commented-out code: // followed by $var, ->method, ::static, [, (, {, }, ], ), ;
+    '/^\s*\/\/\s*[\$\-\>\:\:\[\(\{\}\]\)\;]/',
+    
+    // Commented out keywords followed by code
+    '/^\s*\/\/\s*(public|private|protected|function|class|if|for|while|foreach|return|use |namespace |protected |static |const |throw |try |catch )\s+/',
+    
     // Commented out dd(), dump(), ray()
     '/^\s*\/\/.*\b(dd|dump|ray)\s*\(/',
-    // Lines that are just comment markers with function calls inside
-    '/^\s*\/\/\s*\$/',
 ];
 
 $totalFilesModified = 0;

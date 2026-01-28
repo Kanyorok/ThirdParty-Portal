@@ -30,7 +30,6 @@ class BudgetTopDownAllocationController extends Controller
         //     'Description',
         //     'GLAccountTypeID',
         //     'GLSubAccountTypeID'
-        // )->get();
 
         return view('budgetandanalytics.budgetworkspace.topdown.index', compact(
             'budgets',
@@ -102,7 +101,6 @@ class BudgetTopDownAllocationController extends Controller
 
             //                'budgetId' => $budgetId,
             //                'branchId' => $branchId
-            //            ]));
 
             $isExisting = true;
 

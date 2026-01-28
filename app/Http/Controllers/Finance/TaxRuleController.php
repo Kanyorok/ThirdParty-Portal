@@ -57,20 +57,7 @@ class TaxRuleController extends Controller
             'TaxReceivableGLID' => 'required|exists:t_FinanceGLAccounts,Id',
         ]);
 
-        //     ->where('JurisdictionId', $validated['JurisdictionId'])
-        //     ->where('Rate', $validated['Rate'])
-        //     ->where('AppliesTo', $validated['AppliesTo'])
-        //     ->where('ThresholdAmount', $validated['ThresholdAmount'])
-        //     ->where('ApplyTaxPer', $validated['ApplyTaxPer'])
-        //     ->where('EffectiveFrom', $validated['EffectiveFrom'])
-        //     ->where('EffectiveTo', $validated['EffectiveTo'])
-        //     ->where('TaxPayableGLID', $validated['TaxPayableGLID'])
-        //     ->where('TaxReceivableGLID', $validated['TaxReceivableGLID'])
-        //     ->exists();
 
-        //         ->withInput()
-        //         ->withErrors(['error' => 'Tax Rule Configuration already exists for the given parameters.']);
-        //     }
 
         DB::beginTransaction();
 
@@ -137,15 +124,7 @@ class TaxRuleController extends Controller
             // 'Status' => 'required|boolean',
         ]);
 
-        //     ->where('JurisdictionId', $validated['JurisdictionId'])
-        //     ->where('AppliesTo', $validated['AppliesTo'])
-        //     ->where('ApplyTaxPer', $validated['ApplyTaxPer'])
-        //     ->where('Id', '!=', $id)
-        //     ->exists();
 
-        //         ->withInput()
-        //         ->withErrors(['error' => 'Tax Rule Configuration already exists for the given parameters.']);
-        // }
 
         DB::beginTransaction();
 

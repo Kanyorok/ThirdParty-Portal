@@ -4,7 +4,6 @@ namespace App\Http\Requests\ThirdPartyAuth;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-
 class LoginThirdPartyRequest extends FormRequest
 {
     public function authorize(): bool

@@ -188,7 +188,6 @@ class ThirdPartyController extends Controller
 
         $this->authorize('view', $thirdParty);
 
-        // --- Supplier Stats ---
         $supplierStats = null;
         if ($thirdParty->isSupplier()) {
             $supplierStats = [
@@ -198,7 +197,6 @@ class ThirdPartyController extends Controller
             ];
         }
 
-        // --- Tenant Stats ---
         $tenantStats = null;
         if ($thirdParty->isTenant()) {
             $tenantQuery = PropertyNewLease::whereHas('tenant', fn ($q) => $q->where('ThirdPartyId', $thirdPartyId));
@@ -210,7 +208,6 @@ class ThirdPartyController extends Controller
             ];
         }
 
-        // --- Customer Stats ---
         $customerStats = null;
         if ($thirdParty->isCustomer()) {
             // Placeholder: Just verify existence for now

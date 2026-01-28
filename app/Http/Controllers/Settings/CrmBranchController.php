@@ -16,7 +16,6 @@ use Illuminate\View\View;
 use Throwable;
 use Yajra\DataTables\DataTables;
 
-
 class CrmBranchController extends Controller
 {
     public function __construct()

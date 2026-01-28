@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Legal;
 
-use App\Enums\Core\ApprovalEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Legal\LegalDocument;
 use App\Services\Workflow\ApprovalWorkflow;

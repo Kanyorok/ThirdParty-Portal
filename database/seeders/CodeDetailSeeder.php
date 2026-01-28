@@ -250,7 +250,6 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'GLAccountType', 'Description' => 'Liabilities', 'Value' => 'L', 'DisplayOrder' => 0],
             ['CodeID' => 'GLAccountType', 'Description' => 'Income', 'Value' => 'I', 'DisplayOrder' => 0],
             ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E', 'DisplayOrder' => 0],
-            //['CodeID' => 'GLAccountType', 'Description' => 'Share Capital', 'Value' => 'S', 'DisplayOrder' => 0],
 
             // Tenant Types
             ['CodeID' => 'TenantType', 'Description' => 'Individual', 'Value' => 'I'],
@@ -300,7 +299,6 @@ class CodeDetailSeeder extends Seeder
             // Payment Type
             ['CodeID' => 'PaymentType', 'Description' => 'Full', 'Value' => 'F'],
             ['CodeID' => 'PaymentType', 'Description' => 'Partial', 'Value' => 'P'],
-            //['CodeID' => 'PaymentType', 'Description' => 'Scheduled', 'Value' => 'S'],
 
             // Termination Reason
             // Tender Status codes
@@ -319,8 +317,6 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ', 'Value' => 'R'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Direct Purchase', 'Value' => 'D'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender', 'Value' => 'T'],
-            // ['CodeID' => 'ProcurementMethod', 'Description' => 'Prequalification', 'Value' => 'P'],
-            // ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
 
             // Approval WorkFlow Documents
             ['CodeID' => 'ApprovalWorkFlowDocument', 'Value' => 'PR', 'Description' => 'Requisition'],

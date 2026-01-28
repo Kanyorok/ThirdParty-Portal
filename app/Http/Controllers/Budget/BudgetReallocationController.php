@@ -581,9 +581,7 @@ class BudgetReallocationController extends Controller
 
         //Check if the Line is Activity driven so as to know where to fetch the Total amount from
         //
-        //        }else{ //We pick from Manul entry by line
         //
-        //        }
 
         //Pick the total amount from the Limits table for thst line
         $totAmountAllocated = BudgetLineLedgerLimit::where('BudgetLineID', $validated['BudgetLineID'])

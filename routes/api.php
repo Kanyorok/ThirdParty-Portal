@@ -23,7 +23,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
-
 // Token validation (Sanctum) for frontend session checks
 Route::post('auth/validate-token', function (Request $request) {
     $user = $request->user();
@@ -392,15 +391,12 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // Route::controller(PrequalificationPeriodController::class)->group(function () {
     //     Route::post('prequal-periods', 'store')->middleware('can:create,App\Models\Procurement\PrequalificationPeriod');
     //     Route::get('prequal-periods/{period}', 'show')->middleware('can:view,period');
-    // });
 
     // Supplier Routes
     // Route::middleware('role:supplier')->group(function () {
     //     Route::controller(SupplierApplicationController::class)->group(function () {
     //         Route::post('supplier/applications', 'store');
     //         Route::get('supplier/applications/{application}', 'show')->middleware('can:view,application');
-    //     });
-    // });
 });
 
 

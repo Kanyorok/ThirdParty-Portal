@@ -121,22 +121,14 @@ class PropertyInvoiceController extends Controller
     }
 
 
-    // {
 
 
-    //         ->where('Status', '!=', PropertyNewLeaseEnum::Terminate)
-    //         ->with('tenant.thirdParty')
-    //         ->orderBy('LeaseNumber')
-    //         ->get();
 
 
     //         'property.billingandreceipting.invoicing.edit',
     //         compact('invoice', 'leases', 'currencies', 'taxTypes')
-    //     );
-    // }
 
 
-    // {
 
     //     DB::beginTransaction();
 
@@ -151,24 +143,13 @@ class PropertyInvoiceController extends Controller
     //             'OtherCharges' => $validated['OtherCharges'] ?? 0,
     //             'InvoiceNotes' => $validated['InvoiceNotes'] ?? '',
     //             'ModifiedBy' => Auth::id(),
-    //         ]);
 
     //         DB::commit();
 
     //         activity()
-    //             ->performedOn($invoice)
-    //             ->causedBy(Auth::user())
-    //             ->withProperties(['action' => 'update'])
-    //             ->log('Updated Invoice Details');
 
-    //             ->with('success', 'Invoice updated successfully');
 
-    //     } catch (Throwable $th) {
     //         DB::rollBack();
-    //             ->withErrors(['error' => $th->getMessage()])
-    //             ->withInput();
-    //     }
-    // }
 
     public function destroy($id)
     {

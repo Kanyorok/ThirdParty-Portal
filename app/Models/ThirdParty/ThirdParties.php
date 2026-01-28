@@ -137,15 +137,6 @@ class ThirdParties extends Model
         });
     }
 
-    // {
-    // }
-
-    // {
-    // }
-
-    // {
-    // }
-
     protected function getImageName(): string
     {
         return $this->ThirdPartyName ?? 'third-party';
@@ -167,15 +158,12 @@ class ThirdParties extends Model
      */
 
 
-    // {
     //     // Pivot uses snake_case columns in this table: third_party_id, supplier_category_id
     //     //todo move to supplier master model
     //         SupplierCategory::class,
     //         't_ThirdParty_SupplierCategory',
     //         'third_party_id',
     //         'supplier_category_id'
-    //     );
-    // }
 
     /**
      * Legacy category mappings (t_ThirdPartiesCategories -> CodeDetail) used by prequalification screen.

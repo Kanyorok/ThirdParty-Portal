@@ -131,7 +131,6 @@ class GRNPOSeeder extends Seeder
             ->whereIn('OrderNo', array_column($orders, 'OrderNo'))
             ->get(['Id', 'OrderNo', 'AccountID']);
 
-        // ------------ Seed order lines per order and backfill totals ------------
         $lineIndex = 0;
         foreach ($insertedOrders as $row) {
             $lineIndex++;
@@ -183,7 +182,6 @@ class GRNPOSeeder extends Seeder
                 DB::table('t_Orders')->where('Id', $row->Id)->update($update);
             }
         }
-        // -----------------------------------------------------------------------
 
         // Build GRNs: 5 matching and 3 mismatched per supplier
         $ordersByNo = $insertedOrders->keyBy('OrderNo');

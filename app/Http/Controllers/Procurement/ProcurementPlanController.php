@@ -12,9 +12,6 @@ use Illuminate\Support\Facades\Auth;
 
 class ProcurementPlanController extends Controller
 {
-    // {
-    // }
-
     public function create(ProcurementPeriod $procurementPeriod)
     {
         $this->authorize('create', ProcurementPlan::class);

@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Route;
 // Route::prefix('property')->middleware(PropertyAuthMiddleware::class)->group(function () {
 //     Route::get('rentable-properties', [PropertyViewController::class, 'rentableProperties']);
 //     // Route::get('property-structure/{id}', [PropertyViewController::class, 'propertyStructure']);
-// });
 
 // Property View Routes
 Route::get('property/rentable-properties', [PropertyViewController::class, 'index']);

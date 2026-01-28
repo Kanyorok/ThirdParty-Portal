@@ -21,7 +21,6 @@ class LedgerReportController extends Controller
         // // If dates must be required, keep this
         //     'FromDate' => 'required|date',
         //     'ToDate'   => 'required|date|after_or_equal:FromDate',
-        // ]);
 
         $query = FinanceTransaction::with(
             'glAccounts:Id,GLName,GLCode',

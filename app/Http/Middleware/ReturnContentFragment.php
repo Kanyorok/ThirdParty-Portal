@@ -17,7 +17,6 @@ class ReturnContentFragment
         $response = $next($request);
 
         // Only act on AJAX/XHR requests that explicitly request a partial fragment
-        // (we use a custom header X-Partial to avoid interfering with other AJAX endpoints)
         if (! $request->ajax() || ! $request->headers->has('X-Partial')) {
             return $response;
         }

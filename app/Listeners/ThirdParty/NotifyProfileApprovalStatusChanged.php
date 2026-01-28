@@ -19,7 +19,5 @@ class NotifyProfileApprovalStatusChangedListener
         ]);
 
         // TODO: Send email/SMS notification to user
-        //     }
-        // }
     }
 }

@@ -249,7 +249,6 @@ class TenderController extends Controller
         DB::beginTransaction();
 
         try {
-            // : Create tender in DRAFT status, ApprovalStatus = NULL (not submitted yet)
             $tender = $this->createTenderModel($request);
 
             $tenderId = $tender->Id;
@@ -418,7 +417,6 @@ class TenderController extends Controller
                 return redirect()->back()->with('error', 'Only draft tenders can be submitted.');
             }
 
-            // : Check that ApprovalStatus is NULL (not yet submitted)
             if ($tender->ApprovalStatus !== null) {
                 return redirect()->back()->with('error', 'This tender has already been submitted for approval.');
             }
@@ -1205,7 +1203,6 @@ class TenderController extends Controller
             //     'tender_id' => $tender->Id,
             //     'user_id' => $user->Id,
             //     'current_status' => $tender->ApprovalStatus?->value
-            // ]);
 
             // Check permission
             if (! $this->workflow->canApproveModel($tender, $user)) {
@@ -1358,7 +1355,6 @@ class TenderController extends Controller
             //     'item_based_count' => count($itemBasedCategoryIds),
             //     'total_merged' => count($categoriesWithItems),
             //     'category_ids' => $categoriesWithItems
-            // ]);
 
             // STEP 4: Get top-level parents for all these categories
             $topLevelCategoryIds = [];
@@ -1385,7 +1381,6 @@ class TenderController extends Controller
             // Log::info("Retrieved top-level categories", [
             //     'count' => $topLevelCategories->count(),
             //     'categories' => $topLevelCategories->toArray()
-            // ]);
 
             return response()->json([
                 'ok' => true,
@@ -1525,8 +1520,6 @@ class TenderController extends Controller
             // Add any categories from pivot tables (resilient across DB schemas)
             try {
                 // CRITICAL FIX: Pass both ThirdPartyId and SupplierMaster.Id
-                // - t_ThirdParty_SupplierCategory uses ThirdPartyId (t_ThirdParties.Id)
-                // - t_PrequalificationRoundSupplierCategory uses SupplierMaster.Id
                 $pivotCats = \App\Support\SupplierCategoryResolver::getCategoryIdsForThirdParty(
                     (int)$supplierMaster->ThirdPartyId,
                     (int)$supplierMaster->Id  // Pass SupplierMaster.Id for prequalification lookup
@@ -1575,7 +1568,6 @@ class TenderController extends Controller
                 //     'supplier_category_ids' => $supplierCategoryIds->toArray(),
                 //     'final_item_category_ids' => array_values(array_unique(array_map('intval', $itemCategoryIds))),
                 //     'count' => count(array_unique($itemCategoryIds))
-                // ]);
             }
 
             $suppliers->push([
@@ -1750,7 +1742,6 @@ class TenderController extends Controller
         //     'item_id' => $itemId,
         //     'item_type_id' => $itemTypeId,
         //     'allowed_type_ids' => $allowedTypeIds
-        // ]);
 
         if (! empty($allowedTypeIds) && ! in_array($itemTypeId, $allowedTypeIds, true)) {
             Log::warning("Item rejected: type not allowed", [
@@ -1880,7 +1871,6 @@ class TenderController extends Controller
             //     'pending_count' => $totalPending,
             //     'completed_count' => $totalCompleted,
             //     'next_stage' => $nextStage?->StageName ?? 'None',
-            // ]);
 
 
             // Fetch additional workflow details
@@ -2056,7 +2046,6 @@ class TenderController extends Controller
                 //     'filename' => $uploadedFile->getClientOriginalName(),
                 //     'size' => $uploadedFile->getSize(),
                 //     'mime' => $uploadedFile->getMimeType()
-                // ]);
 
                 $test = $tender->newDocument(
                     ModulesEnum::Procurement,
@@ -2070,7 +2059,6 @@ class TenderController extends Controller
                 //     'tender_id' => $tender->Id,
                 //     'filename' => $uploadedFile->getClientOriginalName(),
                 //     'full_log' => $test
-                // ]);
             } catch (\Exception $e) {
                 $failedCount++;
                 Log::error('Failed to attach document to tender', [
@@ -2090,7 +2078,6 @@ class TenderController extends Controller
         //     'tender_id' => $tender->Id,
         //     'uploaded' => $uploadedCount,
         //     'failed' => $failedCount
-        // ]);
     }
 
     private function initiateWorkflow(Tender $tender): void

@@ -405,7 +405,6 @@ class TransactionService
      */
     public function createJournal(array $header, array $lines): array
     {
-        // ---------- Idempotency ----------
         $jKey = $header['IdempotencyKey']
             ?? ('JRN:' . ($header['ReferenceNumber'] ?? 'REF') . ':' . ($header['BatchNumber'] ?? 'NB'));
 
@@ -424,7 +423,6 @@ class TransactionService
             return ['status' => 'exists', 'journal_id' => $existing->Id, 'message' => 'Journal already exists (idempotent).'];
         }
 
-        // ---------- Validate header ----------
         $hv = Validator::make($header, [
             'Date' => 'required|date',
             'Description' => 'nullable|string|max:255',
@@ -436,7 +434,6 @@ class TransactionService
             throw new \Exception('Journal header validation failed: ' . json_encode($hv->errors()->toArray()));
         }
 
-        // ---------- Normalize + validate lines ----------
         if (empty($lines) || ! is_array($lines[0] ?? null)) {
             throw new \Exception('Journal lines are required.');
         }
@@ -487,7 +484,6 @@ class TransactionService
             throw new \Exception("Journal not balanced. DR={$totalDebit}, CR={$totalCredit}");
         }
 
-        // ---------- Persist (single transaction) ----------
         return DB::transaction(function () use ($header, $norm, $totalDebit, $totalCredit, $jKey) {
             $uid = Auth::id() ?? 0;
             $now = Carbon::now();

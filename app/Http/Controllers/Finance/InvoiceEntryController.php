@@ -79,9 +79,6 @@ class InvoiceEntryController extends Controller
         $poId = Order::where('OrderNo', $poOrderNo)->value('Id');
         $grnId = $validated['GRNReference'];
 
-        //     ->where('iOrderID', $poId)
-        //     ->pluck('Id') //represents the unique Orderline Ids based on
-        //     ->toArray();
 
         try {
             $grnItems = FacadesDB::table('t_GoodsReceipts')
@@ -275,9 +272,6 @@ class InvoiceEntryController extends Controller
         $poId = $request->input('POReference');
         $grnId = $request->input('GRNReference');
 
-        //     ->where('iOrderID', $poId)
-        //     ->pluck('Id') //represents the unique Orderline Ids based on
-        //     ->toArray();
 
         FacadesDB::beginTransaction();
 
@@ -422,10 +416,6 @@ class InvoiceEntryController extends Controller
                     // 'TaxGLAccountID'    => 2_101,
                 ];
                 // Post via mapping; TransactionService handles:
-                // - mapping lookup
-                // - idempotency (no duplicates)
-                // - validation + balancing
-                // - persistence (single DB txn internally)
                 $result = $svc->postFromTypeMapping($payload);
 
                 // Update invoice approval status if posted (or keep as-is if service reported 'exists')

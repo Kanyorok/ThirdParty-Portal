@@ -2,15 +2,8 @@
 
 namespace App\Http\Controllers\Property;
 
-use App\Enums\Core\PermissionEnum;
-use App\Enums\Property\PropertyInvoiceEnum;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Property\BillingAndReceipting\PropertyReceiptRequest;
-use App\Models\Core\Approval\CodeDetail;
-use App\Models\PropertyManagement\PropertyInvoice;
-use App\Models\PropertyManagement\PropertyReceipt;
 use App\Services\Property\BillingAndReceipting\PropertyReceiptService;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -53,44 +46,25 @@ class PropertyReceiptController extends Controller
     }
 
 
-    //
-    // {
-    // }
-
-    //     {
-    //     }
 
 
-    //     {
 
 
-    //         });
 
 
-    //         }
 
-    //     }
 
-    //     {
-    //     }
-    //     {
+
+
     //         try {
 
     //             // Create the receipt
     //             PropertyReceiptService::create(
     //                 Auth::user()
-    //             );
 
     //             // --- Update Invoice Status ---
 
-    //             } elseif ($totalPaid > 0) {
-    //             } else {
-    //             }
 
-    //         } catch (Exception $e) {
-    //         }
-    //     }
-    // {
 
 
     //     <!DOCTYPE html>
@@ -105,7 +79,6 @@ class PropertyReceiptController extends Controller
     //                 font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     //                 padding: 60px 20px;
     //                 color: #212529;
-    //             }
 
     //             .receipt-container {
     //                 background: #fff;
@@ -116,12 +89,10 @@ class PropertyReceiptController extends Controller
     //                 overflow: hidden;
     //                 position: relative;
     //                 animation: fadeIn 0.6s ease-in-out;
-    //             }
 
     //             @keyframes fadeIn {
     //                 from { opacity: 0; transform: translateY(20px); }
     //                 to { opacity: 1; transform: translateY(0); }
-    //             }
 
     //             .receipt-header {
     //                 background: linear-gradient(90deg, #0d6efd, #004aad);
@@ -130,17 +101,14 @@ class PropertyReceiptController extends Controller
     //                 display: flex;
     //                 align-items: center;
     //                 justify-content: space-between;
-    //             }
 
     //             .receipt-header h4 {
     //                 margin: 0;
     //                 font-weight: 700;
     //                 font-size: 1.4rem;
-    //             }
 
     //             .receipt-body {
     //                 padding: 35px;
-    //             }
 
     //             .section-title {
     //                 color: #0d6efd;
@@ -149,12 +117,10 @@ class PropertyReceiptController extends Controller
     //                 padding-left: 10px;
     //                 margin-bottom: 15px;
     //                 font-size: 1rem;
-    //             }
 
     //             .details p {
     //                 font-size: 15px;
     //                 margin-bottom: 6px;
-    //             }
 
     //             table {
     //                 width: 100%;
@@ -162,23 +128,19 @@ class PropertyReceiptController extends Controller
     //                 margin-top: 20px;
     //                 border-radius: 10px;
     //                 overflow: hidden;
-    //             }
 
     //             th {
     //                 background: #004aad;
     //                 color: #fff;
     //                 text-align: left;
     //                 padding: 10px;
-    //             }
 
     //             td {
     //                 padding: 10px;
     //                 border-bottom: 1px solid #dee2e6;
-    //             }
 
     //             tr:last-child td {
     //                 border-bottom: none;
-    //             }
 
     //             .amount-box {
     //                 text-align: center;
@@ -187,13 +149,11 @@ class PropertyReceiptController extends Controller
     //                 border-radius: 14px;
     //                 padding: 30px;
     //                 margin: 40px 0;
-    //             }
 
     //             .amount-box h2 {
     //                 color: #004aad;
     //                 font-weight: 800;
     //                 font-size: 2.2rem;
-    //             }
 
     //             .footer-note {
     //                 text-align: center;
@@ -202,7 +162,6 @@ class PropertyReceiptController extends Controller
     //                 border-top: 1px solid #dee2e6;
     //                 padding-top: 15px;
     //                 margin-top: 30px;
-    //             }
 
     //             .btn-print {
     //                 position: absolute;
@@ -210,7 +169,6 @@ class PropertyReceiptController extends Controller
     //                 right: 20px;
     //                 border-radius: 8px;
     //                 z-index: 100;
-    //             }
 
     //             @media print {
     //                 @page { size: A4; margin: 20mm; }
@@ -220,7 +178,6 @@ class PropertyReceiptController extends Controller
     //                 .section-title { color: #004aad !important; border-color: #004aad !important; -webkit-print-color-adjust: exact; }
     //                 .amount-box { background: #eef5ff !important; border-color: #aac8ff !important; -webkit-print-color-adjust: exact; }
     //                 .btn-print { display: none !important; }
-    //             }
     //         </style>
     //     </head>
 
@@ -286,19 +243,11 @@ class PropertyReceiptController extends Controller
     //     </body>
     //     </html>";
 
-    // }
 
 
-    //     {
 
     //         try {
 
-    //                 ->with('success', 'Rent Receipt Deleted Successfully!');
-    //         } catch (\Throwable $th) {
     //             // Log the error for debugging
     //             Log::error('Error deleting Rent Receipt: ' . $th->getMessage());
-    //                 ->withErrors(['error' => 'Failed to delete Rent  Receipt. Please try again.'])
-    //                 ->withInput();
-    //         }
-    //     }
 }

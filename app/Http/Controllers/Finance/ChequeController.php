@@ -66,7 +66,6 @@ class ChequeController extends Controller
         return view('finance.cheques.index', compact('rows', 'dir', 'status', 'chequeLeafStatuses'));
     }
 
-    // ---------- Create ----------
     public function createIssued()
     {
         $bankAccounts = BankAccount::with('bank')->orderBy('AccountNumber')->get();
@@ -96,7 +95,6 @@ class ChequeController extends Controller
         return view('finance.cheques.received.create', compact('bankAccounts', 'currencies', 'chequePartyTypes'));
     }
 
-    // ---------- Store ----------
     public function storeIssued(Request $request)
     {
         $request->validate([
@@ -319,7 +317,6 @@ class ChequeController extends Controller
             ->with('success', 'Received cheque recorded (On Hand).');
     }
 
-    // ---------- Show ----------
     public function show($id)
     {
         $row = Cheque::with(['bankAccount.bank', 'chequeBook', 'currency'])->findOrFail($id);
@@ -458,7 +455,6 @@ class ChequeController extends Controller
         return $string;
     }
 
-    // ---------- Actions ----------
     // Deposit a RECEIVED cheque -> creates Cashbook RECEIPT (counter = Cheques-On-Hand mapping)
     public function deposit(Request $request, $id)
     {
@@ -528,8 +524,6 @@ class ChequeController extends Controller
     }
 
     // Clear a cheque:
-    //  - ISSUED -> create Cashbook PAYMENT, counter DR from mapping CHQ_ISSUED_CLEAR
-    //  - RECEIVED -> (already deposited) optionally just mark Cleared, or create a second receipt if you separate deposit vs clear by value date.
     public function clear(Request $request, $id)
     {
         $row = Cheque::with('bankAccount')->findOrFail($id);

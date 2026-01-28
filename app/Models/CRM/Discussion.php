@@ -41,7 +41,6 @@ class Discussion extends Pivot
                            'DeletedBy',
                           ];
 
-    // (Call, Meeting)
     public function source(): MorphTo
     {
         return $this->morphTo(__FUNCTION__, 'SourceType', 'SourceTypeID');
@@ -57,7 +56,6 @@ class Discussion extends Pivot
     {
         return $this->belongsToMany(User::class, 't_DiscussionsUsers', 'DiscussionId', 'UserID')
             ->withPivot(['CreatedBy', 'ModifiedBy'])->withTimestamps()->withTrashed();
-        //->using(DiscussionUser::class);
     }
 
     public function discussionUser(): HasMany

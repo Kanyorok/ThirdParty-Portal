@@ -30,7 +30,6 @@ class TenderType extends Model
     ];
 
     //     'TenderType' => TenderTypeEnum::class,
-    // ];
 
     public static function generateTypeCode($tenderTypeValue = null)
     {

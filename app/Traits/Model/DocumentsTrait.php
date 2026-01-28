@@ -32,7 +32,6 @@ trait DocumentsTrait
     public function newDocument(ModulesEnum $module, UploadedFile $file, array|string $permissions, User $actor): Document
     {
         //     throw new ErroredException("Implement UserActorTrait in model");
-        // }
 
         $RelatedId = $this->{$this->primaryKey};
 

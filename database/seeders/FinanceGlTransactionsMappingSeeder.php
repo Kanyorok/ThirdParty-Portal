@@ -30,7 +30,6 @@ class FinanceGlTransactionsMappingSeeder extends Seeder
         foreach ($mappings as [$transactionTypeId, $debitCode, $creditCode]) {
 
             //                continue;
-            //            }
 
             $exists = DB::table('t_FinanceGlTransactionsMapping')
                 ->where('ModuleID', $moduleId)

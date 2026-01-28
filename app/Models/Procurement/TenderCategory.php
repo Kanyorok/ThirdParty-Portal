@@ -28,7 +28,6 @@ class TenderCategory extends Model
     ];
 
     //     'TenderCategory' => TenderCategoryEnum::class,
-    // ];
 
     public static function generateCatCode($categoryValue = null)
     {

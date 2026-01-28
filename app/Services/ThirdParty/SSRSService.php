@@ -136,7 +136,6 @@ class SSRSService
         try {
             $query = Http::withBasicAuth($username, $password)->withOptions(['auth' => [$username, $password, 'ntlm']])
                 ->get(Str::of($Host)->trim()->rtrim('/') . "/{$Path}/api/v2.0/ME");
-            //->get(Str::of($Host)->trim()->rtrim('/') . "/reports/api/v2.0/ME");
         } catch (ConnectionException | Exception) {
             return null;
         }

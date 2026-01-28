@@ -448,7 +448,6 @@ Route::middleware(['module:300000'])->group(function () {
     Route::post('/sections', [SectionController::class, 'store'])->name('sections.store');
 
 
-    //});
 
 
     //Route::get('/tenderevaluations', [EvaluationCriteriaController::class, 'tenderEvaluations'])->name('tenderevaluations.index');
@@ -645,7 +644,6 @@ Route::middleware(['module:300000'])->group(function () {
         'show' => 'procurement-reports.show',
     ]);
     // Route::get('/planning/get-plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])
-    // ->name('planning.getPlanDetails');
 });
 
 
@@ -841,7 +839,6 @@ Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController
 //    Route::get('/sections/{id}/edit', [RFQSectionController::class, 'edit'])->name('rfqsections.edit');
 //    Route::put('/sections/{id}', [RFQSectionController::class, 'update'])->name('rfqsections.update');
 //    Route::delete('/sections/{id}', [RFQSectionController::class, 'destroy'])->name('rfqsections.destroy');
-//});
 //
 //Route::prefix('procurement/rfq')->group(function () {
 //    // Routes for RFQCriteriaController
@@ -852,7 +849,6 @@ Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController
 //    Route::delete('/criterias/{id}', [RFQCriteriaController::class, 'destroy'])->name('rfqcriterias.destroy');
 //
 //    // Routes for RFQSectionController (already defined above, no duplicates needed)
-//});
 //
 // Additional procurement routes (JSON endpoints used by frontend)
 Route::get('committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);

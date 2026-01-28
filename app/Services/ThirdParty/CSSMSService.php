@@ -136,7 +136,6 @@ class CSSMSService
 
                 return false;
             }
-            //{"ExternalReference":"1","Msisdn":"+254718319224","ResponseCode":"000","ResponseDescription":"MESSAGE DELIVERED"}
             Log::error('Sending sms (' . '$sms->Id' . ') Failed : unknown reason');
 
             return false;

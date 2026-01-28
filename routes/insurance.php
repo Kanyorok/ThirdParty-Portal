@@ -237,23 +237,15 @@ Route::middleware(['module:900000'])->namespace('Insurance')->prefix('insurance'
 
     //     // Medical Funds (no hyphen → clean names)
     //     Route::resource('medicalfunds', MedicalFundController::class)
-    //         ->parameters(['medicalfunds' => 'medicalfund']);
 
     //     // Nested: Beneficiaries
     //     Route::resource('medicalfunds.beneficiaries', MedicalFundBeneficiaryController::class)
-    //         ->shallow()
-    //         ->parameters(['medicalfunds' => 'medical_fund','beneficiaries' => 'beneficiary']);
 
     //     // Nested: Contributions
     //     Route::resource('medicalfunds.contributions', MedicalFundContributionController::class)
-    //         ->shallow()
-    //         ->parameters(['medicalfunds' => 'medical_fund','contributions' => 'contribution']);
 
     //     // Nested: Disbursements
     //     Route::resource('medicalfunds.disbursements', MedicalFundDisbursementController::class)
-    //         ->shallow()
-    //         ->parameters(['medicalfunds' => 'medical_fund','disbursements' => 'disbursement']);
-    // });
 
     Route::prefix('bancassurance/settings')->name('bancassurance.settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');

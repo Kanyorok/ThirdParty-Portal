@@ -55,7 +55,6 @@ class ScheduleController extends Controller
 
         return view('crm.schedule.index')
             ->with('rooms', MeetingRoom::all(['RoomID', 'Name', 'Capacity']));
-        //->with('branches', BranchDetails::all());
     }
 
     /**

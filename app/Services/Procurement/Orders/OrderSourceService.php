@@ -33,7 +33,6 @@ class OrderSourceService
             $awardedFromRFQAward = DB::table('t_RFQResponse as r')
                ->join('t_RFQ as q', 'r.RFQId', '=', 'q.Id')
                ->join('t_ThirdParties as tp', 'r.SupplierId', '=', 'tp.Id') // r.SupplierId is ThirdPartyId
-               // ->where('q.Status', 'Approved') // Assuming RFQ status check? Controller didn't have it explicitly in last view?
                // Controller had: DB::table('t_RFQAward as a')...
                // WAIT. My previous edit to controller CHANGED it to query t_RFQResponse.
 

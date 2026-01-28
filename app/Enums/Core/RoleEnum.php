@@ -23,7 +23,6 @@ enum RoleEnum: string
             return $description;
         }
 
-        //[append=>['w' =>'Write']]
         if (array_key_exists('append', $instruction)) {
             $append = $instruction['append'];
             if (array_key_exists($this->value, $append)) {

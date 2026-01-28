@@ -286,9 +286,6 @@ class LegalDocumentController extends Controller
         }
     }
 
-    //    {
-    //    }
-
     public function edit(int $id)
     {
         // Eager-load users to show names in the header or helper text if needed
@@ -316,7 +313,6 @@ class LegalDocumentController extends Controller
             ->get();
 
         // If you want a dropdown for SourceID (FK to t_Modules), uncomment:
-        //     ->orderBy('ModuleName')->get();
 
         return view('legal.documents.edit', [
             'doc' => $doc,
@@ -402,7 +398,6 @@ class LegalDocumentController extends Controller
                     $doc->LinkedDMSDocID = $uploadedDocument->Id;
                     $doc->save();
 
-                    // (Optional) If you want to keep ONLY the latest link in the pivot:
                     if ($request->boolean('DetachOldPivots', false)) {
                         \App\Models\DMS\DocumentRelation::where('Related', $doc::getPrimaryKey())
                             ->where('RelatedID', $doc->getKey())

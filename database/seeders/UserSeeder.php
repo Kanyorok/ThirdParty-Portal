@@ -24,7 +24,5 @@ class UserSeeder extends Seeder
         //         'Linked' => true,
         //         'CreatedBy' => $user->Id,
         //         'ModifiedBy' => $user->Id,
-        //     ]);
-        // }
     }
 }

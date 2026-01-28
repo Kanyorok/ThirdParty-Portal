@@ -113,7 +113,6 @@ class ConsolidatedPlanWorkflowService
             //     'planId' => $this->plan->PlanID,
             //     'error' => $e->getMessage(),
             //     'trace' => $e->getTraceAsString(),
-            // ]);
             // throw new ErroredException($e->getMessage());
         }
     }
@@ -126,7 +125,6 @@ class ConsolidatedPlanWorkflowService
 
 
         //     throw new ErroredException('You do not have permission to approve this plan');
-        // }
 
         try {
             DB::beginTransaction();
@@ -161,7 +159,6 @@ class ConsolidatedPlanWorkflowService
             //     'planId' => $this->plan->PlanID,
             //     'error' => $e->getMessage(),
             //     'trace' => $e->getTraceAsString(),
-            // ]);
             // throw new ErroredException($e->getMessage());
         }
     }

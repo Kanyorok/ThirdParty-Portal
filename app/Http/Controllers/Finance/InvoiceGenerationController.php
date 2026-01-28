@@ -321,10 +321,6 @@ class InvoiceGenerationController extends Controller
                     // 'TaxGLAccountID'    => 2_101,
                 ];
                 // Post via mapping; TransactionService handles:
-                // - mapping lookup
-                // - idempotency (no duplicates)
-                // - validation + balancing
-                // - persistence (single DB txn internally)
                 $result = $svc->postFromTypeMapping($payload);
 
                 // Update invoice approval status if posted (or keep as-is if service reported 'exists')

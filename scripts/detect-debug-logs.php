@@ -18,8 +18,12 @@ $patterns = [
     // die() or exit() with messages (debugging)
     '/\b(die|exit)\s*\(\s*[\'"]/',
     
-    // Commented out code detection - ANY commented function/class/control structure
-    '/^\s*\/\/\s*(public|private|protected|function|class|if|for|while|foreach|return|use |namespace )\s*/',
+    // Commented-out code that looks like actual code (not documentation)
+    // Match lines starting with // followed by: $var, ->method, ::method, [, (, {, }, ], ), ;
+    '/^\s*\/\/\s*[\$\-\>\:\:\[\(\{\}\]\)\;]/',
+    
+    // Commented out keywords followed by code
+    '/^\s*\/\/\s*(public|private|protected|function|class|if|for|while|foreach|return|use |namespace |protected |static |const |throw |try |catch )\s+/',
 ];
 
 $directories = [

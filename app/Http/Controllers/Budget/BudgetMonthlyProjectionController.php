@@ -41,7 +41,6 @@ class BudgetMonthlyProjectionController extends Controller
 
         //     'BudgetID' => 'required|exists:t_Budgets,Id',
         //     'BudgetProjectionID' => 'required',
-        // ]);
 
         DB::beginTransaction();
 

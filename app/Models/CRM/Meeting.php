@@ -93,7 +93,6 @@ class Meeting extends Model
     {
         return $this->belongsToMany(User::class, 't_MeetingUsers', 'MeetingId', 'UserID', 'MeetingID')
             ->withPivot(['CreatedBy', 'ModifiedBy'])->withTimestamps();
-        //->using(MeetingUser::class);
     }
 
     public function source(): MorphTo

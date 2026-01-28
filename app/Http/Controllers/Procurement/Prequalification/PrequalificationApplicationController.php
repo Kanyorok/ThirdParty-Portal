@@ -393,10 +393,6 @@ class PrequalificationApplicationController extends Controller
                     && ! $duplicateWithinRange;
 
                 // Not Applicable per business rules only:
-                // - expired
-                // - strictly future (today is applicable)
-                // - no classifications
-                // - already applied to all classifications
                 $notApplicable = (bool) ($isExpired || $isFutureWindow || ! $hasCategories || ! $hasUnapplied);
 
                 return [

@@ -297,9 +297,6 @@ use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
 
-
-
-
 class AppServiceProvider extends ServiceProvider
 {
     /**

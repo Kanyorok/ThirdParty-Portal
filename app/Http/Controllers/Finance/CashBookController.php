@@ -363,8 +363,6 @@ class CashBookController extends Controller
         }
 
         // TODO: call your GL posting service here
-        // - Bank leg from BankAccount.GLAccountID (DR for Receipt, CR for Payment)
-        // - Counter legs from CashbookLine (already balanced by mapping/validation)
 
         $entry->Status = 'Posted';
         $entry->PostedOn = now();

@@ -84,7 +84,6 @@ class SupplierCategoryResolver
         //     'thirdPartyId' => $thirdPartyId,
         //     'supplierMasterId' => $supplierMasterId,
         //     'categories' => $result
-        // ]);
 
         return $result;
     }

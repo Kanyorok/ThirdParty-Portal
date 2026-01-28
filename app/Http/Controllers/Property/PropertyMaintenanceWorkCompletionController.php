@@ -68,18 +68,13 @@ class PropertyMaintenanceWorkCompletionController extends Controller
 
         return redirect()->route('workcompletion.index')->with('success', 'Work completion created successfully');
     }
-    // {
     //     //Check if user has permission to edit tender categories
-    // }
 
-    // {
 
 
 
     //             Auth::user(),
-    //         );
 
-    // }
     public function show($Id)
     {
         $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionView, PropertyMaintenanceWorkCompletion::class);
@@ -89,16 +84,9 @@ class PropertyMaintenanceWorkCompletionController extends Controller
     }
 
 
-    // {
     //     //Check if user has permission to delete property categories
     //     try {
 
-    //             ->with('success', 'Property Work Completion Deleted Successfully!');
-    //     } catch (\Throwable $th) {
     //         // Log the error for debugging
     //         Log::error('Error deleting property work completion: ' . $th->getMessage());
-    //             ->withErrors(['error' => 'Failed to delete Property Maintenance Work Completion. Please try again.'])
-    //             ->withInput();
-    //     }
-    // }
 }

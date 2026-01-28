@@ -3,7 +3,6 @@
 namespace App\Models\Fleet;
 
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\Core\Branch;
 use App\Models\HRM\Employee;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -63,10 +62,6 @@ class FleetVehicleAssignment extends Model
     {
         return $this->belongsTo(FleetDriver::class, 'DriverID', 'Id');
     }
-
-
-    // {
-    // }
 
     public function assigner()
     {

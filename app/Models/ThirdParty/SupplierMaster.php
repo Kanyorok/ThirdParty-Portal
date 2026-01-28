@@ -2,7 +2,6 @@
 
 namespace App\Models\ThirdParty;
 
-use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -87,6 +86,4 @@ class SupplierMaster extends Model
 
     // Note: ApprovalStatus is a string enum (e.g., 'P', 'A', 'R'), not a foreign key
     // Commenting out incorrect relationship to prevent SQL errors
-    // {
-    // }
 }

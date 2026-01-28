@@ -21,7 +21,6 @@ class RentDashboardController extends Controller
             'lease.tenant.thirdParty',
         ]);
 
-        // ---- Filters (ALL by default) ----
         if ($request->filled('property_id')) {
             $query->whereHas('lease.property', function ($q) use ($request) {
                 $q->where('Id', $request->property_id);
@@ -41,7 +40,6 @@ class RentDashboardController extends Controller
 
         $invoices = $query->get();
 
-        // ---- Finance Invoices mapping ----
         $requestIds = $invoices->pluck('RequestID')->filter()->unique();
         $financeByReq = collect();
 
@@ -53,7 +51,6 @@ class RentDashboardController extends Controller
             )->keyBy('RequestID');
         }
 
-        // ---- Derive amounts & status ----
         $invoices->each(function ($inv) use ($financeByReq) {
             $due = (float)($inv->RentAmount ?? 0)
                 + (float)($inv->ServicesCharge ?? 0)
@@ -70,7 +67,6 @@ class RentDashboardController extends Controller
                 : ($paid > 0 ? 'Partial Paid' : 'Pending');
         });
 
-        // ---- Monthly chart data ----
         $invoiceByMonth = $invoices->groupBy(
             fn ($i) =>
             Carbon::parse($i->InvoiceDate)->format('Y-m')
@@ -103,7 +99,6 @@ class RentDashboardController extends Controller
             ],
         ]);
 
-        // ---- Summary cards ----
         $collected = (float)$allocations->sum('AmountAllocated');
 
         $overdue = $invoices->sum(
@@ -120,7 +115,6 @@ class RentDashboardController extends Controller
 
         $dueSoon = 0; // Optional future logic
 
-        // ---- Filters data ----
         $properties = PropertyRegistry::all();
         $tenants = PropertyNewTenant::with('thirdParty')->get();
 

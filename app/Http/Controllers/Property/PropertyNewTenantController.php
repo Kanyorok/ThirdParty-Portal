@@ -8,14 +8,11 @@ use App\Http\Requests\Property\TenantAndLease\PropertyNewTenantRequest;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\ThirdParty\ThirdParties;
-use App\Services\Property\TenantAndLease\PropertyNewTenantService;
 
 class PropertyNewTenantController extends Controller
 {
     protected $service;
 
-    // {
-    // }
     public function index()
     {
         $newtenants = PropertyNewTenant::with('type', 'thirdParty')->get();
@@ -33,17 +30,6 @@ class PropertyNewTenantController extends Controller
         $assignedTenantIds = PropertyNewTenant::pluck('ThirdPartyId')->toArray();
 
         // // Fetch only tenants with active Tenant type
-        //         ->whereNull('t_ThirdPartyTypes.DeletedOn')
-        //         ->whereHas('category', function ($sub) {
-        //         });
-        //     })
-        //     ->with(['types' => function ($q) {
-        //         ->whereNull('t_ThirdPartyTypes.DeletedOn')
-        //         ->whereHas('category', function ($sub) {
-        //         });
-        //     }])
-        //     ->whereNotIn('Id', $assignedTenantIds)
-        //     ->get();
 
         $tenants = ThirdParties::all();
 

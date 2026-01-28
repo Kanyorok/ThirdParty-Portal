@@ -62,15 +62,9 @@ class PolicyController extends Controller
         ));
     }
 
-    // {
     //             'customerreferral.thirdParty',
     //             'referredByEmployee'
-    //         ])
-    //         ->where('ClientId', $customerId)
-    //         ->orderByDesc('Id')
-    //         ->get();
 
-    // }
     public function getReferralsByCustomer($customerId)
     {
         $referrals = BancAssuranceReferral::with([

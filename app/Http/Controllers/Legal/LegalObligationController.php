@@ -256,18 +256,12 @@ class LegalObligationController extends Controller
         }
     }
 
-    // {
-
-    // }
 
 
-    // {
+
 
     //             'title' => $obligation->ObligationTitle,
     //             'start' => $obligation->DueDate,
     //             'url' => route('legal.obligations.show', $obligation->ID),
-    //         ];
-    //     });
 
-    // }
 }

@@ -268,13 +268,10 @@ class Tender extends Model
     {
         return 'tender'; // This is the morph alias for workflow, not the database column
     }
-    // {
     //         Workflow::class,
     //         'source',
     //         'Source',   // morph type column
     //         'SourceID'  // morph id column
-    //     );
-    // }
 
     /**
      * Keep your existing route key name to avoid breaking other modules

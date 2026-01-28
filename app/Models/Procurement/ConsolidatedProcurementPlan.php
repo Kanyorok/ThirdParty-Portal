@@ -10,7 +10,6 @@ use App\Models\Core\Workflow;
 use App\Models\Inventory\ItemMasterList;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ConsolidatedProcurementPlan extends Model
@@ -69,8 +68,6 @@ class ConsolidatedProcurementPlan extends Model
 
     // Workflow relationships - commented out as not needed for approval workflow
     // The approval workflow uses t_WorkFlowHistory and t_WorkFlowPending tables directly
-    // {
-    // }
 
     /**
      * Get workflow history for this plan

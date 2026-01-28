@@ -20,7 +20,6 @@ class BudgetGLAccountSubType extends Model
     //        'GLAccountSubTypeName',
     //        'CreatedBy',
     //        'ModifiedBy',
-    //    ];
 
     public static function getPrimaryKey(): string
     {

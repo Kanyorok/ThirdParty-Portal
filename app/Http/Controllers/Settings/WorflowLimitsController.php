@@ -109,7 +109,6 @@ class WorflowLimitsController extends Controller
             'amounts' => $amounts,
         ]);
 
-        // --- VALIDATE WORKFLOW STAGE (once) ---
         $workflowStage = WorkflowStage::with(['workflow', 'type_name'])
             ->where('Id', $stageId)
             ->whereHas('type_name', function ($query) {
@@ -123,7 +122,6 @@ class WorflowLimitsController extends Controller
             return redirect()->back()->withErrors(['error' => 'Invalid workflow stage or stage is not AMT type.']);
         }
 
-        // --- FETCH EXISTING LIMITS AND AMOUNTS ---
         $existingLimits = WorkFlowLimit::where('WorkFlowStageId', $stageId)
             ->whereNull('DeletedOn')
             ->orderBy('MaxAmount', 'asc')
@@ -132,7 +130,6 @@ class WorflowLimitsController extends Controller
         $existingAmounts = $existingLimits->pluck('MaxAmount')->toArray();
         $existingCount = count($existingAmounts);
 
-        // --- CHECK DUPLICATES (existing + new) ---
         $newAmounts = array_unique($amounts); // Remove duplicates in new
         if (count($newAmounts) < count($amounts)) {
             return redirect()->back()->withErrors(['error' => 'Duplicate amounts provided in the new limits.']);
@@ -149,7 +146,6 @@ class WorflowLimitsController extends Controller
             return redirect()->back()->withErrors(['error' => implode(' ', $duplicateErrors)]);
         }
 
-        // --- BEGIN TRANSACTION FOR MULTIPLE CREATIONS ---
         DB::beginTransaction();
 
         try {
@@ -179,7 +175,6 @@ class WorflowLimitsController extends Controller
                     'tier_number' => $tierNumber,
                 ]);
 
-                // --- SP CALL ---
                 $params = [
                     $stageId,
                     $amount,
@@ -200,7 +195,6 @@ class WorflowLimitsController extends Controller
 
                 Log::debug('Stored Procedure Result Received.', ['result' => $result]);
 
-                // --- SP RESULT PARSING ---
                 if (! empty($result) && isset($result[0]->Message)) {
                     $message = $result[0]->Message;
 

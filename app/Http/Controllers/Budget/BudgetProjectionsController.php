@@ -379,7 +379,6 @@ class BudgetProjectionsController extends Controller
             //     'CurrencyID' => $request->input('CurrencyID'),
             //     'Products' => $request->input('Products'),
             //     'MonthlyAllocations' => $request->input('MonthlyAllocations'),
-            // ]);
             $budget = BudgetDriverProjections::findOrFail($id);
             // Update currency if present
             if (isset($validated['CurrencyID'])) {

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\API\Procurement;
 
-use App\Enums\Core\PermissionEnum;
 use App\Enums\TenderStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Auth\User;

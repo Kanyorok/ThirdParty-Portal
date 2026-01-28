@@ -28,7 +28,6 @@ Route::prefix('portal/auth')->group(function () {
 // Step 2: Register company info (associated third party) - NO AUTH REQUIRED FOR INITIAL SETUP
 Route::post('third-parties/register-details', [ThirdPartiesController::class, 'store']);
 
-// --- General Public / Unprotected Third Party-related Endpoints ---
 
 // Enums (public)
 Route::prefix('enums')->group(function () {
@@ -85,7 +84,6 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
 });
 
 
-// --- Authenticated Third Party Routes (Requires auth:sanctum & VerifiedUser middleware) ---
 
 Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
 

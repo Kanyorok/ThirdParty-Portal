@@ -71,6 +71,5 @@ class MarketingPlannerActivity extends Model
     {
         return $this->belongsToMany(User::class, 't_MarketingPlannerActivityUsers', 'ActivityId', 'UserID')
             ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy'])->withTimestamps()->withTrashed();
-        //->using(MarketingPlannerActivityUser::class);
     }
 }

@@ -149,25 +149,17 @@ class DepartmentNeed extends Model
         //             Log::info('Auto-submitting department need for approval', [
         //                 'needId' => $departmentNeed->Id,
         //                 'status' => $departmentNeed->Status?->value,
-        //             ]);
 
         //             /** @var DepartmentNeedsWorkflow $workflowService */
         //                 'Initial submission'
-        //             );
 
         //             Log::info('Department need auto-submitted successfully', [
         //                 'needId' => $departmentNeed->Id,
-        //             ]);
-        //         } catch (\Throwable $e) {
         //             Log::error('Failed to auto-submit department need', [
         //                 'needId' => $departmentNeed->Id,
         //                 'error' => $e->getMessage(),
         //                 'trace' => $e->getTraceAsString(),
-        //             ]);
         //             // Don't throw - let the record be created even if workflow submission fails
-        //         }
-        //     }
-        // });
 
         // Log status changes
         static::updating(function (DepartmentNeed $departmentNeed) {

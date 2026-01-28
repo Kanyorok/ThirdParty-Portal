@@ -28,7 +28,6 @@ use App\Http\Controllers\Inventory\UOMController;
 use App\Http\Controllers\Inventory\UOMConversionController;
 use Illuminate\Support\Facades\Route;
 
-
 Route::middleware(['module:400000'])->namespace('Inventory')->prefix('inventory')->group(function () {
     // Route::resource('receipts', ReceiptController::class);
     Route::get('itemmasterlist/export', [ItemMasterListController::class, 'export'])

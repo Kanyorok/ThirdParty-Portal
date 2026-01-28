@@ -94,8 +94,6 @@ class BudgetPeriodController extends Controller
             'selected_gls' => [
                 'nullable',
                 'string',
-                //                    }
-                //                },
             ],
         ]);
         DB::beginTransaction();

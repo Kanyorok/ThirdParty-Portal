@@ -82,13 +82,11 @@ class LegalTemplateController extends Controller
         return view('legal.templates.create', compact('clauses', 'docTypes'));
     }
 
-    //    {
     //                'TemplateName' => 'required|string|max:255',
     //                'DocumentType' => 'required|string|max:100',
     //                'Version' => 'required|string|max:20',
     //                'Description' => 'nullable|string',
     //                'Content' => 'nullable|string',
-    //            ]);
     //
     //            LegalTemplate::create([
     //                'TemplateName' => $request->TemplateName,
@@ -99,11 +97,9 @@ class LegalTemplateController extends Controller
     //                'CreatedBy' => Auth::Id(),
     //                'CreatedOn' => now(),
     //                'IsActive' => 1,
-    //            ]);
     //
     //        LegalTemplate::create($request->all());
     //
-    //    }
 
     public function store(Request $request)
     {

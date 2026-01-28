@@ -288,7 +288,6 @@ class BudgetActivitiesController extends Controller
             $activity = BudgetActivity::findOrFail($id);
             $activityId = $activity->BudgetActivityID;
 
-            // }
             $activity->DeletedBy = Auth::Id();
             $activity->save();
             $activity->delete();

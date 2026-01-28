@@ -39,7 +39,6 @@ class Activity extends Model
                            'ModifiedBy',
                           ];
 
-    // (Call, Schedule, )
     public function activityType(): MorphTo
     {
         return $this->morphTo(__FUNCTION__, 'ActivityType', 'ActivityTypeID');

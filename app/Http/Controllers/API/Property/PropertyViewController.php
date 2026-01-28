@@ -26,13 +26,4 @@ class PropertyViewController extends Controller
         return
             new PropertyCollection($properties);
     }
-
-
-    //     {
-    //             'getBlockByProperty.floor.units' => function ($query) {
-    //                     ->where('CurrentStatus', true);
-    //             }
-    //         ])->findOrFail($id);
-
-    //     }
 }

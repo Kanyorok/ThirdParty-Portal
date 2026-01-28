@@ -202,7 +202,6 @@ abstract class SignService
     private function _addStampToPage(string $imagePath, string $signature): string
     {
         $path = Storage::disk('temp')->path(Str::uuid()->toString() . '.png');
-        //-rotate $rotate_degrees
         shell_exec("composite  -geometry {$this->sign_width}x{$this->sign_height}+{$this->sign_start_h}+{$this->sign_start_v} -dissolve {$this->opacity}% $signature $imagePath $path");
 
         if (! file_exists($path)) {

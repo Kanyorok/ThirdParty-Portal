@@ -45,7 +45,6 @@ class LegalClause extends Model
         'Tags' => 'array',
     ];
 
-    // (Fix the incorrect returned name)
     public static function getPrimaryKey(): string
     {
         return 'LegalClausesId';

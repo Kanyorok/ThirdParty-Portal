@@ -109,7 +109,6 @@ class OnfonMediaService
                                                                       ],
                                                            ]);
 
-            //{"ErrorCode": 0, "ErrorDescription": "null", "Data": [{"MessageErrorCode": 0, "MessageErrorDescription": "Success", "MobileNumber": "254717861596", "MessageId": "5c358ff1-bb38-49dd-bb70-410ba99dc09e", "Custom": ""}]}
             $json_response = json_decode($response->getBody()->getContents(), false, 512, JSON_THROW_ON_ERROR);
 
             if ($json_response->ErrorCode === 0) {

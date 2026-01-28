@@ -4,25 +4,11 @@ namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
 
-
-// {
-//     {
-//             ->where('IsActive', 1)
-//             ->orderByDesc('DispatchDate')
-//             ->get();
-
-//     }
-
-//     {
-//     }
-
-//     {
 //             'DispatchDate' => 'required|date',
 //             'DispatchedTo' => 'required|string',
 //             'DispatchMethod' => 'nullable|string',
 //             'Status' => 'nullable|string',
 //             'Remarks' => 'nullable|string',
-//         ]);
 
 //             LegalDispatch::create([
 //                 'LegalDocumentID' => $documentId,
@@ -34,7 +20,6 @@ use App\Http\Controllers\Controller;
 //                 'CreatedBy' => Auth::id(),
 //                 'CreatedOn' => now(),
 //                 'IsActive' => 1
-//             ]);
 
 
 class LegalDispatchController extends Controller
