@@ -20,7 +20,6 @@ class PropertyTenantClearanceController extends Controller
         $this->service = $service;
     }
 
-
     public function index()
     {
         $clearancetenants = PropertyTenantClearance::all();
