@@ -666,7 +666,6 @@ Route::middleware('role:evaluator')->group(function () {
 });
 
 // Removed this; kinda rendundant
-
 Route::resource('preqevaluation', PrequalificationEvaluationController::class);
 Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
 Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
@@ -790,32 +789,7 @@ Route::get('/procurement/committee-references/{type}', [TenderCommitteeControlle
 Route::get('procurement/tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.manual.show');
 Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);
 
-
-
-//// RFQ Criteria Setup
-//    // Routes for RFQSettingSectionController
-//
-//    // Routes for RFQSettingCriteriaController
-//
-//    // Routes for RFQSectionController
-//
-//    // Routes for RFQCriteriaController
-//
-//    // Routes for RFQSectionController (already defined above, no duplicates needed)
-//
-// Additional procurement routes (JSON endpoints used by frontend)
 Route::get('committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);
 Route::get('tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show.typed');
 Route::get('rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);
 
-Route::get('/fix-rfq-1', function () {
-    $s = app(\App\Services\Procurement\RFQ\RFQWorkflowService::class);
-    $r = \App\Models\Procurement\RFQ::find(1);
-    $u = \App\Models\Auth\User::find(4); // User 4 is likely the admin/current user
-    if (! $u) {
-        $u = \App\Models\Auth\User::first();
-    }
-    $s->submit($r, $u, 'Manual Fix Submission');
-
-    return 'Submitted RFQ 1';
-});

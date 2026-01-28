@@ -73,7 +73,6 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     Route::resource('periodmanagement', PeriodManagementController::class);
     Route::resource('vendormaster', VendorMasterController::class);
     // Original invoice entry (kept for compatibility)
-    // Route::resource('invoiceentry', InvoiceEntryController::class);
 
     // New simplified invoice entry approach
     Route::resource('invoiceentry', InvoiceEntryV2Controller::class)->names([
@@ -247,27 +246,19 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     Route::post('/glAccountTypeSegmentValue/save', [COASegmentController::class, 'saveGLAccountTypeSegment'])->name('glAccountTypeSegmentValue.save');
     Route::post('/glSubAccountTypeSegmentValue/save', [COASegmentController::class, 'saveSubGLAccountTypeSegment'])->name('glSubAccountTypeSegmentValue.save');
 
-    // Route for getting Order
     Route::get('/finance/pos/{selectedVendor}', [InvoiceEntryController::class, 'getOrders'])->name('finance.orders');
-    // Route for getting GRNS
     Route::get('/finance/grns/{selectedPO}', [InvoiceEntryController::class, 'getGRNs'])->name('finance.grns');
-    // Route for viewingPOModal
     Route::get('/finance/viewpo/{selectedPO}', [InvoiceEntryController::class, 'viewPOModal'])->name('finance.viewPOModal');
     Route::get('/finance/viewgrn/{grnId}', [InvoiceEntryController::class, 'viewGRNModal'])->name('finance.viewGRNModal');
-    // Route for sAVING INVOICE
     Route::post('/finance/invoice/save', [InvoiceEntryController::class, 'saveInvoice'])->name('invoiceentry.save');
-    //Route for gettng suppliers from invoices
     Route::get('/finance/supplier/{selectedInvoice}', [PaymentVoucherController::class, 'getSuppliers'])->name('finance.getSuppliers');
-    //Route for getting Transaction Types
     Route::get('/finance/transactions/{selectedModule}', [GLMappingController::class, 'fetchTransactionTypes'])->name('glpostingmap.fetchTransactionTypes');
-    //Route for getting GLAccounts
     Route::get('/glaccounts/list', [GLMappingController::class, 'list'])->name('glpostingmap.list');
 
     Route::post('/paymentvoucher/{id}/approve', [PaymentVoucherController::class, 'approve'])->name('paymentvoucher.approve');
     Route::post('/paymentvoucher/{id}/reject', [PaymentVoucherController::class, 'reject'])->name('paymentvoucher.reject');
 
     //Approval Routes For simulations
-    //Route::patch('/journalentry/{id}/action', [FinanceJournalEntryController::class, 'action'])->name('journalentry.action');
 
     //////// Posting Routes ///////////
     Route::post('/journalApproval/{id}', [\App\Http\Controllers\Finance\PostingController::class, 'journalApproval'])->name('journalApproval');

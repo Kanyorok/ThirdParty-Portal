@@ -28,7 +28,7 @@ use App\Http\Controllers\Insurance\PricingRuleController;
 use App\Http\Controllers\Insurance\ReportsController;
 use App\Http\Controllers\Insurance\SettingsController;
 use App\Http\Controllers\Insurance\UnderwritingController;
-
+use Illuminate\Support\Facades\Route;
 // new, see quick store below
 
 Route::middleware(['module:900000'])->namespace('Insurance')->prefix('insurance')->group(function () {
@@ -128,18 +128,10 @@ Route::middleware(['module:900000'])->namespace('Insurance')->prefix('insurance'
         Route::get('list/{id}', [ClaimController::class, 'assessmentshow'])->name('assessment_show');
         Route::get('edit/{id}', [ClaimController::class, 'assessmentedit'])->name('assessment_edit');
         Route::put('update/{id}', [ClaimController::class, 'assessmentupdate'])->name('assessment_update');
-        // Route::get('{claimId}/documents', [ClaimController::class, 'documentUploadForm'])->name('documents');
-        // Route::post('{claimId}/documents/upload', [ClaimController::class, 'uploadDocuments'])->name('documents.upload');
         Route::get('{id}/assess', [ClaimController::class, 'assessForm'])->name('assessForm');
         Route::post('{id}/assess/store', [ClaimController::class, 'storeAssessment'])->name('assess');
 
         // ✅ Fix these two lines:
-        // Route::get('{id}/approve', [ClaimController::class, 'approvalForm'])->name('approveForm');
-        // Route::post('{id}/approve/store', [ClaimController::class, 'storeApproval'])->name('approveStore');
-        // Route::get('approval/list', [ClaimController::class, 'approvalQueue'])->name('approvalQueue');
-        // Route::get('{id}/settle', [ClaimController::class, 'paymentForm'])->name('settleForm');
-        // Route::post('{id}/settle/store', [ClaimController::class, 'storePayment'])->name('settle.store');
-        // Route::get('payments', [ClaimController::class, 'paymentIndex'])->name('payments.claims.index');
         Route::get('{id}/close', [ClaimClosureController::class, 'closeForm'])->name('closeForm');
         Route::post('{id}/close', [ClaimClosureController::class, 'storeClosure'])->name('storeClosure');
         Route::get('closed', [ClaimClosureController::class, 'closedClaimsIndex'])->name('closed');
@@ -233,19 +225,14 @@ Route::middleware(['module:900000'])->namespace('Insurance')->prefix('insurance'
         Route::get('/{ProductId}', [PricingRuleController::class, 'getProductByProvider'])->name('getProductByProvider');
     });
 
-    // Route::prefix('medical')->as('bancassurance.')->group(function () {
 
     //     // Medical Funds (no hyphen → clean names)
-    //     Route::resource('medicalfunds', MedicalFundController::class)
 
     //     // Nested: Beneficiaries
-    //     Route::resource('medicalfunds.beneficiaries', MedicalFundBeneficiaryController::class)
 
     //     // Nested: Contributions
-    //     Route::resource('medicalfunds.contributions', MedicalFundContributionController::class)
 
     //     // Nested: Disbursements
-    //     Route::resource('medicalfunds.disbursements', MedicalFundDisbursementController::class)
 
     Route::prefix('bancassurance/settings')->name('bancassurance.settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');

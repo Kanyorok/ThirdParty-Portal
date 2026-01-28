@@ -244,8 +244,6 @@ Route::get('/suppliers/for-tender', function (Request $request) {
     ]);
 });
 // Temporarily commented out - SupplierApiController does not exist
-// Route::get('/suppliers/categories', [\App\Http\Controllers\API\Procurement\SupplierApiController::class, 'getSupplierCategories']);
-// Route::get('/suppliers/portal-registered', [\App\Http\Controllers\API\Procurement\SupplierApiController::class, 'getPortalRegisteredSuppliers']);
 
 Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
     Route::get('/thirdpartyuser', function (Request $request) {
@@ -275,10 +273,6 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
         Route::delete('{third_party}', [ThirdPartiesController::class, 'destroy']);
         // Upload supporting documents for a third party
         Route::post('{third_party}/documents', [ThirdPartyDocumentsController::class, 'store']);
-        // Route::get('suppliers', [ThirdPartyController::class, 'getSuppliers']);
-        // Route::patch('{third_party}/approve', [ThirdPartyController::class, 'approve']);
-        // Route::patch('{third_party}/reject', [ThirdPartyController::class, 'reject']);
-        // Route::patch('{third_party}/status', [ThirdPartyController::class, 'updateStatus']);
     });
 
     Route::apiResource('third-parties-bank-details', ThirdPartiesBankDetailsController::class);
@@ -388,15 +382,8 @@ Route::middleware(['web', 'auth:sanctum', \App\Http\Middleware\VerifiedUser::cla
 
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // Admin and Public Routes for Prequalification Periods
-    // Route::controller(PrequalificationPeriodController::class)->group(function () {
-    //     Route::post('prequal-periods', 'store')->middleware('can:create,App\Models\Procurement\PrequalificationPeriod');
-    //     Route::get('prequal-periods/{period}', 'show')->middleware('can:view,period');
 
     // Supplier Routes
-    // Route::middleware('role:supplier')->group(function () {
-    //     Route::controller(SupplierApplicationController::class)->group(function () {
-    //         Route::post('supplier/applications', 'store');
-    //         Route::get('supplier/applications/{application}', 'show')->middleware('can:view,application');
 });
 
 
@@ -425,7 +412,6 @@ Route::prefix('crdb')->middleware(\App\Http\Middleware\CRDBAuthMiddleware::class
     Route::get('syncGLBalances', [CRDBGeneralLedgerController::class, 'syncGLBalances'])->name('syncGLBalances');
     Route::get('syncCustomers', [CRDBCustomerController::class, 'syncCustomers'])->name('syncCustomers');
     Route::get('getClientSummaryStatement', [CRDBCustomerController::class, 'getClientSummaryStatement'])->name('getClientSummaryStatement');
-    // Route::get('data', [CRDBDataController::class, 'fetch']);
 
     // Health check for authenticated requests
     Route::get('health', function () {
