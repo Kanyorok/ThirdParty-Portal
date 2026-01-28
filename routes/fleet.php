@@ -44,10 +44,6 @@ Route::middleware(['module:600000'])->namespace('Fleet')->prefix('fleet')->group
         // ==================== Route Planner ====================
         Route::resource('route_planner', FleetRoutePlannerController::class)->only(['index', 'create', 'store']);
     });
-    /*Route::get('/r', [, 'index'])->name('fleet.route_planner.index');
-    Route::get('/route-planner/create', [FleetRoutePlannerController::class, 'create'])->name('fleet.route_planner.create');
-    Route::post('/route-planner', [FleetRoutePlannerController::class, 'store'])->name('fleet.route_planner.store');*/
-
 
     Route::resource('fuelmanagement', FuelManagementController::class);
 
