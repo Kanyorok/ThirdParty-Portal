@@ -33,8 +33,9 @@ class LocalitySeeder extends Seeder
 
         $local = database_path('data/countries_states_cities.json');
 
-        if (!file_exists($local)) {
+        if (! file_exists($local)) {
             $this->command->error('Countries data file not found: ' . $local);
+
             // finally{} will still run and attempt safe restore
             return;
         }
@@ -57,7 +58,7 @@ class LocalitySeeder extends Seeder
             // Free the raw file content ASAP
             unset($fileContent);
 
-            if (!is_array($countries)) {
+            if (! is_array($countries)) {
                 throw new \RuntimeException('Parsed JSON is not an array.');
             }
 
@@ -81,6 +82,7 @@ class LocalitySeeder extends Seeder
             foreach ($filtered as $idx => $c) {
                 if (isset($c['name']) && strtolower($c['name']) === 'kenya') {
                     $kenyaIndex = $idx;
+
                     break;
                 }
             }
@@ -118,7 +120,7 @@ class LocalitySeeder extends Seeder
 
                 $currencyId = $currencyCode ? $this->getCurrencyId($currencyCode, $currencySymbol) : null;
 
-                if (!$currencyId && $currencyCode) {
+                if (! $currencyId && $currencyCode) {
                     $currencyData = [
                         'Name' => $currencyName ?: $currencyCode,
                         'Code' => $currencyCode,
@@ -164,7 +166,7 @@ class LocalitySeeder extends Seeder
                     ->value('Id');
 
                 // Process all states/regions
-                if (!empty($countryData['states']) && $countryId) {
+                if (! empty($countryData['states']) && $countryId) {
                     $states = $countryData['states'];
                     // Intentionally minimize console output for performance
 
@@ -175,11 +177,11 @@ class LocalitySeeder extends Seeder
                         $stateInsertData = [
                             'Name' => $stateName,
                             'LocationType' => $stateType,
-                            'CreatedOn'    => $date,
+                            'CreatedOn' => $date,
                             'LocalityID' => null,          // parent is the country
                             'CountryId' => $countryId,
                             'CreatedBy' => $actor->Id,
-                            'ModifiedOn'   => $date,
+                            'ModifiedOn' => $date,
                             'ModifiedBy' => $actor->Id,
                         ];
 
@@ -199,7 +201,7 @@ class LocalitySeeder extends Seeder
                             ->value('Id');
 
                         // Process all cities for the state
-                        if (!empty($stateData['cities']) && $stateId) {
+                        if (! empty($stateData['cities']) && $stateId) {
                             $cities = $stateData['cities'];
                             // Intentionally minimize console output for performance
 
@@ -240,7 +242,6 @@ class LocalitySeeder extends Seeder
             unset($countries, $filtered);
 
             $this->command->info('LocalitySeeder completed successfully with Africa + Asia data!');
-
         } catch (JsonException $e) {
             $this->command->error('Could not parse JSON data from ' . $local . '. Error: ' . $e->getMessage());
         } catch (\Throwable $e) {
@@ -251,8 +252,12 @@ class LocalitySeeder extends Seeder
             ]);
         } finally {
             // Ensure large references are dropped before attempting to lower the memory limit
-            if (isset($countries)) unset($countries);
-            if (function_exists('gc_collect_cycles')) gc_collect_cycles();
+            if (isset($countries)) {
+                unset($countries);
+            }
+            if (function_exists('gc_collect_cycles')) {
+                gc_collect_cycles();
+            }
 
             $this->safeRestoreMemoryLimit($originalMemoryLimit);
         }
@@ -263,7 +268,7 @@ class LocalitySeeder extends Seeder
      */
     private function getCurrencyId(?string $currencyCode, ?string $currencySymbol): ?int
     {
-        if (!$currencyCode && !$currencySymbol) {
+        if (! $currencyCode && ! $currencySymbol) {
             return null;
         }
 
@@ -290,6 +295,7 @@ class LocalitySeeder extends Seeder
         // If original was unlimited, nothing to do
         if ($originalLimit === '-1') {
             $this->command->info('Original memory limit was unlimited (-1); leaving current setting.');
+
             return;
         }
 
@@ -301,6 +307,7 @@ class LocalitySeeder extends Seeder
                 'Skipping memory_limit restore to ' . $originalLimit .
                 ' because current usage (' . $this->formatBytes($currentUsage) . ') exceeds it. Leaving limit unchanged.'
             );
+
             return;
         }
 
@@ -333,12 +340,13 @@ class LocalitySeeder extends Seeder
         switch ($last) {
             case 'g':
                 $value *= 1024;
-            // no break
+                // no break
             case 'm':
                 $value *= 1024;
-            // no break
+                // no break
             case 'k':
                 $value *= 1024;
+
                 break;
             default:
                 $value = (float)$limit; // assume bytes if unit missing

@@ -2,15 +2,16 @@
 
 namespace App\Models\Core\Approval;
 
+use App\Models\Auth\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Auth\User;
 
 class WorkflowPending extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -39,7 +40,7 @@ class WorkflowPending extends Model
      * @var string
      */
 
-    const DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $keyType = 'int';
 
@@ -57,7 +58,7 @@ class WorkflowPending extends Model
         'CreatedOn',
         'EscalatedOn',
         'ModifiedBy',
-        'ModifiedOn'
+        'ModifiedOn',
     ];
 
     /**
@@ -122,11 +123,11 @@ class WorkflowPending extends Model
     public function scopeForSource($query, $source, $sourceId = null)
     {
         $query = $query->where('Source', $source);
-        
+
         if ($sourceId) {
             $query = $query->where('SourceID', $sourceId);
         }
-        
+
         return $query;
     }
 
@@ -226,7 +227,7 @@ class WorkflowPending extends Model
      */
     public function isEscalated(): bool
     {
-        return !is_null($this->EscalatedOn);
+        return ! is_null($this->EscalatedOn);
     }
 
     /**
@@ -239,7 +240,7 @@ class WorkflowPending extends Model
         return $this->update([
             'EscalatedOn' => now(),
             'ModifiedBy' => Auth::id() ?? 1,
-            'ModifiedOn' => now()
+            'ModifiedOn' => now(),
         ]);
     }
 
@@ -310,7 +311,7 @@ class WorkflowPending extends Model
     {
         return $this->update([
             'DeletedBy' => $deletedBy ?? Auth::id() ?? 1,
-            'DeletedOn' => now()
+            'DeletedOn' => now(),
         ]);
     }
 
@@ -333,13 +334,14 @@ class WorkflowPending extends Model
     {
         return $this->EscalatedOn?->diffForHumans();
     }
-     public function stage()
+
+    public function stage()
     {
         return $this->belongsTo(WorkflowStage::class, 'Stage');
     }
 
     public function escalations()
-{
-    return $this->hasMany(WorkflowEscalation::class, 'PendingID', 'Id');
-}
+    {
+        return $this->hasMany(WorkflowEscalation::class, 'PendingID', 'Id');
+    }
 }

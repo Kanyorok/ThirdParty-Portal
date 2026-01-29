@@ -19,12 +19,11 @@ class DocumentDownloadController extends Controller
         $this->authorize('view', $document);
         $token = $request->str('token', '')->trim()->toString();
         $service = new DocumentService($document);
-        abort_unless(((!empty($token)) && $service->validateToken($request->user(), $token)), 401);
+        abort_unless(((! empty($token)) && $service->validateToken($request->user(), $token)), 401);
 
         return (Response($service->getFileContent(false), 200))
             ->header('ContentType', $service->type->getMimeType())
             ->header('Content-Disposition', 'attachment; filename=' . $document->Name);
-
     }
 
     /**
@@ -39,6 +38,5 @@ class DocumentDownloadController extends Controller
         }
 
         return redirect()->route('file-download.index', ['document' => $document->DocumentId, 'token' => (new DocumentService($document))->generateToken($request->user())]);
-
     }
 }

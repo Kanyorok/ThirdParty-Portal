@@ -37,7 +37,7 @@ abstract class Controller //implements HasMiddleware
         foreach ((array) $middleware as $m) {
             $this->middleware[] = [
                                    'middleware' => $m,
-                                   'options'    => &$options,
+                                   'options' => &$options,
                                   ];
         }
 
@@ -66,7 +66,6 @@ abstract class Controller //implements HasMiddleware
         return $this->{$method}(...array_values($parameters));
     }
 
-
     public function succeeded(string $message, string $route = '', array $data = [], int $status = 202): JsonResponse
     {
         return response()->json(array_merge(
@@ -85,10 +84,10 @@ abstract class Controller //implements HasMiddleware
     {
         return response()->json([
                                  'ourBranchID' => null,
-                                 'resp'        => [
-                                                   'status'     => $status,
-                                                   'outputJSON' => (!empty($extra)) ? json_encode($extra) : '',
-                                                   'message'    => $message,
+                                 'resp' => [
+                                                   'status' => $status,
+                                                   'outputJSON' => (! empty($extra)) ? json_encode($extra) : '',
+                                                   'message' => $message,
                                                   ],
                                 ]);
     }

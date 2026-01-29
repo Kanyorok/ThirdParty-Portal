@@ -10,50 +10,50 @@ class OrderSourceService
 {
     public function __construct(
         protected OrderService $orderService
-    ) {}
+    ) {
+    }
 
     public function getAwardedRFQs()
     {
         $awardedFromRFQAward = collect([]);
+
         try {
             // Join t_RFQResponse to find all potential suppliers for approved RFQs
             // Not just "awarded" ones, but any approved RFQ with a response.
             // Logic: Approved RFQs are those with orders? No, Approved RFQs are ready for PO.
-            // Current Logic: Fetch from t_RFQAward. 
+            // Current Logic: Fetch from t_RFQAward.
             // BUT previous change: We want ALL responses for approved RFQs.
-            
+
             // 1. Get Approved RFQs (from t_RFQ where Status is Approved? or just t_RFQAward?)
-            // Actually, the previous controller logic joined t_RFQAward. 
+            // Actually, the previous controller logic joined t_RFQAward.
             // AND we wanted to enable selecting un-awarded but responded RFQs.
-            
+
             // Replicating Controller Logic:
             // "Fetch all approved RFQs (via Responses)"
-             $awardedFromRFQAward = DB::table('t_RFQResponse as r')
-                ->join('t_RFQ as q', 'r.RFQId', '=', 'q.Id')
-                ->join('t_ThirdParties as tp', 'r.SupplierId', '=', 'tp.Id') // r.SupplierId is ThirdPartyId
-                // ->where('q.Status', 'Approved') // Assuming RFQ status check? Controller didn't have it explicitly in last view?
-                // Controller had: DB::table('t_RFQAward as a')...
-                // WAIT. My previous edit to controller CHANGED it to query t_RFQResponse.
-                
-                // Let's perform the query exactly as the Controller had it (after my fix).
-                ->select(
-                    'q.Id',
-                    'q.RFQNumber',
-                    'r.SupplierId', // ThirdPartyId
-                    'tp.Id as ThirdPartyId',
-                    DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName, '') as SupplierName"),
-                    DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
-                )
-                ->distinct()
-                ->get();
+            $awardedFromRFQAward = DB::table('t_RFQResponse as r')
+               ->join('t_RFQ as q', 'r.RFQId', '=', 'q.Id')
+               ->join('t_ThirdParties as tp', 'r.SupplierId', '=', 'tp.Id') // r.SupplierId is ThirdPartyId
+               // Controller had: DB::table('t_RFQAward as a')...
+               // WAIT. My previous edit to controller CHANGED it to query t_RFQResponse.
 
+               // Let's perform the query exactly as the Controller had it (after my fix).
+               ->select(
+                   'q.Id',
+                   'q.RFQNumber',
+                   'r.SupplierId', // ThirdPartyId
+                   'tp.Id as ThirdPartyId',
+                   DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName, '') as SupplierName"),
+                   DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
+               )
+               ->distinct()
+               ->get();
         } catch (\Throwable $e) {
             Log::warning('Skipping RFQ fetch', ['error' => $e->getMessage()]);
         }
 
         return $awardedFromRFQAward
             ->filter(function ($r) {
-                return !$this->orderService->isSourceExhausted('RFQ', $r->Id);
+                return ! $this->orderService->isSourceExhausted('RFQ', $r->Id);
             })
             ->values();
     }
@@ -84,7 +84,7 @@ class OrderSourceService
 
         return $awardedTenders
             ->filter(function ($t) {
-                return !$this->orderService->isSourceExhausted('TENDER', $t->Id);
+                return ! $this->orderService->isSourceExhausted('TENDER', $t->Id);
             })
             ->values();
     }
@@ -93,7 +93,7 @@ class OrderSourceService
     {
         // Check if tender exists
         $tender = DB::table('t_Tenders')->where('Id', $tenderId)->first();
-        if (!$tender) {
+        if (! $tender) {
             throw new \Exception('Tender not found');
         }
 
@@ -118,9 +118,10 @@ class OrderSourceService
             $prev = $ordered[$item->itemCode] ?? 0;
             $item->quantity = max(0, $item->quantity - $prev);
             $item->lineTotal = $item->quantity * $item->unitPrice;
+
             return $item;
         })->filter(function ($item) {
-             return $item->quantity > 0;
+            return $item->quantity > 0;
         })->values();
     }
 
@@ -128,34 +129,34 @@ class OrderSourceService
     {
         if ($type === 'rfq') {
             $contract = DB::table('t_RFQAward')->where('Id', $contractId)->first();
-            
-            if (!$contract) {
+
+            if (! $contract) {
                 $contract = DB::table('t_RFQAward')->where('RFQId', $contractId)->first();
             }
 
-            if (!$contract) {
+            if (! $contract) {
                 throw new \Exception('RFQ Contract not found');
             }
-            
+
             $supplier = DB::table('t_Suppliers as s')
                 ->leftJoin('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
                 ->where('s.Id', $contract->SupplierId)
                 ->select('sm.ThirdPartyId')
                 ->first();
-                
+
             $thirdPartyId = $supplier ? $supplier->ThirdPartyId : $contract->SupplierId;
 
             $response = DB::table('t_RFQResponse')
                 ->where('RFQId', $contract->RFQId)
                 ->where('SupplierId', $thirdPartyId)
-                ->orderByDesc('CreatedOn') 
+                ->orderByDesc('CreatedOn')
                 ->first();
 
             $responseId = $response ? $response->Id : null;
 
             $items = DB::table('t_RFQLines as rl')
                 ->join('t_Items as i', 'rl.ItemId', '=', 'i.Id')
-                ->leftJoin('t_ResponseItems as ri', function($join) use ($responseId) {
+                ->leftJoin('t_ResponseItems as ri', function ($join) use ($responseId) {
                     $join->on('ri.ItemName', '=', 'rl.ItemName')
                          ->where('ri.RfqResponseId', '=', $responseId);
                 })
@@ -167,32 +168,32 @@ class OrderSourceService
                     DB::raw('COALESCE(ri.QuotedPrice, 0) as unitPrice'),
                     DB::raw('(rl.Quantity * COALESCE(ri.QuotedPrice, 0)) as lineTotal'),
                     'rl.ItemName as description',
-                     DB::raw('0 as tax'),
+                    DB::raw('0 as tax'),
                     DB::raw('0 as discount')
                 )
                 ->get();
 
-             $orderedContract = $this->orderService->getOrderedQuantities('CONTRACT-RFQ', $contractId);
-             $orderedRFQ = $this->orderService->getOrderedQuantities('RFQ', $contract->RFQId);
+            $orderedContract = $this->orderService->getOrderedQuantities('CONTRACT-RFQ', $contractId);
+            $orderedRFQ = $this->orderService->getOrderedQuantities('RFQ', $contract->RFQId);
 
-             return $items->map(function ($item) use ($orderedContract, $orderedRFQ) {
-                 $prevContract = $orderedContract[$item->itemCode] ?? 0;
-                 $prevRFQ = $orderedRFQ[$item->itemCode] ?? 0;
-                 $item->quantity = max(0, $item->quantity - $prevContract - $prevRFQ);
-                 $item->lineTotal = $item->quantity * $item->unitPrice;
-                 return $item;
-             })->filter(function ($item) {
-                 return $item->quantity > 0;
-             })->values();
+            return $items->map(function ($item) use ($orderedContract, $orderedRFQ) {
+                $prevContract = $orderedContract[$item->itemCode] ?? 0;
+                $prevRFQ = $orderedRFQ[$item->itemCode] ?? 0;
+                $item->quantity = max(0, $item->quantity - $prevContract - $prevRFQ);
+                $item->lineTotal = $item->quantity * $item->unitPrice;
 
+                return $item;
+            })->filter(function ($item) {
+                return $item->quantity > 0;
+            })->values();
         } else {
             // Tender Logic
             $contract = DB::table('t_TenderAwards')->where('Id', $contractId)->first();
-            if (!$contract) {
+            if (! $contract) {
                 throw new \Exception('Contract not found');
             }
 
-            if (!empty($contract->TenderID)) {
+            if (! empty($contract->TenderID)) {
                 $items = $this->getTenderItems($contract->TenderID);
                 $orderedContract = $this->orderService->getOrderedQuantities('CONTRACT', $contractId);
 
@@ -200,13 +201,14 @@ class OrderSourceService
                     $prev = $orderedContract[$item->itemCode] ?? 0;
                     $item->quantity = max(0, $item->quantity - $prev);
                     $item->lineTotal = $item->quantity * $item->unitPrice;
+
                     return $item;
                 })->filter(function ($item) {
                     return $item->quantity > 0;
                 })->values();
             }
-            
-             return collect([]);
+
+            return collect([]);
         }
     }
 
@@ -229,12 +231,13 @@ class OrderSourceService
                 DB::raw("tp.TradingName as SupplierName"),
                 DB::raw("COALESCE(tp.PhysicalAddress, '') as Address"),
                 'ta.ContractStatus',
-                DB::raw("'tender' as AwardType")
+                DB::raw("'tender' as AwardType"),
             ])
             ->get();
 
         // Get active RFQ contracts
         $rfqContracts = collect();
+
         try {
             $rfqContracts = DB::table('t_RFQAward as ra')
                 ->join('t_RFQ as r', 'ra.RFQId', '=', 'r.Id')
@@ -253,7 +256,7 @@ class OrderSourceService
                     DB::raw("tp.TradingName as SupplierName"),
                     DB::raw("COALESCE(tp.PhysicalAddress, '') as Address"),
                     'ra.ContractStatus',
-                    DB::raw("'rfq' as AwardType")
+                    DB::raw("'rfq' as AwardType"),
                 ])
                 ->get();
         } catch (\Exception $e) {
@@ -264,10 +267,10 @@ class OrderSourceService
             ->filter(function ($c) {
                 if (($c->AwardType ?? '') === 'rfq') {
                     // RFQ Contract (t_RFQAward id)
-                    return !$this->orderService->isSourceExhausted('CONTRACT-RFQ', $c->Id);
+                    return ! $this->orderService->isSourceExhausted('CONTRACT-RFQ', $c->Id);
                 } else {
                     // Tender Contract (t_TenderAwards id)
-                    return !$this->orderService->isSourceExhausted('CONTRACT', $c->Id);
+                    return ! $this->orderService->isSourceExhausted('CONTRACT', $c->Id);
                 }
             })
             ->values();
@@ -285,7 +288,7 @@ class OrderSourceService
 
         $methodId = $directMethod ? $directMethod->ID : null;
 
-        if (!$methodId) {
+        if (! $methodId) {
             return collect([]);
         }
 
@@ -304,26 +307,26 @@ class OrderSourceService
             ->where('Status', 'Ap')
             ->get()
             ->filter(function ($plan) {
-                 return !$this->orderService->isSourceExhausted('PLAN', $plan->PlanID);
+                return ! $this->orderService->isSourceExhausted('PLAN', $plan->PlanID);
             })
             ->map(function ($plan) use ($methodId) {
-                 $pending = DB::table('t_PlanLineItem')
-                        ->where('PlanID', $plan->PlanID)
-                        ->where('ProcurementMethod', $methodId)
-                        ->count();
-                 
-                 return [
-                     'PlanID' => $plan->PlanID,
-                     'Title' => $plan->Title ?? $plan->Description ?? ('Plan #' . $plan->PlanID),
-                     'FiscalYear' => $plan->FiscalYear,
-                     'PendingItems' => $pending
-                 ];
+                $pending = DB::table('t_PlanLineItem')
+                       ->where('PlanID', $plan->PlanID)
+                       ->where('ProcurementMethod', $methodId)
+                       ->count();
+
+                return [
+                    'PlanID' => $plan->PlanID,
+                    'Title' => $plan->Title ?? $plan->Description ?? ('Plan #' . $plan->PlanID),
+                    'FiscalYear' => $plan->FiscalYear,
+                    'PendingItems' => $pending,
+                ];
             })
             ->values();
 
         return $plans;
     }
-    
+
     public function getDirectPlanItems($planId)
     {
         // specific lookup to avoid matching 'Tender' or other methods containing 'D'
@@ -336,11 +339,11 @@ class OrderSourceService
             ->value('ID');
 
         // Fallback if not found (try strictly 'Direct')
-        if (!$directMethod) {
-             $directMethod = DB::table('t_CodeDetails')
-                ->where('CodeID', 'ProcurementMethod')
-                ->where('Description', 'Direct')
-                ->value('ID');
+        if (! $directMethod) {
+            $directMethod = DB::table('t_CodeDetails')
+               ->where('CodeID', 'ProcurementMethod')
+               ->where('Description', 'Direct')
+               ->value('ID');
         }
 
         $items = DB::table('t_PlanLineItem as pli')
@@ -353,9 +356,9 @@ class OrderSourceService
                 'i.ItemName as itemName',
                 'pli.MergedQty as quantity',
                 DB::raw('COALESCE(i.ItemPrice, 0) as unitPrice'),
-                 'i.ItemDescription as description',
-                 'i.UOM as uom',
-                 'i.ItemType as itemType'
+                'i.ItemDescription as description',
+                'i.UOM as uom',
+                'i.ItemType as itemType'
             )
             ->distinct()
             ->get();
@@ -366,7 +369,7 @@ class OrderSourceService
             $code = $item->itemCode;
             $prev = $ordered[$code] ?? 0;
             $remaining = max(0, $item->quantity - $prev);
-            
+
             return [
                 'itemCode' => $code,
                 'itemName' => $item->itemName,
@@ -377,7 +380,7 @@ class OrderSourceService
                 'itemType' => $item->itemType,
             ];
         })->filter(function ($item) {
-             return $item['quantity'] > 0;
+            return $item['quantity'] > 0;
         })->values();
     }
 
@@ -400,34 +403,34 @@ class OrderSourceService
         // If Supplier is provided, try to fetch quoted prices
         $quotedPrices = [];
         if ($supplierId) {
-             $response = DB::table('t_RFQResponse')
-                ->where('RFQId', $rfqId)
-                ->where('SupplierId', $supplierId)
-                ->first();
-            
-             if ($response) {
-                 $quotedPrices = DB::table('t_ResponseItems')
-                    ->where('RfqResponseId', $response->Id)
-                    ->pluck('QuotedPrice', 'ItemName') 
-                    ->toArray();
-             }
+            $response = DB::table('t_RFQResponse')
+               ->where('RFQId', $rfqId)
+               ->where('SupplierId', $supplierId)
+               ->first();
+
+            if ($response) {
+                $quotedPrices = DB::table('t_ResponseItems')
+                   ->where('RfqResponseId', $response->Id)
+                   ->pluck('QuotedPrice', 'ItemName')
+                   ->toArray();
+            }
         }
 
         // Calculate remaining quantities
         $ordered = $this->orderService->getOrderedQuantities('RFQ', $rfqId);
 
-        return $items->map(function($item) use ($ordered, $quotedPrices) {
+        return $items->map(function ($item) use ($ordered, $quotedPrices) {
             $code = $item->itemCode;
             $prev = $ordered[$code] ?? 0;
             $remaining = max(0, $item->quantity - $prev);
-            
+
             // Determine Price
             // Check quoted prices by name
             $price = 0;
             if (isset($quotedPrices[$item->itemName])) {
                 $price = $quotedPrices[$item->itemName];
             }
-            
+
             return [
                 'itemCode' => $code,
                 'itemName' => $item->itemName,
@@ -437,7 +440,7 @@ class OrderSourceService
                 'uom' => $item->uom,
                 'itemType' => $item->itemType,
             ];
-        })->filter(function($item) {
+        })->filter(function ($item) {
             return $item['quantity'] > 0;
         })->values();
     }

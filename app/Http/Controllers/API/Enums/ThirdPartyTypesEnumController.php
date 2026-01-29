@@ -20,7 +20,7 @@ class ThirdPartyTypesEnumController extends Controller
             ->orderBy('tpt.Description')
             ->get();
 
-        $data = $rows->map(fn($r) => [
+        $data = $rows->map(fn ($r) => [
             'value' => $r->Code,
             'label' => $r->Description,
         ]);

@@ -36,7 +36,7 @@ class LoanScheduleController extends Controller
     public function index(string $product_id): JsonResponse
     {
         $product = DebtProduct::query()->where('AccountID', $product_id)->oldest('processDate')->first();
-        if (!$product instanceof DebtProduct) {
+        if (! $product instanceof DebtProduct) {
             throw new \RuntimeException('Product not found, maybe closed.', 404);
         }
 
@@ -51,7 +51,7 @@ class LoanScheduleController extends Controller
     public function meeting(MeetingScheduleRequest $request, string $product_id): JsonResponse
     {
         $product = DebtProduct::query()->where('AccountID', $product_id)->oldest('processDate')->first();
-        if (!$product instanceof DebtProduct) {
+        if (! $product instanceof DebtProduct) {
             return $this->errored('Product not found, maybe closed.');
         }
 
@@ -62,7 +62,7 @@ class LoanScheduleController extends Controller
         $assignees = $request->getAssignees();
         $location = $request->getLocation();
         $client = $product->client;
-        if (!$client instanceof Client) {
+        if (! $client instanceof Client) {
             return $this->errored('Could not find client.');
         }
 
@@ -84,6 +84,7 @@ class LoanScheduleController extends Controller
             });
         } catch (Throwable | Exception $e) {
             Log::error('Error scheduling loan appointment failed:  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 
@@ -104,7 +105,7 @@ class LoanScheduleController extends Controller
     public function call(CallScheduleRequest $request, string $product_id): JsonResponse
     {
         $product = DebtProduct::query()->where('AccountID', $product_id)->oldest('processDate')->first();
-        if (!$product instanceof DebtProduct) {
+        if (! $product instanceof DebtProduct) {
             return $this->errored('Product not found, maybe closed.');
         }
 
@@ -114,15 +115,17 @@ class LoanScheduleController extends Controller
         $actor = $request->user();
         $assignee = $request->getAssignee();
         $client = $product->client;
-        if (!$client instanceof Client) {
+        if (! $client instanceof Client) {
             return $this->errored('Could not find client.');
         }
+
         try {
             $schedule = DB::transaction(function () use ($assignee, $notes, $end, $actor, $client, $start, $product) {
                 return $this->phoneCall(model: $client, start: $start, end: $end, dated: now(), actor: $actor, notes: $notes, UserIds: [$assignee->Id], Source: DebtProduct::getPrimaryKey(), SourceID: $product->AccountID);
             });
         } catch (Throwable | Exception $e) {
             Log::error('Error scheduling loan call failed:  ' . $e->getMessage());
+
             return $this->errored('unexpected error scheduling call, try again latter');
         }
 
@@ -143,26 +146,28 @@ class LoanScheduleController extends Controller
     public function destroy(Request $request, string $product_id, $schedule_id): JsonResponse
     {
         $product = DebtProduct::query()->where('AccountID', $product_id)->oldest('processDate')->first();
-        if (!$product instanceof DebtProduct) {
+        if (! $product instanceof DebtProduct) {
             return $this->errored('Product not found, maybe closed.');
         }
 
         $client = $product->client;
-        if (!$client instanceof Client) {
+        if (! $client instanceof Client) {
             return $this->errored('Could not find client.');
         }
 
         $schedule = $client->schedules()->where('t_Schedule.Source', DebtProduct::getPrimaryKey())->where('t_Schedule.SourceID', $product->AccountID)
             ->where('t_Schedule.ScheduleID', $schedule_id)->first();
-        if (!$schedule instanceof Schedule) {
+        if (! $schedule instanceof Schedule) {
             return $this->errored('could not find that schedule.');
         }
+
         try {
             DB::transaction(function () use ($client, $request, $schedule) {
                 $this->cancel($client, $schedule, $request->user());
             });
         } catch (Throwable | Exception $e) {
             Log::error('Cancel loan schedule failed:  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 

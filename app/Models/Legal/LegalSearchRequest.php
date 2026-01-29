@@ -5,16 +5,17 @@ namespace App\Models\Legal;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LegalSearchRequest extends Model
 {
-    use SoftDeletes, UserActorTrait, DocumentsTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_LegalSearchRequests';
     protected $primaryKey = 'Id';
@@ -39,5 +40,4 @@ class LegalSearchRequest extends Model
     {
         return 'LegalSearchRequestsId';
     }
-
 }

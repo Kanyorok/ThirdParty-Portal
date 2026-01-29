@@ -23,7 +23,7 @@ class LoanService
 
     public function message(string $message, User $actor, bool $immediate = false, $bulkNotification = null): array
     {
-        if (!$this->loan->client instanceof Client) {
+        if (! $this->loan->client instanceof Client) {
             return [];
         }
         $service = (new ClientService($this->loan->client))->sendMessage($this->placeholders($this->loan->client, $message), $actor)
@@ -34,7 +34,6 @@ class LoanService
 
         return $service->send($immediate)->addActivity(now(), 'Loan (' . $this->loan->AccountID . ') Payment Reminder');
     }
-
 
     /**
      * @throws Throwable
@@ -48,6 +47,7 @@ class LoanService
                     ->setSource(DebtProduct::getPrimaryKey(), $this->loan->AccountID)->send()
                     ->addActivity(now(), 'Loan (' . $this->loan->AccountID . ') Guarantor Message'));
             }
+
             return $activities->toArray();
         });
     }
@@ -82,6 +82,7 @@ class LoanService
                         ->addActivity(now(), 'Loan (' . $this->loan->AccountID . ') Guarantor Email'));
                 }
             }
+
             return $activities;
         });
     }

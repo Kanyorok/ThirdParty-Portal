@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Settings\WorkFlowLimitRequest;
+use App\Models\Core\Approval\Permission;
+use App\Models\Core\Approval\WorkflowStage;
+use App\Models\Settings\WorkFlowLimit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Http\Requests\Settings\WorkFlowLimitRequest;
-use App\Models\Core\Approval\WorkflowStage;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Core\Approval\Permission;
-use App\Models\Settings\WorkFlowLimit;
 
 class WorflowLimitsController extends Controller
 {
@@ -20,6 +20,7 @@ class WorflowLimitsController extends Controller
     public function index()
     {
         Log::info('Accessing WorkFlow Limits Index Page.');
+
         try {
             // Get workflow stages with AMT type
             $workflowStages = WorkflowStage::with(['workflow', 'type_name'])
@@ -31,6 +32,7 @@ class WorflowLimitsController extends Controller
                 ->map(function ($stage) {
                     $stage->workflow_name = $stage->workflow->Name ?? 'N/A';
                     $stage->workflow_source = $stage->workflow->Source ?? 'N/A';
+
                     return $stage;
                 });
 
@@ -59,7 +61,7 @@ class WorflowLimitsController extends Controller
             Log::info('Data fetched successfully for WorkFlow Limits Index.', [
                 'stages_count' => $workflowStages->count(),
                 'total_limits' => $limits->count(),
-                'stages_with_limits' => count($existingWorkflowStageIds)
+                'stages_with_limits' => count($existingWorkflowStageIds),
             ]);
 
             // Pass the existingWorkflowStageIds to the view
@@ -74,8 +76,9 @@ class WorflowLimitsController extends Controller
             Log::error('Error fetching data for WorkFlow Limits Index.', [
                 'error_message' => $e->getMessage(),
                 'line' => $e->getLine(),
-                'file' => $e->getFile()
+                'file' => $e->getFile(),
             ]);
+
             return redirect()->back()->withErrors(['error' => 'Failed to load workflow limit setup data.']);
         }
     }
@@ -93,7 +96,7 @@ class WorflowLimitsController extends Controller
         $stageId = $validated['WorkFlowStageId'];
         $amounts = $validated['AmountLimit'] ?? []; // Expect array
 
-        if (!is_array($amounts) || empty($amounts)) {
+        if (! is_array($amounts) || empty($amounts)) {
             return redirect()->back()->withErrors(['error' => 'At least one amount limit is required.']);
         }
 
@@ -103,10 +106,9 @@ class WorflowLimitsController extends Controller
         Log::info('Attempting to create multiple WorkFlow Limits.', [
             'user_id' => $userId,
             'stage_id' => $stageId,
-            'amounts' => $amounts
+            'amounts' => $amounts,
         ]);
 
-        // --- VALIDATE WORKFLOW STAGE (once) ---
         $workflowStage = WorkflowStage::with(['workflow', 'type_name'])
             ->where('Id', $stageId)
             ->whereHas('type_name', function ($query) {
@@ -114,12 +116,12 @@ class WorflowLimitsController extends Controller
             })
             ->first();
 
-        if (!$workflowStage) {
+        if (! $workflowStage) {
             Log::error('Invalid or non-AMT workflow stage selected.', ['stage_id' => $stageId]);
+
             return redirect()->back()->withErrors(['error' => 'Invalid workflow stage or stage is not AMT type.']);
         }
 
-        // --- FETCH EXISTING LIMITS AND AMOUNTS ---
         $existingLimits = WorkFlowLimit::where('WorkFlowStageId', $stageId)
             ->whereNull('DeletedOn')
             ->orderBy('MaxAmount', 'asc')
@@ -128,7 +130,6 @@ class WorflowLimitsController extends Controller
         $existingAmounts = $existingLimits->pluck('MaxAmount')->toArray();
         $existingCount = count($existingAmounts);
 
-        // --- CHECK DUPLICATES (existing + new) ---
         $newAmounts = array_unique($amounts); // Remove duplicates in new
         if (count($newAmounts) < count($amounts)) {
             return redirect()->back()->withErrors(['error' => 'Duplicate amounts provided in the new limits.']);
@@ -141,12 +142,12 @@ class WorflowLimitsController extends Controller
             }
         }
 
-        if (!empty($duplicateErrors)) {
+        if (! empty($duplicateErrors)) {
             return redirect()->back()->withErrors(['error' => implode(' ', $duplicateErrors)]);
         }
 
-        // --- BEGIN TRANSACTION FOR MULTIPLE CREATIONS ---
         DB::beginTransaction();
+
         try {
             $createdLimits = [];
             $moduleID = 98006200; // Default module ID
@@ -171,16 +172,15 @@ class WorflowLimitsController extends Controller
                     'permission_name' => $permissionName,
                     'module_id' => $moduleID,
                     'created_by' => $userId,
-                    'tier_number' => $tierNumber
+                    'tier_number' => $tierNumber,
                 ]);
 
-                // --- SP CALL ---
                 $params = [
                     $stageId,
                     $amount,
                     $permissionName,
                     $moduleID,
-                    $userId
+                    $userId,
                 ];
 
                 $result = DB::select(
@@ -195,8 +195,7 @@ class WorflowLimitsController extends Controller
 
                 Log::debug('Stored Procedure Result Received.', ['result' => $result]);
 
-                // --- SP RESULT PARSING ---
-                if (!empty($result) && isset($result[0]->Message)) {
+                if (! empty($result) && isset($result[0]->Message)) {
                     $message = $result[0]->Message;
 
                     if (strpos($message, 'Error:') !== false) {
@@ -206,7 +205,7 @@ class WorflowLimitsController extends Controller
                     $workflowLimitID = $result[0]->WorkflowLimitID ?? null;
                     $permissionID = $result[0]->PermissionID ?? null;
 
-                    if (!$workflowLimitID) {
+                    if (! $workflowLimitID) {
                         throw new \Exception('No valid ID returned from stored procedure for amount ' . $amount);
                     }
 
@@ -214,7 +213,7 @@ class WorflowLimitsController extends Controller
                         'id' => $workflowLimitID,
                         'tier' => $tierNumber,
                         'amount' => $amount,
-                        'permission' => $permissionName
+                        'permission' => $permissionName,
                     ];
 
                     // Log activity for each
@@ -240,7 +239,7 @@ class WorflowLimitsController extends Controller
 
             Log::info('Multiple WorkFlow Limits created successfully.', [
                 'stage_id' => $stageId,
-                'created_count' => count($createdLimits)
+                'created_count' => count($createdLimits),
             ]);
 
             // Prepare success message with details
@@ -257,8 +256,9 @@ class WorflowLimitsController extends Controller
                 'line' => $e->getLine(),
                 'file' => $e->getFile(),
                 'trace' => $e->getTraceAsString(),
-                'user_id' => $userId
+                'user_id' => $userId,
             ]);
+
             return redirect()->back()->withErrors(['error' => 'Error creating workflow limits: ' . $e->getMessage()]);
         }
     }
@@ -301,7 +301,7 @@ class WorflowLimitsController extends Controller
                 'deleted_by' => $userId,
                 'stage_name' => $stageName,
                 'amount' => $amount,
-                'permission' => $permissionName
+                'permission' => $permissionName,
             ]);
 
             // Log activity after deletion
@@ -326,7 +326,7 @@ class WorflowLimitsController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => $successMessage
+                    'message' => $successMessage,
                 ]);
             }
 
@@ -343,7 +343,7 @@ class WorflowLimitsController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'error' => $errorMessage
+                    'error' => $errorMessage,
                 ], 404);
             }
 
@@ -357,7 +357,7 @@ class WorflowLimitsController extends Controller
                 'limit_id' => $Id,
                 'error_message' => $e->getMessage(),
                 'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $errorMessage = 'Failed to delete limit: ' . $e->getMessage();
@@ -365,7 +365,7 @@ class WorflowLimitsController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'error' => $errorMessage
+                    'error' => $errorMessage,
                 ], 500);
             }
 
@@ -395,22 +395,22 @@ class WorflowLimitsController extends Controller
 
             Log::info('Fetched limits for stage via AJAX', [
                 'stage_id' => $stageId,
-                'limits_count' => $limits->count()
+                'limits_count' => $limits->count(),
             ]);
 
             return response()->json([
                 'success' => true,
-                'limits' => $limits
+                'limits' => $limits,
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching limits for stage', [
                 'stage_id' => $stageId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch limits'
+                'message' => 'Failed to fetch limits',
             ], 500);
         }
     }

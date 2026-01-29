@@ -22,7 +22,7 @@ class NewDiscussionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+
                ];
     }
 }

@@ -24,7 +24,7 @@ class ComplianceCalendarEntry extends Model
         'ModifiedBy',
         'ModifiedOn',
         'DeletedBy',
-        'DeletedOn'
+        'DeletedOn',
     ];
 
     public function obligation()

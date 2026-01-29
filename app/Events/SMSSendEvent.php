@@ -18,6 +18,5 @@ class SMSSendEvent
      */
     public function __construct(public SMS $sms)
     {
-        //
     }
 }

@@ -20,10 +20,9 @@ class InsuranceProviderService
         string $ContactPerson,
         string $Email,
         string $Phone,
-        ?bool  $IsActive = null,
-        User   $user
-    ): self
-    {
+        ?bool $IsActive = null,
+        User $user
+    ): self {
 
         // Extract only numeric part after the dash and cast to INT safely
         $lastInsuranceProviderNO = InsuranceProvider::withTrashed()

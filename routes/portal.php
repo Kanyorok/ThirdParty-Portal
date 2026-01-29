@@ -1,13 +1,13 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ThirdParty\API\ThirdPartyAuthController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\ThirdParty\API\MetadataController;
 use App\Http\Controllers\ThirdParty\API\NewThirdPartyController;
 use App\Http\Controllers\ThirdParty\API\ProfileController;
+use App\Http\Controllers\ThirdParty\API\ThirdPartyAuthController;
 use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
-use App\Http\Controllers\ThirdParty\API\MetadataController;
-use App\Http\Controllers\Auth\NewPasswordController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
     Route::post('register', [NewThirdPartyController::class, 'store'])
@@ -69,7 +69,7 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
                 'thirdParty.status',
                 'thirdParty.businessType',
                 'thirdParty.supplierMaster',
-                'thirdParty.supplierMaster.status'
+                'thirdParty.supplierMaster.status',
             ]);
 
             return response()->json([

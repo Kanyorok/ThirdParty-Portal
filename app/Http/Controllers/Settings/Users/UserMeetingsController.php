@@ -30,7 +30,6 @@ class UserMeetingsController extends Controller
     public function __construct()
     {
         $this->middleware('ajax')->except('show');
-        // $this->authorizeResource(Board::class);
     }
 
     /**
@@ -40,6 +39,7 @@ class UserMeetingsController extends Controller
     public function index(): JsonResponse
     {
         $this->authorize('viewAny', User::class);
+
         return $this->meetings(Meeting::query()->where('t_Meetings.Type', User::getPrimaryKey())->where('t_Meetings.EndOn', '>=', Carbon::now()));
     }
 
@@ -54,6 +54,7 @@ class UserMeetingsController extends Controller
         $start = $request->getStart();
         $end = $request->getEnd($start);
         $actor = $request->user();
+
         try {
             $schedule = DB::transaction(static function () use ($start, $end, $actor, $location, $UserIds, $request) {
                 return ScheduleService::userMeeting(
@@ -68,9 +69,10 @@ class UserMeetingsController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error scheduling staff meeting failed: ');
             Log::error($e);
+
             return $this->errored('unexpected error, try again latter');
         }
 
@@ -85,7 +87,7 @@ class UserMeetingsController extends Controller
 
         $this->authorize('meetings', User::class);
         $meeting = Meeting::query()->where('t_Meetings.Type', User::getPrimaryKey())->where('t_Meetings.MeetingID', $meetingId)->lock('WITH(NOLOCK)')->first();
-        if (!$meeting instanceof Meeting) {
+        if (! $meeting instanceof Meeting) {
             return $this->errored('meeting not found');
         }
 
@@ -107,8 +109,9 @@ class UserMeetingsController extends Controller
 
                 activity()->causedBy($request->user())->performedOn($meeting)->event('cancel')->log('Canceled staff meeting  ' . $meeting->Title . '.');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error updating meeting Schedule : ' . $e->getMessage());
+
             return $this->br_response(400, 'unexpected error, try again later');
         }
 

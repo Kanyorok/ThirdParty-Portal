@@ -69,14 +69,14 @@ class DocumentTagsController extends Controller
 
                 $date = now();
                 foreach ($tags as $tag) {
-                    if (!in_array($tag, $documentTags)) {
+                    if (! in_array($tag, $documentTags)) {
                         DocumentTags::create([
                             'DocId' => $document->Id,
                             'TagId' => $tag,
                             'CreatedBy' => $user->Id,
                             'ModifiedBy' => $user->Id,
                             'CreatedOn' => $date,
-                            'ModifiedOn' => $date
+                            'ModifiedOn' => $date,
                         ]);
                         activity()->causedBy($user)->performedOn($document)->event('create')->log('added tag ');
                     }
@@ -84,9 +84,10 @@ class DocumentTagsController extends Controller
 
                 return $this->succeeded('tags updated successfully.', route('files.show', [$document->repository->RepositoryId, $document->DocumentId]));
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Could not attach document tags ' . $e);
         }
+
         return $this->errored('unexpected error occurred');
     }
 

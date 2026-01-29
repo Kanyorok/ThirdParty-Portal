@@ -19,21 +19,20 @@ class PropertyRateAndPricingService
     {
     }
 
-    Public static function create(
-        PropertyRegistry    $PropertyId,
-        ?PropertyBlock  $BlockId,
-        ?PropertyFloor  $FloorId,
-        ?PropertyUnit  $UnitId,
-        int   $Rent,
-        int   $ParkingFee,
-        int   $ServiceCharge,
-        int   $OtherCharges,
-        int   $DepositAmount,
-        Currency    $CurrencyId,
-        FinanceTaxRuleConfiguration    $TaxId,
+    public static function create(
+        PropertyRegistry $PropertyId,
+        ?PropertyBlock $BlockId,
+        ?PropertyFloor $FloorId,
+        ?PropertyUnit $UnitId,
+        int $Rent,
+        int $ParkingFee,
+        int $ServiceCharge,
+        int $OtherCharges,
+        int $DepositAmount,
+        Currency $CurrencyId,
+        FinanceTaxRuleConfiguration $TaxId,
         $user
-    ): self
-    {
+    ): self {
         $propertyRateAndPricing = PropertyRateAndPricing::create([
             'PropertyId' => $PropertyId -> Id,
             'BlockId' => $BlockId -> Id,
@@ -58,25 +57,25 @@ class PropertyRateAndPricingService
                 'PropertyId' => $PropertyId->Id,
             ])
             ->log('Property Rate And Pricing Created');
+
         return new self($propertyRateAndPricing);
     }
 
     public static function update(
-        PropertyRateAndPricing    $propertyRateAndPricing,
-        PropertyRegistry    $PropertyId,
-        ?PropertyBlock  $BlockId,
-        ?PropertyFloor  $FloorId,
-        ?PropertyUnit  $UnitId,
-        int   $Rent,
-        int   $ParkingFee,
-        int   $ServiceCharge,
-        int   $OtherCharges,
-        int   $DepositAmount,
-        Currency    $CurrencyId,
-        FinanceTaxRuleConfiguration    $TaxId,
+        PropertyRateAndPricing $propertyRateAndPricing,
+        PropertyRegistry $PropertyId,
+        ?PropertyBlock $BlockId,
+        ?PropertyFloor $FloorId,
+        ?PropertyUnit $UnitId,
+        int $Rent,
+        int $ParkingFee,
+        int $ServiceCharge,
+        int $OtherCharges,
+        int $DepositAmount,
+        Currency $CurrencyId,
+        FinanceTaxRuleConfiguration $TaxId,
         $user
-    ): self
-    {
+    ): self {
         $propertyRateAndPricing->update([
             'PropertyId' => $PropertyId -> Id,
             'BlockId' => $BlockId -> Id,
@@ -100,14 +99,14 @@ class PropertyRateAndPricingService
                 'PropertyId' => $PropertyId->Id,
             ])
             ->log('Property Rate And Pricing Updated');
+
         return new self($propertyRateAndPricing);
     }
 
     public static function delete(
-        PropertyRateAndPricing    $propertyRateAndPricing,
+        PropertyRateAndPricing $propertyRateAndPricing,
         $user
-    ): void
-    {
+    ): void {
         $propertyRateAndPricing->delete();
 
         activity()

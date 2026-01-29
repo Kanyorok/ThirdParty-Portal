@@ -26,6 +26,7 @@ class ReviewService
                 $branch = $ac->OurBranchID;
             }
         }
+
         return self::_create($rate, $content, Client::getPrimaryKey(), $source, $actor, $ClientID, $sourceID, $branch);
     }
 
@@ -33,15 +34,15 @@ class ReviewService
     {
         $review = new Review();
         $review->fill([
-                       'BranchID'   => $branch,
-                       'Party'      => $party,
-                       'PartyID'    => $partyID,
-                       'Source'     => $source,
-                       'SourceID'   => $sourceID,
-                       'Rating'     => $rate,
-                       'Tonality'   => TonalityEnum::Unknown->value,
-                       'Content'    => $content,
-                       'CreatedBy'  => $actor->Id,
+                       'BranchID' => $branch,
+                       'Party' => $party,
+                       'PartyID' => $partyID,
+                       'Source' => $source,
+                       'SourceID' => $sourceID,
+                       'Rating' => $rate,
+                       'Tonality' => TonalityEnum::Unknown->value,
+                       'Content' => $content,
+                       'CreatedBy' => $actor->Id,
                        'ModifiedBy' => $actor->Id,
                       ])->save();
 
@@ -49,12 +50,13 @@ class ReviewService
         if (is_null($branch)) {
             $service->fixBranch();
         }
+
         return $service->sentiment();
     }
 
     public function sentiment(): static
     {
-        if ($this->review->Tonality->value === TonalityEnum::Unknown->value && !empty($this->review->Content)) {
+        if ($this->review->Tonality->value === TonalityEnum::Unknown->value && ! empty($this->review->Content)) {
             try {
                 $output_text = (new Analyzer())->getSentiment($this->review->Content);
                 $sentiment = null;
@@ -69,7 +71,7 @@ class ReviewService
                     $sentiment = TonalityEnum::Positive;
                 }
 
-                if (!is_null($sentiment)) {
+                if (! is_null($sentiment)) {
                     $this->review->update(['Tonality' => $sentiment]);
                 }
             } catch (\Exception) {
@@ -100,7 +102,7 @@ class ReviewService
             return;
         }
 
-        if (!empty($this->review->BranchID)) {
+        if (! empty($this->review->BranchID)) {
             return;
         }
 
@@ -110,6 +112,7 @@ class ReviewService
                 $this->review->update([
                                        'BranchID' => $branch->OurBranchID,
                                       ]);
+
                 break;
             }
         }

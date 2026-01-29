@@ -10,7 +10,6 @@ class LicenseAudit extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'EventAt', 'Event', 'Detail'
+        'EventAt', 'Event', 'Detail',
     ];
 }
-

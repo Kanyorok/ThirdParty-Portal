@@ -14,6 +14,7 @@ class MarketingListPolicy
     {
         return $user->can(PermissionEnum::DebtCollectionLists->value);
     }
+
     /**
      * Determine whether the user can view any models.
      */
@@ -60,6 +61,7 @@ class MarketingListPolicy
         if ($marketingList->CreatedBy === $user->Id) {
             return true;
         }
+
         return ($marketingList->Source === DebtProduct::getPrimaryKey())
             ? $this->debt($user)
             : $user->can(PermissionEnum::MarketingListUpdate->value);

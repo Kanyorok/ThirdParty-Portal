@@ -13,7 +13,7 @@ class ContractObligation extends Model
     protected $fillable = [
         'LegalDocumentID', 'ObligationTitle', 'ObligationType', 'DueDate',
         'Status', 'AssignedTo', 'Remarks', 'CreatedBy', 'CreatedOn',
-        'ModifiedBy', 'ModifiedOn', 'IsActive'
+        'ModifiedBy', 'ModifiedOn', 'IsActive',
     ];
 
     public function document()

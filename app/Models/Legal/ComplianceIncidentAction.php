@@ -12,7 +12,7 @@ class ComplianceIncidentAction extends Model
 
     protected $fillable = [
         'IncidentID', 'RootCause', 'CorrectiveAction',
-        'ActionOwnerID', 'DueDate', 'Status', 'CreatedBy', 'CreatedOn'
+        'ActionOwnerID', 'DueDate', 'Status', 'CreatedBy', 'CreatedOn',
     ];
 
     public function incident()

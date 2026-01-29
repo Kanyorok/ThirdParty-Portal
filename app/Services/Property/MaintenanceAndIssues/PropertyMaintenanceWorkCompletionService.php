@@ -13,14 +13,13 @@ use Illuminate\Http\UploadedFile;
 
 class PropertyMaintenanceWorkCompletionService
 {
-   private $assignment;
+    private $assignment;
 
     /**
      * Create a new class instance.
      */
     public function __construct(PropertyMaintenanceWorkCompletion $propertyMaintenanceWorkCompletion)
     {
-        //
     }
 
     public static function create(
@@ -28,7 +27,7 @@ class PropertyMaintenanceWorkCompletionService
         string $completionDate,
         string $workDoneSummary,
         ?string $partsUsed = null,
-        ?int    $cost = null,
+        ?int $cost = null,
         CodeDetail $finalstatus,
         User $user,
         UploadedFile $document = null
@@ -47,7 +46,7 @@ class PropertyMaintenanceWorkCompletionService
 
         if (strtolower($finalstatus->Description) === 'completed') {
             $requestNumber->update([
-                'Status' => PostingEnum::Completed->value
+                'Status' => PostingEnum::Completed->value,
             ]);
         }
 
@@ -57,8 +56,8 @@ class PropertyMaintenanceWorkCompletionService
                 $document,
                 [PermissionEnum::PropertyMaintenanceAssignView->value],
                 $user
-                );
-            }
+            );
+        }
 
         activity()
             ->causedBy($user)
@@ -70,17 +69,16 @@ class PropertyMaintenanceWorkCompletionService
         return new self($workCompletion);
     }
 
-
-        public static function update(
+    public static function update(
         PropertyMaintenanceWorkCompletion $requestNumber,
         string $completionDate,
         string $workDoneSummary,
         ?string $partsUsed = null,
-        ?int    $cost = null,
+        ?int $cost = null,
         CodeDetail $finalstatus,
         User $user,
         UploadedFile $document = null
-        ): self {
+    ): self {
         $requestNumber->update([
             'RequestNumber' => $requestNumber->RequestNumber,
             'CompletionDate' => $completionDate,
@@ -95,7 +93,7 @@ class PropertyMaintenanceWorkCompletionService
 
         if (strtolower($finalstatus->Description) === 'completed') {
             $requestNumber->update([
-                'Status' => PostingEnum::Completed->value
+                'Status' => PostingEnum::Completed->value,
             ]);
         }
 
@@ -106,7 +104,7 @@ class PropertyMaintenanceWorkCompletionService
                 $document,
                 [PermissionEnum::PropertyMaintenanceWorkCompletionView->value],
                 $user
-                );
+            );
         }
 
         activity()

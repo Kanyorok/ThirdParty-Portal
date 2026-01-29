@@ -10,8 +10,8 @@ class MeetingLead extends Model
 {
     use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
     protected $table = 't_MeetingLeads';
 
     public static function getPrimaryKey(): string
@@ -29,7 +29,7 @@ class MeetingLead extends Model
                           ];
 
     protected $casts = [
-                        'CreatedOn'  => 'datetime',
+                        'CreatedOn' => 'datetime',
                         'ModifiedOn' => 'datetime',
                        ];
 

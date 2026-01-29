@@ -17,6 +17,7 @@ class UploadDocumentRequest extends FormRequest
     public function rules(): array
     {
         $size = (int)bcmul(config('app.dms.file_size'), 1024, 0);
+
         return [
             'file' => [
                 'required', 'bail',
@@ -33,6 +34,5 @@ class UploadDocumentRequest extends FormRequest
             'file.types' => 'The uploaded file is not allowed .',
             'file.max' => 'The uploaded file must not exceed the maximum size of ' . config('app.dms.file_size') . 'MB.',
         ];
-
     }
 }

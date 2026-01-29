@@ -8,7 +8,6 @@ class ThirdPartiesBankDetailsSeeder extends Seeder
 {
     public function run(): void
     {
-        // $this->call(CurrencySeeder::class);
 
         /*     $thirdParty = ThirdParties::first();
 

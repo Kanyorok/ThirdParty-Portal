@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class AccountPayableController extends Controller
 {
@@ -12,7 +11,8 @@ class AccountPayableController extends Controller
         return view('finance.accountspayable.invoiceentry.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('finance.accountspayable.invoiceentry.create');
     }
 }

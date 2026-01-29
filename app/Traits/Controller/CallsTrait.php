@@ -38,6 +38,7 @@ trait CallsTrait
                 if ($call->EndOn instanceof Carbon) {
                     return $call->EndOn->diffForHumans($call->StartOn, \Carbon\CarbonInterface::DIFF_ABSOLUTE, parts: 2, short: true);
                 }//->diffInMinutes(, true)." mins";
+
                 return 'Non ended';
             })->editColumn('CallStatusID', function (Call $call) {
                 return $call->CallStatusID->description();
@@ -64,6 +65,7 @@ trait CallsTrait
             if ($activity) {
                 $service->activity($actor);
             }
+
             return $service->call;
         });
     }

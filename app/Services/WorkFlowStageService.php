@@ -2,17 +2,17 @@
 
 namespace App\Services;
 
-use App\Models\Auth\User;
-use App\Models\Core\Approval\WorkflowStage;
-use App\Models\Core\Approval\Permission;
-use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use App\Models\Settings\WorkFlow;
-use Illuminate\Support\Facades\DB;
 use App\DTOs\WorkflowStageResult;
 use App\Exceptions\ErroredException;
+use App\Models\Auth\User;
+use App\Models\Core\Approval\Permission;
+use App\Models\Core\Approval\WorkflowStage;
+use App\Models\Settings\WorkFlow;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Models\Role;
 
 class WorkFlowStageService
 {
@@ -22,7 +22,7 @@ class WorkFlowStageService
     public function createStage(array $data)
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             throw new ErroredException('User not authenticated.');
         }
 
@@ -30,7 +30,7 @@ class WorkFlowStageService
             $workflow = WorkFlow::findOrFail($data['WorkFlowId']);
 
             // Check if workflow already has a final stage
-            if (!empty($workflow->FinalStage)) {
+            if (! empty($workflow->FinalStage)) {
                 throw new ErroredException('This workflow already has a final stage. Please remove the final stage designation before adding more stages.');
             }
 
@@ -40,7 +40,7 @@ class WorkFlowStageService
                 ->where('DocumentType', $workflow->Source)
                 ->value('ModuleID');
 
-            if (!$moduleId) {
+            if (! $moduleId) {
                 throw new ErroredException('Module not found for workflow source.');
             }
 
@@ -64,7 +64,7 @@ class WorkFlowStageService
                 $data['Count'] ?? null,
                 $data['StatusId'] ?? null,
                 $user->Id,
-                $moduleId
+                $moduleId,
             ]);
 
 
@@ -95,13 +95,13 @@ class WorkFlowStageService
                 ->where('Id', $dto->newStageId)
                 ->first();
 
-            if (!$stageModel) {
+            if (! $stageModel) {
                 // Debug: Check if it exists via raw DB
                 $rawStage = DB::table('t_WorkflowStages')->where('Id', $dto->newStageId)->first();
 
 
                 if ($rawStage) {
-                    // If found via raw DB but not Eloquent, it's a model issue. 
+                    // If found via raw DB but not Eloquent, it's a model issue.
                     // Try to hydrate manually or investigate model scopes.
                     Log::warning('Stage found via raw DB but not Eloquent. Possible scope or casting issue.');
                     $stageModel = new WorkflowStage((array)$rawStage);
@@ -117,7 +117,7 @@ class WorkFlowStageService
             // Handle Permission
             $permission = null;
 
-            if (!empty($data['PermissionId'])) {
+            if (! empty($data['PermissionId'])) {
                 $permission = Permission::find($data['PermissionId']);
                 if ($permission && $stageModel->PermissionId != $permission->id) {
                     DB::table('t_WorkflowStages')
@@ -129,11 +129,11 @@ class WorkFlowStageService
                 $permission = Permission::find($dto->permissionId);
             }
 
-            if (!$permission) {
+            if (! $permission) {
                 $permissionName = 'workflowstage_' . str_replace(' ', '', $data['StageName']);
                 $permission = Permission::where('name', $permissionName)->first();
 
-                if (!$permission) {
+                if (! $permission) {
                     $permission = Permission::create([
                         'name' => $permissionName,
                         'guard_name' => 'web',
@@ -153,11 +153,11 @@ class WorkFlowStageService
                 $currentUser->load('roles');
                 foreach ($currentUser->roles as $role) {
                     try {
-                        if (!$role->hasPermissionTo($permission->id)) {
+                        if (! $role->hasPermissionTo($permission->id)) {
                             $role->givePermissionTo($permission->id);
                             Log::info("Assigned permission to role", [
                                 'permission' => $permission->name,
-                                'role' => $role->name
+                                'role' => $role->name,
                             ]);
                         }
                     } catch (\Throwable $e) {
@@ -168,7 +168,7 @@ class WorkFlowStageService
 
             // Ensure Admin role has the permission
             $adminRole = Role::find(2);
-            if ($adminRole && !$adminRole->hasPermissionTo($permission->id)) {
+            if ($adminRole && ! $adminRole->hasPermissionTo($permission->id)) {
                 try {
                     $adminRole->givePermissionTo($permission->id);
                 } catch (\Throwable $e) {
@@ -177,18 +177,18 @@ class WorkFlowStageService
             }
 
             // Update FinalStage if marked as final
-            if (!empty($data['IsFinalStage'])) {
+            if (! empty($data['IsFinalStage'])) {
                 DB::table('t_Workflows')
                     ->where('Id', $workflow->Id)
                     ->update([
                         'FinalStage' => $stageModel->StageName,
                         'ModifiedBy' => $user->Id,
-                        'ModifiedOn' => now()
+                        'ModifiedOn' => now(),
                     ]);
 
                 Log::info('Set final stage', [
                     'workflow_id' => $workflow->Id,
-                    'final_stage' => $stageModel->StageName
+                    'final_stage' => $stageModel->StageName,
                 ]);
             } else {
                 // Update modified timestamp
@@ -196,7 +196,7 @@ class WorkFlowStageService
                     ->where('Id', $workflow->Id)
                     ->update([
                         'ModifiedBy' => $user->Id,
-                        'ModifiedOn' => now()
+                        'ModifiedOn' => now(),
                     ]);
             }
 
@@ -209,7 +209,7 @@ class WorkFlowStageService
 
             Log::info('Workflow stage created successfully', [
                 'stage_id' => $stageModel->Id,
-                'stage_name' => $stageModel->StageName
+                'stage_name' => $stageModel->StageName,
             ]);
 
             return [
@@ -222,8 +222,9 @@ class WorkFlowStageService
         } catch (\Throwable $e) {
             Log::error('Workflow stage creation error', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             throw new ErroredException('Error creating workflow stage: ' . $e->getMessage());
         }
     }
@@ -245,7 +246,7 @@ class WorkFlowStageService
                 'stage_id' => $id,
                 'stage_name' => $stageName,
                 'was_final' => $wasFinalStage,
-                'workflow_id' => $workflowId
+                'workflow_id' => $workflowId,
             ]);
 
             // Delete the stage
@@ -264,7 +265,7 @@ class WorkFlowStageService
             if ($remainingStages->isNotEmpty()) {
                 // If the deleted stage was final, don't automatically set a new final stage
                 // Let the user explicitly mark another stage as final
-                if (!$wasFinalStage && !empty($workflow->FinalStage)) {
+                if (! $wasFinalStage && ! empty($workflow->FinalStage)) {
                     // Keep existing final stage if it wasn't the deleted one
                     $newFinalStage = $workflow->FinalStage;
                 }
@@ -276,7 +277,7 @@ class WorkFlowStageService
                 ->update([
                     'FinalStage' => $newFinalStage,
                     'ModifiedBy' => Auth::id(),
-                    'ModifiedOn' => now()
+                    'ModifiedOn' => now(),
                 ]);
 
             // Clear caches
@@ -289,20 +290,21 @@ class WorkFlowStageService
 
             Log::info('Stage deleted successfully', [
                 'stage_id' => $id,
-                'new_final_stage' => $newFinalStage
+                'new_final_stage' => $newFinalStage,
             ]);
 
             return [
                 'success' => true,
                 'final_stage' => $newFinalStage,
-                'was_final_stage' => $wasFinalStage
+                'was_final_stage' => $wasFinalStage,
             ];
         } catch (\Throwable $e) {
             Log::error('Failed to delete workflow stage', [
                 'stage_id' => $id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             throw $e;
         }
     }
@@ -319,7 +321,7 @@ class WorkFlowStageService
                 ->where('Id', $id)
                 ->update(array_merge($data, [
                     'ModifiedBy' => Auth::id(),
-                    'ModifiedOn' => now()
+                    'ModifiedOn' => now(),
                 ]));
 
             // Clear caches
@@ -334,8 +336,9 @@ class WorkFlowStageService
         } catch (\Throwable $e) {
             Log::error('Failed to update workflow stage', [
                 'stage_id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             throw new ErroredException('Failed to update workflow stage: ' . $e->getMessage());
         }
     }

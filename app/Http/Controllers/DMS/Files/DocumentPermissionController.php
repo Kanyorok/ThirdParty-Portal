@@ -29,17 +29,19 @@ class DocumentPermissionController extends Controller
     public function index(Request $request, Document $document): JsonResponse
     {
         $this->authorize('view', $document);
+
         return $this->permissions($document->permissions(), $request->user()->can('delete', $document));
     }
 
     public function visibility(VisibilityRequest $request, Document $document): JsonResponse
     {
         $this->authorize('share', $document);
+
         try {
             return $this->succeeded('file updated successfully', data: [
                 'data' => new FileResource(
                     (new DocumentService($document))->visibility($request->getVisibility(), $request->user())->document
-                )
+                ),
             ]);
         } catch (ErroredException $e) {
             return $e->toJson();
@@ -59,7 +61,7 @@ class DocumentPermissionController extends Controller
             return $this->succeeded('file permissions updated', data: [
                 'data' => new FileResource(
                     (new DocumentService($document))->addPermission($assignee, $permission, $request->user())->document
-                )
+                ),
             ]);
         } catch (ErroredException $e) {
             return $e->toJson();
@@ -73,7 +75,7 @@ class DocumentPermissionController extends Controller
     {
         $this->authorize('share', $document);
         $specialPermission = $document->permissions()->where('Id', $permission_id)->first();
-        if (!$specialPermission instanceof SpecialPermission) {
+        if (! $specialPermission instanceof SpecialPermission) {
             return $this->errored('permission not found');
         }
 
@@ -81,7 +83,7 @@ class DocumentPermissionController extends Controller
             return $this->succeeded('file permissions updated', data: [
                 'data' => new FileResource(
                     (new DocumentService($document))->removePermission($specialPermission, $request->user())->document
-                )
+                ),
             ]);
         } catch (ErroredException $e) {
             return $e->toJson();

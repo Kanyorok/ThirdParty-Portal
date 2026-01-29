@@ -2,21 +2,21 @@
 
 namespace App\Models\Insurance;
 
+use App\Models\Core\Approval\CodeDetail;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
-use App\Models\Core\Approval\CodeDetail;
-use App\Models\Insurance\BancassurancePolicy;
 
 class BancassuranceBeneficiaries extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    //
+
     protected $table = 't_BancassuranceBeneficiaries';
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -31,7 +31,7 @@ class BancassuranceBeneficiaries extends Model
         'IsPrimary',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
@@ -49,5 +49,3 @@ class BancassuranceBeneficiaries extends Model
         return $this->belongsTo(BancassurancePolicy::class, 'PolicyID', 'ID');
     }
 }
-
-

@@ -2,14 +2,14 @@
 
 namespace App\Imports;
 
+use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\PriceManagement;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\ToCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Concerns\ToCollection;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
-use App\Models\Inventory\ItemMasterList;
-use Carbon\Carbon;
 
 class PricingImport implements ToCollection
 {
@@ -21,11 +21,13 @@ class PricingImport implements ToCollection
         foreach ($rows as $row) {
             if ($header) {
                 $header = false;
+
                 continue;
             }
 
             if (count($row) < 8) {
                 Log::warning('Invalid row skipped due to insufficient columns', $row->toArray());
+
                 continue;
             }
 
@@ -34,8 +36,9 @@ class PricingImport implements ToCollection
             // 🔍 Get ItemMasterList by ItemCode
             $item = ItemMasterList::where('ItemCode', $itemCode)->first();
 
-            if (!$item) {
+            if (! $item) {
                 Log::warning("ItemCode '{$itemCode}' not found — skipping row", $row->toArray());
+
                 continue;
             }
 
@@ -53,31 +56,32 @@ class PricingImport implements ToCollection
                     : Carbon::parse($row[5]);
             } catch (\Exception $e) {
                 Log::warning('Invalid date format', $row->toArray());
+
                 continue;
             }
 
             // Matching criteria (ItemID + UOM)
             $match = [
-                'ItemID'        => $itemId,
-                'UOM'           => $row[1],
+                'ItemID' => $itemId,
+                'UOM' => $row[1],
             ];
 
             // Fields to insert or update
             $values = [
-                'ItemCode'      => $itemCode,
+                'ItemCode' => $itemCode,
                 'EffectiveFrom' => $effectiveFrom,
-                'EffectiveTo'   => $effectiveTo,
+                'EffectiveTo' => $effectiveTo,
                 'EstimatedPrice' => $row[2],
-                'ActualPrice'   => $row[3],
-                'CurrencyCode'  => $row[6],
-                'IsDefault'     => $isDefault,
-                'Source'        => 'ExcelImport',
-                'ModifiedBy'    => $userId,
-                'ModifiedOn'    => now(),
+                'ActualPrice' => $row[3],
+                'CurrencyCode' => $row[6],
+                'IsDefault' => $isDefault,
+                'Source' => 'ExcelImport',
+                'ModifiedBy' => $userId,
+                'ModifiedOn' => now(),
             ];
 
             $existing = PriceManagement::where($match)->first();
-            if (!$existing) {
+            if (! $existing) {
                 $values['CreatedBy'] = $userId;
                 $values['CreatedOn'] = now();
             }
@@ -85,14 +89,14 @@ class PricingImport implements ToCollection
             $pricing = PriceManagement::updateOrCreate($match, $values);
 
             // Assign PriceID if not set
-            if (!$pricing->PriceID) {
+            if (! $pricing->PriceID) {
                 $pricing->PriceID = 'PR-' . str_pad($pricing->Id, 5, '0', STR_PAD_LEFT);
                 $pricing->save();
             }
 
             // Update ItemMasterList.ItemPrice only if new, default, or changed
             if (
-                !$item->ItemPrice ||
+                ! $item->ItemPrice ||
                 $pricing->IsDefault ||
                 $item->ItemPrice != $pricing->Id
             ) {

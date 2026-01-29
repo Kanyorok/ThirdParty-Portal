@@ -28,13 +28,15 @@ trait DocumentsTrait
                     if (is_null($document->current)) {
                         return '?';
                     }
+
                     return Number::fileSize($document->current->Size, 2);
                 })->addColumn('Icon', function (Document $document) {
                     return $document->ext()?->getIcon('img');
                 })->addColumn('Repository', function (Document $document) use ($with) {
-                    if (!in_array('repository', $with, true)) {
+                    if (! in_array('repository', $with, true)) {
                         return 'N/A';
                     }
+
                     return $document->repository?->Name ?? 'N/A';
                 })->editColumn('CreatedOn', function (Document $document) {
                     return $document->CreatedOn?->format('d M, Y H:i');
@@ -53,5 +55,4 @@ trait DocumentsTrait
             return $this->errored('an error occurred fetching related documents');
         }
     }
-
 }

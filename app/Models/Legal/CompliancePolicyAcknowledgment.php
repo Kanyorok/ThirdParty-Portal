@@ -14,6 +14,6 @@ class CompliancePolicyAcknowledgment extends Model
 
     public function policy()
     {
-        return $this->belongsTo(CompliancePolicy::class,'PolicyID');
+        return $this->belongsTo(CompliancePolicy::class, 'PolicyID');
     }
 }

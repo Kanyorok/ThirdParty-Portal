@@ -45,7 +45,7 @@ class ApiCountryController extends Controller
             ->get(['ID', 'Name']);
 
         return response()->json([
-            'data' => $localities
+            'data' => $localities,
         ]);
     }
 }

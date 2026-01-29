@@ -45,7 +45,7 @@ class NewThirdPartyController extends Controller
             );
 
             if ($request->hasFile('logo')) {
-                $partyService = new class($party) extends ThirdPartiesService {
+                $partyService = new class ($party) extends ThirdPartiesService {
                     public static function getType(): \App\Models\ThirdParty\ThirdPartyType
                     {
                         return \App\Services\ThirdParties\ThirdPartyService::getType();
@@ -60,7 +60,7 @@ class NewThirdPartyController extends Controller
 
             if ($request->boolean('createUser')) {
                 $gender = $request->getGender('user_Gender');
-                $partyService = new class($party) extends ThirdPartiesService {
+                $partyService = new class ($party) extends ThirdPartiesService {
                     public static function getType(): \App\Models\ThirdParty\ThirdPartyType
                     {
                         return \App\Services\ThirdParties\ThirdPartyService::getType();
@@ -86,8 +86,8 @@ class NewThirdPartyController extends Controller
                     : 'Third party created successfully.',
                 'data' => [
                     'id' => $party->Id,
-                    'name' => $party->ThirdPartyName
-                ]
+                    'name' => $party->ThirdPartyName,
+                ],
             ], 201);
         });
     }

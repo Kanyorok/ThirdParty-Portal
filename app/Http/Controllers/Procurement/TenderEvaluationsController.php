@@ -24,37 +24,37 @@ class TenderEvaluationsController extends Controller
     public function index(Request $request)
     {
         $search = $request->query('search', '');
-        
+
         $sections = Section::select('Id', 'SectionName')->get();
-        
+
         // Get unique tenderID from the TenderSection table
         $tenderSections = TenderSection::select('TenderID')->distinct()->get();
-        
+
         // Get tender IDs that have sections
         $tenderIds = $tenderSections->pluck('TenderID')->toArray();
-        
+
         // Get tenders that are not in the TenderSection table (with search and sort)
         $tendersQuery = Tender::whereNotIn('Id', $tenderIds);
-        
-        if (!empty($search)) {
-            $tendersQuery->where(function($q) use ($search) {
+
+        if (! empty($search)) {
+            $tendersQuery->where(function ($q) use ($search) {
                 $q->where('TenderNo', 'like', '%' . $search . '%')
                   ->orWhere('Title', 'like', '%' . $search . '%');
             });
         }
-        
+
         $tenders = $tendersQuery->orderBy('CreatedOn', 'desc')->get();
-        
+
         // Get tenders that have sections (with search and sort)
         $tenderswithsectionsQuery = Tender::whereIn('Id', $tenderIds);
-        
-        if (!empty($search)) {
-            $tenderswithsectionsQuery->where(function($q) use ($search) {
+
+        if (! empty($search)) {
+            $tenderswithsectionsQuery->where(function ($q) use ($search) {
                 $q->where('TenderNo', 'like', '%' . $search . '%')
                   ->orWhere('Title', 'like', '%' . $search . '%');
             });
         }
-        
+
         $tenderswithsections = $tenderswithsectionsQuery->orderBy('CreatedOn', 'desc')->get();
 
         $data = [];
@@ -64,7 +64,7 @@ class TenderEvaluationsController extends Controller
                 ->with('sections')
                 ->get();
             $sectionNames = $tenderSectionRows
-                ->map(fn($ts) => $ts->sections?->SectionName)
+                ->map(fn ($ts) => $ts->sections?->SectionName)
                 ->filter()
                 ->values()
                 ->all();
@@ -75,13 +75,13 @@ class TenderEvaluationsController extends Controller
                 // Ensure correct PK casing so relations hydrate properly
                 ->with([
                     'criteria:Id,CriteriaName,SectionID',
-                    'section:Id,SectionName'
+                    'section:Id,SectionName',
                 ])
                 ->get();
 
             // Flat list of selected criteria names
             $criteriaNamesFlat = $selectedTenderCriteria
-                ->map(fn($tc) => optional($tc->criteria)->CriteriaName)
+                ->map(fn ($tc) => optional($tc->criteria)->CriteriaName)
                 ->filter()
                 ->unique()
                 ->values()
@@ -93,9 +93,9 @@ class TenderEvaluationsController extends Controller
                 ->groupBy('SectionID')
                 ->each(function ($rows, $sectionId) use (&$criteriaBySection) {
                     $first = $rows->first();
-                    $sectionName = optional($first->section)->SectionName ?: ('Section #'.$sectionId);
+                    $sectionName = optional($first->section)->SectionName ?: ('Section #' . $sectionId);
                     $names = $rows
-                        ->map(fn($tc) => optional($tc->criteria)->CriteriaName)
+                        ->map(fn ($tc) => optional($tc->criteria)->CriteriaName)
                         ->filter()
                         ->values()
                         ->all();
@@ -117,7 +117,7 @@ class TenderEvaluationsController extends Controller
                 'criteriaBySection' => $criteriaBySection,
             ];
         }
-        //return$data;
+
         return view('procurement.tendering.tendersetup.evaluationcriteriasetup.tenderevaluations', compact(
             'tenders',
             'sections',
@@ -130,7 +130,6 @@ class TenderEvaluationsController extends Controller
      */
     public function create()
     {
-        //
     }
 
     /**
@@ -146,7 +145,6 @@ class TenderEvaluationsController extends Controller
      */
     public function show(string $id)
     {
-
     }
 
     /**
@@ -154,7 +152,6 @@ class TenderEvaluationsController extends Controller
      */
     public function edit(string $id)
     {
-        //
     }
 
     /**
@@ -162,7 +159,6 @@ class TenderEvaluationsController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
     }
 
     /**
@@ -170,7 +166,6 @@ class TenderEvaluationsController extends Controller
      */
     public function destroy(string $id)
     {
-        //
     }
 
     //Store Sections associated to a tender
@@ -184,7 +179,7 @@ class TenderEvaluationsController extends Controller
             'tender_id' => $request->tender_id,
             'sections' => $request->sections,
             'weights' => $request->weights,
-            'all_data' => $request->all()
+            'all_data' => $request->all(),
         ]);
 
         // Validate the request data
@@ -211,6 +206,7 @@ class TenderEvaluationsController extends Controller
         }
 
         DB::beginTransaction();
+
         try {
             // First, delete existing sections for this tender to avoid duplicates
             TenderSection::where('TenderID', $tenderId)->delete();
@@ -219,8 +215,9 @@ class TenderEvaluationsController extends Controller
             foreach ($sections as $sectionId) {
                 // Check if the section exists
                 $section = Section::find($sectionId);
-                if (!$section) {
+                if (! $section) {
                     DB::rollBack();
+
                     return back()->with('error', 'Section with ID ' . $sectionId . ' does not exist.');
                 }
 
@@ -247,7 +244,7 @@ class TenderEvaluationsController extends Controller
             Log::info('Tender sections created successfully', [
                 'tender_id' => $tenderId,
                 'sections_count' => count($sections),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return back()->with('success', 'Tender sections created successfully.');
@@ -256,7 +253,7 @@ class TenderEvaluationsController extends Controller
             Log::error('Failed to create tender sections', [
                 'error' => $th->getMessage(),
                 'tender_id' => $tenderId,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return back()->with('error', 'Failed to create tender sections: ' . $th->getMessage());
@@ -273,7 +270,7 @@ class TenderEvaluationsController extends Controller
             ->where('IsActive', true)
             ->get(['CriteriaID', 'SectionID'])
             ->groupBy('SectionID')
-            ->map(fn($rows) => $rows->pluck('CriteriaID')->toArray());
+            ->map(fn ($rows) => $rows->pluck('CriteriaID')->toArray());
 
         // Get sections associated with the tender
         $allTenderSections = TenderSection::where('TenderID', $tender->Id)
@@ -282,19 +279,20 @@ class TenderEvaluationsController extends Controller
 
         // Include any tender section that has a valid Section row (even if IsActive is false)
         $tenderSections = $allTenderSections
-            ->filter(function($ts){
+            ->filter(function ($ts) {
                 return (bool) $ts->sections; // has linked Section
             })
             ->values();
 
         // Only warn about sections truly missing their base Section definition
         $filteredSections = $allTenderSections
-            ->reject(function($ts){
+            ->reject(function ($ts) {
                 return (bool) $ts->sections;
             })
-            ->map(function($ts){
+            ->map(function ($ts) {
                 $name = $ts->sections?->SectionName;
-                return $name ?: ('Section #'.$ts->SectionID);
+
+                return $name ?: ('Section #' . $ts->SectionID);
             })
             ->values();
 
@@ -317,7 +315,6 @@ class TenderEvaluationsController extends Controller
             'filteredSections'
         ));
     }
-
 
     public function storeTenderCriteria(Request $request)
     {
@@ -358,7 +355,7 @@ class TenderEvaluationsController extends Controller
                 // Remove any criteria not selected for this section
                 $removeQuery = TenderCriteria::where('TenderID', (int)$tenderId)
                     ->where('SectionID', (int)$sectionId);
-                if (!empty($selected)) {
+                if (! empty($selected)) {
                     $removeQuery->whereNotIn('CriteriaID', $selected);
                 }
                 // Soft-delete if model has SoftDeletes, else hard delete
@@ -467,6 +464,7 @@ class TenderEvaluationsController extends Controller
                 ->log('Scores submitted for tender ID: ' . $tenderId);
 
             DB::commit();
+
             return redirect()->route('evaluationdashboard.index')->with('success', 'Scores submitted successfully!');
         } catch (Exception $e) {
             DB::rollBack();
@@ -479,5 +477,4 @@ class TenderEvaluationsController extends Controller
             return back()->withErrors(['error' => 'Something went wrong while saving. Please try again.']);
         }
     }
-
 }

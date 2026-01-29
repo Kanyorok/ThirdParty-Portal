@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyRegistry;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class PropertyBlockSeeder extends Seeder
 {
@@ -16,8 +16,9 @@ class PropertyBlockSeeder extends Seeder
         // Fetch a sample property
         $property = PropertyRegistry::where('PropertyName', 'Kilimani Towers')->first();
 
-        if (!$property) {
+        if (! $property) {
             $this->command->warn('Property "Kilimani Towers" not found. Skipping PropertyBlock seeding.');
+
             return;
         }
 

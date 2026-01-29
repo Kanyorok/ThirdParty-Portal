@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
+use App\Http\Requests\FleetManagement\FleetContractedDriverLicenseRequest;
 use App\Models\Fleet\ContractedDriver;
 use App\Models\Fleet\FleetContractedDriverLicense;
 use App\Services\FleetManagement\FleetContractedDriverLicenseService;
-use App\Http\Requests\FleetManagement\FleetContractedDriverLicenseRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class FleetContractedDriverLicenseTrackingController extends Controller
 {
@@ -39,7 +39,7 @@ class FleetContractedDriverLicenseTrackingController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'License created successfully.',
-                'license' => $license
+                'license' => $license,
             ]);
         }
 
@@ -69,14 +69,13 @@ class FleetContractedDriverLicenseTrackingController extends Controller
                 'LicenseCategory' => $license->LicenseCategory,
                 'IssueDate' => $license->IssueDate,
                 'ExpiryDate' => $license->ExpiryDate,
-                'Notes' => $license->Notes
+                'Notes' => $license->Notes,
             ]);
         }
 
         return redirect()->route('fleet.contracted_driver_licenses.index', $driverId)
             ->with('success', 'License updated successfully.');
     }
-
 
     public function destroy(Request $request, $driverId, $licenseId)
     {
@@ -86,12 +85,11 @@ class FleetContractedDriverLicenseTrackingController extends Controller
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'License deleted successfully.'
+                'message' => 'License deleted successfully.',
             ]);
         }
 
         return redirect()->route('fleet.contracted_driver_licenses.index', $driverId)
             ->with('success', 'License deleted successfully.');
     }
-
 }

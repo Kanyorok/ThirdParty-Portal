@@ -9,7 +9,6 @@ use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancassuranceClaim;
 use App\Models\Insurance\BancassuranceClaimAssessment;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Carbon;
 
 class BancassuranceClaimAssessmentService
 {
@@ -18,18 +17,16 @@ class BancassuranceClaimAssessmentService
      */
     public function __construct(public BancassuranceClaimAssessment $bancassuranceclaimassment)
     {
-        //
     }
 
     public static function create(
         BancassuranceClaim $claim,
-        string             $AssessmentComments,
-        float              $AssessmentAmount,
-        CodeDetail         $Decision,
-        User               $user,
-        UploadedFile        $document = null
-    ): self
-    {
+        string $AssessmentComments,
+        float $AssessmentAmount,
+        CodeDetail $Decision,
+        User $user,
+        UploadedFile $document = null
+    ): self {
         $assessment = BancassuranceClaimAssessment::create([
             'ClaimId' => $claim->Id,
             'AssessmentComments' => $AssessmentComments,
@@ -59,16 +56,14 @@ class BancassuranceClaimAssessmentService
         return new self($assessment);
     }
 
-
     public static function update(
         BancassuranceClaimAssessment $assessments,
-        string                       $AssessmentComments,
-        float                        $AssessmentAmount,
-        CodeDetail                   $Decision,
-        User                         $user,
-        UploadedFile                 $document = null
-    ): self
-    {
+        string $AssessmentComments,
+        float $AssessmentAmount,
+        CodeDetail $Decision,
+        User $user,
+        UploadedFile $document = null
+    ): self {
         $assessments->update([
             'AssessmentComments' => $AssessmentComments,
             'AssessmentAmount' => $AssessmentAmount,
@@ -86,7 +81,7 @@ class BancassuranceClaimAssessmentService
                 $user
             );
         }
-        
+
 
         activity()
             ->causedBy($user->Id)
@@ -96,5 +91,4 @@ class BancassuranceClaimAssessmentService
 
         return new self($assessments);
     }
-
 }

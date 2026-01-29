@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQSection;
 use App\Models\Procurement\Section;
-use App\Models\Procurement\RFQSettingSection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -36,7 +35,6 @@ class RFQSectionController extends Controller
         return view('procurement.rfqcriteriasetup.rfqevaluations', compact('rfqs', 'sections', 'rfqList'));
     }
 
-
     /**
      * Store selected sections and weights for a given RFQ.
      */
@@ -57,6 +55,7 @@ class RFQSectionController extends Controller
         $weights = $request->input('weights', []) ?: [];
 
         DB::beginTransaction();
+
         try {
             // Deactivate any previously assigned sections that are not in the current selection
             $exclude = count($sections) ? $sections : [0];
@@ -77,7 +76,7 @@ class RFQSectionController extends Controller
                     'SectionID' => $sectionId,
                 ]);
 
-                $isNew = !$record->exists;
+                $isNew = ! $record->exists;
 
                 $record->Weight = $weight;
                 $record->IsActive = true;
@@ -99,6 +98,7 @@ class RFQSectionController extends Controller
                 ->log('Assigned sections to RFQ ID: ' . $rfqId);
 
             DB::commit();
+
             return back()->with('success', 'RFQ Evaluation sections saved successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -115,6 +115,7 @@ class RFQSectionController extends Controller
     public function index()
     {
         $sections = RFQSection::all();
+
         return view('procurement.rfq.settings.sections', compact('sections'));
     }
 
@@ -129,6 +130,7 @@ class RFQSectionController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             RFQSection::create([
                 'SectionName' => $request->input('name'),
@@ -143,6 +145,7 @@ class RFQSectionController extends Controller
                 ->log('Created a new RFQ section: ' . $request->input('name'));
 
             DB::commit();
+
             return back()->with('success', 'RFQ section created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -180,7 +183,7 @@ class RFQSectionController extends Controller
             ->causedBy(Auth::user())
             ->withProperties([
                 'old' => $oldValues,
-                'new' => $section->getChanges()
+                'new' => $section->getChanges(),
             ])
             ->log('Updated RFQ section: ' . $section->SectionName);
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\TenderApprovalStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderInvitation;
@@ -12,11 +13,10 @@ use App\Enums\TenderStatusEnum;
 
 class TenderResponseController extends Controller
 {
-    //
-
     public function index()
     {
         $invitations = TenderInvitation::all();
+
         return view('procurement.tendering.suppliermanagement.invitationresponsetracking.index', compact('invitations'));
     }
 

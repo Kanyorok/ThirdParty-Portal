@@ -2,10 +2,6 @@
 
 namespace App\Http\Controllers\Property;
 
-
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyLeaseScheduleRequest;
@@ -16,16 +12,18 @@ use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Services\Property\TenantAndLease\PropertyLeaseScheduleService;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
-
 
 class PropertyLeaseScheduleController extends Controller
 {
-    //
     public function index()
     {
         $this->authorize(PermissionEnum::PropertyLeaseScheduleView, PropertyLeaseSchedule::class);
         $leaseschedules = PropertyLeaseSchedule::with(['lease'])->where('isActive', true)->get();
+
         return view('property.tenantmanagement.leasemanagement.leaseschedule.index', compact('leaseschedules'));
     }
 
@@ -47,16 +45,17 @@ class PropertyLeaseScheduleController extends Controller
         return view('property.tenantmanagement.leasemanagement.leaseschedule.create', compact('newleases', 'codes'));
     }
 
-
     public function getPropertyByTenant($tenantId)
     {
         $newlease = PropertyNewLease::where('TenantId', $tenantId)->get();
+
         return response()->json($newlease);
     }
 
     public function getLeaseByProperty($propertyId)
     {
         $newlease = PropertyNewLease::where('PropertyId', $propertyId)->get();
+
         return response()->json($newlease);
     }
 
@@ -65,6 +64,7 @@ class PropertyLeaseScheduleController extends Controller
         $this->authorize(PermissionEnum::PropertyLeaseScheduleView, PropertyLeaseSchedule::class);
         $leaseschedule = PropertyLeaseSchedule::where('isActive', true)->find($id);
         $paymentFrequencies = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
+
         return view('property.tenantmanagement.leasemanagement.leaseschedule.show', compact('leaseschedule', 'paymentFrequencies'));
     }
 
@@ -155,10 +155,12 @@ class PropertyLeaseScheduleController extends Controller
             return back()->withErrors(['error' => 'Failed to update Lease Schedule'])->withInput();
         }
     }
+
     public function destroy($id)
     {
         //Check if user has permission to delete property categories
         $this->authorize(PermissionEnum::PropertyLeaseScheduleDelete, PropertyLeaseSchedule::class);
+
         try {
             $leaseschedules = PropertyLeaseSchedule::findOrFail($id);
             $leaseschedules->delete();
@@ -168,6 +170,7 @@ class PropertyLeaseScheduleController extends Controller
         } catch (Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting Lease Schedule: ' . $th->getMessage());
+
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to delete Lease Schedule. Please try again.'])
                 ->withInput();
@@ -182,10 +185,4 @@ class PropertyLeaseScheduleController extends Controller
 
         return view('property.tenantmanagement.leasemanagement.leaseschedule.print', compact('leaseschedule'));
     }
-
-
-
 }
-
-
-

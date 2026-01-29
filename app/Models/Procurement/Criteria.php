@@ -9,14 +9,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Criteria extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     protected $table = 't_Criterias';
     protected $primaryKey = 'Id';
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = ['CriteriaName', 'Description', 'SectionID', 'IsActive'];
 
@@ -24,8 +25,8 @@ class Criteria extends Model
 
     protected static function booted()
     {
-        static::creating(fn($x) => $x->CreatedBy = optional(auth()->user())->id);
-        static::updating(fn($x) => $x->ModifiedBy = optional(auth()->user())->id);
+        static::creating(fn ($x) => $x->CreatedBy = optional(auth()->user())->id);
+        static::updating(fn ($x) => $x->ModifiedBy = optional(auth()->user())->id);
     }
 
     public function section(): BelongsTo

@@ -36,9 +36,9 @@ class MarketingListsUploadController extends Controller
         }
 
         return $this->succeeded('ok', data: [
-                                             'progress'    => (int) ($total > 0) ? (($done / $total) * 100) : 100,
-                                             'done'        => $done,
-                                             'total'       => (int) $total,
+                                             'progress' => (int) ($total > 0) ? (($done / $total) * 100) : 100,
+                                             'done' => $done,
+                                             'total' => (int) $total,
                                              'description' => 'Processing Data (' . number_format($done) . ' / ' . number_format($total) . ')',
                                             ]);
     }
@@ -60,11 +60,11 @@ class MarketingListsUploadController extends Controller
                                               ],
                                    ], [
                                        'Type.required' => 'type is required',
-                                       'Type.in'       => 'type is invalid',
+                                       'Type.in' => 'type is invalid',
                                       ])['Type'];
 
         $service = (new ListService($list));
-        if (!$service->canSource($type)) {
+        if (! $service->canSource($type)) {
             throw ValidationException::withMessages([
                                                      'Type' => 'Type and List do not match only ' . $service->source(),
                                                     ]);

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class VendorMasterController extends Controller
 {
@@ -12,7 +11,8 @@ class VendorMasterController extends Controller
         return view('finance.accountspayable.vendormaster.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('finance.accountspayable.vendormaster.create');
     }
 }

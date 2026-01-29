@@ -11,6 +11,7 @@ class RegulatoryBodyController extends Controller
     public function index()
     {
         $bodies = RegulatoryBody::orderBy('Name')->get();
+
         return view('legal.setup.regulatory_bodies.index', compact('bodies'));
     }
 
@@ -30,6 +31,7 @@ class RegulatoryBodyController extends Controller
         ]);
 
         RegulatoryBody::create($validated + ['IsActive' => 1]);
+
         return redirect()->route('legal.setup.regulatory_bodies.index')
             ->with('success', 'Regulatory Body added successfully.');
     }
@@ -37,6 +39,7 @@ class RegulatoryBodyController extends Controller
     public function edit($id)
     {
         $body = RegulatoryBody::findOrFail($id);
+
         return view('legal.setup.regulatory_bodies.edit', compact('body'));
     }
 
@@ -53,6 +56,7 @@ class RegulatoryBodyController extends Controller
         ]);
 
         $body->update($validated);
+
         return redirect()->route('legal.setup.regulatory_bodies.index')
             ->with('success', 'Regulatory Body updated successfully.');
     }
@@ -61,6 +65,7 @@ class RegulatoryBodyController extends Controller
     {
         $body = RegulatoryBody::findOrFail($id);
         $body->delete();
+
         return back()->with('success', 'Regulatory Body deleted.');
     }
 }

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 
 class HierarchyViewerController extends Controller
 {
-    //
     public function index()
     {
         return view('finance.chartofaccounts.accounthierarchyviewer.index');

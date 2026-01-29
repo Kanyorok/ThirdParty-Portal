@@ -49,11 +49,12 @@ class FileProperties extends FileExtraction
      */
     public function generateChecksum(DisksEnum $disk, string $path): string
     {
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             throw new ErroredException('Calculating File Checksum Failed. File does not exist.');
         }
         $checksum1 = hash_file('sha256', $this->filePath);
         $checksum2 = hash_file('sha256', Storage::disk($disk->value)->path($path));
+
         return base64_encode($checksum1 . '|' . $checksum2);
     }
 
@@ -62,41 +63,48 @@ class FileProperties extends FileExtraction
         try {
             if ($this->type->isImage()) {
                 $this->extractImageProperties();
+
                 return true;
             }
 
             if ($this->type->isVideo()) {
                 $this->extractVideoProperties();
+
                 return true;
             }
 
             if ($this->type->isAudio()) {
                 $this->extractAudioProperties();
+
                 return true;
             }
 
             if ($this->type->isDocument()) {
                 $this->extractDocumentProperties();
+
                 return true;
             }
             if ($this->type->isPresentation()) {
                 $this->extractPresentationProperties();
+
                 return true;
             }
 
             if ($this->type->value === ExtensionsEnum::Csv->value || $this->type->isSpreadsheet()) {
                 $this->extractSpreadsheetProperties();
+
                 return true;
             }
 
             if ($this->type->value === ExtensionsEnum::Pdf->value) {
                 $this->extractPdfProperties();
+
                 return true;
             }
-
         } catch (Exception $e) {
             Log::warning('Failed to extract type-specific properties: ' . $e->getMessage());
         }
+
         return false;
     }
 
@@ -173,7 +181,7 @@ class FileProperties extends FileExtraction
     {
         if (class_exists(getID3::class)) {
             try {
-                $getID3 = new getID3;
+                $getID3 = new getID3();
                 $fileInfo = $getID3->analyze($this->filePath);
 
                 if (isset($fileInfo['playtime_seconds'])) {
@@ -213,12 +221,10 @@ class FileProperties extends FileExtraction
                         $this->add('audio_sample_rate', $fileInfo['audio']['sample_rate'], DataTypesEnum::Integer);
                     }
                 }
-
             } catch (Exception $e) {
                 Log::warning('Failed to extract video properties: ' . $e->getMessage());
             }
         }
-
     }
 
     /**
@@ -323,21 +329,21 @@ class FileProperties extends FileExtraction
             $spreadsheet = IOFactory::load($this->filePath);
             $properties = $spreadsheet->getProperties();
 
-            if (!empty(trim($properties->getCreator()))) {
+            if (! empty(trim($properties->getCreator()))) {
                 $this->add('creator', $properties->getCreator());
             }
-            if (!empty(trim($properties->getLastModifiedBy()))) {
+            if (! empty(trim($properties->getLastModifiedBy()))) {
                 $this->add('modified_by', $properties->getLastModifiedBy());
             }
             if ($created = $properties->getCreated()) {
                 try {
-                    $this->add('creation_date', Carbon::createFromFormat('U', (integer)$created)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
+                    $this->add('creation_date', Carbon::createFromFormat('U', (int)$created)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
                 } catch (Exception) {
                 }
             }
 
             if ($modified = $properties->getModified()) {
-                $this->add('modified_date', Carbon::createFromFormat('U', (integer)$modified)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
+                $this->add('modified_date', Carbon::createFromFormat('U', (int)$modified)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
             }
 
             $this->add('sheet_count', $spreadsheet->getSheetCount(), DataTypesEnum::Integer);
@@ -345,7 +351,6 @@ class FileProperties extends FileExtraction
         } catch (Exception $e) {
             Log::warning('Failed to extract spreadsheet properties: ' . $e->getMessage());
         }
-
     }
 
     public function getProperties(): Collection
@@ -356,7 +361,7 @@ class FileProperties extends FileExtraction
     public function setProperties(User $actor, Collection $properties = null): static
     {
         if (is_null($properties)) {
-            if (!$this->processContent()) {
+            if (! $this->processContent()) {
                 return $this;
             }
             $properties = $this->properties;
@@ -377,6 +382,7 @@ class FileProperties extends FileExtraction
                     $value = $value;
                 }*/
                 $headers->add($property['Name']);
+
                 return [
                     'VersionId' => $this->document->current->Id,
                     'DocumentId' => (int)$this->document->Id,
@@ -386,7 +392,7 @@ class FileProperties extends FileExtraction
                     'ModifiedOn' => $date,
                     'DataType' => $property['DataType'] ?? 'st',
                     'Name' => $property['Name'] ?? '',
-                    'Value' => $value //35k
+                    'Value' => $value, //35k
                 ];
             });
 
@@ -395,12 +401,13 @@ class FileProperties extends FileExtraction
                     DB::table('t_DocumentAttributes')->where('t_DocumentAttributes.DocumentId', $this->document->Id)
                         ->whereIn('t_DocumentAttributes.Name', $headers->toArray())->update([
                             'DeletedOn' => $date,
-                            'DeletedBy' => $actor->Id
+                            'DeletedBy' => $actor->Id,
                         ]);
                 }
                 DB::table('t_DocumentAttributes')->insert($properties->toArray());
             }
         }
+
         return $this;
     }
 
@@ -412,12 +419,14 @@ class FileProperties extends FileExtraction
         try {
             if (shell_exec("command -v pdfinfo") === null) {
                 SystemHelper::notifyAdmin('pdfinfo command not found. Please install poppler-utils package.');
+
                 return;
             }
 
             $pdfinfo = shell_exec("pdfinfo " . $this->filePath);
             if ($pdfinfo === null) {
                 Log::warning('Failed to get PDF information');
+
                 return;
             }
 
@@ -438,11 +447,13 @@ class FileProperties extends FileExtraction
                 // Convert numeric values to appropriate types
                 if (is_numeric($value)) {
                     $this->add($key, (float)$value, (str_contains($value, '.')) ? DataTypesEnum::Integer : DataTypesEnum::Float);
+
                     continue;
                 }
 
                 if ($value === 'yes' || $value === 'no') {
                     $this->add($key, (int)($value === 'yes'), DataTypesEnum::Boolean);
+
                     continue;
                 }
 
@@ -451,6 +462,7 @@ class FileProperties extends FileExtraction
                         $this->add($key, Carbon::createFromFormat('D M  j H:i:s Y T', $value)?->timezone(config('app.timezone'))->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
                     } catch (Exception) {
                     }
+
                     continue;
                 }
 
@@ -459,6 +471,5 @@ class FileProperties extends FileExtraction
         } catch (Exception $e) {
             Log::warning('Failed to extract PDF properties: ' . $e->getMessage());
         }
-
     }
 }

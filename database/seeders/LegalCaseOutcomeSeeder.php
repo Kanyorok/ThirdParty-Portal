@@ -51,7 +51,7 @@ class LegalCaseOutcomeSeeder extends Seeder
                 ->where('Outcome', $item['Outcome'])
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('t_LegalCaseOutcomes')->insert([
                     'LegalCaseID' => $item['LegalCaseID'],
                     'Outcome' => $item['Outcome'],

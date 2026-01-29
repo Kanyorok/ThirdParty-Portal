@@ -2,49 +2,42 @@
 
 namespace App\Http\Controllers\HR;
 
-use App\Enums\Employee\GenderEnum;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\HRM\AddEmployeeRequest;
-use App\Http\Requests\HRM\EmployeePersonalRequest;
-use App\Models\HR\Employee;
 use App\Models\Core\Branch;
-use App\Models\HRM\Department;
 use App\Models\Finance\Bank;
 use App\Models\Finance\BankBranch;
-use App\Models\HR\JobGrade;
-use App\Models\HR\JobRole;
+use App\Models\HR\Discipline\DisciplinaryCase;
+use App\Models\HR\Employee;
 use App\Models\HR\EmployeeContact;
 use App\Models\HR\EmployeeDocument;
-use App\Models\HR\EmployeeSalaryHistory;
 use App\Models\HR\EmployeeEducation;
-use App\Models\HR\Religion;
+use App\Models\HR\EmployeeSalaryHistory;
+use App\Models\HR\JobGrade;
+use App\Models\HR\JobRole;
+use App\Models\HR\KpiAppraisal;
+use App\Models\HR\KpiGoal;
+use App\Models\HR\KpiRatingScale;
 use App\Models\HR\MonthlyAllowance;
 use App\Models\HR\MonthlyDeduction;
 use App\Models\HR\PayrollRunLine;
+use App\Models\HR\Religion;
 use App\Models\HR\SalaryHistory;
 use App\Models\HR\StaffLoan;
-use App\Services\HR\PayrollMandatoryAllocator;
-use App\Services\StaticListsService;
-use App\Services\HR\EmployeeService;
 use App\Models\HR\TrainingCertificate;
 use App\Models\HR\TrainingSessionParticipant;
-use App\Models\HR\KpiGoal;
-use App\Models\HR\KpiAppraisal;
-use App\Models\HR\KpiRatingScale;
-use App\Models\HR\Discipline\DisciplinaryCase;
+use App\Models\HRM\Department;
+use App\Services\HR\EmployeeService;
+use App\Services\HR\PayrollMandatoryAllocator;
+use App\Services\StaticListsService;
 use App\Traits\Controller\EmployeeTrait;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\View\View;
 use Carbon\Carbon;
 use Exception;
-use Throwable;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 
 class EmployeeController extends Controller
 {
@@ -108,7 +101,7 @@ class EmployeeController extends Controller
         $this->authorize('create', Employee::class);
 
         $grades = JobGrade::where('IsActive', 1)->orderBy('Name')->get();
-        $roles  = JobRole::where('IsActive', 1)->orderBy('Name')->get();
+        $roles = JobRole::where('IsActive', 1)->orderBy('Name')->get();
         $branches = Branch::whereNull('DeletedOn')->orderBy('Name')->get();
         $departments = Department::whereNull('DeletedOn')->orderBy('Name')->get();
         $supervisors = Employee::where('IsActive', 1)->orderBy('FirstName')->get(['Id', 'FirstName', 'LastName']);
@@ -130,35 +123,35 @@ class EmployeeController extends Controller
 
         $data = $request->validate([
             // EmployeeNo is auto-generated, not submitted
-            'FirstName'       => 'required|string|max:100',
-            'LastName'        => 'required|string|max:100',
-            'Email'           => 'nullable|email|max:150',
-            'Phone'           => 'nullable|string|max:50',
-            'Gender'          => ['nullable', Rule::in(['Male','Female','Other'])],
-            'Religion'        => 'nullable|string|max:100',
-            'DateOfBirth'     => 'nullable|date|before_or_equal:' . now()->subYears(20)->format('Y-m-d'),
-            'BranchID'        => 'required|integer',
-            'DepartmentID'    => 'required|integer',
-            'GradeID'         => 'nullable|integer',
-            'RoleID'          => 'nullable|integer',
-            'SupervisorID'    => 'nullable|integer',
-            'EmploymentDate'  => 'nullable|date',
-            'EmploymentType'  => 'nullable|string|max:50',
-            'ContractType'    => 'nullable|string|max:50',
-            'Address'         => 'nullable|string|max:255',
-            'NSSFNo'          => 'nullable|string|max:50',
-            'NHIFNo'          => 'nullable|string|max:50',
-            'KRAPIN'          => 'nullable|string|max:50',
-            'BasicSalary'     => 'required|numeric|min:0',
-            'PaymentMode'     => 'required|string|max:50',
-            'BankID'          => 'nullable|integer|exists:t_Banks,BankID',
-            'BankBranchID'    => 'nullable|integer|exists:t_BankBranches,BranchID',
-            'BankAccount'     => 'nullable|string|max:100',
-            'Status'          => ['nullable', 'string', 'max:20', Rule::in(self::STATUSES)],
+            'FirstName' => 'required|string|max:100',
+            'LastName' => 'required|string|max:100',
+            'Email' => 'nullable|email|max:150',
+            'Phone' => 'nullable|string|max:50',
+            'Gender' => ['nullable', Rule::in(['Male','Female','Other'])],
+            'Religion' => 'nullable|string|max:100',
+            'DateOfBirth' => 'nullable|date|before_or_equal:' . now()->subYears(20)->format('Y-m-d'),
+            'BranchID' => 'required|integer',
+            'DepartmentID' => 'required|integer',
+            'GradeID' => 'nullable|integer',
+            'RoleID' => 'nullable|integer',
+            'SupervisorID' => 'nullable|integer',
+            'EmploymentDate' => 'nullable|date',
+            'EmploymentType' => 'nullable|string|max:50',
+            'ContractType' => 'nullable|string|max:50',
+            'Address' => 'nullable|string|max:255',
+            'NSSFNo' => 'nullable|string|max:50',
+            'NHIFNo' => 'nullable|string|max:50',
+            'KRAPIN' => 'nullable|string|max:50',
+            'BasicSalary' => 'required|numeric|min:0',
+            'PaymentMode' => 'required|string|max:50',
+            'BankID' => 'nullable|integer|exists:t_Banks,BankID',
+            'BankBranchID' => 'nullable|integer|exists:t_BankBranches,BranchID',
+            'BankAccount' => 'nullable|string|max:100',
+            'Status' => ['nullable', 'string', 'max:20', Rule::in(self::STATUSES)],
             'SalaryEffectiveFrom' => 'nullable|date',
-            'Photo'           => 'nullable|image|max:5120',
+            'Photo' => 'nullable|image|max:5120',
             // Contacts
-            'contact_name.*'  => 'nullable|string|max:150',
+            'contact_name.*' => 'nullable|string|max:150',
             'contact_relation.*' => 'nullable|string|max:100',
             'contact_phone.*' => 'nullable|string|max:50',
             'contact_email.*' => 'nullable|email|max:150',
@@ -166,19 +159,19 @@ class EmployeeController extends Controller
             'contact_is_primary.*' => 'nullable|boolean',
             'contact_is_emergency.*' => 'nullable|boolean',
             // Education
-            'edu_level.*'     => 'nullable|string|max:100',
+            'edu_level.*' => 'nullable|string|max:100',
             'edu_institution.*' => 'nullable|string|max:200',
-            'edu_course.*'    => 'nullable|string|max:200',
+            'edu_course.*' => 'nullable|string|max:200',
             'edu_year_from.*' => 'nullable|digits:4',
-            'edu_year_to.*'   => 'nullable|digits:4',
-            'edu_grade.*'     => 'nullable|string|max:50',
+            'edu_year_to.*' => 'nullable|digits:4',
+            'edu_grade.*' => 'nullable|string|max:50',
             // Documents
-            'documents.*'     => 'nullable|file|max:5120',
+            'documents.*' => 'nullable|file|max:5120',
             'documents_category.*' => 'nullable|string|max:100',
             'documents_description.*' => 'nullable|string|max:255',
         ]);
 
-        if (!empty($data['RoleID']) && !empty($data['GradeID'])) {
+        if (! empty($data['RoleID']) && ! empty($data['GradeID'])) {
             $role = JobRole::find($data['RoleID']);
             if ($role && (int)$role->GradeID !== (int)$data['GradeID']) {
                 throw ValidationException::withMessages([
@@ -206,12 +199,12 @@ class EmployeeController extends Controller
 
         $salaryEffective = $request->input('SalaryEffectiveFrom') ?: ($employee->EmploymentDate ?? now()->toDateString());
         EmployeeSalaryHistory::create([
-            'EmployeeID'   => $employee->Id,
-            'BasicSalary'  => $employee->BasicSalary,
-            'EffectiveFrom'=> $salaryEffective,
-            'Notes'        => 'Initial salary',
-            'CreatedBy'    => auth()->id(),
-            'CreatedOn'    => now(),
+            'EmployeeID' => $employee->Id,
+            'BasicSalary' => $employee->BasicSalary,
+            'EffectiveFrom' => $salaryEffective,
+            'Notes' => 'Initial salary',
+            'CreatedBy' => auth()->id(),
+            'CreatedOn' => now(),
         ]);
 
         // Ensure mandatory allowances/deductions are mapped for new employee for the current month.
@@ -221,12 +214,12 @@ class EmployeeController extends Controller
         if ($request->has('CreateUser') && $request->input('CreateUser')) {
             try {
                 $employeeService = new EmployeeService($employee);
-                
+
                 // Check if user already exists with this email
-                if ($employee->Email && !$employeeService->hasUserAccount()) {
+                if ($employee->Email && ! $employeeService->hasUserAccount()) {
                     $userService = $employeeService->createUserAccount(auth()->user());
                     $userService->sendPasswordResetNotification();
-                    
+
                     activity()
                         ->causedBy(auth()->user())
                         ->performedOn($employee)
@@ -309,6 +302,7 @@ class EmployeeController extends Controller
             }))
             ->sortByDesc(function ($row) {
                 $date = $row->EffectiveDate ?? $row->CreatedOn;
+
                 return $date instanceof \DateTimeInterface ? $date->getTimestamp() : 0;
             })
             ->values();
@@ -365,7 +359,6 @@ class EmployeeController extends Controller
             'ratingScaleMap',
             'disciplinaryCases'
         ));
-
     }
 
     public function edit($id)
@@ -376,8 +369,8 @@ class EmployeeController extends Controller
                 ->route('hr.employees.show', $employee->Id)
                 ->withErrors(['status' => 'Exited employees are read-only.']);
         }
-        $grades   = JobGrade::where('IsActive', 1)->orderBy('Name')->get();
-        $roles    = JobRole::where('IsActive', 1)->orderBy('Name')->get();
+        $grades = JobGrade::where('IsActive', 1)->orderBy('Name')->get();
+        $roles = JobRole::where('IsActive', 1)->orderBy('Name')->get();
         $branches = Branch::whereNull('DeletedOn')->orderBy('Name')->get();
         $departments = Department::whereNull('DeletedOn')->orderBy('Name')->get();
         $supervisors = Employee::where('IsActive', 1)->orderBy('FirstName')->get(['Id', 'FirstName', 'LastName']);
@@ -394,10 +387,10 @@ class EmployeeController extends Controller
     public function update(Request $request, $id)
     {
         $employee = Employee::findOrFail($id);
-        
+
         // Authorize: Check if user can update this employee
         $this->authorize('update', $employee);
-        
+
         if ($employee->Status === 'Exited') {
             return redirect()
                 ->route('hr.employees.show', $employee->Id)
@@ -405,35 +398,35 @@ class EmployeeController extends Controller
         }
 
         $data = $request->validate([
-            'FirstName'       => 'required|string|max:100',
-            'LastName'        => 'required|string|max:100',
-            'Email'           => 'nullable|email|max:150',
-            'Phone'           => 'nullable|string|max:50',
-            'Gender'          => ['nullable', Rule::in(['Male','Female','Other'])],
-            'Religion'        => 'nullable|string|max:100',
-            'DateOfBirth'     => 'nullable|date|before_or_equal:' . now()->subYears(20)->format('Y-m-d'),
-            'BranchID'        => 'required|integer',
-            'DepartmentID'    => 'required|integer',
-            'GradeID'         => 'nullable|integer',
-            'RoleID'          => 'nullable|integer',
-            'SupervisorID'    => 'nullable|integer',
-            'EmploymentDate'  => 'nullable|date',
-            'EmploymentType'  => 'nullable|string|max:50',
-            'ContractType'    => 'nullable|string|max:50',
-            'Address'         => 'nullable|string|max:255',
-            'NSSFNo'          => 'nullable|string|max:50',
-            'NHIFNo'          => 'nullable|string|max:50',
-            'KRAPIN'          => 'nullable|string|max:50',
-            'BasicSalary'     => 'required|numeric|min:0',
-            'PaymentMode'     => 'required|string|max:50',
-            'BankID'          => 'nullable|integer|exists:t_Banks,BankID',
-            'BankBranchID'    => 'nullable|integer|exists:t_BankBranches,BranchID',
-            'BankAccount'     => 'nullable|string|max:100',
-            'Status'          => ['nullable', 'string', 'max:20', Rule::in(self::STATUSES)],
+            'FirstName' => 'required|string|max:100',
+            'LastName' => 'required|string|max:100',
+            'Email' => 'nullable|email|max:150',
+            'Phone' => 'nullable|string|max:50',
+            'Gender' => ['nullable', Rule::in(['Male','Female','Other'])],
+            'Religion' => 'nullable|string|max:100',
+            'DateOfBirth' => 'nullable|date|before_or_equal:' . now()->subYears(20)->format('Y-m-d'),
+            'BranchID' => 'required|integer',
+            'DepartmentID' => 'required|integer',
+            'GradeID' => 'nullable|integer',
+            'RoleID' => 'nullable|integer',
+            'SupervisorID' => 'nullable|integer',
+            'EmploymentDate' => 'nullable|date',
+            'EmploymentType' => 'nullable|string|max:50',
+            'ContractType' => 'nullable|string|max:50',
+            'Address' => 'nullable|string|max:255',
+            'NSSFNo' => 'nullable|string|max:50',
+            'NHIFNo' => 'nullable|string|max:50',
+            'KRAPIN' => 'nullable|string|max:50',
+            'BasicSalary' => 'required|numeric|min:0',
+            'PaymentMode' => 'required|string|max:50',
+            'BankID' => 'nullable|integer|exists:t_Banks,BankID',
+            'BankBranchID' => 'nullable|integer|exists:t_BankBranches,BranchID',
+            'BankAccount' => 'nullable|string|max:100',
+            'Status' => ['nullable', 'string', 'max:20', Rule::in(self::STATUSES)],
             'SalaryEffectiveFrom' => 'nullable|date',
-            'Photo'           => 'nullable|image|max:5120',
+            'Photo' => 'nullable|image|max:5120',
             // Contacts
-            'contact_name.*'  => 'nullable|string|max:150',
+            'contact_name.*' => 'nullable|string|max:150',
             'contact_relation.*' => 'nullable|string|max:100',
             'contact_phone.*' => 'nullable|string|max:50',
             'contact_email.*' => 'nullable|email|max:150',
@@ -441,19 +434,19 @@ class EmployeeController extends Controller
             'contact_is_primary.*' => 'nullable|boolean',
             'contact_is_emergency.*' => 'nullable|boolean',
             // Education
-            'edu_level.*'     => 'nullable|string|max:100',
+            'edu_level.*' => 'nullable|string|max:100',
             'edu_institution.*' => 'nullable|string|max:200',
-            'edu_course.*'    => 'nullable|string|max:200',
+            'edu_course.*' => 'nullable|string|max:200',
             'edu_year_from.*' => 'nullable|digits:4',
-            'edu_year_to.*'   => 'nullable|digits:4',
-            'edu_grade.*'     => 'nullable|string|max:50',
+            'edu_year_to.*' => 'nullable|digits:4',
+            'edu_grade.*' => 'nullable|string|max:50',
             // Documents
-            'documents.*'     => 'nullable|file|max:5120',
+            'documents.*' => 'nullable|file|max:5120',
             'documents_category.*' => 'nullable|string|max:100',
             'documents_description.*' => 'nullable|string|max:255',
         ]);
 
-        if (!empty($data['RoleID']) && !empty($data['GradeID'])) {
+        if (! empty($data['RoleID']) && ! empty($data['GradeID'])) {
             $role = JobRole::find($data['RoleID']);
             if ($role && (int)$role->GradeID !== (int)$data['GradeID']) {
                 throw ValidationException::withMessages([
@@ -481,12 +474,12 @@ class EmployeeController extends Controller
         if ($salaryChanged) {
             $salaryEffective = $request->input('SalaryEffectiveFrom') ?: now()->toDateString();
             EmployeeSalaryHistory::create([
-                'EmployeeID'   => $employee->Id,
-                'BasicSalary'  => $employee->BasicSalary,
-                'EffectiveFrom'=> $salaryEffective,
-                'Notes'        => 'Updated salary',
-                'CreatedBy'    => auth()->id(),
-                'CreatedOn'    => now(),
+                'EmployeeID' => $employee->Id,
+                'BasicSalary' => $employee->BasicSalary,
+                'EffectiveFrom' => $salaryEffective,
+                'Notes' => 'Updated salary',
+                'CreatedBy' => auth()->id(),
+                'CreatedOn' => now(),
             ]);
         }
 
@@ -503,11 +496,11 @@ class EmployeeController extends Controller
         $this->authorize('delete', $employee);
 
         $employee->update([
-            'Status'    => 'Deactivated',
+            'Status' => 'Deactivated',
             'StatusReason' => 'Deactivated via list action',
             'StatusChangedBy' => auth()->id(),
             'StatusChangedOn' => now(),
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);
@@ -521,6 +514,7 @@ class EmployeeController extends Controller
     {
         $employee = Employee::with(['branch', 'department'])->findOrFail($id);
         $statusList = self::STATUSES;
+
         return view('hr.employees.status', compact('employee', 'statusList'));
     }
 
@@ -539,8 +533,8 @@ class EmployeeController extends Controller
         $employee->update(array_merge($data, [
             'StatusChangedBy' => auth()->id(),
             'StatusChangedOn' => now(),
-            'ModifiedBy'      => auth()->id(),
-            'ModifiedOn'      => now(),
+            'ModifiedBy' => auth()->id(),
+            'ModifiedOn' => now(),
         ], $flags));
 
         return redirect()
@@ -565,16 +559,16 @@ class EmployeeController extends Controller
                 continue;
             }
             EmployeeContact::create([
-                'EmployeeID'   => $employee->Id,
-                'Name'         => $name,
-                'Relation'     => $relations[$idx] ?? null,
-                'Phone'        => $phones[$idx] ?? null,
-                'Email'        => $emails[$idx] ?? null,
-                'IsPrimary'    => isset($primary[$idx]) ? (bool)$primary[$idx] : false,
-                'IsNextOfKin'  => isset($nextOfKin[$idx]) ? (bool)$nextOfKin[$idx] : false,
-                'IsEmergency'  => isset($emergency[$idx]) ? (bool)$emergency[$idx] : true,
-                'CreatedBy'    => auth()->id(),
-                'CreatedOn'    => now(),
+                'EmployeeID' => $employee->Id,
+                'Name' => $name,
+                'Relation' => $relations[$idx] ?? null,
+                'Phone' => $phones[$idx] ?? null,
+                'Email' => $emails[$idx] ?? null,
+                'IsPrimary' => isset($primary[$idx]) ? (bool)$primary[$idx] : false,
+                'IsNextOfKin' => isset($nextOfKin[$idx]) ? (bool)$nextOfKin[$idx] : false,
+                'IsEmergency' => isset($emergency[$idx]) ? (bool)$emergency[$idx] : true,
+                'CreatedBy' => auth()->id(),
+                'CreatedOn' => now(),
             ]);
         }
     }
@@ -591,13 +585,13 @@ class EmployeeController extends Controller
             }
             $storedPath = $file->store('employee-docs', 'public');
             EmployeeDocument::create([
-                'EmployeeID'  => $employee->Id,
-                'FileName'    => $file->getClientOriginalName(),
-                'FilePath'    => $storedPath,
-                'Category'    => $request->input("documents_category.$idx") ?: null,
+                'EmployeeID' => $employee->Id,
+                'FileName' => $file->getClientOriginalName(),
+                'FilePath' => $storedPath,
+                'Category' => $request->input("documents_category.$idx") ?: null,
                 'Description' => $request->input("documents_description.$idx") ?: null,
-                'UploadedBy'  => auth()->id(),
-                'UploadedOn'  => now(),
+                'UploadedBy' => auth()->id(),
+                'UploadedOn' => now(),
             ]);
         }
     }
@@ -621,15 +615,15 @@ class EmployeeController extends Controller
                 continue;
             }
             EmployeeEducation::create([
-                'EmployeeID'  => $employee->Id,
-                'Level'       => $lvl ?: null,
+                'EmployeeID' => $employee->Id,
+                'Level' => $lvl ?: null,
                 'Institution' => $institutions[$idx] ?? null,
-                'Course'      => $courses[$idx] ?? null,
-                'YearFrom'    => $yearFrom[$idx] ?? null,
-                'YearTo'      => $yearTo[$idx] ?? null,
-                'Grade'       => $grades[$idx] ?? null,
-                'CreatedBy'   => auth()->id(),
-                'CreatedOn'   => now(),
+                'Course' => $courses[$idx] ?? null,
+                'YearFrom' => $yearFrom[$idx] ?? null,
+                'YearTo' => $yearTo[$idx] ?? null,
+                'Grade' => $grades[$idx] ?? null,
+                'CreatedBy' => auth()->id(),
+                'CreatedOn' => now(),
             ]);
         }
     }
@@ -641,7 +635,7 @@ class EmployeeController extends Controller
 
         if ($branchId) {
             $branch = BankBranch::find($branchId);
-            if (!$branch) {
+            if (! $branch) {
                 throw ValidationException::withMessages(['BankBranchID' => 'Selected bank branch is invalid.']);
             }
             if ($bankId && (int)$branch->BankID !== (int)$bankId) {
@@ -653,7 +647,7 @@ class EmployeeController extends Controller
 
         if ($bankId) {
             $bank = Bank::find($bankId);
-            if (!$bank) {
+            if (! $bank) {
                 throw ValidationException::withMessages(['BankID' => 'Selected bank is invalid.']);
             }
         }
@@ -666,7 +660,7 @@ class EmployeeController extends Controller
     {
         try {
             $employee = Employee::findOrFail($id);
-            
+
             // Check if employee already has a user account
             $employeeService = new EmployeeService($employee);
             if ($employeeService->hasUserAccount()) {
@@ -675,7 +669,7 @@ class EmployeeController extends Controller
 
             // Create user account
             $userService = $employeeService->createUserAccount(auth()->user());
-            
+
             // Send password reset email
             $userService->sendPasswordResetNotification();
 
@@ -684,9 +678,9 @@ class EmployeeController extends Controller
             Log::error('Failed to create user account for employee', [
                 'employee_id' => $id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return back()->with('error', 'Failed to create user account: ' . $e->getMessage());
         }
     }

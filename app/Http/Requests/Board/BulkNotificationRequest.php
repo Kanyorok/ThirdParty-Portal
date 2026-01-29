@@ -18,7 +18,7 @@ class BulkNotificationRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'NotificationLabel'     => [
+                'NotificationLabel' => [
                                             'required',
                                             'string',
                                             'max:255',
@@ -27,7 +27,7 @@ class BulkNotificationRequest extends FormRequest
                                             'required',
                                             Rule::exists('t_Committees', 'CommitteeID'),
                                            ],
-                'NotificationContent'   => [
+                'NotificationContent' => [
                                             'required',
                                             'string',
                                             'max:2000',
@@ -42,6 +42,7 @@ class BulkNotificationRequest extends FormRequest
             if ($committee->members()->count() === 0) {
                 throw ValidationException::withMessages(['NotificationCommittee' => 'committee has no members']);
             }
+
             return $committee;
         }
 

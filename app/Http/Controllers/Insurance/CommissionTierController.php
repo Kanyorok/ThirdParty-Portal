@@ -46,6 +46,7 @@ class CommissionTierController extends Controller
             return response()->json(['message' => 'Commission tier created successfully'], 201);
         } catch (\Exception $e) {
             Log::error('Failed to create commission tier: ' . $e->getMessage());
+
             return response()->json(['error' => 'Failed to create commission tier'], 500);
         }
     }

@@ -1,15 +1,14 @@
 <?php
 
-
 namespace App\Http\Controllers\Insurance;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\ProviderAndProducts\InsuranceProductRequest;
 use App\Models\Core\Approval\CodeDetail;
-use App\Services\Insurance\ProviderAndProducts\InsuranceProductService;
 use App\Models\Insurance\InsuranceProduct;
 use App\Models\Insurance\InsuranceProvider;
-use App\Enums\Core\PermissionEnum;
+use App\Services\Insurance\ProviderAndProducts\InsuranceProductService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -20,6 +19,7 @@ class InsuranceProductController extends Controller
     public function index()
     {
         $products = InsuranceProduct::all();
+
         return view('bancassurance.products.index', compact('products'));
     }
 
@@ -105,6 +105,7 @@ class InsuranceProductController extends Controller
     public function destroy($Id)
     {
         $this->authorize(PermissionEnum::InsuranceProductDelete, InsuranceProduct::class);
+
         try {
             $product = InsuranceProduct::findOrFail($Id);
 
@@ -119,10 +120,10 @@ class InsuranceProductController extends Controller
         } catch (\Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting Insurance Product: ' . $th->getMessage());
+
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to delete Insurance Product. Please try again.'])
                 ->withInput();
         }
     }
-
 }

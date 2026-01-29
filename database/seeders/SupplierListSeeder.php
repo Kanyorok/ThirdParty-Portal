@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\ThirdParies\Supplier;
 use App\Models\Inventory\ItemCategories;
+use App\Models\ThirdParies\Supplier;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -27,7 +27,7 @@ class SupplierListSeeder extends Seeder
             'SmartOffice Hub', 'NextGen Supplies', 'Bureau World', 'PrimeTech Distributors',
             'Metro Office Essentials', 'Quick Supply Chain', 'Future Office Depot', 'Smart & Simple Supplies',
             'ExcelTech Vendors', 'Reliable Office Provisions', 'Efficient Supplies Inc.', 'Citywide Distributors',
-            'FastTrack Stationery', 'EssentialBiz Ltd.', 'Nova Supply Partners', 'SharpEdge Office'
+            'FastTrack Stationery', 'EssentialBiz Ltd.', 'Nova Supply Partners', 'SharpEdge Office',
         ];
 
         $domains = ['example.com', 'suppliermail.com', 'officesupply.org', 'vendorhub.net'];

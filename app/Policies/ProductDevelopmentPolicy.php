@@ -44,6 +44,7 @@ class ProductDevelopmentPolicy
         if ($productDevelopment->User_ID === $user->Id) {
             return true;
         }
+
         return $user->can(PermissionEnum::ProductDevelopmentUpdate->value);
     }
 
@@ -52,6 +53,7 @@ class ProductDevelopmentPolicy
         if ($productDevelopment->User_ID === $user->Id) {
             return true;
         }
+
         return $user->can(PermissionEnum::ProductDevelopmentDelete->value);
     }
 

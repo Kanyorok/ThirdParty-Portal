@@ -17,6 +17,6 @@ class BranchService
 
     public function isHQ(): bool
     {
-        return (boolean)$this->branch->IsHQ;
+        return (bool)$this->branch->IsHQ;
     }
 }

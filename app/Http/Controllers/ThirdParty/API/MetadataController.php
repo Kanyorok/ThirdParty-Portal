@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\ThirdParty\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\Core\Country;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Country;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -21,7 +21,7 @@ class MetadataController extends Controller
                     'id' => $country->id,
                     'name' => $country->name,
                     'code' => $country->CountryCode,
-                    'flag' => $this->getFlagEmoji($country->CountryCode)
+                    'flag' => $this->getFlagEmoji($country->CountryCode),
                 ];
             });
 
@@ -52,9 +52,12 @@ class MetadataController extends Controller
 
     private function getFlagEmoji(string $countryCode): string
     {
-        if (strlen($countryCode) !== 2) return "🌐";
+        if (strlen($countryCode) !== 2) {
+            return "🌐";
+        }
 
         $code = strtoupper($countryCode);
+
         return mb_convert_encoding('&#' . (127397 + ord($code[0])) . ';', 'UTF-8', 'HTML-ENTITIES') .
             mb_convert_encoding('&#' . (127397 + ord($code[1])) . ';', 'UTF-8', 'HTML-ENTITIES');
     }

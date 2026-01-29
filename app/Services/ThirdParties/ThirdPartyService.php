@@ -4,12 +4,12 @@ namespace App\Services\ThirdParties;
 
 use App\Exceptions\ErroredException;
 use App\Models\Auth\User;
-use App\Models\ThirdParty\ThirdPartyUser;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\Insurance\BancAssuranceReferral;
-use App\Models\ThirdParty\ThirdPartyType;
 use App\Models\ThirdParty\ThirdParties;
+use App\Models\ThirdParty\ThirdPartyType;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\Insurance\BancassuranceCustomersService;
 use App\Services\Property\TenantAndLease\PropertyNewTenantService;
 use DateTime;
@@ -22,14 +22,14 @@ class ThirdPartyService extends ThirdPartiesService
     public const string TypeCustomer = 'CU';
 
     public static function create(
-        string   $name,
+        string $name,
         ?string $tradingName,
         CodeDetail $businessType,
         string $registrationNumber,
         string $taxPIN,
         ?string $vatNumber,
         Locality $locationID,
-        ?string  $physicalAddress,
+        ?string $physicalAddress,
         ?string $email,
         ?string $phone,
         ?string $website,
@@ -41,24 +41,24 @@ class ThirdPartyService extends ThirdPartiesService
         CodeDetail $CustomerGender = null,
         CodeDetail $CustomerMaritalStatus = null,
         CodeDetail $CustomerOccupation = null,
-        string   $Tenant_Remarks = null
+        string $Tenant_Remarks = null
     ): self {
         $partyTypes = self::getTypes($types);
-        
+
         // Create the parent ThirdParty and check if it was created successfully
         $parentParty = parent::create($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor);
-        
-        if (!$parentParty) {
+
+        if (! $parentParty) {
             throw new ErroredException('Failed to create ThirdParty record');
         }
-        
+
         $partyService = new self($parentParty);
 
         foreach ($partyTypes as $type) {
             if ($type->Code === 'CU' && ($CustomerDateOfBirth === null || $CustomerGender === null || $CustomerMaritalStatus === null || $CustomerOccupation === null)) {
                 throw new ErroredException('DateOfBirth, Gender, MaritalStatus and Occupation are required for Customer');
             }
-            
+
             match ($type->Code) {
                 self::TypeTenant => $partyService->addTenant($actor, $Tenant_Remarks),
                 self::TypeSupplier => $partyService->addSupplier($actor),
@@ -66,20 +66,20 @@ class ThirdPartyService extends ThirdPartiesService
                 default => throw new ErroredException('Invalid party type'),
             };
         }
-        
+
         return $partyService;
     }
 
     public static function update(
         ThirdParties $party,
-        string   $name,
+        string $name,
         ?string $tradingName,
         CodeDetail $businessType,
         string $registrationNumber,
         string $taxPIN,
         ?string $vatNumber,
         Locality $locationID,
-        ?string  $physicalAddress,
+        ?string $physicalAddress,
         ?string $email,
         ?string $phone,
         ?string $website,
@@ -91,13 +91,13 @@ class ThirdPartyService extends ThirdPartiesService
         CodeDetail $CustomerGender = null,
         CodeDetail $CustomerMaritalStatus = null,
         CodeDetail $CustomerOccupation = null,
-        string   $Tenant_Remarks = null
+        string $Tenant_Remarks = null
     ): self {
         // Check if the party exists before proceeding
-        if (!$party) {
+        if (! $party) {
             throw new ErroredException('ThirdParty not found');
         }
-        
+
         $party->update([
             'ThirdPartyName' => $name,
             'TradingName' => $tradingName,
@@ -128,7 +128,7 @@ class ThirdPartyService extends ThirdPartiesService
                 // Check if type already exists to avoid duplication
                 $exists = $party->types()->where('TypeId', $type->TypeId)->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     match ($type->Code) {
                         self::TypeTenant => $partyService->addTenant($actor, $Tenant_Remarks),
                         self::TypeSupplier => $partyService->addSupplier($actor),

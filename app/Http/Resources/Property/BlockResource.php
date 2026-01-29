@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources\Property;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class BlockResource extends JsonResource
@@ -15,9 +14,9 @@ class BlockResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'id'         => $this->Id,
+            'id' => $this->Id,
             'block_name' => $this->BlockName,
-            'floors'     => FloorResource::collection($this->floor),
+            'floors' => FloorResource::collection($this->floor),
         ];
     }
 }

@@ -41,7 +41,6 @@ trait UsefulEnumTrait
         throw new ErroredException('Unknown type');
     }
 
-
     /**
      * @throws ErroredException
      */

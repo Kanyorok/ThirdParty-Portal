@@ -58,7 +58,7 @@ class LeadController extends Controller
             $query = Lead::query();
 
             //check roles.
-            if (!$actor->can([PermissionEnum::LeadUpdate->value, PermissionEnum::LeadDelete->value])) {
+            if (! $actor->can([PermissionEnum::LeadUpdate->value, PermissionEnum::LeadDelete->value])) {
                 $query->where(function (Builder $query) use ($actor) {
                     //check users.
                     $query->where('t_Leads.RelationshipManagerID', $actor->Id)
@@ -97,6 +97,7 @@ class LeadController extends Controller
                     }
                 }
             }
+
             return LeadService::dt($query, ['location', 'photo', 'ind']);
         }
 
@@ -220,8 +221,9 @@ class LeadController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error adding lead ' . $e->getMessage());
+
             return $this->errored('unexpected error adding lead, try again latter');
         }
 
@@ -232,8 +234,9 @@ class LeadController extends Controller
     {
         try {
             $request->save($request->user(), $lead);
-        } catch (Exception|Throwable$e) {
+        } catch (Exception | Throwable$e) {
             Log::error('Error updating lead ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 
@@ -246,7 +249,7 @@ class LeadController extends Controller
     public function show(Request $request, $lead_id): RedirectResponse|View
     {
         $lead = Lead::where('LeadID', $lead_id)->withTrashed()->with(['country', 'location', 'creator'])->first();
-        if (!$lead instanceof Lead) {
+        if (! $lead instanceof Lead) {
             return redirect()->back()->with('fail', 'invalid lead.');
         }
 
@@ -259,7 +262,7 @@ class LeadController extends Controller
         $schedule = null;
         $call = null;
         $meeting = null;
-        if (!$won) {
+        if (! $won) {
             if (is_numeric($request->call)) {
                 $call = Call::query()->where('CallStatusID', CallStatusEnum::SuccessOngoing->value)->where('CallID', $request->get('call'))
                     ->where('PartyID', $lead->LeadID)->where('Party', Lead::getPrimaryKey())
@@ -302,6 +305,7 @@ class LeadController extends Controller
         }
 
         $StaticLists = StaticListsService::getList([StaticListsService::Industries, StaticListsService::MarketingModes, StaticListsService::CustomerType, StaticListsService::LeadLossReason, StaticListsService::TicketCategories]);
+
         return view('crm.leads.show', compact('lead', 'schedule', 'call', 'meeting'))
             ->with('MarketingListMember', $lead->marketingLists()->where('Type', MarketingListEnum::Static->value)->select(['slug', 'Label'])->get())
             ->with('Countries', Country::query()->select(['Name', 'CountryCode', 'Id', 'PhoneCode', 'Flag'])->whereHas('localities')->orderBy('t_Countries.Name')->get())
@@ -330,6 +334,7 @@ class LeadController extends Controller
              return $this->errored('lead already won');
          }*/
         $activities = $lead->activities()->latest('ActivityID')->limit(5)->get();
+
         return view(
             'crm.leads.summary',
             compact('lead', 'activities')

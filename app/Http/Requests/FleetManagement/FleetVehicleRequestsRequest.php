@@ -38,6 +38,5 @@ class FleetVehicleRequestsRequest extends FormRequest
             'ApprovedOn' => 'nullable|date|after_or_equal:today',
             'RejectionReason' => 'nullable|string|max:255',
         ];
-
     }
 }

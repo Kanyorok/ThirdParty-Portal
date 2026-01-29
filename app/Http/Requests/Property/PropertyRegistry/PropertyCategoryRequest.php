@@ -35,5 +35,4 @@ class PropertyCategoryRequest extends FormRequest
             'Description' => ['required', 'string'],
         ];
     }
-
 }

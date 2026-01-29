@@ -19,7 +19,6 @@ class LeadMessageController extends Controller
         $this->middleware('ajax');
     }
 
-
     /**
      * Display a listing of the resource.
      * @throws Exception
@@ -43,10 +42,12 @@ class LeadMessageController extends Controller
                 $service = SMSService::createLead($lead, $request->validated('message_content'), $request->user(), $phone);
                 $activity = $service->addActivity(now());
                 $service->send();
+
                 return $activity;
             });
         } catch (Exception $e) {
             Log::error('Error sending sms to lead ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

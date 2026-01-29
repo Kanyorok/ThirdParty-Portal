@@ -13,6 +13,6 @@ class FilingType extends Model
     protected $fillable = [
         'Name',
         'Description',
-        'IsActive'
+        'IsActive',
     ];
 }

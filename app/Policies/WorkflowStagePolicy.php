@@ -30,6 +30,7 @@ class WorkflowStagePolicy
 
         // Fallback: Construct expected permission name (legacy/backup)
         $permissionName = 'workflowstage_' . str_replace(' ', '', $stage->StageName);
+
         return $user->hasPermissionTo($permissionName);
     }
 }

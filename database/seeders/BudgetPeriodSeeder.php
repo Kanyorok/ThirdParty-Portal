@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -18,8 +17,9 @@ class BudgetPeriodSeeder extends Seeder
 
         // Get a valid user ID
         $userId = DB::table('t_Users')->value('Id');
-        if (!$userId) {
+        if (! $userId) {
             echo "❌ No users found in t_Users. Please seed users first.\n";
+
             return;
         }
 
@@ -27,6 +27,7 @@ class BudgetPeriodSeeder extends Seeder
         $periodTypeIds = DB::table('t_BudgetPeriodTypes')->pluck('Id')->all();
         if (empty($periodTypeIds)) {
             echo "❌ No period types found in t_BudgetPeriodTypes. Seed them first.\n";
+
             return;
         }
 

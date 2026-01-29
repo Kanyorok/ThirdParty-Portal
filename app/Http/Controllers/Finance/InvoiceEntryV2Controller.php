@@ -5,16 +5,15 @@ namespace App\Http\Controllers\Finance;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Finance\FinanceInvoiceEntry;
-use App\Models\Procurement\Supplier;
-use App\Models\ThirdParty\ThirdParties;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Currency;
+use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Finance\FinanceTaxRuleConfiguration;
-use App\Services\Finance\TransactionService;
+use App\Models\Procurement\Supplier;
+use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
@@ -29,7 +28,7 @@ class InvoiceEntryV2Controller extends Controller
 
         // Apply filters if provided
         if ($request->filled('vendor_name')) {
-            $query->whereHas('thirdParty', function($q) use ($request) {
+            $query->whereHas('thirdParty', function ($q) use ($request) {
                 $q->where('ThirdPartyName', 'like', '%' . $request->vendor_name . '%')
                   ->orWhere('TradingName', 'like', '%' . $request->vendor_name . '%');
             });
@@ -101,7 +100,7 @@ class InvoiceEntryV2Controller extends Controller
         $invoice = FinanceInvoiceEntry::with([
             'thirdParty:Id,ThirdPartyName,TradingName',
             'currency:Id,Name,Code,Symbol',
-            'createdBy:Id,Name'
+            'createdBy:Id,Name',
         ])->findOrFail($id);
 
         // Create mock order relationship if POId exists
@@ -114,7 +113,7 @@ class InvoiceEntryV2Controller extends Controller
                     'Description' => $orderData->Description ?? '',
                     'OrdTotExcl' => $orderData->OrdTotExcl ?? 0,
                     'TaxPercentage' => $orderData->TaxPercentage ?? 0,
-                    'TaxID' => $orderData->TaxID ?? null
+                    'TaxID' => $orderData->TaxID ?? null,
                 ];
             }
         }
@@ -126,7 +125,7 @@ class InvoiceEntryV2Controller extends Controller
                 $invoice->grn = (object)[
                     'id' => $grnData->id,
                     'GRNID' => $grnData->GRNID,
-                    'SupplierId' => $grnData->SupplierId ?? null
+                    'SupplierId' => $grnData->SupplierId ?? null,
                 ];
                 // Log::info('GRN data loaded', ['grn_id' => $grnData->GRNID]);
             } else {
@@ -151,23 +150,23 @@ class InvoiceEntryV2Controller extends Controller
                 )
                 ->get();
 
-            $poSub = $poItems->sum(fn($li) => (float)($li->UnitCost ?? 0) * (float)($li->Quantity ?? 0));
+            $poSub = $poItems->sum(fn ($li) => (float)($li->UnitCost ?? 0) * (float)($li->Quantity ?? 0));
         }
 
         // Prepare view data exactly like original controller
         $viewData = [
-            'currencyCode'   => $invoice->currency->Code ?? 'KSh',
+            'currencyCode' => $invoice->currency->Code ?? 'KSh',
             'currencySymbol' => $invoice->currency->Symbol ?? 'KSh',
-            'invNo'          => $invoice->InvoiceNumber ?? '—',
-            'invDate'        => $invoice->InvoiceDate
+            'invNo' => $invoice->InvoiceNumber ?? '—',
+            'invDate' => $invoice->InvoiceDate
                 ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d M Y')
                 : '—',
-            'amount'         => number_format((float)($invoice->TotalAmount ?? 0), 2),
-            'exRate'         => $invoice->ExchangeRate ?? 1.0,
-            'vendorName'     => ($invoice->thirdParty->TradingName ?? $invoice->thirdParty->ThirdPartyName) ?? '—',
-            'poNo'           => $invoice->order->OrderNo ?? '—',
-            'grnNo'          => $invoice->grn->GRNID ?? '—',
-            'poSub'          => $poSub,
+            'amount' => number_format((float)($invoice->TotalAmount ?? 0), 2),
+            'exRate' => $invoice->ExchangeRate ?? 1.0,
+            'vendorName' => ($invoice->thirdParty->TradingName ?? $invoice->thirdParty->ThirdPartyName) ?? '—',
+            'poNo' => $invoice->order->OrderNo ?? '—',
+            'grnNo' => $invoice->grn->GRNID ?? '—',
+            'poSub' => $poSub,
         ];
 
         // Remove debug logging in production
@@ -182,6 +181,7 @@ class InvoiceEntryV2Controller extends Controller
     public function quickSearchSuppliers(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
+
         try {
             // Support both Select2 (q) and our previous (search_term) parameter styles
             $q = trim((string) ($request->input('search_term') ?? $request->input('q') ?? ''));
@@ -190,7 +190,7 @@ class InvoiceEntryV2Controller extends Controller
                 return response()->json([
                     'results' => [],
                     'suppliers' => [],
-                    'message' => 'Please type at least 2 characters'
+                    'message' => 'Please type at least 2 characters',
                 ], 200);
             }
 
@@ -198,7 +198,7 @@ class InvoiceEntryV2Controller extends Controller
             // Collapse duplicates by ThirdPartyID (choose a stable SupplierID via MIN)
             $suppliers = DB::table('t_ThirdParties as tp')
                 ->join('t_Suppliers as s', 's.ThirdPartyID', '=', 'tp.Id')
-                ->where(function($query) use ($q) {
+                ->where(function ($query) use ($q) {
                     $query->where('tp.RegistrationNumber', 'like', "%{$q}%")
                           ->orWhere('tp.Email', 'like', "%{$q}%")
                           ->orWhere('tp.Phone', 'like', "%{$q}%")
@@ -229,7 +229,7 @@ class InvoiceEntryV2Controller extends Controller
                 ->values();
 
             // Build common representation
-            $mapped = $suppliers->map(function($supplier) {
+            $mapped = $suppliers->map(function ($supplier) {
                 $name = $supplier->TradingName ?: $supplier->ThirdPartyName;
                 $display = trim($name) !== '' ? $name : 'Unknown Supplier';
                 $displayText = $display .
@@ -265,9 +265,9 @@ class InvoiceEntryV2Controller extends Controller
                 'results' => $results,
                 'pagination' => [ 'more' => false ],
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error in quickSearchSuppliers: ' . $e->getMessage());
+
             return response()->json(['error' => 'Search failed: ' . $e->getMessage()], 500);
         }
     }
@@ -278,6 +278,7 @@ class InvoiceEntryV2Controller extends Controller
     public function findSupplier(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
+
         try {
             // This method can accept either search_term or supplier_id
             if ($request->has('supplier_id')) {
@@ -308,7 +309,7 @@ class InvoiceEntryV2Controller extends Controller
                 // Search in ThirdParties and join with Suppliers - Search in all relevant fields
                 $supplier = DB::table('t_ThirdParties as tp')
                     ->join('t_Suppliers as s', 's.ThirdPartyID', '=', 'tp.Id')
-                    ->where(function($query) use ($q) {
+                    ->where(function ($query) use ($q) {
                         $query->where('tp.RegistrationNumber', $q)
                               ->orWhere('tp.Email', $q)
                               ->orWhere('tp.Phone', $q)
@@ -332,7 +333,7 @@ class InvoiceEntryV2Controller extends Controller
                     ->first();
             }
 
-            if (!$supplier) {
+            if (! $supplier) {
                 return response()->json(['error' => 'Supplier not found. Please check the registration number, email, or phone number.'], 404);
             }
 
@@ -359,11 +360,9 @@ class InvoiceEntryV2Controller extends Controller
                 ->orderByRaw(Schema::hasColumn('t_Orders', 'OrderDate') ? 'OrderDate desc' : 'Id desc')
                 ->distinct()
                 ->get()
-                ->map(function($order) use ($defaultCurrency) {
+                ->map(function ($order) use ($defaultCurrency) {
                     // TODO: Uncomment when CurrencyID column is available
-                    // $currency = $order->CurrencyID ?
                     //     Currency::find($order->CurrencyID) :
-                    //     $defaultCurrency;
 
                     // For now, manually set to currency ID 56 (or default)
                     $currency = Currency::find(56) ?: $defaultCurrency;
@@ -387,9 +386,9 @@ class InvoiceEntryV2Controller extends Controller
                         'Currency' => [
                             'Id' => $currency->Id ?? $defaultCurrency->Id,
                             'Code' => $currency->Code ?? $defaultCurrency->Code,
-                            'Symbol' => $currency->Symbol ?? $defaultCurrency->Symbol
+                            'Symbol' => $currency->Symbol ?? $defaultCurrency->Symbol,
                         ],
-                        'OrderLines' => $this->getOrderLines($order->Id)
+                        'OrderLines' => $this->getOrderLines($order->Id),
                     ];
                 });
 
@@ -409,14 +408,14 @@ class InvoiceEntryV2Controller extends Controller
                 ->groupBy('gr.GRNID', 'gr.POID', 'gr.ReceivedDate')
                 ->orderBy('gr.ReceivedDate', 'desc')
                 ->get()
-                ->map(function($grn) {
+                ->map(function ($grn) {
                     return [
                         'GRNID' => $grn->GRNID,
                         'OrderNo' => $grn->OrderNo,
                         'ReceivedDate' => $grn->ReceivedDate ? \Carbon\Carbon::parse($grn->ReceivedDate)->format('d M Y') : '',
                         'TotalOrderedQty' => $grn->TotalOrderedQty ?? 0,
                         'TotalReceivedQty' => $grn->TotalReceivedQty ?? 0,
-                        'Items' => $this->getGRNItems($grn->GRNID)
+                        'Items' => $this->getGRNItems($grn->GRNID),
                     ];
                 });
 
@@ -430,22 +429,22 @@ class InvoiceEntryV2Controller extends Controller
                     'Phone' => $supplier->Phone,
                     'Address' => $supplier->PhysicalAddress,
                     'BusinessType' => $supplier->BusinessType,
-                    'IsActive' => (bool) $supplier->Active_Status
+                    'IsActive' => (bool) $supplier->Active_Status,
                 ],
                 'orders' => $orders,
                 'grns' => $grns,
                 'defaultCurrency' => [
                     'Id' => $defaultCurrency->Id,
                     'Code' => $defaultCurrency->Code,
-                    'Symbol' => $defaultCurrency->Symbol
-                ]
+                    'Symbol' => $defaultCurrency->Symbol,
+                ],
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error in findSupplier: ' . $e->getMessage(), [
                 'request' => $request->all(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return response()->json(['error' => 'Search failed: ' . $e->getMessage()], 500);
         }
     }
@@ -456,6 +455,7 @@ class InvoiceEntryV2Controller extends Controller
     private function getOrderLines($orderId)
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
+
         try {
             $rows = DB::table('t_OrderLines as ol')
                 ->leftJoin('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
@@ -511,8 +511,9 @@ class InvoiceEntryV2Controller extends Controller
         } catch (\Exception $e) {
             Log::error('Error fetching order lines: ' . $e->getMessage(), [
                 'orderId' => $orderId,
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return collect([]); // Return empty collection on error
         }
     }
@@ -523,6 +524,7 @@ class InvoiceEntryV2Controller extends Controller
     private function getGRNItems($grnId)
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
+
         try {
             return DB::table('t_GoodsReceipts as gr')
                 ->leftJoin('t_Items as i', 'gr.ItemNo', '=', 'i.Id')
@@ -533,18 +535,19 @@ class InvoiceEntryV2Controller extends Controller
                     DB::raw('COALESCE(gr.ReceivedQTY, 0) as ReceivedQTY')
                 )
                 ->get()
-                ->map(function($item) {
+                ->map(function ($item) {
                     return [
                         'ItemName' => $item->ItemName ?? 'Unknown Item',
                         'POQTY' => $item->POQTY ?? 0,
-                        'ReceivedQTY' => $item->ReceivedQTY ?? 0
+                        'ReceivedQTY' => $item->ReceivedQTY ?? 0,
                     ];
                 });
         } catch (\Exception $e) {
             Log::error('Error fetching GRN items: ' . $e->getMessage(), [
                 'grnId' => $grnId,
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return collect([]); // Return empty collection on error
         }
     }
@@ -555,6 +558,7 @@ class InvoiceEntryV2Controller extends Controller
     public function store(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
+
         try {
             $validated = $request->validate([
                 'ThirdPartyID' => 'required|exists:t_ThirdParties,Id',
@@ -589,24 +593,26 @@ class InvoiceEntryV2Controller extends Controller
                 //'ThirdPartyID' => $validated['ThirdPartyID'], // Store in correct field for relationship
                 'SupplierID' => $validated['ThirdPartyID'], // Also store SupplierID separately if needed
                 'POId' => $validated['POReference'], // This is actually the PO ID from the form
-                'POReference'=>  $validated['POReference'],
+                'POReference' => $validated['POReference'],
                 'GRNId' => 1,//$validated['GRNReference'], //Set to one to avoid data type conversion since with po we can get the grn
-                'GRNReference'=>1,//$validated['GRNReference'],
+                'GRNReference' => 1,//$validated['GRNReference'],
                 'InvoiceNumber' => $validated['InvoiceNumber'],
                 'InvoiceDate' => $validated['InvoiceDate'],
                 'DueDate' => $validated['DueDate'],
                 // Store inclusive amount for posting/approval
-                'InvoiceAmount' => (function() use ($validated) {
+                'InvoiceAmount' => (function () use ($validated) {
                     // Calculate based on PO if available
-                    if (!empty($validated['POReference'])) {
+                    if (! empty($validated['POReference'])) {
                         $order = DB::table('t_Orders')->where('Id', (int)$validated['POReference'])->first();
                         if ($order) {
                             $excl = (float)($order->OrdTotExcl ?? 0);
                             $taxPct = (float)($order->TaxPercentage ?? 0);
                             $taxAmt = $excl * ($taxPct / 100);
+
                             return $excl + $taxAmt;
                         }
                     }
+
                     // Fallback to form amount (assumed inclusive if no PO logic)
                     return (float)$validated['Amount'];
                 })(),
@@ -614,16 +620,18 @@ class InvoiceEntryV2Controller extends Controller
                 'TaxPercentage' => $taxPercentage ?? 0.0,
                 'Description' => $validated['Description'],
                 'TaxID' => 1,//$validated['TaxID'] ?? 1,
-                'TotalAmount' => (function() use ($validated) {
-                    if (!empty($validated['POReference'])) {
+                'TotalAmount' => (function () use ($validated) {
+                    if (! empty($validated['POReference'])) {
                         $order = DB::table('t_Orders')->where('Id', (int)$validated['POReference'])->first();
                         if ($order) {
                             $excl = (float)($order->OrdTotExcl ?? 0);
                             $taxPct = (float)($order->TaxPercentage ?? 0);
                             $taxAmt = $excl * ($taxPct / 100);
+
                             return $excl + $taxAmt;
                         }
                     }
+
                     return (float)$validated['Amount'];
                 })(),
                 'CurrencyID' => $validated['CurrencyID'] ?? 56, // Set to default currency
@@ -632,7 +640,7 @@ class InvoiceEntryV2Controller extends Controller
                 'CreatedBy' => Auth::id(),
                 'CreatedOn' => now(),
                 'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now()
+                'ModifiedOn' => now(),
             ]);
 
             //File Upload
@@ -651,17 +659,17 @@ class InvoiceEntryV2Controller extends Controller
 
             return redirect()->route('invoiceentry.show', $invoice->Id)
                 ->with('success', 'Invoice created successfully');
-
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             return $th->getMessage();
-        }
-        catch (ValidationException $e) {
+        } catch (ValidationException $e) {
             DB::rollBack();
             Log::error('Validation error creating invoice: ', $e->errors());
+
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error creating invoice: ' . $e->getMessage());
+
             return back()->with('error', 'Failed to create invoice: ' . $e->getMessage())->withInput();
         }
     }
@@ -672,6 +680,7 @@ class InvoiceEntryV2Controller extends Controller
     public function update(Request $request, $id)
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableUpdate, FinanceInvoiceEntry::class);
+
         try {
             $invoice = FinanceInvoiceEntry::findOrFail($id);
 
@@ -684,7 +693,7 @@ class InvoiceEntryV2Controller extends Controller
                 'InvoiceDate' => 'required|date',
                 'DueDate' => 'required|date',
                 'Amount' => 'required|numeric|min:0.01',
-                'Description' => 'nullable|string'
+                'Description' => 'nullable|string',
             ]);
 
             $invoice->update([
@@ -697,14 +706,14 @@ class InvoiceEntryV2Controller extends Controller
                 'InvoiceAmount' => $validated['Amount'],
                 'Description' => $validated['Description'],
                 'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now()
+                'ModifiedOn' => now(),
             ]);
 
             return redirect()->route('invoiceentry.show', $invoice->Id)
                 ->with('success', 'Invoice updated successfully');
-
         } catch (\Exception $e) {
             Log::error('Error updating invoice: ' . $e->getMessage());
+
             return back()->with('error', 'Failed to update invoice: ' . $e->getMessage())->withInput();
         }
     }
@@ -727,7 +736,7 @@ class InvoiceEntryV2Controller extends Controller
             )
             ->get();
 
-        $orders = DB::table('t_Orders')->select('Id','AccountID','Description','OrdTotExcl','OrderNo')->get();
+        $orders = DB::table('t_Orders')->select('Id', 'AccountID', 'Description', 'OrdTotExcl', 'OrderNo')->get();
 
         $currencies = Currency::select('Id', 'Code')->get();
 
@@ -742,7 +751,8 @@ class InvoiceEntryV2Controller extends Controller
     public function destroy($id)
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableDelete, FinanceInvoiceEntry::class);
-            try {
+
+        try {
             DB::beginTransaction();
 
             $invoice = FinanceInvoiceEntry::findOrFail($id);
@@ -751,7 +761,7 @@ class InvoiceEntryV2Controller extends Controller
             if ($invoice->ApprovalStatus !== 'draft') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Only draft invoices can be deleted. Approved or posted invoices cannot be removed.'
+                    'message' => 'Only draft invoices can be deleted. Approved or posted invoices cannot be removed.',
                 ], 422);
             }
 
@@ -779,31 +789,30 @@ class InvoiceEntryV2Controller extends Controller
             Log::info('Invoice deleted successfully', [
                 'invoice_id' => $id,
                 'invoice_number' => $invoiceNumber,
-                'deleted_by' => Auth::id()
+                'deleted_by' => Auth::id(),
             ]);
 
             if (request()->expectsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Invoice deleted successfully'
+                    'message' => 'Invoice deleted successfully',
                 ]);
             }
 
             return redirect()->route('invoiceentry.index')
                 ->with('success', 'Invoice deleted successfully');
-
         } catch (\Exception $e) {
             DB::rollBack();
 
             Log::error('Error deleting invoice: ' . $e->getMessage(), [
                 'invoice_id' => $id,
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             if (request()->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to delete invoice: ' . $e->getMessage()
+                    'message' => 'Failed to delete invoice: ' . $e->getMessage(),
                 ], 500);
             }
 
@@ -844,9 +853,8 @@ class InvoiceEntryV2Controller extends Controller
                 'Id' => 56,
                 'Code' => 'KES',
                 'Symbol' => 'KSh',
-                'Name' => 'Kenyan Shilling'
+                'Name' => 'Kenyan Shilling',
             ];
-
         } catch (\Exception $e) {
             Log::error('Error getting default currency: ' . $e->getMessage());
 
@@ -855,7 +863,7 @@ class InvoiceEntryV2Controller extends Controller
                 'Id' => 56,
                 'Code' => 'KES',
                 'Symbol' => 'KSh',
-                'Name' => 'Kenyan Shilling'
+                'Name' => 'Kenyan Shilling',
             ];
         }
     }

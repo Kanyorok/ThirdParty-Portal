@@ -11,20 +11,19 @@ use App\Models\Procurement\RFQAward;
 use App\Enums\RFQAwardStatusEnum;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQResponse;
-use App\Models\Procurement\RFQ;
-use App\Models\Procurement\TenderSupplier;
+use App\Models\Procurement\Tender;
+use App\Models\Procurement\TenderAward;
 use App\Models\Procurement\TenderCommitteeEvaluation;
-use App\Models\Procurement\BidResponsiveness;
+use App\Models\Procurement\TenderSupplier;
+use App\Services\Procurement\TenderScoringService;
 use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Services\Procurement\TenderScoringService;
 
 class AwardsController extends Controller
 {
-
     protected ApprovalWorkflow $workflow;
     protected ApprovalWorkflow $rfqWorkflow;
 
@@ -34,10 +33,11 @@ class AwardsController extends Controller
         $this->workflow = new ApprovalWorkflow('TenderAwardStatus', 'AwardStatus');
         $this->rfqWorkflow = new ApprovalWorkflow('rfq_award', 'AwardStatus');
     }
+
     /**
      * Display a listing of awards
      */
-  public function index(Request $request)
+    public function index(Request $request)
     {
         $statusFilter = $request->get('status_filter');
         $search = $request->get('search');
@@ -47,7 +47,7 @@ class AwardsController extends Controller
             ->get()
             ->map(function ($award) {
                 $status = $award->AwardStatus;
-                $statusClass = match($status) {
+                $statusClass = match ($status) {
                     'Pending' => 'bg-warning text-dark',
                     'Approved' => 'bg-success',
                     'Rejected' => 'bg-danger',
@@ -72,16 +72,18 @@ class AwardsController extends Controller
 
         // Tenders with evaluations but no award yet => Pending
         $tendersWithEval = Tender::whereHas('submissions', function ($q) {
-                $q->where('IsResponsive', true)->whereIn('BidStatus', ['responsive', 'evaluated']);
-            })
-            ->whereExists(function($q){
+            $q->where('IsResponsive', true)->whereIn('BidStatus', ['responsive', 'evaluated']);
+        })
+            ->whereExists(function ($q) {
                 $q->select(DB::raw(1))
                   ->from('t_TenderCommitteeEvaluations as e')
                   ->whereColumn('e.TenderID', 't_Tenders.Id');
             })
             ->with('award')
             ->get()
-            ->filter(function ($t) { return !$t->award; })
+            ->filter(function ($t) {
+                return ! $t->award;
+            })
             ->map(function ($tender) {
                 return [
                     'type' => 'tender',
@@ -138,7 +140,7 @@ class AwardsController extends Controller
             ->pluck('RFQId');
 
         $rfqPending = RFQ::whereIn('Id', $rfqsWithEval)
-            ->whereNotExists(function($q){
+            ->whereNotExists(function ($q) {
                 $q->select(DB::raw(1))
                   ->from('t_RFQAward as a')
                   ->whereColumn('a.RFQId', 't_RFQ.Id');
@@ -189,18 +191,18 @@ class AwardsController extends Controller
         }
 
         // Sort by award_date desc
-        $items = $items->sortByDesc(function($row){
+        $items = $items->sortByDesc(function ($row) {
             return $row['award_date'] === '--' ? '' : $row['award_date'];
         })->values();
 
         // Add permission checks for tender awards
         $user = Auth::user();
-        
+
         // If user is not authenticated, redirect to login
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login')->with('error', 'Please log in to access this page.');
         }
-        
+
         $items = $items->map(function ($row) use ($user) {
             if ($row['type'] === 'tender' && isset($row['award_id'])) {
                 $award = TenderAward::find($row['award_id']);
@@ -221,19 +223,20 @@ class AwardsController extends Controller
             } else {
                 $row['can_approve'] = false;
             }
+
             return $row;
         });
 
         return view('procurement.awards.index', [
             'items' => $items,
-            'filters' => $request->only(['status_filter', 'search'])
+            'filters' => $request->only(['status_filter', 'search']),
         ]);
     }
 
     /**
      * Show unified awards page for both Tenders and RFQs
      */
-     public function view_tender($id)
+    public function view_tender($id)
     {
         return $this->showUnifiedAward($id, 'tender');
     }
@@ -241,7 +244,7 @@ class AwardsController extends Controller
     /**
      * Show RFQ award page (redirects to unified interface)
      */
-     public function view_rfq($id)
+    public function view_rfq($id)
     {
         return $this->showUnifiedAward($id, 'rfq');
     }
@@ -267,7 +270,7 @@ class AwardsController extends Controller
                 ->first();
         } else {
             $tender = Tender::findOrFail($id);
-            
+
             // Get most recent award
             $existingAward = TenderAward::where('TenderID', $id)
                 ->with(['winningSupplier.supplierMaster.party'])
@@ -282,12 +285,12 @@ class AwardsController extends Controller
 
         if ($existingAward) {
             $isSubmitter = $existingAward->CreatedBy == Auth::id();
-            
+
             // Only check approval permissions if award is pending
-            // Note: RFQAward doesn't have AwardStatus column by default in some versions, 
+            // Note: RFQAward doesn't have AwardStatus column by default in some versions,
             // but if it does or if we treat existence as awarded, we need to be careful.
             // Assuming standard workflow for TenderAward. For RFQAward, it's usually created as approved/final in this system.
-            
+
             $status = $existingAward->AwardStatus ?? 'Approved'; // Default to Approved for RFQ if column missing
 
             if ($status === 'Pending') {
@@ -304,13 +307,13 @@ class AwardsController extends Controller
                         $canApprove = false;
                     }
                 }
-                
-                $showApprovalButtons = $canApprove && !$isSubmitter;
+
+                $showApprovalButtons = $canApprove && ! $isSubmitter;
             }
         }
 
         // Determine type if not specified (fallback for Tenders)
-        if (!$type && $tender instanceof Tender) {
+        if (! $type && $tender instanceof Tender) {
             $type = $this->determineTenderType($tender);
         }
 
@@ -354,7 +357,7 @@ class AwardsController extends Controller
     {
         $request->validate([
             'tender_id' => 'required|exists:t_Tenders,Id',
-            'type' => 'required|in:tender,rfq'
+            'type' => 'required|in:tender,rfq',
         ]);
 
         return $this->showUnifiedAward($request->tender_id, $request->type);
@@ -511,13 +514,14 @@ class AwardsController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Award creation error: ' . $e->getMessage());
+
             return redirect()->back()
                 ->with('error', 'Failed to create award: ' . $e->getMessage())
                 ->withInput();
         }
     }
 
-     public function submitForApproval($id)
+    public function submitForApproval($id)
     {
         try {
             DB::beginTransaction();
@@ -558,7 +562,7 @@ class AwardsController extends Controller
                 ucfirst($type) . ' Award submitted for approval'
             );
 
-            if (!$submitted) {
+            if (! $submitted) {
                 throw new \Exception('Failed to submit award to workflow');
             }
 
@@ -584,10 +588,10 @@ class AwardsController extends Controller
             DB::rollBack();
             Log::error('Award Submit Error: ' . $e->getMessage());
             Log::error($e->getTraceAsString());
+
             return redirect()->back()->with('error', 'Failed to submit award: ' . $e->getMessage());
         }
     }
-
 
     /**
      * Approve award (Unified for Tender and RFQ)
@@ -777,6 +781,7 @@ class AwardsController extends Controller
             DB::rollBack();
             Log::error("--- APPROVE AWARD ERROR --- " . $th->getMessage());
             Log::error($th->getTraceAsString());
+
             return redirect()->back()->with('error', 'Failed to approve award: ' . $th->getMessage());
         }
     }
@@ -862,7 +867,7 @@ class AwardsController extends Controller
                 $statusColumn
             );
 
-            if (!$rejected) {
+            if (! $rejected) {
                 throw new \Exception('Workflow rejection failed');
             }
 
@@ -921,27 +926,28 @@ class AwardsController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error("--- REJECT AWARD ERROR --- " . $th->getMessage());
+
             return redirect()->back()->with('error', 'Failed to reject award: ' . $th->getMessage());
         }
     }
 
-
     /**
      * Cancel a pending award (re-open tender for re-award)
      */
-   public function workflowHistory($id)
+    public function workflowHistory($id)
     {
         $award = TenderAward::findOrFail($id);
-        
+
         try {
             $history = $this->workflow->historyForModel($award);
-            
+
             return view('procurement.awards.workflow-history', compact(
                 'award',
                 'history'
             ));
         } catch (\Exception $e) {
             Log::error('Failed to fetch workflow history: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to load workflow history.');
         }
     }
@@ -978,14 +984,13 @@ class AwardsController extends Controller
             DB::commit();
 
             return back()->with('success', 'Award cancelled successfully.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Award cancel error: ' . $e->getMessage());
+
             return back()->with('error', 'Failed to cancel award: ' . $e->getMessage());
         }
     }
-
 
     /**
      * Get consolidated scores for tender award (using same logic as BidScoreConsolidationController)
@@ -1006,7 +1011,7 @@ class AwardsController extends Controller
                     'bid_id' => $bid->Id,
                     'name' => $bid->SupplierName ?? 'Unknown Supplier',
                     'bid_amount' => $bid->BidAmount,
-                    'currency' => $bid->Currency
+                    'currency' => $bid->Currency,
                 ];
             });
 
@@ -1018,7 +1023,9 @@ class AwardsController extends Controller
         foreach ($bidders as $bidder) {
             $sid = (int)$bidder['id'];
             $entry = $computed[$sid] ?? null;
-            if (!$entry) { continue; }
+            if (! $entry) {
+                continue;
+            }
 
             $sectionScores = [];
             foreach ($sections as $sec) {
@@ -1078,7 +1085,7 @@ class AwardsController extends Controller
             ->values();
 
         return $tenderSections
-            ->filter(fn($ts) => $ts->sections)
+            ->filter(fn ($ts) => $ts->sections)
             ->map(function ($ts) use ($tenderId) {
                 $section = $ts->sections;
 
@@ -1090,7 +1097,7 @@ class AwardsController extends Controller
                     ->with('criteria')
                     ->get();
 
-                $criteria = $tcRows->map(function($tc){
+                $criteria = $tcRows->map(function ($tc) {
                     return [
                         'id' => $tc->CriteriaID,
                         'name' => $tc->criteria?->CriteriaName ?? 'Criteria',
@@ -1155,7 +1162,7 @@ class AwardsController extends Controller
             'section_scores' => $sectionScores,
             'total_weighted_score' => round($avgTotal, 2),
             'technical_score' => $this->getTechnicalScore($sectionScores),
-            'financial_score' => $this->getFinancialScore($sectionScores)
+            'financial_score' => $this->getFinancialScore($sectionScores),
         ];
     }
 
@@ -1166,27 +1173,35 @@ class AwardsController extends Controller
     {
         // Keep for compatibility; delegate to member-based helper and average
         $supplierGroup = $evaluations->get($supplierId) ?? collect();
-        if ($supplierGroup->isEmpty()) { return 0.0; }
-        $sum = 0.0; $cnt = 0;
+        if ($supplierGroup->isEmpty()) {
+            return 0.0;
+        }
+        $sum = 0.0;
+        $cnt = 0;
         foreach ($supplierGroup as $memberData) {
             $sum += $this->memberSectionPercent($memberData, $section);
             $cnt++;
         }
+
         return $cnt > 0 ? $sum / $cnt : 0.0;
     }
 
     private function memberSectionPercent($memberData, array $section): float
     {
-        $sumScore = 0.0; $sumMax = 0.0;
+        $sumScore = 0.0;
+        $sumMax = 0.0;
         $sectionRows = optional($memberData)->get($section['id']) ?? collect();
         foreach ($section['criteria'] as $criteria) {
             $rows = optional($sectionRows)->get($criteria['id']) ?? collect();
-            if ($rows->isEmpty()) { continue; }
+            if ($rows->isEmpty()) {
+                continue;
+            }
             $avg = (float)$rows->avg('Score');
             $max = (float)($criteria['max_score'] ?? ($rows->avg('MaxScore') ?? 10));
             $sumScore += $avg;
             $sumMax += $max;
         }
+
         return $sumMax > 0 ? ($sumScore / $sumMax) * 100.0 : 0.0;
     }
 
@@ -1195,7 +1210,7 @@ class AwardsController extends Controller
      */
     protected function getTechnicalScore($sectionScores)
     {
-        $technicalSection = collect($sectionScores)->first(function($section) {
+        $technicalSection = collect($sectionScores)->first(function ($section) {
             return stripos($section['section_name'], 'technical') !== false;
         });
 
@@ -1207,7 +1222,7 @@ class AwardsController extends Controller
      */
     protected function getFinancialScore($sectionScores)
     {
-        $financialSection = collect($sectionScores)->first(function($section) {
+        $financialSection = collect($sectionScores)->first(function ($section) {
             return stripos($section['section_name'], 'financial') !== false ||
                    stripos($section['section_name'], 'finance') !== false;
         });

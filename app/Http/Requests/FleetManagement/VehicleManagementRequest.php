@@ -35,7 +35,7 @@ class VehicleManagementRequest extends FormRequest
         ];
 
         // ✅ For creation
-        if (!$vehicleId) {
+        if (! $vehicleId) {
             $rules['RegistrationNo'] = [
                 'required',
                 'string',

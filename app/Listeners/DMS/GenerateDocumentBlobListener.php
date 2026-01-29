@@ -24,11 +24,9 @@ class GenerateDocumentBlobListener implements ShouldQueue
      */
     public function handle(DocumentUploadedEvent $event): void
     {
-        if (!(new FileExtractionService($event->document))->searchAndTags()) {
+        if (! (new FileExtractionService($event->document))->searchAndTags()) {
             Log::error('Could not process file content extraction for tags and search : ' . $event->document->DocumentId);
             $this->fail('Could not process file content extraction for tags and search');
         }
     }
-
-
 }

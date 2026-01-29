@@ -6,11 +6,8 @@ use App\Enums\WorkflowStatus;
 use App\Models\Auth\User;
 use App\Models\Core\Approval;
 use App\Models\Procurement\Requisitions;
-use App\Models\Core\Approval\CodeDetail;
 use App\Services\Core\ApprovalWorkflowService;
 use Illuminate\Support\Facades\DB;
-
-
 
 class RequisitionWorkflowService extends ApprovalWorkflowService
 {
@@ -19,9 +16,10 @@ class RequisitionWorkflowService extends ApprovalWorkflowService
     /**
      * Submit a purchase requisition for approval
      */
-    public function submit(Requisitions $requisition, User $actor, string $remarks,): bool
+    public function submit(Requisitions $requisition, User $actor, string $remarks): bool
     {
         $status = self::codeDetail(WorkflowStatus::Submitted, $this->codeId);
+
         return $this->submittedAction(
             $actor,
             $status,
@@ -41,6 +39,7 @@ class RequisitionWorkflowService extends ApprovalWorkflowService
     public function approve(Requisitions $requisition, User $actor, string $remarks): bool
     {
         $status = self::codeDetail(WorkflowStatus::APPROVED, $this->codeId);
+
         return $this->approveAction($actor, $status, $requisition->getMorphClass(), $requisition->getKey(), $remarks, 'DocStatus');
     }
 
@@ -50,6 +49,7 @@ class RequisitionWorkflowService extends ApprovalWorkflowService
     public function reject(Requisitions $requisition, User $actor, string $remarks): bool
     {
         $status = self::codeDetail(WorkflowStatus::REJECTED, $this->codeId);
+
         return $this->rejectAction($actor, $status, $requisition->getMorphClass(), $requisition->getKey(), $remarks, 'DocStatus');
     }
 
@@ -59,6 +59,7 @@ class RequisitionWorkflowService extends ApprovalWorkflowService
     public function return(Requisitions $requisition, User $actor, string $remarks): bool
     {
         $status = self::codeDetail(WorkflowStatus::RETURNED, $this->codeId);
+
         return $this->approveAction($actor, $status, $requisition->getMorphClass(), $requisition->getKey(), $remarks, 'DocStatus');
     }
 
@@ -68,6 +69,7 @@ class RequisitionWorkflowService extends ApprovalWorkflowService
     public function markUnderReview(Requisitions $requisition, User $actor, string $remarks): bool
     {
         $status = self::codeDetail(WorkflowStatus::UnderReview, $this->codeId);
+
         return $this->approveAction($actor, $status, $requisition->getMorphClass(), $requisition->getKey(), $remarks, 'DocStatus');
     }
 
@@ -77,6 +79,7 @@ class RequisitionWorkflowService extends ApprovalWorkflowService
     public function comment(Requisitions $requisition, User $actor, string $remarks): bool
     {
         $status = self::codeDetail(WorkflowStatus::COMMENTED, $this->codeId);
+
         return $this->approveAction($actor, $status, $requisition->getMorphClass(), $requisition->getKey(), $remarks, 'DocStatus');
     }
 

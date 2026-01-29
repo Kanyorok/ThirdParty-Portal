@@ -2,17 +2,15 @@
 
 namespace App\Services\FleetManagement;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetInspectionSchedule;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class FleetInspectionScheduleService
 {
     /**
      * Create a new Inspection
      */
-
     public function create(array $data): FleetInspectionSchedule
     {
         return DB::transaction(function () use ($data) {
@@ -39,7 +37,7 @@ class FleetInspectionScheduleService
     {
         $latestInspection = FleetInspectionSchedule::withTrashed()->latest('CreatedOn')->first();
 
-        if (!$latestInspection || !$latestInspection->InspectionNo) {
+        if (! $latestInspection || ! $latestInspection->InspectionNo) {
             return 'INS-0001';
         }
 
@@ -48,7 +46,6 @@ class FleetInspectionScheduleService
 
         return 'INS-' . str_pad($newId, 4, '0', STR_PAD_LEFT);
     }
-
 
     /**
      * Update Inspection
@@ -83,7 +80,7 @@ class FleetInspectionScheduleService
             $records->DeletedOn = now();
             $records->save();
 
-            $records->delete(); 
+            $records->delete();
 
             activity()
                 ->performedOn($records)

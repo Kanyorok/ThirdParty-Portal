@@ -26,7 +26,7 @@ class LocalityRequest extends FormRequest
                                  'min:1',
                                  'max:255',
                                 ],
-                'place_in'   => [
+                'place_in' => [
                                  'required',
                                  'integer',
                                 ],
@@ -38,7 +38,7 @@ class LocalityRequest extends FormRequest
      */
     public function getType(): string
     {
-        if (!in_array($this->_type, LocalityTypeEnum::values(), true)) {
+        if (! in_array($this->_type, LocalityTypeEnum::values(), true)) {
             throw ValidationException::withMessages(['place_name' => 'invalid Locality']);
         }
 
@@ -75,9 +75,10 @@ class LocalityRequest extends FormRequest
             return null;
         }
 
-        if (!Locality::query()->where('ID', $place)->exists()) {
+        if (! Locality::query()->where('ID', $place)->exists()) {
             throw ValidationException::withMessages(['place_in' => 'invalid place']);
         }
+
         return $place;
     }
 }

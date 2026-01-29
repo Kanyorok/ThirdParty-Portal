@@ -31,6 +31,7 @@ class AttachContactClientRequest extends FormRequest
         if ($client instanceof Client) {
             return $client;
         }
+
         throw ValidationException::withMessages(['client' => 'client not found, or invalid.']);
     }
 }

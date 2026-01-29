@@ -20,7 +20,7 @@ class LegalExecutionLog extends Model
         'CreatedOn',
         'ModifiedBy',
         'ModifiedOn',
-        'IsActive'
+        'IsActive',
     ];
 
     public function document()

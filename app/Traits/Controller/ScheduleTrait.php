@@ -29,9 +29,10 @@ trait ScheduleTrait
      */
     public function schedules(Builder|BelongsToMany|MorphMany $query, array $with = []): JsonResponse
     {
-        if (!empty($with)) {
+        if (! empty($with)) {
             $query->with($with);
         }
+
         return Datatables::of($query->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
             ->addColumn('action', function (Schedule $schedule) {
                 return '<button type="button"  data-click_url="' . route('schedule.show', [$schedule->ScheduleID]) . '" data-summary_title="schedule details" class="btn btn-info btn-sm click-summary-data"><i class="fas fa-eye"></i> details</button>';
@@ -47,7 +48,6 @@ trait ScheduleTrait
                 return $schedule->EndOn?->format('F d, Y h:i A');
             })->rawColumns(['action'])->make();
     }
-
 
     /**
      * @throws ErroredException
@@ -88,8 +88,8 @@ trait ScheduleTrait
     {
         $schedule->forceFill([
                               'ScheduleStatusID' => ScheduleStatusEnum::Canceled->value,
-                              'DeletedOn'        => Carbon::now(),
-                              'DeletedBy'        => $actor->Id,
+                              'DeletedOn' => Carbon::now(),
+                              'DeletedBy' => $actor->Id,
                              ])->save(['timestamps' => false]);
 
         $scheduled = $schedule->scheduled;
@@ -101,11 +101,13 @@ trait ScheduleTrait
 
         if ($model instanceof Client) {
             ActivityService::schedule($model->ClientID, Client::getPrimaryKey(), $schedule, $actor->UserID . ' Canceled - ' . $schedule->Title, $actor);
+
             return;
         }
 
         if ($model instanceof Lead) {
             ActivityService::schedule($model->LeadID, Lead::getPrimaryKey(), $schedule, $actor->UserID . ' Canceled - ' . $schedule->Title, $actor);
+
             return;
         }
 

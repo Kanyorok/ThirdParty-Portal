@@ -31,7 +31,7 @@ class FleetMaintenanceScheduleRequest extends FormRequest
                 'min:0',
                 // Only allow mileage on update
                 function ($attribute, $value, $fail) {
-                    if ($this->isMethod('POST') && !is_null($value)) {
+                    if ($this->isMethod('POST') && ! is_null($value)) {
                         $fail('Scheduled mileage can only be set when editing a record.');
                     }
                 },

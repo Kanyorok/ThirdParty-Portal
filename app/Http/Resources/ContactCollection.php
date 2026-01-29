@@ -20,35 +20,35 @@ class ContactCollection extends ResourceCollection
                 'data' => $this->collection->transform(function ($contact) {
                     if ($contact->party instanceof Lead) {
                         $party = [
-                                  'id'   => $contact->party->LeadID,
+                                  'id' => $contact->party->LeadID,
                                   'name' => $contact->party->Name,
-                                  'url'  => route('leads.show', $contact->party->LeadID),
+                                  'url' => route('leads.show', $contact->party->LeadID),
                                   'type' => 'LeadID',
                                  ];
                     } elseif ($contact->party instanceof Client) {
                         $party = [
-                                  'id'   => $contact->party->ClientID,
+                                  'id' => $contact->party->ClientID,
                                   'name' => $contact->party->Name,
-                                  'url'  => route('clients.show', $contact->party->ClientID),
+                                  'url' => route('clients.show', $contact->party->ClientID),
                                   'type' => 'ClientID',
                                  ];
                     } else {
                         $party = [
-                                  'id'   => $contact->id,
+                                  'id' => $contact->id,
                                   'name' => $contact->name,
-                                  'url'  => route('home'),
+                                  'url' => route('home'),
                                   'type' => '',
                                  ];
                     }
 
                     return [
-                            'id'       => $contact->ContactID,
-                            'name'     => $contact->Label,
+                            'id' => $contact->ContactID,
+                            'name' => $contact->Label,
                             'contacts' => [
                                            'email' => $contact->Email,
                                            'phone' => $contact->Phone,
                                           ],
-                            'party'    => $party,
+                            'party' => $party,
                            ];
                 }),
                ];

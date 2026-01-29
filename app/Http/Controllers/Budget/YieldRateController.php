@@ -9,7 +9,6 @@ use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLineProductTypes;
 use App\Models\Budget\BudgetPeriodTypes;
 use App\Models\Budget\BudgetProduct;
-use App\Models\Budget\BudgetProductType;
 use App\Models\Budget\BudgetRates;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +18,6 @@ use Throwable;
 
 class YieldRateController extends Controller
 {
-    //
     public function index()
     {
         $driverRatesData = BudgetDriverRates::with('rateType')->latest()->get();
@@ -80,6 +78,7 @@ class YieldRateController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $driverRate = BudgetDriverRates::create([
                 'PeriodTypeID' => 1, //for nullable period type
@@ -89,7 +88,7 @@ class YieldRateController extends Controller
                 'EffectiveDate' => 1, //for nullable effective date
                 'Source' => $validated['Source'],
                 'CreatedBy' => Auth::Id(),
-                'ModifiedBy' => Auth::Id()
+                'ModifiedBy' => Auth::Id(),
             ]);
             DB::commit();
             activity()
@@ -101,6 +100,7 @@ class YieldRateController extends Controller
             return back()->with('success', 'Driver created successfully');
         } catch (Throwable $th) {
             DB::rollBack();
+
             return $th->getMessage();
             Log::error('Failed to Update period:' . $th->getMessage());
 
@@ -112,8 +112,8 @@ class YieldRateController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetDriverRates::class);
 
-        //    return $id;
         DB::beginTransaction();
+
         try {
             $yieldrate = BudgetDriverRates::findOrFail($id);
             $yieldrate->DeletedBy = Auth::id();
@@ -130,8 +130,8 @@ class YieldRateController extends Controller
         } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to delete Product Rate: ' . $th->getMessage());
-            return redirect()->back()->withErrors(['error' => 'Failed to delete Product Rate: ' . $th->getMessage()]);
 
+            return redirect()->back()->withErrors(['error' => 'Failed to delete Product Rate: ' . $th->getMessage()]);
         }
     }
 
@@ -176,7 +176,6 @@ class YieldRateController extends Controller
     public function update(Request $request, $id)
     {
         //Check permissions
-        //return $request;
         $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetDriverRates::class);
 
         //Validate request
@@ -190,6 +189,7 @@ class YieldRateController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $driverRate = BudgetDriverRates::findOrFail($id);
             $driverRate->update([
@@ -216,5 +216,4 @@ class YieldRateController extends Controller
             return back()->withErrors(['error' => 'Failed to update driver'])->withInput();
         }
     }
-
 }

@@ -30,7 +30,7 @@ class PropertyLeaseTerminationService
 
     public static function create(
         PropertyNewLease $LeaseID,
-        string     $TerminationDate,
+        string $TerminationDate,
         CodeDetail $TerminationReason,
         string $Remarks = null,
         string $Status,
@@ -76,7 +76,7 @@ class PropertyLeaseTerminationService
             );
 
             //create workflow instance and submit for approval
-            $terminationflow = new ApprovalWorkflow('ApprovalStatus',  'Status' );
+            $terminationflow = new ApprovalWorkflow('ApprovalStatus', 'Status');
             $terminationflow->submit(
                 $termination,
                 $user,
@@ -124,6 +124,7 @@ class PropertyLeaseTerminationService
             return new self($termination);
         } catch (\Exception $e) {
             DB::rollBack();
+
             throw $e;
         }
     }

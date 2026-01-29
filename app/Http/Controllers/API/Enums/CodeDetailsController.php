@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API\Enums;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class CodeDetailsController extends Controller
 {
@@ -15,7 +14,7 @@ class CodeDetailsController extends Controller
             ->orderBy('DisplayOrder')
             ->get(['Value', 'Description']);
 
-        $data = $details->map(fn($d) => [
+        $data = $details->map(fn ($d) => [
             'value' => $d->Value,
             'label' => $d->Description,
         ]);

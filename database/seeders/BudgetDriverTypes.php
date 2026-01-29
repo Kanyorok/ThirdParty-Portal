@@ -25,62 +25,62 @@ class BudgetDriverTypes extends Seeder
             [
                 'DriverName' => 'Financial',
                 'Description' => 'Drivers based on financial metrics such as revenue, expenses, and profitability.',
-                'IsActive' => true
+                'IsActive' => true,
             ],
             [
                 'DriverName' => 'Operational',
                 'Description' => 'Drivers tied to business operations such as staffing, system uptime, or process efficiency.',
-                'IsActive' => true
+                'IsActive' => true,
             ],
             [
                 'DriverName' => 'Loan Volume',
                 'Description' => 'Tracks the total value or number of loans issued in a given period. Helps in forecasting interest income.',
-                'IsActive' => false
+                'IsActive' => false,
             ],
             [
                 'DriverName' => 'Interest Rate',
                 'Description' => 'Reflects applicable interest rates affecting borrowing costs and investment returns.',
-                'IsActive' => true
+                'IsActive' => true,
             ],
             [
                 'DriverName' => 'Transaction Volume',
                 'Description' => 'Measures the number of customer transactions processed over time, used to estimate operational load.',
-                'IsActive' => true
+                'IsActive' => true,
             ],
             [
                 'DriverName' => 'Deposit Balance',
                 'Description' => 'Represents total customer deposits, often used in liquidity, reserve, and funding analysis.',
-                'IsActive' => true
+                'IsActive' => true,
             ],
             [
                 'DriverName' => 'Default Rate',
                 'Description' => 'Indicates the proportion of loans that are not repaid, used in assessing credit risk.',
-                'IsActive' => true
+                'IsActive' => true,
             ],
             [
                 'DriverName' => 'Cost of Funding',
                 'Description' => 'Reflects the average interest or cost incurred by the institution in acquiring funds.',
-                'IsActive' => true
+                'IsActive' => true,
             ],
             [
                 'DriverName' => 'Customer Acquisition Cost',
                 'Description' => 'Represents the average marketing and onboarding cost incurred to bring in a new customer.',
-                'IsActive' => false
+                'IsActive' => false,
             ],
             [
                 'DriverName' => 'Branch Operating Cost',
                 'Description' => 'Covers recurring expenses of physical branches like rent, utilities, and staffing.',
-                'IsActive' => true
+                'IsActive' => true,
             ],
             [
                 'DriverName' => 'Net Interest Margin',
                 'Description' => 'Measures the spread between interest earned and paid, a key indicator of profitability.',
-                'IsActive' => true
+                'IsActive' => true,
             ],
             [
                 'DriverName' => 'Regulatory Compliance Cost',
                 'Description' => 'Includes all expenditures related to meeting local, regional, or international financial regulations.',
-                'IsActive' => false
+                'IsActive' => false,
             ],
         ];
 
