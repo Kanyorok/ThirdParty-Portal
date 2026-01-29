@@ -54,9 +54,9 @@ interface UserNavProps {
 }
 
 const MENU_ITEMS = [
-    { id: "account", label: "Account", icon: User, href: "/dashboard/account" },
+    // { id: "account", label: "Account", icon: User, href: "/dashboard/account" },
     { id: "notifications", label: "Notifications", icon: Bell, href: "/dashboard/notifications" },
-    { id: "settings", label: "Settings", icon: Settings, href: "/dashboard/settings" },
+    { id: "accounts", label: "Account Settings", icon: Settings, href: "/dashboard/settings" },
 ] as const
 
 const placeholder_avatar = "/avatars/doe.png"
@@ -117,9 +117,9 @@ const PROFILE_CONFIG: Record<
     Exclude<ProfileType, "base">,
     { label: string; description: string; icon: React.ElementType; dot: string; iconTone: string }
 > = {
-    Supplier: { label: "Supplier", description: "Tenders, RFQs, documents", icon: HardHat, dot: "bg-blue-500", iconTone: "text-blue-600" },
-    Tenant: { label: "Tenant", description: "Properties, leases, maintenance", icon: Building2, dot: "bg-emerald-500", iconTone: "text-emerald-600" },
-    Customer: { label: "Customer", description: "Policies and account access", icon: Shield, dot: "bg-violet-500", iconTone: "text-violet-600" },
+    Supplier: { label: "Supplier", description: "", icon: HardHat, dot: "bg-blue-500", iconTone: "text-blue-600" },
+    Tenant: { label: "Tenant", description: "", icon: Building2, dot: "bg-emerald-500", iconTone: "text-emerald-600" },
+    Customer: { label: "Customer", description: "", icon: Shield, dot: "bg-violet-500", iconTone: "text-violet-600" },
 }
 
 export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, onOpenChange }: UserNavProps) => {
