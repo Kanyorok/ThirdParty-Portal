@@ -25,11 +25,8 @@ class SupplierService extends ThirdPartiesService
             $supplier->load('party');
         }
 
-        // Validate the relationship exists
+        // Validate the relationship exists - silently skip if no ThirdParty (legacy data)
         if (! $supplier->party) {
-            // throw new \RuntimeException("Supplier {$supplier->SupplierID} has no associated ThirdParty record");
-            \Illuminate\Support\Facades\Log::warning("Supplier {$supplier->SupplierID} (ID: {$supplier->Id}) has no associated ThirdParty record. Skipping strict check.");
-
             return;
         }
 

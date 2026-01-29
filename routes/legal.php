@@ -172,7 +172,8 @@ Route::prefix('legal/compliance')->name('legal.compliance.')->group(function () 
     Route::post('trainings/{trainingId}/bulk-issue', [ComplianceTrainingController::class,'bulkIssueCertifications'])->name('trainings.bulkIssueCerts');
 });
 
-Route::prefix('legal/compliance')->name('legal.compliance.')->group(function () {
-    Route::get('analytics', [ComplianceAnalyticsController::class,'index'])
-        ->name('analytics.index');
-});
+// ComplianceAnalyticsController does not exist - routes removed
+// Route::prefix('legal/compliance')->name('legal.compliance.')->group(function () {
+//     Route::get('analytics', [ComplianceAnalyticsController::class,'index'])
+//         ->name('analytics.index');
+// });

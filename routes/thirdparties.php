@@ -162,25 +162,14 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
         // Prequalification API endpoints (for frontend compatibility)
         Route::prefix('prequalification')->name('prequalification.')->group(function () {
             // Controller not included in the 'use' statements, but path is clearly third-party/procurement
-            // Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
-            // Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
-            // Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
         });
 
         // Supplier RFQ endpoints (supplier portal)
         // Controller not included in the 'use' statements, but path is clearly third-party/procurement
-        // Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
-        // Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
-        // Route::post('rfq-responses', [SupplierRFQController::class, 'submitResponse']);
-        // Route::post('rfq-clarifications', [SupplierRFQController::class, 'postClarification']);
-        // Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
     });
 
     // Prequalification Progress (Third Party Application State)
     Route::prefix('v1')->group(function () {
         // Controller not included in the 'use' statements, but path is clearly third-party/procurement
-        // Route::get('/prequalification/applications/{roundId}/progress', [PrequalificationProgressController::class, 'getApplicationProgress']);
-        // Route::post('/prequalification/applications/{roundId}/categories/{categoryId}/progress', [PrequalificationProgressController::class, 'updateCategoryProgress']);
-        // Route::get('/prequalification/applications/my-applications', [PrequalificationProgressController::class, 'getMyApplications']);
     });
 });

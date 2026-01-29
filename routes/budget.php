@@ -81,7 +81,6 @@ Route::middleware(['module:1200000'])->namespace('Budget')->prefix('budget')->gr
     Route::resource('budgetlinecategories', BudgetLineCategoriesController::class);
     Route::resource('budgetactivities', BudgetActivitiesController::class);
     Route::resource('yieldexpenserate', YieldRateController::class);
-    //Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::post('/storeProjections', [BudgetProjectionsController::class, 'storeProjections'])->name('budgetprojections.storeProjections');
     Route::post('/deleteProjection', [BudgetProjectionsController::class, 'deleteProjection'])->name('budgetprojections.deleteProjection.post');

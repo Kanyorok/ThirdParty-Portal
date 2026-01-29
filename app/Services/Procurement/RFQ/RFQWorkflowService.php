@@ -19,11 +19,6 @@ class RFQWorkflowService extends ApprovalWorkflow
     {
         // Pass the CodeId and the status column name to parent
         parent::__construct('RequisitionStatus', 'Status');
-
-        Log::info('RFQWorkflowService initialized', [
-            'codeId' => 'RequisitionStatus',
-            'statusColumn' => 'Status',
-        ]);
     }
 
     /**
