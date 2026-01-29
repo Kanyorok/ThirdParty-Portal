@@ -183,14 +183,14 @@ class ThirdPartyAuthController extends Controller
         if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => __('auth.unauthenticated')
+                'message' => "Not Authorized"
             ], 401);
         }
 
         if ($user->hasVerifiedEmail()) {
             return response()->json([
                 'success' => false,
-                'message' => __('auth.email_already_verified')
+                'message' =>"Email already verified!"
             ], 400);
         }
 
@@ -198,7 +198,7 @@ class ThirdPartyAuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('auth.verification_link_sent')
+            'message' => "Email Verification Resent Successfully!"
         ], 200);
     }
 
