@@ -1,6 +1,6 @@
-import CredentialsProvider from "next-auth/providers/credentials";
-import type { NextAuthOptions, Session } from "next-auth";
-import type { JWT } from "next-auth/jwt";
+import CredentialsProvider from "next-auth/providers/credentials"
+import type { NextAuthOptions, Session } from "next-auth"
+import type { JWT } from "next-auth/jwt"
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -12,7 +12,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("MISSING_FIELDS")
+          return null
         }
 
         const res = await fetch(
@@ -30,13 +30,14 @@ export const authOptions: NextAuthOptions = {
           }
         )
 
+        if (!res.ok) {
+          return null
+        }
+
         const data = await res.json()
 
-        if (!res.ok || !data?.success) {
-          if (data?.error) {
-            throw new Error(data.error)
-          }
-          throw new Error("AUTH_FAILURE")
+        if (data?.success !== true || !data?.user || !data?.token) {
+          return null
         }
 
         const u = data.user
@@ -79,24 +80,23 @@ export const authOptions: NextAuthOptions = {
             }
             : null,
         } as any
-      }
-
+      },
     }),
   ],
   session: { strategy: "jwt", maxAge: 23 * 60 * 60 },
   callbacks: {
     async jwt({ token, user, trigger, session }): Promise<JWT> {
       if (user) {
-        return { ...token, ...user };
+        return { ...token, ...user }
       }
       if (trigger === "update" && session?.user) {
         return {
           ...token,
           ...session.user,
-          accessToken: token.accessToken
-        };
+          accessToken: token.accessToken,
+        }
       }
-      return token;
+      return token
     },
     async session({ session, token }): Promise<Session> {
       if (token) {
@@ -134,13 +134,13 @@ export const authOptions: NextAuthOptions = {
           third_party: token.third_party,
           thirdParty: token.third_party,
           profile: token.profile,
-        } as any;
-        session.accessToken = token.accessToken as string;
-        (session as any).tokenType = (token as any).tokenType;
+        } as any
+        session.accessToken = token.accessToken as string
+          ; (session as any).tokenType = (token as any).tokenType
       }
-      return session;
+      return session
     },
   },
   pages: { signIn: "/signin", error: "/signin" },
   secret: process.env.NEXTAUTH_SECRET,
-};
+}
