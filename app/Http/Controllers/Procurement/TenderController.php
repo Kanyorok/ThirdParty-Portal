@@ -1878,7 +1878,7 @@ class TenderController extends Controller
                 }
             }
 
-        
+
 
             // Fetch additional workflow details
             $approvalType = 'N/A';

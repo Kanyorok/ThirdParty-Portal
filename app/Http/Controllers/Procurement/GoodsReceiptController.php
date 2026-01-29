@@ -111,7 +111,7 @@ class GoodsReceiptController extends Controller
         }
 
         $Orders = $filteredOrders;
-        
+
 
         // Fetch all active stores
         $stores = DB::connection('sqlsrv')->table('t_Stores')->select('Id', 'StoreName')->get();

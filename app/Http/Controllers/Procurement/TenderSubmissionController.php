@@ -19,7 +19,6 @@ class TenderSubmissionController extends Controller
             'submissionMode',
             'createdByUser',
             'supplier.supplierMaster.party',
-            'tender',
         ])
             ->orderBy('CreatedOn', 'desc')
             ->get();
@@ -46,41 +45,7 @@ class TenderSubmissionController extends Controller
             ->where('CodeID', 'SubmissionMode')
             ->get(['ID', 'Description']);
 
-        $currencies = \App\Models\Core\Currency::all();
-
-        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes', 'currencies'));
-    }
-
-    public function getInvitedSuppliers($tenderId)
-    {
-        $tender = Tender::where('TenderNo', $tenderId)->firstOrFail();
-
-        if ($tender->TenderType === \App\Enums\TenderTypeEnum::Open) { // Public Tender
-            // List all approved and prequalified suppliers
-            $suppliers = Supplier::where('Active_Status', 1)
-               ->with('supplierMaster.thirdParty')
-               ->get()
-               ->map(function ($supplier) {
-                   return [
-                       'Id' => $supplier->Id,
-                       'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName
-                           ?? $supplier->supplierMaster->thirdParty->ThirdPartyName,
-                   ];
-               })
-               ->unique('SupplierName')
-               ->values();
-        } else {
-            // Restricted Tender - load active invitations
-            $suppliers = $tender->invitedSuppliers->map(function ($supplier) {
-                return [
-                    'Id' => $supplier->Id,
-                    'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName
-                        ?? $supplier->supplierMaster->thirdParty->ThirdPartyName,
-                ];
-            });
-        }
-
-        return response()->json($suppliers);
+        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes'));
     }
 
     public function view($Id)

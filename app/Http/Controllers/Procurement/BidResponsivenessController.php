@@ -60,7 +60,7 @@ class BidResponsivenessController extends Controller
         $this->authorize(PermissionEnum::BidSubmissionRead);
 
         $submission = BidSubmission::with([
-            'supplier.supplierMaster.thirdParty.users', // Correct path to ThirdParty details and Users
+            'supplier.thirdParty',
             'tender',
             'openedByUser',
             'responsivenessCheckedByUser',
@@ -120,13 +120,13 @@ class BidResponsivenessController extends Controller
         $supplierDetails = [
             'supplier_name' => $submission->SupplierName,
             'supplier_id' => $submission->SupplierId,
-            'third_party_name' => $thirdParty->ThirdPartyName ?? 'N/A',
-            'trading_name' => $thirdParty->TradingName ?? 'N/A',
-            'registration_number' => $thirdParty->RegistrationNumber ?? 'N/A',
-            'contact_person' => $primaryUser?->fullName ?? 'N/A',
-            'email' => $primaryUser?->Email ?? ($thirdParty->Email ?? 'N/A'),
-            'phone' => $primaryUser?->Phone ?? ($thirdParty->Phone ?? 'N/A'),
-            'address' => $thirdParty->PhysicalAddress ?? 'N/A',
+            'third_party_name' => $submission->supplier->thirdParty->ThirdPartyName ?? 'N/A',
+            'trading_name' => $submission->supplier->thirdParty->TradingName ?? 'N/A',
+            'registration_number' => $submission->supplier->thirdParty->RegistrationNumber ?? 'N/A',
+            'contact_person' => $submission->supplier->thirdParty->ContactPerson ?? 'N/A',
+            'email' => $submission->supplier->thirdParty->EmailAddress ?? 'N/A',
+            'phone' => $submission->supplier->thirdParty->PhoneNumber ?? 'N/A',
+            'address' => $submission->supplier->thirdParty->PhysicalAddress ?? 'N/A',
         ];
 
         // Get responsiveness summary

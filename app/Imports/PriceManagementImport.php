@@ -23,13 +23,13 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
         $actualPrice = $data['actualprice'] ?? $data['price'] ?? null;
 
         if (empty($itemCode) || empty($actualPrice)) {
-            
+
             return;
         }
 
         $item = ItemMasterList::where('ItemCode', $itemCode)->first();
-        if (!$item) {
-           
+        if (! $item) {
+
             return;
         }
 

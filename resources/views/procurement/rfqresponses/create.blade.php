@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <select name="Currency" class="form-control" required>
                                         <option value="">-- Select Currency --</option>
                                         @foreach($currencies as $curr)
-                        <option value="{{ $curr->Code }}" {{ $curr->Symbol === 'Ksh' ? 'selected' : '' }}>
+                        <option value="{{ $curr->Code }}" {{ $curr->Symbol=== 'Ksh' ? 'selected' : '' }}>
                                                 {{ $curr->Name }} ({{ $curr->Symbol }})
                         </option>
 @endforeach

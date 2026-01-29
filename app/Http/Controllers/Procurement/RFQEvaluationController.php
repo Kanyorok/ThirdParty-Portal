@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use App\Enums\RFQAwardStatusEnum;
+use App\Enums\EmailPriorityEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQCommitteeMember;
@@ -10,7 +10,7 @@ use App\Models\Procurement\RFQCriteria;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\RFQSupplierResponseEvaluation;
-use App\Services\Workflow\ApprovalWorkflow;
+use App\Services\CRMEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -397,25 +397,59 @@ class RFQEvaluationController extends Controller
 
         // Initialize workflow for RFQ Award
         try {
-            $workflow = new ApprovalWorkflow('rfq_award', 'AwardStatus');
-            $workflow->submit($award, auth()->user(), RFQAwardStatusEnum::SUBMITTED);
+            $payload = [
+                'rfqId' => (int)$rfqId,
+                'supplierId' => (int)$supplierId,
+                'status' => 'Awarded',
+                'awardedOn' => now()->toISOString(),
+                'comments' => $request->input('Comments'),
+            ];
 
-            // Update status to Submitted
-            $award->update([
-                'AwardStatus' => \App\Models\Procurement\RFQAward::STATUS_SUBMITTED,
-            ]);
+            $endpoint = config('services.procurement_supplier_portal.endpoint', 'http://localhost:3000/api/procurement/rfq-suppliers');
+            $apiKey = config('services.procurement_supplier_portal.key');
 
-            Log::info('RFQ Award submitted for approval', [
-                'rfqId' => $rfqId,
-                'supplierId' => $supplierId,
-                'awardId' => $award->Id,
-                'status' => $award->AwardStatus,
-            ]);
-        } catch (\Exception $e) {
-            Log::error("Failed to submit RFQ Award to workflow: " . $e->getMessage());
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'X-API-Key' => $apiKey,
+            ])->post($endpoint, $payload);
 
-            // We don't rollback the award creation, but we should alert
-            return back()->with('warning', 'Award created but workflow submission failed. Please contact support.');
+            if (! $response->successful()) {
+                \Log::warning('Supplier award notify failed', ['rfqId' => $rfqId, 'supplierId' => $supplierId, 'status' => $response->status(), 'body' => $response->body()]);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Supplier award notify exception', ['rfqId' => $rfqId, 'supplierId' => $supplierId, 'error' => $e->getMessage()]);
+        }
+
+        // Send award email to supplier (if email available)
+        try {
+            $responseRecord = \App\Models\Procurement\RFQResponse::where('RFQId', $rfqId)->where('SupplierId', $supplierId)->with('supplier.thirdParty')->first();
+            $recipientEmail = null;
+            $recipientName = null;
+            if ($responseRecord && $responseRecord->supplier && $responseRecord->supplier->thirdParty) {
+                $tp = $responseRecord->supplier->thirdParty;
+                $recipientEmail = $tp->Email ?? null;
+                $recipientName = $tp->ThirdPartyName ?? $tp->TradingName ?? null;
+            }
+
+            if ($recipientEmail && filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
+                $actor = auth()->user();
+                $subject = "Award Notification: RFQ #{$rfqId} - {$award->Id}";
+                $body = "<p>Dear " . ($recipientName ?? 'Supplier') . ",</p>";
+                $body .= "<p>We are pleased to inform you that you have been awarded for RFQ <strong>" . ($award->RFQId ?? $rfqId) . "</strong>.</p>";
+                $body .= "<p>Comments: " . e($request->input('Comments') ?? '') . "</p>";
+                $body .= "<p>Please log in to the supplier portal for details.</p>";
+                $body .= "<p>Regards,<br>" . e(config('org.name')) . "</p>";
+
+                // Prepare to/to array format expected by createRaw: [ [ 'Name' => 'email' ] ]
+                $to = [[ $recipientName ?? $recipientEmail => $recipientEmail ]];
+
+                CRMEmailService::createRaw($actor, $subject, $body, $to, 'ThirdParty', (string)($responseRecord->supplier->thirdParty->Id ?? ''), [], [], EmailPriorityEnum::Normal)->send(true);
+            } else {
+                Log::warning('Award email not sent: no valid email for supplier', ['rfqId' => $rfqId, 'supplierId' => $supplierId]);
+            }
+        } catch (\Throwable $ex) {
+            Log::error('Error sending award email', ['error' => $ex->getMessage(), 'rfqId' => $rfqId, 'supplierId' => $supplierId]);
         }
 
         return back()->with('success', 'Award submitted for approval. The award will be finalized once approved.');
@@ -432,10 +466,7 @@ class RFQEvaluationController extends Controller
             'sections.section.criteria',
             'rfqResponses.supplier',
             'committeeMembers.user.employee',
-        ])
-        ->whereHas('rfqResponses')
-        ->whereNotIn('Id', $awardedRfqIds)
-        ->get();
+        ])->whereHas('rfqResponses')->get();
 
         $currencies = config('app.currencies');
 

@@ -89,18 +89,14 @@ class LoginRequest extends FormRequest
                 'BranchId' => $branchRole['branch']->Id,
             ])->save();
 
-    
+
 
             //new session
             Auth::guard('web')->login($user, $branchRole['role']->hasPermissionTo(PermissionEnum::UsersSessions));
-            
-          
-            // DISABLED: session()->regenerate() changes session ID
-            // Apache in production doesn't send Set-Cookie header in AJAX responses
-            // So browser keeps old session ID, causing authentication to fail
-            // Security note: Auth::login() already migrates session for security
-            // $this->session()->regenerate();
-    
+
+
+
+
 
             // CRITICAL: Generate session_token for EnsureSingleActiveSession middleware
             // This middleware was added on Sept 23, 2025 but login was never updated
@@ -125,14 +121,14 @@ class LoginRequest extends FormRequest
 
             // Force save session to DB immediately
             $this->session()->save();
-            
+
             // Debug: Check DB immediately after save
             $dbSession = DB::table(config('session.table', 't_SYSSessions'))
                 ->where('id', session()->getId())
                 ->first();
-          
-        
-            
+
+
+
             return;
         }
 

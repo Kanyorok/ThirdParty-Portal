@@ -149,8 +149,8 @@ class PrequalificationEvaluationController extends Controller
             foreach ($passedApps as $app) {
                 // Resolve ThirdPartyId from SupplierMaster (supplier relationship)
                 $thirdPartyId = $app->supplier?->ThirdPartyId;
-                
-            
+
+
                 // Create category-specific prequalification record
                 DB::table('t_PrequalificationRoundSupplierCategory')->updateOrInsert(
                     [

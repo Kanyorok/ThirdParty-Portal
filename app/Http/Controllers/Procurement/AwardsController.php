@@ -725,7 +725,7 @@ class AwardsController extends Controller
                 $award->approve($user, $remarks);
             }
 
-            // --- Notifications ---
+
 
 
             $creator = \App\Models\Auth\User::find($award->CreatedBy);
