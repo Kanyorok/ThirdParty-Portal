@@ -273,7 +273,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <li class="list-group-item"><strong>Item Name:</strong> ${data.ItemName || 'N/A'}</li>
                         <li class="list-group-item"><strong>Branch:</strong> ${data.BranchName || 'N/A'}</li>
                         <li class="list-group-item"><strong>Department:</strong> ${data.DepartmentName || 'N/A'}</li>
-                        <li class="list-group-item"><strong>Created By:</strong> ${data.CreatedBy || 'N/A'}</li>
+                        <li class="list-group-item"><strong>Requested By:</strong> ${data.CreatedBy || 'N/A'}</li>
                         <li class="list-group-item"><strong>Quantity:</strong> ${data.RequestedQty || 0}</li>
                         <li class="list-group-item"><strong>Est. Total Cost:</strong> KES ${data.EstimatedCost || '0.00'}</li>
                         <li class="list-group-item"><strong>Expected Delivery:</strong> ${formattedDate}</li>
