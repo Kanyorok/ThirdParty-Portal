@@ -66,16 +66,25 @@ class InterBranchRequisitionService
             InterBranchRequisitionItem::create($item);
         }
 
-            //create workflow instance and submit for approval
-            $requisitionflow = new ApprovalWorkflow('InterBranchRequisitionStatus',  'Status' );
-            $requisitionflow->submit(
-                $requisition,
-                $user = Auth::user(),
-                InterBranchRequisitionEnum::Pending,
-                'Interbranch Requisition Submitted for Approval'
-            );
 
- 
+            try {
+                $requisitionflow = new ApprovalWorkflow('InterBranchRequisitionStatus', 'Status');
+                $requisitionflow->submit(
+                    $requisition,
+                    $user = Auth::user(),
+                    InterBranchRequisitionEnum::Pending,
+                    'Interbranch Requisition Submitted for Approval'
+                );
+            } catch (\Exception $e) {
+                // Delete the requisition and items if workflow submission fails
+                $requisition->items()->delete();
+                $requisition->forceDelete();
+                
+                // Throw a validation exception that will be caught by the controller
+                throw ValidationException::withMessages([
+                    'workflow' => 'Workflow configuration is missing. Please configure the approval workflow for Inter-Branch Requisitions before creating requisitions. Contact your system administrator.'
+                ]);
+            }
 
         activity()
             ->performedOn($requisition)

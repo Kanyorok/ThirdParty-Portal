@@ -12,6 +12,7 @@ use App\Models\Inventory\StockItem;
 use App\Services\Inventory\StockAdjustmentService;
 use Illuminate\Http\Request;  
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class TransactionAdjustmentController extends Controller
 {
@@ -60,15 +61,23 @@ class TransactionAdjustmentController extends Controller
 
         $currentUser = $request->user();
     
-    return view('inventory.transactions.adjustments.create', compact('branch', 'users', 'reasons', 'stockItems', 'currentUser'));
+        return view('inventory.transactions.adjustments.create', compact('branch', 'users', 'reasons', 'stockItems', 'currentUser'));
     }
 
     public function store(StockAdjustmentRequest $request)
     {
         $this->authorize('create', StockAdjustment::class);
-        $this->service->create($request->validated());
-
-        return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment recorded.');
+        
+        try {
+            $this->service->create($request->validated());
+            return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment recorded.');
+        } catch (ValidationException $e) {
+            // Workflow configuration error - return to create page with error
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            // Other errors
+            return back()->withErrors(['error' => 'Failed to create stock adjustment: ' . $e->getMessage()])->withInput();
+        }
     }
 
     public function getBranchStock($branchId)
@@ -80,14 +89,14 @@ class TransactionAdjustmentController extends Controller
         return response()->json($stockItems);
     }
 
-        public function approve(StockAdjustment $stockAdjustment, Request $request)  // Add Request for comments
-        {
-            $this->authorize('approve', $stockAdjustment);
-            $comments = $request->input('comments');
-            $this->service->approve($stockAdjustment->Id, $comments);
+    public function approve(StockAdjustment $stockAdjustment, Request $request)
+    {
+        $this->authorize('approve', $stockAdjustment);
+        $comments = $request->input('comments');
+        $this->service->approve($stockAdjustment->Id, $comments);
 
-            return redirect()->back()->with('success', 'Stock adjustment approved.');
-        }
+        return redirect()->back()->with('success', 'Stock adjustment approved.');
+    }
 
     public function edit(StockAdjustment $stockAdjustment)
     {
@@ -151,7 +160,7 @@ class TransactionAdjustmentController extends Controller
         return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment deleted.');
     }
 
-    public function reject(StockAdjustment $stockAdjustment, Request $request)  // Add Request for comments
+    public function reject(StockAdjustment $stockAdjustment, Request $request)
     {
         $this->authorize('approve', $stockAdjustment);
         $comments = $request->input('comments');
