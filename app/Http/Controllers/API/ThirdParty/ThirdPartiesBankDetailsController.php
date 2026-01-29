@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\API\ThirdParty;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
-use App\Models\ThirdParty\ThirdPartiesBankDetails;
 use App\Http\Requests\ThirdPartyAuth\StoreBankDetailsRequest;
 use App\Http\Requests\ThirdPartyAuth\UpdateBankDetailsRequest;
-use Illuminate\Http\Response;
 use App\Http\Resources\ThirdParty\ThirdPartyBankDetailCollection;
 use App\Http\Resources\ThirdParty\ThirdPartyBankDetailResource;
+use App\Models\ThirdParty\ThirdPartiesBankDetails;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 
 class ThirdPartiesBankDetailsController extends Controller
 {
@@ -18,7 +18,7 @@ class ThirdPartiesBankDetailsController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user || !$user->thirdParty) {
+        if (! $user || ! $user->thirdParty) {
             abort(Response::HTTP_UNAUTHORIZED, 'Not authorized to view bank details.');
         }
 
@@ -44,7 +44,7 @@ class ThirdPartiesBankDetailsController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user || !$user->thirdParty || $user->thirdParty->Id !== $thirdPartiesBankDetail->ThirdPartyId) {
+        if (! $user || ! $user->thirdParty || $user->thirdParty->Id !== $thirdPartiesBankDetail->ThirdPartyId) {
             abort(Response::HTTP_FORBIDDEN, 'You are not authorized to view this bank detail.');
         }
 
@@ -67,7 +67,7 @@ class ThirdPartiesBankDetailsController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user || !$user->thirdParty || $user->thirdParty->Id !== $thirdPartiesBankDetail->ThirdPartyId) {
+        if (! $user || ! $user->thirdParty || $user->thirdParty->Id !== $thirdPartiesBankDetail->ThirdPartyId) {
             abort(Response::HTTP_FORBIDDEN, 'You are not authorized to delete this bank detail.');
         }
 

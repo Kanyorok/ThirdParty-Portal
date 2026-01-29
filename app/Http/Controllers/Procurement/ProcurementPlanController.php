@@ -2,30 +2,25 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use App\Http\Controllers\Controller;
-use App\Models\Procurement\ProcurementPlan;
-use App\Models\Procurement\ProcurementPeriod;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Inventory\ItemMasterList;
-use Illuminate\Http\Request;
 use App\enums\ProcurementPlanStatusEnum;
+use App\Http\Controllers\Controller;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Procurement\ProcurementPeriod;
+use App\Models\Procurement\ProcurementPlan;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProcurementPlanController extends Controller
 {
-    // public function index()
-    // {
-    //     $procurementPlans = ProcurementPlan::with(['item', 'procurementPeriod'])->get();
-    //     return view('procurement.procurement_plans.index', compact('procurementPlans'));
-    // }
-
     public function create(ProcurementPeriod $procurementPeriod)
     {
         $this->authorize('create', ProcurementPlan::class);
         $items = ItemMasterList::orderBy('ItemName')->get();
+
         return view('procurement.procurement_plans.create', [
             'availableItems' => $items,
-            'period' =>  $procurementPeriod,
-        ]); 
+            'period' => $procurementPeriod,
+        ]);
     }
 
     public function store(Request $request, ProcurementPeriod $procurementPeriod) // Route Model Binding
@@ -57,6 +52,7 @@ class ProcurementPlanController extends Controller
             'CreatedBy' => Auth::id(),
             'ModifiedBy' => Auth::id(),
         ]);
+
         return redirect()->route('procurement-periods.show', $procurementPeriod->Id)
             ->with('success', 'Procurement plan item added successfully.');
     }

@@ -37,9 +37,8 @@ class MarketingFilterService
                 if ($this->_filter->Operator->value === ComparisonOperatorsEnum::Between->value) {
                     return $query->lock('WITH(NOLOCK)')->whereBetween($this->_filter->FieldName, $this->listFilter->FilterValues, $this->listFilter->After);
                 }
-                //if ($this->_filter->Operator->isBasic()) {
+
                 return $query->lock('WITH(NOLOCK)')->where($this->_filter->FieldName, $this->_filter->Operator->symbol(), $this->listFilter->FilterValue, $this->listFilter->After);
-                // }
             });
         }
 
@@ -59,7 +58,6 @@ class MarketingFilterService
     {
         return self::sources($this->_filter);
     }
-
 
     public static function sources(SysFilter $filter): Collection
     {
@@ -84,6 +82,7 @@ class MarketingFilterService
                 return true;
             }
         }
+
         return false;
     }
 
@@ -95,6 +94,7 @@ class MarketingFilterService
                 return $source->name;
             }
         }
+
         return $value;
     }
 }

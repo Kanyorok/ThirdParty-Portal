@@ -4,12 +4,12 @@ namespace App\Services\ThirdParties;
 
 use App\Exceptions\ErroredException;
 use App\Models\Auth\User;
-use App\Models\ThirdParty\ThirdPartyUser;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\Insurance\BancAssuranceReferral;
-use App\Models\ThirdParty\ThirdPartyType;
 use App\Models\ThirdParty\ThirdParties;
+use App\Models\ThirdParty\ThirdPartyType;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\Insurance\BancassuranceCustomersService;
 use DateTime;
 use RuntimeException;

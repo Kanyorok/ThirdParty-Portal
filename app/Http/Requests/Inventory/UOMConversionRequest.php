@@ -29,7 +29,7 @@ class UOMConversionRequest extends FormRequest
             'ConversionFactor' => 'required|numeric|min:0',
             'Remarks' => 'nullable|string|max:500',
 
-            //
+
         ];
     }
 }

@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\HRM;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\HRM\Employee;
-use App\Models\Auth\User;
 use App\Models\HRM\Committee;
-use App\Models\HRM\EmployeeInternalCommittee;
+use App\Models\HRM\Employee;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -75,6 +73,4 @@ class EmployeeInternalCommitteeController extends Controller
 
         return back()->with('success', 'Employee removed from committee.');
     }
-
-
 }

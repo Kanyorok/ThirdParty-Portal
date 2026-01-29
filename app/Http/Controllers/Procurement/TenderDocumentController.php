@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
@@ -14,7 +15,7 @@ class TenderDocumentController extends Controller
         $documents = TenderDocument::where('TenderID', $tenderId)
             ->with(['creator', 'modifier'])
             ->get();
-            
+
         return response()->json($documents);
     }
 
@@ -22,7 +23,7 @@ class TenderDocumentController extends Controller
     {
         $request->validate([
             'file' => 'required|file|max:10240', // 10MB max
-            'description' => 'nullable|string|max:255'
+            'description' => 'nullable|string|max:255',
         ]);
 
         $file = $request->file('file');
@@ -45,7 +46,7 @@ class TenderDocumentController extends Controller
             ->where('TenderDocumentID', $documentId)
             ->with(['creator', 'modifier', 'deleter'])
             ->firstOrFail();
-            
+
         return response()->json($document);
     }
 
@@ -53,7 +54,7 @@ class TenderDocumentController extends Controller
     {
         $document = TenderDocument::where('TenderID', $tenderId)
             ->findOrFail($documentId);
-            
+
         return Storage::download($document->FilePath, $document->originalFilename);
     }
 
@@ -61,14 +62,14 @@ class TenderDocumentController extends Controller
     {
         $document = TenderDocument::where('TenderID', $tenderId)
             ->findOrFail($documentId);
-            
+
         Storage::delete($document->FilePath);
-        
+
         $document->update([
             'DeletedBy' => Auth::id(),
             'DeletedOn' => now(),
         ]);
-        
+
         return response()->json(null, 204);
     }
 }

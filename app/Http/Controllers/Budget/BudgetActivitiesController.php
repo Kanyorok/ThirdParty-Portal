@@ -18,7 +18,6 @@ use Throwable;
 
 class BudgetActivitiesController extends Controller
 {
-    //
     public function index()
     {
         $this->authorize(PermissionEnum::BudgetActivityView, BudgetActivity::class);
@@ -33,7 +32,7 @@ class BudgetActivitiesController extends Controller
         $grouped = $activities->groupBy('BudgetID');
 
         return view('budgetandanalytics.budgetactivities.index', [
-            'groupedActivities' => $grouped
+            'groupedActivities' => $grouped,
         ]);
     }
 
@@ -57,13 +56,13 @@ class BudgetActivitiesController extends Controller
         ));
     }
 
-
     public function store(Request $request)
     {
         //Check for permission
         $this->authorize(PermissionEnum::BudgetActivityCreate, BudgetActivity::class);
         // Validate request
-        $validated = $request->validate([
+        $validated = $request->validate(
+            [
             'BudgetID' => 'required|exists:t_Budgets,Id',
             'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
             'ActivityID' => 'required|exists:t_BudgetActivityMaster,Id',
@@ -73,7 +72,7 @@ class BudgetActivitiesController extends Controller
             'FullAllocation' => 'nullable|numeric|min:0',
             'monthly_allocations' => 'nullable|array',
             'monthly_allocations.*' => 'nullable|numeric|min:0',
-        ],
+            ],
             [
                 'ActivityID.required' => 'Please select an activity from the list.',
                 'BudgetID.required' => 'Please select a budget from the list.',
@@ -82,7 +81,8 @@ class BudgetActivitiesController extends Controller
                 'AllocationType.required' => 'Please select an allocation type.',
                 'monthly_allocations.*.numeric' => 'Monthly allocation must be a number.',
                 'monthly_allocations.*.min' => 'Monthly allocation must be greater than 0.',
-        ]);
+            ]
+        );
 
         try {
             DB::beginTransaction();
@@ -92,7 +92,7 @@ class BudgetActivitiesController extends Controller
 
             // Calculate full allocation from monthly if applicable
             $fullAllocation = 0;
-            if ($validated['AllocationType'] === 'monthly' && !empty($validated['monthly_allocations'])) {
+            if ($validated['AllocationType'] === 'monthly' && ! empty($validated['monthly_allocations'])) {
                 $fullAllocation = collect($validated['monthly_allocations'])->sum(function ($value) {
                     return is_numeric($value) ? floatval($value) : 0;
                 });
@@ -116,7 +116,7 @@ class BudgetActivitiesController extends Controller
             ]);
 
             // Handle Monthly Allocations (store all months, even 0.00)
-            if ($validated['AllocationType'] === 'monthly' && !empty($validated['monthly_allocations'])) {
+            if ($validated['AllocationType'] === 'monthly' && ! empty($validated['monthly_allocations'])) {
                 foreach ($validated['monthly_allocations'] as $month => $amount) {
                     BudgetMonthlyAllocation::create([
                         'BudgetActivityID' => $activity->Id,
@@ -136,27 +136,31 @@ class BudgetActivitiesController extends Controller
                 ->withProperties(['action' => 'create'])
                 ->log('Created a budget activity');
             DB::commit();
+
             return redirect()->route('budgetactivities.index')->with('success', 'Budget Activity created successfully.');
         } catch (Throwable $th) {
             DB::rollBack();
+
             return $th->getMessage();
             Log::error('Failed to store budget activity.', [
                 'error' => $th->getMessage(),
-                'stack' => $th->getTraceAsString()
+                'stack' => $th->getTraceAsString(),
             ]);
 
             return back()->with('error', 'An error occurred while creating the budget activity. Please try again.');
         }
     }
 
-
     public function fetchActivities(Request $request)
     {
         $budgetLineId = $request->query('budget_line_id');
-        if (!$budgetLineId) return response()->json(['error' => 'Missing budget_line_id'], 400);
+        if (! $budgetLineId) {
+            return response()->json(['error' => 'Missing budget_line_id'], 400);
+        }
         $activities = BudgetActivityMaster::where('BudgetLineID', $budgetLineId)
             ->select('Id', 'ActivityName')
             ->get();
+
         return response()->json($activities);
     }
 
@@ -172,6 +176,7 @@ class BudgetActivitiesController extends Controller
             'allocations'])
             ->where('BudgetID', $budgetId)
             ->get();
+
         return view('budgetandanalytics.budgetactivities.show', compact('budget', 'activities'));
     }
 
@@ -185,6 +190,7 @@ class BudgetActivitiesController extends Controller
         $budgets = Budget::all();
         $budgetName = Budget::find($activity->BudgetID)->Name;
         $monthlyAllocations = $activity->allocations->keyBy('Month');
+
         return view('budgetandanalytics.budgetactivities.edit', compact(
             'activity',
             'budgetLines',
@@ -209,6 +215,7 @@ class BudgetActivitiesController extends Controller
             'monthly_allocations' => 'nullable|array',
             'monthly_allocations.*' => 'nullable|numeric|min:0',
         ]);
+
         try {
             DB::beginTransaction();
             $userId = Auth::id();
@@ -217,7 +224,7 @@ class BudgetActivitiesController extends Controller
             $budgetId = $activity->BudgetID;
             // Calculate full allocation from monthly if applicable
             $fullAllocation = 0;
-            if ($validated['AllocationType'] === 'monthly' && !empty($validated['monthly_allocations'])) {
+            if ($validated['AllocationType'] === 'monthly' && ! empty($validated['monthly_allocations'])) {
                 $fullAllocation = collect($validated['monthly_allocations'])->sum(function ($value) {
                     return is_numeric($value) ? floatval($value) : 0;
                 });
@@ -239,7 +246,7 @@ class BudgetActivitiesController extends Controller
             ]);
             // Handle Monthly Allocations
             $activity->allocations()->delete();
-            if ($validated['AllocationType'] === 'monthly' && !empty($validated['monthly_allocations'])) {
+            if ($validated['AllocationType'] === 'monthly' && ! empty($validated['monthly_allocations'])) {
                 foreach ($validated['monthly_allocations'] as $month => $amount) {
                     BudgetMonthlyAllocation::create([
                         'BudgetActivityID' => $activity->Id,
@@ -259,13 +266,15 @@ class BudgetActivitiesController extends Controller
                 ->withProperties(['action' => 'update'])
                 ->log('Updated a budget activity');
             DB::commit();
+
             return redirect()->route('budgetactivities.show', $budgetId)->with('success', 'Budget Activity updated successfully.');
         } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to update budget activity.', [
                 'error' => $th->getMessage(),
-                'stack' => $th->getTraceAsString()
+                'stack' => $th->getTraceAsString(),
             ]);
+
             return back()->with('error', 'An error occurred while updating the budget activity. Please try again.');
         }
     }
@@ -273,18 +282,12 @@ class BudgetActivitiesController extends Controller
     public function destroy($id)
     {
         $this->authorize(PermissionEnum::BudgetActivityDelete, BudgetActivity::class);
+
         try {
             DB::beginTransaction();
             $activity = BudgetActivity::findOrFail($id);
             $activityId = $activity->BudgetActivityID;
-            // $activity->allocations()->delete();
-            // $allocations = BudgetMonthlyAllocation::where('BudgetActivityID', $activityId)->get();
 
-            // foreach($allocations as $allocation ){
-            //     $allocations->DeletedBy = Auth::Id();
-            //     $allocation->save();
-            //     $allocation->delete();
-            // }
             $activity->DeletedBy = Auth::Id();
             $activity->save();
             $activity->delete();
@@ -294,13 +297,15 @@ class BudgetActivitiesController extends Controller
                 ->withProperties(['action' => 'delete'])
                 ->log('Deleted a budget activity');
             DB::commit();
+
             return back()->with('success', 'Budget Activity deleted successfully.');
         } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to delete budget activity.', [
                 'error' => $th->getMessage(),
-                'stack' => $th->getTraceAsString()
+                'stack' => $th->getTraceAsString(),
             ]);
+
             return back()->with('error', 'An error occurred while deleting the budget activity. Please try again.');
         }
     }

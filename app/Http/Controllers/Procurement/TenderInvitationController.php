@@ -3,17 +3,15 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Models\Procurement\TenderInvitation;
 use App\Models\Procurement\Tender;
-use App\Models\ThirdParies\ThirdParty;
+use App\Models\Procurement\TenderInvitation;
 use App\Models\ThirdParies\Supplier;
-use Illuminate\Http\Request;
+use App\Models\ThirdParies\ThirdParty;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\App;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Log;
 
 class TenderInvitationController extends Controller
 {
@@ -33,7 +31,6 @@ class TenderInvitationController extends Controller
     public function storeResponse(Request $request)
     {
         // Public/Supplier facing usually, but if internal:
-        // $this->authorize('create', TenderInvitation::class);
         // Assuming this is used by the system or suppliers, we might need a specific permission or leave open if it's a public endpoint protected by other means?
         // Checking controller logic, it seems mixed. For now, let's secure it.
         $this->authorize('create', TenderInvitation::class);
@@ -62,6 +59,7 @@ class TenderInvitationController extends Controller
             'CreatedBy' => $request->user()->Id,
             'ModifiedBy' => $request->user()->Id,
         ]);
+
         return redirect()->back()->with('success', 'Your response has been recorded.');
     }
 
@@ -76,7 +74,7 @@ class TenderInvitationController extends Controller
         try {
             $page = (int)$request->query('page', 1);
             $limit = (int)$request->query('limit', 10);
-            
+
             // Get authenticated user via Sanctum
             $user = Auth::guard('sanctum')->user();
 
@@ -91,13 +89,13 @@ class TenderInvitationController extends Controller
                 $thirdPartyId = $request->query('third_party_id');
             }
 
-            if (!$thirdPartyId) {
+            if (! $thirdPartyId) {
                 return response()->json([
                     'error' => 'Unable to determine Third Party ID. Please ensure you are authenticated.',
                     'debug' => [
                         'user_type' => $user ? get_class($user) : 'No user',
                         'user_id' => $user ? $user->Id : null,
-                    ]
+                    ],
                 ], 400);
             }
 
@@ -119,7 +117,7 @@ class TenderInvitationController extends Controller
                     'supplierInfo' => [
                         'supplierId' => null,
                         'thirdPartyId' => (int)$thirdPartyId,
-                    ]
+                    ],
                 ]);
             }
 
@@ -140,16 +138,16 @@ class TenderInvitationController extends Controller
             } catch (\Exception $e) {
                 Log::error('Error querying invitations', [
                     'supplier_ids' => $supplierIds->values()->all(),
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
 
                 return response()->json([
-                    'message' => 'Failed to fetch invitations. Please try again later.'
+                    'message' => 'Failed to fetch invitations. Please try again later.',
                 ], 500);
             }
 
             // Initialize empty collection if no invitations found
-            if (!isset($invitations)) {
+            if (! isset($invitations)) {
                 $invitations = collect([]);
             }
 
@@ -159,7 +157,6 @@ class TenderInvitationController extends Controller
 
                 // Safely access tender relationship
                 if ($invitation->tender) {
-
                     // Calculate estimated cost dynamically from items to match backend view logic
                     $calculatedEstimatedValue = $invitation->tender->items->sum(function ($item) {
                         return ($item->QtyToTender ?? 0) * ($item->item?->price?->ActualPrice ?? 0);
@@ -183,10 +180,10 @@ class TenderInvitationController extends Controller
                         'estimatedValue' => $finalEstimatedValue,
                         'currency' => $invitation->tender->currency ? [
                             'code' => $invitation->tender->currency->Code,
-                            'symbol' => $invitation->tender->currency->Symbol
+                            'symbol' => $invitation->tender->currency->Symbol,
                         ] : null,
                         'tenderCategoryRelation' => $invitation->tender->tenderCategoryRelation ? [
-                            'tenderCategory' => $invitation->tender->tenderCategoryRelation->TenderCategory
+                            'tenderCategory' => $invitation->tender->tenderCategoryRelation->TenderCategory,
                         ] : null,
                         'documents' => $invitation->tender->documents ? $invitation->tender->documents->map(function ($doc) {
                             return [
@@ -236,16 +233,16 @@ class TenderInvitationController extends Controller
                 'supplierInfo' => [
                     'supplierIds' => $supplierIds->values()->all(),
                     'thirdPartyId' => (int)$thirdPartyId,
-                ]
+                ],
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching tender invitations', [
                 'error' => $e->getMessage(),
-                'third_party_id' => $request->query('third_party_id')
+                'third_party_id' => $request->query('third_party_id'),
             ]);
 
             return response()->json([
-                'message' => 'An unexpected error occurred. Please try again later.'
+                'message' => 'An unexpected error occurred. Please try again later.',
             ], 500);
         }
     }
@@ -256,7 +253,7 @@ class TenderInvitationController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        
+
         try {
             $validated = $request->validate([
                 'responseStatus' => 'required|in:accepted,declined,pending',
@@ -271,25 +268,25 @@ class TenderInvitationController extends Controller
             } catch (\Exception $readEx) {
                 return response()->json([
                     'error' => 'Database read failed',
-                    'message' => $readEx->getMessage()
+                    'message' => $readEx->getMessage(),
                 ], 500);
             }
 
-            if (!$invitation) {
+            if (! $invitation) {
                 return response()->json([
-                    'error' => 'Invitation not found'
+                    'error' => 'Invitation not found',
                 ], 404);
             }
 
             try {
                 $currentUser = Auth::guard('sanctum')->user();
-                
-                if (!$currentUser) {
+
+                if (! $currentUser) {
                     $currentUser = Auth::user();
                 }
 
-                if (!$currentUser) {
-                     return response()->json(['error' => 'Unauthenticated'], 401);
+                if (! $currentUser) {
+                    return response()->json(['error' => 'Unauthenticated'], 401);
                 }
 
                 $userId = $currentUser->getAuthIdentifier();
@@ -298,7 +295,7 @@ class TenderInvitationController extends Controller
 
                 // FK Fix: Use System Admin (1) for ThirdParty users
                 if ($isThirdParty) {
-                    $userId = 1; 
+                    $userId = 1;
                 }
 
                 if (empty($userId)) {
@@ -309,15 +306,14 @@ class TenderInvitationController extends Controller
                     'update t_TenderInvitations set ResponseStatus = ?, ResponseDate = ?, ModifiedBy = ? where InvitationID = ?',
                     [
                         ucfirst($validated['responseStatus']),
-                        now(), 
-                        $userId, 
-                        $id
+                        now(),
+                        $userId,
+                        $id,
                     ]
                 );
-                
+
                 $invitation->ResponseStatus = ucfirst($validated['responseStatus']);
                 $invitation->ResponseDate = now();
-                // $invitation->save(); // We used direct DB update above to bypass model issues
 
 
                 // Harmonize with storeResponse: Use PascalCase for status
@@ -325,7 +321,7 @@ class TenderInvitationController extends Controller
                     'accepted' => 'Accepted',
                     'declined' => 'Declined',
                     'pending' => 'Pending',
-                    'submitted' => 'Submitted'
+                    'submitted' => 'Submitted',
                 ];
                 $cleanStatus = strtolower($validated['responseStatus']);
                 $dbStatus = $statusMap[$cleanStatus] ?? ucfirst($cleanStatus);
@@ -335,13 +331,13 @@ class TenderInvitationController extends Controller
                     'ResponseDate' => now(),
                     // Don't set ModifiedBy for supplier portal responses to avoid FK constraint issues
                     // ModifiedBy references t_Users, but Auth::user() is ThirdPartyUser
-                    'ModifiedBy' => 1
+                    'ModifiedBy' => 1,
                 ];
 
                 // Add decline reason only if provided and we're declining
                 if (
                     $cleanStatus === 'declined' &&
-                    !empty($validated['declineReason'])
+                    ! empty($validated['declineReason'])
                 ) {
                     $updateData['DeclineReason'] = $validated['declineReason'];
                 }
@@ -352,12 +348,13 @@ class TenderInvitationController extends Controller
             } catch (\Exception $updateEx) {
                 Log::error('=== STEP 3 FAILED: Database update error ===', [
                     'error' => $updateEx->getMessage(),
-                    'sql_state' => $updateEx->getCode()
+                    'sql_state' => $updateEx->getCode(),
                 ]);
+
                 return response()->json([
                     'error' => 'Database update failed',
                     'message' => $updateEx->getMessage(),
-                    'sql_error' => true
+                    'sql_error' => true,
                 ], 500);
             }
 
@@ -374,18 +371,18 @@ class TenderInvitationController extends Controller
                     'ResponseDate' => $updatedInvitation->ResponseDate,
                     'DeclineReason' => $updatedInvitation->DeclineReason,
                     'affected_rows' => $affected,
-                ]
+                ],
             ]);
         } catch (\Exception $e) {
             Log::error('=== GENERAL ERROR ===', [
                 'invitation_id' => $id,
                 'error' => $e->getMessage(),
-                'request_data' => $request->all()
+                'request_data' => $request->all(),
             ]);
 
             return response()->json([
                 'error' => 'General failure',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

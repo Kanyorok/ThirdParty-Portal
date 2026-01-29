@@ -34,7 +34,7 @@ class CampaignApprovalController extends Controller
         }
 
         $lock = Cache::lock('approve-campaign-' . $campaign->CampaignID, 5);
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             return $this->errored('campaign has been approved, or another user is working on it');
         }
 
@@ -49,6 +49,7 @@ class CampaignApprovalController extends Controller
             return $e->toJson();
         } catch (\Throwable | Exception $e) {
             Log::error('Error approve campaign failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -80,6 +81,7 @@ class CampaignApprovalController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error reject campaign failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

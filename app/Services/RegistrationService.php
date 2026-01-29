@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Auth\User;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\ThirdParties\SupplierService;
@@ -35,7 +36,7 @@ class RegistrationService
                 'ModifiedBy' => $systemUserId,
             ]);
 
-            if (!empty($userData['verification_base_url'])) {
+            if (! empty($userData['verification_base_url'])) {
                 $user->verificationBaseUrl = $userData['verification_base_url'];
             }
 
@@ -131,7 +132,7 @@ class RegistrationService
             $accountType = $thirdPartyData['accountType'] ?? 'supplier';
             $this->attachAccountType($thirdParty, $accountType, $user, $thirdPartyData);
 
-            if (!empty($thirdPartyData['ThirdPartyType'])) {
+            if (! empty($thirdPartyData['ThirdPartyType'])) {
                 DB::table('t_ThirdPartyType_ThirdParties')->insert([
                     'TypeId' => $thirdPartyData['ThirdPartyType'],
                     'ThirdPartyId' => $thirdParty->Id,
@@ -162,7 +163,7 @@ class RegistrationService
             'PartyType' => 'ThirdPartyId',
             'PartyID' => $thirdParty->Id,
             'CreatedBy' => $user->Id,
-            'CreatedOn' => now()
+            'CreatedOn' => now(),
         ]]);
 
         $thirdParty->customerProfile()->updateOrCreate(

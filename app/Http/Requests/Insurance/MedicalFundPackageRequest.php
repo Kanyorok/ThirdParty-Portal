@@ -14,18 +14,18 @@ class MedicalFundPackageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Name'                => ['required', 'string', 'max:100'],
+            'Name' => ['required', 'string', 'max:100'],
             'CoverageDescription' => ['nullable', 'string', 'max:255'],
-            'Premium'             => ['required', 'numeric', 'min:0'],
-            'IsCompulsory'        => ['nullable', 'boolean'],
+            'Premium' => ['required', 'numeric', 'min:0'],
+            'IsCompulsory' => ['nullable', 'boolean'],
 
             // coverage pivot validation
-            'coverage_ids'              => ['array'],
-            'coverage_ids.*'            => ['integer'],
-            'coverage.AnnualLimit.*'    => ['nullable', 'numeric', 'min:0'],
-            'coverage.PerVisitLimit.*'  => ['nullable', 'numeric', 'min:0'],
-            'coverage.WaitingPeriod.*'  => ['nullable', 'integer', 'min:0'],
-            'coverage.Scope.*'          => ['nullable', 'in:PerBeneficiary,PerFamily'],
+            'coverage_ids' => ['array'],
+            'coverage_ids.*' => ['integer'],
+            'coverage.AnnualLimit.*' => ['nullable', 'numeric', 'min:0'],
+            'coverage.PerVisitLimit.*' => ['nullable', 'numeric', 'min:0'],
+            'coverage.WaitingPeriod.*' => ['nullable', 'integer', 'min:0'],
+            'coverage.Scope.*' => ['nullable', 'in:PerBeneficiary,PerFamily'],
         ];
     }
 

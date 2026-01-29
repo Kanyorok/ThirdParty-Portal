@@ -28,7 +28,7 @@ class FleetContractedDriverLicenseRequest extends FormRequest
             'IssueDate' => 'required|date',
             'ExpiryDate' => 'required|date|after_or_equal:IssueDate',
             'Notes' => 'nullable|string|max:255',
-            //
+
         ];
     }
 }

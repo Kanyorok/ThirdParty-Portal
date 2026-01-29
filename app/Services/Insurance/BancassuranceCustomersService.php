@@ -4,7 +4,6 @@ namespace App\Services\Insurance;
 
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
-use App\Models\ThirdParty\ThirdPartyUser;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\Finance\FinanceRole;
@@ -12,6 +11,7 @@ use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancAssuranceReferral;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyType;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\ThirdParties\ThirdPartiesService;
 use App\Services\ThirdParties\ThirdPartyService;
 use DateTime;
@@ -128,6 +128,30 @@ class BancassuranceCustomersService extends ThirdPartiesService
         });
     }
 
+    /*  public static function create(
+          ThirdParties $ThirdPartyId,
+          ?BancAssuranceReferral $ReferralID = null,
+          DateTime              $DateOfBirth,
+          CodeDetail            $Gender,
+          CodeDetail            $MaritalStatus,
+          CodeDetail            $Occupation,
+          User                  $user
+      ): self
+      {
+          $customer = BancassuranceCustomer::create([
+              'ThirdPartyId' => $ThirdPartyId->Id,
+              'ReferralID' => $ReferralID->Id ?? null,
+              'DateOfBirth' => $DateOfBirth,
+              'Gender' => $Gender->ID,
+              'MaritalStatus' => $MaritalStatus->ID,
+              'Occupation' => $Occupation->ID,
+              'CreatedBy' => $user->Id,
+              'ModifiedBy' => $user->Id,
+          ]);
+
+          activity()->causedBy($user->Id)->performedOn($customer)->event('create')->log("Added Customer {$customer->Id}.");
+          return new self($customer);
+      }*/
     public static function getType(): ThirdPartyType
     {
         return ThirdPartyType::query()->withTrashed()->where('Code', ThirdPartyService::TypeCustomer)->firstOr(function () {
@@ -136,6 +160,7 @@ class BancassuranceCustomersService extends ThirdPartiesService
                 throw new \RuntimeException("No finance roles found " . __CLASS__);
             }
             $actor = SystemHelper::user();
+
             return ThirdPartyType::create([
                 'FinanceRole' => $role->FinanceRoleID,
                 'Code' => ThirdPartyService::TypeCustomer,

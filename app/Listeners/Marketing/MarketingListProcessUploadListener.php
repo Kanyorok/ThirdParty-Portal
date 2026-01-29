@@ -26,7 +26,6 @@ class MarketingListProcessUploadListener implements ShouldQueue
      */
     public function __construct()
     {
-        //
     }
 
     /**
@@ -34,13 +33,14 @@ class MarketingListProcessUploadListener implements ShouldQueue
      */
     public function handle(MarketingListUploadedEvent $event): void
     {
-        if (!file_exists($event->file)) {
+        if (! file_exists($event->file)) {
             $this->_completeProcessing($event->list, $event->actor, [], 0, 'Invalid or Unsupported upload file');
         }
 
         if ($event->Type === Client::getPrimaryKey()) {
             $this->_processClients($event->list, $event->file, $event->actor);
             unlink($event->file);
+
             return;
         }
 
@@ -69,7 +69,7 @@ class MarketingListProcessUploadListener implements ShouldQueue
                 SimpleXLSXGen::fromArray($failed, "Failed Import")->saveAs($file);
                 $service?->addAttachmentContent(file_get_contents($file), ExtensionsEnum::Xlsx->getMimeType(), $list->Label . ' Failed ' . now()->format('d M Y H:i') . '.xlsx', $actor);
                 unlink($file);
-            } catch (Exception|Throwable) {
+            } catch (Exception | Throwable) {
             }
         }
 
@@ -85,6 +85,7 @@ class MarketingListProcessUploadListener implements ShouldQueue
         $requiredHeaders = ['MemberID'];
         if (array_diff($requiredHeaders, $headers)) {
             $this->_completeProcessing($list, $actor, $data, 0, 'The provided CSV file is missing some required fields: ' . " " . implode(', ', array_diff($requiredHeaders, $headers)));
+
             return;
         }
         $total = count($data);
@@ -104,6 +105,7 @@ class MarketingListProcessUploadListener implements ShouldQueue
             if (Client::query()->where('ClientID', $ClientID)->exists()) {
                 $ClientIDs->add($ClientID);
                 $success++;
+
                 continue;
             }
             $failed->add($ClientID);

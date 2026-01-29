@@ -10,8 +10,8 @@ use App\Models\Procurement\RFQResponseItem;
 use App\Models\ThirdParies\Supplier;
 use App\Models\Core\Currency;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Carbon;
 
@@ -21,6 +21,7 @@ class RFQResponseController extends Controller
     {
         $this->authorize('viewAny', RFQResponse::class);
         $rfqResponses = RFQResponse::with(['rfq', 'items', 'items.uom'])->latest()->paginate(10);
+
         return view('procurement.rfqresponses.index', compact('rfqResponses'));
     }
 
@@ -48,7 +49,7 @@ class RFQResponseController extends Controller
                 return [
                     'Id' => $supplier->Id,
                     'SupplierName' => $supplier->supplierMaster->party->TradingName
-                        ?? $supplier->supplierMaster->party->ThirdPartyName
+                        ?? $supplier->supplierMaster->party->ThirdPartyName,
                 ];
             });
 
@@ -147,6 +148,7 @@ class RFQResponseController extends Controller
     {
         $rfqResponse = RFQResponse::with(['rfq', 'items'])->findOrFail($id);
         $rfqs = RFQ::all();
+
         return view('procurement.rfqresponses.edit', compact('rfqResponse', 'rfqs'));
     }
 
@@ -187,6 +189,7 @@ class RFQResponseController extends Controller
     {
         $rfqResponse = RFQResponse::findOrFail($id);
         $rfqResponse->delete();
+
         return redirect()->route('rfqresponses.index')->with('success', 'RFQ Response deleted successfully.');
     }
 
@@ -238,7 +241,7 @@ class RFQResponseController extends Controller
         $rfqId = $request->query('rfqId');
         $supplierId = $request->query('supplierId');
 
-        if (!$rfqId || !$supplierId) {
+        if (! $rfqId || ! $supplierId) {
             return response()->json(['exists' => false]);
         }
 
@@ -246,6 +249,10 @@ class RFQResponseController extends Controller
             ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
             ->where('s.Id', $supplierId)
             ->value('sm.ThirdPartyId');
+
+        if (! $thirdPartyId) {
+            return response()->json(['exists' => false]);
+        }
 
         $existing = RFQResponse::with('items')
             ->where('RFQId', $rfqId)
@@ -259,7 +266,9 @@ class RFQResponseController extends Controller
             ->latest('Id')
             ->first();
 
-        if (!$existing) return response()->json(['exists' => false]);
+        if (! $existing) {
+            return response()->json(['exists' => false]);
+        }
 
         return response()->json([
             'exists' => true,

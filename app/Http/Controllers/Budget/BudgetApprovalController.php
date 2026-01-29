@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Log;
 
 class BudgetApprovalController extends Controller
 {
-    //
     public function index()
     {
         return view('budgetandanalytics.budgetworkspace.approval.index');
@@ -38,6 +37,7 @@ class BudgetApprovalController extends Controller
             return back()->with('success', 'Budget Approved Successfully');
         } catch (\Throwable $th) {
             Log::error('Error in approving budget', $th->getMessage());
+
             return back()->with('error', 'Something went wrong');
         }
     }
@@ -60,6 +60,7 @@ class BudgetApprovalController extends Controller
             return back()->with('success', 'Budget Rejected Successfully');
         } catch (\Throwable $th) {
             Log::error('Error in approving budget', $th->getMessage());
+
             return back()->with('error', 'Something went wrong');
         }
     }

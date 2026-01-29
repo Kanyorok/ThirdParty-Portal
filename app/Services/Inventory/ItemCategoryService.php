@@ -2,11 +2,11 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\Inventory\ItemCategories;
 use App\Models\Core\Approval\CodeDetail;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\QueryException;
+use App\Models\Inventory\ItemCategories;
 use Exception;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 
 class ItemCategoryService
 {
@@ -18,7 +18,7 @@ class ItemCategoryService
         do {
             try {
                 $category = DB::transaction(function () use (&$data) {
-                    $isSubcategory = !empty($data['ParentId']);
+                    $isSubcategory = ! empty($data['ParentId']);
                     $data['CategoryCode'] = $this->generateCategoryCode($isSubcategory);
                     $data['CreatedBy'] = auth()->id();
                     $data['ModifiedBy'] = auth()->id();
@@ -42,7 +42,6 @@ class ItemCategoryService
                     ->log('Created Item Category ' . $category->CategoryCode);
 
                 return $category;
-
             } catch (QueryException $e) {
                 if ($this->isDuplicateCategoryCodeError($e)) {
                     $attempt++;
@@ -115,7 +114,7 @@ class ItemCategoryService
             $child->update([
                 'Status' => $statusId,
                 'ModifiedBy' => auth()->id(),
-                'ModifiedOn' => now()
+                'ModifiedOn' => now(),
             ]);
 
             $this->cascadeStatus($child, $statusId);
@@ -126,7 +125,7 @@ class ItemCategoryService
             $item->update([
                 'Status' => $statusId,
                 'ModifiedBy' => auth()->id(),
-                'ModifiedOn' => now()
+                'ModifiedOn' => now(),
             ]);
         }
     }

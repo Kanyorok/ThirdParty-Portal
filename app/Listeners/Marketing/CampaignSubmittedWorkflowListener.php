@@ -22,7 +22,6 @@ class CampaignSubmittedWorkflowListener implements ShouldQueue
      */
     public function __construct()
     {
-        //
     }
 
     /**
@@ -33,7 +32,7 @@ class CampaignSubmittedWorkflowListener implements ShouldQueue
         $users = User::query()->lock('WITH(NOLOCK)')->hasPermission(PermissionEnum::CampaignApproval->value)->get(["Id", "UserID", "Name", "Email"]);
         DB::transaction(function () use ($users, $event) {
             foreach ($users as $user) {
-                if (!$user instanceof User) {
+                if (! $user instanceof User) {
                     continue;
                 }
                 if (in_array($user->UserID, [$event->actor->UserID, SystemHelper::ID], true)) {//skip sys and submitter
@@ -41,9 +40,9 @@ class CampaignSubmittedWorkflowListener implements ShouldQueue
                 }
 
                 $event->campaign->pendingWorkflows()->lock('WITH(NOLOCK)')->where('Stage', CampaignStatusEnum::Approval)->create([
-                                                                                                                                  'Stage'      => CampaignStatusEnum::Approval,
-                                                                                                                                  'UserId'     => $user->Id,
-                                                                                                                                  'CreatedBy'  => $event->actor->Id,
+                                                                                                                                  'Stage' => CampaignStatusEnum::Approval,
+                                                                                                                                  'UserId' => $user->Id,
+                                                                                                                                  'CreatedBy' => $event->actor->Id,
                                                                                                                                   'ModifiedBy' => $event->actor->Id,
                                                                                                                                  ]);
 

@@ -49,6 +49,7 @@ class MarketingPlannerActivityController extends Controller
                 if ($planner->Type->value === PlannerTypeEnum::MasterPlanner->value) {
                     return $activity->branch?->Name;
                 }
+
                 return '-';
             })->editColumn('StartOn', function (MarketingPlannerActivity $activity) {
                 return $activity->StartOn?->format('M d, Y');
@@ -77,7 +78,7 @@ class MarketingPlannerActivityController extends Controller
             if ($request->has('Branch')) {
                 $branch = Branch::query()->where('BranchId', $request->get('Branch'))->first();
             }
-            if (!$branch instanceof Branch) {
+            if (! $branch instanceof Branch) {
                 throw ValidationException::withMessages(['Branch' => 'branch is required']);
             }
         }
@@ -102,16 +103,17 @@ class MarketingPlannerActivityController extends Controller
                         ($request->validated('activity_materials')) ?? ''
                     );
                 activity()->causedBy($request->user())->performedOn($planner)->event('update')->log('added activity to plan ' . $planner->PlannerID);
+
                 return $planner;
             });
         } catch (Exception $e) {
             Log::error('Error adding  planner activity failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
         return $this->succeeded('activity added successfully.', route('marketing-planner.edit', $planner->PlannerID));
     }
-
 
     /**
      * Summary
@@ -121,9 +123,10 @@ class MarketingPlannerActivityController extends Controller
     {
         $this->authorize('view', [$planner]);
         $Activity = $planner->activities()->where('t_MarketingPlannerActivities.PlannerActivityID', $ActivityId)->first();
-        if (!$Activity instanceof MarketingPlannerActivity) {
+        if (! $Activity instanceof MarketingPlannerActivity) {
             return $this->errored('Activity not found');
         }
+
         return view('crm.marketing.planner.activities.show')
             ->with('activity', $Activity)
             ->with('users', $Activity->users);
@@ -136,14 +139,14 @@ class MarketingPlannerActivityController extends Controller
     {
         $this->authorize('create', [MarketingPlannerActivity::class, $planner]);
         $Activity = $planner->activities()->where('t_MarketingPlannerActivities.PlannerActivityID', $ActivityId)->first();
-        if (!$Activity instanceof MarketingPlannerActivity) {
+        if (! $Activity instanceof MarketingPlannerActivity) {
             return $this->errored('Activity not found');
         }
+
         return view('crm.marketing.planner.activities.edit')
             ->with('activity', $Activity)->with('planner', $planner)->with('users', $Activity->users)
             ->with('Branches', Branch::all(['Id', 'BranchID', 'Name']));
     }
-
 
     /**
      * Add an activity in draft && owner
@@ -154,7 +157,7 @@ class MarketingPlannerActivityController extends Controller
     {
         $this->authorize('create', [MarketingPlannerActivity::class, $planner]);
         $Activity = $planner->activities()->where('t_MarketingPlannerActivities.PlannerActivityID', $ActivityId)->first();
-        if (!$Activity instanceof MarketingPlannerActivity) {
+        if (! $Activity instanceof MarketingPlannerActivity) {
             return $this->errored('Activity not found');
         }
         $branchId = $Activity->BranchId;
@@ -172,19 +175,28 @@ class MarketingPlannerActivityController extends Controller
 
         try {
             DB::transaction(static function () use ($Activity, $users, $end, $start, $request, $planner, $actor, $branchId) {
-                (new PlannerService($planner))->updateActivity($Activity, $request->validated('activity_name'), $request->validated('activity_location'), $start, $end, $request->validated('activity_budget'), ($request->validated('activity_notes')) ?? '', $actor, $users, $branchId
+                (new PlannerService($planner))->updateActivity(
+                    $Activity,
+                    $request->validated('activity_name'),
+                    $request->validated('activity_location'),
+                    $start,
+                    $end,
+                    $request->validated('activity_budget'),
+                    ($request->validated('activity_notes')) ?? '',
+                    $actor,
+                    $users,
+                    $branchId
                 );
                 activity()->causedBy($request->user())->performedOn($planner)->event('update')->log('updated activity (' . $Activity->PlannerActivityID . ') in plan ' . $planner->PlannerID);
             });
         } catch (Exception $e) {
             Log::error('Error adding  planner activity failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
         return $this->succeeded('activity added successfully.', route('marketing-planner.edit', $planner->PlannerID));
     }
-
-
 
     /**
      * Remover an activity in draft && owner.
@@ -203,10 +215,12 @@ class MarketingPlannerActivityController extends Controller
                         'DeletedOn' => now(),
                     ]);
                 activity()->causedBy($request->user())->performedOn($planner)->event('delete')->log('removed activity ' . $ActivityId . ' from  plan ' . $planner->PlannerID);
+
                 return $planner;
             });
         } catch (Exception $e) {
             Log::error('Error removing  planner activity failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

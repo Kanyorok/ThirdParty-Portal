@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class FinancialReportingController extends Controller
 {
@@ -11,6 +10,7 @@ class FinancialReportingController extends Controller
     {
         return view('finance.financialreporting.index');
     }
+
     public function create()
     {
         return view('finance.financialreporting.create');

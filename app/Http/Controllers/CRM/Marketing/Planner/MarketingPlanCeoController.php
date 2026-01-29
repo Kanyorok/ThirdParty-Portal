@@ -38,6 +38,7 @@ class MarketingPlanCeoController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error ceo approval planner failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -69,6 +70,7 @@ class MarketingPlanCeoController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error ceo reject planner failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

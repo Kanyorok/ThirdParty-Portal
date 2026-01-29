@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Log;
 
 class BudgetGLLineEntryController extends Controller
 {
-    //
     public function index()
     {
 
@@ -38,7 +37,7 @@ class BudgetGLLineEntryController extends Controller
     {
 
         $this->authorize(PermissionEnum::BudgetEntryByLineCreate, BudgetManualEntry::class);
-        $budgets = Budget::select('Id', 'Name','From','To')->where('Status','draft')->get();
+        $budgets = Budget::select('Id', 'Name', 'From', 'To')->where('Status', 'draft')->get();
 
         $branches = Branch::select('Id', 'Name')->get();
         //Pick budgetlines that have activities only.
@@ -68,6 +67,7 @@ class BudgetGLLineEntryController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $userId = Auth::id();
             $branchId = session('LoginBranchId');
@@ -107,14 +107,17 @@ class BudgetGLLineEntryController extends Controller
                 ->event('create')
                 ->withProperties(['action' => 'create'])
                 ->log('Created a Manual Budget Line Entry');
+
             return redirect()->route('entrybyglline.index')->with('success', 'Manual Budget Line Entry Created Successfully!');
         } catch (Exception $e) {
             DB::rollback();
+
             return $e->getMessage();
             Log::error('Failed to save budget entry.', [
                 'error' => $e->getMessage(),
-                'stack' => $e->getTraceAsString()
+                'stack' => $e->getTraceAsString(),
             ]);
+
             return redirect()->back()->withErrors(['error' => 'Failed to save budget entry. ' . $e->getMessage()]);
         }
     }
@@ -136,13 +139,14 @@ class BudgetGLLineEntryController extends Controller
 
 
         DB::beginTransaction();
+
         try {
             $entry = BudgetManualEntry::findOrFail($id);
             $monthlydelete = BudgetManualEntryAllocations::where('EntryId', $id)->update([
-                'DeletedBy' => Auth::Id()
+                'DeletedBy' => Auth::Id(),
             ]);
             $monthlydelete = BudgetManualEntryAllocations::where('EntryId', $id)->delete();
-            $entry->DeletedBy = Auth:: Id();
+            $entry->DeletedBy = Auth::Id();
             $entry->save();
 
             $entry->delete(); // Delete the entry itself
@@ -153,11 +157,14 @@ class BudgetGLLineEntryController extends Controller
                 ->event('delete')
                 ->withProperties(['action' => 'delete'])
                 ->log('Deleted a Manual Budget Line Entry');
+
             return back()->with('success', 'Manual Budget Line Entry Deleted Successfully!');
         } catch (Exception $e) {
             DB::rollBack();
+
             return $e->getMessage();
             Log::error('Failed to delete budget entry.', $e->getMessage());
+
             return redirect()->back()->withErrors(['error' => 'Failed to delete budget entry. ' . $e->getMessage()]);
         }
     }
@@ -183,6 +190,7 @@ class BudgetGLLineEntryController extends Controller
         $entry = BudgetManualEntry::with(['budget:Id,Name', 'branch:Id,Name', 'budgetLine:Id,LineName', 'allocations'])->findOrFail($id);
         $branches = Branch::select('Id', 'Name')->get();
         $budgetLines = BudgetLine::select('Id', 'LineName')->get();
+
         return view('budgetandanalytics.budgetworkspace.entrybyglline.edit', compact('entry', 'branches', 'budgetLines'));
     }
 
@@ -199,6 +207,7 @@ class BudgetGLLineEntryController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $entry = BudgetManualEntry::with('allocations')->findOrFail($id);
             $userId = Auth::id();
@@ -239,15 +248,16 @@ class BudgetGLLineEntryController extends Controller
                 ->event('update')
                 ->withProperties(['action' => 'update'])
                 ->log('Updated a Manual Budget Line Entry');
+
             return redirect()->route('entrybyglline.index')->with('success', 'Manual Budget Line Entry Updated Successfully!');
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to update budget entry.', [
                 'error' => $e->getMessage(),
-                'stack' => $e->getTraceAsString()
+                'stack' => $e->getTraceAsString(),
             ]);
+
             return redirect()->back()->withErrors(['error' => 'Failed to update budget entry. ' . $e->getMessage()]);
         }
     }
 }
-

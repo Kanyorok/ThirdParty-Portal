@@ -8,19 +8,15 @@ use App\Http\Requests\Property\TenantAndLease\PropertyNewTenantRequest;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\ThirdParty\ThirdParties;
-use App\Services\Property\TenantAndLease\PropertyNewTenantService;
 
 class PropertyNewTenantController extends Controller
 {
     protected $service;
 
-    // public function __construct(PropertyNewTenantService $service)
-    // {
-    //     $this->service = $service;
-    // }
     public function index()
     {
         $newtenants = PropertyNewTenant::with('type', 'thirdParty')->get();
+
         return view('property.tenantmanagement.tenantmaintenance.index', compact('newtenants'));
     }
 
@@ -34,28 +30,11 @@ class PropertyNewTenantController extends Controller
         $assignedTenantIds = PropertyNewTenant::pluck('ThirdPartyId')->toArray();
 
         // // Fetch only tenants with active Tenant type
-        // $tenants = ThirdParties::whereHas('types', function ($q) {
-        //         $q->whereNull('t_ThirdPartyType_ThirdParties.DeletedOn')
-        //         ->whereNull('t_ThirdPartyTypes.DeletedOn')
-        //         ->whereHas('category', function ($sub) {
-        //             $sub->where('Name', 'Tenant');
-        //         });
-        //     })
-        //     ->with(['types' => function ($q) {
-        //         $q->whereNull('t_ThirdPartyType_ThirdParties.DeletedOn')
-        //         ->whereNull('t_ThirdPartyTypes.DeletedOn')
-        //         ->whereHas('category', function ($sub) {
-        //             $sub->where('Name', 'Tenant');
-        //         });
-        //     }])
-        //     ->whereNotIn('Id', $assignedTenantIds)
-        //     ->get();
 
         $tenants = ThirdParties::all();
 
         return view('property.tenantmanagement.tenantmaintenance.create', compact('tenantTypes', 'tenants'));
     }
-
 
     public function edit($id)
     {
@@ -70,6 +49,7 @@ class PropertyNewTenantController extends Controller
     {
         $this->authorize(PermissionEnum::TenantMaintenanceView, PropertyNewTenant::class);
         $newtenant = PropertyNewTenant::findOrFail($id);
+
         return view('property.tenantmanagement.tenantmaintenance.show', compact('newtenant'));
     }
 
@@ -93,7 +73,6 @@ class PropertyNewTenantController extends Controller
         );
 
         return redirect()->route('addtenant.index')->with('success', 'Tenant created successfully');
-
     }
 
     public function update(PropertyNewTenantRequest $request, $id)
@@ -119,6 +98,4 @@ class PropertyNewTenantController extends Controller
             ->route('addtenant.index')
             ->with('success', 'Tenant updated successfully.');
     }
-
-
 }

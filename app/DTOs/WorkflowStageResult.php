@@ -17,7 +17,7 @@ class WorkflowStageResult
 
     public static function fromDatabaseResult(?object $result): self
     {
-        if (!$result) {
+        if (! $result) {
             return new self('Unknown error occurred');
         }
 

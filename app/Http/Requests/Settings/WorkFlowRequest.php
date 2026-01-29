@@ -24,7 +24,7 @@ class WorkFlowRequest extends FormRequest
         return [
             'Name' => 'required|string|max:255',
             'Description' => 'required|string|max:1000',
-            'DocType' => 'required|string', 
-        ]; 
+            'DocType' => 'required|string',
+        ];
     }
 }

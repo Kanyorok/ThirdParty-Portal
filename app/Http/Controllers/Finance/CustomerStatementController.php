@@ -30,8 +30,8 @@ class CustomerStatementController extends Controller
             ->whereNull('DeletedOn');
 
         // Search filter
-        if (!empty($search)) {
-            $query->where(function($q) use ($search) {
+        if (! empty($search)) {
+            $query->where(function ($q) use ($search) {
                 $q->where('ThirdPartyName', 'like', "%{$search}%")
                   ->orWhere('TradingName', 'like', "%{$search}%")
                   ->orWhere('IDNumber', 'like', "%{$search}%")
@@ -44,11 +44,12 @@ class CustomerStatementController extends Controller
             ->take($perPage)
             ->get();
 
-        $items = $results->map(function($item) {
+        $items = $results->map(function ($item) {
             $displayName = $item->ThirdPartyName ?: $item->TradingName;
             if ($item->IDNumber) {
                 $displayName .= " ({$item->IDNumber})";
             }
+
             return [
                 'id' => $item->Id,
                 'text' => $displayName,
@@ -58,8 +59,8 @@ class CustomerStatementController extends Controller
         return response()->json([
             'results' => $items,
             'pagination' => [
-                'more' => ($page * $perPage) < $total
-            ]
+                'more' => ($page * $perPage) < $total,
+            ],
         ]);
     }
 
@@ -70,6 +71,7 @@ class CustomerStatementController extends Controller
     {
         //For ERP it will be a detailed statement
         $Type = 'Detailed';
+
         try {
             // Fetch customer details from t_ThirdParties
             $customerData = DB::table('t_ThirdParties')
@@ -78,7 +80,7 @@ class CustomerStatementController extends Controller
                 ->whereNull('DeletedOn')
                 ->first();
 
-            if (!$customerData) {
+            if (! $customerData) {
                 return response()->json(['error' => 'Customer not found'], 404);
             }
 
@@ -136,10 +138,9 @@ class CustomerStatementController extends Controller
                 'tenantTransactions' => $tenantTransactions,
                 'supplierTransactions' => $supplierTransactions,
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to fetch statement: ' . $e->getMessage()
+                'error' => 'Failed to fetch statement: ' . $e->getMessage(),
             ], 500);
         }
     }

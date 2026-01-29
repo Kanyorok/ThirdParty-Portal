@@ -110,8 +110,10 @@ class FacebookService extends SocialService
     protected const RENEW_DAYS_BEFORE_EXPIRE = 14;
     protected Api $api;
     protected ?APICredential $credential = null;
-    protected int $PageID, $AppId;
-    protected string $appSecret, $pageToken;
+    protected int $PageID;
+    protected int $AppId;
+    protected string $appSecret;
+    protected string $pageToken;
 
     /**
      * @throws ErroredException
@@ -120,7 +122,7 @@ class FacebookService extends SocialService
     {
         if (is_null($AppId) || is_null($appSecret) || is_null($pageToken) || is_null($pageID)) {//use db here.
             $cred = APICredential::query()->where('Integration', IntegrationsEnum::Facebook->value)->latest('Id')->first();
-            if (!$cred instanceof APICredential) {
+            if (! $cred instanceof APICredential) {
                 throw new ErroredException('no facebook configuration');
             }
             $this->credential = $cred;
@@ -157,6 +159,7 @@ class FacebookService extends SocialService
             Log::error('Facebook Posts: ');
             Log::error($e);
         }
+
         throw new ErroredException('an expected error occurred.');
     }
 
@@ -190,6 +193,7 @@ class FacebookService extends SocialService
             Log::error('Facebook Insights: ');
             Log::error($e);
         }
+
         return null;
     }
 
@@ -219,10 +223,12 @@ class FacebookService extends SocialService
                        'since' => $since->format('U'),
                        'limit' => 100,
                       ];
+
         try {
             $comments = (is_null($commentID))
                 ? (new PagePost($postId, api: $this->api))->getComments(self::COMMENT_FIELDS, $parameters)?->getLastResponse()->getContent()
                 : (new Comment($commentID, api: $this->api))->getComments(self::COMMENT_FIELDS, $parameters)?->getLastResponse()->getContent();
+
             return json_decode(json_encode($comments, JSON_THROW_ON_ERROR), false, 512, JSON_THROW_ON_ERROR);
         } catch (Exception $e) {
             Log::error('Facebook Comments: ');
@@ -246,6 +252,7 @@ class FacebookService extends SocialService
             } else {
                 throw new ErroredException('Invalid parent type given');
             }
+
             return (object) json_decode(json_encode($comment, JSON_THROW_ON_ERROR), false, 512, JSON_THROW_ON_ERROR);
         } catch (ErroredException $e) {
             throw new ErroredException($e->getMessage());
@@ -256,6 +263,7 @@ class FacebookService extends SocialService
 
         throw new ErroredException('an expected error occurred.');
     }
+
     public function syncComments(Social $social): self
     {
         if ($social->CommentsCount === 0) {
@@ -267,7 +275,7 @@ class FacebookService extends SocialService
             $cmt = $social->comments()->where('RemoteId', $comment->id)->first();
             if ($cmt instanceof \App\Models\Communication\Comment) {
                 $cmt->update([
-                              'Notes'    => $comment->message,
+                              'Notes' => $comment->message,
                               'Response' => json_encode($comment),
                              ]);
                 $cmtID = $cmt->Id;
@@ -275,14 +283,14 @@ class FacebookService extends SocialService
                 $cmtID = $social->comments()->insertGetId([
                     'CommentType' => \App\Models\CRM\Social::getPrimaryKey(),
                                                            'CommentTypeID' => $social->Id,
-                                                           'Notes'         => $comment->message,
-                                                           'Response'      => json_encode($comment),
-                                                           'Source'        => $social->Type->value,
-                                                           'RemoteId'      => $comment->id,
-                                                           'CreatedOn'     => Carbon::parse($comment->created_time)->timezone(config('app.timezone')),
-                                                           'CreatedBy'     => $actor->Id,
-                                                           'ModifiedOn'    => now(),
-                                                           'ModifiedBy'    => $actor->Id,
+                                                           'Notes' => $comment->message,
+                                                           'Response' => json_encode($comment),
+                                                           'Source' => $social->Type->value,
+                                                           'RemoteId' => $comment->id,
+                                                           'CreatedOn' => Carbon::parse($comment->created_time)->timezone(config('app.timezone')),
+                                                           'CreatedBy' => $actor->Id,
+                                                           'ModifiedOn' => now(),
+                                                           'ModifiedBy' => $actor->Id,
                                                           ]);
             }
             if ($comment->comment_count > 0) {
@@ -292,14 +300,14 @@ class FacebookService extends SocialService
                     $toSave->add([
                         'CommentType' => \App\Models\Communication\Comment::getPrimaryKey(),
                                   'CommentTypeID' => $cmtID,
-                                  'Notes'         => $commentComment->message,
-                                  'Response'      => json_encode($commentComment),
-                                  'RemoteId'      => $commentComment->id,
-                                  'Source'        => $social->Type->value,
-                                  'CreatedOn'     => Carbon::parse($commentComment->created_time)->timezone(config('app.timezone')),
-                                  'CreatedBy'     => $actor->Id,
-                                  'ModifiedOn'    => now(),
-                                  'ModifiedBy'    => $actor->Id,
+                                  'Notes' => $commentComment->message,
+                                  'Response' => json_encode($commentComment),
+                                  'RemoteId' => $commentComment->id,
+                                  'Source' => $social->Type->value,
+                                  'CreatedOn' => Carbon::parse($commentComment->created_time)->timezone(config('app.timezone')),
+                                  'CreatedBy' => $actor->Id,
+                                  'ModifiedOn' => now(),
+                                  'ModifiedBy' => $actor->Id,
                                  ]);
                 }
 
@@ -318,7 +326,7 @@ class FacebookService extends SocialService
             return false;
         }
 
-        if (!is_null($social->Published_at)) {
+        if (! is_null($social->Published_at)) {
             return true;
         }
 
@@ -330,8 +338,8 @@ class FacebookService extends SocialService
 
         $social->update([
                          'Published_at' => Carbon::now(),
-                         'RemoteId'     => $Remote->id,
-                         'Response'     => json_encode($Remote),
+                         'RemoteId' => $Remote->id,
+                         'Response' => json_encode($Remote),
                         ]);
 
         return true;
@@ -357,7 +365,7 @@ class FacebookService extends SocialService
         }
 
         $params = $images->merge([
-                                  'message'   => $message,
+                                  'message' => $message,
                                   'published' => true,
             //'scheduled_publish_time' => $publish_at->format('U')
                                  ]);
@@ -385,7 +393,7 @@ class FacebookService extends SocialService
                 ['Content-Type' => $image->MIMEType]
             )->post("https://graph.facebook.com/v21.0/" . $this->PageID . "/photos", [
                                                                                       'access_token' => $this->pageToken,
-                                                                                      'published'    => false,
+                                                                                      'published' => false,
                                                                                      ]);
 
             if ($response->successful()) {
@@ -394,6 +402,7 @@ class FacebookService extends SocialService
         } catch (Exception $e) {
             Log::error($e);
         }
+
         throw new ErroredException('Uploading Media failed');
     }
 
@@ -426,9 +435,10 @@ class FacebookService extends SocialService
 
         return $required;
     }
+
     public function updateToken(): void
     {
-        if (!$this->credential instanceof APICredential) {
+        if (! $this->credential instanceof APICredential) {
             Log::error('Cannot update credentials when initializing.');
         }
 
@@ -438,7 +448,7 @@ class FacebookService extends SocialService
         try {
             if (is_numeric($Config?->page_token_expires_at)) {
                 $configDate = Carbon::createFromFormat('U', $Config?->page_token_expires_at);
-                if (!$configDate instanceof Carbon) {
+                if (! $configDate instanceof Carbon) {
                     throw new Exception('Invalid page_token_expires_at given');
                 }
             } else {
@@ -447,6 +457,7 @@ class FacebookService extends SocialService
         } catch (Exception | Throwable $e) {
             SystemHelper::notifyAdmin('Could not update facebook token, cannot ascertain expire date');
             Log::error($e);
+
             return;
         }
 
@@ -459,17 +470,18 @@ class FacebookService extends SocialService
         } catch (ErroredException $e) {
             SystemHelper::notifyAdmin('Could not update facebook token, Could not fetch new token');
             Log::error($e);
+
             return;
         }
 
         $this->credential->update([
                                    'Configuration' => [
-                                                       'page_id'               => $this->PageID,
-                                                       'app_id'                => $this->AppId,
-                                                       'app_secret'            => $this->appSecret,
-                                                       'page_token'            => $tokenResponse->access_token,
+                                                       'page_id' => $this->PageID,
+                                                       'app_id' => $this->AppId,
+                                                       'app_secret' => $this->appSecret,
+                                                       'page_token' => $tokenResponse->access_token,
                                                        'page_token_expires_at' => bcadd($tokenResponse->expires_in, now()->format('U')),
-                                                       'page_name'             => $Config->page_name,
+                                                       'page_name' => $Config->page_name,
                                                       ],
                                   ]);
     }
@@ -480,6 +492,7 @@ class FacebookService extends SocialService
     private function _UserID(): string
     {
         $response = Http::get('https://graph.facebook.com/v21.0/me?fields=id&access_token=' . $this->pageToken);
+
         try {
             if ($response->successful()) {
                 return (json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR)['id']) ?? '';
@@ -499,9 +512,9 @@ class FacebookService extends SocialService
     public function refreshToken(): object
     {
         $response = Http::get('https://graph.facebook.com/oauth/access_token', [
-                                                                                'grant_type'        => 'fb_exchange_token',
-                                                                                'client_id'         => $this->AppId,
-                                                                                'client_secret'     => $this->appSecret,
+                                                                                'grant_type' => 'fb_exchange_token',
+                                                                                'client_id' => $this->AppId,
+                                                                                'client_secret' => $this->appSecret,
                                                                                 'fb_exchange_token' => $this->pageToken,
                                                                                ]);
 
@@ -531,6 +544,7 @@ class FacebookService extends SocialService
         } catch (Exception $e) {
             Log::error($e);
         }
+
         return collect([]);
     }
 }

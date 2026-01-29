@@ -13,6 +13,6 @@ class ControlType extends Model
     protected $fillable = [
         'Name',
         'Description',
-        'IsActive'
+        'IsActive',
     ];
 }

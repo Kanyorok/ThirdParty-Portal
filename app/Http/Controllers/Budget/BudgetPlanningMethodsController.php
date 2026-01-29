@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Budget;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Models\Budget\BudgetPlanningMethods;
 use App\Enums\Core\PermissionEnum;
+use App\Http\Controllers\Controller;
+use App\Models\Budget\BudgetPlanningMethods;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BudgetPlanningMethodsController extends Controller
@@ -16,6 +16,7 @@ class BudgetPlanningMethodsController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetPlanningMethods::class);
         $methods = BudgetPlanningMethods::all();
+
         return view('budgetandanalytics.settings.planningmethods.index', compact('methods'));
     }
 
@@ -64,6 +65,7 @@ class BudgetPlanningMethodsController extends Controller
     {
 
         $method = BudgetPlanningMethods::find($id);
+
         return view('budgetandanalytics.settings.planningmethods.edit', compact('method'));
     }
 
@@ -111,9 +113,9 @@ class BudgetPlanningMethodsController extends Controller
     public function destroy(string $id)
     {
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetPlanningMethods::class);
+
         try {
             $method = BudgetPlanningMethods::find($id)->delete();
-            //$method->delete();
 
             activity()
                 ->performedOn(new BudgetPlanningMethods())
@@ -124,8 +126,8 @@ class BudgetPlanningMethodsController extends Controller
             return redirect()->route('planningmethods.index')->with('Success', 'Planning Method Deleted Successfully');
         } catch (\Throwable $th) {
             Log::error('---DELETE PLANNING METHOD ERROR---' . $th->getMessage());
+
             return redirect()->route('planningmethods.index')->with('error', 'Failed to delete Planning Method. Please try again.');
         }
     }
-
 }

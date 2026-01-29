@@ -18,7 +18,7 @@ class StockTakePolicy
         return $user->can(PermissionEnum::StockTakeView->value);
     }
 
-    public function create(User $user ,StockTake $stockTake): bool
+    public function create(User $user, StockTake $stockTake): bool
     {
         return $user->can(PermissionEnum::StockTakeCreate->value);
     }
@@ -28,9 +28,8 @@ class StockTakePolicy
         return $user->can(PermissionEnum::StockTakeUpdate->value);
     }
 
-    public function destroy(User $user ,StockTake $stockTake): bool
+    public function destroy(User $user, StockTake $stockTake): bool
     {
         return $user->can(PermissionEnum::StockTakeDestroy->value);
     }
-
 }

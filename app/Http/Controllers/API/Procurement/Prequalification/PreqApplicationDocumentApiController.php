@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\API\Procurement\Prequalification;
 
 use App\Enums\Core\ModulesEnum;
+use App\Helpers\SystemHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\StoreApplicationDocumentRequest;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\Procurement\Prequalification\PrequalificationApplicationDocument;
 use App\Services\DMS\DocumentService;
 use App\Services\DMS\RepositoryService;
-use App\Helpers\SystemHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -28,14 +28,15 @@ class PreqApplicationDocumentApiController extends Controller
             ->with('dmsDocument.current')
             ->orderByDesc('CreatedOn')
             ->get();
+
         return response()->json(['data' => $docs]);
     }
 
     public function store(StoreApplicationDocumentRequest $request, int $roundId, int $categoryId): JsonResponse
     {
         $user = $request->user();
-    // DMS DocumentService requires an internal Auth\\User actor, not ThirdPartyUser
-    $actor = SystemHelper::user();
+        // DMS DocumentService requires an internal Auth\\User actor, not ThirdPartyUser
+        $actor = SystemHelper::user();
         $supplierId = $user?->thirdParty?->Id;
 
         $sectionId = (int) $request->input('section_id');
@@ -72,7 +73,7 @@ class PreqApplicationDocumentApiController extends Controller
 
             return response()->json([
                 'message' => 'Document uploaded',
-                'data' => $link->load('dmsDocument.current')
+                'data' => $link->load('dmsDocument.current'),
             ], 201);
         } catch (\Throwable $e) {
             Log::error('PreqApplicationDocument upload failed', [
@@ -81,6 +82,7 @@ class PreqApplicationDocumentApiController extends Controller
                 'supplierId' => $supplierId,
                 'error' => $e->getMessage(),
             ]);
+
             return response()->json([
                 'message' => 'Upload failed',
                 'errors' => ['file' => [$e->getMessage()]],
@@ -99,6 +101,7 @@ class PreqApplicationDocumentApiController extends Controller
             ->where('CategoryID', $categoryId)
             ->firstOrFail();
         $doc->forceFill(['DeletedOn' => now(), 'DeletedBy' => $user->Id])->save();
+
         return response()->json(['message' => 'Deleted']);
     }
 }

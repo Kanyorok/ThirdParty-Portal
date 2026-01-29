@@ -1,36 +1,32 @@
 <?php
 
+use App\Http\Controllers\API\DMS\DocumentApiController;
+use App\Http\Controllers\API\Enums\CodeDetailsController;
 use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
 use App\Http\Controllers\API\Procurement\SupplierRFQController;
 use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
-// use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
-use App\Http\Controllers\Procurement\ThirdParties\ThirdPartiesController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyDocumentsController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyProfileController;
-use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
-use App\Http\Controllers\API\Enums\CodeDetailsController;
-use App\Http\Controllers\Procurement\Prequalification\Api\PrequalificationApplicationController;
-// use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
-use App\Http\Controllers\Procurement\SupplierCategoryController;
-use App\Http\Controllers\Procurement\SupplierCategoryApiController;
-use App\Http\Controllers\Procurement\SupplierController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationProgressController;
+use App\Http\Controllers\Procurement\SupplierCategoryApiController;
+use App\Http\Controllers\Procurement\SupplierCategoryController;
+use App\Http\Controllers\Procurement\SupplierController;
 use App\Http\Controllers\Procurement\TenderApiController;
 use App\Http\Controllers\Procurement\TenderInvitationController;
-use App\Http\Controllers\API\DMS\DocumentApiController;
-// use App\Http\Controllers\Procurement\TenderDocumentController;
+use App\Http\Controllers\Procurement\ThirdParties\ThirdPartiesController;
+use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyDocumentsController;
-// use App\Http\Controllers\Settings\WorkFlowController;
 
 // Token validation (Sanctum) for frontend session checks
 Route::post('auth/validate-token', function (Request $request) {
     $user = $request->user();
-    if (!$user) {
+    if (! $user) {
         return response()->json(['valid' => false], 401);
     }
 
@@ -38,7 +34,7 @@ Route::post('auth/validate-token', function (Request $request) {
     $isActive = method_exists($user, 'isActive') ? $user->isActive() : (bool)($user->IsActive ?? $user->isActive ?? false);
     $isApproved = method_exists($user, 'isApproved') ? $user->isApproved() : (bool)($user->isApproved ?? false);
 
-    if (!$isActive || !$isApproved) {
+    if (! $isActive || ! $isApproved) {
         return response()->json(['valid' => false], 403);
     }
 
@@ -72,14 +68,14 @@ Route::get('/health', function () {
     return response()->json([
         'status' => 'ok',
         'timestamp' => now(),
-        'service' => 'BRERP API'
+        'service' => 'BRERP API',
     ]);
 });
 
 // Test auth endpoint (WITH AUTH REQUIRED)
 Route::middleware('auth:sanctum')->get('/test-auth', function (Illuminate\Http\Request $request) {
     $user = Auth::guard('sanctum')->user();
-    
+
     return response()->json([
         'success' => true,
         'message' => 'Authentication working!',
@@ -88,8 +84,8 @@ Route::middleware('auth:sanctum')->get('/test-auth', function (Illuminate\Http\R
         'user_id' => $user ? $user->Id : null,
         'third_party_id' => ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null,
         'request_headers' => [
-            'authorization' => $request->header('Authorization') ? 'Present (' . substr($request->header('Authorization'), 0, 20) . '...)' : 'Missing'
-        ]
+            'authorization' => $request->header('Authorization') ? 'Present (' . substr($request->header('Authorization'), 0, 20) . '...)' : 'Missing',
+        ],
     ]);
 });
 
@@ -103,13 +99,13 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
             $query->where('Id', $thirdPartyId);
         })->first();
 
-        if (!$supplier) {
+        if (! $supplier) {
             return response()->json([
                 'debug' => 'No supplier found',
                 'third_party_id' => $thirdPartyId,
                 'third_parties_count' => DB::table('t_ThirdParties')->count(),
                 'suppliers_count' => DB::table('t_Suppliers')->count(),
-                'sample_third_party' => DB::table('t_ThirdParties')->first()
+                'sample_third_party' => DB::table('t_ThirdParties')->first(),
             ]);
         }
 
@@ -131,15 +127,15 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
                     'ResponseStatus' => strtolower($inv->ResponseStatus),
                     'tender_title' => $inv->tender ? $inv->tender->Title : 'No tender loaded',
                     'documents_count' => $inv->tender && $inv->tender->documents ? $inv->tender->documents->count() : 0,
-                    'documents' => $inv->tender && $inv->tender->documents ? $inv->tender->documents->toArray() : []
+                    'documents' => $inv->tender && $inv->tender->documents ? $inv->tender->documents->toArray() : [],
                 ];
-            })
+            }),
         ]);
     } catch (\Exception $e) {
         return response()->json([
             'debug' => 'Error in debug endpoint',
             'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
+            'trace' => $e->getTraceAsString(),
         ]);
     }
 });
@@ -148,7 +144,7 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
 Route::get('/debug/auth-status', function (Illuminate\Http\Request $request) {
     try {
         $user = Auth::guard('sanctum')->user();
-        
+
         $response = [
             'authenticated' => $user !== null,
             'timestamp' => now()->toDateTimeString(),
@@ -165,7 +161,7 @@ Route::get('/debug/auth-status', function (Illuminate\Http\Request $request) {
 
             if ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
                 $response['third_party_id'] = $user->ThirdPartyId;
-                
+
                 // Get supplier IDs for this third party
                 $supplierIds = DB::table('t_Suppliers')
                     ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
@@ -178,7 +174,7 @@ Route::get('/debug/auth-status', function (Illuminate\Http\Request $request) {
                 $response['supplier_count'] = count($supplierIds);
 
                 // Check tender invitations
-                if (!empty($supplierIds)) {
+                if (! empty($supplierIds)) {
                     $invitationCount = DB::table('t_TenderInvitations')
                         ->whereIn('SupplierId', $supplierIds)
                         ->whereNull('DeletedOn')
@@ -206,7 +202,7 @@ Route::get('/debug/auth-status', function (Illuminate\Http\Request $request) {
         return response()->json([
             'error' => 'Exception occurred',
             'message' => $e->getMessage(),
-            'trace' => config('app.debug') ? $e->getTraceAsString() : 'Enable debug mode to see trace'
+            'trace' => config('app.debug') ? $e->getTraceAsString() : 'Enable debug mode to see trace',
         ], 500);
     }
 })->middleware('auth:sanctum');
@@ -241,15 +237,13 @@ Route::get('/suppliers/for-tender', function (Request $request) {
         'suppliers' => [
             ['id' => 1, 'name' => 'ABC Construction Ltd', 'pin' => 'P001234567', 'email' => 'info@abcconstruction.co.ke', 'category' => 'Construction'],
             ['id' => 2, 'name' => 'TechSolutions Kenya', 'pin' => 'P002345678', 'email' => 'contact@techsolutions.co.ke', 'category' => 'IT Services'],
-            ['id' => 3, 'name' => 'Office Supplies Plus', 'pin' => 'P003456789', 'email' => 'sales@officesupplies.co.ke', 'category' => 'Office Supplies']
+            ['id' => 3, 'name' => 'Office Supplies Plus', 'pin' => 'P003456789', 'email' => 'sales@officesupplies.co.ke', 'category' => 'Office Supplies'],
         ],
         'total' => 3,
-        'filtered_by_category' => false
+        'filtered_by_category' => false,
     ]);
 });
 // Temporarily commented out - SupplierApiController does not exist
-// Route::get('/suppliers/categories', [\App\Http\Controllers\API\Procurement\SupplierApiController::class, 'getSupplierCategories']);
-// Route::get('/suppliers/portal-registered', [\App\Http\Controllers\API\Procurement\SupplierApiController::class, 'getPortalRegisteredSuppliers']);
 
 Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
     Route::get('/thirdpartyuser', function (Request $request) {
@@ -279,10 +273,6 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
         Route::delete('{third_party}', [ThirdPartiesController::class, 'destroy']);
         // Upload supporting documents for a third party
         Route::post('{third_party}/documents', [ThirdPartyDocumentsController::class, 'store']);
-        // Route::get('suppliers', [ThirdPartyController::class, 'getSuppliers']);
-        // Route::patch('{third_party}/approve', [ThirdPartyController::class, 'approve']);
-        // Route::patch('{third_party}/reject', [ThirdPartyController::class, 'reject']);
-        // Route::patch('{third_party}/status', [ThirdPartyController::class, 'updateStatus']);
     });
 
     Route::apiResource('third-parties-bank-details', ThirdPartiesBankDetailsController::class);
@@ -364,16 +354,16 @@ Route::prefix('procurement')->name('api.procurement.')
             Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
             Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
         });
-        
+
         // RFQ routes - now properly authenticated
         Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
         Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
         Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
-        
+
         // Protected RFQ actions (submit, clarifying)
         Route::post('rfq-responses', [SupplierRFQController::class, 'submitResponse']);
         Route::post('rfq-clarifications', [SupplierRFQController::class, 'postClarification']);
-        
+
         // Tender invitations - matches RFQ structure
         Route::get('tender-invitations', [TenderInvitationController::class, 'index']);
         Route::put('tender-invitations/{id}', [TenderInvitationController::class, 'update']);
@@ -392,18 +382,8 @@ Route::middleware(['web', 'auth:sanctum', \App\Http\Middleware\VerifiedUser::cla
 
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // Admin and Public Routes for Prequalification Periods
-    // Route::controller(PrequalificationPeriodController::class)->group(function () {
-    //     Route::post('prequal-periods', 'store')->middleware('can:create,App\Models\Procurement\PrequalificationPeriod');
-    //     Route::get('prequal-periods/{period}', 'show')->middleware('can:view,period');
-    // });
 
     // Supplier Routes
-    // Route::middleware('role:supplier')->group(function () {
-    //     Route::controller(SupplierApplicationController::class)->group(function () {
-    //         Route::post('supplier/applications', 'store');
-    //         Route::get('supplier/applications/{application}', 'show')->middleware('can:view,application');
-    //     });
-    // });
 });
 
 
@@ -415,8 +395,9 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
  */
 
 use App\Http\Controllers\API\CRDB\CRDBAuthController;
-use App\Http\Controllers\API\CRDB\CRDBGeneralLedgerController;
 use App\Http\Controllers\API\CRDB\CRDBCustomerController;
+use App\Http\Controllers\API\CRDB\CRDBGeneralLedgerController;
+
 // CRDB Authentication Routes (Public)
 Route::prefix('crdb')->group(function () {
     Route::post('login', [CRDBAuthController::class, 'login'])->name('crdb.login');
@@ -431,7 +412,6 @@ Route::prefix('crdb')->middleware(\App\Http\Middleware\CRDBAuthMiddleware::class
     Route::get('syncGLBalances', [CRDBGeneralLedgerController::class, 'syncGLBalances'])->name('syncGLBalances');
     Route::get('syncCustomers', [CRDBCustomerController::class, 'syncCustomers'])->name('syncCustomers');
     Route::get('getClientSummaryStatement', [CRDBCustomerController::class, 'getClientSummaryStatement'])->name('getClientSummaryStatement');
-    // Route::get('data', [CRDBDataController::class, 'fetch']);
 
     // Health check for authenticated requests
     Route::get('health', function () {

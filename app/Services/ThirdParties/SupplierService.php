@@ -5,13 +5,14 @@ namespace App\Services\ThirdParties;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
-use App\Models\ThirdParty\ThirdPartyUser;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\Finance\FinanceRole;
 use App\Models\ThirdParty\SupplierMaster;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyType;
+use App\Models\ThirdParty\ThirdPartyUser;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Models\ThirdParies\Supplier;
@@ -39,6 +40,7 @@ class SupplierService extends ThirdPartiesService
                 throw new \RuntimeException("No finance roles found " . __CLASS__);
             }
             $actor = SystemHelper::user();
+
             return ThirdPartyType::create([
                 'FinanceRole' => $role->FinanceRoleID,
                 'Code' => ThirdPartyService::TypeSupplier,

@@ -28,11 +28,16 @@ use Spatie\Permission\Models\Permission;
 
 class User extends Authenticatable
 {
-    use ImageTrait, HasFactory, Notifiable, UserActorTrait, SoftDeletes, HasBranchRoles;
+    use ImageTrait;
+    use HasFactory;
+    use Notifiable;
+    use UserActorTrait;
+    use SoftDeletes;
+    use HasBranchRoles;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const string CREATED_AT = 'CreatedOn';
+    public const string UPDATED_AT = 'ModifiedOn';
+    public const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Users';
     protected $primaryKey = 'Id';
@@ -62,12 +67,12 @@ class User extends Authenticatable
         'remember_token',
         'Linked',
         'Email_Signature',
-        'BranchId'
+        'BranchId',
     ];
 
     protected $casts = [
-        'Gender'    => GenderEnum::class,
-        'Linked'    => 'bool',
+        'Gender' => GenderEnum::class,
+        'Linked' => 'bool',
         'login_at' => 'datetime',
         'CreatedBy' => 'integer',
     ];
@@ -78,7 +83,9 @@ class User extends Authenticatable
     public function getRoleNames(): Collection
     {
         $branchId = session('LoginBranchId');
-        if (!$branchId) return collect();
+        if (! $branchId) {
+            return collect();
+        }
 
         return ModelRole::where('model_id', $this->Id)  // Changed from $this->UserID
             ->where('model_type', self::getPrimaryKey())
@@ -92,6 +99,7 @@ class User extends Authenticatable
     public function hasRole($roles, string $guard = null): bool
     {
         $roleNames = $this->getRoleNames();
+
         return collect($roles)->intersect($roleNames)->isNotEmpty();
     }
 
@@ -99,7 +107,9 @@ class User extends Authenticatable
     public function getPermissionsViaRoles(): Collection
     {
         $branchId = session('LoginBranchId');
-        if (!$branchId) return collect();
+        if (! $branchId) {
+            return collect();
+        }
 
         return Permission::query()
             ->whereHas('roles.modelRoles', function ($query) use ($branchId) {
@@ -115,7 +125,6 @@ class User extends Authenticatable
         // No special bypass - admin role gets permissions like any other role
         return $this->getPermissionsViaRoles()->contains('name', $permission);
     }
-
 
     // ✅ FIXED: Explicitly use Id for model_id
     public function syncRolesWithBranch(array|Collection $roles, int $branchId, int $actorId = 1): void
@@ -178,7 +187,7 @@ class User extends Authenticatable
     /**
      * Get the morph class for the model.
      * This must return 'UserID' to match the morphMap and database model_type column.
-     * 
+     *
      * Without this override, Spatie Permission looks for model_type = 'App\Models\Auth\User'
      * but the database has model_type = 'UserID' as defined in the morphMap.
      */
@@ -216,7 +225,7 @@ class User extends Authenticatable
         }
 
         $branchId = session('LoginBranchId');
-        if (!$branchId) {
+        if (! $branchId) {
             return null;
         }
 
@@ -269,6 +278,7 @@ class User extends Authenticatable
         if (is_string($permissions)) {
             $permissions = array_map('trim', explode(',', $permissions));
         }
+
         return $query->whereHas('roles.permissions', function (Builder $query) use ($permissions) {
             $query->whereIn('name', $permissions);
         })->orWhereHas('permissions', function (Builder $query) use ($permissions) {

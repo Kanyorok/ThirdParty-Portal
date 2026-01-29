@@ -43,16 +43,16 @@ class SurveyController extends Controller
         }
 
         $clientID = $request->get('clientID');
-        if (!is_string($clientID)) {
+        if (! is_string($clientID)) {
             throw ValidationException::withMessages(['clientID' => 'clientID is required']);
         }
 
-        if (!Client::query()->where('ClientID', $clientID)->exists()) {
+        if (! Client::query()->where('ClientID', $clientID)->exists()) {
             throw ValidationException::withMessages(['clientID' => 'clientID may be invalid']);
         }
 
         $response = $request->get('response');
-        if (!is_array($response)) {
+        if (! is_array($response)) {
             throw ValidationException::withMessages(['response' => 'please enter response']);
         }
 
@@ -83,7 +83,7 @@ class SurveyController extends Controller
                     $txtResponse = $questionResponse;
                 } elseif ($question->Type->value === SurveyQuestionTypeEnum::Closed->value) {
                     $option = $question->answers()->where('Id', $questionResponse)->first();
-                    if (!$option instanceof SurveyQuestionAnswer) {
+                    if (! $option instanceof SurveyQuestionAnswer) {
                         throw ValidationException::withMessages([
                                                                  $question->SurveyQuestionId => $question->SurveyQuestionId . ' does not have valid response.',
                                                                 ]);
@@ -96,16 +96,16 @@ class SurveyController extends Controller
                 }
 
                 $ans->add([
-                           'Party'                  => Client::getPrimaryKey(),
-                           'PartyID'                => $clientID,
-                           'Source'                 => 'Channels',
-                           'Response'               => $txtResponse,
+                           'Party' => Client::getPrimaryKey(),
+                           'PartyID' => $clientID,
+                           'Source' => 'Channels',
+                           'Response' => $txtResponse,
                            'SurveyQuestionAnswerID' => $idResponse,
-                           'SurveyQuestionID'       => $question->Id,
-                           'CreatedOn'              => $date,
-                           'ModifiedOn'             => $date,
-                           'CreatedBy'              => $actor->Id,
-                           'ModifiedBy'             => $actor->Id,
+                           'SurveyQuestionID' => $question->Id,
+                           'CreatedOn' => $date,
+                           'ModifiedOn' => $date,
+                           'CreatedBy' => $actor->Id,
+                           'ModifiedBy' => $actor->Id,
                           ]);
 
                 continue 2;

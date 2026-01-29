@@ -3,9 +3,8 @@
 namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\Inventory\InventoryType;
 use App\Models\Auth\User;
-use Illuminate\Auth\Access\Response;
+use App\Models\Inventory\InventoryType;
 
 class InventoryTypePolicy
 {
@@ -56,5 +55,4 @@ class InventoryTypePolicy
     {
         return $user->can(PermissionEnum::InventoryTypeRestore->value);
     }
-
 }

@@ -27,6 +27,5 @@ class DepartmentNeedsRequest extends FormRequest
             'BranchID' => 'required|exists:t_Branches,Id',
             'DepartmentID' => 'required|exists:t_Departments,Id',
         ];
-
     }
 }

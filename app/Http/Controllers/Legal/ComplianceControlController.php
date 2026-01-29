@@ -1,23 +1,22 @@
 <?php
 
-
 namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Legal\ComplianceArea;
 use App\Models\Legal\ComplianceControl;
 use App\Models\Legal\ComplianceControlEvidence;
 use App\Models\Legal\ComplianceObligation;
-use App\Models\Legal\ComplianceArea;
 use App\Models\Legal\ControlType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class ComplianceControlController extends Controller
 {
     public function index()
     {
         $controls = ComplianceControl::with(['area', 'controlType'])->get();
+
         return view('legal.compliance.controls.index', compact('controls'));
     }
 
@@ -27,6 +26,7 @@ class ComplianceControlController extends Controller
         $types = ControlType::pluck('Name', 'Id');
         $owners = DB::table('t_Users')->pluck('Name', 'Id');
         $obligations = ComplianceObligation::pluck('Title', 'Id');
+
         return view('legal.compliance.controls.create', compact('areas', 'types', 'owners', 'obligations'));
     }
 
@@ -58,6 +58,7 @@ class ComplianceControlController extends Controller
     public function show($id)
     {
         $control = ComplianceControl::with(['area', 'controlType', 'obligations', 'evidence'])->findOrFail($id);
+
         return view('legal.compliance.controls.show', compact('control'));
     }
 
@@ -68,6 +69,7 @@ class ComplianceControlController extends Controller
         $types = ControlType::pluck('Name', 'Id');
         $owners = DB::table('t_Users')->pluck('Name', 'Id');
         $obligations = ComplianceObligation::pluck('Title', 'Id');
+
         return view('legal.compliance.controls.edit', compact('control', 'areas', 'types', 'owners', 'obligations'));
     }
 
@@ -105,6 +107,7 @@ class ComplianceControlController extends Controller
             'DeletedBy' => auth()->id() ?? 1,
             'DeletedOn' => now(),
         ]);
+
         return redirect()->route('legal.compliance.controls.index')
             ->with('success', 'Control deactivated.');
     }

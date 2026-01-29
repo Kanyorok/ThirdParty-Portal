@@ -17,22 +17,22 @@ class ScheduleCollection extends ResourceCollection
         return [
                 'data' => $this->collection->transform(function ($schedule) {
                     return new ScheduleResource($schedule);
-                /*$scheduleService = new ScheduleService($schedule->resource);
-                return  [
-                    'id' => $schedule->ScheduleID,
-                    'title' => $schedule->Title,
-                    'icon' =>  ($schedule->ScheduledType===Call::getPrimaryKey())?'<i class="fas fa-phone-alt"></i>':'<i class="fas fa-calendar-alt"></i>',
-                    'start' => $schedule->StartOn->toIso8601String(),
-                    'end' =>  $schedule->EndOn->toIso8601String(),
-                    'description' => $schedule->Notes,
-                    'display' => ($schedule->trashed())?'background':'auto',
-                    'color' => $scheduleService->colour(),
-                    'permission' => [
-                        'editable' => $scheduleService->editable(),
-                        'cancelable' => $scheduleService->cancelable(),
-                        'actionable' => $scheduleService->actionable()
-                    ],
-                ];*/
+                    /*$scheduleService = new ScheduleService($schedule->resource);
+                    return  [
+                        'id' => $schedule->ScheduleID,
+                        'title' => $schedule->Title,
+                        'icon' =>  ($schedule->ScheduledType===Call::getPrimaryKey())?'<i class="fas fa-phone-alt"></i>':'<i class="fas fa-calendar-alt"></i>',
+                        'start' => $schedule->StartOn->toIso8601String(),
+                        'end' =>  $schedule->EndOn->toIso8601String(),
+                        'description' => $schedule->Notes,
+                        'display' => ($schedule->trashed())?'background':'auto',
+                        'color' => $scheduleService->colour(),
+                        'permission' => [
+                            'editable' => $scheduleService->editable(),
+                            'cancelable' => $scheduleService->cancelable(),
+                            'actionable' => $scheduleService->actionable()
+                        ],
+                    ];*/
                 }),
                ];
     }

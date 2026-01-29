@@ -30,17 +30,17 @@ class PBXAuthMiddleware
             return $this->_fail('client: no source');
         }
         $bearerToken = $request->bearerToken();
-        if (!is_string($bearerToken)) {
+        if (! is_string($bearerToken)) {
             return $this->_fail('client: no token provided');
         }
 
         try {
             $ApiCred = APICredential::query()->where('Integration', IntegrationsEnum::PBX->value)->latest('Id')->first();
-            if (!$ApiCred instanceof APICredential) {
+            if (! $ApiCred instanceof APICredential) {
                 return $this->_fail('No API credential Found');
             }
             $key = $ApiCred->Configuration?->Key;
-            if (!is_string($key)) {
+            if (! is_string($key)) {
                 return $this->_fail('Invalid key in system');
             }
         } catch (ConnectionException | InvalidParameterException | Exception $e) {
@@ -56,6 +56,7 @@ class PBXAuthMiddleware
     protected function _fail(string $reason): JsonResponse
     {
         SystemHelper::notifyAdmin('3CX Endpoints Authentication Failure : ' . $reason);
+
         return response()->json(['message' => 'unauthorized'], Response::HTTP_UNAUTHORIZED);
     }
 }

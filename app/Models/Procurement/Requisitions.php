@@ -5,22 +5,18 @@ namespace App\Models\Procurement;
 use App\Enums\WorkflowStatus;
 use App\Models\Core\Approval\WorkflowHistory;
 use App\Models\Core\Approval\WorkflowPending;
+use App\Models\Inventory\TransactionTransfer;
 use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Inventory\TransactionTransfer;
-
 
 class Requisitions extends Model
 {
-    //
-
     use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $connection = 'sqlsrv';
     protected $table = 't_Requisitions';
     protected $primaryKey = 'Id';
@@ -40,25 +36,26 @@ class Requisitions extends Model
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
-        'CategoryId'
+        'CategoryId',
     ];
 
     protected $casts = [
         // 'Status' => CampaignStatusEnum::class,
         // 'Type' => CampaignTypeEnum::class,
-        'CreatedBy'  => 'integer',
+        'CreatedBy' => 'integer',
         'ModifiedBy' => 'integer', //,
         // 'Processing' => 'boolean'
     ];
+
     public function requisitionLines()
     {
         return $this->hasMany(RequisitionLine::class, 'RequisitionID', 'Id');
     }
+
     public function procurementPlan()
     {
         return $this->belongsTo(\App\Models\Procurement\ConsolidatedProcurementPlan::class, 'PlanRef', 'PlanID');
     }
-
 
     public function transfer()
     {
@@ -119,9 +116,9 @@ class Requisitions extends Model
         });
     }
 
-     /**
-     * Workflow history relationship
-     */
+    /**
+    * Workflow history relationship
+    */
     public function workflowHistory()
     {
         return $this->morphMany(
@@ -143,6 +140,4 @@ class Requisitions extends Model
             'Id'        // Local key
         );
     }
-
-
 }

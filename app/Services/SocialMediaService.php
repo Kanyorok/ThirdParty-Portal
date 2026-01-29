@@ -63,19 +63,19 @@ class SocialMediaService
         User $actor
     ): self {
         $id = Social::insertGetId([
-                                   'SocialID'      => self::_ID(),
-                                   'RemoteId'      => $Id,
-                                   'Type'          => $integration->value,
-                                   'Content'       => $content,
-                                   'LikesCount'    => $likes,
+                                   'SocialID' => self::_ID(),
+                                   'RemoteId' => $Id,
+                                   'Type' => $integration->value,
+                                   'Content' => $content,
+                                   'LikesCount' => $likes,
                                    'CommentsCount' => $comments,
-                                   'ViewsCount'    => $views,
-                                   'Published_at'  => $updated,
-                                   'Response'      => $response,
-                                   'CreatedOn'     => $created,
-                                   'CreatedBy'     => $actor->Id,
-                                   'ModifiedOn'    => $updated,
-                                   'ModifiedBy'    => $actor->Id,
+                                   'ViewsCount' => $views,
+                                   'Published_at' => $updated,
+                                   'Response' => $response,
+                                   'CreatedOn' => $created,
+                                   'CreatedBy' => $actor->Id,
+                                   'ModifiedOn' => $updated,
+                                   'ModifiedBy' => $actor->Id,
                                   ]);
 
         return new self(Social::query()->findOrFail($id));
@@ -100,6 +100,7 @@ class SocialMediaService
     public function addImage(Image $image, User $actor): static
     {
         $this->social->images()->attach($image->ImageID, ['CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id]);
+
         return $this;
     }
 
@@ -123,6 +124,7 @@ class SocialMediaService
         foreach ($medias as $media) {
             if ($media->type === "photo") {
                 $service->mediaFromUrl($media->url, $actor, ExtensionsEnum::Jpeg->getMimeType());
+
                 break;
             }
             if ($media->type === "video") {
@@ -133,6 +135,7 @@ class SocialMediaService
                 foreach ($media->variants as $variant) {
                     if (Str::contains($variant->content_type, "mp4") && (filter_var($variant->url, FILTER_VALIDATE_URL) !== false)) {
                         $service->mediaFromUrl($variant->url, $actor, $variant->content_type);
+
                         break;
                     }
                 }
@@ -145,21 +148,21 @@ class SocialMediaService
      */
     public static function create(IntegrationsEnum $socialType, string $content, Carbon $scheduled_at, User $actor): SocialMediaService
     {
-        if (!$socialType->isSocial()) {
+        if (! $socialType->isSocial()) {
             throw new ErroredException("Social media type " . $socialType->name . " not allowed");
         }
         $social = new Social();
         $social->fill([
-                       'SocialID'      => self::_ID(),
-                       'RemoteId'      => '',
-                       'Type'          => $socialType->value,
-                       'Content'       => $content,
-                       'LikesCount'    => 0,
+                       'SocialID' => self::_ID(),
+                       'RemoteId' => '',
+                       'Type' => $socialType->value,
+                       'Content' => $content,
+                       'LikesCount' => 0,
                        'CommentsCount' => 0,
-                       'ViewsCount'    => 0,
-                       'Scheduled_at'  => $scheduled_at,
-                       'CreatedBy'     => $actor->Id,
-                       'ModifiedBy'    => $actor->Id,
+                       'ViewsCount' => 0,
+                       'Scheduled_at' => $scheduled_at,
+                       'CreatedBy' => $actor->Id,
+                       'ModifiedBy' => $actor->Id,
                       ])->save();
 
         return new self($social);
@@ -178,6 +181,7 @@ class SocialMediaService
                     throw new ErroredException("Comment source is not Facebook comment");
                 }
                 $newComment = $service->createComment($comment->RemoteId, $description, 'comment');
+
                 return CommentService::forComment($comment, $description, $actor, $newComment, $newComment->id, IntegrationsEnum::Facebook)->comment;
             }
 
@@ -185,12 +189,13 @@ class SocialMediaService
 
             return CommentService::forSocial($this->social, $description, $actor, $newComment, $newComment->id)->comment;
         }
+
         throw new ErroredException("Not implemented");
     }
 
     public function publish(): bool
     {
-        if (!is_null($this->social->Published_at)) {
+        if (! is_null($this->social->Published_at)) {
             return true;
         }
 

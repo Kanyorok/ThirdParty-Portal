@@ -40,6 +40,7 @@ class ClientNotesController extends Controller
             $activity = $this->save($client->notes(), $note, $actor);
         } catch (Exception $e) {
             Log::error('Error adding Client Note. e: ' . $e->getMessage());
+
             return $this->errored('unexpected error try again latter');
         }
 

@@ -67,7 +67,7 @@ class PrequalificationService
 
         // Apply search functionality
         $search = $filters['search'] ?? '';
-        if (!empty($search)) {
+        if (! empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('t_PrequalificationRounds.Title', 'LIKE', '%' . $search . '%')
                     ->orWhere('t_PrequalificationRounds.Description', 'LIKE', '%' . $search . '%');
@@ -87,7 +87,7 @@ class PrequalificationService
      */
     public function getSupplierCategories(?int $thirdPartyId): Collection
     {
-        if (!$thirdPartyId) {
+        if (! $thirdPartyId) {
             return collect();
         }
 
@@ -136,7 +136,7 @@ class PrequalificationService
                 ->whereNull('DeletedOn')
                 ->get(['RoundID', 'ItemCategoryID'])
                 ->groupBy('RoundID')
-                ->map(fn($rows) => $rows->pluck('ItemCategoryID')->filter()->unique()->values());
+                ->map(fn ($rows) => $rows->pluck('ItemCategoryID')->filter()->unique()->values());
         } elseif (
             Schema::hasTable('t_PrequalificationRoundItemCategories')
             && Schema::hasColumn('t_PrequalificationRoundItemCategories', 'RoundID')
@@ -147,7 +147,7 @@ class PrequalificationService
                 ->whereNull('DeletedOn')
                 ->get(['RoundID', 'ItemCategoryID'])
                 ->groupBy('RoundID')
-                ->map(fn($rows) => $rows->pluck('ItemCategoryID')->filter()->unique()->values());
+                ->map(fn ($rows) => $rows->pluck('ItemCategoryID')->filter()->unique()->values());
         }
 
         return collect();
@@ -164,19 +164,19 @@ class PrequalificationService
         return $roundIds->mapWithKeys(function ($rid) use ($supplierCategories, $roundItemCategoryMap) {
             // If no mapping exists at all, use supplier categories if present; otherwise fall back to all active
             if ($roundItemCategoryMap->isEmpty()) {
-                return [$rid => $supplierCategories->isNotEmpty() 
-                    ? $supplierCategories 
+                return [$rid => $supplierCategories->isNotEmpty()
+                    ? $supplierCategories
                     : $this->getAllActiveCategories()];
             }
 
             $itemIds = $roundItemCategoryMap->get($rid, collect());
-            if (!$itemIds instanceof Collection) {
+            if (! $itemIds instanceof Collection) {
                 $itemIds = collect($itemIds);
             }
 
             if ($itemIds->isEmpty()) {
-                return [$rid => $supplierCategories->isNotEmpty() 
-                    ? $supplierCategories 
+                return [$rid => $supplierCategories->isNotEmpty()
+                    ? $supplierCategories
                     : $this->getAllActiveCategories()];
             }
 
@@ -192,6 +192,7 @@ class PrequalificationService
                 if ($supplierCategories->isNotEmpty()) {
                     return [$rid => $supplierCategories];
                 }
+
                 return [$rid => $this->getAllActiveCategories()];
             }
 
@@ -208,7 +209,7 @@ class PrequalificationService
      */
     public function getSupplierApplications(?int $supplierId, Collection $roundIds): Collection
     {
-        if (!$supplierId || $roundIds->isEmpty()) {
+        if (! $supplierId || $roundIds->isEmpty()) {
             return collect();
         }
 
@@ -256,10 +257,12 @@ class PrequalificationService
     public function mapStatus(?string $appStatusCode = null, ?string $catStatusCode = null, ?string $stage = null): string
     {
         $code = $catStatusCode ?? $appStatusCode;
-        if (!$code) return 'NOT_APPLIED';
-        
+        if (! $code) {
+            return 'NOT_APPLIED';
+        }
+
         $code = is_string($code) ? $code : (string) $code;
-        
+
         return match ($code) {
             'A', 'P' => 'APPROVED',
             'R' => 'REJECTED',
@@ -304,29 +307,29 @@ class PrequalificationService
     public function validateRoundEligibility(PrequalificationRound $round): array
     {
         $now = now();
-        $statusValue = is_object($round->Status) && property_exists($round->Status, 'value') 
-            ? $round->Status->value 
+        $statusValue = is_object($round->Status) && property_exists($round->Status, 'value')
+            ? $round->Status->value
             : (string) $round->Status;
 
         $isClosed = (string) $statusValue === (string) PrequalificationRoundEnum::Closed->value;
         $isOpen = (string) $statusValue === (string) PrequalificationRoundEnum::Open->value;
-        $windowOpen = (!$round->StartDate || $round->StartDate <= $now) 
-            && (!$round->EndDate || $round->EndDate >= $now);
+        $windowOpen = (! $round->StartDate || $round->StartDate <= $now)
+            && (! $round->EndDate || $round->EndDate >= $now);
         $isExpired = $round->EndDate && $round->EndDate < $now;
 
-        $isEligible = !$isClosed && $isOpen && $windowOpen && !$isExpired;
+        $isEligible = ! $isClosed && $isOpen && $windowOpen && ! $isExpired;
 
         $reason = null;
         $httpCode = 200;
 
-        if (!$isEligible) {
+        if (! $isEligible) {
             if ($isExpired) {
                 $reason = 'This round has expired.';
                 $httpCode = 410;
             } elseif ($isClosed) {
                 $reason = 'Applications are closed for this round.';
                 $httpCode = 403;
-            } elseif (!$isOpen) {
+            } elseif (! $isOpen) {
                 $reason = 'Round is not open for applications.';
                 $httpCode = 403;
             } else {

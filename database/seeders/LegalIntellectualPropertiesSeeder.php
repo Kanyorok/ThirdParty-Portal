@@ -24,7 +24,7 @@ class LegalIntellectualPropertiesSeeder extends Seeder
                 'ExpiryDate' => '2034-01-15',
                 'Status' => 'Active',
                 'Owner' => 'Toyota Motor Corporation',
-                // 'Jurisdiction' => 'Kenya',   
+                // 'Jurisdiction' => 'Kenya',
                 'DMSDocID' => 1001,
                 'Remarks' => 'Trademark for corporate logo and branding.',
                 'IsDisputed' => false,
@@ -79,7 +79,7 @@ class LegalIntellectualPropertiesSeeder extends Seeder
                 ->where('Title', $record['Title'])
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('t_LegalIntellectualProperties')->insert([
                     'Title' => $record['Title'],
                     'IPType' => $record['IPType'],
@@ -98,7 +98,7 @@ class LegalIntellectualPropertiesSeeder extends Seeder
                     'ModifiedBy' => 1,
                     'ModifiedOn' => $now,
                     'DeletedBy' => null,
-                    'DeletedOn' => null
+                    'DeletedOn' => null,
                 ]);
             }
         }

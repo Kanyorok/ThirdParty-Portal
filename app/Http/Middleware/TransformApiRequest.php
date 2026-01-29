@@ -26,6 +26,7 @@ class TransformApiRequest
             $camelKey = is_numeric($key) ? $key : Str::camel($key);
             $transformedArray[$camelKey] = is_array($value) ? $this->transformKeysToCamelCase($value) : $value;
         }
+
         return $transformedArray;
     }
 }

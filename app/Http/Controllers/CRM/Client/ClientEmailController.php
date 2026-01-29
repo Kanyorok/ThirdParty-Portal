@@ -31,15 +31,18 @@ class ClientEmailController extends Controller
     {
         $email = $request->getClientEmail($client);
         $cc = $request->getCarbonCopyEmails();
+
         try {
             $activity = DB::transaction(static function () use ($cc, $email, $client, $request) {
                 $service = CRMEmailService::createClient($client, $email, $request->validated('mail_subject'), $request->validated('mail_content'), $request->user(), $cc);
                 $activity = $service->addActivity(now());
                 $service->send();
+
                 return $activity;
             });
         } catch (Exception | \Throwable $e) {
             Log::error('Error sending email to client ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

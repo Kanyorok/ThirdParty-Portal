@@ -15,8 +15,7 @@ enum InsurancePolicyStatus: string
     case AwaitingIssuance = 'A';
     case Issued = 'I';
 
-    case  Rejected = 'R';
-
+    case Rejected = 'R';
 
     public function label(): string
     {

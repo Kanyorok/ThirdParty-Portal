@@ -4,47 +4,72 @@ namespace App\Http\Controllers\API\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\BidSubmission;
+use App\Models\Procurement\Tender;
 use App\Models\ThirdParies\Supplier;
 use App\Services\Procurement\EncryptedBidDocumentService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-class TenderSubmissionApiController extends Controller
+class TenderSubmissionController extends Controller
 {
     public function index(): JsonResponse
     {
-        $supplier = $this->resolveSupplier();
+        $this->authorize(\App\Enums\Core\PermissionEnum::BidSubmissionRead->value);
+        $submissions = BidSubmission::with([
+            'submissionMode',
+            'createdByUser',
+            'supplier.supplierMaster.party',
+        ])
+            ->orderBy('CreatedOn', 'desc')
+            ->get();
 
-        if (!$supplier) {
-            return response()->json(['error' => 'Supplier not found'], 404);
-        }
-
-        $submissions = BidSubmission::query()
-            ->where('SupplierId', $supplier->Id)
-            ->orderByDesc('CreatedOn')
-            ->get()
-            ->map(fn ($s) => [
-                'id' => $s->Id,
-                'tenderRef' => $s->TenderRef,
-                'submissionMode' => $s->submissionMode?->Description,
-                'receivedAt' => $s->ReceivedAt,
-                'status' => $s->DocumentsAccessible ? 'opened' : 'sealed',
-                'createdOn' => $s->CreatedOn,
-            ]);
-
-        return response()->json([
-            'data' => $submissions,
-            'total' => $submissions->count(),
-        ]);
+        return view('procurement.tendering.suppliermanagement.bidsubmission.index', compact('submissions'));
     }
 
     public function store(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'tender_id' => 'required|integer|exists:t_Tenders,Id',
-            'submission_mode' => 'required|string',
+        $this->authorize(\App\Enums\Core\PermissionEnum::BidSubmissionWrite->value);
+        // Exclude tenders that already have submissions
+        $tenders = Tender::select('TenderNo', 'Title')
+            ->doesntHave('submissions')
+            ->get();
+
+        // Fix: Get supplier names from the related ThirdParty table
+        $suppliers = Supplier::select('t_Suppliers.Id')
+            ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
+            ->join('t_ThirdParties', 't_SupplierMaster.ThirdPartyId', '=', 't_ThirdParties.Id')
+            ->selectRaw('t_Suppliers.Id, COALESCE(t_ThirdParties.TradingName, t_ThirdParties.ThirdPartyName) as SupplierName')
+            ->whereNull('t_Suppliers.DeletedOn')
+            ->get();
+
+        $submissionModes = DB::table('t_CodeDetails')
+            ->where('CodeID', 'SubmissionMode')
+            ->get(['ID', 'Description']);
+
+        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes'));
+    }
+
+    public function view($Id)
+    {
+        $submission = BidSubmission::findOrFail($Id);
+
+        return view('procurement.tendering.suppliermanagement.bidsubmission.view', compact('submission'));
+    }
+
+    public function edit($Id)
+    {
+        $submission = BidSubmission::findOrFail($Id);
+    }
+
+    public function store(Request $request)
+    {
+        // Validate the input
+        $request->validate([
+            'tender_ref' => 'required|string|max:255',
+            'supplier_name' => 'required|string|max:255',
+            'submission_mode' => 'required|string|max:255',
+            'received_at' => 'required|date',
+            'recorded_by' => 'required|string|max:255',
             'remarks' => 'nullable|string',
             'bid_file' => 'required|file|mimes:zip,pdf|max:10240',
         ]);
@@ -80,13 +105,29 @@ class TenderSubmissionApiController extends Controller
             ->where('Description', $data['submission_mode'])
             ->value('ID');
 
-        if (!$submissionModeId) {
-            return response()->json(['error' => 'Invalid submission mode'], 422);
+        if (! $submissionModeId) {
+            return redirect()->back()->withErrors(['submission_mode' => 'Invalid submission mode selected.']);
         }
 
         $userId = DB::table('t_Users')->value('Id') ?? 1;
 
         DB::beginTransaction();
+
+        try {
+            // Create bid submission record
+            $bidSubmission = BidSubmission::create([
+                'TenderRef' => $request->tender_ref,
+                'SupplierName' => $request->supplier_name,
+                'SupplierId' => $supplier?->Id,
+                'SubmissionMode' => $submissionModeId,
+                'ReceivedAt' => $request->received_at,
+                'RecordedBy' => $request->recorded_by,
+                'Remarks' => $request->remarks,
+                'SubmissionSource' => 'manual',
+                'DocumentsAccessible' => false, // Sealed until bid opening
+                'CreatedBy' => $request->user()->Id,
+                'ModifiedBy' => $request->user()->Id,
+            ]);
 
         $submission = BidSubmission::create([
             'TenderRef' => $data['tender_id'],

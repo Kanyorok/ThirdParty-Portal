@@ -11,9 +11,9 @@ Sortable.mount(RemoveOnSpill, RevertOnSpill);
 export default Sortable;
 
 export {
-	Sortable,
+  Sortable,
 
-	// Extra
-	Swap,
-	MultiDrag
+  // Extra
+  Swap,
+  MultiDrag,
 };

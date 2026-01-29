@@ -33,6 +33,7 @@ class LeadActionController extends Controller
     {
         $actor = $request->user();
         $this->authorize('update', $lead);
+
         /*if (!is_string($actor->ClientID) || !Client::query()->where('ClientID', $actor->ClientID)->exists()) {
             return $this->errored('Kindly add ClientID in your profile.');
         }
@@ -109,7 +110,7 @@ class LeadActionController extends Controller
             DB::transaction(static function () use ($lead, $actor) {
                 (new LeadService($lead))->won($actor);
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Lead (' . $lead->LeadID . ') mark as won.');
             Log::error($e);
         }

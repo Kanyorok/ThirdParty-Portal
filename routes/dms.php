@@ -86,8 +86,6 @@ Route::middleware(['module:700000'])->namespace('DMS')->prefix('dms')->group(fun
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('dms-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'dms-reports.index',
-        'show' => 'dms-reports.show'
+        'show' => 'dms-reports.show',
     ]);
-
-
 });

@@ -23,7 +23,7 @@ class LoanCollateralController extends Controller
     public function __invoke(string $product_id): JsonResponse
     {
         $product = DebtProduct::query()->where('AccountID', $product_id)->oldest('processDate')->first();
-        if (!$product instanceof DebtProduct) {
+        if (! $product instanceof DebtProduct) {
             throw new Exception('Product not found, maybe closed.');
         }
         $this->authorize('view', $product);
@@ -34,5 +34,5 @@ class LoanCollateralController extends Controller
             })->editColumn('NetCollateralValue', function (CollateralAccount $collateralAccount) {
                 return number_format($collateralAccount->NetCollateralValue, 2);
             })->make();
-    }//
+    }
 }

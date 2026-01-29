@@ -30,7 +30,7 @@ class UpdateGlBalances extends Command
         try {
             DB::transaction(static function () {
                 // Execute the stored procedure and capture the result
-                if (!DB::statement('EXEC p_updateGLBalances')) {
+                if (! DB::statement('EXEC p_updateGLBalances')) {
                     throw new \RuntimeException('Error executing stored procedure');
                 }
             });

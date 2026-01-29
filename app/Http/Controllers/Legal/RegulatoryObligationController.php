@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Legal\RegulatoryObligation;
+use Illuminate\Http\Request;
 
 class RegulatoryObligationController extends Controller
 {
     public function index()
     {
         $obligations = RegulatoryObligation::latest()->get();
+
         return view('legal.compliance.obligations.index', compact('obligations'));
     }
 
@@ -36,12 +37,14 @@ class RegulatoryObligationController extends Controller
         ]);
 
         RegulatoryObligation::create($validated);
+
         return redirect()->route('legal.compliance.obligations.index')->with('success', 'Obligation created successfully.');
     }
 
     public function edit($id)
     {
         $obligation = RegulatoryObligation::findOrFail($id);
+
         return view('legal.compliance.obligations.edit', compact('obligation'));
     }
 
@@ -64,6 +67,7 @@ class RegulatoryObligationController extends Controller
         ]);
 
         $obligation->update($validated);
+
         return redirect()->route('legal.compliance.obligations.index')->with('success', 'Obligation updated successfully.');
     }
 }

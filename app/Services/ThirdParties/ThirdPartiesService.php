@@ -20,7 +20,9 @@ use Illuminate\Support\Facades\Hash;
 
 abstract class ThirdPartiesService
 {
-    public function __construct(public ThirdParties $party) {}
+    public function __construct(public ThirdParties $party)
+    {
+    }
 
     abstract public static function getType(): ThirdPartyType;
 
@@ -34,6 +36,7 @@ abstract class ThirdPartiesService
         if ($partyTypes->isEmpty()) {
             throw new ErroredException('Invalid | no types provided');
         }
+
         return $partyTypes;
     }
 
@@ -67,7 +70,7 @@ abstract class ThirdPartiesService
     }
 
     public static function create(
-        string  $name,
+        string $name,
         ?string $tradingName,
         ?CodeDetail $businessType, // Changed to nullable to match Request logic
         string $registrationNumber,
@@ -126,6 +129,7 @@ abstract class ThirdPartiesService
 
         if ($create) {
             $actor = SystemHelper::user();
+
             return CodeDetail::create([
                 'CodeID' => 'ThirdPartyStatus',
                 'Value' => $status->value,
@@ -136,12 +140,14 @@ abstract class ThirdPartiesService
                 'ModifiedBy' => $actor->Id ?? 1,
             ]);
         }
+
         throw new ErroredException('Invalid Status, not set and could not create');
     }
 
     public function setLogo(\Illuminate\Http\UploadedFile $image, User|ThirdPartyUser $actor): self
     {
         $this->party->setImage($image, $actor, 'ImageId');
+
         return $this;
     }
 

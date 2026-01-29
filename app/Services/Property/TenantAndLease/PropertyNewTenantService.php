@@ -6,13 +6,13 @@ use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
-use App\Models\ThirdParty\ThirdPartyUser;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\Finance\FinanceRole;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyType;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\ThirdParties\ThirdPartiesService;
 use App\Services\ThirdParties\ThirdPartyService;
 use Illuminate\Http\UploadedFile;
@@ -34,6 +34,7 @@ class PropertyNewTenantService extends ThirdPartiesService
                 throw new RuntimeException("No finance roles found " . __CLASS__);
             }
             $actor = SystemHelper::user();
+
             return ThirdPartyType::create([
                 'FinanceRole' => $role->FinanceRoleID,
                 'Code' => ThirdPartyService::TypeTenant,
@@ -67,7 +68,7 @@ class PropertyNewTenantService extends ThirdPartiesService
         activity()->causedBy($user)->performedOn($tenant)->event('create')->log("Added New Tenant {$tenant->Id}.");
 
         $service = new self($tenant);
-        $service->addType(self::getType(), PropertyNewTenant::class, $tenant->Id, $user);
+        $service->addType(self::getType(), PropertyNewTenant::getPrimaryKey(), $tenant->Id, $user);
 
         return $service;
     }
@@ -120,17 +121,14 @@ class PropertyNewTenantService extends ThirdPartiesService
             'ModifiedBy' => $user->Id,
         ]);
 
-        if (!empty($document)) {
-            $docs = is_array($document) ? $document : [$document];
-            foreach ($docs as $doc) {
-                if ($doc instanceof UploadedFile) {
-                    $propertyNewTenant->newDocument(
-                        ModulesEnum::Property,
-                        $doc,
-                        [PermissionEnum::TenantMaintenanceView->value],
-                        $user
-                    );
-                }
+        if (! empty($document)) {
+            foreach ($document as $doc) {
+                $propertyNewTenant->newDocument(
+                    ModulesEnum::Property,
+                    $doc,
+                    [PermissionEnum::TenantMaintenanceView->value],
+                    $user
+                );
             }
         }
 

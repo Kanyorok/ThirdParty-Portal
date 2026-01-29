@@ -21,7 +21,7 @@ class ClientSelectController extends Controller
     {
         $data = [];
         $search = $request->getSearchString();
-        if (is_string($search) && !empty($search)) {
+        if (is_string($search) && ! empty($search)) {
             $data = Client::query()
                 ->where(function ($query) use ($search) {
                     $query->where('Name', 'LIKE', "%$search%")

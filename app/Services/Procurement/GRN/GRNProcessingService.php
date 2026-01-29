@@ -2,17 +2,17 @@
 
 namespace App\Services\Procurement\GRN;
 
-use App\Models\Procurement\EnhancedGoodsReceipt;
-use App\Models\Inventory\StockTransaction;
-use App\Models\Inventory\StockItem;
+use App\Models\Finance\FinanceGLMapping;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceJournalLines;
-use App\Models\Finance\FinanceGLMapping;
 use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\StockTransaction;
+use App\Models\Procurement\EnhancedGoodsReceipt;
 use App\Services\Finance\JournalEntryService;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class GRNProcessingService
 {
@@ -21,7 +21,7 @@ class GRNProcessingService
     public function __construct(JournalEntryService $journalService = null)
     {
         // Create a basic journal service if not injected
-        $this->journalService = $journalService ?? new class {
+        $this->journalService = $journalService ?? new class () {
             public function createJournalEntry(array $data)
             {
                 return FinanceJournalEntry::create($data);
@@ -31,7 +31,7 @@ class GRNProcessingService
             {
                 return FinanceJournalLines::create([
                     'JournalEntryId' => is_object($journalEntry) ? $journalEntry->Id : $journalEntry,
-                    ...$lineData
+                    ...$lineData,
                 ]);
             }
         };
@@ -46,7 +46,7 @@ class GRNProcessingService
 
         try {
             // Determine item type if not set
-            if (!$grnLine->ItemType) {
+            if (! $grnLine->ItemType) {
                 $itemType = $this->determineItemType($grnLine);
                 $grnLine->update(['ItemType' => $itemType]);
             }
@@ -55,14 +55,17 @@ class GRNProcessingService
             switch ($grnLine->ItemType) {
                 case EnhancedGoodsReceipt::ITEM_TYPE_STOCK:
                     $this->processStockItem($grnLine);
+
                     break;
 
                 case EnhancedGoodsReceipt::ITEM_TYPE_ASSET:
                     $this->processAssetItem($grnLine);
+
                     break;
 
                 case EnhancedGoodsReceipt::ITEM_TYPE_SERVICE:
                     $this->processServiceItem($grnLine);
+
                     break;
 
                 default:
@@ -103,7 +106,7 @@ class GRNProcessingService
     protected function processStockItem(EnhancedGoodsReceipt $grnLine): void
     {
         $item = ItemMasterList::find($grnLine->ItemNo);
-        if (!$item) {
+        if (! $item) {
             throw new Exception("Item not found: {$grnLine->ItemNo}");
         }
 
@@ -188,8 +191,6 @@ class GRNProcessingService
     {
         // Services don't need inventory updates, just journal entry
         // The journal entry will be created in the main process method
-
-
     }
 
     /**
@@ -201,7 +202,7 @@ class GRNProcessingService
         $transactionCode = $this->getTransactionCode($grnLine->ItemType);
         $glMapping = $this->getGLMapping($transactionCode);
 
-        if (!$glMapping) {
+        if (! $glMapping) {
             throw new Exception("GL mapping not found for transaction code: {$transactionCode}");
         }
 
@@ -268,8 +269,9 @@ class GRNProcessingService
     {
         $item = ItemMasterList::with('itemType')->find($grnLine->ItemNo);
 
-        if (!$item) {
+        if (! $item) {
             Log::warning("Item not found, defaulting to stock", ['item_no' => $grnLine->ItemNo]);
+
             return EnhancedGoodsReceipt::ITEM_TYPE_STOCK;
         }
 
@@ -372,28 +374,28 @@ class GRNProcessingService
     {
         $errors = [];
 
-        if (!$grnLine->ItemNo) {
+        if (! $grnLine->ItemNo) {
             $errors[] = "Item number is required";
         }
 
-        if (!$grnLine->ReceivedQTY || $grnLine->ReceivedQTY <= 0) {
+        if (! $grnLine->ReceivedQTY || $grnLine->ReceivedQTY <= 0) {
             $errors[] = "Received quantity must be greater than zero";
         }
 
-        if (!$grnLine->UnitPrice || $grnLine->UnitPrice < 0) {
+        if (! $grnLine->UnitPrice || $grnLine->UnitPrice < 0) {
             $errors[] = "Unit price must be zero or greater";
         }
 
-        if (!$grnLine->SupplierId) {
+        if (! $grnLine->SupplierId) {
             $errors[] = "Supplier is required";
         }
 
-        if (!$grnLine->StoreID) {
+        if (! $grnLine->StoreID) {
             $errors[] = "Store is required";
         }
 
         // Check if item exists
-        if ($grnLine->ItemNo && !ItemMasterList::find($grnLine->ItemNo)) {
+        if ($grnLine->ItemNo && ! ItemMasterList::find($grnLine->ItemNo)) {
             $errors[] = "Item not found in master list";
         }
 

@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\FleetManagement;
 
-use Illuminate\Foundation\Http\FormRequest;
 use App\Models\Fleet\FleetVehicleInspection;
+use Illuminate\Foundation\Http\FormRequest;
 
 class FleetVehicleInspectionRequest extends FormRequest
 {
@@ -20,33 +20,30 @@ class FleetVehicleInspectionRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-
-         public function rules(): array
-{
-    return [
-        'ParentInspectionID' => 'nullable|exists:t_FleetVehicleInspections,Id',
-        'VehicleID'      => 'required|integer|exists:t_FleetVehicles,Id',
-        'InspectionTypeID' => 'required|integer|exists:t_CodeDetails,ID',
-        'FuelType'       => 'required|integer|exists:t_FuelTypes,Id',
-        'DriverID' => 'nullable|integer|exists:t_FleetDrivers,Id|required_without:ContractedDriverID',
-        'ContractedDriverID' => 'nullable|integer|exists:t_ContractedDrivers,Id|required_without:DriverID',
-        'InspectionDate' => 'required|date',
-        'Mileage'        => 'required|integer|min:0',
-        'Fuel'           => 'required|integer|exists:t_CodeDetails,ID',
-        'EngineOil'      => 'required|integer|exists:t_CodeDetails,ID',
-        'Coolant'        => 'required|integer|exists:t_CodeDetails,ID',
-        'Reflector'       => 'nullable|boolean',
-        'FireExtinguisher'=> 'nullable|boolean',
-        'FirstAidKit'     => 'nullable|boolean',
-        'SpareTyre'       => 'nullable|boolean',
-        'Spanner'         => 'nullable|boolean',
-        'Jack'            => 'nullable|boolean',
-        '4XFloorMats'     => 'nullable|boolean',
-        'Document' => 'nullable|file|max:2048',
-    ];
-}
-
-
+    public function rules(): array
+    {
+        return [
+            'ParentInspectionID' => 'nullable|exists:t_FleetVehicleInspections,Id',
+            'VehicleID' => 'required|integer|exists:t_FleetVehicles,Id',
+            'InspectionTypeID' => 'required|integer|exists:t_CodeDetails,ID',
+            'FuelType' => 'required|integer|exists:t_FuelTypes,Id',
+            'DriverID' => 'nullable|integer|exists:t_FleetDrivers,Id|required_without:ContractedDriverID',
+            'ContractedDriverID' => 'nullable|integer|exists:t_ContractedDrivers,Id|required_without:DriverID',
+            'InspectionDate' => 'required|date',
+            'Mileage' => 'required|integer|min:0',
+            'Fuel' => 'required|integer|exists:t_CodeDetails,ID',
+            'EngineOil' => 'required|integer|exists:t_CodeDetails,ID',
+            'Coolant' => 'required|integer|exists:t_CodeDetails,ID',
+            'Reflector' => 'nullable|boolean',
+            'FireExtinguisher' => 'nullable|boolean',
+            'FirstAidKit' => 'nullable|boolean',
+            'SpareTyre' => 'nullable|boolean',
+            'Spanner' => 'nullable|boolean',
+            'Jack' => 'nullable|boolean',
+            '4XFloorMats' => 'nullable|boolean',
+            'Document' => 'nullable|file|max:2048',
+        ];
+    }
 
     public function withValidator($validator)
     {

@@ -2,11 +2,9 @@
 
 namespace App\Policies\Inventory;
 
-
 use App\Enums\Core\PermissionEnum;
-use App\Models\Inventory\ItemCategories;
 use App\Models\Auth\User;
-use Illuminate\Auth\Access\Response;
+use App\Models\Inventory\ItemCategories;
 
 class ItemCategoryPolicy
 {
@@ -57,5 +55,4 @@ class ItemCategoryPolicy
     {
         return $user->can(PermissionEnum::ItemCategoryRestore->value);
     }
-
 }

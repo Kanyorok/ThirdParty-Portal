@@ -14,7 +14,7 @@ class CurrencyController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index():JsonResponse
+    public function index(): JsonResponse
     {
         $this->authorize('view', CodeDetail::class);
 
@@ -23,7 +23,8 @@ class CurrencyController extends Controller
                 ->addColumn('action', function (Currency $currency) {
                     return '--';
                 })->rawColumns(['action'])->make();
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         return $this->errored('unexpected error, try again later');
     }
@@ -33,7 +34,6 @@ class CurrencyController extends Controller
      */
     public function create()
     {
-        //
     }
 
     /**
@@ -41,7 +41,6 @@ class CurrencyController extends Controller
      */
     public function store(Request $request)
     {
-        //
     }
 
     /**
@@ -49,7 +48,6 @@ class CurrencyController extends Controller
      */
     public function show(Currency $currency)
     {
-        //
     }
 
     /**
@@ -57,7 +55,6 @@ class CurrencyController extends Controller
      */
     public function edit(Currency $currency)
     {
-        //
     }
 
     /**
@@ -65,7 +62,6 @@ class CurrencyController extends Controller
      */
     public function update(Request $request, Currency $currency)
     {
-        //
     }
 
     /**
@@ -73,6 +69,5 @@ class CurrencyController extends Controller
      */
     public function destroy(Currency $currency)
     {
-        //
     }
 }

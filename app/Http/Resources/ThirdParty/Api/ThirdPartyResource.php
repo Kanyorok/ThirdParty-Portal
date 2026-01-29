@@ -13,9 +13,9 @@ class ThirdPartyResource extends JsonResource
             'id' => $this->Id,
             'profileCompletion' => $this->profile_completion ?? 0,
             'thirdPartyDetails' => [
-                'thirdPartyName'     => $this->ThirdPartyName,
-                'tradingName'        => $this->TradingName,
-                'businessType'       => $this->businessType?->CodeDetailsName,
+                'thirdPartyName' => $this->ThirdPartyName,
+                'tradingName' => $this->TradingName,
+                'businessType' => $this->businessType?->CodeDetailsName,
                 'registrationNumber' => $this->RegistrationNumber,
                 'taxPIN'             => $this->TaxPIN,
                 'physicalAddress'    => $this->PhysicalAddress,
@@ -28,7 +28,7 @@ class ThirdPartyResource extends JsonResource
             'isTenant'       => \App\Models\PropertyManagement\PropertyNewTenant::where('ThirdPartyId', $this->Id)->exists(),
             'isCustomer'     => \App\Models\Insurance\BancassuranceCustomer::where('ThirdPartyId', $this->Id)->exists(),
             'isPrequalified' => (bool) ($this->supplierMaster?->IsPrequalified ?? false),
-            'supplierId'     => $this->supplierMaster?->SupplierID,
+            'supplierId' => $this->supplierMaster?->SupplierID,
             'approvalStatus' => $this->supplierMaster?->ApprovalStatus,
             'types' => $this->types->map(fn($t) => [
                 'id'    => $t->TypeId,

@@ -2,37 +2,36 @@
 
 namespace App\Models\ThirdParty;
 
+use App\Enums\EmailPriorityEnum;
+use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
 use App\Notifications\ThirdParty\VerifyThirdPartyEmail;
 // use Illuminate\Auth\MustVerifyEmail;
 // use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use App\Traits\Model\UserActorTrait;
-use App\Services\CRMEmailService;
-use App\Models\Auth\User;
-use App\Enums\EmailPriorityEnum;
-
-use Illuminate\Auth\Passwords\CanResetPassword;
-use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 
 class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
 {
-    // use HasApiTokens, Notifiable, SoftDeletes, MustVerifyEmail;
-    use HasApiTokens, Notifiable, SoftDeletes, UserActorTrait, CanResetPassword;
+    use HasApiTokens;
+    use Notifiable;
+    use SoftDeletes;
+    use MustVerifyEmail;
+    use UserActorTrait;
+    use CanResetPassword;
 
     public static $snakeAttributes = false;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const string CREATED_AT = 'CreatedOn';
+    public const string UPDATED_AT = 'ModifiedOn';
+    public const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_ThirdPartyUsers';
     protected $primaryKey = 'Id';
@@ -89,6 +88,7 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
         do {
             $id = strtoupper(Str::random(8));
         } while (static::where('UserID', $id)->exists());
+
         return $id;
     }
 
@@ -114,7 +114,7 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
 
     public function hasVerifiedEmail(): bool
     {
-        return !is_null($this->EmailVerifiedOn);
+        return ! is_null($this->EmailVerifiedOn);
     }
 
     public ?string $verificationBaseUrl = null;
@@ -171,14 +171,14 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
 
     public function fullName(): Attribute
     {
-        return Attribute::get((fn() => trim("{$this->FirstName} {$this->LastName}")));
+        return Attribute::get((fn () => trim("{$this->FirstName} {$this->LastName}")));
     }
 
     public function isActive(): bool
     {
         // return (bool)$this->IsActive();
         // User must be explicitly active AND have a verified email
-        return (bool)$this->IsActive && !is_null($this->EmailVerifiedOn);
+        return (bool)$this->IsActive && ! is_null($this->EmailVerifiedOn);
     }
 
     public function isApproved(): bool
@@ -205,12 +205,12 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
 
     public function hasProfile(): bool
     {
-        return !is_null($this->ThirdPartyId);
+        return ! is_null($this->ThirdPartyId);
     }
 
     public function canBeDeleted(): bool
     {
-        return !$this->isActive();
+        return ! $this->isActive();
     }
 
     public function scopeActive(Builder $query): Builder
@@ -260,8 +260,9 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
 
     public function sendPasswordResetNotification($token): void
     {
-        $baseUrl = config('app.nextauth_url') ?? config('app.frontend_url') ?? config('app.url');
-        $url = $baseUrl . '/reset-password?token=' . $token . '&email=' . urlencode($this->Email);
+        // Use FRONTEND_URL from .env as the source of truth
+        $baseUrl = config('app.frontend_url') ?? config('app.url');
+        $url = rtrim($baseUrl, '/') . '/reset-password?token=' . $token . '&email=' . urlencode($this->Email);
 
         $subject = 'Reset Password Notification';
         $body = "

@@ -13,6 +13,6 @@ class FileFormat extends Model
     protected $fillable = [
         'Name',
         'MimeType',
-        'IsActive'
+        'IsActive',
     ];
 }

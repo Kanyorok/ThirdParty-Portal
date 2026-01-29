@@ -84,7 +84,7 @@ class ClientTicketController extends Controller
                     ? $this->save($client, $category, $request->validated('ticket_title'), $request->validated('ticket_description'), $owner, Email::getPrimaryKey(), $priority, $start, $end, SourceID: $emailConversation->email->EmailID)
                     : $this->save($client, $category, $request->validated('ticket_title'), $request->validated('ticket_description'), $owner, $source, $priority, $start, $end);
 
-                    $service->assign($assignee);
+                $service->assign($assignee);
 
                 foreach ($watchers as $watcher) {
                     if ($watcher instanceof Team && $assignee instanceof Team && $watcher->TeamID === $assignee->TeamID) {
@@ -105,12 +105,14 @@ class ClientTicketController extends Controller
                         }
                     }
                 }
+
                 return $service;
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error creating Client ticket ' . $e->getMessage());
+
             return $this->errored('unexpected error creating ticket, try again later');
         }
 

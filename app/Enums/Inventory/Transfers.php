@@ -57,7 +57,7 @@ enum Transfers: string
             self::Disposed => 'danger',
             self::Returned => 'secondary',
             self::AwaitingReview => 'info',
-            
+
             //self::UnderRepair => 'warning',
         };
     }

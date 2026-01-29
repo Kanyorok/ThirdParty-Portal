@@ -2,10 +2,9 @@
 
 namespace App\Models\Finance;
 
-use Illuminate\Database\Eloquent\Model;
-use App\Models\Finance\FinanceInvoice;
-use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Models\Auth\User;
+use Illuminate\Database\Eloquent\Model;
+
 class InvoiceTax extends Model
 {
     protected $table = 't_FinanceInvoiceTaxes';

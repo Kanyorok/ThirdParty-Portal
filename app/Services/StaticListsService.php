@@ -17,10 +17,10 @@ class StaticListsService
     {
         $detail = new CodeDetail();
         $detail->fill([
-                       'CodeID'      => $list,
+                       'CodeID' => $list,
                        'Description' => $description,
-                       'CreatedBy'   => $actor->Id,
-                       'ModifiedBy'  => $actor->Id,
+                       'CreatedBy' => $actor->Id,
+                       'ModifiedBy' => $actor->Id,
                       ])->save();
 
         activity()->causedBy($actor)->performedOn($detail->refresh())->event('create')->log('created ' . $detail->CodeID);
@@ -33,8 +33,9 @@ class StaticListsService
         if (is_int($position)) {
             $newPosition = $position;
             $oldPosition = $this->codeDetail->DisplayOrder;
-            if (!is_int($oldPosition)) {
+            if (! is_int($oldPosition)) {
                 $this->codeDetail->update(['DisplayOrder' => $newPosition, 'ModifiedBy' => $actor->Id]);
+
                 return $this;
             }
 
@@ -50,6 +51,7 @@ class StaticListsService
                     $other->update(['DisplayOrder' => bcsub($other->DisplayOrder, 1), 'ModifiedBy' => $actor->Id]);
                 }
                 $this->codeDetail->update(['DisplayOrder' => $newPosition, 'ModifiedBy' => $actor->Id]);
+
                 return $this;
             }
 
@@ -61,6 +63,7 @@ class StaticListsService
                     $other->update(['DisplayOrder' => bcadd($other->DisplayOrder, 1), 'ModifiedBy' => $actor->Id]);
                 }
                 $this->codeDetail->update(['DisplayOrder' => $newPosition, 'ModifiedBy' => $actor->Id]);
+
                 return $this;
             }
 
@@ -78,7 +81,6 @@ class StaticListsService
     public const Industries = 'Industries';
     public const CustomerType = 'CustomerTypes';
     public const TicketCategories = 'TicketCategories';
-
 
     public static function getLists(): Collection
     {
@@ -123,9 +125,9 @@ class StaticListsService
         if (is_array($CodeIDs)) {
             $q->whereIn('CodeID', $CodeIDs);
         }
+
         return $q;
     }
-
 
     protected static function _query(): Builder
     {

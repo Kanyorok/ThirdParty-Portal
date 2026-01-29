@@ -4,9 +4,9 @@ namespace App\Services\Insurance\ProviderAndProducts;
 
 use App\Models\Auth\User;
 use App\Models\Core\Currency;
+use App\Models\Insurance\InsurancePricingRule;
 use App\Models\Insurance\InsuranceProduct;
 use App\Models\Insurance\InsuranceProvider;
-use App\Models\Insurance\InsurancePricingRule;
 
 class InsurancePricingRuleService
 {
@@ -19,20 +19,19 @@ class InsurancePricingRuleService
 
     public static function create(
         InsuranceProvider $InsuranceProviderId,
-        InsuranceProduct  $Product,
-        string            $RuleName,
-        float             $CoverageAmountMin,
-        float             $CoverageAmountMax,
-        float             $PremiumRate,
-        Currency          $CurrencyId,
-        int               $AgeMin,
-        int               $AgeMax,
-        int               $TenureMin,
-        int               $TenureMax,
-        bool              $IsActive,
-        User              $user
-    ): self
-    {
+        InsuranceProduct $Product,
+        string $RuleName,
+        float $CoverageAmountMin,
+        float $CoverageAmountMax,
+        float $PremiumRate,
+        Currency $CurrencyId,
+        int $AgeMin,
+        int $AgeMax,
+        int $TenureMin,
+        int $TenureMax,
+        bool $IsActive,
+        User $user
+    ): self {
 
         $ruler = InsurancePricingRule::create([
             'InsuranceProviderId' => $InsuranceProviderId->Id,
@@ -52,7 +51,7 @@ class InsurancePricingRuleService
         ]);
 
         activity()->causedBy($user->Id)->performedOn($ruler)->event('create')->log("Added Provider {$ruler->Id}.");
+
         return new self($ruler);
     }
-
 }

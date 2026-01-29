@@ -9,11 +9,11 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class ScheduleClient extends Pivot
 {
-    use  UserActorTrait;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_ScheduleClients';
 
@@ -33,7 +33,7 @@ class ScheduleClient extends Pivot
                           ];
 
     protected $casts = [
-                        'CreatedOn'  => 'datetime',
+                        'CreatedOn' => 'datetime',
                         'ModifiedOn' => 'datetime',
                         'ReminderOn' => 'datetime',
                        ];
@@ -42,6 +42,7 @@ class ScheduleClient extends Pivot
     {
         return $this->belongsTo(Client::class, 'ClientID');
     }
+
     public function schedule(): BelongsTo
     {
         return $this->belongsTo(Schedule::class, 'ScheduleId', 'ScheduleID');

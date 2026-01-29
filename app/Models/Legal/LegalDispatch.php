@@ -12,7 +12,7 @@ class LegalDispatch extends Model
 
     protected $fillable = [
         'LegalDocumentID', 'DispatchDate', 'DispatchedTo', 'DispatchMethod',
-        'Status', 'Remarks', 'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'IsActive'
+        'Status', 'Remarks', 'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'IsActive',
     ];
 
     public function document()

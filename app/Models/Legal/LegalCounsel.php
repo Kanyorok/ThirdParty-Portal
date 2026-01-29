@@ -14,7 +14,7 @@ class LegalCounsel extends Model
         'LegalCaseID', 'CounselName', 'LawFirm',
         'ContactEmail', 'ContactPhone', 'Role',
         'Remarks', 'CreatedBy', 'CreatedOn',
-        'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn', 'IsActive'
+        'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn', 'IsActive',
     ];
 
     public function case()

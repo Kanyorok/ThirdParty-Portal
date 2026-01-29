@@ -8,12 +8,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyBlock extends Model
 {
-    use SoftDeletes, UserActorTrait;
-    //
+    use SoftDeletes;
+    use UserActorTrait;
+
     protected $table = 't_PropertyBlock';
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -22,7 +23,7 @@ class PropertyBlock extends Model
         'Description',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
 
     ];
 
@@ -30,13 +31,14 @@ class PropertyBlock extends Model
     {
         return 'PropertyBlockId';
     }
+
     public function property()
     {
-        return $this->belongsTo(PropertyRegistry::class,'PropertyID','Id');
+        return $this->belongsTo(PropertyRegistry::class, 'PropertyID', 'Id');
     }
+
     public function floor()
     {
         return $this->hasMany(PropertyFloor::class, 'BlockID', 'Id');
     }
 }
-

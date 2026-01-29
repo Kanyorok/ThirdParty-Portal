@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Number;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 use Yajra\DataTables\DataTables;
@@ -42,6 +41,7 @@ class RoleController extends Controller
                 })
                 ->editColumn('users_count', function (Role $role) {
                     $count = Number::abbreviate($role->users_count, ($role->users_count > 999) ? 1 : 0);
+
                     return '<a href="#" class="view-role-users" data-role_id="' . $role->id . '" title="View Users">' . $count . '</a>';
                 })
                 ->addColumn('creator', function (Role $role) {
@@ -49,12 +49,13 @@ class RoleController extends Controller
                         return '?';
                     }
                     $user = User::withTrashed()->find($role->CreatedBy);
+
                     return $user ? $user->UserID . '-' . $user->Name : '?';
                 })
                 ->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')
                 ->setRowData([
-                    'dbl_click_url' => fn(Role $role) => route('roles.edit', [$role->id]),
-                    'summary_title' => fn(Role $role) => 'Role ' . $role->name,
+                    'dbl_click_url' => fn (Role $role) => route('roles.edit', [$role->id]),
+                    'summary_title' => fn (Role $role) => 'Role ' . $role->name,
                 ])
                 ->rawColumns(['action', 'users_count'])
                 ->make();
@@ -67,7 +68,7 @@ class RoleController extends Controller
     {
         $role = Role::with('users')->find($id);
 
-        if (!$role) {
+        if (! $role) {
             abort(404, 'Role not found.');
         }
 
@@ -76,19 +77,19 @@ class RoleController extends Controller
 
     public function create(): View
     {
-        
-    // Get all permissions from DB
-    $allPermissions = \Spatie\Permission\Models\Permission::all();
 
-    // Get permissions from Enum
-    $enumPermissions = collect(\App\Enums\Core\PermissionEnum::cases())->map(fn($p) => $p->value)->toArray();
+        // Get all permissions from DB
+        $allPermissions = \Spatie\Permission\Models\Permission::all();
 
-    // Filter dynamic permissions (those not in Enum)
-    $dynamicPermissions = $allPermissions->reject(function ($perm) use ($enumPermissions) {
-        return in_array($perm->name, $enumPermissions);
-    });
+        // Get permissions from Enum
+        $enumPermissions = collect(\App\Enums\Core\PermissionEnum::cases())->map(fn ($p) => $p->value)->toArray();
 
-    return view('settings.roles.create', compact('dynamicPermissions'));
+        // Filter dynamic permissions (those not in Enum)
+        $dynamicPermissions = $allPermissions->reject(function ($perm) use ($enumPermissions) {
+            return in_array($perm->name, $enumPermissions);
+        });
+
+        return view('settings.roles.create', compact('dynamicPermissions'));
     }
 
     public function store(RoleRequest $request): JsonResponse
@@ -117,6 +118,7 @@ class RoleController extends Controller
             });
         } catch (Exception $e) {
             Log::error('Error creating role: ' . $e->getMessage());
+
             return $this->errored('Unexpected error, try again later.');
         }
 
@@ -131,7 +133,7 @@ class RoleController extends Controller
         $allPermissions = \Spatie\Permission\Models\Permission::all();
 
         // Get permissions from Enum
-        $enumPermissions = collect(\App\Enums\Core\PermissionEnum::cases())->map(fn($p) => $p->value)->toArray();
+        $enumPermissions = collect(\App\Enums\Core\PermissionEnum::cases())->map(fn ($p) => $p->value)->toArray();
 
         // Filter dynamic permissions (those not in Enum)
         $dynamicPermissions = $allPermissions->reject(function ($perm) use ($enumPermissions) {
@@ -150,7 +152,7 @@ class RoleController extends Controller
         // Security check: Prevent user from modifying a role they are assigned to
         $assignedRoleIds = $actor->branchRoles()->pluck('role_id')->toArray();
         if (in_array($role->id, $assignedRoleIds)) {
-             return $this->errored('You cannot alter permissions for a role you are currently assigned to.');
+            return $this->errored('You cannot alter permissions for a role you are currently assigned to.');
         }
 
         try {
@@ -180,6 +182,7 @@ class RoleController extends Controller
             }
         } catch (Exception $e) {
             Log::error('Error updating role: ' . $e->getMessage());
+
             return $this->errored('Unexpected error, try again later.');
         }
 
@@ -197,6 +200,7 @@ class RoleController extends Controller
                 $role->delete();
                 activity()->causedBy($request->user())->performedOn($role)->event('delete')->log('Deleted role ' . $role->name);
             });
+
             try {
                 foreach ($role->users as $user) {
                     ModuleService::clearNavbarCache($user);
@@ -205,6 +209,7 @@ class RoleController extends Controller
             }
         } catch (Exception $e) {
             Log::error('Error deleting role: ' . $e->getMessage());
+
             return $this->errored('Unexpected error, try again later.');
         }
 
@@ -220,6 +225,7 @@ class RoleController extends Controller
             return $this->succeeded('Permissions synced successfully. All permissions (including dynamic ones) have been assigned to the Admin role.');
         } catch (\Throwable $e) {
             Log::error('Error seeding permissions: ' . $e->getMessage());
+
             return $this->errored('Failed to sync permissions: ' . $e->getMessage());
         }
     }

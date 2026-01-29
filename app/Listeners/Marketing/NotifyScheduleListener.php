@@ -24,7 +24,6 @@ class NotifyScheduleListener implements ShouldQueue
      */
     public function __construct()
     {
-        //
     }
 
     /**
@@ -40,9 +39,10 @@ class NotifyScheduleListener implements ShouldQueue
     protected function _sendUserEmails(Schedule $schedule, User $actor, bool $sleep = false): void
     {
         $users = $schedule->users()->get(['t_Users.Name', 't_Users.Email', 't_Users.Id']);
-        if (!$sleep && $users->count() === 0) {
+        if (! $sleep && $users->count() === 0) {
             sleep(10);
             $this->_sendUserEmails($schedule, $actor, true);
+
             return;
         }
 
@@ -60,34 +60,33 @@ class NotifyScheduleListener implements ShouldQueue
             ->addAttachmentContent($service->getEmailICS(), ExtensionsEnum::ICS->getMimeType(), 'invite.ics', $actor);
     }
 
-
     protected function _sendBoardEmails(Schedule $schedule, User $actor): void
     {
         $meeting = $schedule->scheduled;
         if ($meeting instanceof Meeting && $schedule->Type === Board::getPrimaryKey()) {
             $Attachment = ImageService::createContent((new ScheduleService($schedule))->getEmailICS(), Meeting::getPrimaryKey(), $meeting->MeetingID, ExtensionsEnum::ICS->getMimeType(), 'invite.ics', $actor)->image;
             foreach ($schedule->members as $member) {
-                if (!$member instanceof Board) {
+                if (! $member instanceof Board) {
                     continue;
                 }
 
-                    (new BoardService($member))->sendMessage(
-                        'Hello #name, There is a scheduled meeting `' . $meeting->Title . '` for ' . $schedule->StartOn->format('M d, Y') .
-                        ' at ' . $schedule->StartOn->format('h:i A') . '. Please check your email for more details.',
-                        $actor,
-                        true
-                    )
-                    ->sendEmail(
-                        'Board Meeting on ' . $schedule->StartOn->format('M d, Y'),
-                        body: '<p>There is an upcoming meeting <b>' . $meeting->Title . '</b> scheduled for:</p>
+                (new BoardService($member))->sendMessage(
+                    'Hello #name, There is a scheduled meeting `' . $meeting->Title . '` for ' . $schedule->StartOn->format('M d, Y') .
+                    ' at ' . $schedule->StartOn->format('h:i A') . '. Please check your email for more details.',
+                    $actor,
+                    true
+                )
+                ->sendEmail(
+                    'Board Meeting on ' . $schedule->StartOn->format('M d, Y'),
+                    body: '<p>There is an upcoming meeting <b>' . $meeting->Title . '</b> scheduled for:</p>
                             <p>Date: ' . $schedule->StartOn->format('M d, Y') . '</p>
                             <p>Time: ' . $schedule->StartOn->format('h:i A') . ' - ' . $schedule->EndOn->format('h:i A') . ' (' . $schedule->StartOn->format('e') . ')</p>
                             <p>Location: ' . (new MeetingService($meeting))->getVenue(true) . '</p>
                             <p>Agenda : </p> <p>' . $meeting->Notes . '</p>
                             <p>If you are unable to attend or need to join remotely, please notify the chair at your earliest convenience.</p>',
-                        actor: $actor,
-                        priorityEnum: EmailPriorityEnum::Important
-                    )?->setSource(Meeting::getPrimaryKey(), $meeting->MeetingID)->addAttachment($Attachment)->send(true);
+                    actor: $actor,
+                    priorityEnum: EmailPriorityEnum::Important
+                )?->setSource(Meeting::getPrimaryKey(), $meeting->MeetingID)->addAttachment($Attachment)->send(true);
             }
         }
     }

@@ -2,10 +2,10 @@
 
 namespace App\Services\Insurance\ProviderAndProducts;
 
-use App\Models\Core\Currency;
-use App\Models\Insurance\InsuranceProductRider;
 use App\Models\Auth\User;
+use App\Models\Core\Currency;
 use App\Models\Insurance\InsuranceProduct;
+use App\Models\Insurance\InsuranceProductRider;
 use App\Models\Insurance\InsuranceProvider;
 
 class InsuranceProductRiderService
@@ -19,16 +19,15 @@ class InsuranceProductRiderService
 
     public static function create(
         InsuranceProvider $InsuranceProviderId,
-        InsuranceProduct  $Product,
-        string            $RiderName,
-        ?string           $Description = null,
-        float             $AdditionalPremium,
-        Currency          $CurrencyId,
-        ?bool             $IsOptional = null,
-        ?bool             $IsActive = null,
-        User              $user
-    ): self
-    {
+        InsuranceProduct $Product,
+        string $RiderName,
+        ?string $Description = null,
+        float $AdditionalPremium,
+        Currency $CurrencyId,
+        ?bool $IsOptional = null,
+        ?bool $IsActive = null,
+        User $user
+    ): self {
 
         $rider = InsuranceProductRider::create([
             'InsuranceProviderId' => $InsuranceProviderId->Id,
@@ -44,6 +43,7 @@ class InsuranceProductRiderService
         ]);
 
         activity()->causedBy($user->Id)->performedOn($rider)->event('create')->log("Added Provider {$rider->Id}.");
+
         return new self($rider);
     }
 }

@@ -12,6 +12,6 @@ class ComplianceObligationDocument extends Model
 
     protected $fillable = [
         'ObligationID', 'FileName', 'MimeType', 'FilePath',
-        'Version', 'UploadedBy', 'UploadedOn'
+        'Version', 'UploadedBy', 'UploadedOn',
     ];
 }

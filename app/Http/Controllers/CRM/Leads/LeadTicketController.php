@@ -98,6 +98,7 @@ class LeadTicketController extends Controller
                         }
                     }
                 }
+
                 return $service;
             });
         } catch (ErroredException $e) {
@@ -105,6 +106,7 @@ class LeadTicketController extends Controller
         } catch (Throwable | Exception $e) {
             Log::error('Error creating ticket ' . $e->getMessage());
             Log::error($e);
+
             return $this->errored('unexpected error creating ticket, try again later');
         }
 

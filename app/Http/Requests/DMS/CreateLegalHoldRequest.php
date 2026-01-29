@@ -37,6 +37,7 @@ class CreateLegalHoldRequest extends FormRequest
         if ($documentIDs->isEmpty()) {
             throw ValidationException::withMessages(['Tags' => 'No valid tags, must have documents associated with them.']);
         }
+
         return $documentIDs->toArray();
     }
 
@@ -50,6 +51,7 @@ class CreateLegalHoldRequest extends FormRequest
                 $ref = Str::slug('Hold' . Str::padLeft(($number), 4, '0'));
             } while (LegalHold::where('Ref', $ref)->withTrashed()->exists());
         }
+
         return $ref;
     }
 }

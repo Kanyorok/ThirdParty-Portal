@@ -17,11 +17,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FinanceInvoiceEntry extends Model
 {
-    use SoftDeletes, UserActorTrait,DocumentsTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $primaryKey = 'Id';
     protected $table = 't_FinanceInvoiceEntry';
@@ -59,7 +61,7 @@ class FinanceInvoiceEntry extends Model
         'ExchangeRate' => 'float',
     ];
 
-    public static function getPrimaryKey() : string
+    public static function getPrimaryKey(): string
     {
         return 'FinanceInvoiceEntryId';
     }
@@ -73,6 +75,7 @@ class FinanceInvoiceEntry extends Model
     {
         return $this->belongsTo(Supplier::class, 'SupplierID', 'Id');
     }
+
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'SupplierID', 'Id');
@@ -83,7 +86,8 @@ class FinanceInvoiceEntry extends Model
         return $this->belongsTo(ThirdParties::class, 'SupplierID', 'Id');
     }
 
-    public function currency(){
+    public function currency()
+    {
         return $this->belongsTo(Currency::class, 'CurrencyID', 'Id');
     }
 

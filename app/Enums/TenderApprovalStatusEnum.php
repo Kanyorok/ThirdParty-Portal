@@ -10,7 +10,7 @@ enum TenderApprovalStatusEnum: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'Pending Approval',
             self::APPROVED => 'Approved',
             self::REJECTED => 'Rejected',

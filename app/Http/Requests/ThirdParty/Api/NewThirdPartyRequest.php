@@ -58,7 +58,7 @@ class NewThirdPartyRequest extends FormRequest
                 'nullable',
                 'string',
                 'min:8',
-                'confirmed'
+                'confirmed',
             ],
             'supplier_category_id' => [
                 'nullable',
@@ -140,7 +140,7 @@ class NewThirdPartyRequest extends FormRequest
     {
         return [
             'Phone.*' => 'invalid phone number provided.',
-            'user_Phone.*' => 'invalid phone number provided.'
+            'user_Phone.*' => 'invalid phone number provided.',
         ];
     }
 }

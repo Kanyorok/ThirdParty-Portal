@@ -32,6 +32,7 @@ class CsvUploadRequest extends FormRequest
         if ($file instanceof UploadedFile && $file->isValid() && $file->getMimeType() === ExtensionsEnum::Csv->getMimeType()) {
             return $file;
         }
+
         throw ValidationException::withMessages(['file' => 'file is not a valid file']);
     }
 }

@@ -50,7 +50,7 @@ class CodeDetailsRequest extends FormRequest
      */
     public function getType(): string
     {
-        if (!in_array($this->_type, StaticListsService::getLists()->toArray())) {
+        if (! in_array($this->_type, StaticListsService::getLists()->toArray())) {
             throw ValidationException::withMessages(['Description' => 'invalid list type']);
         }
 

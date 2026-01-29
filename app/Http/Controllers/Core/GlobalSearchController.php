@@ -13,12 +13,12 @@ class GlobalSearchController extends Controller
     public function search(Request $request)
     {
         $query = $request->input('query');
-        if (!$query || strlen($query) < 2) {
+        if (! $query || strlen($query) < 2) {
             return response()->json([]);
         }
-        
-        $modules = ModuleService::getNavbarData(); 
-        
+
+        $modules = ModuleService::getNavbarData();
+
         $results = $this->flattenAndFilter($modules, $query);
 
         return response()->json($results->values());
@@ -31,25 +31,26 @@ class GlobalSearchController extends Controller
 
         foreach ($modules as $module) {
             // Check current module
-            if (Str::contains(Str::lower($module['name']), $lowerQuery) || 
-                Str::contains(Str::lower($module['description'] ?? ''), $lowerQuery)) {
-                
+            if (
+                Str::contains(Str::lower($module['name']), $lowerQuery) ||
+                Str::contains(Str::lower($module['description'] ?? ''), $lowerQuery)
+            ) {
                 $route = $module['route'] ?? '#';
                 if ($route !== '#' && $route !== 'javascript:void(0)') {
-                     $results->push([
-                        'name' => $module['name'],
-                        'route' => $route,
-                        'icon' => $module['icon'] ?? null,
-                        'breadcrumb' => $module['name']
+                    $results->push([
+                       'name' => $module['name'],
+                       'route' => $route,
+                       'icon' => $module['icon'] ?? null,
+                       'breadcrumb' => $module['name'],
                     ]);
                 }
             }
 
             // Check children
-            if (!empty($module['children'])) {
+            if (! empty($module['children'])) {
                 $childrenResults = $this->flattenAndFilter(collect($module['children']), $query);
                 // Prepend parent name to breadcrumb for better context
-                foreach($childrenResults as $child) {
+                foreach ($childrenResults as $child) {
                     $child['breadcrumb'] = $module['name'] . ' > ' . $child['breadcrumb'];
                     $results->push($child);
                 }

@@ -11,7 +11,7 @@ class BREncryption
     {
         $cmd = config('app.br.crypto');
 
-        if (!file_exists($cmd) || !is_executable($cmd)) {
+        if (! file_exists($cmd) || ! is_executable($cmd)) {
             return null;
         }
 
@@ -40,7 +40,6 @@ class BREncryption
         
         return self::_encryptText($identifier . $password);
     }
-
 
     private static function _encryptText(string $strInputText): string
     {

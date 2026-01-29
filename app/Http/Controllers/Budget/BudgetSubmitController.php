@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\Budget;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class BudgetSubmitController extends Controller
 {
-    //
     public function index()
     {
         return view('budgetandanalytics.budgetworkspace.submitapproval.index');

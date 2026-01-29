@@ -11,6 +11,7 @@ class ControlTypeController extends Controller
     public function index()
     {
         $controls = ControlType::orderBy('Name')->get();
+
         return view('legal.setup.control_types.index', compact('controls'));
     }
 
@@ -27,6 +28,7 @@ class ControlTypeController extends Controller
         ]);
 
         ControlType::create($validated + ['IsActive' => 1]);
+
         return redirect()->route('legal.setup.control_types.index')
             ->with('success', 'Control Type added successfully.');
     }
@@ -34,6 +36,7 @@ class ControlTypeController extends Controller
     public function edit($id)
     {
         $control = ControlType::findOrFail($id);
+
         return view('legal.setup.control_types.edit', compact('control'));
     }
 
@@ -47,6 +50,7 @@ class ControlTypeController extends Controller
         ]);
 
         $control->update($validated);
+
         return redirect()->route('legal.setup.control_types.index')
             ->with('success', 'Control Type updated successfully.');
     }
@@ -55,6 +59,7 @@ class ControlTypeController extends Controller
     {
         $control = ControlType::findOrFail($id);
         $control->delete();
+
         return back()->with('success', 'Control Type deleted.');
     }
 }

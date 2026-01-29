@@ -24,6 +24,7 @@ class TaskPolicy
         if ($task->CreatedBy === $user->Id || $task->UserID === $user->Id) {
             return true;
         }
+
         return $user->can(PermissionEnum::TaskCreate->value) || $user->can(PermissionEnum::TaskDelegate->value);
     }
 
@@ -51,6 +52,7 @@ class TaskPolicy
 
         return ($task->UserID === $user->Id);
     }
+
     /**
      * Determine whether the user can delete the model.
      */

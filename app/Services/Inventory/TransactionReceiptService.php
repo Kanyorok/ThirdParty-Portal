@@ -5,10 +5,10 @@ namespace App\Services\Inventory;
 use App\Enums\Inventory\Transfers;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Inventory\InventoryHold;
-use App\Models\Inventory\StockItem;
 use App\Models\Inventory\StockGRNLedger;
-use App\Models\Inventory\Store;
+use App\Models\Inventory\StockItem;
 use App\Models\Inventory\StockTransaction;
+use App\Models\Inventory\Store;
 use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionTransfer;
 use Exception;
@@ -21,7 +21,7 @@ class TransactionReceiptService
     {
         return DB::transaction(function () use ($validatedData, $items) {
             $userId = Auth::id();
-            if (!$userId) {
+            if (! $userId) {
                 throw new Exception('User not authenticated. Cannot create receipt.');
             }
 
@@ -88,9 +88,9 @@ class TransactionReceiptService
 
     public function createReceiptItemsWithFIFO($receipt, $items, $transfer, $userId = null)
     {
-        if (!$userId) {
+        if (! $userId) {
             $userId = Auth::id();
-            if (!$userId) {
+            if (! $userId) {
                 throw new Exception('User not authenticated. Cannot create receipt items.');
             }
         }
@@ -101,7 +101,7 @@ class TransactionReceiptService
             ->where('Description', 'Transfer Receipts')
             ->value('ID');
 
-        if (!$transferSource) {
+        if (! $transferSource) {
             throw new Exception("Source type 'Transfer Receipts' not found in t_CodeDetails.");
         }
 
@@ -113,11 +113,11 @@ class TransactionReceiptService
                 $itemId = $itemData['item'];
                 $receivedQty = $itemData['received_qty'];
                 $damagedQty = $itemData['damaged_qty'] ?? 0;
-                
+
                 // Get the corresponding transfer item to get batch allocations
                 $transferItem = $transfer->items()->where('Item', $itemId)->first();
-                
-                if (!$transferItem) {
+
+                if (! $transferItem) {
                     throw new Exception("Transfer item not found for item {$itemId}");
                 }
 
@@ -129,7 +129,7 @@ class TransactionReceiptService
 
                 $averageCost = $this->calculateAverageCost($transferItem, $receivedQty);
 
-                if (!$stock) {
+                if (! $stock) {
                     $stock = StockItem::create([
                         'SKUCode' => 'SKU-' . $itemId . '-' . $storeId . '-' . time(),
                         'ItemID' => $itemId,
@@ -153,7 +153,7 @@ class TransactionReceiptService
                     $oldQty = $stock->CurrentQty;
                     $oldCost = $stock->UnitCost;
                     $newQty = $receivedQty;
-                    
+
                     if ($oldQty > 0) {
                         $stock->UnitCost = (($oldQty * $oldCost) + ($newQty * $averageCost)) / ($oldQty + $newQty);
                     } else {
@@ -228,8 +228,8 @@ class TransactionReceiptService
                     'BalanceQty' => $newToQty,
                     'TransactionDate' => now(),
                     'TotalCost' => $averageCost * $receivedQty,
-                    'Remarks' => 'Transfer From Branch ID ' . ($transfer->FromBranch ?? 'Unknown') . 
-                                ' | Transfer ID: ' . $transfer->TransferId . 
+                    'Remarks' => 'Transfer From Branch ID ' . ($transfer->FromBranch ?? 'Unknown') .
+                                ' | Transfer ID: ' . $transfer->TransferId .
                                 ' | Allocations: ' . $this->getAllocationSummary($transferItem),
                     'CreatedBy' => $userId,
                     'CreatedOn' => now(),
@@ -243,7 +243,7 @@ class TransactionReceiptService
                         ->where('Description', 'Damaged in Transit')
                         ->value('ID');
 
-                    if (!$damagedReasonId) {
+                    if (! $damagedReasonId) {
                         throw new Exception("Damaged in Transit reason not found in t_CodeDetails.");
                     }
 
@@ -280,7 +280,7 @@ class TransactionReceiptService
     {
         // Get batch allocations from transfer item
         $batchAllocations = json_decode($transferItem->BatchAllocation, true) ?? [];
-        
+
         if (empty($batchAllocations)) {
             // If no specific allocations, use FIFO from source
             $allocations = $this->allocateFIFOFromSource($transferItem, $storeId, $branchId, $receivedQty);
@@ -334,13 +334,13 @@ class TransactionReceiptService
     {
         // Get source branch (from transfer)
         $sourceBranch = $transferItem->transfer->FromBranch;
-        
+
         // Get default store for source branch
         $sourceStore = Store::where('BranchID', $sourceBranch)
             ->where('Status', true)
             ->first();
-            
-        if (!$sourceStore) {
+
+        if (! $sourceStore) {
             throw new Exception("No active store found for source branch {$sourceBranch}");
         }
 
@@ -355,12 +355,14 @@ class TransactionReceiptService
 
         $allocations = [];
         $remainingQty = $quantity;
-        
+
         foreach ($availableBatches as $batch) {
-            if ($remainingQty <= 0) break;
-            
+            if ($remainingQty <= 0) {
+                break;
+            }
+
             $allocatedQty = min($batch->RemainingQTY, $remainingQty);
-            
+
             $allocations[] = [
                 'ledger_id' => $batch->id,
                 'grn_id' => $batch->GRNID,
@@ -368,7 +370,7 @@ class TransactionReceiptService
                 'unit_price' => (float) $batch->UnitPrice,
                 'quantity' => $allocatedQty,
             ];
-            
+
             $remainingQty -= $allocatedQty;
         }
 
@@ -385,14 +387,14 @@ class TransactionReceiptService
     private function calculateAverageCost($transferItem, $receivedQty)
     {
         $batchAllocations = json_decode($transferItem->BatchAllocation, true) ?? [];
-        
+
         if (empty($batchAllocations)) {
             return $transferItem->UnitCost ?? 0;
         }
 
         $totalCost = 0;
         $totalQty = 0;
-        
+
         foreach ($batchAllocations as $allocation) {
             $totalCost += $allocation['unit_price'] * $allocation['quantity'];
             $totalQty += $allocation['quantity'];
@@ -407,7 +409,7 @@ class TransactionReceiptService
     private function getAllocationSummary($transferItem)
     {
         $batchAllocations = json_decode($transferItem->BatchAllocation, true) ?? [];
-        
+
         if (empty($batchAllocations)) {
             return 'FIFO Allocation';
         }
@@ -423,7 +425,7 @@ class TransactionReceiptService
             $receiptId = $receipt->Id;
             $userId = Auth::id();
 
-            if (!$userId) {
+            if (! $userId) {
                 throw new Exception('User not authenticated. Cannot delete receipt.');
             }
 
@@ -435,7 +437,7 @@ class TransactionReceiptService
 
                 if ($stock) {
                     $stock->CurrentQty -= $item->ReceivedQty;
-                    
+
                     // Recalculate unit cost after deletion
                     if ($stock->CurrentQty > 0) {
                         // Get remaining ledger entries
@@ -445,10 +447,10 @@ class TransactionReceiptService
                             ->sum(function ($entry) {
                                 return $entry->RemainingQTY * $entry->UnitPrice;
                             });
-                        
+
                         $stock->UnitCost = $remainingValue / $stock->CurrentQty;
                     }
-                    
+
                     $stock->ModifiedBy = $userId;
                     $stock->ModifiedOn = now();
                     $stock->save();

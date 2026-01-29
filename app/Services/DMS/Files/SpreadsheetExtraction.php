@@ -14,7 +14,7 @@ class SpreadsheetExtraction extends FileExtraction
 {
     public function processContent(): bool
     {
-        if (!$this->extension->isSpreadsheet()) {
+        if (! $this->extension->isSpreadsheet()) {
             return false;
         }
         $name = $this->createTempFile();
@@ -23,6 +23,7 @@ class SpreadsheetExtraction extends FileExtraction
         if ($content !== '') {
             return $this->handleContent($content);
         }
+
         return $this->handleContent();
     }
 
@@ -32,7 +33,7 @@ class SpreadsheetExtraction extends FileExtraction
         $allText = [];
 
         foreach ($extractedData as $sheetName => $sheetData) {
-            if (!empty($sheetData['all_text'])) {
+            if (! empty($sheetData['all_text'])) {
                 $allText[] = $sheetData['all_text'];
             }
         }
@@ -42,7 +43,7 @@ class SpreadsheetExtraction extends FileExtraction
 
     private function extractText(string $filePath): array
     {
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             return [];
         }
 
@@ -67,7 +68,6 @@ class SpreadsheetExtraction extends FileExtraction
             }
 
             return $extractedData;
-
         } catch (Exception $e) {
             throw new RuntimeException("Failed to extract text from spreadsheet: " . $e->getMessage());
         }
@@ -148,11 +148,9 @@ class SpreadsheetExtraction extends FileExtraction
             }
 
             return (string)$value;
-
         } catch (Exception $e) {
             // If calculation fails, return the raw value
             return (string)$cell->getValue();
         }
     }
-
 }

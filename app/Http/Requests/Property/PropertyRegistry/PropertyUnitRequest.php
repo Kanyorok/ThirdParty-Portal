@@ -32,8 +32,9 @@ class PropertyUnitRequest extends FormRequest
                 'string',
                 'max:50',
                 'min:1',
-                Rule::unique((new PropertyUnit)->getTable())
-                    ->where(fn($query) => $query
+                Rule::unique((new PropertyUnit())->getTable())
+                    ->where(
+                        fn ($query) => $query
                         ->where('PropertyID', $this->PropertyID)
                         ->where('BlockID', $this->BlockID)
                         ->where('FloorID', $this->FloorID)

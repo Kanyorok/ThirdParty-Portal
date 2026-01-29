@@ -2,11 +2,10 @@
 
 namespace App\Services\ThirdParties;
 
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Locality;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyUser;
-use App\Models\Core\Locality;
-use App\Models\Core\Approval\CodeDetail;
-use App\Services\ThirdParties\SupplierService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -64,7 +63,7 @@ class ThirdPartyRegistrationService
                 'ModifiedBy' => $user->Id,
             ]);
 
-            if (!empty($data['category_ids'])) {
+            if (! empty($data['category_ids'])) {
                 $supplierService->party->categories()->sync($data['category_ids']);
             } elseif (!empty($data['supplier_category_id'])) {
                 $supplierService->party->categories()->sync([$data['supplier_category_id']]);
@@ -73,7 +72,7 @@ class ThirdPartyRegistrationService
             return $supplierService->party->fresh([
                 'categories',
                 'types',
-                'supplierMaster'
+                'supplierMaster',
             ]);
         });
     }

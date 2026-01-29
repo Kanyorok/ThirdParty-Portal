@@ -2,13 +2,12 @@
 
 namespace App\Policies\Procurement;
 
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Procurement\PlanLineItems;
-use App\Enums\Core\PermissionEnum;
 
 class PlanEditPolicy
 {
-
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::PlanEditRead->value);

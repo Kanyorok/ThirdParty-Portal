@@ -2,16 +2,15 @@
 
 namespace App\Services\Procurement;
 
+use App\Enums\Core\ExtensionsEnum;
+use App\Enums\Core\VisibilityEnum;
+use App\Models\Auth\User;
 use App\Models\DMS\Document;
 use App\Models\DMS\Repository;
 use App\Models\Procurement\BidSubmission;
-use App\Models\Auth\User;
 use App\Services\DMS\DocumentService;
-use App\Enums\Core\VisibilityEnum;
-use App\Enums\Core\ExtensionsEnum;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
@@ -23,8 +22,8 @@ class EncryptedBidDocumentService
      */
     public static function storeEncryptedBidDocuments(
         BidSubmission $bidSubmission,
-        array         $documents,
-        User          $actor
+        array $documents,
+        User $actor
     ): array {
         try {
             $storedDocuments = [];
@@ -65,6 +64,7 @@ class EncryptedBidDocumentService
             return $storedDocuments;
         } catch (\Exception $e) {
             Log::error('Error storing encrypted bid documents: ' . $e->getMessage());
+
             throw new \Exception('Failed to store encrypted bid documents: ' . $e->getMessage());
         }
     }
@@ -74,7 +74,7 @@ class EncryptedBidDocumentService
      */
     public static function decryptBidDocuments(BidSubmission $bidSubmission, User $actor): array
     {
-        if (!$bidSubmission->canAccessDocuments()) {
+        if (! $bidSubmission->canAccessDocuments()) {
             throw new \Exception('Bid documents are sealed until the opening ceremony.');
         }
 
@@ -113,6 +113,7 @@ class EncryptedBidDocumentService
             return $decryptedDocuments;
         } catch (\Exception $e) {
             Log::error('Error decrypting bid documents: ' . $e->getMessage());
+
             throw new \Exception('Failed to decrypt bid documents: ' . $e->getMessage());
         }
     }
@@ -131,6 +132,7 @@ class EncryptedBidDocumentService
     private static function generateSecureBidFileName(BidSubmission $bidSubmission, UploadedFile $document): string
     {
         $extension = $document->getClientOriginalExtension();
+
         return "BID_{$bidSubmission->TenderRef}_{$bidSubmission->SupplierId}_" . Str::uuid() . ".{$extension}";
     }
 
@@ -141,7 +143,7 @@ class EncryptedBidDocumentService
     {
         $repository = Repository::where('Name', 'Encrypted Bid Documents')->first();
 
-        if (!$repository) {
+        if (! $repository) {
             $repository = Repository::create([
                 'Name' => 'Encrypted Bid Documents',
                 'Description' => 'Securely encrypted bid documents for tender submissions',

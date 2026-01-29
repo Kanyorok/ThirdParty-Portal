@@ -2,13 +2,10 @@
 
 namespace App\Http\Requests\Procurement;
 
-
 use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 
 class PlanFromNeedsRequest extends FormRequest
 {

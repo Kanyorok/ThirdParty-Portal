@@ -20,7 +20,7 @@ class SupplierPolicy
             && $user->isActive()
             && in_array($supplier->ApprovalStatus, [
                 ThirdPartyApprovalStatusEnum::Pending,
-                ThirdPartyApprovalStatusEnum::Rejected
+                ThirdPartyApprovalStatusEnum::Rejected,
             ]);
     }
 

@@ -21,7 +21,7 @@ trait ReviewsTrait
      */
     private function reviews(Builder|MorphMany $query, array $with = [], array $extra = []): JsonResponse
     {
-        if (!empty($with)) {
+        if (! empty($with)) {
             $query->with($with);
         }
 
@@ -45,12 +45,13 @@ trait ReviewsTrait
                     }
                     return $review->Party;*/
             })->editColumn('branch.BranchName', function (Review $review) use ($with) {
-                if (!in_array('branch', $with, true)) {
+                if (! in_array('branch', $with, true)) {
                     return '';
                 }
                 if ($review->branch instanceof Branch) {
                     return $review->branch->BranchName;
                 }
+
                 return ' ? ';
             })->editColumn('Rating', function (Review $review) {
                 return (new ReviewService($review))->getRate(' width="32" height="32" class="img-thumbnail" alt="' . $review->Rating . ' star"');
