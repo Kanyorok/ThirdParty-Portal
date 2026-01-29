@@ -29,6 +29,7 @@ use App\Http\Controllers\Insurance\ReportsController;
 use App\Http\Controllers\Insurance\SettingsController;
 use App\Http\Controllers\Insurance\UnderwritingController;
 use Illuminate\Support\Facades\Route;
+
 // new, see quick store below
 
 Route::middleware(['module:900000'])->namespace('Insurance')->prefix('insurance')->group(function () {

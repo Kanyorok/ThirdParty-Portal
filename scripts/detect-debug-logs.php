@@ -73,6 +73,23 @@ function scanDirectory($dir, $patterns, $excludePatterns, &$errors, &$totalFiles
             $lines = explode("\n", $content);
 
             foreach ($lines as $lineNumber => $line) {
+                $trimmed = trim($line);
+                
+                // Ignore documentation comments (e.g., "// - ControllerName")
+                if (preg_match('/^\/\/\s*-\s+\w+/', $trimmed)) {
+                    continue;
+                }
+                
+                // Ignore commented route fragments (e.g., "//         ->name('...')")
+                if (preg_match('/^\/\/\s+->/', $trimmed)) {
+                    continue;
+                }
+                
+                // Ignore closing braces in comments (e.g., "// });")
+                if (preg_match('/^\/\/\s*\}\);?\s*$/', $trimmed)) {
+                    continue;
+                }
+                
                 foreach ($patterns as $patternName => $pattern) {
                     if (preg_match($pattern, $line)) {
                         $errors[] = [

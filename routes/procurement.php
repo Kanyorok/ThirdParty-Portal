@@ -792,4 +792,3 @@ Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController
 Route::get('committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);
 Route::get('tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show.typed');
 Route::get('rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);
-
