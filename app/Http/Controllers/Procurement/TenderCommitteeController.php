@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\RFQ;
+use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQCommittee;
 use App\Models\Procurement\RFQCommitteeMember;
+use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderCommittee;
+use App\Models\Procurement\TenderCommitteeEvaluation;
 use App\Models\Procurement\TenderCommitteeMember;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -16,9 +19,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Procurement\RFQ;
-use App\Models\Procurement\TenderCommitteeEvaluation;
-use App\Models\Procurement\RFQEvaluation;
 
 class TenderCommitteeController extends Controller
 {
@@ -258,23 +258,23 @@ class TenderCommitteeController extends Controller
                 ->where('CommitteeType', 'tender')
                 ->pluck('ReferenceId')
                 ->toArray();
-            
+
             // Also check for legacy TenderID field
             $tendersWithLegacyCommittee = TenderCommittee::whereNotNull('TenderID')
                 ->pluck('TenderID')
                 ->toArray();
-            
+
             $excludedTenderIds = array_unique(array_merge($tendersWithCommittee, $tendersWithLegacyCommittee));
-            
+
             // Get IDs of tenders where evaluation has started
             $tendersWithEvaluation = TenderCommitteeEvaluation::whereNotNull('TenderID')
                 ->distinct()
                 ->pluck('TenderID')
                 ->toArray();
-            
+
             // Combine all excluded IDs
             $allExcludedIds = array_unique(array_merge($excludedTenderIds, $tendersWithEvaluation));
-            
+
             $data = Tender::select('Id', 'TenderNo as RefNo', 'Title')
                 ->whereNotIn('Id', $allExcludedIds)
                 ->get();
@@ -283,24 +283,24 @@ class TenderCommitteeController extends Controller
             $rfqsWithCommittee = RFQCommittee::whereNotNull('RFQID')
                 ->pluck('RFQID')
                 ->toArray();
-            
+
             // Also check TenderCommittee for RFQ type entries
             $rfqsWithTenderCommittee = TenderCommittee::whereNotNull('ReferenceId')
                 ->where('CommitteeType', 'rfq')
                 ->pluck('ReferenceId')
                 ->toArray();
-            
+
             $excludedRfqIds = array_unique(array_merge($rfqsWithCommittee, $rfqsWithTenderCommittee));
-            
+
             // Get IDs of RFQs where evaluation has started
             $rfqsWithEvaluation = RFQEvaluation::whereNotNull('RFQId')
                 ->distinct()
                 ->pluck('RFQId')
                 ->toArray();
-            
+
             // Combine all excluded IDs
             $allExcludedIds = array_unique(array_merge($excludedRfqIds, $rfqsWithEvaluation));
-            
+
             $data = RFQ::select('Id', 'RFQNumber as RefNo')
                 ->whereNotIn('Id', $allExcludedIds)
                 ->get();

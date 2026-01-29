@@ -61,9 +61,9 @@ class BidResponsivenessController extends Controller
 
         $submission = BidSubmission::with([
             'supplier.supplierMaster.thirdParty.users', // Correct path to ThirdParty details and Users
-            'tender', 
-            'openedByUser', 
-            'responsivenessCheckedByUser'
+            'tender',
+            'openedByUser',
+            'responsivenessCheckedByUser',
         ])->findOrFail($bidId);
 
         if (! $submission->isOpened()) {
@@ -116,7 +116,7 @@ class BidResponsivenessController extends Controller
         // Get supplier details - fix relationship traversal
         $thirdParty = $submission->supplier->supplierMaster->thirdParty ?? null;
         $primaryUser = $thirdParty?->users->sortByDesc('CreatedOn')->first();
-        
+
         $supplierDetails = [
             'supplier_name' => $submission->SupplierName,
             'supplier_id' => $submission->SupplierId,
@@ -126,12 +126,12 @@ class BidResponsivenessController extends Controller
             'contact_person' => $primaryUser?->fullName ?? 'N/A',
             'email' => $primaryUser?->Email ?? ($thirdParty->Email ?? 'N/A'),
             'phone' => $primaryUser?->Phone ?? ($thirdParty->Phone ?? 'N/A'),
-            'address' => $thirdParty->PhysicalAddress ?? 'N/A'
+            'address' => $thirdParty->PhysicalAddress ?? 'N/A',
         ];
 
         // Get responsiveness summary
         $responsivenessSummary = $submission->getResponsivenessSummary();
-        
+
         // Default 'submitted_timely' to system check if not yet manually verified
         if ($responsivenessSummary['submitted_timely']['status'] === null) {
             $responsivenessSummary['submitted_timely']['status'] = $submission->ReceivedOnTime;
@@ -395,7 +395,7 @@ class BidResponsivenessController extends Controller
             DB::commit();
 
             $message = "Bulk responsiveness check completed: {$responsiveCount} responsive, {$nonResponsiveCount} non-responsive";
-            
+
             session()->flash('success', $message);
 
             return response()->json([

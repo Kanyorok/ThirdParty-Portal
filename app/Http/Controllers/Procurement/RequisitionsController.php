@@ -410,6 +410,7 @@ class RequisitionsController extends Controller
                 DB::commit();
 
                 $actionText = ucfirst($action) . 'd';
+
                 return redirect()->route('requisition.index')
                     ->with('success', "Requisition {$actionText} successfully.");
             } catch (\Exception $e) {

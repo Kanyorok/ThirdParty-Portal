@@ -124,20 +124,20 @@ class SupplierController extends Controller
     public function search(Request $request)
     {
         $term = $request->get('q');
-        
+
         $query = SupplierMaster::query()
             ->with('party')
             ->where('IsPrequalified', true)
             ->where('ApprovalStatus', \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved);
 
-        if (!empty($term)) {
+        if (! empty($term)) {
             $query->whereHas('party', function ($q) use ($term) {
                 $q->where('ThirdPartyName', 'like', "%{$term}%")
                   ->orWhere('TradingName', 'like', "%{$term}%")
                   ->orWhere('RegistrationNumber', 'like', "%{$term}%");
             });
         }
-        
+
         \Illuminate\Support\Facades\Log::info('Supplier Search Term: ' . $term);
 
         $suppliers = $query->limit(20)->get()->map(function ($supplier) {

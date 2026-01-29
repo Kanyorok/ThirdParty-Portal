@@ -49,7 +49,7 @@ class TenderInvitationController extends Controller
             ->exists();
 
         if ($existing) {
-             return redirect()->back()->with('error', 'You have already responded to this tender invitation.');
+            return redirect()->back()->with('error', 'You have already responded to this tender invitation.');
         }
 
         $path = null;

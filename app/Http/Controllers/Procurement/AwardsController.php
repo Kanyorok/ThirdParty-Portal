@@ -2,13 +2,9 @@
 
 namespace App\Http\Controllers\Procurement;
 
-
 use App\Http\Controllers\Controller;
-use App\Models\Procurement\Tender;
-use App\Enums\TenderStatusEnum;
-use App\Models\Procurement\TenderAward;
+use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQAward;
-use App\Enums\RFQAwardStatusEnum;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\Tender;
@@ -47,7 +43,7 @@ class AwardsController extends Controller
             ->get()
             ->map(function ($award) {
                 $status = $award->AwardStatus;
-                $statusClass = match ($status) {
+                $statusClass = match($status) {
                     'Pending' => 'bg-warning text-dark',
                     'Approved' => 'bg-success',
                     'Rejected' => 'bg-danger',
@@ -301,7 +297,7 @@ class AwardsController extends Controller
                     } else {
                         $canApprove = $this->workflow->canApproveModel($existingAward, $currentUser);
                     }
-                    
+
                     // User who submitted cannot approve their own award
                     if ($isSubmitter) {
                         $canApprove = false;
@@ -403,13 +399,13 @@ class AwardsController extends Controller
         return 'tender';
     }
 
-        /**
+    /**
      * Store award decision (Unified for Tender and RFQ)
      */
     public function store(Request $request)
     {
         $type = $request->input('award_type', 'tender');
-        
+
         $rules = [
             'tender_id' => 'required', // ID of Tender or RFQ
             'winning_supplier_id' => 'required|exists:t_Suppliers,Id',
@@ -424,7 +420,7 @@ class AwardsController extends Controller
         if ($type === 'tender') {
             $rules['tender_id'] .= '|exists:t_Tenders,Id';
         } else {
-             $rules['tender_id'] .= '|exists:t_RFQ,Id';
+            $rules['tender_id'] .= '|exists:t_RFQ,Id';
         }
 
         $request->validate($rules);
@@ -436,14 +432,14 @@ class AwardsController extends Controller
             $id = $request->tender_id;
 
             if ($type === 'rfq') {
-                // --- RFQ AWARD CREATION ---
+
                 // Check if active award exists
                 $hasActiveAward = RFQAward::where('RFQId', $id)
                     ->whereIn('AwardStatus', ['Pending', 'Approved', 'Submitted for Approval', 'Under Review'])
                     ->exists();
-                
+
                 if ($hasActiveAward) {
-                     return redirect()->back()->with('error', 'An active award already exists for this RFQ.');
+                    return redirect()->back()->with('error', 'An active award already exists for this RFQ.');
                 }
 
                 $award = RFQAward::create([
@@ -459,23 +455,24 @@ class AwardsController extends Controller
                     'ModifiedBy' => $user->Id,
                 ]);
 
-                 activity()
-                    ->performedOn($award)
-                    ->causedBy($user)
-                    ->withProperties(['type' => 'rfq', 'rfq_id' => $id])
-                    ->log('Created RFQ award (Pending) for RFQ ID: ' . $id);
+                activity()
+                   ->performedOn($award)
+                   ->causedBy($user)
+                   ->withProperties(['type' => 'rfq', 'rfq_id' => $id])
+                   ->log('Created RFQ award (Pending) for RFQ ID: ' . $id);
 
-                 DB::commit();
-                 return redirect()->route('awards.unified', ['id' => $id, 'type' => 'rfq'])
-                    ->with('success', 'RFQ award created successfully. Please submit for approval if needed.');
+                DB::commit();
+
+                return redirect()->route('awards.unified', ['id' => $id, 'type' => 'rfq'])
+                   ->with('success', 'RFQ award created successfully. Please submit for approval if needed.');
 
             } else {
-                // --- TENDER AWARD CREATION ---
+
                 // Check if active award exists
                 $hasActiveAward = TenderAward::where('TenderID', $id)
                     ->whereIn('AwardStatus', ['Pending', 'Approved', 'Submitted for Approval', 'Under Review'])
                     ->exists();
-                    
+
                 if ($hasActiveAward) {
                     return redirect()->back()->with('error', 'An active award already exists for this tender.');
                 }
@@ -493,7 +490,7 @@ class AwardsController extends Controller
                     'FinancialScore' => $request->financial_score,
                     'TotalScore' => $request->total_score,
                     'NotifyUnsuccessfulBidders' => $request->boolean('notify_unsuccessful', true),
-                    'AwardStatus' => 'Pending', 
+                    'AwardStatus' => 'Pending',
                     'CreatedBy' => $user->Id,
                     'ModifiedBy' => $user->Id,
                 ]);
@@ -536,7 +533,7 @@ class AwardsController extends Controller
             $validStatuses = [TenderAward::STATUS_DRAFT, TenderAward::STATUS_PENDING];
 
             // 2. Try RFQAward
-            if (!$award) {
+            if (! $award) {
                 $award = RFQAward::find($id);
                 $type = 'rfq';
                 $workflowService = $this->rfqWorkflow;
@@ -544,20 +541,20 @@ class AwardsController extends Controller
                 $statusSubmitted = \App\Models\Procurement\RFQAward::STATUS_SUBMITTED;
                 $validStatuses = [RFQAward::STATUS_PENDING, 'Pending'];
 
-                if (!$award) {
-                     return redirect()->back()->with('error', 'Award not found.');
+                if (! $award) {
+                    return redirect()->back()->with('error', 'Award not found.');
                 }
             }
-       
+
             // Validation: Must be in Draft or Pending status
-            if (!in_array($award->AwardStatus, $validStatuses)) {
+            if (! in_array($award->AwardStatus, $validStatuses)) {
                 return redirect()->back()->with('error', 'Only draft or pending awards can be submitted for approval.');
             }
 
             // Submit to workflow
             $submitted = $workflowService->submit(
-                $award, 
-                $user, 
+                $award,
+                $user,
                 $statusEnum,
                 ucfirst($type) . ' Award submitted for approval'
             );
@@ -602,12 +599,12 @@ class AwardsController extends Controller
              'approval_remarks' => 'nullable|string|max:1000',
              'remarks' => 'nullable|string|max:1000',
         ]);
-        
+
         $remarks = $request->approval_remarks ?? $request->remarks;
         $awardId = $request->award_id ?? $id;
 
-        if (!$awardId) {
-             return redirect()->back()->with('error', 'Award ID is required.');
+        if (! $awardId) {
+            return redirect()->back()->with('error', 'Award ID is required.');
         }
 
         try {
@@ -618,35 +615,35 @@ class AwardsController extends Controller
             $requestedType = $request->input('type') ?? $request->input('award_type');
             $award = null;
             $type = null;
-            
+
             if ($requestedType === 'rfq') {
                 $award = RFQAward::find($awardId);
                 $type = 'rfq';
                 $workflowService = $this->rfqWorkflow;
                 $statusEnum = \App\Enums\RFQAwardStatusEnum::APPROVED;
             } elseif ($requestedType === 'tender') {
-                 $award = TenderAward::find($awardId);
-                 $type = 'tender';
-                 $workflowService = $this->workflow;
-                 $statusEnum = \App\Enums\TenderAwardStatusEnum::APPROVED;
+                $award = TenderAward::find($awardId);
+                $type = 'tender';
+                $workflowService = $this->workflow;
+                $statusEnum = \App\Enums\TenderAwardStatusEnum::APPROVED;
             } else {
                 // Fallback: Try Tender then RFQ
-                 $award = TenderAward::find($awardId);
-                 if ($award) {
-                     $type = 'tender';
-                     $workflowService = $this->workflow;
-                     $statusEnum = \App\Enums\TenderAwardStatusEnum::APPROVED;
-                 } else {
-                     $award = RFQAward::find($awardId);
-                     $type = 'rfq';
-                     $workflowService = $this->rfqWorkflow;
-                     $statusEnum = \App\Enums\RFQAwardStatusEnum::APPROVED;
-                 }
+                $award = TenderAward::find($awardId);
+                if ($award) {
+                    $type = 'tender';
+                    $workflowService = $this->workflow;
+                    $statusEnum = \App\Enums\TenderAwardStatusEnum::APPROVED;
+                } else {
+                    $award = RFQAward::find($awardId);
+                    $type = 'rfq';
+                    $workflowService = $this->rfqWorkflow;
+                    $statusEnum = \App\Enums\RFQAwardStatusEnum::APPROVED;
+                }
             }
-            
+
             $statusColumn = 'AwardStatus';
 
-            if (!$award) {
+            if (! $award) {
                 return redirect()->back()->with('error', 'Award not found.');
             }
 
@@ -664,32 +661,33 @@ class AwardsController extends Controller
                 'can_approve' => $canApprove,
                 'user_id' => $user->Id,
                 'creator_id' => $award->CreatedBy,
-                'is_maker' => $user->Id === $award->CreatedBy
+                'is_maker' => $user->Id === $award->CreatedBy,
             ]);
-            
-            if (!$canApprove) {
-                 // Check For Exemptions (Maker-Checker)
+
+            if (! $canApprove) {
+                // Check For Exemptions (Maker-Checker)
                 $exemptions = config('workflow.maker_checker_exempt', []);
                 $isExempt = in_array($type . '_award', $exemptions);
-                
+
                 Log::info("Maker-Checker Exemption Check", [
                     'exemptions' => $exemptions,
                     'target' => $type . '_award',
-                    'is_exempt' => $isExempt
+                    'is_exempt' => $isExempt,
                 ]);
 
-                if (!$isExempt) {
+                if (! $isExempt) {
                     Log::warning("User not authorized to approve award", ['id' => $award->Id, 'type' => $type]);
+
                     return redirect()->back()->with('error', 'You are not authorized to approve this award at this stage.');
                 }
             }
 
             // Validate award is in submitted/pending/under review status
-            $validStatuses = $type === 'tender' 
+            $validStatuses = $type === 'tender'
                 ? [TenderAward::STATUS_SUBMITTED, TenderAward::STATUS_UNDER_REVIEW, TenderAward::STATUS_PENDING]
                 : [RFQAward::STATUS_SUBMITTED, RFQAward::STATUS_UNDER_REVIEW, RFQAward::STATUS_PENDING];
 
-            if (!in_array($award->AwardStatus, $validStatuses)) {
+            if (! in_array($award->AwardStatus, $validStatuses)) {
                 return redirect()->back()->with('error', 'Only pending/submitted awards can be approved.');
             }
 
@@ -701,8 +699,8 @@ class AwardsController extends Controller
                 $remarks,
                 $statusColumn
             );
-            
-            if (!$approved) {
+
+            if (! $approved) {
                 throw new \Exception('Workflow approval failed');
             }
 
@@ -718,18 +716,18 @@ class AwardsController extends Controller
                     'ModifiedBy' => $user->Id,
                     'ModifiedOn' => now(),
                 ]);
-                
+
                 // Update Tender Status
-                 if ($award->tender) {
+                if ($award->tender) {
                     $award->tender->update(['Status' => \App\Enums\TenderStatusEnum::Awarded->value]);
                 }
             } else {
-                 $award->approve($user, $remarks);
+                $award->approve($user, $remarks);
             }
 
             // --- Notifications ---
 
-            // 1. Notify Creator
+
             $creator = \App\Models\Auth\User::find($award->CreatedBy);
             if ($creator && $creator->Email) {
                 try {
@@ -737,13 +735,16 @@ class AwardsController extends Controller
                     $subject = ucfirst($type) . ' Award Approved: ' . $refNumber;
                     $body = "<p>The " . strtoupper($type) . " award for <strong>" . $refNumber . "</strong> has been approved.</p>";
                     $to = [[$creator->Name => $creator->Email]];
-                    
+
                     $service = \App\Services\CRMEmailService::createRaw(
                         Auth::user(),
                         $subject,
                         $body,
                         $to,
-                        null, null, [], [],
+                        null,
+                        null,
+                        [],
+                        [],
                         \App\Enums\EmailPriorityEnum::Normal
                     );
                     $service->send(true);
@@ -759,7 +760,7 @@ class AwardsController extends Controller
                     $this->notifyUnsuccessfulBidders($award);
                 }
             } else {
-                 $this->notifySuccessfulRFQBidders($award);
+                $this->notifySuccessfulRFQBidders($award);
             }
 
             activity()
@@ -791,11 +792,11 @@ class AwardsController extends Controller
         $request->validate([
              'reason' => 'required|string|max:1000',
         ]);
-        
+
         $awardId = $request->award_id ?? $id;
 
-        if (!$awardId) {
-             return redirect()->back()->with('error', 'Award ID is required.');
+        if (! $awardId) {
+            return redirect()->back()->with('error', 'Award ID is required.');
         }
 
         try {
@@ -808,33 +809,33 @@ class AwardsController extends Controller
             $type = null;
 
             if ($requestedType === 'rfq') {
-                 $award = RFQAward::find($awardId);
-                 $type = 'rfq';
-                 $workflowService = $this->rfqWorkflow;
-                 $statusEnum = \App\Enums\RFQAwardStatusEnum::REJECTED;
+                $award = RFQAward::find($awardId);
+                $type = 'rfq';
+                $workflowService = $this->rfqWorkflow;
+                $statusEnum = \App\Enums\RFQAwardStatusEnum::REJECTED;
             } elseif ($requestedType === 'tender') {
-                 $award = TenderAward::find($awardId);
-                 $type = 'tender';
-                 $workflowService = $this->workflow;
-                 $statusEnum = \App\Enums\TenderAwardStatusEnum::REJECTED;
+                $award = TenderAward::find($awardId);
+                $type = 'tender';
+                $workflowService = $this->workflow;
+                $statusEnum = \App\Enums\TenderAwardStatusEnum::REJECTED;
             } else {
                 // Fallback
-                 $award = TenderAward::find($awardId);
-                 if ($award) {
+                $award = TenderAward::find($awardId);
+                if ($award) {
                     $type = 'tender';
                     $workflowService = $this->workflow;
                     $statusEnum = \App\Enums\TenderAwardStatusEnum::REJECTED;
-                 } else {
+                } else {
                     $award = RFQAward::find($awardId);
                     $type = 'rfq';
                     $workflowService = $this->rfqWorkflow;
                     $statusEnum = \App\Enums\RFQAwardStatusEnum::REJECTED;
-                 }
+                }
             }
 
             $statusColumn = 'AwardStatus';
 
-            if (!$award) {
+            if (! $award) {
                 return redirect()->back()->with('error', 'Award not found.');
             }
 
@@ -845,16 +846,16 @@ class AwardsController extends Controller
             ]);
 
             // Check if user can approve (same perm for reject)
-            if (!$workflowService->canApproveModel($award, $user)) {
+            if (! $workflowService->canApproveModel($award, $user)) {
                 return redirect()->back()->with('error', 'You are not authorized to reject this award.');
             }
 
             // Validate status
-             $validStatuses = $type === 'tender' 
-                ? [TenderAward::STATUS_SUBMITTED, TenderAward::STATUS_UNDER_REVIEW, TenderAward::STATUS_PENDING]
-                : [RFQAward::STATUS_SUBMITTED, RFQAward::STATUS_UNDER_REVIEW, RFQAward::STATUS_PENDING];
+            $validStatuses = $type === 'tender'
+               ? [TenderAward::STATUS_SUBMITTED, TenderAward::STATUS_UNDER_REVIEW, TenderAward::STATUS_PENDING]
+               : [RFQAward::STATUS_SUBMITTED, RFQAward::STATUS_UNDER_REVIEW, RFQAward::STATUS_PENDING];
 
-            if (!in_array($award->AwardStatus, $validStatuses)) {
+            if (! in_array($award->AwardStatus, $validStatuses)) {
                 return redirect()->back()->with('error', 'Only pending/submitted awards can be rejected.');
             }
 
@@ -881,8 +882,8 @@ class AwardsController extends Controller
                     'ModifiedOn' => now(),
                 ]);
             } else {
-                 $award->reject($user, $request->reason);
-                 
+                $award->reject($user, $request->reason);
+
                 // Notify creator for RFQ
                 $creator = \App\Models\Auth\User::find($award->CreatedBy);
                 if ($creator && $creator->Email) {
@@ -892,18 +893,21 @@ class AwardsController extends Controller
                         $body = "<p>The RFQ award for <strong>" . $rfqNumber . "</strong> has been rejected.</p>";
                         $body .= "<p><strong>Reason:</strong> " . e($request->reason) . "</p>";
                         $to = [[$creator->Name => $creator->Email]];
-                        
+
                         $service = \App\Services\CRMEmailService::createRaw(
                             Auth::user(),
                             $subject,
                             $body,
                             $to,
-                            null, null, [], [],
+                            null,
+                            null,
+                            [],
+                            [],
                             \App\Enums\EmailPriorityEnum::Normal
                         );
                         $service->send(true);
                     } catch (\Exception $e) {
-                         Log::error("Failed to send RFQ rejection email: " . $e->getMessage());
+                        Log::error("Failed to send RFQ rejection email: " . $e->getMessage());
                     }
                 }
             }
@@ -984,6 +988,7 @@ class AwardsController extends Controller
             DB::commit();
 
             return back()->with('success', 'Award cancelled successfully.');
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Award cancel error: ' . $e->getMessage());
@@ -1337,12 +1342,13 @@ class AwardsController extends Controller
         try {
             $tenderTitle = $award->tender->Title ?? 'Tender';
             $tenderNo = $award->tender->TenderNo;
-            
+
             // Get supplier contact info
             $winningSupplier = \App\Models\ThirdParies\Supplier::find($award->WinningSupplierID);
-            if (!$winningSupplier) {
-                 Log::warning("Winning supplier not found for award {$award->Id}");
-                 return;
+            if (! $winningSupplier) {
+                Log::warning("Winning supplier not found for award {$award->Id}");
+
+                return;
             }
 
             $thirdParty = $winningSupplier->supplierMaster->thirdParty;
@@ -1368,14 +1374,15 @@ class AwardsController extends Controller
                     $body,
                     $to,
                     'ThirdParty',
-                    (string)$thirdParty->Id, 
-                    [], [],
+                    (string)$thirdParty->Id,
+                    [],
+                    [],
                     \App\Enums\EmailPriorityEnum::Important
                 );
                 $service->send(true);
                 Log::info("Award notification sent to winner {$email} for tender {$tenderNo}");
             } else {
-                 Log::warning("No email found for winning supplier ID {$award->WinningSupplierID}");
+                Log::warning("No email found for winning supplier ID {$award->WinningSupplierID}");
             }
 
         } catch (\Exception $e) {
@@ -1395,20 +1402,20 @@ class AwardsController extends Controller
                 ->where('IsResponsive', true) // Only notify responsive bidders who lost
                 ->with('supplier.supplierMaster.thirdParty.users')
                 ->get();
-            
+
             $tenderTitle = $award->tender->Title ?? 'Tender';
             $tenderNo = $award->tender->TenderNo;
-            
+
             foreach ($unsuccessfulBidders as $bidder) {
                 // Get supplier primary contact
                 $supplier = $bidder->supplier; // t_Suppliers
                 $thirdParty = $supplier->supplierMaster->thirdParty; // SupplierMaster -> ThirdParty
-                
+
                 // Try to find a user/contact to email
                 $contactUser = $thirdParty->users ? $thirdParty->users->first() : null; // Get first user as primary contact
                 $email = $contactUser ? $contactUser->Email : ($thirdParty->Email ?? null);
                 $name = $contactUser ? $contactUser->Name : ($thirdParty->ThirdPartyName ?? 'Supplier');
-                
+
                 if ($email) {
                     // Send Regret Letter via CRMEmailService
                     $subject = "Regret Letter - {$tenderTitle} ({$tenderNo})";
@@ -1422,7 +1429,7 @@ class AwardsController extends Controller
 
                     try {
                         $to = [[$name => $email]];
-                        
+
                         $service = \App\Services\CRMEmailService::createRaw(
                             Auth::user(),
                             $subject,
@@ -1430,14 +1437,15 @@ class AwardsController extends Controller
                             $to,
                             'ThirdParty',
                             (string)$thirdParty->Id,
-                            [], [],
+                            [],
+                            [],
                             \App\Enums\EmailPriorityEnum::Normal
                         );
                         $service->send(true); // Send immediately
 
                         Log::info("Regret email sent to {$email} for tender {$tenderNo}");
                     } catch (\Exception $e) {
-                         Log::error("Failed to send email to {$email}: " . $e->getMessage());
+                        Log::error("Failed to send email to {$email}: " . $e->getMessage());
                     }
                 }
             }
@@ -1454,12 +1462,13 @@ class AwardsController extends Controller
         try {
             $rfqTitle = $award->rfq->Subject ?? ($award->rfq->Comments ?? 'RFQ Award');
             $rfqNo = $award->rfq->RFQNumber;
-            
+
             // Get supplier contact info
             $winningSupplier = \App\Models\ThirdParies\Supplier::find($award->SupplierId);
-            if (!$winningSupplier) {
-                 Log::warning("Winning supplier not found for RFQ award {$award->Id}");
-                 return;
+            if (! $winningSupplier) {
+                Log::warning("Winning supplier not found for RFQ award {$award->Id}");
+
+                return;
             }
 
             $thirdParty = $winningSupplier->supplierMaster->thirdParty;
@@ -1485,14 +1494,15 @@ class AwardsController extends Controller
                     $body,
                     $to,
                     'ThirdParty',
-                    (string)$thirdParty->Id, 
-                    [], [],
+                    (string)$thirdParty->Id,
+                    [],
+                    [],
                     \App\Enums\EmailPriorityEnum::Important
                 );
                 $service->send(true);
                 Log::info("RFQ Award notification sent to winner {$email} for RFQ {$rfqNo}");
             } else {
-                 Log::warning("No email found for winning supplier ID {$award->SupplierId}");
+                Log::warning("No email found for winning supplier ID {$award->SupplierId}");
             }
 
         } catch (\Exception $e) {
@@ -1513,9 +1523,9 @@ class AwardsController extends Controller
     }
     */
 
-    /* 
+    /*
     * DEPRECATED: Logic merged into approveRfq
-    * 
+    *
     public function approveRfqAward(Request $request)
     {
        // ... (Merged into approveRfq)

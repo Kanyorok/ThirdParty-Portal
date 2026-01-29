@@ -246,7 +246,7 @@ enum PermissionEnum: string
     case AwardDelete = 'award-delete';
     case AwardApprove = 'award-approve';
 
-        // Purchase Orders (LPO)
+    // Purchase Orders (LPO)
     case PurchaseOrderRead = 'purchaseOrder-read';
     case PurchaseOrderWrite = 'purchaseOrder-create';
     case PurchaseOrderUpdate = 'purchaseOrder-update';

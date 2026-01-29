@@ -381,7 +381,7 @@ class BidSubmission extends Model
             'overall_responsive' => $this->IsResponsive,
             'overall_remarks' => $this->ResponsivenessRemarks,
             'checked_at' => $this->ResponsivenessCheckedAt,
-            'checked_by' => $this->responsivenessCheckedByUser?->Name ?? 'Unknown'
+            'checked_by' => $this->responsivenessCheckedByUser?->Name ?? 'Unknown',
         ];
     }
 
@@ -437,6 +437,6 @@ class BidSubmission extends Model
         return $this->isBidOpeningCeremonyStarted() ? 'opened' : 'accessible';
     }
 
-    // Document management integration 
+    // Document management integration
     // Will be implemented once DMS schema compatibility is resolved
 }

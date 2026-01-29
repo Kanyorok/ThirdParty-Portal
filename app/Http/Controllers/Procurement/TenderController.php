@@ -174,10 +174,10 @@ class TenderController extends Controller
 
             $needId = optional($lineItem->departmentNeed)->NeedID;
 
-             // Resolve top-level category
-             $catId = $item->Category;
-             $topLevelCatId = $categoryToTopLevel[$catId] ?? $catId;
- 
+            // Resolve top-level category
+            $catId = $item->Category;
+            $topLevelCatId = $categoryToTopLevel[$catId] ?? $catId;
+
             $entry = [
                 'id' => $planId,
                 'planLineItemId' => $lineItem->LineItemID,
@@ -625,19 +625,17 @@ class TenderController extends Controller
 
     ////before
 
-
-
     public function edit(string $id, Request $request)
     {
         $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
         $tender = Tender::findOrFail($id);
 
         $validated = $request->validate(
-             [
+            [
             'submission_deadline.after_or_equal' => 'The submission deadline cannot be in the past.',
             'opening_date.after' => 'The opening date must be after the submission deadline.',
         ]
-             );
+        );
 
         $show = true;
         if (
@@ -695,7 +693,7 @@ class TenderController extends Controller
 
                 // Check if item's top-level category matches tender's category
                 $itemTopCategory = $categoryToTopLevel[$item->Category] ?? $item->Category;
-                
+
                 // Allow if item is directly in the category OR if item is in a sub-category of the tender category (if tender is root)
                 if ($item->Category != $tender->ItemCategoryId && $itemTopCategory != $tender->ItemCategoryId) {
                     return false;

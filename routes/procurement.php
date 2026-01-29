@@ -256,7 +256,7 @@ Route::middleware(['module:300000'])->group(function () {
 
     // Supplier Categories - JSON
     Route::get('supplier-categories/all', [\App\Http\Controllers\Procurement\SupplierCategoryController::class, 'all'])->name('supplier-categories.all');
-    
+
     // Suppliers
     Route::get('suppliers/search', [SupplierController::class, 'search'])->name('suppliers.search');
     Route::post('suppliers/{id}/submit', [SupplierController::class, 'submit'])->name('suppliers.submit');
@@ -338,7 +338,7 @@ Route::middleware(['module:300000'])->group(function () {
     // Consolidated scoring view and award action
     Route::get('/rfq-evaluations/consolidated/{rfq}', [RFQEvaluationController::class, 'consolidated'])->name('evaluations.consolidated');
     Route::post('/rfq-evaluations/{rfq}/award/{supplier}', [RFQEvaluationController::class, 'awardSupplier'])->name('evaluations.award');
-    
+
     // Edit and Update evaluation routes
     Route::get('/rfq-evaluations/{id}/edit', [RFQEvaluationController::class, 'edit'])->name('evaluations.edit');
     Route::put('/rfq-evaluations/{id}', [RFQEvaluationController::class, 'update'])->name('evaluations.update');

@@ -54,6 +54,7 @@ class PlanEditController extends Controller
             // Enforce minimum quantity of 1 - if item is not required, user should use Remove option
             if ($qty < 1) {
                 $errors[] = "Adjust Qty for item '{$item->item->ItemName}' (ID: $id) must be greater than or equal to 1. Use Remove option to exclude items.";
+
                 continue;
             }
 

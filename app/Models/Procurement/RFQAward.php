@@ -6,8 +6,8 @@ use App\Models\Auth\User;
 use App\Models\Core\Approval\WorkflowHistory;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RFQAward extends Model
 {
@@ -22,12 +22,12 @@ class RFQAward extends Model
     public const DELETED_AT = 'DeletedOn';
 
     // Award Status Constants (matching TenderAward)
-    const STATUS_PENDING = 'Pending';
-    const STATUS_SUBMITTED = 'Submitted for Approval';
-    const STATUS_UNDER_REVIEW = 'Under Review';
-    const STATUS_APPROVED = 'Approved';
-    const STATUS_REJECTED = 'Rejected';
-    const STATUS_CANCELLED = 'Cancelled';
+    public const STATUS_PENDING = 'Pending';
+    public const STATUS_SUBMITTED = 'Submitted for Approval';
+    public const STATUS_UNDER_REVIEW = 'Under Review';
+    public const STATUS_APPROVED = 'Approved';
+    public const STATUS_REJECTED = 'Rejected';
+    public const STATUS_CANCELLED = 'Cancelled';
 
     protected $fillable = [
         'RFQId',
@@ -158,12 +158,12 @@ class RFQAward extends Model
 
     public function hasContract(): bool
     {
-        return !empty($this->ContractStatus) && $this->ContractStatus !== 'Pending Contract';
+        return ! empty($this->ContractStatus) && $this->ContractStatus !== 'Pending Contract';
     }
 
     public function isContractReady(): bool
     {
-        return $this->AwardStatus === self::STATUS_APPROVED && !$this->hasContract();
+        return $this->AwardStatus === self::STATUS_APPROVED && ! $this->hasContract();
     }
 
     // Methods

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use App\Enums\EmailPriorityEnum;
+use App\Enums\RFQAwardStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQCommitteeMember;
@@ -10,14 +10,10 @@ use App\Models\Procurement\RFQCriteria;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\RFQSupplierResponseEvaluation;
-use App\Services\CRMEmailService;
+use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Services\CRMEmailService;
-use App\Enums\EmailPriorityEnum;
-use App\Services\Workflow\ApprovalWorkflow;
-use App\Enums\RFQAwardStatusEnum;
 
 class RFQEvaluationController extends Controller
 {
@@ -47,7 +43,7 @@ class RFQEvaluationController extends Controller
 
         // Build award status per RFQ
         $awards = \App\Models\Procurement\RFQAward::whereIn('RFQId', $rfqIds)->get()->keyBy('RFQId');
-        
+
         // Build evaluation completion status per RFQ
         $rfqAwardStatus = [];
         foreach ($rfqIds as $rfqId) {
@@ -56,22 +52,22 @@ class RFQEvaluationController extends Controller
                 ->where('Response', 1)
                 ->pluck('UserID')
                 ->toArray();
-            
+
             // Get members who have evaluated
             $evaluatedMembers = RFQEvaluation::where('RFQId', $rfqId)
                 ->pluck('UserCode')
-                ->map(fn($c) => (int)$c)
+                ->map(fn ($c) => (int)$c)
                 ->toArray();
-            
+
             $pendingMembers = array_diff($acceptedMembers, $evaluatedMembers);
             $allMembersEvaluated = empty($pendingMembers);
-            
+
             // Get top-ranked supplier for awarding
             $topSupplier = null;
             if ($allMembersEvaluated) {
                 // Find highest weighted score supplier for this RFQ from evaluationsRanked later
             }
-            
+
             $rfqAwardStatus[$rfqId] = [
                 'allMembersEvaluated' => $allMembersEvaluated,
                 'acceptedCount' => count($acceptedMembers),
@@ -318,13 +314,13 @@ class RFQEvaluationController extends Controller
             ->where('Response', 1)
             ->with('user.employee')
             ->get();
-        
+
         $evaluatedUserIds = RFQEvaluation::where('RFQId', $rfqId)
             ->pluck('UserCode')
-            ->map(fn($code) => (int)$code)
+            ->map(fn ($code) => (int)$code)
             ->toArray();
 
-        $pendingMembers = $acceptedMembers->filter(fn($m) => !in_array($m->UserID, $evaluatedUserIds));
+        $pendingMembers = $acceptedMembers->filter(fn ($m) => ! in_array($m->UserID, $evaluatedUserIds));
         $allMembersEvaluated = $pendingMembers->isEmpty();
 
         $viewData = [
@@ -341,7 +337,7 @@ class RFQEvaluationController extends Controller
             'allMembersEvaluated' => $allMembersEvaluated,
             'acceptedMembersCount' => $acceptedMembers->count(),
             'evaluatedMembersCount' => count($evaluatedUserIds),
-            'pendingMembers' => $pendingMembers->map(fn($m) => $m->user?->employee?->full_name ?? $m->user?->Name ?? "User ID: {$m->UserID}")->values()->all(),
+            'pendingMembers' => $pendingMembers->map(fn ($m) => $m->user?->employee?->full_name ?? $m->user?->Name ?? "User ID: {$m->UserID}")->values()->all(),
         ];
 
         if ($request->boolean('embed')) {
@@ -365,7 +361,7 @@ class RFQEvaluationController extends Controller
 
         $evaluatedMembers = RFQEvaluation::where('RFQId', $rfqId)
             ->pluck('UserCode')
-            ->map(fn($code) => (int)$code)
+            ->map(fn ($code) => (int)$code)
             ->toArray();
 
         $pendingMembers = array_diff($acceptedMembers, $evaluatedMembers);
@@ -376,12 +372,12 @@ class RFQEvaluationController extends Controller
                 ->whereIn('UserID', $pendingMembers)
                 ->with('user.employee')
                 ->get()
-                ->map(fn($m) => $m->user?->employee?->full_name ?? $m->user?->Name ?? "User ID: {$m->UserID}")
+                ->map(fn ($m) => $m->user?->employee?->full_name ?? $m->user?->Name ?? "User ID: {$m->UserID}")
                 ->join(', ');
 
             $totalAccepted = count($acceptedMembers);
             $totalEvaluated = count($evaluatedMembers);
-            
+
             return back()->with('error', "Cannot award yet. Only {$totalEvaluated} of {$totalAccepted} committee members have completed their evaluations. Pending members: {$pendingMemberNames}");
         }
 
@@ -403,7 +399,7 @@ class RFQEvaluationController extends Controller
         try {
             $workflow = new ApprovalWorkflow('rfq_award', 'AwardStatus');
             $workflow->submit($award, auth()->user(), RFQAwardStatusEnum::SUBMITTED);
-            
+
             // Update status to Submitted
             $award->update([
                 'AwardStatus' => \App\Models\Procurement\RFQAward::STATUS_SUBMITTED,
@@ -417,6 +413,7 @@ class RFQEvaluationController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error("Failed to submit RFQ Award to workflow: " . $e->getMessage());
+
             // We don't rollback the award creation, but we should alert
             return back()->with('warning', 'Award created but workflow submission failed. Please contact support.');
         }
@@ -434,7 +431,7 @@ class RFQEvaluationController extends Controller
         $rfqs = RFQ::with([
             'sections.section.criteria',
             'rfqResponses.supplier',
-            'committeeMembers.user.employee'
+            'committeeMembers.user.employee',
         ])
         ->whereHas('rfqResponses')
         ->whereNotIn('Id', $awardedRfqIds)
@@ -558,10 +555,11 @@ class RFQEvaluationController extends Controller
         }
 
         DB::beginTransaction();
+
         try {
             foreach ($request->Evaluations as $evalId => $data) {
                 $score = (int)($data['Score'] ?? 0);
-                
+
                 // Enforce score range
                 if ($score < 1 || $score > 10) {
                     throw new \Exception("Score must be between 1 and 10.");
@@ -577,9 +575,11 @@ class RFQEvaluationController extends Controller
             }
 
             DB::commit();
+
             return redirect()->route('evaluations.index')->with('success', 'Evaluation updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return back()->with('error', 'Error updating evaluation: ' . $th->getMessage());
         }
     }

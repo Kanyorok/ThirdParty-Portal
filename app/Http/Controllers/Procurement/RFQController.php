@@ -308,23 +308,17 @@ class RFQController extends Controller
 
         $supplierIds = [];
         foreach ($supplierMasterIds as $masterId) {
-            // Check if supplier exists in t_Suppliers (for this RFQ context, we might need a specific category,
-            // but for now we just ensure a record exists to link to)
-            // We'll try to find an existing active supplier record for this master ID
+            // Check if supplier exists in t_Suppliers
             $supplier = DB::table('t_Suppliers')
                 ->where('SupplierMasterId', $masterId)
                 ->whereNull('DeletedOn')
                 ->first();
 
             if (! $supplier) {
-                // Create a new supplier record if one doesn't exist
-                // We need a default category or logic here. For now, we'll try to use the RFQ's category if possible,
-                // or a default one. Since we removed strict category filtering, we just need A record.
-
-                // Get a valid category ID (try RFQ's category, or first available)
+                // Get a valid category ID
                 $categoryId = $rfq->ItemCategoryId ?? DB::table('t_ItemCategories')->value('Id');
 
-                // Get a valid Supplier Category ID (try to find one linked to the item category, or just the first one)
+                // Get a valid Supplier Category ID
                 $supplierCategoryId = DB::table('t_SupplierCategory_ItemCategory')
                     ->where('ItemCategoryID', $categoryId)
                     ->value('SupplierCategoryID')
@@ -332,7 +326,7 @@ class RFQController extends Controller
 
                 $newSupplierId = DB::table('t_Suppliers')->insertGetId([
                     'SupplierMasterId' => $masterId,
-                    'CategoryId' => $supplierCategoryId, // This is actually SupplierCategoryID in some contexts, but schema says CategoryId
+                    'CategoryId' => $supplierCategoryId,
                     'SupplierCategoryID' => $supplierCategoryId,
                     'Active_Status' => 1,
                     'CreatedBy' => Auth::user()->Id,
@@ -371,7 +365,6 @@ class RFQController extends Controller
         ]);
 
         // Build recipients (unique emails for selected suppliers)
-        // Build recipients (unique emails for selected suppliers)
         $thirdPartyUserEmailSub = DB::table('t_ThirdPartyUsers as tpu')
             ->select('tpu.ThirdPartyId', DB::raw('MIN(tpu.Email) as Email'))
             ->whereNull('tpu.DeletedOn')
@@ -389,19 +382,26 @@ class RFQController extends Controller
             ->whereNull('tp.DeletedOn')
             ->select('tp.TradingName', DB::raw('tpu.Email as Email'))
             ->get();
-        $cc = [];
+
+        $recipients = [];
         $usedEmails = [];
+
         foreach ($recipientRows as $row) {
             $email = trim((string)$row->Email);
             if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) && ! in_array(strtolower($email), $usedEmails, true)) {
-                $cc[] = [$row->TradingName => $email];
+                $recipients[] = [
+                    'name' => $row->TradingName,
+                    'email' => $email,
+                ];
                 $usedEmails[] = strtolower($email);
             }
         }
 
         // Send emails to suppliers
         $actor = Auth::user();
-        if ($actor && ! empty($cc)) {
+        $successfulEmals = 0;
+
+        if ($actor && ! empty($recipients)) {
             $subject = 'RFQ Invitation: ' . $rfq->RFQNumber;
             $submissionDeadlineFormatted = $rfq->SubmissionDeadline
                 ? \Carbon\Carbon::parse($rfq->SubmissionDeadline)->format('d/m/Y')
@@ -411,66 +411,10 @@ class RFQController extends Controller
                 '<p>Submission Deadline: <b>' . e($submissionDeadlineFormatted) . '</b></p>' .
                 '<p>Please log in to the supplier portal to view details and submit your response.</p>';
 
-            // Prepare supplier list
-            $supplierList = [];
-            foreach ($cc as $entry) {
-                foreach ($entry as $name => $email) {
-                    $supplierList[] = ['name' => $name, 'email' => $email];
-                }
-            }
-
-            $to = [[$recipientName ?? $recipientEmail => $recipientEmail]];
-
-            $salutationName = $recipientName ?? $recipientEmail;
-            $personalBody = '<p>Hello ' . e($salutationName) . ',</p>' . $bodyTemplate;
-
-            try {
-                $service = \App\Services\CRMEmailService::createRaw(
-                    $actor, 
-                    $subject, 
-                    $personalBody, 
-                    $to, 
-                    'ThirdParty', 
-                    '', 
-                    [], 
-                    [], // No BCC to ensures privacy
-                    \App\Enums\EmailPriorityEnum::Important
-                );
-                $service->send(true);
-                
-                Log::info('Email sent to supplier', [
-                    'rfq_id' => $rfq->Id,
-                    'recipient' => $recipientEmail
-                ]);
-            } catch (\Exception $e) {
-                Log::error('Failed to send email to supplier', [
-                    'rfq_id' => $rfq->Id,
-                    'recipient' => $recipientEmail,
-                    'error' => $e->getMessage()
-                ]);
-            }
-        }
-    }
-
-                // Build BCC with other suppliers
-                $bcc = [];
-                foreach ($uniqueEmails as $otherEmail) {
-                    if ($otherEmail === $recipientEmail) {
-                        continue;
-                    }
-                    $otherName = null;
-                    foreach ($supplierList as $s) {
-                        if (strtolower($s['email']) === $otherEmail) {
-                            $otherName = $s['name'];
-
-                            break;
-                        }
-                    }
-                    $bcc[] = [$otherName ?? $otherEmail => $otherEmail];
-                }
-
-                $salutationName = $recipientName ?? $recipientEmail;
-                $personalBody = '<p>Hello ' . e($salutationName) . ',</p>' . $bodyTemplate;
+            // Send individual emails to preserve privacy
+            foreach ($recipients as $recipient) {
+                $to = [[$recipient['name'] => $recipient['email']]];
+                $personalBody = '<p>Hello ' . e($recipient['name']) . ',</p>' . $bodyTemplate;
 
                 try {
                     $service = \App\Services\CRMEmailService::createRaw(
@@ -481,26 +425,27 @@ class RFQController extends Controller
                         'ThirdParty',
                         '',
                         [],
-                        $bcc,
+                        [], // No BCC
                         \App\Enums\EmailPriorityEnum::Important
                     );
                     $service->send(true);
+                    $successfulEmals++;
 
                     Log::info('Email sent to supplier', [
                         'rfq_id' => $rfq->Id,
-                        'recipient' => $recipientEmail,
+                        'recipient' => $recipient['email'],
                     ]);
                 } catch (\Exception $e) {
                     Log::error('Failed to send email to supplier', [
                         'rfq_id' => $rfq->Id,
-                        'recipient' => $recipientEmail,
+                        'recipient' => $recipient['email'],
                         'error' => $e->getMessage(),
                     ]);
                 }
             }
         }
 
-        return redirect()->back()->with('success', 'RFQ published and invitation emails sent to ' . count($supplierIds) . ' supplier(s).');
+        return redirect()->back()->with('success', 'RFQ published. ' . $successfulEmals . ' invitation email(s) sent.');
     }
 
     /**
@@ -590,62 +535,35 @@ class RFQController extends Controller
             }
         }
 
-    $allCategoryIds = $allCategoryIds->unique()->values();
+        $allCategoryIds = $allCategoryIds->unique()->values();
 
-    // Prepare a subquery to fetch a single contact email per third party
-    $thirdPartyUserEmailSub = DB::table('t_ThirdPartyUsers as tpu')
-        ->select('tpu.ThirdPartyId', DB::raw('MIN(tpu.Email) as Email'))
-        ->whereNull('tpu.DeletedOn')
-        ->groupBy('tpu.ThirdPartyId');
+        // Prepare a subquery to fetch a single contact email per third party
+        $thirdPartyUserEmailSub = DB::table('t_ThirdPartyUsers as tpu')
+            ->select('tpu.ThirdPartyId', DB::raw('MIN(tpu.Email) as Email'))
+            ->whereNull('tpu.DeletedOn')
+            ->groupBy('tpu.ThirdPartyId');
 
-    // FIXED: Select suppliers from SupplierMaster directly
-    $suppliers = DB::table('t_SupplierMaster as sm')
-        ->join('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
-        ->leftJoinSub($thirdPartyUserEmailSub, 'tpu', function ($join) {
-            $join->on('tpu.ThirdPartyId', '=', 'tp.Id');
-        })
-        ->whereNull('sm.DeletedOn')
-        ->whereNull('tp.DeletedOn')
-        ->where('sm.ApprovalStatus', 'A') // Only approved suppliers
-        ->where('sm.IsPrequalified', 1)   // Only prequalified suppliers
-        ->select(
-            'sm.Id', // Use SupplierMaster Id
-            'sm.ThirdPartyId',
-            'tp.TradingName as SupplierName',
-            'tp.BusinessType',
-            DB::raw('tpu.Email as Email')
-        )
-        ->orderBy('tp.TradingName')
-        ->get();
+        // FIXED: Select suppliers from SupplierMaster directly
+        $suppliers = DB::table('t_SupplierMaster as sm')
+            ->join('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
+            ->leftJoinSub($thirdPartyUserEmailSub, 'tpu', function ($join) {
+                $join->on('tpu.ThirdPartyId', '=', 'tp.Id');
+            })
+            ->whereNull('sm.DeletedOn')
+            ->whereNull('tp.DeletedOn')
+            ->where('sm.ApprovalStatus', 'A') // Only approved suppliers
+            ->where('sm.IsPrequalified', 1)   // Only prequalified suppliers
+            ->select(
+                'sm.Id', // Use SupplierMaster Id
+                'sm.ThirdPartyId',
+                'tp.TradingName as SupplierName',
+                'tp.BusinessType',
+                DB::raw('tpu.Email as Email')
+            )
+            ->orderBy('tp.TradingName')
+            ->get();
 
-    Log::info('Suppliers fetched for RFQ', [
-        'rfq_id' => $rfq->Id,
-        'supplier_count' => $suppliers->count(),
-        'suppliers' => $suppliers->toArray()
-    ]);
-
-    // Load RFQ responses (supplier quotations) with items and supplier info for printing
-    $rfqResponses = RFQResponse::with(['items.uom', 'supplier.supplierMaster.party'])
-        ->where('RFQId', $rfq->Id)
-        ->get();
-
-    // Get workflow data
-    $canApprove = false;
-    $history = collect();
-    $pendingApprovals = [];
-    try {
-        $canApprove = $this->workflowService->canUserApprove($rfq, Auth::user());
-        $history = $this->workflowService->getHistory($rfq);
-        $pendingApprovals = $this->workflowService->getPendingApprovals($rfq);
-        
-        Log::info('Workflow data retrieved', [
-            'rfq_id' => $rfq->Id,
-            'can_approve' => $canApprove,
-            'history_count' => $history->count(),
-            'pending_count' => count($pendingApprovals)
-        ]);
-    } catch (\Exception $e) {
-        Log::error('Failed to get workflow data', [
+        Log::info('Suppliers fetched for RFQ', [
             'rfq_id' => $rfq->Id,
             'supplier_count' => $suppliers->count(),
             'suppliers' => $suppliers->toArray(),
@@ -675,9 +593,10 @@ class RFQController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to get workflow data', [
                 'rfq_id' => $rfq->Id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'supplier_count' => $suppliers->count(),
+                'suppliers' => $suppliers->toArray(),
             ]);
+
         }
 
         return view('procurement.rfqs.show', compact('rfq', 'suppliers', 'rfqResponses', 'canApprove', 'history', 'pendingApprovals'));

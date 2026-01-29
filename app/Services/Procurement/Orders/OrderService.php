@@ -3,6 +3,7 @@
 namespace App\Services\Procurement\Orders;
 
 use App\Models\Auth\User;
+use App\Models\Core\Branch;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -15,6 +16,7 @@ class OrderService
      */
     public function __construct()
     {
+
     }
 
     public static function addPO($supplier, $poDate, $rfqNo, $priority, $terms, User $actor, $taxId = null)
@@ -23,8 +25,8 @@ class OrderService
             $response = DB::transaction(function () use ($supplier, $poDate, $rfqNo, $priority, $terms, $actor, $taxId) {
                 // Execute the stored procedure and capture the result
                 // Use the actor's BranchId so PO is linked to the correct branch
-                $branchId = $actor->BranchId ?? 0;
-                
+                $branchId = Branch::where('isHQ', 1)->value('Id');
+
                 $result = DB::select('EXEC p_AddPurchaseOrder ?, ?, ?, ?, ?, ?, ?, ?', [
                     $supplier,
                     $poDate,
@@ -33,7 +35,7 @@ class OrderService
                     $terms,
                     $actor->Id, // use lowercase `id`, Laravel convention
                     $branchId, // Use user's branch ID
-                    $taxId // New TaxId param
+                    $taxId, // New TaxId param
                 ]);
 
 
@@ -76,6 +78,9 @@ class OrderService
             ];
         }
     }
+
+
+
 
     public static function addPOLines($item, $quantity, $price, $taxId, $discount, $linetotal, User $actor, $orderId)
     {
@@ -406,6 +411,7 @@ class OrderService
             } else {
                 return false;
             }
+
         } elseif ($sourceType === 'CONTRACT-RFQ') {
             $rfqContract = DB::table('t_RFQAward')->where('Id', $sourceId)->first();
             if ($rfqContract && $rfqContract->RFQId) {
@@ -428,6 +434,7 @@ class OrderService
             } else {
                 return false;
             }
+
         } elseif ($sourceType === 'PLAN') {
             $directMethod = DB::table('t_CodeDetails')
                ->where('CodeID', 'ProcurementMethod')
