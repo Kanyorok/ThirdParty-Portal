@@ -3,9 +3,11 @@
 namespace App\Models\HRM;
 
 use App\Models\Auth\User;
+use App\Models\HR\Employee;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Department extends Model
@@ -25,12 +27,17 @@ class Department extends Model
 
     public function head(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'HeadId', 'Id')->withTrashed();
+        return $this->belongsTo(Employee::class, 'HeadId', 'Id')->withTrashed();
     }
 
     public function deputy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'DeputyHeadId', 'Id')->withTrashed();
+        return $this->belongsTo(Employee::class, 'DeputyHeadId', 'Id')->withTrashed();
+    }
+
+    public function employees(): HasMany
+    {
+        return $this->hasMany(Employee::class, 'DepartmentID', 'Id');
     }
 
     public static function getPrimaryKey(): string

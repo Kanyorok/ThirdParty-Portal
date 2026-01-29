@@ -32,17 +32,27 @@ class DepartmentController extends Controller
     {
         if ($request->ajax()) {
             try {
-                return Datatables::of(Department::query()->select('*'))->addIndexColumn()
+                return Datatables::of(
+                    Department::query()
+                        ->with(['head'])
+                        ->withCount(['employees' => function ($query) {
+                            $query->whereNull('DeletedOn')->where('IsActive', 1);
+                        }])
+                )->addIndexColumn()
                     ->addColumn('action', function (Department $department) {
                         return '<button type="button" data-click_url="' . route('hr.departments.show', [$department->DepartmentID]) . '" data-summary_title="department details" class="btn btn-info btn-sm click-summary-data"><i class="fas fa-eye"></i> details</button>';
                     })->addColumn('employees_count', function (Department $department) {
-                        return number_format(0);
+                        return number_format($department->employees_count ?? 0);
                     })->addColumn('hod', function (Department $department) {
-                        return "-";
+                        if ($department->head) {
+                            return '<span class="badge bg-info">' . $department->head->FirstName . ' ' . $department->head->LastName . '</span>';
+                        }
+                        return '<span class="text-muted">Not Assigned</span>';
                     })->editColumn('DepartmentID', function (Department $department) {
                         return Str::upper($department->DepartmentID);
-                    })->rawColumns(['action',])->make();
+                    })->rawColumns(['action', 'hod'])->make();
             } catch (Exception $e) {
+                Log::error('Department index error: ' . $e->getMessage());
             }
             return $this->errored('cannot retrieve department list.');
         }
@@ -58,9 +68,22 @@ class DepartmentController extends Controller
         try {
             return DB::transaction(function () use ($request) {
                 $dpt = DepartmentService::create(
-                    name: $request->string('Name')->trim()->toString(), actor: $request->user(),
+                    name: $request->string('Name')->trim()->toString(), 
+                    actor: $request->user(),
                     description: $request->string('Description')->trim()->toString()
                 )->department;
+
+                // Assign HOD if provided
+                if ($request->filled('HeadId')) {
+                    $dpt->update(['HeadId' => $request->input('HeadId')]);
+                }
+
+                // Assign Deputy HOD if provided
+                if ($request->filled('DeputyHeadId')) {
+                    $dpt->update(['DeputyHeadId' => $request->input('DeputyHeadId')]);
+                }
+
+                activity()->causedBy($request->user())->performedOn($dpt)->event('create')->log('created department ' . $dpt->DepartmentID);
 
                 return $this->succeeded($dpt->DepartmentID . ' created successfully.');
             });
@@ -76,7 +99,19 @@ class DepartmentController extends Controller
      */
     public function create(): View
     {
-        return view('hr.department.create');
+        // Get all active employees to select HOD
+        $employees = DB::table('t_HREmployees')
+            ->select('Id', 'EmployeeNo', 'FirstName', 'LastName', 'Email')
+            ->whereNull('DeletedOn')
+            ->where('IsActive', 1)
+            ->orderBy('FirstName')
+            ->get()
+            ->map(function ($employee) {
+                $employee->FullName = $employee->FirstName . ' ' . $employee->LastName . ' (' . $employee->EmployeeNo . ')';
+                return $employee;
+            });
+
+        return view('hr.department.create', compact('employees'));
     }
 
     /**
@@ -84,7 +119,19 @@ class DepartmentController extends Controller
      */
     public function show(Department $department)
     {
-        return view('hr.department.show', ['department' => $department]);
+        // Get all active employees to select HOD
+        $employees = DB::table('t_HREmployees')
+            ->select('Id', 'EmployeeNo', 'FirstName', 'LastName', 'Email')
+            ->whereNull('DeletedOn')
+            ->where('IsActive', 1)
+            ->orderBy('FirstName')
+            ->get()
+            ->map(function ($employee) {
+                $employee->FullName = $employee->FirstName . ' ' . $employee->LastName . ' (' . $employee->EmployeeNo . ')';
+                return $employee;
+            });
+
+        return view('hr.department.show', compact('department', 'employees'));
     }
 
     /**
@@ -97,6 +144,8 @@ class DepartmentController extends Controller
                 $department->update([
                     'Name' => $request->string('Name')->trim()->toString(),
                     'Description' => $request->string('Description')->trim()->toString(),
+                    'HeadId' => $request->input('HeadId'),
+                    'DeputyHeadId' => $request->input('DeputyHeadId'),
                     'ModifiedBy' => $request->user()->Id,
                 ]);
 

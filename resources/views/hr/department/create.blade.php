@@ -15,6 +15,34 @@
             <p id="Description_error" class="invalid-feedback d-none error col-12" role="alert"></p>
         </div>
 
+        <div class="col-12 mb-3">
+            <label class="form-label" for="HeadId">Head of Department (HOD)</label>
+            <select class="form-select select2" id="HeadId" name="HeadId" data-placeholder="Select HOD">
+                <option value="">-- Select HOD --</option>
+                @foreach($employees as $employee)
+                    <option value="{{ $employee->Id }}">
+                        {{ $employee->FullName }}
+                    </option>
+                @endforeach
+            </select>
+            <small class="text-muted">Select the employee who will head this department</small>
+            <p id="HeadId_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+        </div>
+
+        <div class="col-12 mb-3">
+            <label class="form-label" for="DeputyHeadId">Deputy Head of Department</label>
+            <select class="form-select select2" id="DeputyHeadId" name="DeputyHeadId" data-placeholder="Select Deputy HOD">
+                <option value="">-- Select Deputy HOD --</option>
+                @foreach($employees as $employee)
+                    <option value="{{ $employee->Id }}">
+                        {{ $employee->FullName }}
+                    </option>
+                @endforeach
+            </select>
+            <small class="text-muted">Optional: Select the deputy head for this department</small>
+            <p id="DeputyHeadId_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+        </div>
+
         <div class="mt-2">
             <button type="button" class="btn btn-secondary float-start"
                     onclick="window.bsOffcanvas.hide();">
@@ -28,6 +56,12 @@
 </div>
 <script>
     $(function () {
+        // Initialize Select2
+        $('.select2').select2({
+            theme: 'bootstrap-5',
+            dropdownParent: $('#summaryOffcanvas')
+        });
+
         $('form#createDepartmentForm').submit(async function (e) {
             e.preventDefault();
             if (await saveForm($(this), $('#createDepartmentBtn'), false, true, true)) {

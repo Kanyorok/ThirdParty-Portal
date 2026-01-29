@@ -10,6 +10,29 @@
     <ul class="list-group list-group-flush">
         <li class="list-group-item">Name : <b class="float-end">{{ $department->Name }}</b></li>
         <li class="list-group-item">Description : <b class="float-end">{{ $department->Description ?? 'No Description' }}</b></li>
+        <li class="list-group-item">Head of Department : 
+            <b class="float-end">
+                @if($department->head)
+                    <span class="badge bg-info">{{ $department->head->FirstName }} {{ $department->head->LastName }}</span>
+                @else
+                    <span class="text-muted">Not Assigned</span>
+                @endif
+            </b>
+        </li>
+        <li class="list-group-item">Deputy HOD : 
+            <b class="float-end">
+                @if($department->deputy)
+                    <span class="badge bg-secondary">{{ $department->deputy->FirstName }} {{ $department->deputy->LastName }}</span>
+                @else
+                    <span class="text-muted">Not Assigned</span>
+                @endif
+            </b>
+        </li>
+        <li class="list-group-item">Total Employees : 
+            <b class="float-end">
+                <span class="badge bg-primary">{{ $department->employees()->whereNull('DeletedOn')->where('IsActive', 1)->count() }}</span>
+            </b>
+        </li>
     </ul>
 </div>
 <div class="m-auto">
@@ -64,6 +87,32 @@
                                       class="form-control">{{ $department->Description }}</textarea>
                             <p id="Description_error" class="invalid-feedback d-none error col-12"
                                role="alert"></p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="HeadId">Head of Department (HOD)</label>
+                            <select class="form-select select2-update" id="HeadId" name="HeadId" data-placeholder="Select HOD">
+                                <option value="">-- Select HOD --</option>
+                                @foreach($employees as $employee)
+                                    <option value="{{ $employee->Id }}" {{ $department->HeadId == $employee->Id ? 'selected' : '' }}>
+                                        {{ $employee->FullName }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">Select the employee who will head this department</small>
+                            <p id="HeadId_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="DeputyHeadId">Deputy Head of Department</label>
+                            <select class="form-select select2-update" id="DeputyHeadId" name="DeputyHeadId" data-placeholder="Select Deputy HOD">
+                                <option value="">-- Select Deputy HOD --</option>
+                                @foreach($employees as $employee)
+                                    <option value="{{ $employee->Id }}" {{ $department->DeputyHeadId == $employee->Id ? 'selected' : '' }}>
+                                        {{ $employee->FullName }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">Optional: Select the deputy head for this department</small>
+                            <p id="DeputyHeadId_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                         </div>
                         <hr>
                         <div class="mt-4">
@@ -141,5 +190,13 @@
         $('#updateDepartmentModal').removeClass('d-none');
         $('.modal-title').html('update Department');
         $("#departmentActionModel").modal('show');
+        
+        // Initialize Select2 when modal is shown
+        setTimeout(function() {
+            $('.select2-update').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#departmentActionModel')
+            });
+        }, 100);
     }
 </script>
