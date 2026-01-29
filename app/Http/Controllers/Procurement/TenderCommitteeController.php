@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\RFQ;
-use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQCommittee;
 use App\Models\Procurement\RFQCommitteeMember;
 use App\Models\Procurement\RFQEvaluation;

@@ -61,7 +61,7 @@
         "phpunit/phpunit": "^11.0.1",
         "roave/security-advisories": "dev-latest",
         "spatie/laravel-ignition": "^2.4",
-        "squizlabs/php_codesniffer": "^4.0"
+        "squizlabs/php_codesniffer": "*"
     },
     "autoload": {
         "files": [
