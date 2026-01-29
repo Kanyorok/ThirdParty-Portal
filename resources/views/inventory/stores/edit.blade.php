@@ -175,7 +175,6 @@
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-            // Initialize Bootstrap tooltips
             document.addEventListener('DOMContentLoaded', function() {
                 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
                 var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -183,12 +182,10 @@
                 });
             });
 
-            // Confirmation when changing main store status
             document.querySelector('form').addEventListener('submit', function(e) {
                 const isMainStore = document.getElementById('IsMainStore');
                 const wasMainStore = {{ $store->IsMainStore ? 'true' : 'false' }};
                 
-                // If changing from non-main to main store
                 if (isMainStore.checked && !wasMainStore && !isMainStore.disabled) {
                     if (!confirm('Are you sure you want to set this as the main store? This will remove the main store status from any existing main store in this branch.')) {
                         e.preventDefault();
@@ -196,7 +193,6 @@
                     }
                 }
                 
-                // If removing main store status
                 if (!isMainStore.checked && wasMainStore) {
                     if (!confirm('Are you sure you want to remove the main store status? This branch will no longer have a designated main store.')) {
                         e.preventDefault();
