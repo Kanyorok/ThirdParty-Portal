@@ -147,21 +147,7 @@ class PrequalificationEvaluationController extends Controller
                 // Resolve ThirdPartyId from SupplierMaster (supplier relationship)
                 $thirdPartyId = $app->supplier?->ThirdPartyId;
                 
-                if (!$thirdPartyId) {
-                    Log::warning('Bulk prequalify skipped: No ThirdPartyId for SupplierMaster', [
-                         'supplierMasterId' => $app->SupplierID,
-                         'applicationId' => $app->ApplicationID
-                    ]);
-                    continue;
-                }
-
-                Log::info('Bulk prequalify processing', [
-                    'roundId' => $roundId,
-                    'thirdPartyId' => $thirdPartyId,
-                    'categoryId' => $app->CategoryID,
-                    'applicationId' => $app->ApplicationID,
-                    'userId' => $userId,
-                ]);
+            
                 // Create category-specific prequalification record
                 DB::table('t_PrequalificationRoundSupplierCategory')->updateOrInsert(
                     [

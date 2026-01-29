@@ -105,25 +105,7 @@ class StockMovementController extends Controller
             $closingValue = $closingQty * $unitCost;
             
             // Debug log for first item
-            if (count($movementData) === 0) {
-                \Log::debug('Transaction calculation:', [
-                    'item_id' => $tx->ItemID,
-                    'opening_qty' => $openingQty,
-                    'in_qty' => $tx->total_in_qty,
-                    'out_qty' => $tx->total_out_qty,
-                    'closing_qty' => $closingQty,
-                    'unit_cost' => $unitCost,
-                    'opening_value' => $openingValue,
-                    'in_value' => $inValue,
-                    'out_value' => $outValue,
-                    'closing_value' => $closingValue,
-                    'tx_avg_unit_cost' => $tx->avg_unit_cost,
-                    'tx_total_in_value' => $tx->total_in_value,
-                    'tx_total_out_value' => $tx->total_out_value,
-                    'item_unit_cost' => $item ? $item->UnitCost : 'no item'
-                ]);
-            }
-            
+           
             $movementData[$tx->ItemID] = [
                 'label' => $item ? ($item->ItemName ?? $item->Description) : 'Unknown',
                 'quantity' => [

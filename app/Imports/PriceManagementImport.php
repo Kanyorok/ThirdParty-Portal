@@ -23,13 +23,13 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
         $actualPrice = $data['actualprice'] ?? $data['price'] ?? null;
 
         if (empty($itemCode) || empty($actualPrice)) {
-            Log::warning("Invalid row skipped (missing itemcode or actualprice)", $data);
+            
             return;
         }
 
         $item = ItemMasterList::where('ItemCode', $itemCode)->first();
         if (!$item) {
-            Log::warning("Item not found for ItemCode: {$itemCode}", $data);
+           
             return;
         }
 

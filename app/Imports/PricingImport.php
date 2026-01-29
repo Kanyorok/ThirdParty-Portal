@@ -25,7 +25,7 @@ class PricingImport implements ToCollection
             }
 
             if (count($row) < 8) {
-                Log::warning('Invalid row skipped due to insufficient columns', $row->toArray());
+                
                 continue;
             }
 
@@ -35,7 +35,7 @@ class PricingImport implements ToCollection
             $item = ItemMasterList::where('ItemCode', $itemCode)->first();
 
             if (!$item) {
-                Log::warning("ItemCode '{$itemCode}' not found — skipping row", $row->toArray());
+                
                 continue;
             }
 

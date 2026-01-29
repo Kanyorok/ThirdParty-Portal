@@ -46,7 +46,7 @@ class ItemsSheetImport implements ToModel, WithHeadingRow
             if (!empty($validationErrors)) {
                 $this->skipped++;
                 $this->errors = array_merge($this->errors, $validationErrors);
-                Log::warning("❌ Skipped row {$rowNumber}: Validation failed", ['errors' => $validationErrors]);
+                
                 DB::rollBack();
                 return null;
             }
@@ -64,7 +64,7 @@ class ItemsSheetImport implements ToModel, WithHeadingRow
                 $errorMsg = "Row {$rowNumber}: Invalid Item Type '{$itemType}'";
                 $this->skipped++;
                 $this->errors[] = $errorMsg;
-                Log::warning("❌ Skipped row: " . $errorMsg, $row);
+                
                 DB::rollBack();
                 return null;
             }
@@ -75,7 +75,7 @@ class ItemsSheetImport implements ToModel, WithHeadingRow
                 $errorMsg = "Row {$rowNumber}: Invalid UOM '{$uom}'";
                 $this->skipped++;
                 $this->errors[] = $errorMsg;
-                Log::warning("❌ Skipped row: " . $errorMsg, $row);
+                
                 DB::rollBack();
                 return null;
             }
@@ -87,7 +87,7 @@ class ItemsSheetImport implements ToModel, WithHeadingRow
                 $errorMsg = "Row {$rowNumber}: Invalid Inventory Type '{$inventoryType}'";
                 $this->skipped++;
                 $this->errors[] = $errorMsg;
-                Log::warning("❌ Skipped row: " . $errorMsg, $row);
+              
                 DB::rollBack();
                 return null;
             }
@@ -108,7 +108,7 @@ class ItemsSheetImport implements ToModel, WithHeadingRow
                 $errorMsg = "Row {$rowNumber}: Category '{$categoryName}'{$parentText} not found";
                 $this->skipped++;
                 $this->errors[] = $errorMsg;
-                Log::warning("❌ Skipped row: " . $errorMsg, $row);
+             
                 DB::rollBack();
                 return null;
             }
@@ -152,10 +152,10 @@ class ItemsSheetImport implements ToModel, WithHeadingRow
 
                 if ($hasChanges) {
                     $existingItem->update($updateData);
-                    Log::info("🔁 Updated existing item: {$itemCode}");
+                   
                     $this->updated++;
                 } else {
-                    Log::info("⏭ Skipped identical item: {$itemCode}");
+                    
                     $this->skipped++;
                 }
 

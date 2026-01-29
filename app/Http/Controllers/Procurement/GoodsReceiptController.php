@@ -114,12 +114,6 @@ class GoodsReceiptController extends Controller
         
         $Orders = $filteredOrders;
         
-        Log::info('GRN Create Debug', [
-            'total_orders' => $Orders->count(),
-            'total_lines' => $OrderLines->count(),
-            'received_po_ids' => $receivedQuantities->keys()->toArray(),
-            'grouped_keys' => $linesGrouped->keys()->toArray()
-        ]);
         
         // Fetch all active stores
         $stores = DB::connection('sqlsrv')->table('t_Stores')->select('Id', 'StoreName')->get();

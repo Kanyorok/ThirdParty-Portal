@@ -1849,17 +1849,7 @@ class TenderController extends Controller
                 }
             }
 
-            // Debug logging
-            // \Log::info('Workflow History Debug', [
-            //     'tender_id' => $tender->Id,
-            //     'has_workflow' => $hasWorkflow,
-            //     'history_count' => $history->count(),
-            //     'current_stage' => $currentStage,
-            //     'pending_count' => $totalPending,
-            //     'completed_count' => $totalCompleted,
-            //     'next_stage' => $nextStage?->StageName ?? 'None',
-            // ]);
-
+        
 
             // Fetch additional workflow details
             $approvalType = 'N/A';

@@ -92,35 +92,18 @@ class LoginRequest extends FormRequest
                 'BranchId' => $branchRole['branch']->Id,
             ])->save();
 
-            // Debug: Log before login
-            \Log::info('BEFORE Auth::login', [
-                'user_id' => $user->Id,
-                'session_id' => session()->getId(),
-                'auth_check' => auth()->check(),
-            ]);
+    
 
             //new session
             Auth::guard('web')->login($user, $branchRole['role']->hasPermissionTo(PermissionEnum::UsersSessions));
             
-            // Debug: Log immediately after login
-            \Log::info('AFTER Auth::login', [
-                'auth_check' => auth()->check(),
-                'auth_id' => auth()->id(),
-                'session_id' => session()->getId(),
-            ]);
-            
+          
             // DISABLED: session()->regenerate() changes session ID
             // Apache in production doesn't send Set-Cookie header in AJAX responses
             // So browser keeps old session ID, causing authentication to fail
             // Security note: Auth::login() already migrates session for security
             // $this->session()->regenerate();
-            
-            // Debug: Log after regenerate (skipped)
-            \Log::info('SKIPPED session regenerate', [
-                'auth_check' => auth()->check(),
-                'auth_id' => auth()->id(),
-                'session_id' => session()->getId(),
-            ]);
+    
 
             // CRITICAL: Generate session_token for EnsureSingleActiveSession middleware
             // This middleware was added on Sept 23, 2025 but login was never updated
@@ -150,12 +133,8 @@ class LoginRequest extends FormRequest
             $dbSession = DB::table(config('session.table', 't_SYSSessions'))
                 ->where('id', session()->getId())
                 ->first();
-            \Log::info('AFTER session save', [
-                'session_id' => session()->getId(),
-                'db_found' => (bool)$dbSession,
-                'db_user_id' => $dbSession ? $dbSession->user_id : null,
-                'auth_check' => auth()->check(),
-            ]);
+          
+        
             
             return;
         }

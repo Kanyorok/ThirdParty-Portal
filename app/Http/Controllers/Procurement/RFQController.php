@@ -529,13 +529,6 @@ public function reject(Request $request, $id)
     $rfq = RFQ::with('rfqLines', 'rfqLines.uom', 'requisition')->findOrFail($id);
     $this->authorize('view', $rfq);
 
-    // Debug: Check what's being passed to workflow service
-    Log::info('RFQ Show - Workflow Debug', [
-        'rfq_id' => $rfq->Id,
-        'rfq_number' => $rfq->RFQNumber,
-        'status' => $rfq->Status,
-        'source_alias' => RFQ::getPrimaryKey()
-    ]);
 
     // Gather item category IDs from RFQ lines and include ancestors and descendants
     $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique()->filter()->values();
