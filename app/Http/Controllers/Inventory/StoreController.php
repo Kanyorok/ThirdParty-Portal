@@ -22,12 +22,17 @@ class StoreController extends Controller
     public function index(Request $request)
     {
         $currentBranch = $request->user()->branch;
-            if (!$currentBranch instanceof Branch) {
-                 return redirect()->back()->with('fail', 'Current user branch not found.');
-            }
+        if (!$currentBranch instanceof Branch) {
+            return redirect()->back()->with('fail', 'Current user branch not found.');
+        }
 
         $branchId = $currentBranch->Id; 
-        $stores = Store::where('BranchID', $branchId)->get();
+        
+        // Load stores with stock items count for efficient checking
+        $stores = Store::where('BranchID', $branchId)
+            ->withCount('stockItems')
+            ->get();
+            
         return view('inventory.stores.index', compact('stores'));
     }
 
@@ -36,9 +41,9 @@ class StoreController extends Controller
         $this->authorize('create', Store::class);
 
         $currentBranch = $request->user()->branch;
-            if (!$currentBranch instanceof Branch) {
-                 return redirect()->back()->with('fail', 'Current user branch not found.');
-            }
+        if (!$currentBranch instanceof Branch) {
+            return redirect()->back()->with('fail', 'Current user branch not found.');
+        }
 
         $branchId = $currentBranch->Id; 
         $branch = Branch::find($branchId);
@@ -74,9 +79,9 @@ class StoreController extends Controller
         $this->authorize('update', $store);
         
         $currentBranch = $request->user()->branch;
-            if (!$currentBranch instanceof Branch) {
-                 return redirect()->back()->with('fail', 'Current user branch not found.');
-            }
+        if (!$currentBranch instanceof Branch) {
+            return redirect()->back()->with('fail', 'Current user branch not found.');
+        }
 
         $branchId = $currentBranch->Id; 
         $branch = Branch::find($branchId); 
@@ -85,14 +90,23 @@ class StoreController extends Controller
             ->where('IsMainStore', true)
             ->where('Id', '!=', $Id)
             ->exists();
+        
+        $hasStockItems = $store->stockItems()->exists();
+        $stockItemsCount = $hasStockItems ? $store->stockItems()->count() : 0;
 
-        return view('inventory.stores.edit', compact('store', 'branch', 'mainStoreExists')); // Changed to 'branch'
+        return view('inventory.stores.edit', compact('store', 'branch', 'mainStoreExists', 'hasStockItems', 'stockItemsCount'));
     }
 
     public function update(StoreRequest $request, $Id)
     {
         $store = Store::findOrFail($Id);
         $this->authorize('update', $store);
+
+        if ($store->Status == 1 && $request->Status == 0 && $store->hasStockItems()) {
+            return redirect()->back()
+                ->with('error', 'Cannot deactivate store with existing stock items. Please remove all stock items first.')
+                ->withInput();
+        }
 
         try {
             $this->service->update($store, $request->validated());
@@ -107,7 +121,6 @@ class StoreController extends Controller
         $store = Store::findOrFail($Id);
         $this->authorize('destroy', $store);
 
-        // Prevent deletion of main store if it's the only one
         if ($store->IsMainStore) {
             $otherStoresCount = Store::where('BranchID', $store->BranchID)
                 ->where('Id', '!=', $Id)
@@ -116,6 +129,10 @@ class StoreController extends Controller
             if ($otherStoresCount === 0) {
                 return redirect()->back()->with('error', 'Cannot delete the main store as it is the only store for this branch.');
             }
+        }
+        
+        if ($store->hasStockItems()) {
+            return redirect()->back()->with('error', 'Cannot delete store with existing stock items. Please remove all stock items first.');
         }
 
         try {
