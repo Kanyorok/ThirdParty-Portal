@@ -23,6 +23,9 @@ class OrderService
         try {
             $response = DB::transaction(function () use ($supplier, $poDate, $rfqNo, $priority, $terms, $actor, $taxId) {
                 // Execute the stored procedure and capture the result
+                // Use the actor's BranchId so PO is linked to the correct branch
+                $branchId = $actor->BranchId ?? 0;
+                
                 $result = DB::select('EXEC p_AddPurchaseOrder ?, ?, ?, ?, ?, ?, ?, ?', [
                     $supplier,
                     $poDate,
@@ -30,7 +33,7 @@ class OrderService
                     $priority,
                     $terms,
                     $actor->Id, // use lowercase `id`, Laravel convention
-                    0, // BranchId default
+                    $branchId, // Use user's branch ID
                     $taxId // New TaxId param
                 ]);
 

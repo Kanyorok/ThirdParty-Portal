@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Procurement;
 use App\Enums\Core\PostingEnum;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+
+use App\Models\Inventory\Store;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Procurement\GoodsReceipt;
 use App\Models\Inventory\StockGRNLedger;
@@ -36,23 +38,32 @@ class GoodsReceiptController extends Controller
     public function create()
     {
         $this->authorize('create', GoodsReceipt::class);
-        $usedOrderNos = DB::connection('sqlsrv')
+        
+        // Get total received quantities per PO line item from existing GRNs
+        $receivedQuantities = DB::connection('sqlsrv')
             ->table('t_GoodsReceipts')
-            ->distinct()
-            ->pluck('POID');
+            ->select('POID', 'ItemNo', DB::raw('SUM(ReceivedQTY) as TotalReceived'))
+            ->whereNull('DeletedOn')
+            ->groupBy('POID', 'ItemNo')
+            ->get()
+            ->groupBy(fn($item) => (int) $item->POID) // Cast POID to int for consistent matching
+            ->map(function ($items) {
+                return $items->keyBy(fn($item) => (int) $item->ItemNo)->map(fn($item) => (float) $item->TotalReceived);
+            });
 
-        // Fetch approved POs not yet used in GRNs
+        // Fetch all approved POs with their BranchID
         $Orders = DB::connection('sqlsrv')
             ->table('t_Orders')
-            ->whereNotIn('OrderNo', $usedOrderNos)
+            ->leftJoin('t_Branches', 't_Orders.BranchID', '=', 't_Branches.Id')
             ->where(function($query) {
-                $query->where('DocStatus', 'A')  // Approved
-                      ->orWhere('DocStatus', 'a'); // Handle case variations
+                $query->where('t_Orders.DocStatus', 'A')  // Approved
+                      ->orWhere('t_Orders.DocStatus', 'a'); // Handle case variations
             })
-            ->select('Id', 'OrderNo', 'ExtOrdNum', 'AccountID', 'OrdTotIncl')
-            ->orderByDesc('CreatedOn')
+            ->select('t_Orders.Id', 't_Orders.OrderNo', 't_Orders.ExtOrdNum', 't_Orders.AccountID', 't_Orders.OrdTotIncl', 't_Orders.BranchID', 't_Branches.Name as BranchName')
+            ->orderByDesc('t_Orders.CreatedOn')
             ->get();
 
+        // Fetch all order lines with item details
         $OrderLines = DB::connection('sqlsrv')->table('t_OrderLines as ol')
             ->join('t_items as i', 'ol.iStockCodeID', '=', 'i.Id')
             ->leftJoin('t_CodeDetails as cd', 'i.InventoryType', '=', 'cd.Id')
@@ -70,28 +81,53 @@ class GoodsReceiptController extends Controller
             )
             ->get();
 
-
         $linesGrouped = $OrderLines->groupBy('iOrderID');
+        
+        // Filter orders to only include those with remaining items
+        $filteredOrders = collect();
+        
+        foreach ($Orders as $order) {
+            $orderLines = $linesGrouped[$order->Id] ?? collect();
+            $receivedForPO = $receivedQuantities[(int) $order->Id] ?? collect();
+            
+            // Calculate remaining quantities for each line
+            $linesWithRemaining = $orderLines->map(function ($line) use ($receivedForPO) {
+                $received = $receivedForPO[(int) $line->iStockCodeID] ?? 0;
+                $remaining = $line->fQuantity - $received;
+                
+                // Add remaining quantity to line object
+                $line->fReceivedSoFar = $received;
+                $line->fRemainingQty = max(0, $remaining);
+                
+                return $line;
+            })->filter(function ($line) {
+                // Only keep lines with remaining quantity > 0
+                return $line->fRemainingQty > 0;
+            });
+            
+            // Only include PO if it has remaining items
+            if ($linesWithRemaining->isNotEmpty()) {
+                $order->OrderLines = $linesWithRemaining->values();
+                $filteredOrders->push($order);
+            }
+        }
+        
+        $Orders = $filteredOrders;
         
         Log::info('GRN Create Debug', [
             'total_orders' => $Orders->count(),
             'total_lines' => $OrderLines->count(),
+            'received_po_ids' => $receivedQuantities->keys()->toArray(),
             'grouped_keys' => $linesGrouped->keys()->toArray()
         ]);
         
-        foreach ($Orders as $order) {
-            $order->OrderLines = $linesGrouped[$order->Id] ?? collect();
-            Log::info('Order Lines Attached', [
-                'order_id' => $order->Id,
-                'order_no' => $order->OrderNo,
-                'lines_count' => $order->OrderLines->count()
-            ]);
-        }
-        
         // Fetch all active stores
         $stores = DB::connection('sqlsrv')->table('t_Stores')->select('Id', 'StoreName')->get();
+        
+        // Fetch all branches for TransferTo dropdown
+        $branches = Branch::select('Id', 'Name')->where('IsHq', 1)->get();
 
-        return view('procurement.goodreceipts.create', compact('Orders', 'stores'));
+        return view('procurement.goodreceipts.create', compact('Orders', 'stores', 'branches'));
     }
 
 
@@ -122,7 +158,9 @@ class GoodsReceiptController extends Controller
         DB::beginTransaction();
         try {
             foreach ($request->items as $index => $item) {
-                $branchId = $item['TransferTo'] ?? Auth::user()->BranchId;
+                // TransferTo may contain string values like "Checkin" - only use if numeric
+                $transferTo = $item['TransferTo'] ?? null;
+                $branchId = is_numeric($transferTo) ? (int) $transferTo : Auth::user()->BranchId;
                 
                 $mainStore = $this->getDefaultStoreForBranch($branchId);
                 
@@ -149,39 +187,6 @@ class GoodsReceiptController extends Controller
                     'ModifiedBy'       => Auth::id(),
                 ]);
 
-                $existingStock = StockItem::where('ItemID', $grn->ItemNo)
-                    ->where('Store', $grn->StoreID)
-                    ->first();
-
-                if ($existingStock) {
-                    $existingStock->CurrentQty += (int) $grn->ReceivedQTY;
-                    $existingStock->LastReceived = now();
-                    $existingStock->ModifiedBy = Auth::id();
-                    $existingStock->save();
-
-                    Log::info("Stock updated for ItemID {$grn->ItemNo}, new qty: {$existingStock->CurrentQty}");
-                } else {
-                    StockItem::create([
-                        'SKUCode'      => 'SKU-' . $grn->ItemNo . '-' . time(),
-                        'ItemID'       => $grn->ItemNo,
-                        'UOM'          => optional($grn->item)->UOM,
-                        'UnitCost'     => optional($grn->item)->UnitCost ?? 0,
-                        'Store'        => $grn->StoreID,
-                        'Branch'       => $authUser->BranchId ?? null,
-                        'CurrentQty'   => (int) $grn->ReceivedQTY,
-                        'Min'          => 0,
-                        'Reorder'      => 0,
-                        'Max'          => 0,
-                        'LastReceived' => now(),
-                        'Status'       => true,
-                        'CreatedBy'    => Auth::id(),
-                        'CreatedOn'    => now(),
-                        'ModifiedBy'   => Auth::id(),
-                        'ModifiedOn'   => now(),
-                    ]);
-
-                    Log::info("New StockItem created for ItemID {$grn->ItemNo}");
-                }
             }
 
             DB::commit();
@@ -293,7 +298,7 @@ class GoodsReceiptController extends Controller
                 ->first();
 
             if ($stockItem) {
-                $stockItem->UnitCost = $grnLine->UnitPrice;
+                $stockItem->UnitCost = $grnLine->UnitPrice ?? 0;
                 $stockItem->CurrentQty += (int) $grnLine->ReceivedQTY;
                 $stockItem->LastReceived = now();
                 $stockItem->ModifiedBy = Auth::id();
@@ -303,7 +308,7 @@ class GoodsReceiptController extends Controller
                     'SKUCode'      => 'SKU-' . $grnLine->ItemNo . '-' . $mainStore->Id . '-' . time(),
                     'ItemID'       => $grnLine->ItemNo,
                     'UOM'          => optional($grnLine->item)->UOM ?? 1,
-                    'UnitCost'     => $grnLine->UnitPrice, 
+                    'UnitCost'     => $grnLine->UnitPrice ?? 0, 
                     'Store'        => $mainStore->Id, // Use the main store ID
                     'Branch'       => $branchId,
                     'CurrentQty'   => (int) $grnLine->ReceivedQTY,
@@ -327,7 +332,7 @@ class GoodsReceiptController extends Controller
                 'SKUCode' => $stockItem->SKUCode,
                 'ReceivedQTY' => $grnLine->ReceivedQTY,
                 'RemainingQTY' => $grnLine->ReceivedQTY,
-                'UnitPrice' => $grnLine->UnitPrice,
+                'UnitPrice' => $grnLine->UnitPrice ?? 0,
                 'Store' => $mainStore->Id, // Use the main store ID for the ledger
                 'Branch' => $branchId,
                 'ReceivedDate' => now(),

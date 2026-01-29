@@ -1059,6 +1059,7 @@ enum PermissionEnum: string
             [self::SupplierRead, self::SupplierWrite, self::SupplierUpdate, self::SupplierDelete, self::SupplierApprove],
             [self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval],
             [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApprove],
+            [self::GoodsReceiptRead, self::GoodsReceiptWrite, self::GoodsReceiptUpdate, self::GoodsReceiptDelete, self::GoodsReceiptApprove],
 
             //Tenders
             [self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval],
@@ -1484,6 +1485,9 @@ enum PermissionEnum: string
 
             //PurchaseOrder
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApprove => 'Purchase Order',
+
+            //Goods Receipt (GRN)
+            self::GoodsReceiptRead, self::GoodsReceiptWrite, self::GoodsReceiptUpdate, self::GoodsReceiptDelete, self::GoodsReceiptApprove => 'Goods Receipt',
 
             self::BidOpeningRead, self::BidOpeningWrite => 'Bid Opening',
             self::RFQResponseRead, self::RFQResponseWrite, self::RFQResponseUpdate => 'RFQ Response',
