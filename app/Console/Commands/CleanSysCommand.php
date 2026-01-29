@@ -36,6 +36,7 @@ class CleanSysCommand extends Command
     public function handle(): void
     {
         $actor = SystemHelper::user();
+
         try {
             $this->_cleanTmp();
         } catch (Exception | Throwable) {
@@ -55,22 +56,21 @@ class CleanSysCommand extends Command
     protected function _cleanTmp(): void
     {
         $tempFolder = Storage::disk('temp')->path('');
-          $files = scandir($tempFolder);
+        $files = scandir($tempFolder);
 
-          foreach ($files as $file) {
-              $filePath = $tempFolder . DIRECTORY_SEPARATOR . $file;
+        foreach ($files as $file) {
+            $filePath = $tempFolder . DIRECTORY_SEPARATOR . $file;
 
-              if (is_file($filePath)) {
-                  $lastModified = filemtime($filePath);
-                  $twoHoursAgo = now()->subHours(2)->timestamp;
+            if (is_file($filePath)) {
+                $lastModified = filemtime($filePath);
+                $twoHoursAgo = now()->subHours(2)->timestamp;
 
-                  if ($lastModified < $twoHoursAgo) {
-                      unlink($filePath);
-                  }
-              }
-          }
+                if ($lastModified < $twoHoursAgo) {
+                    unlink($filePath);
+                }
+            }
+        }
     }
-
 
     private function _checkMarketingList(User $actor): void
     {

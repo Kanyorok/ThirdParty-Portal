@@ -6,7 +6,6 @@ use App\Enums\CallStatusEnum;
 use App\Enums\CallTypeEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class CallLogRequest extends FormRequest
@@ -19,7 +18,7 @@ class CallLogRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'phonenumber'    => [
+                'phonenumber' => [
                                      'required',
                                      'string',
                                      'max:255',
@@ -33,22 +32,22 @@ class CallLogRequest extends FormRequest
                                      'required',
                                      'integer',
                                     ],
-                'ContactName'    => [
+                'ContactName' => [
                                      'nullable',
                                      'string',
                                      'max:255',
                                     ],
-                'StartTime'      => [
+                'StartTime' => [
                                      'required',
                                      'string',
                                      'max:255',
                                     ],
-                'EndTime'        => [
+                'EndTime' => [
                                      'required',
                                      'string',
                                      'max:255',
                                     ],
-                'CallType'       => [
+                'CallType' => [
                                      'required',
                                      'string',
                                      'max:20',
@@ -94,6 +93,7 @@ class CallLogRequest extends FormRequest
             if (Str::contains($this->validated('AgentExtension'), '800')) {
                 return CallStatusEnum::NotReceived;
             }
+
             return CallStatusEnum::SuccessDiscussion;
         }
 
@@ -104,6 +104,7 @@ class CallLogRequest extends FormRequest
         if (Str::contains($this->validated('CallType'), 'Notanswered')) {
             return CallStatusEnum::NotReceived;
         }
+
         //Outbound
         return CallStatusEnum::SuccessDiscussion;
     }

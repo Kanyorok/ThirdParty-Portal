@@ -3,27 +3,26 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Enums\Core\PermissionEnum;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Insurance\Customers\BancassuranceCustomersRequest;
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\Insurance\BancassuranceCustomer;
+use App\Models\Insurance\BancAssuranceReferral;
 use App\Models\ThirdParty\ThirdParties;
 use App\Services\Insurance\BancassuranceCustomersService;
-use App\Http\Requests\Insurance\Customers\BancassuranceCustomersRequest;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\Core\Approval\CodeDetail;
-use App\Models\Insurance\BancAssuranceReferral;
-use App\Models\Insurance\BancassuranceCustomer;
-
 
 class CustomerController extends Controller
 {
-    //
     public function index()
     {
         $customers = BancassuranceCustomer::all();
 
         return view('bancassurance.customers.index', compact('customers'));
     }
+
     public function create()
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
@@ -131,13 +130,14 @@ class CustomerController extends Controller
     public function destroy($id)
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersDelete, BancassuranceCustomer::class);
+
         try {
             $customer = BancassuranceCustomer::findOrFail($id);
 
-                if ($customer->policies()->exists()) {
-                    return redirect()->back()
-                    ->withErrors(['error' => 'This customer is in use and cannot be deleted.']);
-                }  
+            if ($customer->policies()->exists()) {
+                return redirect()->back()
+                ->withErrors(['error' => 'This customer is in use and cannot be deleted.']);
+            }
             $customer->delete();
 
             return redirect()->route('bancassurance.customers.check')
@@ -145,6 +145,7 @@ class CustomerController extends Controller
         } catch (\Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting Customer: ' . $th->getMessage());
+
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to delete Customer. Please try again.'])
                 ->withInput();
@@ -154,7 +155,7 @@ class CustomerController extends Controller
     public function portfolio($customerId)
     {
         $customer = BancassuranceCustomer::find($customerId);
-        if (!$customer) {
+        if (! $customer) {
             return redirect()->back()->withErrors(['error' => 'Customer not found.']);
         }
 
@@ -165,7 +166,4 @@ class CustomerController extends Controller
 
         return view('bancassurance.customers.portfolio', compact('customer', 'policies'));
     }
-
 }
-
-

@@ -20,4 +20,3 @@ class ReportsController extends Controller
         return $this->getReports($request->ajax());
     }
 }
-

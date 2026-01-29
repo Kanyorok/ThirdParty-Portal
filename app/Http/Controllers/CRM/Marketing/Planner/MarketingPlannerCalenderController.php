@@ -27,7 +27,7 @@ class MarketingPlannerCalenderController extends Controller
             ? Carbon::createFromFormat('Y-m-d', $request->end)?->endOfDay()
             : $planner->EndOn?->startOfDay();
 
-        if (!$start instanceof Carbon || !$end instanceof Carbon) {
+        if (! $start instanceof Carbon || ! $end instanceof Carbon) {
             return new PlannerActivitiesCollection(collect());
         }
 

@@ -4,18 +4,16 @@ namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Legal\ComplianceCalendarEntry;
-use App\Models\Legal\ComplianceAlert;
 use App\Models\Legal\ComplianceObligation;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ComplianceCalendarController extends Controller
 {
-
     public function index()
     {
         $entries = ComplianceCalendarEntry::with(['obligation', 'alerts'])->orderBy('StartDate', 'asc')->get();
         $owners = \DB::table('t_Users')->pluck('Name', 'Id'); // associative array
+
         return view('legal.compliance.calendar.index', compact('entries', 'owners'));
     }
 
@@ -23,6 +21,7 @@ class ComplianceCalendarController extends Controller
     {
         $obligations = ComplianceObligation::orderBy('Title')->pluck('Title', 'Id');
         $owners = \DB::table('t_Users')->orderBy('Name')->pluck('Name', 'Id'); // ✅ add this
+
         return view('legal.compliance.calendar.create', compact('obligations', 'owners'));
     }
 
@@ -54,6 +53,7 @@ class ComplianceCalendarController extends Controller
         $entry = ComplianceCalendarEntry::findOrFail($id);
         $obligations = ComplianceObligation::orderBy('Title')->pluck('Title', 'Id');
         $owners = \DB::table('t_Users')->orderBy('Name')->pluck('Name', 'Id'); // ✅ add this
+
         return view('legal.compliance.calendar.edit', compact('entry', 'obligations', 'owners'));
     }
 
@@ -76,6 +76,7 @@ class ComplianceCalendarController extends Controller
                 'ModifiedBy' => auth()->id() ?? 1,  // ✅ track who edited
                 'ModifiedOn' => now(),
             ]);
+
         return redirect()->route('legal.compliance.calendar.index')->with('success', 'Calendar entry updated successfully.');
     }
 
@@ -91,6 +92,7 @@ class ComplianceCalendarController extends Controller
     {
         $entry = ComplianceCalendarEntry::with(['obligation', 'alerts'])->findOrFail($id);
         $owners = \DB::table('t_Users')->orderBy('Name')->pluck('Name', 'Id');
+
         return view('legal.compliance.calendar.show', compact('entry', 'owners'));
     }
 }

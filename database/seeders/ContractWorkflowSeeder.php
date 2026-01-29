@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Core\Approval\CodeDetail;
 
 class ContractWorkflowSeeder extends Seeder
 {
@@ -14,33 +13,33 @@ class ContractWorkflowSeeder extends Seeder
     public function run(): void
     {
         $modules = ['rfq_award', 'tender_award'];
-        
+
         $statuses = [
             [
-                'Value' => 'pe', 
+                'Value' => 'pe',
                 'Description' => 'Pending',
-                'DisplayOrder' => 1
+                'DisplayOrder' => 1,
             ],
             [
-                'Value' => 'rv', 
+                'Value' => 'rv',
                 'Description' => 'Under Review',
-                'DisplayOrder' => 2
+                'DisplayOrder' => 2,
             ],
             [
-                'Value' => 'Ap', 
+                'Value' => 'Ap',
                 'Description' => 'Approved',
-                'DisplayOrder' => 3
+                'DisplayOrder' => 3,
             ],
             [
-                'Value' => 'Re', 
+                'Value' => 'Re',
                 'Description' => 'Rejected',
-                'DisplayOrder' => 4
+                'DisplayOrder' => 4,
             ],
              [
-                'Value' => 'Dr', 
+                'Value' => 'Dr',
                 'Description' => 'Draft Created',
-                'DisplayOrder' => 0
-            ]
+                'DisplayOrder' => 0,
+            ],
         ];
 
         foreach ($modules as $codeId) {
@@ -49,7 +48,7 @@ class ContractWorkflowSeeder extends Seeder
                 DB::table('t_CodeDetails')->updateOrInsert(
                     [
                         'CodeID' => $codeId,
-                        'Value' => $status['Value']
+                        'Value' => $status['Value'],
                     ],
                     [
                         'Description' => $status['Description'],
@@ -60,7 +59,7 @@ class ContractWorkflowSeeder extends Seeder
                         'ModifiedBy' => 1,
                         'ModifiedOn' => now(),
                         'DeletedBy' => null,
-                        'DeletedOn' => null
+                        'DeletedOn' => null,
                     ]
                 );
             }

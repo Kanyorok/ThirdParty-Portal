@@ -10,17 +10,18 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Department extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $table = 't_Departments';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
         'Name', 'DepartmentID', 'Description', 'HeadId', 'DeputyHeadId',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     public function head(): BelongsTo
@@ -47,5 +48,4 @@ class Department extends Model
     {
         return $this->Name;
     }
-
 }

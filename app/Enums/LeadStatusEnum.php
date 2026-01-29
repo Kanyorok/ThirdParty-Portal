@@ -13,7 +13,7 @@ enum LeadStatusEnum: string
     case Hot = 'ho';
 
     case Won = 'wo';
-    case  Cold = 'co';
+    case Cold = 'co';
 
     public function getIcon(): string
     {
@@ -33,6 +33,7 @@ enum LeadStatusEnum: string
             self::Hot => $this->name . ' - Very Busy',
             self::Cold => $this->name . ' - Lost',
         };
+
         return $this->getIcon() . ' ' . $text;
     }
 }

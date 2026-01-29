@@ -2,20 +2,22 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\TenderTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\TenderType;
 use Illuminate\Http\Request;
-use App\Enums\TenderTypeEnum;
 
-class TenderTypeController extends Controller {
+class TenderTypeController extends Controller
+{
     /**
      * Display a listing of the resource.
      */
-    public function index() {
+    public function index()
+    {
         $tenderTypes = TenderType::orderBy('Id')->get();
+
         return view('procurement.tendering.tendersetup.tendertype.index', compact('tenderTypes'));
     }
-
 
     /**
      * Show the form for creating a new resource.
@@ -28,7 +30,7 @@ class TenderTypeController extends Controller {
         return view('procurement.tendering.tendersetup.tendertype.create', [
             'newTypeCode' => $newTypeCode,
             'tenderTypeOptions' => TenderTypeEnum::cases(),
-            'defaultType' => $defaultType
+            'defaultType' => $defaultType,
         ]);
     }
 
@@ -64,6 +66,7 @@ class TenderTypeController extends Controller {
     public function edit($id)
     {
         $tenderType = TenderType::findOrFail($id);
+
         return view('procurement.tendering.tendersetup.tendertype.edit', compact('tenderType'));
     }
 

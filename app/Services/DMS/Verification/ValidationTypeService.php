@@ -44,6 +44,7 @@ class ValidationTypeService extends PermissionsService
                 $service->addApprover($approver, $actor, RoleEnum::Write);
             }
         }
+
         return $service;
     }
 
@@ -63,11 +64,12 @@ class ValidationTypeService extends PermissionsService
      */
     public function addApprover(User|Team $approver, User $actor, RoleEnum $role, bool $notify = true): static
     {
-        if (!in_array($role->value, [RoleEnum::Admin->value, RoleEnum::Write->value], true)) {
+        if (! in_array($role->value, [RoleEnum::Admin->value, RoleEnum::Write->value], true)) {
             throw new ErroredException('Only Admin and Write (Approve) roles can be assigned as approvers');
         }
 
         $this->_addPermissions($this->type, $approver, RoleEnum::Admin, $actor, $notify);
+
         return $this;
     }
 
@@ -77,6 +79,7 @@ class ValidationTypeService extends PermissionsService
     public function removeApprover(SpecialPermission $permission, User $actor): static
     {
         $this->_trashPermissions($this->type, $permission, $actor);
+
         return $this;
     }
 }

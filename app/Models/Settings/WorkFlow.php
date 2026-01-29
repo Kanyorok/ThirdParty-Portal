@@ -2,21 +2,21 @@
 
 namespace App\Models\Settings;
 
+use App\Models\Core\Approval\WorkflowStage;
+use App\Models\Core\Approval\WorkFlowType;
+use App\Models\Core\Module;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Auth\User;
-use App\Models\Core\Module;
-use App\Models\Core\Approval\WorkFlowType;
-use App\Models\Core\Approval\WorkflowStage;
 
 class WorkFlow extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_WorkFlows';
     protected $primaryKey = 'Id';
@@ -51,14 +51,12 @@ class WorkFlow extends Model
     }
 
     public function module()
-   {
-    return $this->belongsTo(Module::class, 'ModuleId');
-   }
+    {
+        return $this->belongsTo(Module::class, 'ModuleId');
+    }
 
     public function getIsFinalStageAttribute()
     {
-        return !empty($this->FinalStage);
+        return ! empty($this->FinalStage);
     }
-
-
 }

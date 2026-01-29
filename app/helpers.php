@@ -1,6 +1,6 @@
 <?php
 
-if (!function_exists('appDate')) {
+if (! function_exists('appDate')) {
     /**
      * Format a date using the application's date format.
      *

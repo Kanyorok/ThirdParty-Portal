@@ -13,7 +13,6 @@ use App\Models\PropertyManagement\PropertyRateAndPricing;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Services\Property\PropertyRateAndPricingService;
-use Illuminate\Http\Request;
 use Log;
 
 class PropertyRateAndPricingControllert extends Controller
@@ -22,6 +21,7 @@ class PropertyRateAndPricingControllert extends Controller
     {
         $this->authorize(PermissionEnum::PropertyRateAndPricingView, PropertyRateAndPricing::class);
         $pricings = PropertyRateAndPricing::orderBy('Id', 'desc')->get();
+
         return view('property.propertyrateandpricing.index', compact('pricings'));
     }
 
@@ -31,28 +31,35 @@ class PropertyRateAndPricingControllert extends Controller
         $property = PropertyRegistry::with(['getBlockByProperty.floor.units'])->where('IsActive', true)->get();
         $Taxes = FinanceTaxRuleConfiguration::all();
         $currencies = Currency::all();
+
         return view('property.propertyrateandpricing.create', compact('property', 'Taxes', 'currencies'));
     }
-    
+
     public function getBlockByProperty($propertyId)
     {
         $blocks = PropertyBlock::where('PropertyID', $propertyId)->get();
+
         return response()->json($blocks);
     }
+
     public function getFloorByBlock($blockId)
     {
         $floors = PropertyFloor::where('BlockID', $blockId)->get();
+
         return response()->json($floors);
     }
-    Public function getUnitsByFloor($floorId)
+
+    public function getUnitsByFloor($floorId)
     {
         $units = PropertyUnit::where('FloorID', $floorId)->get();
+
         return response()->json($units);
     }
 
     public function getPricingByUnit($unitId)
     {
         $pricing = PropertyRateAndPricing::where('UnitId', $unitId)->first();
+
         return response()->json($pricing);
     }
 
@@ -81,6 +88,7 @@ class PropertyRateAndPricingControllert extends Controller
                 ->with('success', 'Property Rate and Pricing created successfully.');
         } catch (\Exception $e) {
             Log::error('Error creating Property Rate and Pricing: ' . $e->getMessage());
+
             return back()->withErrors('An error occurred while creating the Property Rate and Pricing. Please try again.');
         }
     }
@@ -89,6 +97,7 @@ class PropertyRateAndPricingControllert extends Controller
     {
         $this->authorize(PermissionEnum::PropertyRateAndPricingView, PropertyRateAndPricing::class);
         $pricing = PropertyRateAndPricing::findOrFail($id);
+
         return view('property.propertyrateandpricing.show', compact('pricing'));
     }
 
@@ -99,6 +108,7 @@ class PropertyRateAndPricingControllert extends Controller
         $property = PropertyRegistry::with(['getBlockByProperty.floor.units'])->where('IsActive', true)->get();
         $Taxes = FinanceTaxRuleConfiguration::all();
         $currencies = Currency::all();
+
         return view('property.propertyrateandpricing.edit', compact('pricing', 'property', 'Taxes', 'currencies'));
     }
 
@@ -130,6 +140,7 @@ class PropertyRateAndPricingControllert extends Controller
                 ->with('success', 'Property Rate and Pricing updated successfully.');
         } catch (\Exception $e) {
             Log::error('Error updating Property Rate and Pricing: ' . $e->getMessage());
+
             return back()->withErrors('An error occurred while updating the Property Rate and Pricing. Please try again.');
         }
     }
@@ -137,6 +148,7 @@ class PropertyRateAndPricingControllert extends Controller
     public function destroy($id)
     {
         $this->authorize(PermissionEnum::PropertyRateAndPricingDelete, PropertyRateAndPricing::class);
+
         try {
             $pricing = PropertyRateAndPricing::findOrFail($id);
             $pricing->delete();
@@ -145,8 +157,8 @@ class PropertyRateAndPricingControllert extends Controller
                 ->with('success', 'Property Rate and Pricing deleted successfully.');
         } catch (\Exception $e) {
             Log::error('Error deleting Property Rate and Pricing: ' . $e->getMessage());
+
             return back()->withErrors('An error occurred while deleting the Property Rate and Pricing. Please try again.');
         }
     }
-
 }

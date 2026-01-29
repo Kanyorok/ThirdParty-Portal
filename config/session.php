@@ -18,7 +18,7 @@ return [
     |
     */
 
-        'driver'          => env('SESSION_DRIVER', 'database'),
+        'driver' => env('SESSION_DRIVER', 'database'),
 
     /*
     |--------------------------------------------------------------------------
@@ -32,7 +32,7 @@ return [
     |
     */
 
-        'lifetime'        => env('SESSION_LIFETIME', 20),
+        'lifetime' => env('SESSION_LIFETIME', 20),
 
         'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', true),
 
@@ -47,7 +47,7 @@ return [
     |
     */
 
-        'encrypt'         => env('SESSION_ENCRYPT', false),
+        'encrypt' => env('SESSION_ENCRYPT', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -60,7 +60,7 @@ return [
     |
     */
 
-        'files'           => storage_path('framework/sessions'),
+        'files' => storage_path('framework/sessions'),
 
     /*
     |--------------------------------------------------------------------------
@@ -73,7 +73,7 @@ return [
     |
     */
 
-        'connection'      => env('SESSION_CONNECTION'),
+        'connection' => env('SESSION_CONNECTION'),
 
     /*
     |--------------------------------------------------------------------------
@@ -86,7 +86,7 @@ return [
     |
     */
 
-        'table'           => env('SESSION_TABLE', 't_SYSSessions'),
+        'table' => env('SESSION_TABLE', 't_SYSSessions'),
 
     /*
     |--------------------------------------------------------------------------
@@ -101,7 +101,7 @@ return [
     |
     */
 
-        'store'           => env('SESSION_STORE'),
+        'store' => env('SESSION_STORE'),
 
     /*
     |--------------------------------------------------------------------------
@@ -114,7 +114,7 @@ return [
     |
     */
 
-        'lottery'         => [
+        'lottery' => [
                               2,
                               100,
                              ],
@@ -130,7 +130,7 @@ return [
     |
     */
 
-        'cookie'          => env(
+        'cookie' => env(
             'SESSION_COOKIE',
             Str::slug(env('APP_NAME', 'laravel'), '_') . '_session'
         ),
@@ -146,7 +146,7 @@ return [
     |
     */
 
-        'path'            => env('SESSION_PATH', '/'),
+        'path' => env('SESSION_PATH', '/'),
 
     /*
     |--------------------------------------------------------------------------
@@ -159,7 +159,7 @@ return [
     |
     */
 
-        'domain'          => env('SESSION_DOMAIN') ?: null,
+        'domain' => env('SESSION_DOMAIN') ?: null,
 
     /*
     |--------------------------------------------------------------------------
@@ -172,7 +172,7 @@ return [
     |
     */
 
-        'secure'          => env('SESSION_SECURE_COOKIE'),
+        'secure' => env('SESSION_SECURE_COOKIE'),
 
     /*
     |--------------------------------------------------------------------------
@@ -185,7 +185,7 @@ return [
     |
     */
 
-        'http_only'       => env('SESSION_HTTP_ONLY', true),
+        'http_only' => env('SESSION_HTTP_ONLY', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -202,7 +202,7 @@ return [
     |
     */
 
-        'same_site'       => env('SESSION_SAME_SITE', 'lax'),
+        'same_site' => env('SESSION_SAME_SITE', 'lax'),
 
     /*
     |--------------------------------------------------------------------------
@@ -215,6 +215,6 @@ return [
     |
     */
 
-        'partitioned'     => env('SESSION_PARTITIONED_COOKIE', false),
+        'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
 
        ];

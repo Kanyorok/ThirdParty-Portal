@@ -36,7 +36,7 @@ class ListRequest extends FormRequest
     public function getSource(MarketingListEnum $type): ?string
     {
         $Source = $this->string('Party', 'null')->toString();
-        if (!in_array($Source, ['null', Client::getPrimaryKey(), Lead::getPrimaryKey()], true)) {
+        if (! in_array($Source, ['null', Client::getPrimaryKey(), Lead::getPrimaryKey()], true)) {
             throw ValidationException::withMessages(['Party' => 'select a valid source']);
         }
 
@@ -70,6 +70,7 @@ class ListRequest extends FormRequest
         if ($Visibility instanceof VisibilityEnum) {
             return $Visibility;
         }
+
         throw ValidationException::withMessages(['Visibility' => 'invalid visibility type']);
     }
 }

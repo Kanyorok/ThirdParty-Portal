@@ -38,6 +38,7 @@ class TaggingRuleController extends Controller
                     if (strlen($rule->Value) > 70) {
                         return '<span title="' . $rule->Value . '">' . substr($rule->Value, 0, 70) . '...</span>';
                     }
+
                     return $rule->Value;
                 })->rawColumns(['Value', 'action'])->make();
         } catch (Exception $e) {
@@ -69,7 +70,7 @@ class TaggingRuleController extends Controller
 
                 return $this->succeeded('Tagging rule created successfully');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error creating tagging rule: ' . $e);
         }
 
@@ -94,6 +95,7 @@ class TaggingRuleController extends Controller
         }
 
         $actor = $request->user();
+
         try {
             return DB::transaction(function () use ($documentTaggingRules, $actor, $request) {
                 $documentTaggingRules->forceFill([
@@ -105,8 +107,9 @@ class TaggingRuleController extends Controller
 
                 return $this->succeeded('tagging  rule deleted');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('trash tagging  rule : ' . $e);
+
             return $this->errored('an unexpected error occurred');
         }
     }

@@ -19,6 +19,7 @@ class CheckTokenAndAddToHeaderMiddleware
         if (isset($all['_token'])) {
             $request->headers->set('Authorization', sprintf('%s %s', 'Bearer', $all['_token']));
         }
+
         return $next($request);
     }
 }

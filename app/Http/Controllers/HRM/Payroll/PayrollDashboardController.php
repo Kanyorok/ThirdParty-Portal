@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 
 class PayrollDashboardController extends Controller
 {
-    public function create(){
+    public function create()
+    {
         return view("hrms.payrollmanagement.payrolldashboard.create");
     }
-    public function index(){
+
+    public function index()
+    {
         return view("hrms.payrollmanagement.payrolldashboard.index");
     }
 }

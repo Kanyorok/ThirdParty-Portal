@@ -2,16 +2,20 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\ThirdParty\ThirdParties;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Auth\User;
+
 class PropertyNewTenant extends Model
 {
-    use SoftDeletes, UserActorTrait, DocumentsTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
+
     protected $table = 't_TenantMaintenance';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
@@ -25,7 +29,7 @@ class PropertyNewTenant extends Model
         'IsActive',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
@@ -52,5 +56,4 @@ class PropertyNewTenant extends Model
     {
         return $this->belongsTo(ThirdParties::class, 'ThirdPartyId', 'Id');
     }
-
 }

@@ -7,13 +7,13 @@ import MultiDrag from '../plugins/MultiDrag';
 export default Sortable;
 
 export {
-	Sortable,
+  Sortable,
 
-	// Default
-	AutoScroll,
-	OnSpill,
+  // Default
+  AutoScroll,
+  OnSpill,
 
-	// Extra
-	Swap,
-	MultiDrag
+  // Extra
+  Swap,
+  MultiDrag,
 };

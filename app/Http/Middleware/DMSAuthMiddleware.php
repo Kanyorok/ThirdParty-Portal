@@ -30,7 +30,7 @@ class DMSAuthMiddleware
 
             try {
                 $ApiCred = APICredential::query()->where('Integration', IntegrationsEnum::DMSCoreBanking->value)->latest('Id')->first();
-                if (!$ApiCred instanceof APICredential) {
+                if (! $ApiCred instanceof APICredential) {
                     abort(Response::HTTP_UNAUTHORIZED);
                 }
                 $user = $ApiCred->Configuration?->user;
@@ -39,8 +39,9 @@ class DMSAuthMiddleware
                     abort(Response::HTTP_UNAUTHORIZED);
                 }
                 Log::info('Passed Basic Auth Middleware: ');
+
                 return $next($request);
-            } catch (ConnectionException|InvalidParameterException|Exception) {
+            } catch (ConnectionException | InvalidParameterException | Exception) {
             }
         }
         abort(Response::HTTP_UNAUTHORIZED);

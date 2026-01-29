@@ -27,7 +27,6 @@ class BulkSendListener implements ShouldQueue
      */
     public function __construct()
     {
-        //
     }
 
     /**
@@ -40,18 +39,22 @@ class BulkSendListener implements ShouldQueue
             case LoanService::MODULE:
                 $this->_loans($event);
                 $view = 'crm.debt-collection.notifications.document';
+
                 break;
             case BoardNotificationController::MODULE:
                 $this->_board($event);
                 $view = 'crm.board.notifications.document';
+
                 break;
             case UserService::MODULE:
                 $this->_users($event);
                 $view = 'settings.users.notifications.document';
+
                 break;
             case TeamService::MODULE:
                 $this->_team($event);
                 $view = 'settings.users.notifications.document';
+
                 break;
         }
 
@@ -69,7 +72,7 @@ class BulkSendListener implements ShouldQueue
                 Content: PDF::loadView($view, ['title' => "Bulk Notification: " . Str::upper($event->bulkNotification->Label), 'notifications' => $event->bulkNotification])->setPaper('a4', 'landscape')->output(),
                 MimeType: ExtensionsEnum::Pdf->getMimeType(),
                 Name: Str::upper($event->bulkNotification->Label) . '.pdf',
-                actor: $event->bulkNotification->creator 
+                actor: $event->bulkNotification->creator
             )->send(true);
         }
     }
@@ -114,7 +117,7 @@ class BulkSendListener implements ShouldQueue
     {
         $loans = LoanQueryRequest::filterDebts(DebtProduct::query()->where('processDate', $event->dated), $event->attributes)->lock('WITH(NOLOCK)')->get();
         foreach ($loans as $loan) {
-            if (!$loan instanceof DebtProduct && !$loan->client instanceof Client) {
+            if (! $loan instanceof DebtProduct && ! $loan->client instanceof Client) {
                 continue;
             }
             (new LoanService($loan))->message($event->bulkNotification->Content, $event->actor, true, $event->bulkNotification);

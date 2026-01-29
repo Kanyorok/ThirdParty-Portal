@@ -51,5 +51,4 @@ class PropertyRateAndPricingRequest extends FormRequest
             'TaxId' => ['required', 'exists:t_FinanceTaxRuleConfiguration,Id'],
         ];
     }
-
 }

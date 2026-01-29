@@ -14,12 +14,12 @@ class FinanceModuleTransactionSeeder extends Seeder
 
         // Define the configuration: ModuleID => [TransactionTypeIDs]
         $moduleConfig = [
-            300000  => range(1, 4),      // 1, 2, 3, 4
-            400000  => [5, 6],
-            500000  => [7, 8],
-            600000  => [9, 10],
-            800000  => [11, 12],
-            900000  => [13, 14],
+            300000 => range(1, 4),      // 1, 2, 3, 4
+            400000 => [5, 6],
+            500000 => [7, 8],
+            600000 => [9, 10],
+            800000 => [11, 12],
+            900000 => [13, 14],
             1100000 => range(15, 22),    // 15 through 22
         ];
 
@@ -28,12 +28,12 @@ class FinanceModuleTransactionSeeder extends Seeder
         foreach ($moduleConfig as $moduleId => $transactionTypes) {
             foreach ($transactionTypes as $typeId) {
                 $data[] = [
-                    'ModuleID'          => $moduleId,
+                    'ModuleID' => $moduleId,
                     'TransactionTypeID' => $typeId,
-                    'CreatedBy'         => 1,
-                    'CreatedOn'         => $now,
-                    'ModifiedBy'        => 1,
-                    'ModifiedOn'        => $now,
+                    'CreatedBy' => 1,
+                    'CreatedOn' => $now,
+                    'ModifiedBy' => 1,
+                    'ModifiedOn' => $now,
                 ];
             }
         }

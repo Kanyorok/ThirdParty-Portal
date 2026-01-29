@@ -2,10 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-
 use App\Models\ThirdParty\SupplierCategory;
-
+use Illuminate\Database\Seeder;
 
 class SupplierCategorySeeder extends Seeder
 {

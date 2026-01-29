@@ -26,30 +26,30 @@ class BoardMeetingRequest extends FormRequest
                                             'required',
                                             Rule::exists('t_Committees', 'CommitteeID'),
                                            ],
-                'BoardMeetingTitle'     => [
+                'BoardMeetingTitle' => [
                                             'required',
                                             'string',
                                             'max:200',
                                            ],
-                'BoardMeetingStart'     => [
+                'BoardMeetingStart' => [
                                             'required',
                                             'date_format:"Y-m-d H:i"',
                                             'before:BoardMeetingEnd',
                                            ],
-                'BoardMeetingEnd'       => [
+                'BoardMeetingEnd' => [
                                             'required',
                                             'date_format:"Y-m-d H:i"',
                                             'after:BoardMeetingStart',
                                            ],
-                'BoardMeetingLocation'  => [
+                'BoardMeetingLocation' => [
                                             'required',
                                             'string',
                                            ],
-                'BoardMeetingAgenda'    => [
+                'BoardMeetingAgenda' => [
                                             'required',
                                             'string',
                                            ],
-                'BoardMeetingUsers'     => [
+                'BoardMeetingUsers' => [
                                             'required',
                                             'array',
                                             'min:1',
@@ -72,6 +72,7 @@ class BoardMeetingRequest extends FormRequest
                 return $room;
             }
         }
+
         return $location;
     }
 
@@ -82,6 +83,7 @@ class BoardMeetingRequest extends FormRequest
             if ($committee->members()->count() === 0) {
                 throw ValidationException::withMessages(['BoardMeetingCommittee' => 'committee has no members']);
             }
+
             return $committee;
         }
 
@@ -94,7 +96,7 @@ class BoardMeetingRequest extends FormRequest
     public function getEnd(Carbon $start): Carbon
     {
         $end = Carbon::createFromFormat('Y-m-d H:i', $this->validated('BoardMeetingEnd'));
-        if (!$end instanceof Carbon) {
+        if (! $end instanceof Carbon) {
             throw ValidationException::withMessages(['BoardMeetingEnd' => 'invalid date format']);
         }
 
@@ -124,6 +126,7 @@ class BoardMeetingRequest extends FormRequest
         if ($start instanceof Carbon) {
             return $start;
         }
+
         throw ValidationException::withMessages(['meeting_start' => 'invalid date format']);
     }
 }

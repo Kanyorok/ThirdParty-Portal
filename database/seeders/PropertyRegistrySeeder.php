@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\PropertyManagement\PropertyRegistry;
-use App\Models\PropertyManagement\PropertyType;
 use App\Models\Core\CategoryMaster;
 use App\Models\Core\Locality;
+use App\Models\PropertyManagement\PropertyRegistry;
+use App\Models\PropertyManagement\PropertyType;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class PropertyRegistrySeeder extends Seeder
 {

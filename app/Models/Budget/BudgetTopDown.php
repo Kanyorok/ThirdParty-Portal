@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetTopDown extends Model
 {
-    const CREATED_AT = 'CreatedOn';
-
     use SoftDeletes;
     use UserActorTrait;
 
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $table = 't_BudgetTopDown';
     protected $primaryKey = 'Id';
     protected $fillable = [
@@ -47,5 +47,4 @@ class BudgetTopDown extends Model
     {
         return $this->belongsTo(BudgetLine::class, 'BudgetLineID');
     }
-
 }

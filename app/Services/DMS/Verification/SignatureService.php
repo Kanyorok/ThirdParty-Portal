@@ -23,11 +23,23 @@ class SignatureService extends SignService
      * @throws ErroredException
      */
     public static function create(
-        User         $actor, string $name, VisibilityEnum $visibility, int $Width, int $Height, int $HorizontalStart, int $VerticalStart, int $Opacity = 100,
-        string       $Content = '#userid# #date#', string $ContentColour = "#000000", int $ContentSize = 10, ImageGravityEnum $ContentPosition = ImageGravityEnum::Center,
-        string       $ContentBorderColour = "#000000", int $ContentBorderWeight = 1,
-        UploadedFile $file = null, string $description = null): SignatureService
-    {
+        User $actor,
+        string $name,
+        VisibilityEnum $visibility,
+        int $Width,
+        int $Height,
+        int $HorizontalStart,
+        int $VerticalStart,
+        int $Opacity = 100,
+        string $Content = '#userid# #date#',
+        string $ContentColour = "#000000",
+        int $ContentSize = 10,
+        ImageGravityEnum $ContentPosition = ImageGravityEnum::Center,
+        string $ContentBorderColour = "#000000",
+        int $ContentBorderWeight = 1,
+        UploadedFile $file = null,
+        string $description = null
+    ): SignatureService {
         $signature = new DMSSignature();
         $signature->fill([
             "SignatureId" => self::_id(),
@@ -60,11 +72,22 @@ class SignatureService extends SignService
     }
 
     public function update(
-        User   $actor, string $name, VisibilityEnum $visibility, int $Width, int $Height, int $HorizontalStart, int $VerticalStart, int $Opacity = 100,
-        string $Content = '#userid# #date#', string $ContentColour = "#000000", int $ContentSize = 10, ImageGravityEnum $ContentPosition = ImageGravityEnum::Center,
-        string $ContentBorderColour = "#000000", int $ContentBorderWeight = 1,
-        string $description = null): static
-    {
+        User $actor,
+        string $name,
+        VisibilityEnum $visibility,
+        int $Width,
+        int $Height,
+        int $HorizontalStart,
+        int $VerticalStart,
+        int $Opacity = 100,
+        string $Content = '#userid# #date#',
+        string $ContentColour = "#000000",
+        int $ContentSize = 10,
+        ImageGravityEnum $ContentPosition = ImageGravityEnum::Center,
+        string $ContentBorderColour = "#000000",
+        int $ContentBorderWeight = 1,
+        string $description = null
+    ): static {
         $this->signature->fill([
             "Name" => $name,
             "Description" => $description,
@@ -84,12 +107,14 @@ class SignatureService extends SignService
         ])->save();
 
         activity()->causedBy($actor)->performedOn($this->signature)->event('update')->log('Updated signature : ' . $this->signature->Name);
+
         return $this;
     }
 
     public function trash(User $actor): bool
     {
         activity()->causedBy($actor)->performedOn($this->signature)->event('deleted')->log('Updated signature : ' . $this->signature->Name);
+
         return $this->signature->forceFill([
             'DeletedBy' => $actor->Id,
             'DeletedOn' => now(),
@@ -102,11 +127,12 @@ class SignatureService extends SignService
     public function setImage(UploadedFile $file, User $actor, bool $log = true): static
     {
         $this->signature->update([
-            'ImageId' => $this->signature->newDocument(ModulesEnum::DMS, $file, [], $actor)->Id
+            'ImageId' => $this->signature->newDocument(ModulesEnum::DMS, $file, [], $actor)->Id,
         ]);
         if ($log) {
             activity()->causedBy($actor)->performedOn($this->signature)->event('Image')->log('Signature Image updated : ' . $this->signature->Name);
         }
+
         return $this;
     }
 
@@ -128,9 +154,9 @@ class SignatureService extends SignService
     {
         if ($queue) {
             SignDocumentJob::dispatch($document, $this->signature, $actor, $SignPages);
+
             return;
         }
         $this->_signDocument($this->signature, $document, $actor, $SignPages);
     }
-
 }

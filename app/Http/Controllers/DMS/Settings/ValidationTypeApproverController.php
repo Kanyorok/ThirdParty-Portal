@@ -29,6 +29,7 @@ class ValidationTypeApproverController extends Controller
     public function index(DocumentValidationType $documentValidationType): JsonResponse
     {
         $this->authorize('view', $documentValidationType);
+
         return $this->permissions($documentValidationType->permissions(), true, instructions: ['append' => ['w' => 'Validate', 'a' => '*']]);
     }
 
@@ -44,12 +45,14 @@ class ValidationTypeApproverController extends Controller
         try {
             return \DB::transaction(function () use ($documentValidationType, $approver, $role, $request) {
                 (new ValidationTypeService($documentValidationType))->addApprover($approver, SystemHelper::user(), $role);
+
                 return $this->succeeded('approver added successfully');
             });
         } catch (ErroredException $e) {
             return $e->toJson();
         } catch (\Throwable $e) {
             Log::error("Error adding document validator: " . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
     }
@@ -61,19 +64,21 @@ class ValidationTypeApproverController extends Controller
     {
         $this->authorize('view', $documentValidationType);//todo fix permission
         $specialPermission = $documentValidationType->permissions()->where('Id', $permission_id)->first();
-        if (!$specialPermission instanceof SpecialPermission) {
+        if (! $specialPermission instanceof SpecialPermission) {
             return $this->errored('approver not found');
         }
 
         try {
             return \DB::transaction(function () use ($specialPermission, $documentValidationType, $request) {
                 (new ValidationTypeService($documentValidationType))->removeApprover($specialPermission, $request->user());
+
                 return $this->succeeded('approver removed successfully');
             });
         } catch (ErroredException $e) {
             return $e->toJson();
         } catch (\Throwable $e) {
             Log::error("Error removing document type approver: " . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
     }

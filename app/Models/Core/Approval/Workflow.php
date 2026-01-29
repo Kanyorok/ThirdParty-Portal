@@ -1,10 +1,9 @@
 <?php
 
 namespace App\Models\Core\Approval;
-use App\Enums\WorkflowStatus;
+
 use App\Models\Settings\WorkFlowStage;
-use App\Models\Settings\WorkflowType;   
-use App\Models\Settings\WorkFlowLimit;
+use App\Models\Settings\WorkflowType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
@@ -35,24 +34,24 @@ class Workflow extends Model
     // Soft-delete style check
     public function isDeleted(): bool
     {
-        return !is_null($this->DeletedOn);
+        return ! is_null($this->DeletedOn);
     }
 
     // === Relationships ===
 
     public function type()
     {
-        return $this->belongsTo(WorkflowType::class,'WorkflowTypeId', 'Id');
+        return $this->belongsTo(WorkflowType::class, 'WorkflowTypeId', 'Id');
     }
 
     public function stage()
     {
         return $this->belongsTo(WorkFlowStage::class, 'stage', 'order');
     }
-    
-     /**
-     * MORPH TO relationship - This connects to DepartmentNeed, etc.
-     */
+
+    /**
+    * MORPH TO relationship - This connects to DepartmentNeed, etc.
+    */
     public function source(): MorphTo
     {
         return $this->morphTo('source', 'Source', 'SourceID');
@@ -67,12 +66,11 @@ class Workflow extends Model
         static::deleting(function ($workflow) {
             // Delete all associated stages
             $workflow->stages()->delete();
-            
+
             \Illuminate\Support\Facades\Log::info('Deleted workflow stages during cascade', [
                 'workflow_id' => $workflow->Id,
                 'stages_deleted' => $workflow->stages()->count(),
             ]);
         });
     }
-
 }

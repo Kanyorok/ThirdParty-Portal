@@ -35,6 +35,7 @@ class ShareRequest extends FormRequest
             if (($team instanceof Team) && $team->users()->count() > 0) {
                 return $team;
             }
+
             throw ValidationException::withMessages([$field => 'invalid team or has no users']);
         }
 
@@ -42,6 +43,7 @@ class ShareRequest extends FormRequest
         if ($user instanceof User) {
             return $user;
         }
+
         throw ValidationException::withMessages([$field => 'invalid user selected.']);
     }
 
@@ -52,6 +54,7 @@ class ShareRequest extends FormRequest
         } catch (ErroredException $e) {
             throw ValidationException::withMessages([$field => 'invalid role provided']);
         }
+
         return $roleEnum;
     }
 }

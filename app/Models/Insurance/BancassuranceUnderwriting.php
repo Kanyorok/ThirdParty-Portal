@@ -9,17 +9,18 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BancassuranceUnderwriting extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $table = 't_BancassuranceUnderwriting';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
         'PolicyId', 'FeedbackDate', 'RiskScore', 'Decision', 'Comments',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     public static function getPrimarykey(): string

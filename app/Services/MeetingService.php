@@ -59,15 +59,15 @@ class MeetingService
         }
 
         $this->meeting->update([
-                                'Title'               => $title,
-                                'StatusID'            => $status->value,
-                                'StartOn'             => $start,
-                                'EndOn'               => $end ?? $this->meeting->EndOn,
-                                'Location'            => $Location,
+                                'Title' => $title,
+                                'StatusID' => $status->value,
+                                'StartOn' => $start,
+                                'EndOn' => $end ?? $this->meeting->EndOn,
+                                'Location' => $Location,
                                 'MeetingLocationType' => $LocationType->value,
-                                'LocationId'          => $LocationId,
-                                'Notes'               => $agenda ?? $this->meeting->Notes,
-                                'ModifiedBy'          => $actor->Id,
+                                'LocationId' => $LocationId,
+                                'Notes' => $agenda ?? $this->meeting->Notes,
+                                'ModifiedBy' => $actor->Id,
                                ]);
 
         return $this;
@@ -77,6 +77,7 @@ class MeetingService
     {
         $document = ImageService::createUpload($file, Meeting::getPrimaryKey(), $this->meeting->MeetingID, $actor)->image;
         activity()->causedBy($actor)->performedOn($this->meeting)->event('document')->log('added a document  ' . $document->Name . ' to meeting ' . $this->meeting->Title . '.');
+
         return $document;
     }
 
@@ -94,19 +95,19 @@ class MeetingService
 
         $meeting = new Meeting();
         $meeting->fill([
-                        'Title'               => $title,
-                        'StatusID'            => $status->value,
-                        'StartOn'             => $start,
-                        'EndOn'               => $end,
-                        'Type'                => $type,
-                        'Location'            => $Location,
+                        'Title' => $title,
+                        'StatusID' => $status->value,
+                        'StartOn' => $start,
+                        'EndOn' => $end,
+                        'Type' => $type,
+                        'Location' => $Location,
                         'MeetingLocationType' => $LocationType->value,
-                        'LocationId'          => $LocationId,
-                        'Notes'               => $notes,
-                        'Source'              => $source,
-                        'SourceID'            => $sourceID,
-                        'CreatedBy'           => $actor->Id,
-                        'ModifiedBy'          => $actor->Id,
+                        'LocationId' => $LocationId,
+                        'Notes' => $notes,
+                        'Source' => $source,
+                        'SourceID' => $sourceID,
+                        'CreatedBy' => $actor->Id,
+                        'ModifiedBy' => $actor->Id,
                        ])->save();
 
         return new self($meeting->refresh());
@@ -126,14 +127,14 @@ class MeetingService
 
         if ($this->meeting->Type === Client::class) {
             $clients = $schedule->scheduleClients()->select('ClientID')->get('ClientID')->pluck('ClientID')->toArray();
-            if (!empty($clients)) {
+            if (! empty($clients)) {
                 $this->attachClient($clients, $dated, $actor);
             }
         }
 
         if ($this->meeting->Type === Lead::class) {
             $leads = $schedule->scheduleLeads()->select('LeadId')->get('LeadId')->pluck('LeadId')->toArray();
-            if (!empty($leads)) {
+            if (! empty($leads)) {
                 $this->attachClient($leads, $dated, $actor);
             }
         }
@@ -153,10 +154,10 @@ class MeetingService
                 foreach ($chunk as $ClientID) {
                     $dataClients->add($ClientID);
                     $data->add([
-                                'MeetingId'  => $this->meeting->MeetingID,
-                                'ClientID'   => $ClientID,
-                                'CreatedOn'  => $dated,
-                                'CreatedBy'  => $actor->Id,
+                                'MeetingId' => $this->meeting->MeetingID,
+                                'ClientID' => $ClientID,
+                                'CreatedOn' => $dated,
+                                'CreatedBy' => $actor->Id,
                                 'ModifiedOn' => $dated,
                                 'ModifiedBy' => $actor->Id,
                                ]);
@@ -168,14 +169,15 @@ class MeetingService
                     $dataClients = collect();
                 }
             }
+
             return $this;
         }
 
         DB::table('t_MeetingClients')->insert([
-                                               'MeetingId'  => $this->meeting->MeetingID,
-                                               'ClientID'   => $ClientIDs,
-                                               'CreatedOn'  => $dated,
-                                               'CreatedBy'  => $actor->Id,
+                                               'MeetingId' => $this->meeting->MeetingID,
+                                               'ClientID' => $ClientIDs,
+                                               'CreatedOn' => $dated,
+                                               'CreatedBy' => $actor->Id,
                                                'ModifiedOn' => $dated,
                                                'ModifiedBy' => $actor->Id,
                                               ]);
@@ -197,10 +199,10 @@ class MeetingService
                 foreach ($chunk as $LeadId) {
                     $dataLeads->add($LeadId);
                     $data->add([
-                                'MeetingId'  => $this->meeting->MeetingID,
-                                'LeadId'     => $LeadId,
-                                'CreatedOn'  => $dated,
-                                'CreatedBy'  => $actor->Id,
+                                'MeetingId' => $this->meeting->MeetingID,
+                                'LeadId' => $LeadId,
+                                'CreatedOn' => $dated,
+                                'CreatedBy' => $actor->Id,
                                 'ModifiedOn' => $dated,
                                 'ModifiedBy' => $actor->Id,
                                ]);
@@ -212,14 +214,15 @@ class MeetingService
                     $dataClients = collect();
                 }
             }
+
             return $this;
         }
 
         DB::table('t_MeetingLeads')->insert([
-                                             'MeetingId'  => $this->meeting->MeetingID,
-                                             'LeadId'     => $LeadIds,
-                                             'CreatedOn'  => $dated,
-                                             'CreatedBy'  => $actor->Id,
+                                             'MeetingId' => $this->meeting->MeetingID,
+                                             'LeadId' => $LeadIds,
+                                             'CreatedOn' => $dated,
+                                             'CreatedBy' => $actor->Id,
                                              'ModifiedOn' => $dated,
                                              'ModifiedBy' => $actor->Id,
                                             ]);
@@ -237,10 +240,10 @@ class MeetingService
             foreach ($users->chunk(1000) as $chunk) {
                 foreach ($chunk as $OperatorID) {
                     $data->add([
-                                'MeetingId'  => $this->meeting->MeetingID,
-                                'UserID'     => $OperatorID,
-                                'CreatedOn'  => $dated,
-                                'CreatedBy'  => $actor->Id,
+                                'MeetingId' => $this->meeting->MeetingID,
+                                'UserID' => $OperatorID,
+                                'CreatedOn' => $dated,
+                                'CreatedBy' => $actor->Id,
                                 'ModifiedOn' => $dated,
                                 'ModifiedBy' => $actor->Id,
                                ]);
@@ -251,14 +254,15 @@ class MeetingService
                     $data = collect();
                 }
             }
+
             return $this;
         }
 
         DB::table('t_MeetingUsers')->insert([
-                                             'MeetingId'  => $this->meeting->MeetingID,
-                                             'UserID'     => $OperatorIDs,
-                                             'CreatedOn'  => $dated,
-                                             'CreatedBy'  => $actor->Id,
+                                             'MeetingId' => $this->meeting->MeetingID,
+                                             'UserID' => $OperatorIDs,
+                                             'CreatedOn' => $dated,
+                                             'CreatedBy' => $actor->Id,
                                              'ModifiedOn' => $dated,
                                              'ModifiedBy' => $actor->Id,
                                             ]);
@@ -274,12 +278,12 @@ class MeetingService
             foreach ($users->chunk(1000) as $chunk) {
                 foreach ($chunk as $MemberID) {
                     $data->add([
-                                'MeetingId'     => $this->meeting->MeetingID,
+                                'MeetingId' => $this->meeting->MeetingID,
                                 'BoardMemberId' => $MemberID,
-                                'CreatedOn'     => $dated,
-                                'CreatedBy'     => $actor->Id,
-                                'ModifiedOn'    => $dated,
-                                'ModifiedBy'    => $actor->Id,
+                                'CreatedOn' => $dated,
+                                'CreatedBy' => $actor->Id,
+                                'ModifiedOn' => $dated,
+                                'ModifiedBy' => $actor->Id,
                                ]);
                 }
 
@@ -288,16 +292,17 @@ class MeetingService
                     $data = collect();
                 }
             }
+
             return $this;
         }
 
         DB::table('t_MeetingBoard')->insert([
-                                             'MeetingId'     => $this->meeting->MeetingID,
+                                             'MeetingId' => $this->meeting->MeetingID,
                                              'BoardMemberId' => $MemberIDs,
-                                             'CreatedOn'     => $dated,
-                                             'CreatedBy'     => $actor->Id,
-                                             'ModifiedOn'    => $dated,
-                                             'ModifiedBy'    => $actor->Id,
+                                             'CreatedOn' => $dated,
+                                             'CreatedBy' => $actor->Id,
+                                             'ModifiedOn' => $dated,
+                                             'ModifiedBy' => $actor->Id,
                                             ]);
 
         return $this;

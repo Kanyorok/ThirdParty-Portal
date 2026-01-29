@@ -32,7 +32,7 @@ class LoanActivityController extends Controller
             ->oldest('processDate')
             ->first();
 
-        if (!$product instanceof DebtProduct) {
+        if (! $product instanceof DebtProduct) {
             return $this->errored('Product not found, maybe closed.');
         }
 

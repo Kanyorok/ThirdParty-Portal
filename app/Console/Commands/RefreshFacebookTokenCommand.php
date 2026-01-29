@@ -32,6 +32,7 @@ class RefreshFacebookTokenCommand extends Command
             $service = new FacebookService();
         } catch (ErroredException $e) {
             Log::error('Facebook does not have a valid credentials');
+
             return;
         }
 

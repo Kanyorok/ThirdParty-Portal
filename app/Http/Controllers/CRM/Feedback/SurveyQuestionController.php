@@ -46,6 +46,7 @@ class SurveyQuestionController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error add question to survey :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -60,16 +61,17 @@ class SurveyQuestionController extends Controller
     {
         $this->authorize('update', $survey);
         $question = $survey->questions()->where('t_SurveyQuestions.SurveyQuestionId', $QuestionId)->first();
-        if (!$question instanceof SurveyQuestion) {
+        if (! $question instanceof SurveyQuestion) {
             return $this->errored('invalid question give');
         }
 
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($request, $question, $actor) {
                 $question->update([
-                                   'Question'   => $request->validated('SurveyQuestion'),
-                                   'Notes'      => $request->validated('SurveyHelp') ?? '',
+                                   'Question' => $request->validated('SurveyQuestion'),
+                                   'Notes' => $request->validated('SurveyHelp') ?? '',
                                    'ModifiedBy' => $actor->Id,
                                   ]);
                 // activity()->causedBy($actor)->performedOn($survey)->event('delete')->log('added question to survey : ' . $survey->SurveyID);
@@ -78,6 +80,7 @@ class SurveyQuestionController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error add question to survey :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -92,11 +95,12 @@ class SurveyQuestionController extends Controller
     {
         $this->authorize('update', $survey);
         $question = $survey->questions()->where('t_SurveyQuestions.SurveyQuestionId', $QuestionId)->first();
-        if (!$question instanceof SurveyQuestion) {
+        if (! $question instanceof SurveyQuestion) {
             return $this->errored('invalid question give');
         }
 
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($survey, $question, $actor) {
                 $question->forceFill([
@@ -107,6 +111,7 @@ class SurveyQuestionController extends Controller
             });
         } catch (Exception $e) {
             Log::error('Error removing question in survey :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

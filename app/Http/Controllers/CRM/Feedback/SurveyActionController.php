@@ -43,7 +43,7 @@ class SurveyActionController extends Controller
         $actor = $request->user();
         $survey = Survey::query()->where('SurveyID', $survey_id)->where('CreatedBy', $actor->Id)
             ->where('t_Surveys.Status', SurveyStatusEnum::Draft->value)->first();
-        if (!$survey instanceof Survey) {
+        if (! $survey instanceof Survey) {
             return $this->errored('cannot submit, survey not in draft');
         }
         $this->authorize('view', $survey);
@@ -65,6 +65,7 @@ class SurveyActionController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error submitting survey failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

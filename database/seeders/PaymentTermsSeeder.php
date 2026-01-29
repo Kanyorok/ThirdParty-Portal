@@ -137,12 +137,12 @@ class PaymentTermsSeeder extends Seeder
                     'CreatedOn' => now(),
                     'ModifiedBy' => 1,
                     'ModifiedOn' => now(),
-                ]
+                ],
             ];
 
             foreach ($paymentTerms as $term) {
                 $exists = DB::table('t_CodeDetails')->where('ID', $term['ID'])->exists();
-                if (!$exists) {
+                if (! $exists) {
                     DB::table('t_CodeDetails')->insert($term);
                     $this->command->info("  ✅ Added: {$term['Description']}");
                 }

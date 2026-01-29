@@ -22,12 +22,12 @@ class MedicalFundsCatalogSeeder extends Seeder
 
             foreach ($coverages as $c) {
                 $exists = DB::table('t_Coverages')->where('Code', $c['Code'])->exists();
-                if (!$exists) {
+                if (! $exists) {
                     DB::table('t_Coverages')->insert([
-                        'Code'        => $c['Code'],
-                        'Name'        => $c['Name'],
+                        'Code' => $c['Code'],
+                        'Name' => $c['Name'],
                         'Description' => $c['Description'],
-                        'IsActive'    => 1,
+                        'IsActive' => 1,
                     ]);
                 }
             }
@@ -47,10 +47,10 @@ class MedicalFundsCatalogSeeder extends Seeder
 
             foreach ($rels as $r) {
                 $exists = DB::table('t_BeneficiaryRelationships')->where('Code', $r['Code'])->exists();
-                if (!$exists) {
+                if (! $exists) {
                     DB::table('t_BeneficiaryRelationships')->insert([
-                        'Code'     => $r['Code'],
-                        'Name'     => $r['Name'],
+                        'Code' => $r['Code'],
+                        'Name' => $r['Name'],
                         'IsActive' => 1,
                     ]);
                 }
@@ -58,4 +58,3 @@ class MedicalFundsCatalogSeeder extends Seeder
         }
     }
 }
-

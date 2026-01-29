@@ -46,14 +46,16 @@ class ClientMeetingController extends Controller
         $meeting = null;
         if ($schedule instanceof Schedule) {
             $meeting = $schedule->scheduled;
-            if (!$meeting instanceof Meeting) {
+            if (! $meeting instanceof Meeting) {
                 throw ValidationException::withMessages(['meeting_initiated' => 'invalid schedule provide']);
             }
         }
+
         try {
             $meeting = $this->startClientMeeting($client, $request->validated('meeting_initiated_title'), $request->validated('meeting_initiated_location'), $current_start, $actor, $meeting, $schedule);
         } catch (Exception $e) {
             Log::error('Error starting meeting  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -67,12 +69,12 @@ class ClientMeetingController extends Controller
     public function update(Request $request, Client $client, $meeting_id): JsonResponse
     {
         $request->validate([
-                            'ongoing_meeting_title'      => [
+                            'ongoing_meeting_title' => [
                                                              'required',
                                                              'min:5',
                                                              'max:200',
                                                             ],
-                            'ongoing_meeting_location'   => [
+                            'ongoing_meeting_location' => [
                                                              'required',
                                                              'min:5',
                                                              'max:200',
@@ -82,11 +84,11 @@ class ClientMeetingController extends Controller
                                                              'min:5',
                                                              'max:5000',
                                                             ],
-                            'meeting_notes'              => [
+                            'meeting_notes' => [
                                                              'nullable',
                                                              'max:5000',
                                                             ],
-                            'ongoing_meeting_users'      => [
+                            'ongoing_meeting_users' => [
                                                              'required',
                                                              'array',
                                                              'min:1',
@@ -95,7 +97,7 @@ class ClientMeetingController extends Controller
                            ]);
 
         $meeting = $client->meetings()->where('t_Meetings.MeetingID', $meeting_id)->first();
-        if (!$meeting instanceof Meeting) {
+        if (! $meeting instanceof Meeting) {
             return $this->errored('unexpected error saving, with meeting');
         }
         $userIds = User::query()->whereIn('t_Users.UserID', $request->get('ongoing_meeting_users'))->pluck('Id')->toArray();
@@ -109,6 +111,7 @@ class ClientMeetingController extends Controller
             $this->endMeeting($meeting, $request->ongoing_meeting_title, $request->ongoing_meeting_location, $client->ClientID, Carbon::now()->subSeconds(3), $actor, $request->ongoing_meeting_discussion, $userIds, $request->ongoing_meeting_notes);
         } catch (Exception $e) {
             Log::error('Error end Meeting ' . $e->getMessage());
+
             return $this->errored('unexpected error saving, try again latter');
         }
 

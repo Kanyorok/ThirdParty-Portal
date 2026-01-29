@@ -9,11 +9,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class VendorClarifications extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_VendorClarifications';
     protected $primaryKey = 'ClarificationID';
@@ -58,6 +59,7 @@ class VendorClarifications extends Model
     {
         return $this->belongsTo(Tender::class, 'TenderID', 'Id');
     }
+
     public function vendorID()
     {
         return $this->belongsTo(Supplier::class, 'VendorID', 'Id');

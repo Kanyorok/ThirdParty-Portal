@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class ReconDashboardController extends Controller
 {
-    //
     public function index()
     {
         return view('finance.bankreconciliation.recondashboard.index');
@@ -17,5 +15,4 @@ class ReconDashboardController extends Controller
     {
         return view('finance.bankreconciliation.recondashboard.create');
     }
-
 }

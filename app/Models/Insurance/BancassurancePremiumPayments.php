@@ -4,20 +4,20 @@ namespace App\Models\Insurance;
 
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Currency;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Insurance\BancassurancePolicy;
-use App\Traits\Model\UserActorTrait;
 
 class BancassurancePremiumPayments extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    //
+
     protected $table = 't_BancassurancePremiumPayments';
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -33,7 +33,7 @@ class BancassurancePremiumPayments extends Model
         'Notes',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
@@ -55,6 +55,7 @@ class BancassurancePremiumPayments extends Model
     {
         return $this->belongsTo(BancassuranceCustomer::class, 'CustomerID', 'Id');
     }
+
     public function currency()
     {
         return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');

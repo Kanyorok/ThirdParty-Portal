@@ -19,6 +19,7 @@ class LegalSearchRequestController extends Controller
         $this->authorize(PermissionEnum::LegalSearchView, LegalSearchRequest::class);
 
         $requests = LegalSearchRequest::orderByDesc('RequestDate')->get();
+
         return view('legal.search_requests.index', compact('requests'));
     }
 
@@ -29,6 +30,7 @@ class LegalSearchRequestController extends Controller
         $details = CodeDetail::select('Value')
             ->where('CodeID', 'LegalSearchRequestTypes')
             ->get();
+
         return view('legal.search_requests.create', compact('details'));
     }
 
@@ -93,6 +95,7 @@ class LegalSearchRequestController extends Controller
                 ->log('Error creating Search Request');
 
             Log::error('Error creating Search Request' . $th->getMessage());
+
             return back()->with('error', 'Error creating Search Request: ' . $th->getMessage());
         }
     }
@@ -102,6 +105,7 @@ class LegalSearchRequestController extends Controller
         $this->authorize(PermissionEnum::LegalSearchView, LegalSearchRequest::class);
 
         $request = LegalSearchRequest::findOrFail($id);
+
         return view('legal.search_requests.show', compact('request'));
     }
 
@@ -113,6 +117,7 @@ class LegalSearchRequestController extends Controller
         $details = CodeDetail::select('Value')
             ->where('CodeID', 'LegalSearchRequestTypes')
             ->get();
+
         return view('legal.search_requests.edit', compact('request', 'details'));
     }
 
@@ -158,6 +163,7 @@ class LegalSearchRequestController extends Controller
                 ->log('Error updating Search Request');
 
             Log::error('Error updating Search Request' . $th->getMessage());
+
             return back()->with('error', 'Error updating Search Request: ' . $th->getMessage());
         }
     }
@@ -183,7 +189,6 @@ class LegalSearchRequestController extends Controller
             DB::commit();
 
             return back()->with('success', 'Search request deleted.');
-
         } catch (\Throwable $th) {
             DB::rollBack();
 
@@ -194,6 +199,7 @@ class LegalSearchRequestController extends Controller
                 ->log('Error deleting Search Request');
 
             Log::error('Error deleting Search Request' . $th->getMessage());
+
             return back()->with('error', 'Error deleting Search Request: ' . $th->getMessage());
         }
     }
@@ -251,12 +257,11 @@ class LegalSearchRequestController extends Controller
 
             return redirect()->route('legal.search_requests.index')
                 ->with('success', 'Search request status updated.');
-
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to update search request status: ' . $th->getMessage());
+
             return back()->with('error', 'An error occurred. Please try again.');
         }
     }
-
 }

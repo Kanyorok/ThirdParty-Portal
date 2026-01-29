@@ -2,21 +2,12 @@
 
 namespace App\Services\FleetManagement;
 
-
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Models\FleetManagement\FleetModel;
-use App\Models\FleetManagement\FleetMake;
-use Illuminate\Support\Facades\Log;
-use App\Models\Auth\User;
-use App\Http\Requests\FleetManagement\FleetModelRequest;
-use App\Traits\Model\UserActorTrait;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class FleetModelService
 {
-
     public function create(array $data): FleetModel
     {
         return DB::transaction(function () use ($data) {
@@ -36,13 +27,14 @@ class FleetModelService
             if ($existing) {
                 if ($existing->trashed()) {
                     $existing->restore();
+
                     return $existing;
                 }
+
                 throw new \Exception("This model already exists for the selected brand.");
             }
 
             return FleetModel::create($data);
-
         });
         activity()
             ->performedOn($model)
@@ -54,7 +46,7 @@ class FleetModelService
     {
         $latestModel = FleetModel::withTrashed()->latest('CreatedOn')->first();
 
-        if (!$latestModel || !$latestModel->ModelID) {
+        if (! $latestModel || ! $latestModel->ModelID) {
             return 'MOD-0001';
         }
 
@@ -64,7 +56,6 @@ class FleetModelService
         return 'MOD-' . str_pad($newId, 4, '0', STR_PAD_LEFT);
     }
 
-
     public function update(FleetModel $model, array $data): FleetModel
     {
         return DB::transaction(function () use ($model, $data) {
@@ -73,6 +64,7 @@ class FleetModelService
             $model->ModifiedBy = Auth::id();
             $model->ModifiedOn = now();
             $model->save();
+
             return $model;
         });
         activity()
@@ -101,5 +93,3 @@ class FleetModelService
         });
     }
 }
-
-

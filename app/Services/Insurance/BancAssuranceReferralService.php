@@ -21,18 +21,17 @@ class BancAssuranceReferralService
     }
 
     public static function create(
-        BancassuranceCustomer   $ClientId,
-        ?User                   $ReferredBy = null,
-        ?Carbon                 $ReferralDate = null,
-        ?InsuranceProduct       $InsuranceProductId = null,
-        InsuranceProvider       $PreferredInsurerId,
-        ?string                 $Remarks = null,
+        BancassuranceCustomer $ClientId,
+        ?User $ReferredBy = null,
+        ?Carbon $ReferralDate = null,
+        ?InsuranceProduct $InsuranceProductId = null,
+        InsuranceProvider $PreferredInsurerId,
+        ?string $Remarks = null,
         InsuranceReferralStatus $Status,
-        ?User                   $AssignedTo = null,
-        Branch                  $BranchId,
-        User                    $user
-    ): self
-    {
+        ?User $AssignedTo = null,
+        Branch $BranchId,
+        User $user
+    ): self {
         $referral = BancAssuranceReferral::create([
             'ClientId' => $ClientId->Id,
             'ReferredBy' => $ReferredBy->Id ?? null,
@@ -57,19 +56,18 @@ class BancAssuranceReferralService
     }
 
     public static function update(
-        BancAssuranceReferral   $referralupdate,
-        BancassuranceCustomer   $ClientId,
-        ?User                   $ReferredBy = null,
-        ?Carbon                 $ReferralDate = null,
-        ?InsuranceProduct       $InsuranceProductId = null,
-        InsuranceProvider       $PreferredInsurerId,
-        ?string                 $Remarks = null,
+        BancAssuranceReferral $referralupdate,
+        BancassuranceCustomer $ClientId,
+        ?User $ReferredBy = null,
+        ?Carbon $ReferralDate = null,
+        ?InsuranceProduct $InsuranceProductId = null,
+        InsuranceProvider $PreferredInsurerId,
+        ?string $Remarks = null,
         InsuranceReferralStatus $Status,
-        ?User                   $AssignedTo = null,
-        Branch                  $BranchId,
-        User                    $user
-    ): self
-    {
+        ?User $AssignedTo = null,
+        Branch $BranchId,
+        User $user
+    ): self {
         $referralupdate->update([
             'ClientId' => $ClientId->Id,
             'ReferredBy' => $ReferredBy->Id ?? null,

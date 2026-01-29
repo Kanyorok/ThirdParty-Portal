@@ -16,11 +16,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Call extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Calls';
     protected $primaryKey = 'CallID';
@@ -52,11 +53,11 @@ class Call extends Model
                           ];
 
     protected $casts = [
-                        'StartOn'      => 'datetime',
-                        'EndOn'        => 'datetime',
+                        'StartOn' => 'datetime',
+                        'EndOn' => 'datetime',
                         'CallStatusID' => CallStatusEnum::class,
-                        'CallTypeID'   => CallTypeEnum::class,
-                        'Response'     => 'object',
+                        'CallTypeID' => CallTypeEnum::class,
+                        'Response' => 'object',
                        ];
 
     public function schedule(): BelongsTo
@@ -68,7 +69,6 @@ class Call extends Model
     {
         return $this->morphTo(__FUNCTION__, "Party", "PartyID");
     }
-
 
     public function user(): BelongsTo
     {

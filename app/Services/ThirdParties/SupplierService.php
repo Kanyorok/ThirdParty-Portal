@@ -5,30 +5,28 @@ namespace App\Services\ThirdParties;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
-use App\Models\ThirdParty\ThirdPartyUser;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\Finance\FinanceRole;
 use App\Models\ThirdParty\SupplierMaster;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyType;
+use App\Models\ThirdParty\ThirdPartyUser;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Http\UploadedFile;
 
 class SupplierService extends ThirdPartiesService
 {
     public function __construct(public SupplierMaster $supplier)
     {
         // Ensure relationship is loaded
-        if (!$supplier->relationLoaded('party')) {
+        if (! $supplier->relationLoaded('party')) {
             $supplier->load('party');
         }
 
-        // Validate the relationship exists
-        if (!$supplier->party) {
-            // throw new \RuntimeException("Supplier {$supplier->SupplierID} has no associated ThirdParty record");
-            \Illuminate\Support\Facades\Log::warning("Supplier {$supplier->SupplierID} (ID: {$supplier->Id}) has no associated ThirdParty record. Skipping strict check.");
+        // Validate the relationship exists - silently skip if no ThirdParty (legacy data)
+        if (! $supplier->party) {
             return;
         }
 
@@ -43,6 +41,7 @@ class SupplierService extends ThirdPartiesService
                 throw new \RuntimeException("No finance roles found " . __CLASS__);
             }
             $actor = SystemHelper::user();
+
             return ThirdPartyType::create([
                 'FinanceRole' => $role->FinanceRoleID,
                 'Code' => ThirdPartyService::TypeSupplier,
@@ -53,9 +52,8 @@ class SupplierService extends ThirdPartiesService
         });
     }
 
-
     public static function create(
-        string  $name,
+        string $name,
         ?string $tradingName,
         CodeDetail $businessType,
         string $registrationNumber,
@@ -91,6 +89,7 @@ class SupplierService extends ThirdPartiesService
         activity()->causedBy($actor)->performedOn($supplier)->event('create')->log("Added Supplier {$supplier->SupplierID} to thirdparty {$party->ThirdPartyName}.");
         $service = new self($supplier);
         $service->addType(self::getType(), SupplierMaster::getPrimaryKey(), $supplier->Id, $actor);
+
         return $service;
     }
 

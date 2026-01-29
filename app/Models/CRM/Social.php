@@ -14,11 +14,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Social extends Model
 {
-    use ImageTrait, SoftDeletes, UserActorTrait;
+    use ImageTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Socials';
     protected $primaryKey = 'Id';
@@ -40,13 +42,13 @@ class Social extends Model
                           ];
 
     protected $casts = [
-                        'LikesCount'    => 'integer',
+                        'LikesCount' => 'integer',
                         'CommentsCount' => 'integer',
-                        'ViewsCount'    => 'integer',
-                        'Published_at'  => 'datetime',
-                        'Scheduled_at'  => 'datetime',
-                        'Response'      => 'array',
-                        'Type'          => IntegrationsEnum::class,
+                        'ViewsCount' => 'integer',
+                        'Published_at' => 'datetime',
+                        'Scheduled_at' => 'datetime',
+                        'Response' => 'array',
+                        'Type' => IntegrationsEnum::class,
                        ];
 
     public static function getPrimaryKey(): string
@@ -64,13 +66,11 @@ class Social extends Model
         return $this->morphMany(Comment::class, 'type', 'CommentType', 'CommentTypeID', 'Id');
     }
 
-
     public function images(): BelongsToMany
     {
         return $this->belongsToMany(Image::class, 't_SocialImage', 'SocialId', 'ImageId', 'Id')
             ->withPivot(['CreatedBy', 'ModifiedBy'])->withTimestamps();
     }
-
 
     public function getPhotoAttribute()
     {

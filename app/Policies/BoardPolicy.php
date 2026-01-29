@@ -13,7 +13,6 @@ class BoardPolicy
         return $user->can(PermissionEnum::BoardMeeting->value);
     }
 
-
     /**
      * Determine whether the user can view any models.
      */

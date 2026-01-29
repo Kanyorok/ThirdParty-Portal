@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Finance\BankBranchController;
 use App\Http\Controllers\Settings\WorflowLimitsController;
-use App\Http\Controllers\Settings\WorflowLimitController;
 use App\Http\Controllers\Settings\WorkFlowController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/debug/auth', function (Illuminate\Http\Request $request) {
     $sessionId = session()->getId();
     $tableName = config('session.table', 't_SYSSessions');
-    
+
     $sessionEntry = \Illuminate\Support\Facades\DB::table($tableName)
         ->where('id', $sessionId)
         ->first();
@@ -91,8 +90,6 @@ Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(fun
 
 
         //         // Add POST alternative for delete to handle form submission
-        // Route::post('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy.post');
-        // Route::delete('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy');
 
         // Workflow Limits Routes
         Route::get('workflow-limits', [WorflowLimitsController::class, 'index'])->name('settings.workflow_limits');
@@ -174,9 +171,3 @@ Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(fun
     Route::get('/getCities', [BankBranchController::class, 'getCities'])->name('getCities');
 });
 // // Admin Licensing endpoints (should be accessible post-auth; license check happens after upload)
-// Route::middleware(['auth'])->group(function () {
-//     Route::get('/admin/license', [LicenseController::class, 'index'])
-//         ->name('admin.license.index');
-//     Route::post('/admin/license', [LicenseController::class, 'store'])
-//         ->name('admin.license.store');
-// });

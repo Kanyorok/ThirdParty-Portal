@@ -15,9 +15,9 @@ class FinanceTaxTypeController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::FinanceTaxSettingView, FinanceTaxType::class);
-        
+
         // Fetch all tax types from the database
-         $taxTypes = FinanceTaxType::all();
+        $taxTypes = FinanceTaxType::all();
 
         // Return the view with the tax types data
         return view('finance.taxmanagement.taxtypes.index', compact('taxTypes'));
@@ -26,6 +26,7 @@ class FinanceTaxTypeController extends Controller
     public function create()
     {
         $this->authorize(PermissionEnum::FinanceTaxSettingCreate, FinanceTaxType::class);
+
         // Return the view to create a new tax type
         return view('finance.taxmanagement.taxtypes.create');
     }
@@ -45,23 +46,24 @@ class FinanceTaxTypeController extends Controller
         }
 
         DB::beginTransaction();
+
         try {
+            $type = FinanceTaxType::create([
+                'TaxTypeName' => $validated['TaxTypeName'],
+                'Description' => $validated['Description'],
+                'CreatedBy' => Auth::Id(),
+                'ModifiedBy' => Auth::Id(),
+            ]);
 
-        $type = FinanceTaxType::create([
-            'TaxTypeName' => $validated['TaxTypeName'],
-            'Description' => $validated['Description'],
-            'CreatedBy' => Auth::Id(),
-            'ModifiedBy' => Auth::Id(),
-        ]);
-
-        activity()
-            ->performedOn($type)
-            ->causedBy(Auth::user())
-            ->withProperties(['action' => 'create'])
-            ->log('Tax Type created');
+            activity()
+                ->performedOn($type)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'create'])
+                ->log('Tax Type created');
 
             DB::commit();
-        return redirect()->route('taxtypes.index')->with('success', 'Tax Type created successfully.');
+
+            return redirect()->route('taxtypes.index')->with('success', 'Tax Type created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             // Log the error or handle it as needed
@@ -69,7 +71,8 @@ class FinanceTaxTypeController extends Controller
                 'user_id' => Auth::id(),
                 'request_data' => $request->all(),
             ]);
-            // Redirect back with an error message  
+
+            // Redirect back with an error message
             return redirect()->back()->withErrors(['error' => 'Failed to create Tax Type: ' . $e->getMessage()]);
         }
     }
@@ -96,12 +99,13 @@ class FinanceTaxTypeController extends Controller
         $exists = FinanceTaxType::where('TaxTypeName', $validated['TaxTypeName'])
             ->where('Id', '!=', $id)
             ->exists();
-            
+
         if ($exists) {
             return redirect()->back()->withErrors(['TaxTypeName' => 'Tax Type already exists.']);
         }
 
         DB::beginTransaction();
+
         try {
             $taxType = FinanceTaxType::findOrFail($id);
             $taxType->update([
@@ -117,6 +121,7 @@ class FinanceTaxTypeController extends Controller
                 ->log('Tax Type updated');
 
             DB::commit();
+
             return redirect()->route('taxtypes.index')->with('success', 'Tax Type updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -124,20 +129,22 @@ class FinanceTaxTypeController extends Controller
                 'user_id' => Auth::id(),
                 'request_data' => $request->all(),
             ]);
+
             return redirect()->back()->withErrors(['error' => 'Failed to update Tax Type: ' . $e->getMessage()]);
         }
     }
-    
+
     public function destroy(Request $request, $id)
     {
         $this->authorize(PermissionEnum::FinanceTaxSettingDelete, FinanceTaxType::class);
 
         DB::beginTransaction();
+
         try {
             $taxType = FinanceTaxType::findOrFail($id);
             $taxType->DeletedBy = Auth::id();
             $taxType->save();
-            // Soft delete the tax type 
+            // Soft delete the tax type
             $taxType->delete();
 
             activity()
@@ -147,10 +154,12 @@ class FinanceTaxTypeController extends Controller
                 ->log('Tax Type deleted');
 
             DB::commit();
+
             return redirect()->route('taxtypes.index')->with('success', 'Tax Type deleted successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to delete Tax Type: ' . $e->getMessage());
+
             return redirect()->back()->withErrors(['error' => 'Failed to delete Tax Type: ' . $e->getMessage()]);
         }
     }

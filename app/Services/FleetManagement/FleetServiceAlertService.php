@@ -2,9 +2,9 @@
 
 namespace App\Services\FleetManagement;
 
-use App\Models\Fleet\FleetServiceAlert;
-use App\Models\Fleet\FleetMaintenanceSchedule;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Fleet\FleetMaintenanceSchedule;
+use App\Models\Fleet\FleetServiceAlert;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -14,6 +14,7 @@ class FleetServiceAlertService
     {
         $latest = FleetServiceAlert::withTrashed()->latest('CreatedOn')->first();
         $lastId = $latest ? (int)str_replace('ALT-', '', $latest->AlertID) : 0;
+
         return 'ALT-' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
     }
 

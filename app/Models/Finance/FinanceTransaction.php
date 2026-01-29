@@ -10,14 +10,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FinanceTransaction extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     protected $table = 't_FinancialTransactions';
     protected $primaryKey = 'Id';
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     public static function getPrimaryKey(): string
     {
@@ -86,5 +87,4 @@ class FinanceTransaction extends Model
     {
         return $this->belongsTo(Department::class, 'DepartmentID', 'Id');
     }
-
 }

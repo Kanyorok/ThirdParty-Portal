@@ -43,7 +43,7 @@ class DocumentController extends Controller
     {
         try {
             return $this->succeeded('document uploaded successfully', data: [
-                'data' => new FileResource(DocumentService::createUpload($repository, $request->file('file'), $request->user())->document)
+                'data' => new FileResource(DocumentService::createUpload($repository, $request->file('file'), $request->user())->document),
             ]);
         } catch (ErroredException $e) {
             return $e->toJson();
@@ -62,7 +62,7 @@ class DocumentController extends Controller
         if ($lock->get()) {
             activity()->causedBy($actor)->performedOn($document)->event('view')->log('viewed document  ' . $document->Name . '.');
         }
-        //
+
 
         //checked out.
         $service = new DocumentService($document);
@@ -105,6 +105,7 @@ class DocumentController extends Controller
             'Name' => ['required', 'string', 'min:2', 'max:200'],
         ]);
         $actor = $request->user();
+
         try {
             return DB::transaction(function () use ($document, $repository, $data, $actor) {
                 activity()->causedBy($actor)->performedOn($document)->event('update')->log('rename document  ' . $document->Name . ' to ' . $data['Name'] . '.');
@@ -116,9 +117,10 @@ class DocumentController extends Controller
 
                 return $this->succeeded('document renamed successfully', route('files.show', [$repository->RepositoryId, $document->DocumentId]));
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('rename file failed : ' . $e);
         }
+
         return $this->errored('rename file failed, try again later');
     }
 
@@ -139,13 +141,18 @@ class DocumentController extends Controller
                 ])->save();
 
                 activity()->causedBy(auth()->user())->performedOn($document)->event('delete')->log('trashed document  ' . $document->Name . '.');
-                return $this->succeeded(message: 'document trashed successfully', route: route('repo.show', [$repository->RepositoryId]),
-                    data: ['data' => new FileResource($document)]);
+
+                return $this->succeeded(
+                    message: 'document trashed successfully',
+                    route: route('repo.show', [$repository->RepositoryId]),
+                    data: ['data' => new FileResource($document)]
+                );
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('deleting file failed :');
             Log::error($e);
         }
+
         return $this->errored('an unexpected error occurred');
     }
 }

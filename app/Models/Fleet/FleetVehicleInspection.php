@@ -2,28 +2,21 @@
 
 namespace App\Models\Fleet;
 
-use Illuminate\Database\Eloquent\Model;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\FleetDriver;
-use App\Models\Fleet\FleetTripLog;
-use App\Models\Fleet\ContractedDriver;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
-use App\Traits\Model\DocumentsTrait;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\Fleet\FuelType;
-use App\Models\HRM\Employee;
+use App\Traits\Model\DocumentsTrait;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FleetVehicleInspection extends Model
 {
-    use UserActorTrait, SoftDeletes, DocumentsTrait;
+    use UserActorTrait;
+    use SoftDeletes;
+    use DocumentsTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_FleetVehicleInspections';
     protected $primaryKey = 'Id';
@@ -61,7 +54,7 @@ class FleetVehicleInspection extends Model
         return $this->belongsTo(FuelType::class, 'FuelType', 'Id');
     }
 
-    public function fuel()      
+    public function fuel()
     {
         return $this->belongsTo(CodeDetail::class, 'Fuel', 'ID');
     }

@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Settings;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class UserBulkNotificationRequest extends FormRequest
 {
@@ -15,7 +14,7 @@ class UserBulkNotificationRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'NotificationLabel'   => [
+                'NotificationLabel' => [
                                           'required',
                                           'string',
                                           'max:255',

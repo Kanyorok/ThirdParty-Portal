@@ -38,4 +38,3 @@ class SystemBankSettingSeeder extends Seeder
         }
     }
 }
-

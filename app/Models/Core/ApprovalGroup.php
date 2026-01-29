@@ -6,10 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class ApprovalGroup extends Model
 {
-    //
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $connection = 'sqlsrv';
 
     protected $table = 't_ApprovalGroups';
@@ -22,7 +21,7 @@ class ApprovalGroup extends Model
         'ApprovalType',
         'Permission',
         'CreatedBy',
-        'ModifiedBy'
+        'ModifiedBy',
 
     ];
     protected $casts = [

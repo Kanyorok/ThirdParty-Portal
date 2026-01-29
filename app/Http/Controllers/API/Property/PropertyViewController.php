@@ -15,7 +15,7 @@ class PropertyViewController extends Controller
             'getBlockByProperty.floor.units' => function ($query) {
                 $query->where('IsRentable', true)
                     ->where('CurrentStatus', true);
-            }
+            },
         ])
         ->whereHas('getBlockByProperty.floor.units', function ($query) {
             $query->where('IsRentable', true)
@@ -23,20 +23,7 @@ class PropertyViewController extends Controller
         })
         ->paginate(10);
 
-        return 
+        return
             new PropertyCollection($properties);
     }
-
-
-    // public function propertyStructure($id): JsonResponse
-    //     {
-    //         $property = PropertyRegistry::with([
-    //             'getBlockByProperty.floor.units' => function ($query) {
-    //                 $query->where('IsRentable', true)
-    //                     ->where('CurrentStatus', true);
-    //             }
-    //         ])->findOrFail($id);
-
-    //         return new PropertyViewResource($property);
-    //     }
 }

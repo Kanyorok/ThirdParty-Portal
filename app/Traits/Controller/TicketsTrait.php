@@ -47,9 +47,10 @@ trait TicketsTrait
         string $SourceTicketID = null,
         string $SourceID = '0'
     ): TicketService {
-        if (!$model instanceof Lead && !$model instanceof Client && !$model instanceof User) {
+        if (! $model instanceof Lead && ! $model instanceof Client && ! $model instanceof User) {
             throw new ErroredException('unknown party given');
         }
+
         return DB::transaction(static function () use ($SourceTicketID, $priority, $model, $category, $title, $description, $actor, $Source, $SourceID, $start, $end) {
             if ($model instanceof Lead) {
                 return TicketService::lead($model, $category, $title, $description, $actor, ($Source instanceof TicketSourceEnum) ? $Source->value : $Source, $priority, SourceID: $SourceID, start: $start, end: $end);

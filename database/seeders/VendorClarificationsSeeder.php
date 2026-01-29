@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class VendorClarificationsSeeder extends Seeder
 {
@@ -27,7 +27,7 @@ class VendorClarificationsSeeder extends Seeder
                 'ModifiedOn' => $now,
                 'DeletedBy' => null,
                 'DeletedOn' => null,
-            
+
             ],
             [
                 'TenderId' => 11, // Assumes tender ID 2 exists in t_Tenders

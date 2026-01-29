@@ -35,6 +35,7 @@ class LegalObligationController extends Controller
         $details = CodeDetail::select('Value')
             ->where('CodeID', 'LegalSourceTypes')
             ->get();
+
         return view('legal.obligations.create', compact('details'));
     }
 
@@ -91,6 +92,7 @@ class LegalObligationController extends Controller
                 ->log('Obligation successfully created');
 
             Log::error('Error creating obligation: ' . $th->getMessage());
+
             return back()->with('error', 'Error creating Obligation: ' . $th->getMessage());
         }
     }
@@ -100,6 +102,7 @@ class LegalObligationController extends Controller
         $this->authorize(PermissionEnum::LegalObligationUpdate, LegalObligation::class);
 
         $obligation = LegalObligation::findOrFail($id);
+
         return view('legal.obligations.edit', compact('obligation'));
     }
 
@@ -146,6 +149,7 @@ class LegalObligationController extends Controller
                 ->log('Obligation successfully updated');
 
             Log::error('Error updating obligation: ' . $th->getMessage());
+
             return back()->with('error', 'Error updating Obligation: ' . $th->getMessage());
         }
     }
@@ -157,6 +161,7 @@ class LegalObligationController extends Controller
         $obligation = LegalObligation::findOrFail($id);
         $users = User::select('Name', 'Id', 'Email')
             ->get();
+
         return view('legal.obligations.show', compact('obligation', 'users'));
     }
 
@@ -181,7 +186,6 @@ class LegalObligationController extends Controller
             DB::commit();
 
             return back()->with('success', 'Obligation successfully deleted');
-
         } catch (\Throwable $th) {
             DB::rollBack();
 
@@ -192,6 +196,7 @@ class LegalObligationController extends Controller
                 ->log('Obligation successfully deleted');
 
             Log::error('Error deleting obligation: ' . $th->getMessage());
+
             return back()->with('error', 'Error deleting Obligation: ' . $th->getMessage());
         }
     }
@@ -199,9 +204,9 @@ class LegalObligationController extends Controller
     public function getObligations($id)
     {
         $obligations = LegalObligation::findOrFail($id);
+
         return response()->json($obligations);
     }
-
 
     public function assignUser(Request $request, $id)
     {
@@ -213,7 +218,6 @@ class LegalObligationController extends Controller
         if ($obligation->AssignedTo == $validated['UserId']) {
             return back()->withErrors('Error', 'User Already Assigned');
         } else {
-
             //Store in scheduled table
             $schedule = Schedule::create([
                 'Title' => $obligation->Title,
@@ -252,30 +256,12 @@ class LegalObligationController extends Controller
         }
     }
 
-    // public function markComplete($id)
-    // {
-    //     $obligation = LegalObligation::findOrFail($id);
-    //     $obligation->Status = 'Completed';
-    //     $obligation->ModifiedBy = Auth::id();
-    //     $obligation->ModifiedOn = now();
-    //     $obligation->save();
-
-    //     return redirect()->back()->with('success', 'Obligation marked as completed.');
-    // }
 
 
-    // public function calendar()
-    // {
-    //     $obligations = LegalObligation::whereNull('DeletedOn')->get();
 
-    //     $calendarEvents = $obligations->map(function ($obligation) {
-    //         return [
+
     //             'title' => $obligation->ObligationTitle,
     //             'start' => $obligation->DueDate,
     //             'url' => route('legal.obligations.show', $obligation->ID),
-    //         ];
-    //     });
 
-    //     return view('legal.obligations.calendar', compact('calendarEvents'));
-    // }
 }

@@ -12,7 +12,7 @@ class SalesOrderController extends Controller
      */
     public function index()
     {
-        //
+
         return view("procurement.salesOrders.create");
     }
 
@@ -21,7 +21,7 @@ class SalesOrderController extends Controller
      */
     public function create()
     {
-        //
+
         return view("procurement.salesOrders.create");
     }
 
@@ -30,7 +30,6 @@ class SalesOrderController extends Controller
      */
     public function store(Request $request)
     {
-        //
     }
 
     /**
@@ -38,7 +37,6 @@ class SalesOrderController extends Controller
      */
     public function show(string $id)
     {
-        //
     }
 
     /**
@@ -46,7 +44,6 @@ class SalesOrderController extends Controller
      */
     public function edit(string $id)
     {
-        //
     }
 
     /**
@@ -54,7 +51,6 @@ class SalesOrderController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
     }
 
     /**
@@ -62,6 +58,5 @@ class SalesOrderController extends Controller
      */
     public function destroy(string $id)
     {
-        //
     }
 }

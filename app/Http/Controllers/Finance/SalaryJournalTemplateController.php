@@ -11,6 +11,7 @@ class SalaryJournalTemplateController extends Controller
     public function index()
     {
         $templates = DB::table('t_SalaryJournalTemplates')->orderBy('TemplateName')->get();
+
         return view('finance.integration.salary_journal.index', compact('templates'));
     }
 

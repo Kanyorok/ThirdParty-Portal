@@ -13,8 +13,8 @@ class PrequalificationResponseController extends Controller
     public function index(Request $request): JsonResponse
     {
         $responses = PrequalificationResponse::with(['application', 'criteria', 'createdBy'])
-            ->when($request->get('application_id'), fn($q, $id) => $q->where('ApplicationID', $id))
-            ->when($request->get('round_id'), fn($q, $id) => $q->whereHas('criteria', fn($q2) => $q2->where('RoundId', $id)))
+            ->when($request->get('application_id'), fn ($q, $id) => $q->where('ApplicationID', $id))
+            ->when($request->get('round_id'), fn ($q, $id) => $q->whereHas('criteria', fn ($q2) => $q2->where('RoundId', $id)))
             ->paginate(20);
 
         return response()->json($responses);
@@ -38,6 +38,7 @@ class PrequalificationResponseController extends Controller
                 $r['CreatedBy'] = auth()->id();
                 $results[] = PrequalificationResponse::create($r);
             }
+
             return $results;
         });
 

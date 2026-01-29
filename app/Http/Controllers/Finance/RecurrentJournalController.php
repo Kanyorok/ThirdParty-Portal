@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Finance;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Core\Branch;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Branch;
 use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceJournalLines;
@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\Log;
 
 class RecurrentJournalController extends Controller
 {
-    //
     public function index(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerView, FinanceJournalEntry::class);
@@ -34,25 +33,25 @@ class RecurrentJournalController extends Controller
         }
 
         if ($request->filled('date_from')) {
-            $query->whereHas('recurringJournals', function($q) use ($request) {
+            $query->whereHas('recurringJournals', function ($q) use ($request) {
                 $q->whereDate('StartDate', '>=', $request->date_from);
             });
         }
 
         if ($request->filled('date_to')) {
-            $query->whereHas('recurringJournals', function($q) use ($request) {
+            $query->whereHas('recurringJournals', function ($q) use ($request) {
                 $q->whereDate('StartDate', '<=', $request->date_to);
             });
         }
 
         if ($request->filled('reference_name')) {
-            $query->whereHas('recurringJournals', function($q) use ($request) {
+            $query->whereHas('recurringJournals', function ($q) use ($request) {
                 $q->where('ReferenceName', 'like', '%' . $request->reference_name . '%');
             });
         }
 
         if ($request->filled('frequency') && $request->frequency !== 'all') {
-            $query->whereHas('recurringJournals', function($q) use ($request) {
+            $query->whereHas('recurringJournals', function ($q) use ($request) {
                 $q->where('Frequency', $request->frequency);
             });
         }
@@ -92,14 +91,17 @@ class RecurrentJournalController extends Controller
     public function create()
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerCreate, FinanceJournalEntry::class);
+
         try {
             $gls = FinanceGLAccounts::select('Id', 'GLName', 'GLCode')->get();
             $branches = Branch::select('Id', 'Name')->get();
             $departments = Department::select('Id', 'Name')->get();
             $paymentFrequency = CodeDetail::select('CodeID', 'Description', 'Value')->where('CodeID', 'JournalPaymentFrequency')->get();
+
             return view('finance.generalledger.recurrentjournal.create', compact('gls', 'branches', 'departments', 'paymentFrequency'));
         } catch (\Throwable) {
             Log::error('Error in Recurrent Journal Create');
+
             return back()->with('error', 'Error in Recurrent Journal Create');
         }
     }
@@ -148,57 +150,61 @@ class RecurrentJournalController extends Controller
         }
 
         DB::beginTransaction();
+
         try {
             // Save the master entry in the JournalEntry Table
             $journalEntry = FinanceJournalEntry::create([
                 'Date' => $validated['StartDate'],
-                'Description'    => $validated['Description'],
-                'Type'=> 'recurring',
+                'Description' => $validated['Description'],
+                'Type' => 'recurring',
                 'CreatedBy' => Auth::id(),
-                'ModifiedBy'=> Auth::Id(),
+                'ModifiedBy' => Auth::Id(),
             ]);
             //Saveto the Recurrent Journal Table
-            $store=RecurrentJournal::create([
-                'JournalEntryId'=> $journalEntry->Id,
-                'StartDate'      => $validated['StartDate'],
-                'CuttOffDate'    => $validated['CuttOffDate'],
-                'Frequency'      => $validated['Frequency'],
-                'ReferenceName'  => $validated['ReferenceName'],
-                'Description'    => $validated['Description'],
-                'CreatedBy'      => Auth::id(),
-                'ModifiedBy'     => Auth::id(),
+            $store = RecurrentJournal::create([
+                'JournalEntryId' => $journalEntry->Id,
+                'StartDate' => $validated['StartDate'],
+                'CuttOffDate' => $validated['CuttOffDate'],
+                'Frequency' => $validated['Frequency'],
+                'ReferenceName' => $validated['ReferenceName'],
+                'Description' => $validated['Description'],
+                'CreatedBy' => Auth::id(),
+                'ModifiedBy' => Auth::id(),
             ]);
             // SAVE to the JournalLines table
             foreach ($request->entries as $entry) {
                 FinanceJournalLines::create([
                     'JournalEntryId' => $journalEntry->Id,
-                    'GLAccountID'    => $entry['gl_id'],
-                    'BranchID'       => $entry['branch_id'],
-                    'DepartmentID'   => $entry['department_id'],
-                    'IsDebit'        => $entry['is_debit'],
+                    'GLAccountID' => $entry['gl_id'],
+                    'BranchID' => $entry['branch_id'],
+                    'DepartmentID' => $entry['department_id'],
+                    'IsDebit' => $entry['is_debit'],
                     'Amount' => $entry['is_debit'] ? $entry['amount'] * -1 : $entry['amount'],
                     'Debit' => ($entry['debit'] * -1) ?? 0,
-                    'Credit'         => $entry['credit'] ?? 0,
-                    'Narration'      => $entry['narration'] ?? null,
+                    'Credit' => $entry['credit'] ?? 0,
+                    'Narration' => $entry['narration'] ?? null,
                     'CreatedBy' => Auth::id(),
-                    'ModifiedBy'=> Auth::Id(),
+                    'ModifiedBy' => Auth::Id(),
                 ]);
             }
             activity('Recurring Journal Entry')
                 ->performedOn(new FinanceJournalEntry())
                 ->causedBy(Auth::id())
-                ->withProperties(['Create' =>$store])
+                ->withProperties(['Create' => $store])
                 ->log('Created Recurring Journal Entry');
             DB::commit();
+
             return back()->with('success', 'Recurrent Journal created successfully.');
-        }catch (\Throwable $th) {
+        } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Error in Recurrent Journal Store');
+
             return back()->with('error', 'Error in Storing Recurrent Journal.');
         }
     }
 
-    public function show($id){
+    public function show($id)
+    {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerView, ReverseJournalEntry::class);
         $journalEntry = FinanceJournalEntry::with([
             'recurringJournals',
@@ -206,13 +212,13 @@ class RecurrentJournalController extends Controller
             'sourceModule',
             'createdBy:Id,Name',
             'modifiedBy:Id,Name',
-            'reversalsAsOriginal' => function($query) {
+            'reversalsAsOriginal' => function ($query) {
                 $query->with('journalEntry.createdBy:Id,Name');
-            }
+            },
         ])->findOrFail($id);
-        $frequencies =CodeDetail::where('CodeID', 'JournalPaymentFrequency')->pluck('Description', 'Value')->toArray();
+        $frequencies = CodeDetail::where('CodeID', 'JournalPaymentFrequency')->pluck('Description', 'Value')->toArray();
 
-        return view('finance.generalledger.recurrentjournal.show', compact('journalEntry','frequencies'));
+        return view('finance.generalledger.recurrentjournal.show', compact('journalEntry', 'frequencies'));
     }
 
     public function edit($id)
@@ -223,6 +229,7 @@ class RecurrentJournalController extends Controller
         $branches = Branch::select('Id', 'Name')->get();
         $departments = Department::select('Id', 'Name')->get();
         $paymentFrequency = CodeDetail::select('CodeID', 'Description', 'Value')->where('CodeID', 'JournalPaymentFrequency')->get();
+
         return view('finance.generalledger.recurrentjournal.edit', compact('journalEntry', 'gls', 'branches', 'departments', 'paymentFrequency'));
     }
 
@@ -272,15 +279,16 @@ class RecurrentJournalController extends Controller
         }
 
         // Validate ownership of incoming line_ids
-        $existingIds = $journalEntry->journalLines->pluck('Id')->map(fn($v) => (int)$v)->all();
-        $incomingIds = collect($validated['entries'])->pluck('line_id')->filter()->map(fn($v) => (int)$v)->all();
+        $existingIds = $journalEntry->journalLines->pluck('Id')->map(fn ($v) => (int)$v)->all();
+        $incomingIds = collect($validated['entries'])->pluck('line_id')->filter()->map(fn ($v) => (int)$v)->all();
         foreach ($incomingIds as $lid) {
-            if (!in_array($lid, $existingIds, true)) {
+            if (! in_array($lid, $existingIds, true)) {
                 return back()->withErrors(['Invalid line submitted' => 'One or more lines do not belong to this journal entry.'])->withInput();
             }
         }
 
         DB::beginTransaction();
+
         try {
             // Update recurring header (in journal and recurrent table)
             $journalEntry->Date = $validated['StartDate'];
@@ -301,7 +309,7 @@ class RecurrentJournalController extends Controller
 
             // Delete removed lines
             $toDelete = array_diff($existingIds, $incomingIds);
-            if (!empty($toDelete)) {
+            if (! empty($toDelete)) {
                 FinanceJournalLines::where('JournalEntryId', $journalEntry->Id)->whereIn('Id', $toDelete)->delete();
             }
 
@@ -318,7 +326,7 @@ class RecurrentJournalController extends Controller
                     'Narration' => $entry['narration'] ?? null,
                     'ModifiedBy' => Auth::id(),
                 ];
-                if (!empty($entry['line_id'])) {
+                if (! empty($entry['line_id'])) {
                     FinanceJournalLines::where('JournalEntryId', $journalEntry->Id)->where('Id', (int)$entry['line_id'])->update($payload);
                 } else {
                     FinanceJournalLines::create(array_merge($payload, [
@@ -335,10 +343,12 @@ class RecurrentJournalController extends Controller
                 ->log('Updated Recurring Journal');
 
             DB::commit();
+
             return redirect()->route('recurrentjournal.show', $journalEntry->Id)->with('success', 'Recurring Journal updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Error updating Recurring Journal: ' . $th->getMessage());
+
             return back()->with('error', 'Failed to update Recurring Journal')->withInput();
         }
     }
@@ -352,6 +362,7 @@ class RecurrentJournalController extends Controller
             \App\Models\Finance\RecurrentJournal::where('JournalEntryId', $entry->Id)->delete();
             $entry->delete();
         });
+
         return redirect()->route('recurrentjournal.index')->with('success', 'Recurring journal deleted.');
     }
 }

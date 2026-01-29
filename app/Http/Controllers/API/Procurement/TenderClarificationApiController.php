@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\API\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Models\Procurement\VendorClarifications;
 use App\Models\Procurement\Tender;
+use App\Models\Procurement\VendorClarifications;
 use App\Models\ThirdParies\Supplier;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -23,9 +23,9 @@ class TenderClarificationApiController extends Controller
     {
         try {
             // Simple validation first
-            if (!$request->tender_id || !$request->question) {
+            if (! $request->tender_id || ! $request->question) {
                 return response()->json([
-                    'error' => 'Missing required fields: tender_id, question'
+                    'error' => 'Missing required fields: tender_id, question',
                 ], 422);
             }
 
@@ -44,7 +44,7 @@ class TenderClarificationApiController extends Controller
                     ->first();
             }
             // Case 2: Resolve from Authenticated User (Portal)
-            else if ($user) {
+            elseif ($user) {
                 // Check if user is a ThirdPartyUser and has a related ThirdParty
                 // Note: Logic depends on how User model relates to ThirdParty
                 // Assuming standard ThirdPartyUser model pattern where we can find the ThirdParty
@@ -53,8 +53,8 @@ class TenderClarificationApiController extends Controller
                 if (method_exists($user, 'thirdParty')) {
                     $thirdPartyId = $user->thirdParty->Id ?? null;
                 } else {
-                    // Fallback to checking via email or other linking logic if needed 
-                    // For now, let's assume the user IS linked. 
+                    // Fallback to checking via email or other linking logic if needed
+                    // For now, let's assume the user IS linked.
                     // This part might need adjustment based on specific User/ThirdPartyUser model structure
                     // Using a common pattern seen in other controllers:
                     $thirdPartyUser = DB::table('t_ThirdPartyUsers')->where('Id', $user->Id)->first();
@@ -71,9 +71,9 @@ class TenderClarificationApiController extends Controller
                 }
             }
 
-            if (!$supplier) {
+            if (! $supplier) {
                 return response()->json([
-                    'error' => 'Supplier record not found for the current user/context.'
+                    'error' => 'Supplier record not found for the current user/context.',
                 ], 404);
             }
 
@@ -84,10 +84,10 @@ class TenderClarificationApiController extends Controller
                 ->where('ResponseStatus', 'accepted') // Case-sensitive check matched to DB update method
                 ->first();
 
-            if (!$invitation) {
+            if (! $invitation) {
                 return response()->json([
                     'error' => 'Access Denied',
-                    'message' => 'You must accept the tender invitation before asking questions.'
+                    'message' => 'You must accept the tender invitation before asking questions.',
                 ], 403);
             }
 
@@ -117,7 +117,7 @@ class TenderClarificationApiController extends Controller
 
             $clarificationId = $result[0]->ClarificationID ?? null;
 
-            if (!$clarificationId) {
+            if (! $clarificationId) {
                 throw new \Exception('Failed to create clarification record');
             }
 
@@ -130,20 +130,20 @@ class TenderClarificationApiController extends Controller
                     'tenderId' => $request->tender_id,
                     'question' => $request->question,
                     'questionDate' => date('Y-m-d H:i:s'),
-                    'status' => 'pending'
-                ]
+                    'status' => 'pending',
+                ],
             ], 201);
         } catch (\Exception $e) {
             Log::error('Error submitting tender clarification', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all()
+                'request_data' => $request->all(),
             ]);
 
             return response()->json([
                 'error' => 'Failed to submit clarification',
                 'message' => $e->getMessage(),
-                'debug' => $e->getTraceAsString()
+                'debug' => $e->getTraceAsString(),
             ], 500);
         }
     }
@@ -155,16 +155,15 @@ class TenderClarificationApiController extends Controller
     public function getClarifications(Request $request): JsonResponse
     {
         try {
-
             $validator = Validator::make($request->all(), [
                 'tender_id' => 'required|integer|exists:t_Tenders,Id',
-                'third_party_id' => 'nullable|integer'
+                'third_party_id' => 'nullable|integer',
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
                     'error' => 'Validation failed',
-                    'messages' => $validator->errors()
+                    'messages' => $validator->errors(),
                 ], 422);
             }
 
@@ -176,7 +175,7 @@ class TenderClarificationApiController extends Controller
                 $supplier = Supplier::whereHas('supplierMaster', function ($query) use ($request) {
                     $query->where('ThirdPartyId', $request->third_party_id);
                 })->first();
-            } else if ($user) {
+            } elseif ($user) {
                 // Try to find the supplier via the authenticated user's third party
                 // Assuming the User model (likely ThirdPartyUser) has a way to get to ThirdParty
                 $thirdPartyId = null;
@@ -197,9 +196,9 @@ class TenderClarificationApiController extends Controller
                 }
             }
 
-            if (!$supplier) {
+            if (! $supplier) {
                 return response()->json([
-                    'error' => 'Supplier context not found'
+                    'error' => 'Supplier context not found',
                 ], 404);
             }
 
@@ -210,10 +209,10 @@ class TenderClarificationApiController extends Controller
                 ->where('ResponseStatus', 'accepted')
                 ->first();
 
-            if (!$invitation) {
+            if (! $invitation) {
                 return response()->json([
                     'error' => 'Access Denied',
-                    'message' => 'You must accept the tender invitation to view clarifications.'
+                    'message' => 'You must accept the tender invitation to view clarifications.',
                 ], 403);
             }
 
@@ -242,7 +241,7 @@ class TenderClarificationApiController extends Controller
                     'isOwnQuestion' => $clarification->VendorID == $supplier->Id,
                     'status' => $clarification->Answer ? 'answered' : 'pending',
                     'createdBy' => $clarification->CreatedBy,
-                    'createdOn' => $clarification->CreatedOn
+                    'createdOn' => $clarification->CreatedOn,
                 ];
             });
 
@@ -250,17 +249,17 @@ class TenderClarificationApiController extends Controller
                 'data' => $formattedClarifications,
                 'total' => $formattedClarifications->count(),
                 'tender_id' => $request->tender_id,
-                'supplier_id' => $supplier->Id
+                'supplier_id' => $supplier->Id,
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching tender clarifications', [
                 'error' => $e->getMessage(),
-                'request_data' => $request->all()
+                'request_data' => $request->all(),
             ]);
 
             return response()->json([
                 'error' => 'Failed to fetch clarifications',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -313,7 +312,7 @@ class TenderClarificationApiController extends Controller
                     'questionDate' => $clarification->QuestionDate,
                     'daysPending' => now()->diffInDays($clarification->QuestionDate),
                     'createdBy' => $clarification->CreatedBy,
-                    'createdOn' => $clarification->CreatedOn
+                    'createdOn' => $clarification->CreatedOn,
                 ];
             });
 
@@ -323,17 +322,17 @@ class TenderClarificationApiController extends Controller
                     'total' => $total,
                     'page' => $page,
                     'limit' => $limit,
-                    'pages' => ceil($total / $limit)
-                ]
+                    'pages' => ceil($total / $limit),
+                ],
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching pending clarifications', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'error' => 'Failed to fetch pending clarifications',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -348,27 +347,27 @@ class TenderClarificationApiController extends Controller
             $validator = Validator::make($request->all(), [
                 'answer' => 'required|string|min:10|max:2000',
                 'is_published_to_all' => 'boolean',
-                'responded_by' => 'required|string'
+                'responded_by' => 'required|string',
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
                     'error' => 'Validation failed',
-                    'messages' => $validator->errors()
+                    'messages' => $validator->errors(),
                 ], 422);
             }
 
             $clarification = VendorClarifications::find($clarificationId);
 
-            if (!$clarification) {
+            if (! $clarification) {
                 return response()->json([
-                    'error' => 'Clarification not found'
+                    'error' => 'Clarification not found',
                 ], 404);
             }
 
             if ($clarification->Answer) {
                 return response()->json([
-                    'error' => 'This clarification has already been answered'
+                    'error' => 'This clarification has already been answered',
                 ], 409);
             }
 
@@ -387,14 +386,14 @@ class TenderClarificationApiController extends Controller
                     $request->is_published_to_all ?? false ? 1 : 0,
                     $systemUserId,
                     date('Y-m-d H:i:s'),
-                    $clarificationId
+                    $clarificationId,
                 ]
             );
 
             Log::info('Clarification response submitted', [
                 'clarification_id' => $clarificationId,
                 'answered_by' => $request->responded_by,
-                'is_public' => $request->is_published_to_all ?? false
+                'is_public' => $request->is_published_to_all ?? false,
             ]);
 
             return response()->json([
@@ -403,18 +402,18 @@ class TenderClarificationApiController extends Controller
                     'clarificationId' => $clarificationId,
                     'answer' => $request->answer,
                     'answerDate' => now()->format('Y-m-d H:i:s'),
-                    'isPublic' => (bool)($request->is_published_to_all ?? false)
-                ]
+                    'isPublic' => (bool)($request->is_published_to_all ?? false),
+                ],
             ]);
         } catch (\Exception $e) {
             Log::error('Error submitting clarification response', [
                 'clarification_id' => $clarificationId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'error' => 'Failed to submit response',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

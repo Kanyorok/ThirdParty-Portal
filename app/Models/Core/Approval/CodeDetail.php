@@ -3,27 +3,27 @@
 namespace App\Models\Core\Approval;
 
 use App\Traits\Model\UserActorTrait;
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CodeDetail extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-      public static function getPrimaryKey(): string
+    public static function getPrimaryKey(): string
     {
         return 'CodeDetailsId';
     }
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_CodeDetails';
     protected $primaryKey = 'ID';
 
-  
+
 
     protected $fillable = [
         'CodeID','Value', 'Description', 'DisplayOrder', 'IsActive',
@@ -31,6 +31,4 @@ class CodeDetail extends Model
     ];
 
     protected $casts = ['DisplayOrder' => 'integer'];
-
-    
 }

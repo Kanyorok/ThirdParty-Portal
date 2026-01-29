@@ -2,14 +2,12 @@
 
 namespace App\Policies\FleetManagement;
 
-use App\Models\Auth\User;
 use App\Enums\Core\PermissionEnum;
+use App\Models\Auth\User;
 use App\Models\FleetManagement\DriverManagement;
-use Illuminate\Auth\Access\Response;
 
 class DriverManagementPolicy
 {
-
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::DriverManagementView->value);
@@ -54,8 +52,4 @@ class DriverManagementPolicy
     {
         return $user->can(PermissionEnum::DriverManagementUpdate->value);
     }
-
 }
-
-
-

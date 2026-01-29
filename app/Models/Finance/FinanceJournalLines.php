@@ -8,14 +8,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FinanceJournalLines extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
 
     protected $table = 't_FinanceJournalLines';
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $primaryKey = 'Id';
 

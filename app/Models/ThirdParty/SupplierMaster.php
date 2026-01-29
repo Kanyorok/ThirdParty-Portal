@@ -2,7 +2,6 @@
 
 namespace App\Models\ThirdParty;
 
-use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,11 +10,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SupplierMaster extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const string CREATED_AT = 'CreatedOn';
+    public const string UPDATED_AT = 'ModifiedOn';
+    public const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_SupplierMaster';
     protected $primaryKey = 'Id';
@@ -86,8 +86,4 @@ class SupplierMaster extends Model
 
     // Note: ApprovalStatus is a string enum (e.g., 'P', 'A', 'R'), not a foreign key
     // Commenting out incorrect relationship to prevent SQL errors
-    // public function status(): BelongsTo
-    // {
-    //     return $this->belongsTo(CodeDetail::class, 'ApprovalStatus', 'Id');
-    // }
 }

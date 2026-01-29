@@ -34,14 +34,14 @@ class LoanGuarantorController extends Controller
     public function index(string $product_id): JsonResponse
     {
         $product = DebtProduct::query()->where('AccountID', $product_id)->oldest('processDate')->first();
-        if (!$product instanceof DebtProduct) {
+        if (! $product instanceof DebtProduct) {
             throw new \RuntimeException('Product not found, maybe closed.', 404);
         }
         $this->authorize('view', $product);
 
         return Datatables::of($product->guarantors()->with('client')->select('*'))->addIndexColumn()
             ->addColumn('action', function (Guarantor $guarantor) {
-                if (!$guarantor->client instanceof Client) {
+                if (! $guarantor->client instanceof Client) {
                     return '..';
                 }
                 $service = new ClientService($guarantor->client);
@@ -52,10 +52,10 @@ class LoanGuarantorController extends Controller
                 $btn .= (is_string($service->getEmail()))
                     ? '<button class="btn btn-sm btn-primary mx-1 send-mail-to-action" data-info="' . route('debt-collection.guarantors.email', [$guarantor->AccountID]) . '~' . $service->client->Name . '~' . $service->getEmail() . '" title="send email"><i class="fas fa-envelope"></i></button>'
                     : '<button class="btn btn-sm btn-primary mx-1" disabled title="send email"><i class="fas fa-envelope"></i></button>';
+
                 return $btn;
             })->editColumn('client', function (Guarantor $guarantor) {
                 return (new PartyService($guarantor->client))->getDTRow();
-                //  return '<a href="javascript:void(0)" data-click_url="' . route('clients.summary', $guarantor->GuarantorID) . '" data-summary_title="member summary" class="click-summary-data">' . $guarantor->client?->Name . '</a>';
             })->editColumn('GuaranteeAmount', function (Guarantor $guarantor) {
                 return number_format($guarantor->GuaranteeAmount, 2);
             })->editColumn('CreatedOn', function (Guarantor $guarantor) {
@@ -66,7 +66,7 @@ class LoanGuarantorController extends Controller
     public function sms(GuarantorMessageRequest $request, string $product_id): JsonResponse
     {
         $product = DebtProduct::query()->where('AccountID', $product_id)->oldest('processDate')->first();
-        if (!$product instanceof DebtProduct) {
+        if (! $product instanceof DebtProduct) {
             return $this->errored('Product not found, maybe closed.');
         }
         $this->authorize('view', $product);
@@ -88,7 +88,7 @@ class LoanGuarantorController extends Controller
             $guarantor = $product->guarantors()->whereHas('client', function (Builder $query) use ($request) {
                 return ClientService::search($query, $request->validated('message_to'));
             })->with('client')->first();
-            if (!$guarantor?->client instanceof Client) {
+            if (! $guarantor?->client instanceof Client) {
                 throw ValidationException::withMessages(['message_to' => 'phone number maybe invalid']);
             }
 
@@ -103,6 +103,7 @@ class LoanGuarantorController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error sending sms to guarantor ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -112,7 +113,7 @@ class LoanGuarantorController extends Controller
     public function emailAll(GuarantorEmailRequest $request, string $product_id): JsonResponse
     {
         $product = DebtProduct::query()->where('AccountID', $product_id)->oldest('processDate')->first();
-        if (!$product instanceof DebtProduct) {
+        if (! $product instanceof DebtProduct) {
             return $this->errored('Product not found, maybe closed.');
         }
         $this->authorize('view', $product);
@@ -123,7 +124,7 @@ class LoanGuarantorController extends Controller
     public function email(MailToRequest $request, string $product_id): JsonResponse
     {
         $product = DebtProduct::query()->where('AccountID', $product_id)->oldest('processDate')->first();
-        if (!$product instanceof DebtProduct) {
+        if (! $product instanceof DebtProduct) {
             return $this->errored('Product not found, maybe closed.');
         }
         $this->authorize('view', $product);
@@ -131,7 +132,7 @@ class LoanGuarantorController extends Controller
         $guarantor = $product->guarantors()->whereHas('client', function (Builder $query) use ($request) {
             $query->where('Email', $request->validated('mail_to'));
         })->with('client')->first();
-        if (!$guarantor?->client instanceof Client) {
+        if (! $guarantor?->client instanceof Client) {
             throw ValidationException::withMessages(['mail_to' => 'email maybe invalid']);
         }
 
@@ -148,8 +149,10 @@ class LoanGuarantorController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error sending email to guarantor ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
+
         return $this->succeeded('sending email(s)', data: ['activities' => $activities]);
     }
 }

@@ -18,8 +18,11 @@ use SensitiveParameter;
 class CSSMSService
 {
     protected Client $client;
-    protected string $priority, $messageType, $sender_id;
-    protected string $username, $password;
+    protected string $priority;
+    protected string $messageType;
+    protected string $sender_id;
+    protected string $username;
+    protected string $password;
 
     /**
      * @throws ErroredException
@@ -27,7 +30,7 @@ class CSSMSService
     public function __construct()
     {
         $cred = APICredential::query()->where('Integration', IntegrationsEnum::SMS->value)->latest('Id')->first();
-        if (!$cred instanceof APICredential) {
+        if (! $cred instanceof APICredential) {
             throw new ErroredException('no sms configuration');
         }
         $this->client = self::_getClient();
@@ -62,9 +65,11 @@ class CSSMSService
             ]);
 
             $json_response = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+
             return is_array($json_response) && array_key_exists('ResponseCode', $json_response) && $json_response['ResponseCode'] === '000';
-        } catch (GuzzleException|JsonException|Exception|ErroredException) {
+        } catch (GuzzleException | JsonException | Exception | ErroredException) {
         }
+
         return false;
     }
 
@@ -74,17 +79,19 @@ class CSSMSService
     protected static function formatKenyaCode(string $phone_number): string
     {
         if (strlen((int)$phone_number) === 9) {
-            if (!$phone_number) {
+            if (! $phone_number) {
                 throw new ErroredException("Invalid phone number given ! ");
             }
+
             return "254" . ltrim($phone_number, 0);
         }
 
         if (strlen($phone_number) === 10) {
             $number = substr($phone_number, -9);
-            if (!$number) {
+            if (! $number) {
                 throw new ErroredException("Invalid phone number given ! ");
             }
+
             return "254" . ltrim($number, 0);
         }
 
@@ -126,10 +133,11 @@ class CSSMSService
                 $reason .= array_key_exists('Msisdn', $json_response) ? $json_response['Msisdn'] : '';
 
                 Log::error('Sending sms (' . '$sms->Id' . ') Failed : ' . $reason);
+
                 return false;
             }
-            //{"ExternalReference":"1","Msisdn":"+254718319224","ResponseCode":"000","ResponseDescription":"MESSAGE DELIVERED"}
             Log::error('Sending sms (' . '$sms->Id' . ') Failed : unknown reason');
+
             return false;
         } catch (GuzzleException  $exception) {
             Log::error('Guzzle cs sms error' . $exception->getMessage());
@@ -138,6 +146,7 @@ class CSSMSService
         } catch (ErroredException $e) {
             Log::error('Phone number issue cs error' . $e->getMessage());
         }
+
         return false;
     }
 }

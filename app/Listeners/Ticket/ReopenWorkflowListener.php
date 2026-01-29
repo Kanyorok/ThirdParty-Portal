@@ -22,7 +22,6 @@ class ReopenWorkflowListener implements ShouldQueue
      */
     public function __construct()
     {
-        //
     }
 
     /**
@@ -36,7 +35,7 @@ class ReopenWorkflowListener implements ShouldQueue
             ->get(["Id", "UserID", "Name", "Email"]);
         DB::transaction(function () use ($users, $event) {
             foreach ($users as $user) {
-                if (!$user instanceof User) {
+                if (! $user instanceof User) {
                     continue;
                 }
 

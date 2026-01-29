@@ -30,10 +30,11 @@ class LoanAssignmentController extends Controller
     public function index(string $product_id): JsonResponse
     {
         $loan = DebtProduct::query()->where('AccountID', $product_id)->latest('processDate')->first();
-        if (!$loan instanceof DebtProduct) {
+        if (! $loan instanceof DebtProduct) {
             return $this->errored('Loan not found, maybe closed.');
         }
         $this->authorize('view', $loan);
+
         try {
             return Datatables::of($loan->assignment()->with(['user', 'creator']))->addIndexColumn()
                 ->editColumn('user', function (LoanAssignment $assignment) {
@@ -42,6 +43,7 @@ class LoanAssignmentController extends Controller
                     if ($assignment->EndOn instanceof Carbon) {
                         return $assignment->EndOn?->format('F d, Y h:i A');
                     }
+
                     return 'Current';
                 })->editColumn('StartOn', function (LoanAssignment $assignment) {
                     return ' <details><summary>' . $assignment->StartOn?->format('F d, Y h:i A') . '</summary>
@@ -53,6 +55,7 @@ class LoanAssignmentController extends Controller
             Log::error('Error getting assignment history failed: ');
             Log::error($e);
         }
+
         return $this->errored('unexpected error, try again later');
     }
 
@@ -62,12 +65,13 @@ class LoanAssignmentController extends Controller
     public function store(LoanAssignmentRequest $request, string $product_id): JsonResponse
     {
         $loan = DebtProduct::query()->where('AccountID', $product_id)->latest('processDate')->first();
-        if (!$loan instanceof DebtProduct) {
+        if (! $loan instanceof DebtProduct) {
             return $this->errored('Loan not found, maybe closed.');
         }
         $this->authorize('assign', $loan);
         $assignee = $request->getAssignee();
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($actor, $loan, $assignee) {
                 (new LoanService($loan))->assign($assignee, $actor);
@@ -76,6 +80,7 @@ class LoanAssignmentController extends Controller
             return $e->toJson();
         } catch (Throwable | Exception $e) {
             Log::error('Error  re assigned loan failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

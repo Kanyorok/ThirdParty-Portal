@@ -16,7 +16,7 @@ class CanAction
     public function handle(Request $request, Closure $next, string $param1, string $param2 = null)
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             abort(401);
         }
 
@@ -44,7 +44,7 @@ class CanAction
 
         // Normalize action synonyms handled by resolver
         $allowed = PermissionResolver::can($user, $submodule, $action);
-        if (!$allowed) {
+        if (! $allowed) {
             abort(403);
         }
 

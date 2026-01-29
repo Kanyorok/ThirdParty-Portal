@@ -17,17 +17,17 @@ class BoardUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'BoardMemberPhone'  => [
+                'BoardMemberPhone' => [
                                         'nullable',
                                         'string',
                                         'max:200',
                                        ],
-                'BoardMemberEmail'  => [
+                'BoardMemberEmail' => [
                                         'required',
                                         'email:dns',
                                         'max:200',
                                        ],
-                'BoardCommittees'   => [
+                'BoardCommittees' => [
                                         'required',
                                         'array',
                                         'min:1',
@@ -37,12 +37,12 @@ class BoardUpdateRequest extends FormRequest
                                         'required',
                                         Rule::exists('t_Committees', 'CommitteeID'),
                                        ],
-                'BoardMemberRole'   => [
+                'BoardMemberRole' => [
                                         'nullable',
                                         'string',
                                         'max:200',
                                        ],
-                'BoardMemberNotes'  => [
+                'BoardMemberNotes' => [
                                         'nullable',
                                         'string',
                                         'max:2000',

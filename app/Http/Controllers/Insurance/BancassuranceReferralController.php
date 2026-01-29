@@ -6,8 +6,8 @@ use App\Enums\Core\PermissionEnum;
 use App\Enums\Insurance\InsuranceReferralStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\BancAssuranceReferralRequest;
-use App\Models\Core\Branch;
 use App\Models\Auth\User;
+use App\Models\Core\Branch;
 use App\Models\HRM\Employee;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancAssuranceReferral;
@@ -19,44 +19,45 @@ use Illuminate\Http\Request;
 
 class BancassuranceReferralController extends Controller
 {
+    public function index()
+    {
+        $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
+        $referrals = BancAssuranceReferral::orderByDesc('Id')->get();
 
-public function index()
-{
-    $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
-    $referrals = BancAssuranceReferral::orderByDesc('Id')->get();
-    return view('bancassurance.referrals.index', compact('referrals'));
-}
-public function create()
-{
-    $this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
-    $Clients = BancassuranceCustomer::all();
-    $insurers = InsuranceProvider::all();
-    $users = User::with('employee')->get();
-    return view('bancassurance.referrals.create', compact('users', 'insurers', 'Clients'));
-}
+        return view('bancassurance.referrals.index', compact('referrals'));
+    }
 
+    public function create()
+    {
+        $this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
+        $Clients = BancassuranceCustomer::all();
+        $insurers = InsuranceProvider::all();
+        $users = User::with('employee')->get();
 
-public function getProductsByInsurer($insurerId)
-{
-    $products = InsuranceProduct::where('InsuranceProviderID', $insurerId)->get();
-    return response()->json($products);
-}
+        return view('bancassurance.referrals.create', compact('users', 'insurers', 'Clients'));
+    }
 
+    public function getProductsByInsurer($insurerId)
+    {
+        $products = InsuranceProduct::where('InsuranceProviderID', $insurerId)->get();
 
-public function store(BancAssuranceReferralRequest $request)
-{
-    $this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
-    $user = auth()->user();
-    $validated = $request->validated();
+        return response()->json($products);
+    }
+
+    public function store(BancAssuranceReferralRequest $request)
+    {
+        $this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
+        $user = auth()->user();
+        $validated = $request->validated();
 
         // Handle nullable relationships safely
         $ClientId = BancassuranceCustomer::findOrFail($validated['ClientId']);
 
-        $ReferredBy = !empty($validated['ReferredBy']) ? User::findOrFail($validated['ReferredBy']) : $user;
+        $ReferredBy = ! empty($validated['ReferredBy']) ? User::findOrFail($validated['ReferredBy']) : $user;
 
-        $AssignedTo = !empty($validated['AssignedTo']) ? User::findOrFail($validated['AssignedTo']) : null;
+        $AssignedTo = ! empty($validated['AssignedTo']) ? User::findOrFail($validated['AssignedTo']) : null;
 
-        $InsuranceProductId = !empty($validated['InsuranceProductId']) ? InsuranceProduct::findOrFail($validated['InsuranceProductId']) : null;
+        $InsuranceProductId = ! empty($validated['InsuranceProductId']) ? InsuranceProduct::findOrFail($validated['InsuranceProductId']) : null;
 
         $PreferredInsurerId = InsuranceProvider::findOrFail($validated['PreferredInsurerId']);
 
@@ -82,43 +83,42 @@ public function store(BancAssuranceReferralRequest $request)
             ->with('success', 'Referral submitted!');
     }
 
-public function edit($Id)
-{
-    $this->authorize(
-        PermissionEnum::BancassuranceReferralUpdate,
-        BancAssuranceReferral::class
-    );
+    public function edit($Id)
+    {
+        $this->authorize(
+            PermissionEnum::BancassuranceReferralUpdate,
+            BancAssuranceReferral::class
+        );
 
-    $referral = BancAssuranceReferral::with([
-        'customerreferral.thirdParty'
-    ])->findOrFail($Id);
+        $referral = BancAssuranceReferral::with([
+            'customerreferral.thirdParty',
+        ])->findOrFail($Id);
 
-    $Clients  = BancAssuranceCustomer::with('thirdParty')->get();
-    $insurers = InsuranceProvider::all();
-    $users    = User::with('employee')->get();
+        $Clients = BancAssuranceCustomer::with('thirdParty')->get();
+        $insurers = InsuranceProvider::all();
+        $users = User::with('employee')->get();
 
-    return view(
-        'bancassurance.referrals.edit',
-        compact('referral', 'Clients', 'insurers', 'users')
-    );
-}
+        return view(
+            'bancassurance.referrals.edit',
+            compact('referral', 'Clients', 'insurers', 'users')
+        );
+    }
 
-
-public function update(BancAssuranceReferralRequest $request, $Id)
-{  
-    $this->authorize(PermissionEnum::BancassuranceReferralUpdate, BancAssuranceReferral::class);
-    $user = auth()->user();
-    $validated = $request->validated();
+    public function update(BancAssuranceReferralRequest $request, $Id)
+    {
+        $this->authorize(PermissionEnum::BancassuranceReferralUpdate, BancAssuranceReferral::class);
+        $user = auth()->user();
+        $validated = $request->validated();
 
         $referral = BancAssuranceReferral::where('Id', $Id)->firstOrFail();
 
         $ClientId = BancassuranceCustomer::findOrFail($validated['ClientId']);
 
-        $ReferredBy = !empty($validated['ReferredBy']) ? User::findOrFail($validated['ReferredBy']) : $user;
+        $ReferredBy = ! empty($validated['ReferredBy']) ? User::findOrFail($validated['ReferredBy']) : $user;
 
-        $AssignedTo = !empty($validated['AssignedTo']) ? User::findOrFail($validated['AssignedTo']) : null;
+        $AssignedTo = ! empty($validated['AssignedTo']) ? User::findOrFail($validated['AssignedTo']) : null;
 
-        $InsuranceProductId = !empty($validated['InsuranceProductId']) ? InsuranceProduct::findOrFail($validated['InsuranceProductId']) : null;
+        $InsuranceProductId = ! empty($validated['InsuranceProductId']) ? InsuranceProduct::findOrFail($validated['InsuranceProductId']) : null;
 
         $PreferredInsurerId = InsuranceProvider::findOrFail($validated['PreferredInsurerId']);
 
@@ -145,20 +145,21 @@ public function update(BancAssuranceReferralRequest $request, $Id)
             ->with('success', 'Referral updated successfully!');
     }
 
-public function show($Id)
-{
-    $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
-    $referral = BancAssuranceReferral::with('employee')->findOrFail($Id);
-    return view('bancassurance.referrals.show', compact('referral'));
-}
+    public function show($Id)
+    {
+        $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
+        $referral = BancAssuranceReferral::with('employee')->findOrFail($Id);
 
-public function assignList()
-{
-    $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
-    $referrals = BancAssuranceReferral::with('insuranceProduct')
-        ->whereNull('AssignedTo')
-        ->where('Status',InsuranceReferralStatus::Pending->value) // Assuming 'P' stands for 'Pending'
-        ->orderByDesc('Id')->get();
+        return view('bancassurance.referrals.show', compact('referral'));
+    }
+
+    public function assignList()
+    {
+        $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
+        $referrals = BancAssuranceReferral::with('insuranceProduct')
+            ->whereNull('AssignedTo')
+            ->where('Status', InsuranceReferralStatus::Pending->value) // Assuming 'P' stands for 'Pending'
+            ->orderByDesc('Id')->get();
 
         $employees = Employee::whereNull('DeletedOn')
             ->select('Id', 'FirstName', 'LastName')
@@ -167,13 +168,12 @@ public function assignList()
         return view('bancassurance.referrals.assign', compact('referrals', 'employees'));
     }
 
-
-public function assign(Request $request, $Id)
-{
-    $this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
-    $request->validate([
-        'AssignedTo' => 'required|exists:t_Employees,Id',
-    ]);
+    public function assign(Request $request, $Id)
+    {
+        $this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
+        $request->validate([
+            'AssignedTo' => 'required|exists:t_Employees,Id',
+        ]);
 
         $referral = BancAssuranceReferral::findOrFail($Id);
 
@@ -187,10 +187,10 @@ public function assign(Request $request, $Id)
         return redirect()->back()->with('success', 'Referral assigned successfully.');
     }
 
-public function performanceView()
-{
-    $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
-    $referrals = BancAssuranceReferral::with(['referredByEmployee.employee.branch'])->get();
+    public function performanceView()
+    {
+        $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
+        $referrals = BancAssuranceReferral::with(['referredByEmployee.employee.branch'])->get();
 
         $grouped = $referrals->groupBy(function ($referral) {
             return $referral->referredByEmployee?->Id ?? 'Unknown';
@@ -200,7 +200,6 @@ public function performanceView()
             $employee = $items->first()->referredByEmployee->employee;
             $branch = $employee?->branch;
 
-           // dd($employee, $branch);
 
             return [
                 'StaffName' => $employee ? $employee->FirstName . ' ' . $employee->LastName : 'Unknown',
@@ -214,23 +213,22 @@ public function performanceView()
         return view('bancassurance.referrals.performance', ['performance' => $performance]);
     }
 
-Public function destroy($Id)
-{
-    $this->authorize(PermissionEnum::BancassuranceReferralDelete, BancAssuranceReferral::class);
-    $referral = BancAssuranceReferral::findOrFail($Id);
+    public function destroy($Id)
+    {
+        $this->authorize(PermissionEnum::BancassuranceReferralDelete, BancAssuranceReferral::class);
+        $referral = BancAssuranceReferral::findOrFail($Id);
 
-    if ($referral->customerreferral()->exists()) {
-        return redirect()->back()
-        ->withErrors(['error' => 'This referral is in use and cannot be deleted.']);
-    }  
-    $referral->DeletedBy = Auth()->Id();
-    $referral->save();
-    $referral->delete();
+        if ($referral->customerreferral()->exists()) {
+            return redirect()->back()
+            ->withErrors(['error' => 'This referral is in use and cannot be deleted.']);
+        }
+        $referral->DeletedBy = Auth()->Id();
+        $referral->save();
+        $referral->delete();
 
         activity()->causedBy(auth()->user()->Id)->performedOn($referral)
             ->event('delete')->log("Deleted Bank Assurance Referral {$referral->Id}.");
 
         return redirect()->route('bancassurance.referrals.index')->with('success', 'Referral deleted successfully!');
-
     }
 }

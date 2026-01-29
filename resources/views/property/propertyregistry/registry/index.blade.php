@@ -37,9 +37,15 @@
             <small>This screen displays a list of all registered properties.</small>
         </div>
 
-        <a href="{{ route('PropertyRegistry.create') }}" class="btn btn-primary shadow-sm">
-            <i class="bi bi-plus-circle me-1"></i> Add Property
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('PropertyRegistry.bulkCreate') }}" class="btn btn-outline-primary shadow-sm">
+                <i class="bi bi-upload me-1"></i> Bulk Upload Properties
+            </a>
+
+            <a href="{{ route('PropertyRegistry.create') }}" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i> Add Property
+            </a>
+        </div>
     </div>
 
     @if($properties->count())

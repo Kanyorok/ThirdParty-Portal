@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\TenderStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\Tender;
-use App\Enums\TenderStatusEnum;
 use App\Services\Procurement\EncryptedBidDocumentService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -20,9 +19,9 @@ class TenderOpeningController extends Controller
     public function index()
     {
         // Get tenders ready for opening based on opening date
-        $tenders = Tender::whereHas('submissions', function($query) {
-                $query->where('BidStatus', 'submitted');
-            })
+        $tenders = Tender::whereHas('submissions', function ($query) {
+            $query->where('BidStatus', 'submitted');
+        })
             ->where('OpeningDate', '<=', now()) // Only tenders where opening date has passed
             ->where('SubmissionDeadline', '<=', now()) // Ensure submission deadline has also passed
             ->where('Status', '!=', \App\Enums\TenderStatusEnum::Draft->value)
@@ -31,8 +30,9 @@ class TenderOpeningController extends Controller
             ->select('Id', 'TenderNo', 'Title', 'Status', 'OpeningDate', 'SubmissionDeadline')
             ->orderBy('OpeningDate', 'desc')
             ->get();
-        
+
         $data = false;
+
         return view('procurement.tendering.bidopeningandevaluation.opening.index', compact('tenders', 'data'));
     }
 
@@ -49,7 +49,6 @@ class TenderOpeningController extends Controller
      */
     public function store(Request $request)
     {
-        //
     }
 
     /**
@@ -61,7 +60,7 @@ class TenderOpeningController extends Controller
         $tender = Tender::where('TenderNo', $id)
             ->select('Id', 'TenderNo', 'Title', 'Status', 'OpeningDate', 'SubmissionDeadline')
             ->firstOrFail();
-        
+
         // Check if tender is ready for opening
         if ($tender->OpeningDate > now()) {
             return redirect()->back()->with('error', 'Tender opening ceremony cannot start before the scheduled opening date: ' . $tender->OpeningDate->format('d/m/Y H:i'));
@@ -79,13 +78,14 @@ class TenderOpeningController extends Controller
                 $submission->status_badge = $this->getStatusBadge($submission);
                 $submission->has_bid_security = $this->checkBidSecurity($encryptedDocs);
                 $submission->submission_timely = $submission->ReceivedAt <= $submission->BidOpeningDate;
+
                 return $submission;
             });
 
         // Get other tenders for dropdown
-        $tenders = Tender::whereHas('submissions', function($query) {
-                $query->where('BidStatus', 'submitted');
-            })
+        $tenders = Tender::whereHas('submissions', function ($query) {
+            $query->where('BidStatus', 'submitted');
+        })
             ->where('OpeningDate', '<=', now())
             ->where('SubmissionDeadline', '<=', now())
             ->where('Status', '!=', \App\Enums\TenderStatusEnum::Draft->value)
@@ -94,17 +94,19 @@ class TenderOpeningController extends Controller
             ->select('Id', 'TenderNo', 'Title', 'Status', 'OpeningDate')
             ->orderBy('OpeningDate', 'desc')
             ->get();
-            
+
         // Determine ceremony status
         $ceremonyStatus = $this->getCeremonyStatus($submissions);
         $data = true;
-        
-        return view('procurement.tendering.bidopeningandevaluation.opening.index', 
-            compact('tender', 'tenders', 'submissions', 'data', 'ceremonyStatus'));
+
+        return view(
+            'procurement.tendering.bidopeningandevaluation.opening.index',
+            compact('tender', 'tenders', 'submissions', 'data', 'ceremonyStatus')
+        );
     }
 
     /**
-     * Initialize PUBLIC/RECORDED bid opening ceremony 
+     * Initialize PUBLIC/RECORDED bid opening ceremony
      */
     public function startCeremony(Request $request)
     {
@@ -116,7 +118,7 @@ class TenderOpeningController extends Controller
         ]);
 
         $tender = Tender::where('TenderNo', $request->tender_ref)->firstOrFail();
-        
+
         // Validate ceremony can be started
         if ($tender->OpeningDate > now()) {
             return redirect()->back()->with('error', 'Cannot start ceremony before scheduled opening date.');
@@ -133,7 +135,7 @@ class TenderOpeningController extends Controller
 
         try {
             DB::beginTransaction();
-            
+
             // Initialize ceremony (but don't open bids yet - that will be done individually)
             $tender->update([
                 'OpeningDate' => now(), // Mark ceremony as started
@@ -151,21 +153,22 @@ class TenderOpeningController extends Controller
                     'ceremony_type' => $request->opening_type,
                     'officers_present' => $request->officers_present,
                     'ceremony_notes' => $request->ceremony_notes,
-                    'total_bids' => $submissions->count()
+                    'total_bids' => $submissions->count(),
                 ])
                 ->log("OPENING CEREMONY INITIALIZED: {$tender->TenderNo} - {$request->opening_type} ceremony with {$submissions->count()} bids");
 
             DB::commit();
 
-            return redirect()->back()->with('success', 
-                "🎉 Opening ceremony initialized! You can now open individual bids one by one.");
-
+            return redirect()->back()->with(
+                'success',
+                "🎉 Opening ceremony initialized! You can now open individual bids one by one."
+            );
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error initializing opening ceremony', [
                 'tender_ref' => $request->tender_ref,
                 'user_id' => $request->user()->Id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()->back()->with('error', 'Failed to initialize ceremony: ' . $e->getMessage());
@@ -179,12 +182,12 @@ class TenderOpeningController extends Controller
     {
         try {
             $submission = BidSubmission::with(['supplier.thirdParty', 'tender'])->findOrFail($submissionId);
-            
+
             // Validate ceremony is in progress
-            if (!$submission->tender || !$submission->tender->OpeningDate || $submission->tender->OpeningDate > now()) {
+            if (! $submission->tender || ! $submission->tender->OpeningDate || $submission->tender->OpeningDate > now()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Opening ceremony has not been started for this tender.'
+                    'message' => 'Opening ceremony has not been started for this tender.',
                 ], 400);
             }
 
@@ -192,7 +195,7 @@ class TenderOpeningController extends Controller
             if ($submission->OpenedAt) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'This bid has already been opened.'
+                    'message' => 'This bid has already been opened.',
                 ], 400);
             }
 
@@ -200,15 +203,15 @@ class TenderOpeningController extends Controller
 
             // READ OUT BID BASICS (Public/Recorded Opening)
             $bidDetails = $this->readOutBidBasics($submission);
-            
+
             // Get ceremony details from tender's activity log or session
             $ceremonyDetails = [
                 'ceremony_type' => 'public', // You might want to store this in tender or get from session
                 'read_out_summary' => $bidDetails['read_out_summary'],
                 'bid_security_present' => $bidDetails['has_bid_security'],
-                'received_on_time' => $bidDetails['received_on_time'] === 'YES'
+                'received_on_time' => $bidDetails['received_on_time'] === 'YES',
             ];
-            
+
             // Mark bid as opened
             $submission->markAsOpened($request->user(), $ceremonyDetails);
 
@@ -219,7 +222,7 @@ class TenderOpeningController extends Controller
                 ->withProperties([
                     'action' => 'individual_bid_opening',
                     'bid_details' => $bidDetails,
-                    'opened_at' => now()
+                    'opened_at' => now(),
                 ])
                 ->log("BID OPENED: {$submission->SupplierName} - {$bidDetails['read_out_summary']}");
 
@@ -233,21 +236,20 @@ class TenderOpeningController extends Controller
                     'supplier_name' => $submission->SupplierName,
                     'read_out_summary' => $bidDetails['read_out_summary'],
                     'bid_details' => $bidDetails,
-                    'opened_at' => $submission->fresh()->OpenedAt->format('d/m/Y H:i:s')
-                ]
+                    'opened_at' => $submission->fresh()->OpenedAt->format('d/m/Y H:i:s'),
+                ],
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error opening individual bid', [
                 'submission_id' => $submissionId,
                 'user_id' => $request->user()->Id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to open bid: ' . $e->getMessage()
+                'message' => 'Failed to open bid: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -261,10 +263,10 @@ class TenderOpeningController extends Controller
             $submission = BidSubmission::with(['supplier.thirdParty', 'tender', 'openedByUser'])
                 ->findOrFail($submissionId);
 
-            if (!$submission->OpenedAt) {
+            if (! $submission->OpenedAt) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Bid is still sealed and cannot be viewed.'
+                    'message' => 'Bid is still sealed and cannot be viewed.',
                 ], 403);
             }
 
@@ -272,13 +274,13 @@ class TenderOpeningController extends Controller
 
             // Prepare DMS lookup for new-format docs that contain document_id
             $docIds = collect($encryptedDocs)
-                ->map(fn($d) => $d['document_id'] ?? null)
+                ->map(fn ($d) => $d['document_id'] ?? null)
                 ->filter()
                 ->values()
                 ->all();
 
             $dmsDocs = [];
-            if (!empty($docIds)) {
+            if (! empty($docIds)) {
                 $dmsDocs = \App\Models\DMS\Document::whereIn('DocumentId', $docIds)
                     ->with('current')
                     ->get()
@@ -290,7 +292,7 @@ class TenderOpeningController extends Controller
                     'id' => $submission->Id,
                     'supplier_name' => $submission->SupplierName,
                     'tender_ref' => $submission->TenderRef,
-                    'tender_title' => $submission->tender->Title ?? 'N/A'
+                    'tender_title' => $submission->tender->Title ?? 'N/A',
                 ],
                 'bid_details' => [
                     'bid_amount' => $submission->BidAmount,
@@ -298,47 +300,47 @@ class TenderOpeningController extends Controller
                     'validity_period' => $submission->ValidityPeriod . ' days',
                     'delivery_period' => $submission->DeliveryPeriod . ' days',
                     'payment_terms' => $submission->PaymentTerms,
-                    'bid_status' => $submission->BidStatus
+                    'bid_status' => $submission->BidStatus,
                 ],
                 'submission_details' => [
                     'received_at' => $submission->ReceivedAt->format('d/m/Y H:i:s'),
                     'submission_source' => ucfirst($submission->SubmissionSource),
                     'document_count' => count($encryptedDocs),
                     'bid_security_present' => $submission->BidSecurityPresent,
-                    'received_on_time' => $submission->ReceivedOnTime
+                    'received_on_time' => $submission->ReceivedOnTime,
                 ],
                 'opening_details' => [
                     'opened_at' => $submission->OpenedAt->format('d/m/Y H:i:s'),
                     'opened_by' => $submission->openedByUser->Name ?? 'Unknown',
                     'ceremony_type' => ucfirst($submission->CeremonyType ?? 'Unknown'),
-                    'read_out_summary' => $submission->ReadOutSummary
+                    'read_out_summary' => $submission->ReadOutSummary,
                 ],
-                'documents' => array_map(function($doc) use ($dmsDocs) {
+                'documents' => array_map(function ($doc) use ($dmsDocs) {
                     $documentId = $doc['document_id'] ?? null;
                     $linked = $documentId && isset($dmsDocs[$documentId]) ? $dmsDocs[$documentId] : null;
                     $name = $linked?->Name
                         ?? ($doc['original_name'] ?? ($doc['original_filename'] ?? 'Unknown'));
                     $sizeBytes = $linked?->current?->Size ?? ($doc['file_size'] ?? null);
                     $uploadedAtVal = $linked?->getAttribute('CreatedOn');
+
                     return [
                         'filename' => $name,
                         'size' => $sizeBytes !== null ? $this->formatFileSize($sizeBytes) : 'N/A',
                         'uploaded_at' => ($uploadedAtVal instanceof \Carbon\Carbon)
                             ? $uploadedAtVal->format('d/m/Y H:i:s')
-                            : ($uploadedAtVal ?: ($doc['uploaded_at'] ?? null))
+                            : ($uploadedAtVal ?: ($doc['uploaded_at'] ?? null)),
                     ];
-                }, $encryptedDocs)
+                }, $encryptedDocs),
             ];
 
             return response()->json([
                 'success' => true,
-                'data' => $bidDetails
+                'data' => $bidDetails,
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to load bid details: ' . $e->getMessage()
+                'message' => 'Failed to load bid details: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -351,23 +353,23 @@ class TenderOpeningController extends Controller
         try {
             $submission = BidSubmission::with(['tender', 'openedByUser'])->findOrFail($submissionId);
 
-            if (!$submission->OpenedAt) {
+            if (! $submission->OpenedAt) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Bid is still sealed. No read-out available.'
+                    'message' => 'Bid is still sealed. No read-out available.',
                 ], 403);
             }
 
             $readOutData = [
                 'tender_info' => [
                     'tender_no' => $submission->TenderRef,
-                    'tender_title' => $submission->tender->Title ?? 'N/A'
+                    'tender_title' => $submission->tender->Title ?? 'N/A',
                 ],
                 'ceremony_info' => [
                     'opened_at' => $submission->OpenedAt->format('d/m/Y H:i:s'),
                     'opened_by' => $submission->openedByUser->Name ?? 'Unknown',
                     'ceremony_type' => ucfirst($submission->CeremonyType ?? 'Public'),
-                    'officers_present' => $submission->OfficersPresent
+                    'officers_present' => $submission->OfficersPresent,
                 ],
                 'public_read_out' => $submission->ReadOutSummary,
                 'read_out_components' => [
@@ -377,19 +379,18 @@ class TenderOpeningController extends Controller
                     'delivery_period' => $submission->DeliveryPeriod . ' days',
                     'bid_security' => $submission->BidSecurityPresent ? 'Present' : 'Not Found',
                     'received_status' => $submission->ReceivedOnTime ? 'On Time' : 'Late',
-                    'document_count' => count(json_decode($submission->EncryptedDocuments, true) ?? []) . ' files'
-                ]
+                    'document_count' => count(json_decode($submission->EncryptedDocuments, true) ?? []) . ' files',
+                ],
             ];
 
             return response()->json([
                 'success' => true,
-                'data' => $readOutData
+                'data' => $readOutData,
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to load read-out summary: ' . $e->getMessage()
+                'message' => 'Failed to load read-out summary: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -402,14 +403,14 @@ class TenderOpeningController extends Controller
         try {
             $tender = Tender::where('TenderNo', $tenderRef)->firstOrFail();
             $submissions = BidSubmission::where('TenderRef', $tenderRef)->get();
-            
+
             $openedCount = $submissions->whereNotNull('OpenedAt')->count();
             $totalCount = $submissions->count();
-            
+
             if ($openedCount < $totalCount) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Cannot complete ceremony. {$openedCount} of {$totalCount} bids have been opened. Please open all bids first."
+                    'message' => "Cannot complete ceremony. {$openedCount} of {$totalCount} bids have been opened. Please open all bids first.",
                 ], 400);
             }
 
@@ -427,7 +428,7 @@ class TenderOpeningController extends Controller
                 ->withProperties([
                     'action' => 'ceremony_completed',
                     'total_bids_opened' => $openedCount,
-                    'completed_at' => now()
+                    'completed_at' => now(),
                 ])
                 ->log("OPENING CEREMONY COMPLETED: {$tender->TenderNo} - All {$openedCount} bids opened");
 
@@ -437,14 +438,13 @@ class TenderOpeningController extends Controller
                 'data' => [
                     'tender_ref' => $tenderRef,
                     'opened_bids' => $openedCount,
-                    'completed_at' => now()->format('d/m/Y H:i:s')
-                ]
+                    'completed_at' => now()->format('d/m/Y H:i:s'),
+                ],
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to complete ceremony: ' . $e->getMessage()
+                'message' => 'Failed to complete ceremony: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -457,7 +457,7 @@ class TenderOpeningController extends Controller
         try {
             $submission = BidSubmission::findOrFail($submissionId);
 
-            if (!$submission->canAccessDocuments()) {
+            if (! $submission->canAccessDocuments()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Documents are sealed until bid opening ceremony starts.',
@@ -479,7 +479,6 @@ class TenderOpeningController extends Controller
                     'ceremony_started' => $submission->isBidOpeningCeremonyStarted(),
                 ],
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error accessing bid documents', [
                 'submission_id' => $submissionId,
@@ -502,7 +501,7 @@ class TenderOpeningController extends Controller
         try {
             $submission = BidSubmission::findOrFail($submissionId);
 
-            if (!$submission->canAccessDocuments()) {
+            if (! $submission->canAccessDocuments()) {
                 abort(403, 'Documents are sealed until bid opening ceremony starts.');
             }
 
@@ -511,7 +510,7 @@ class TenderOpeningController extends Controller
                 $request->user()
             );
 
-            if (!isset($decryptedDocs[$documentIndex])) {
+            if (! isset($decryptedDocs[$documentIndex])) {
                 abort(404, 'Document not found.');
             }
 
@@ -521,7 +520,6 @@ class TenderOpeningController extends Controller
                 ->header('Content-Type', $document['mime_type'])
                 ->header('Content-Disposition', 'attachment; filename="' . $document['name'] . '"')
                 ->header('Content-Length', $document['size']);
-
         } catch (\Exception $e) {
             Log::error('Error downloading bid document', [
                 'submission_id' => $submissionId,
@@ -541,7 +539,7 @@ class TenderOpeningController extends Controller
     private function readOutBidBasics($bid): array
     {
         $encryptedDocs = json_decode($bid->EncryptedDocuments, true) ?? [];
-        
+
         $bidDetails = [
             'supplier_name' => $bid->SupplierName,
             'bid_amount' => $bid->BidAmount,
@@ -553,24 +551,24 @@ class TenderOpeningController extends Controller
             'has_bid_security' => $this->checkBidSecurity($encryptedDocs),
             'envelope_sealed' => true, // Always true at opening
             'received_on_time' => $bid->ReceivedAt <= $bid->BidOpeningDate ? 'YES' : 'NO',
-            'submission_method' => $bid->SubmissionSource === 'portal' ? 'Online Portal' : 'Manual Submission'
+            'submission_method' => $bid->SubmissionSource === 'portal' ? 'Online Portal' : 'Manual Submission',
         ];
-        
+
         // Create read-out summary for public announcement
         $readOutSummary = "Bidder: {$bidDetails['supplier_name']}, ";
-        
+
         // Only include price if allowed (you can make this configurable)
         if ($this->isPriceDisclosureAllowed($bid)) {
             $readOutSummary .= "Amount: {$bidDetails['currency']} " . number_format($bidDetails['bid_amount'], 2) . ", ";
         }
-        
+
         $readOutSummary .= "Documents: {$bidDetails['document_count']} files, ";
         $readOutSummary .= "Bid Security: " . ($bidDetails['has_bid_security'] ? 'Present' : 'Not Found') . ", ";
         $readOutSummary .= "Received: {$bidDetails['received_on_time']} (on time), ";
         $readOutSummary .= "Envelope: Sealed";
-        
+
         $bidDetails['read_out_summary'] = $readOutSummary;
-        
+
         return $bidDetails;
     }
 
@@ -581,12 +579,15 @@ class TenderOpeningController extends Controller
     {
         foreach ($encryptedDocs as $doc) {
             $filename = strtolower($doc['original_filename'] ?? '');
-            if (str_contains($filename, 'security') || 
-                str_contains($filename, 'bond') || 
-                str_contains($filename, 'guarantee')) {
+            if (
+                str_contains($filename, 'security') ||
+                str_contains($filename, 'bond') ||
+                str_contains($filename, 'guarantee')
+            ) {
                 return true;
             }
         }
+
         return false;
     }
 
@@ -609,9 +610,9 @@ class TenderOpeningController extends Controller
         $bytes = max($bytes, 0);
         $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
         $pow = min($pow, count($units) - 1);
-        
+
         $bytes /= pow(1024, $pow);
-        
+
         return round($bytes, 2) . ' ' . $units[$pow];
     }
 
@@ -631,7 +632,7 @@ class TenderOpeningController extends Controller
                 'can_start' => false,
                 'submitted_count' => $submittedCount,
                 'opened_count' => $openedCount,
-                'total_count' => $totalCount
+                'total_count' => $totalCount,
             ];
         }
 
@@ -642,7 +643,7 @@ class TenderOpeningController extends Controller
                 'can_start' => true,
                 'submitted_count' => $submittedCount,
                 'opened_count' => $openedCount,
-                'total_count' => $totalCount
+                'total_count' => $totalCount,
             ];
         }
 
@@ -653,7 +654,7 @@ class TenderOpeningController extends Controller
                 'can_start' => false,
                 'submitted_count' => $submittedCount,
                 'opened_count' => $openedCount,
-                'total_count' => $totalCount
+                'total_count' => $totalCount,
             ];
         }
 
@@ -663,7 +664,7 @@ class TenderOpeningController extends Controller
             'can_start' => false,
             'submitted_count' => $submittedCount,
             'opened_count' => $openedCount,
-            'total_count' => $totalCount
+            'total_count' => $totalCount,
         ];
     }
 
@@ -689,6 +690,7 @@ class TenderOpeningController extends Controller
                 if ($submission->OpenedAt) {
                     return '<span class="badge bg-success">🔓 Opened</span>';
                 }
+
                 return '<span class="badge bg-warning">🔒 Sealed</span>';
         }
     }
@@ -698,7 +700,6 @@ class TenderOpeningController extends Controller
      */
     public function edit(string $id)
     {
-        //
     }
 
     /**
@@ -706,7 +707,6 @@ class TenderOpeningController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
     }
 
     /**
@@ -714,6 +714,5 @@ class TenderOpeningController extends Controller
      */
     public function destroy(string $id)
     {
-        //
     }
 }

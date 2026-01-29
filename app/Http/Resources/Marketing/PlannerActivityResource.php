@@ -16,16 +16,17 @@ class PlannerActivityResource extends JsonResource
     public function toArray(Request $request): array
     {
         $s = $this->resource;
-        if (!$s instanceof MarketingPlannerActivity) {
+        if (! $s instanceof MarketingPlannerActivity) {
             $s = $s->resource;
         }
+
         return [
-                'id'          => $this->PlannerActivityID,
-                'title'       => $this->Name,
-                'start'       => $this->StartOn->toIso8601String(),
-                'end'         => $this->EndOn->toIso8601String(),
+                'id' => $this->PlannerActivityID,
+                'title' => $this->Name,
+                'start' => $this->StartOn->toIso8601String(),
+                'end' => $this->EndOn->toIso8601String(),
                 'description' => $this->Notes,
-                'actions'     => [
+                'actions' => [
                                   'show' => route('planner-activities.show', [$s->planner->PlannerID, $this->PlannerActivityID]),
                                  ],
                ];

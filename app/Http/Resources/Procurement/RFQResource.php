@@ -1,13 +1,13 @@
 <?php
 
 namespace App\Http\Resources\Procurement;
-use Illuminate\Http\Resources\Json\ResourceCollection;
+
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class RFQResource extends   JsonResource
+class RFQResource extends JsonResource
 {
     /**
-     * 
+     *
      *
      * @param  \Illuminate\Http\Request  $request
      * @return array
@@ -24,40 +24,40 @@ class RFQResource extends   JsonResource
             'remarks' => $this->Remarks,
             'createdOn' => $this->CreatedOn,
             'modifiedOn' => $this->ModifiedOn,
-            'category' => $this->whenLoaded('category', function() {
+            'category' => $this->whenLoaded('category', function () {
                 return [
                     'id' => $this->category->Id ?? null,
                     'name' => $this->category->Name ?? null,
                 ];
             }),
 
-            'requisition' => $this->whenLoaded('requisition', function() {
+            'requisition' => $this->whenLoaded('requisition', function () {
                 return [
                     'id' => $this->requisition->Id ?? null,
                     'description' => $this->requisition->Title ?? $this->requisition->Description ?? null,
                 ];
             }),
 
-            'rfqLines' => $this->whenLoaded('rfqLines', function() {
-                return $this->rfqLines->map(function($line) {
+            'rfqLines' => $this->whenLoaded('rfqLines', function () {
+                return $this->rfqLines->map(function ($line) {
                     return [
                         'id' => $line->Id,
                         'itemId' => $line->ItemId,
                         'description' => $line->Description,
                         'quantity' => $line->Quantity,
-                        'uom' => $line->UOM ?? $line->uom->Name ?? null, 
+                        'uom' => $line->UOM ?? $line->uom->Name ?? null,
                     ];
                 });
             }),
 
-            'suppliers' => $this->whenLoaded('suppliers', function() {
-                return $this->suppliers->map(function($supplier) {
-                    
-                    $name = $supplier->supplierMaster->party->ThirdPartyName 
-                        ?? $supplier->supplierMaster->party->TradingName 
-                        ?? $supplier->Name 
+            'suppliers' => $this->whenLoaded('suppliers', function () {
+                return $this->suppliers->map(function ($supplier) {
+
+                    $name = $supplier->supplierMaster->party->ThirdPartyName
+                        ?? $supplier->supplierMaster->party->TradingName
+                        ?? $supplier->Name
                         ?? null;
-                        
+
                     return [
                         'id' => $supplier->Id,
                         'name' => $name,
@@ -67,8 +67,8 @@ class RFQResource extends   JsonResource
                 });
             }),
 
-            'sections' => $this->whenLoaded('sections'), 
-            'criteria' => $this->whenLoaded('criteria'), 
+            'sections' => $this->whenLoaded('sections'),
+            'criteria' => $this->whenLoaded('criteria'),
             'committeeMembers' => $this->whenLoaded('committeeMembers'),
             'createdBy' => $this->CreatedBy,
             'modifiedBy' => $this->ModifiedBy,

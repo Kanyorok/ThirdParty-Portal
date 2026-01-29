@@ -49,7 +49,7 @@ class BudgetProductTypeSeeder extends Seeder
 
         foreach ($productTypes as $productType) {
             // Check if ProductCode already exists
-            if (!DB::table('t_BudgetProductTypes')->where('ProductCode', $productType['ProductCode'])->exists()) {
+            if (! DB::table('t_BudgetProductTypes')->where('ProductCode', $productType['ProductCode'])->exists()) {
                 DB::table('t_BudgetProductTypes')->insert([
                     'ProductCode' => $productType['ProductCode'],
                     'Name' => $productType['Name'],

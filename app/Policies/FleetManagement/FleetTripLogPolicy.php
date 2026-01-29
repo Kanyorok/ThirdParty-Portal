@@ -2,15 +2,13 @@
 
 namespace App\Policies\FleetManagement;
 
-use App\Models\Auth\User;
-use App\Enums\Core\PermissionEnum;
 use App\Enums\Core\ApprovalEnum;
+use App\Enums\Core\PermissionEnum;
+use App\Models\Auth\User;
 use App\Models\Fleet\FleetTripLog;
-use Illuminate\Auth\Access\Response;
 
 class FleetTripLogPolicy
 {
-
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::FleetTripLogView->value);
@@ -57,7 +55,6 @@ class FleetTripLogPolicy
         return $user->can(PermissionEnum::FleetTripLogUpdate->value);
     }
 
-
     public function approve(User $user, FleetTripLog $requisition): bool
     {
         // Don't allow approving if already approved or rejected
@@ -74,7 +71,6 @@ class FleetTripLogPolicy
         // Must have the approval permission
         return $user->can(PermissionEnum::FleetTripLogApprove->value);
     }
-
 
     public function reject(User $user, FleetTripLog $requisition): bool
     {

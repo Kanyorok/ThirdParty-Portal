@@ -54,7 +54,6 @@ class DiscussionController extends Controller
      */
     public function show(Discussion $discussion): View
     {
-        //  dd($discussion->discussionUser()->select('UserID')->pluck('UserID')->toArray());
         /*$users = User::query()
             ->whereIn('Id', $discussion->discussionUser()->select('UserID'))
             ->lock('WITH(NOLOCK)')->get();*/

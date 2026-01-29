@@ -12,8 +12,8 @@ class CampaignParty extends Model
 {
     use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
 
     protected $table = 't_CampaignParties';
     protected $primaryKey = 'Id';

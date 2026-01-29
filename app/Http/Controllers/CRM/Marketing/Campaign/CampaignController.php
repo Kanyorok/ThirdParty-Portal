@@ -69,14 +69,16 @@ class CampaignController extends Controller
         $list = $request->getList();
         $actor = $request->user();
         $type = $request->getType();
+
         try {
             $campaign = DB::transaction(static function () use ($type, $actor, $request, $list) {
                 return CampaignService::create($list, $request->string('Label', 'Non Labeled Campaign')->toString(), $actor, $type, $request->string('Notes', '')->toString())->campaign;
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error create campaign ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -120,8 +122,8 @@ class CampaignController extends Controller
                            ]);
 
         $campaign->update([
-                           'Label'      => ($campaign->Type->value === CampaignTypeEnum::Email->value) ? $request->Subject : $campaign->Label,
-                           'Details'    => Str::of($request->Content)->remove(["\r", "\n", "\t", "\0", "\x0B"])->replace("\u{A0}", " ")->toString(),
+                           'Label' => ($campaign->Type->value === CampaignTypeEnum::Email->value) ? $request->Subject : $campaign->Label,
+                           'Details' => Str::of($request->Content)->remove(["\r", "\n", "\t", "\0", "\x0B"])->replace("\u{A0}", " ")->toString(),
                            'ModifiedBy' => $request->user()->Id,
                           ]);
 

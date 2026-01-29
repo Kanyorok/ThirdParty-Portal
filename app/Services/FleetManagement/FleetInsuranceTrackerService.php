@@ -2,20 +2,18 @@
 
 namespace App\Services\FleetManagement;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Fleet\FleetInsuranceTracker;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
+use App\Models\Fleet\FleetInsuranceTracker;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class FleetInsuranceTrackerService
 {
     /**
      * Create a new Fleet Vehicle
      */
-
     public function create(array $data, UploadedFile $document = null): FleetInsuranceTracker
     {
         return DB::transaction(function () use ($data, $document) {
@@ -54,12 +52,11 @@ class FleetInsuranceTrackerService
         });
     }
 
-
     private function generateInsuranceNo(): string
     {
         $latestInsurance = FleetInsuranceTracker::withTrashed()->latest('CreatedOn')->first();
 
-        if (!$latestInsurance || !$latestInsurance->InsuranceNo) {
+        if (! $latestInsurance || ! $latestInsurance->InsuranceNo) {
             return 'INS-0001';
         }
 
@@ -69,33 +66,31 @@ class FleetInsuranceTrackerService
         return 'INS-' . str_pad($newId, 4, '0', STR_PAD_LEFT);
     }
 
+    public function update(FleetInsuranceTracker $records, array $data): FleetInsuranceTracker
+    {
+        return DB::transaction(function () use ($records, $data) {
 
-   public function update(FleetInsuranceTracker $records, array $data): FleetInsuranceTracker
-{
-    return DB::transaction(function () use ($records, $data) {
+            // Fill other attributes
+            $records->fill($data);
 
-        // Fill other attributes
-        $records->fill($data);
+            // ✅ Explicitly ensure PolicyNumber is updated
+            if (isset($data['PolicyNumber'])) {
+                $records->PolicyNumber = $data['PolicyNumber'];
+            }
 
-        // ✅ Explicitly ensure PolicyNumber is updated
-        if (isset($data['PolicyNumber'])) {
-            $records->PolicyNumber = $data['PolicyNumber'];
-        }
+            $records->ModifiedBy = Auth::id();
+            $records->ModifiedOn = now();
+            $records->save();
 
-        $records->ModifiedBy = Auth::id();
-        $records->ModifiedOn = now();
-        $records->save();
+            activity()
+                ->performedOn($records)
+                ->causedBy(Auth::user())
+                ->withProperties(['attributes' => $data])
+                ->log('Fleet Insurance Updated');
 
-        activity()
-            ->performedOn($records)
-            ->causedBy(Auth::user())
-            ->withProperties(['attributes' => $data])
-            ->log('Fleet Insurance Updated');
-
-        return $records;
-    });
-}
-
+            return $records;
+        });
+    }
 
     /**
      * Soft delete a Fleet Vehicle

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Legal\RegulatoryComplianceTask;
 use App\Models\Legal\RegulatoryObligation;
+use Illuminate\Http\Request;
 
 class RegulatoryComplianceTaskController extends Controller
 {
@@ -13,12 +13,14 @@ class RegulatoryComplianceTaskController extends Controller
     {
         $obligation = RegulatoryObligation::findOrFail($obligationId);
         $tasks = $obligation->tasks;
+
         return view('legal.compliance.tasks.index', compact('obligation', 'tasks'));
     }
 
     public function create($obligationId)
     {
         $obligation = RegulatoryObligation::findOrFail($obligationId);
+
         return view('legal.compliance.tasks.create', compact('obligation'));
     }
 
@@ -37,6 +39,7 @@ class RegulatoryComplianceTaskController extends Controller
         $validated['ObligationID'] = $obligationId;
 
         RegulatoryComplianceTask::create($validated);
+
         return redirect()->route('legal.compliance.tasks.index', $obligationId)->with('success', 'Compliance task added.');
     }
 
@@ -44,6 +47,7 @@ class RegulatoryComplianceTaskController extends Controller
     {
         $task = RegulatoryComplianceTask::findOrFail($id);
         $obligation = RegulatoryObligation::findOrFail($obligationId);
+
         return view('legal.compliance.tasks.edit', compact('task', 'obligation'));
     }
 
@@ -62,6 +66,7 @@ class RegulatoryComplianceTaskController extends Controller
         ]);
 
         $task->update($validated);
+
         return redirect()->route('legal.compliance.tasks.index', $obligationId)->with('success', 'Task updated successfully.');
     }
 }

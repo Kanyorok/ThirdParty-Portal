@@ -10,13 +10,13 @@ use Illuminate\Support\Facades\Auth;
 
 class EngagedAuditorController extends Controller
 {
-
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         $engagedAuditors = EngagedAuditor::with('auditor')->get();
+
         return view('procurement.engaged-auditor.index', compact('engagedAuditors'));
     }
 
@@ -26,6 +26,7 @@ class EngagedAuditorController extends Controller
     public function create()
     {
         $auditors = SasraAuditor::where('Status', 'Active')->get();
+
         return view('procurement.engaged-auditor.create', compact('auditors'));
     }
 
@@ -46,6 +47,7 @@ class EngagedAuditorController extends Controller
         $validated['ModifiedBy'] = Auth::id();
 
         EngagedAuditor::create($validated);
+
         return redirect()->route('engaged-auditors.index')->with('success', 'Engaged auditor created successfully.');
     }
 
@@ -54,7 +56,6 @@ class EngagedAuditorController extends Controller
      */
     public function show(string $id)
     {
-        //
     }
 
     /**
@@ -64,6 +65,7 @@ class EngagedAuditorController extends Controller
     {
         $engagedAuditor = EngagedAuditor::findOrFail($id);
         $auditors = SasraAuditor::where('Status', 'Active')->get();
+
         return view('procurement.engaged-auditor.edit', compact('engagedAuditor', 'auditors'));
     }
 
@@ -82,7 +84,7 @@ class EngagedAuditorController extends Controller
         $validated['ModifiedBy'] = Auth::id();
 
         // Set EngagementStatus to 'Inactive' if EngagementEndDate is present
-        if (!empty($validated['EngagementEndDate'])) {
+        if (! empty($validated['EngagementEndDate'])) {
             $validated['EngagementStatus'] = 'Inactive';
         }
 

@@ -4,12 +4,11 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\BidSubmission;
-use Illuminate\Http\Request;
 use App\Models\Procurement\Tender;
 use App\Models\ThirdParies\Supplier;
 use App\Services\Procurement\EncryptedBidDocumentService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
 
 class TenderSubmissionController extends Controller
 {
@@ -24,6 +23,7 @@ class TenderSubmissionController extends Controller
         ])
             ->orderBy('CreatedOn', 'desc')
             ->get();
+
         return view('procurement.tendering.suppliermanagement.bidsubmission.index', compact('submissions'));
     }
 
@@ -82,17 +82,19 @@ class TenderSubmissionController extends Controller
 
         return response()->json($suppliers);
     }
+
     public function view($Id)
     {
         $submission = BidSubmission::findOrFail($Id);
+
         return view('procurement.tendering.suppliermanagement.bidsubmission.view', compact('submission'));
     }
 
     public function edit($Id)
     {
         $submission = BidSubmission::findOrFail($Id);
-        //return view('procurement.tendering.suppliermanagement.bidsubmission.edit', compact('submission'));
     }
+
     public function store(Request $request)
     {
         // Validate the input
@@ -136,7 +138,7 @@ class TenderSubmissionController extends Controller
             ->where('Description', $request->submission_mode)
             ->value('ID');
 
-        if (!$submissionModeId) {
+        if (! $submissionModeId) {
             return redirect()->back()->withErrors(['submission_mode' => 'Invalid submission mode selected.']);
         }
 
@@ -164,6 +166,7 @@ class TenderSubmissionController extends Controller
         }
 
         DB::beginTransaction();
+
         try {
             // Get Supplier Name for display/redundancy (as per schema)
             $supplierName = $supplier->supplierMaster->thirdParty->TradingName ?? $supplier->supplierMaster->thirdParty->ThirdPartyName;

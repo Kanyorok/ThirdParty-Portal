@@ -2,9 +2,8 @@
 
 namespace App\Services\FleetManagement;
 
-use App\Models\Fleet\FleetMaintenanceSchedule;
-use App\Models\Fleet\FleetServiceAlert;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Fleet\FleetMaintenanceSchedule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -142,6 +141,7 @@ class FleetMaintenanceScheduleService
     {
         $latest = FleetMaintenanceSchedule::withTrashed()->latest('CreatedOn')->first();
         $lastId = $latest ? (int)str_replace('SCH-', '', $latest->ScheduleID) : 0;
+
         return 'SCH-' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
     }
 

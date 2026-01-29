@@ -12,14 +12,16 @@ use Illuminate\Notifications\Notifiable;
 
 class ThirdPartiesBankDetails extends Model
 {
-    use Notifiable, SoftDeletes, UserActorTrait;
+    use Notifiable;
+    use SoftDeletes;
+    use UserActorTrait;
 
     protected $table = 't_ThirdPartiesBankDetails';
     protected $primaryKey = 'BankID';
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const string CREATED_AT = 'CreatedOn';
+    public const string UPDATED_AT = 'ModifiedOn';
+    public const string DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'ThirdPartyId', 'CurrencyId', 'AccountNumber', 'BranchID', 'Extra',
@@ -42,6 +44,7 @@ class ThirdPartiesBankDetails extends Model
     {
         return $this->belongsTo(ThirdParties::class, 'ThirdPartyId', 'Id');
     }
+
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');
@@ -51,7 +54,6 @@ class ThirdPartiesBankDetails extends Model
     {
         return $this->belongsTo(BankBranch::class, 'BranchID', 'BranchID');
     }
-
 
     public static function getPrimaryKey(): string
     {

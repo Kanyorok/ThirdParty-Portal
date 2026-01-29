@@ -65,15 +65,15 @@ class ClientController extends Controller
                     $query->whereNull('ClientID');
                 }
             } else {
-                if (!empty($member_no)) {
+                if (! empty($member_no)) {
                     $query->where('ClientID', '=', $member_no);
                 }
 
-                if (!empty($name)) {
+                if (! empty($name)) {
                     $query->where('Name', 'like', "%$name%");
                 }
 
-                if (!empty($phone)) {
+                if (! empty($phone)) {
                     $query->where(function (Builder $q) use ($phone) {
                         $q->where('Phone1', '=', $phone)
                             ->orWhere('Phone2', '=', $phone)
@@ -81,7 +81,7 @@ class ClientController extends Controller
                     });
                 }
 
-                if (!empty($idNumber)) {
+                if (! empty($idNumber)) {
                     $query->where(function (Builder $q) use ($idNumber) {
                         $q->whereHas('individual', function (Builder $query) use ($idNumber) {
                             $query->where('PassportNo', '=', $idNumber);
@@ -91,6 +91,7 @@ class ClientController extends Controller
                     });
                 }
             }
+
             return ClientService::dt((new UserService($request->user()))->hideUsers($query), ['type', 'status']);
         }
 
@@ -113,20 +114,23 @@ class ClientController extends Controller
                     if ($account->product instanceof Product) {
                         return $account->product->Description;
                     }
+
                     return '';
                 })->editColumn('LastCreditTrxDate', function (Account $account) {
-                    if (!$account->LastDebitTrxDate instanceof Carbon) {
+                    if (! $account->LastDebitTrxDate instanceof Carbon) {
                         if ($account->LastCreditTrxDate instanceof Carbon) {
                             return $account->LastCreditTrxDate;
                         }
+
                         return '';
                     }
-                    if (!$account->LastCreditTrxDate instanceof Carbon) {
+                    if (! $account->LastCreditTrxDate instanceof Carbon) {
                         return $account->LastDebitTrxDate;
                     }
                     if ($account->LastDebitTrxDate->gte($account->LastCreditTrxDate)) {
                         return $account->LastDebitTrxDate;
                     }
+
                     return $account->LastCreditTrxDate;
                 })/*->setRowClass('mouse_pointer user-select-none client-row-data')->setRowData([
                     'data-click-url' => function(Account $account) {
@@ -198,12 +202,12 @@ class ClientController extends Controller
             ->with('MarketingListMember', $client->marketingLists()->where('Type', MarketingListEnum::Static->value)->select(['slug', 'Label'])->whereNull('t_MarketingListParties.DeletedOn')->get());
     }
 
-
     public function summary(Request $request, Client $client): View
     {
         $this->authorize('summary', $client);
         $activities = $client->activities()->latest('ActivityID')->limit(5)->get();
         activity()->causedBy($request->user())->performedOn($client)->event('summary')->log('viewed client details.');
+
         return view(
             'crm.clients.summary',
             compact('client', 'activities')

@@ -2,8 +2,8 @@
 
 namespace App\Policies\Insurance;
 
-use App\Models\Auth\User;
 use App\Enums\Core\PermissionEnum;
+use App\Models\Auth\User;
 use App\Models\Insurance\BancassuranceBeneficiaries;
 
 class BancassuranceCustomersBeneficiariesPolicy
@@ -35,6 +35,4 @@ class BancassuranceCustomersBeneficiariesPolicy
     {
         return $user->can(PermissionEnum::BancassuranceCustomersBeneficiariesDelete->value);
     }
-
-
 }

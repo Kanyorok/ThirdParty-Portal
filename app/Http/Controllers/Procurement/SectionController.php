@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Models\Procurement\Section;
 use App\Models\Procurement\Criteria;
-use Illuminate\Http\Request;
+use App\Models\Procurement\Section;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -22,6 +22,7 @@ class SectionController extends Controller
     {
         $this->authorize('viewAny', Section::class);
         $sections = Section::with('criteria')->get();
+
         return view('procurement.tendering.settings.sections', compact('sections'));
     }
 
@@ -30,12 +31,12 @@ class SectionController extends Controller
         $this->authorize('create', Section::class);
         $masterSections = Section::with('criteria')->get();
         $prequalificationRound = null;
+
         return view(
             'procurement.suppliers.prequalification.prequalification-rounds.create',
             compact('masterSections', 'prequalificationRound')
         );
     }
-
 
     public function store(Request $request, $sectionable = null): RedirectResponse
     {
@@ -50,6 +51,7 @@ class SectionController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $sectionData = [
                 'SectionName' => $validated['SectionName'],
@@ -65,7 +67,7 @@ class SectionController extends Controller
 
             $section = Section::create($sectionData);
 
-            if (!empty($validated['criteria'])) {
+            if (! empty($validated['criteria'])) {
                 foreach ($validated['criteria'] as $criterion) {
                     $section->criteria()->create([
                         'CriteriaName' => $criterion['CriteriaName'],
@@ -81,6 +83,7 @@ class SectionController extends Controller
                 ->log('Created a new section with criteria: ' . $section->SectionName);
 
             DB::commit();
+
             return back()->with('success', 'Section and Criteria created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -97,6 +100,7 @@ class SectionController extends Controller
     {
         $this->authorize('update', $section);
         $section->load('criteria');
+
         return view('procurement.tendering.settings.section-edit', compact('section'));
     }
 
@@ -104,6 +108,7 @@ class SectionController extends Controller
     {
         $this->authorize('view', $section);
         $section->load('criteria');
+
         return view('procurement.tendering.settings.section-show', compact('section'));
     }
 
@@ -122,6 +127,7 @@ class SectionController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $section->update([
                 'SectionName' => $validated['SectionName'],
@@ -129,14 +135,14 @@ class SectionController extends Controller
                 'IsActive' => $validated['IsActive'],
             ]);
 
-            if (!empty($validated['criteria_remove'])) {
+            if (! empty($validated['criteria_remove'])) {
                 $idsToRemove = explode(',', $validated['criteria_remove']);
                 Criteria::destroy($idsToRemove);
             }
 
-            if (!empty($validated['criteria'])) {
+            if (! empty($validated['criteria'])) {
                 foreach ($validated['criteria'] as $criterionData) {
-                    if (!empty($criterionData['Id'])) {
+                    if (! empty($criterionData['Id'])) {
                         $criteria = Criteria::find($criterionData['Id']);
                         $criteria->update([
                             'CriteriaName' => $criterionData['CriteriaName'],
@@ -158,14 +164,16 @@ class SectionController extends Controller
                 ->causedBy(Auth::user())
                 ->withProperties([
                     'old' => $section->getOriginal(),
-                    'new' => $section->getChanges()
+                    'new' => $section->getChanges(),
                 ])
                 ->log('Updated section and criteria: ' . $section->SectionName);
 
             DB::commit();
+
             return redirect()->back()->with('success', 'Section and Criteria updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return back()->with('error', 'Failed to update section and criteria: ' . $th->getMessage());
         }
     }
@@ -174,6 +182,7 @@ class SectionController extends Controller
     {
         $this->authorize('delete', $section);
         DB::beginTransaction();
+
         try {
             $sectionName = $section->SectionName;
             $section->criteria()->delete();
@@ -186,9 +195,11 @@ class SectionController extends Controller
                 ->log('Deleted section and its criteria: ' . $sectionName);
 
             DB::commit();
+
             return redirect()->back()->with('success', 'Section and its criteria deleted successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return back()->with('error', 'Failed to delete section: ' . $th->getMessage());
         }
     }

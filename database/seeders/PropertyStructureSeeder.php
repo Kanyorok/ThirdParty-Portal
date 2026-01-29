@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Auth\User;
 use App\Models\Core\Country;
 use App\Models\Core\Locality;
 use App\Models\PropertyManagement\PropertyBlock;
@@ -9,7 +10,6 @@ use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyUnit;
 use Illuminate\Database\Seeder;
-use App\Models\Auth\User;
 
 class PropertyStructureSeeder extends Seeder
 {
@@ -85,5 +85,3 @@ class PropertyStructureSeeder extends Seeder
         }
     }
 }
-
-

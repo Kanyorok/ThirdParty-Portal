@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Finance;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Auth\ModelRole;
-use App\Models\Core\Branch;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Branch;
 use App\Models\Core\Currency;
 use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceGLSubAccountTypes;
@@ -87,7 +87,6 @@ class ChartOfAccountsController extends Controller
         ));
     }
 
-
     public function create()
     {
         $accountTypes = CodeDetail::select('CodeID', 'Value', 'Description')->where('CodeID', 'GLAccountType')->get();
@@ -97,22 +96,27 @@ class ChartOfAccountsController extends Controller
         $currencies = Currency::select('Id', 'Code')->get();
 
         return view('finance.chartofaccounts.chartofaccounts.create', compact(
-            'accountTypes', 'typeGroups', 'subAccountTypes', 'allGLAccounts', 'currencies'
+            'accountTypes',
+            'typeGroups',
+            'subAccountTypes',
+            'allGLAccounts',
+            'currencies'
         ));
     }
 
     public function getTypeGroups(Request $request)
     {
         $typeGroups = FinanceGLTypeGroup::select('Id', 'Description', 'SegmentValue')->where('GLAccountTypeID', $request->GLAccountTypeID)->get();
+
         return response()->json($typeGroups);
     }
 
     public function getSubAccountTypes(Request $request)
     {
         $subTypes = FinanceGLSubAccountTypes::where('GLTypeGroupId', $request->GLTypeGroupID)->get();
+
         return response()->json($subTypes);
     }
-
 
     public function store(Request $request)
     {
@@ -123,13 +127,13 @@ class ChartOfAccountsController extends Controller
                 'string',
                 'max:50',
                 Rule::unique('t_FinanceGLAccounts', 'GLName')
-                    ->where(fn($q) => $q->whereNull('DeletedOn')), // ignore soft-deleted rows
+                    ->where(fn ($q) => $q->whereNull('DeletedOn')), // ignore soft-deleted rows
             ],
-            'GLAccountTypeID'    => 'required',
-            'GLTypeGroupID'      => 'required|exists:t_FinanceGLTypeGroups,Id',
+            'GLAccountTypeID' => 'required',
+            'GLTypeGroupID' => 'required|exists:t_FinanceGLTypeGroups,Id',
             'Currency' => 'required|exists:t_Currencies,Id',
             'GLSubAccountTypeID' => 'required|exists:t_FinanceGLSubAccountTypes,Id',
-            'Description'        => 'required|string|max:255',
+            'Description' => 'required|string|max:255',
             'IsActive' => 'nullable|boolean',
         ]);
 
@@ -221,10 +225,12 @@ class ChartOfAccountsController extends Controller
         } catch (QueryException $e) {
             if ($e->getCode() == '23000') { // SQL duplicate error
                 Log::error('Duplicate GL Code: ' . $e->getMessage());
+
                 return back()->with('error', 'A General Ledger Account with this GL Code already exists.');
             }
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return $th->getMessage();
             Log::error('Failed to create General Ledger Account:' . $th->getMessage());
 
@@ -236,7 +242,7 @@ class ChartOfAccountsController extends Controller
     {
         $this->authorize(PermissionEnum::FinanceCOAUpdate, FinanceGLAccounts::class);
         $gl = FinanceGLAccounts::with('typeGroup:Id,Description', 'subAccount:Id,Description')->find($id);
-        if (!$gl) {
+        if (! $gl) {
             return redirect()->route('chartofaccounts.index')->with('error', 'GL Account not found.');
         }
         $accountTypes = CodeDetail::select('CodeID', 'Value', 'Description')->where('CodeID', 'GLAccountType')->get();
@@ -250,7 +256,14 @@ class ChartOfAccountsController extends Controller
         $currencies = Currency::select('Id', 'Code')->get();
 
         return view('finance.chartofaccounts.chartofaccounts.edit', compact(
-            'accountTypes', 'typeGroups', 'subAccountTypes', 'allGLAccounts', 'gl', 'typeID', 'subTypeID', 'currencies'
+            'accountTypes',
+            'typeGroups',
+            'subAccountTypes',
+            'allGLAccounts',
+            'gl',
+            'typeID',
+            'subTypeID',
+            'currencies'
         ));
     }
 
@@ -264,13 +277,13 @@ class ChartOfAccountsController extends Controller
                 'max:50',
                 Rule::unique('t_FinanceGLAccounts', 'GLName')
                     ->ignore($id, 'Id')                        // just use $id directly
-                    ->where(fn($q) => $q->whereNull('DeletedOn')),
+                    ->where(fn ($q) => $q->whereNull('DeletedOn')),
             ],
-            'GLAccountTypeID'    => 'required',
-            'GLTypeGroupID'      => 'required|exists:t_FinanceGLTypeGroups,Id',
+            'GLAccountTypeID' => 'required',
+            'GLTypeGroupID' => 'required|exists:t_FinanceGLTypeGroups,Id',
             'Currency' => 'required|exists:t_Currencies,Id',
             'GLSubAccountTypeID' => 'required|exists:t_FinanceGLSubAccountTypes,Id',
-            'Description'        => 'required|string|max:255',
+            'Description' => 'required|string|max:255',
             'IsActive' => 'nullable|boolean',
         ]);
 
@@ -278,7 +291,6 @@ class ChartOfAccountsController extends Controller
 
         try {
             $gl = FinanceGLAccounts::findOrFail($id);
-            //$branchID = ModelRole::where('model_id', Auth::id())->pluck('BranchID')->first();
 
             //Get the type values TO  be used in creating an account code
             $GLAccountTypeValue = CodeDetail::where('CodeID', 'GLAccountType')->where('Value', $validated['GLAccountTypeID'])->pluck('DisplayOrder')->first();
@@ -316,18 +328,20 @@ class ChartOfAccountsController extends Controller
         } catch (QueryException $e) {
             DB::rollBack();
             Log::error('Update error: ' . $e->getMessage());
+
             return back()->with('error', 'An error occurred while updating the GL account.');
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Unexpected error: ' . $th->getMessage());
+
             return back()->with('error', 'Failed to update the GL account: ' . $th->getMessage());
         }
     }
 
-
     public function hierarchy()
     {
         $accounts = DB::table('t_GLAccounts')->orderBy('GLCode')->get();
+
         return view('finance.chartofaccounts.chartofaccounts.account_hierarchy', compact('accounts'));
     }
 
@@ -335,7 +349,7 @@ class ChartOfAccountsController extends Controller
     {
         $account = DB::table('t_GLAccounts')->where('GLCode', $code)->first();
 
-        if (!$account) {
+        if (! $account) {
             abort(404, 'Account not found.');
         }
 
@@ -345,10 +359,11 @@ class ChartOfAccountsController extends Controller
     public function destroy($id)
     {
         $this->authorize(PermissionEnum::FinanceCOADelete, FinanceGLAccounts::class);
+
         try {
             DB::beginTransaction();
             $gl = FinanceGLAccounts::find($id);
-            if (!$gl) {
+            if (! $gl) {
                 return back()->with('error', 'GL Account not found.');
             }
             $gl->DeletedBy = Auth::Id();
@@ -363,10 +378,12 @@ class ChartOfAccountsController extends Controller
                 ->withProperties(['action' => 'update'])
                 ->log('Updated GL account: ' . $gl->GLName);
             DB::commit();
+
             return back()->with('success', 'GL Account deleted successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to delete GL Account:' . $th->getMessage());
+
             return back()->with('error', 'Failed to delete GL Account:' . $th->getMessage());
         }
     }
@@ -385,7 +402,7 @@ class ChartOfAccountsController extends Controller
         // 2) Fetch just the one GL account
         /** @var \App\Models\FinanceGLAccount $glAccount */
         $glAccount = FinanceGLAccounts::find($glId);
-        if (!$glAccount) {
+        if (! $glAccount) {
             return null; // not found
         }
 
@@ -406,7 +423,7 @@ class ChartOfAccountsController extends Controller
         }
 
         // 4) Join with dashes; drop empty parts
-        $parts = array_values(array_filter($parts, fn($v) => $v !== null && $v !== ''));
+        $parts = array_values(array_filter($parts, fn ($v) => $v !== null && $v !== ''));
         $glCode = implode('-', $parts);
 
         // 5) Save and return
