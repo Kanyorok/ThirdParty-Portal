@@ -2,30 +2,30 @@
 
 namespace App\Models\Licensing;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class License extends Model
 {
     protected $table = 't_Licenses';
     protected $primaryKey = 'Id';
-    
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = null; // No automatic updated_at
+
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = null; // No automatic updated_at
 
     protected $fillable = [
         'LicenseId',
-        'PayloadJson', 
+        'PayloadJson',
         'SignatureBase64',
         'PublicKeyId',
         'Status',
-        'LastValidatedOn'
+        'LastValidatedOn',
     ];
 
     protected $casts = [
         'CreatedOn' => 'datetime',
         'LastValidatedOn' => 'datetime',
-        'Status' => 'integer'
+        'Status' => 'integer',
     ];
 
     /**
@@ -62,12 +62,13 @@ class License extends Model
     public function getIsExpiredAttribute(): bool
     {
         $payload = $this->parsed_payload;
-        if (!$payload || !isset($payload['expires_at'])) {
+        if (! $payload || ! isset($payload['expires_at'])) {
             return true;
         }
 
         try {
             $expiryDate = new \DateTime($payload['expires_at']);
+
             return $expiryDate <= new \DateTime('now', new \DateTimeZone('UTC'));
         } catch (\Exception $e) {
             return true;
@@ -80,6 +81,7 @@ class License extends Model
     public function getModulesAttribute(): array
     {
         $payload = $this->parsed_payload;
+
         return $payload['modules'] ?? [];
     }
 
@@ -89,10 +91,11 @@ class License extends Model
     public function getTenantInfoAttribute(): array
     {
         $payload = $this->parsed_payload;
+
         return [
             'name' => $payload['tenant_name'] ?? 'Unknown',
             'id' => $payload['tenant_id'] ?? null,
-            'edition' => $payload['edition'] ?? 'Unknown'
+            'edition' => $payload['edition'] ?? 'Unknown',
         ];
     }
 

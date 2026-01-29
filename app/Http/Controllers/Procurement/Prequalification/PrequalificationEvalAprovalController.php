@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Procurement\Prequalification;
 
+use App\Enums\Procurement\PrequalificationApplicationEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Enums\Procurement\PrequalificationApplicationEnum;
+use Illuminate\View\View;
 
 class PrequalificationEvalAprovalController extends Controller
 {
@@ -43,7 +43,7 @@ class PrequalificationEvalAprovalController extends Controller
         $application->load([
             'supplier',
             'round.evaluationSections.criteria.masterCriteria',
-            'evaluations.evaluator'
+            'evaluations.evaluator',
         ]);
 
         return view('procurement.suppliers.prequalification.evaluationapproval.show', [
@@ -59,6 +59,7 @@ class PrequalificationEvalAprovalController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             if ($validated['decision'] === 'approve') {
                 $application->Status = PrequalificationApplicationEnum::Approved;

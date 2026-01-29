@@ -2,8 +2,6 @@
 
 namespace App\Policies\Procurement;
 
-use App\Models\Auth\User;
-
 class ConsolidatedNeedPolicy
 {
     /**
@@ -11,6 +9,5 @@ class ConsolidatedNeedPolicy
      */
     public function __construct()
     {
-        //
     }
 }

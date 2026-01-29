@@ -23,27 +23,25 @@ class BancassurancePolicyService
      */
     public function __construct(public BancassurancePolicy $bancassurancePolicy)
     {
-        //
     }
 
     public static function create(
-        BancassuranceCustomer  $CustomerID,
-        InsuranceProduct       $ProductID,
-        ?InsuranceProvider     $InsurerID,
-        float                  $SumAssured,
-        float                  $PremiumAmount,
-        Carbon                 $PolicyStartDate,
-        Carbon                 $PolicyEndDate,
-        CodeDetail             $PaymentFrequency,
+        BancassuranceCustomer $CustomerID,
+        InsuranceProduct $ProductID,
+        ?InsuranceProvider $InsurerID,
+        float $SumAssured,
+        float $PremiumAmount,
+        Carbon $PolicyStartDate,
+        Carbon $PolicyEndDate,
+        CodeDetail $PaymentFrequency,
         ?BancAssuranceReferral $ReferralID = null,
         ?InsuranceProductRider $RiderAddOn = null,
-        ?Carbon                $IssuedDate = null,
-        ?Carbon                $ExpiryDate = null,
-        bool                   $IsActive = true,
-        InsurancePolicyStatus  $Status,
-        User                   $user
-    ): self
-    {
+        ?Carbon $IssuedDate = null,
+        ?Carbon $ExpiryDate = null,
+        bool $IsActive = true,
+        InsurancePolicyStatus $Status,
+        User $user
+    ): self {
 
         $lastPolicyNumber = BancassurancePolicy::withTrashed() // in case you're using soft deletes
         ->selectRaw("MAX(CAST(SUBSTRING(PolicyNumber, 8, LEN(PolicyNumber)) AS INT)) as max_number")
@@ -74,16 +72,15 @@ class BancassurancePolicyService
 
 
         activity()->causedBy($user->Id)->performedOn($policy)->event('create')->log("Added Policy {$policy->Id}.");
+
         return new self($policy);
     }
 
-
     public static function uploadpolicy(
         BancassurancePolicy $policy,
-        User                $user,
-        UploadedFile        $document = null
-    ): self
-    {
+        User $user,
+        UploadedFile $document = null
+    ): self {
         if ($document) {
             $policy->newDocument(
                 ModulesEnum::Insurance,

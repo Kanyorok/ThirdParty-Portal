@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
-use App\Models\Finance\Bank;
-use App\Models\Finance\BankBranch;
-use App\Models\Finance\BankAccount;
 use App\Models\Core\Currency;
+use App\Models\Finance\Bank;
+use App\Models\Finance\BankAccount;
+use App\Models\Finance\BankBranch;
 use App\Models\Finance\FinanceGLAccounts;
 use Illuminate\Http\Request;
 
@@ -50,7 +50,7 @@ class BankAccountSetupController extends Controller
 
         $acc = new BankAccount($request->only([
             'BankID', 'BranchID', 'AccountName', 'AccountNumber', 'IBAN',
-            'CurrencyID', 'GLAccountID', 'OpeningBalance', 'IsDefault', 'IsActive'
+            'CurrencyID', 'GLAccountID', 'OpeningBalance', 'IsDefault', 'IsActive',
         ]));
         // CurrentBalance starts at OpeningBalance
         $acc->CurrentBalance = $request->input('OpeningBalance', 0);
@@ -65,6 +65,7 @@ class BankAccountSetupController extends Controller
     public function show($id)
     {
         $account = BankAccount::with(['bank', 'branch'])->findOrFail($id);
+
         return view('finance.bankaccountsetup.show', compact('account'));
     }
 
@@ -100,7 +101,7 @@ class BankAccountSetupController extends Controller
         $acc = BankAccount::findOrFail($id);
         $acc->fill($request->only([
             'BankID', 'BranchID', 'AccountName', 'AccountNumber', 'IBAN',
-            'CurrencyID', 'GLAccountID', 'IsDefault', 'IsActive'
+            'CurrencyID', 'GLAccountID', 'IsDefault', 'IsActive',
         ]));
         // If OpeningBalance provided, you can decide policy; here we won't change CurrentBalance
         if ($request->filled('OpeningBalance')) {

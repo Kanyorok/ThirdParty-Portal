@@ -39,8 +39,9 @@ class PurchaseOrderWorkflowService extends ApprovalWorkflowService
         } catch (\Exception $e) {
             Log::error('Order submission failed in workflow service', [
                 'order_id' => $order->getKey(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }
@@ -52,7 +53,7 @@ class PurchaseOrderWorkflowService extends ApprovalWorkflowService
     {
         try {
             $status = self::codeDetail(ApprovalEnum::Approved, $this->codeId);
-            
+
             $result = $this->approveAction(
                 $actor,
                 $status,
@@ -71,8 +72,9 @@ class PurchaseOrderWorkflowService extends ApprovalWorkflowService
         } catch (\Exception $e) {
             Log::error('Order approval failed in workflow service', [
                 'order_id' => $order->getKey(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }
@@ -84,7 +86,7 @@ class PurchaseOrderWorkflowService extends ApprovalWorkflowService
     {
         try {
             $status = self::codeDetail(ApprovalEnum::Rejected, $this->codeId);
-            
+
             $result = $this->rejectAction(
                 $actor,
                 $status,
@@ -103,8 +105,9 @@ class PurchaseOrderWorkflowService extends ApprovalWorkflowService
         } catch (\Exception $e) {
             Log::error('Order rejection failed in workflow service', [
                 'order_id' => $order->getKey(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }
@@ -116,7 +119,7 @@ class PurchaseOrderWorkflowService extends ApprovalWorkflowService
     {
         try {
             $status = self::codeDetail(ApprovalEnum::Pending, $this->codeId);
-            
+
             $result = $this->approveAction(
                 $actor,
                 $status,
@@ -135,8 +138,9 @@ class PurchaseOrderWorkflowService extends ApprovalWorkflowService
         } catch (\Exception $e) {
             Log::error('Order return failed in workflow service', [
                 'order_id' => $order->getKey(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }
@@ -153,8 +157,9 @@ class PurchaseOrderWorkflowService extends ApprovalWorkflowService
         } catch (\Exception $e) {
             Log::error('Failed to fetch order workflow history', [
                 'order_id' => $order->getKey(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return collect();
         }
     }
@@ -176,8 +181,9 @@ class PurchaseOrderWorkflowService extends ApprovalWorkflowService
             Log::error('Failed to check user approval permission', [
                 'order_id' => $order->getKey(),
                 'user_id' => $user->Id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -205,8 +211,9 @@ class PurchaseOrderWorkflowService extends ApprovalWorkflowService
         } catch (\Exception $e) {
             Log::error('Failed to fetch pending approvals', [
                 'order_id' => $order->getKey(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return [];
         }
     }
@@ -227,8 +234,9 @@ class PurchaseOrderWorkflowService extends ApprovalWorkflowService
         } catch (\Exception $e) {
             Log::error('Failed to check if order is fully approved', [
                 'order_id' => $order->getKey(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }

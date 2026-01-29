@@ -15,9 +15,10 @@ trait EmployeeTrait
 {
     public function getEmployees(Builder|BelongsToMany $query, array $with = [], array $extra = []): JsonResponse
     {
-        if (!empty($with)) {
+        if (! empty($with)) {
             $query->with($with);
         }
+
         try {
             return Datatables::of($query->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
                 ->addColumn('action', function (Employee $employee) {
@@ -27,16 +28,20 @@ trait EmployeeTrait
                         if ($employee->branch instanceof Branch) {
                             return $employee->branch->Name;
                         }
+
                         return ' ? ';
                     }
+
                     return '';
                 })->editColumn('department.Name', function (Employee $employee) use ($with) {
                     if (in_array('department', $with, true)) {
                         if ($employee->department instanceof Department) {
                             return $employee->department->Name;
                         }
+
                         return ' ? ';
                     }
+
                     return '';
                 })->editColumn('EmployeeID', function (Employee $employee) {
                     return strtoupper($employee->EmployeeID);

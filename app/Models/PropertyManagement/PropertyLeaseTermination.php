@@ -3,21 +3,23 @@
 namespace App\Models\PropertyManagement;
 
 use App\Enums\Core\ApprovalEnum;
+use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Auth\User;
-
 
 class PropertyLeaseTermination extends Model
 {
-    use SoftDeletes, UserActorTrait, DocumentsTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
+
     protected $table = 't_TerminateLease';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -28,7 +30,7 @@ class PropertyLeaseTermination extends Model
         'Status',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string

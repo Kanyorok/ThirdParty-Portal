@@ -43,7 +43,9 @@ use Yajra\DataTables\DataTables;
 
 class CRMEmailService
 {
-    public function __construct(public Email $crmEmail) {}
+    public function __construct(public Email $crmEmail)
+    {
+    }
 
     public static function createClient(Client $client, string $to, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = null, Email $replyTo = null): CRMEmailService
     {
@@ -52,7 +54,7 @@ class CRMEmailService
 
     private static function create(User $actor, string $subject, string $body, EmailPriorityEnum $priority, array $to, ?string $Party = null, ?string $PartyID = null, array $cc = [], array $bcc = [], Email $replyTo = null): CRMEmailService
     {
-        if (!$replyTo instanceof Email && !Str::contains($subject, ['RE:', config('org.name')])) {
+        if (! $replyTo instanceof Email && ! Str::contains($subject, ['RE:', config('org.name')])) {
             $subject .= ' - ' . config('org.name');
         }
         $crmEmail = new Email();
@@ -123,8 +125,6 @@ class CRMEmailService
         return self::create($actor, $subject, $body, $priorityEnum, [[$driver->FullName => $driver->Email]], FleetDriver::getPrimaryKey(), $driver->Id, $cc, replyTo: $replyTo);
     }
 
-
-
     public static function createBoard(Board $board, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal): CRMEmailService
     {
         return self::create($actor, $subject, $body, $priorityEnum, [[$board->Name => $board->Email]], Board::getPrimaryKey(), $board->Id, $cc);
@@ -136,7 +136,7 @@ class CRMEmailService
     public static function dt(Builder|MorphMany $query, array $with = []): JsonResponse
     {
         $query->lock('WITH(NOLOCK)');
-        if (!empty($with)) {
+        if (! empty($with)) {
             $query->with($with);
         }
 
@@ -146,8 +146,8 @@ class CRMEmailService
                        data-summary_title="Email details." >
                         <i class="fas fa-eye"></i> View
                     </button>';
-            })->editColumn('Type', fn(Email $email) => $email->Type->name)
-            ->editColumn('CreatedOn', fn(Email $email) => $email->CreatedOn?->format('F d, Y h:i A'))
+            })->editColumn('Type', fn (Email $email) => $email->Type->name)
+            ->editColumn('CreatedOn', fn (Email $email) => $email->CreatedOn?->format('F d, Y h:i A'))
             ->editColumn('Dated', function (Email $email) {
                 return $email->Dated instanceof Carbon
                     ? $email->Dated->format('F d, Y h:i A')
@@ -183,7 +183,6 @@ class CRMEmailService
         return false;
     }
 
-
     public function getParty(): string
     {
         return ($this->crmEmail->Type->value === EmailTypeEnum::Incoming->value)
@@ -205,6 +204,7 @@ class CRMEmailService
                 }
             }
         }
+
         return $emails;
     }
 
@@ -217,6 +217,7 @@ class CRMEmailService
                 return $email;
             }
         }
+
         return $emails;
     }
 
@@ -238,6 +239,7 @@ class CRMEmailService
     public function addAttachment(Image $image): self
     {
         $this->crmEmail->attachments()->attach($image->ImageID, [], false);
+
         return $this;
     }
 
@@ -258,7 +260,7 @@ class CRMEmailService
         }
 
         //check if it has ref and auto attach to that conversation && party there off.
-        if (!is_null($this->crmEmail->ReferenceId)) {
+        if (! is_null($this->crmEmail->ReferenceId)) {
             $related = Email::query()->whereNotNull('EmailConversationId')->where(function (Builder $query) {
                 $query->where('MailID', $this->crmEmail->ReferenceId)->orWhere('ReferenceId', $this->crmEmail->ReferenceId);
             })->with('conversation')->first();
@@ -274,13 +276,13 @@ class CRMEmailService
             }
         }
 
-        //if no conversation and search party and create a conversation.
 
         //search client
         $client = Client::query()->where('Email', $this->crmEmail->From)->first(['ClientID', 'Name', 'Email']);
         if ($client instanceof Client) {
             $this->attachClient($client)->addActivity($dated);
             $this->_createConversation();
+
             return $this;
         }
 
@@ -289,6 +291,7 @@ class CRMEmailService
         if ($lead instanceof Lead) {
             $this->attachLead($lead)->addActivity($dated);
             $this->_createConversation();
+
             return $this;
         }
 
@@ -298,17 +301,20 @@ class CRMEmailService
             if ($contact->party instanceof Lead) {
                 $this->attachLead($contact->party)->addActivity($dated);
                 $this->_createConversation();
+
                 return $this;
             }
 
             if ($contact->party instanceof Client) {
                 $this->attachClient($contact->party)->addActivity($dated);
                 $this->_createConversation();
+
                 return $this;
             }
         }
 
         $this->_createConversation();
+
         return $this;
     }
 
@@ -344,6 +350,7 @@ class CRMEmailService
                 'Party' => $conversation->Party,
             ]);
         }
+
         return $conversation;
     }
 
@@ -379,26 +386,28 @@ class CRMEmailService
         }
 
         if ($this->crmEmail->Status->value === EmailStatusEnum::Queued->value) {
-
             return $this->_send();
         }
 
         if ($this->crmEmail->Status->value === EmailStatusEnum::Draft->value) {
-            if (!$immediate && config('queue.default') !== 'sync') {
+            if (! $immediate && config('queue.default') !== 'sync') {
                 $this->crmEmail->update([
                     'Status' => EmailStatusEnum::Sending->value,
                 ]);
 
                 event(new EmailSendEvent($this->crmEmail));
+
                 return $this;
             }
+
             return $this->_send();
         }
 
         if ($this->crmEmail->Status->value === EmailStatusEnum::Sending->value) {
-            if (!$immediate && config('queue.default') !== 'sync') {
+            if (! $immediate && config('queue.default') !== 'sync') {
                 return $this;      //already queued for sending.
             }
+
             return $this->_send();
         }
 
@@ -431,11 +440,11 @@ class CRMEmailService
     protected function _send(): static
     {
 
-        //$mailable = Mail::send(new DefaultEmail($this->crmEmail));
         try {
             $mailable = $this->_sendNewConfig();
         } catch (ErroredException $e) {
             SystemHelper::notifyAdmin('send email ' . $e->getMessage());
+
             return $this->_failed('No Email Config');
         }
 
@@ -446,7 +455,7 @@ class CRMEmailService
                 'Status' => EmailStatusEnum::Sent->value,
             ]);
 
-            if (!is_int($this->crmEmail->EmailConversationId)) {
+            if (! is_int($this->crmEmail->EmailConversationId)) {
                 $this->_createConversation(); //create and set non related (new);
             }
             $source = $this->crmEmail->source;
@@ -466,6 +475,7 @@ class CRMEmailService
                     'LastContacted' => now(),
                 ]);
             }
+
             return $this;
         }
 
@@ -478,7 +488,7 @@ class CRMEmailService
     private function _sendNewConfig(): ?SentMessage
     {
         $credentials = APICredential::query()->where('Integration', IntegrationsEnum::Email->value)->latest('Id')->first();
-        if (!$credentials instanceof APICredential) {
+        if (! $credentials instanceof APICredential) {
             throw new ErroredException('no email mail configuration');
         }
         $emailConfig = $credentials->Configuration;

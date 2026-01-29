@@ -2,18 +2,22 @@
 
 namespace App\Models\Core;
 
+use App\Traits\Model\RelatedPermissionTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Module extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use RelatedPermissionTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const string CREATED_AT = 'CreatedOn';
+    public const string UPDATED_AT = 'ModifiedOn';
+    public const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Modules';
     protected $primaryKey = 'ModuleID';
@@ -31,9 +35,8 @@ class Module extends Model
         'RequiredPermission',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
-
 
     public static function getPrimaryKey(): string
     {
@@ -45,8 +48,13 @@ class Module extends Model
         return $this->belongsTo(__CLASS__, 'ParentID', 'ModuleID');
     }
 
-    public function children()
+    public function children(): HasMany
     {
         return $this->hasMany(__CLASS__, 'ParentID', 'ModuleID');
+    }
+
+    public function permissionColum(): string
+    {
+        return 'RequiredPermission';
     }
 }

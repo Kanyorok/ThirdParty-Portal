@@ -10,7 +10,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyRateAndPricing extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+
     protected $table = 't_PropertyRateAndPricing';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
@@ -31,39 +33,40 @@ class PropertyRateAndPricing extends Model
         'TaxId',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
+
     public static function getPrimaryKey(): string
     {
         return 'PropertyRateAndPricingId';
     }
 
-    Public function property()
+    public function property()
     {
         return $this->belongsTo(PropertyRegistry::class, 'PropertyId', 'Id');
     }
 
-    Public function block()
+    public function block()
     {
         return $this->belongsTo(PropertyBlock::class, 'BlockId', 'Id');
     }
 
-    Public function floor()
+    public function floor()
     {
         return $this->belongsTo(PropertyFloor::class, 'FloorId', 'Id');
     }
 
-    Public function unit()
+    public function unit()
     {
         return $this->belongsTo(PropertyUnit::class, 'UnitId', 'Id');
     }
 
-    Public function currency()
+    public function currency()
     {
         return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');
     }
 
-    Public function tax()
+    public function tax()
     {
         return $this->belongsTo(FinanceTaxRuleConfiguration::class, 'TaxId', 'Id');
     }

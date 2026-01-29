@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyRegistry;
-use App\Models\PropertyManagement\PropertyBlock;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class PropertyFloorSeeder extends Seeder
 {
@@ -16,8 +16,9 @@ class PropertyFloorSeeder extends Seeder
 
         // Fetch a property
         $property = PropertyRegistry::where('PropertyName', 'Kilimani Towers')->first();
-        if (!$property) {
+        if (! $property) {
             $this->command->warn('Property "Kilimani Towers" not found. Skipping PropertyFloor seeding.');
+
             return;
         }
 
@@ -25,6 +26,7 @@ class PropertyFloorSeeder extends Seeder
         $blocks = PropertyBlock::where('PropertyID', $property->Id)->get();
         if ($blocks->isEmpty()) {
             $this->command->warn('No blocks found for "Kilimani Towers". Skipping PropertyFloor seeding.');
+
             return;
         }
 

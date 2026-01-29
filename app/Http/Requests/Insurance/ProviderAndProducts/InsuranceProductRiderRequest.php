@@ -25,7 +25,7 @@ class InsuranceProductRiderRequest extends FormRequest
     {
         return [
             'InsuranceProviderId' => 'required|exists:t_InsuranceProviders,Id',
-            'Product'=>'required|exists:t_InsuranceProducts,Id',
+            'Product' => 'required|exists:t_InsuranceProducts,Id',
             'RiderName' => [
                 'required',
                 'string',

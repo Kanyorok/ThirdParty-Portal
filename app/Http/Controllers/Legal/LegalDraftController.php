@@ -4,16 +4,15 @@ namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Legal\LegalDraft;
-use App\Models\Legal\LegalClause;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
 
 class LegalDraftController extends Controller
 {
     public function index()
     {
         $drafts = LegalDraft::orderByDesc('CreatedOn')->get();
+
         return view('legal.drafts.index', compact('drafts'));
     }
 
@@ -46,6 +45,7 @@ class LegalDraftController extends Controller
     public function edit($id)
     {
         $draft = LegalDraft::findOrFail($id);
+
         return view('legal.drafts.edit', compact('draft'));
     }
 
@@ -71,25 +71,25 @@ class LegalDraftController extends Controller
     public function show($id)
     {
         $draft = LegalDraft::findOrFail($id);
+
         return view('legal.drafts.show', compact('draft'));
     }
 
     // Clause fetch API for JS sidebar
-public function fetchClauses(Request $request)
-{
-    $q = $request->query('q');
+    public function fetchClauses(Request $request)
+    {
+        $q = $request->query('q');
 
-    $clauses = DB::table('t_LegalClauses')
-        ->where('IsActive', 1)
-        ->where(function ($query) use ($q) {
-            $query->where('Title', 'like', "%$q%")
-                  ->orWhere('Content', 'like', "%$q%");
-        })
-        ->orderBy('Title')
-        ->limit(10)
-        ->get(['ID', 'Title', 'Content']);
+        $clauses = DB::table('t_LegalClauses')
+            ->where('IsActive', 1)
+            ->where(function ($query) use ($q) {
+                $query->where('Title', 'like', "%$q%")
+                      ->orWhere('Content', 'like', "%$q%");
+            })
+            ->orderBy('Title')
+            ->limit(10)
+            ->get(['ID', 'Title', 'Content']);
 
-    return response()->json($clauses);
-}
-
+        return response()->json($clauses);
+    }
 }

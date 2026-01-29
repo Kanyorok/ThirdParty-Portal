@@ -2,18 +2,21 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Auth\User;
+
 class PropertyLeaseSchedule extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+
     protected $table = 't_ScheduleLease';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -27,13 +30,14 @@ class PropertyLeaseSchedule extends Model
         'OtherCharges',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
     {
         return 'ScheduleLeaseId';
     }
+
     public function lease()
     {
         return $this->belongsTo(PropertyNewLease::class, 'LeaseNumber', 'Id');

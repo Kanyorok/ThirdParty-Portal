@@ -21,6 +21,7 @@ trait SpecialPermissionTrait
                         return '<button type="button" data-click_url="' . $this->_trashRoute($permission) . '" data-info="' . (new PartyService($permission->party))->getName() . '"
                             class="btn btn-danger btn-sm share-permission-trash"><i class="fas fa-trash"></i></button>';
                     }
+
                     return '...';
                 })->editColumn('party', function (SpecialPermission $permission) {
                     return (new PartyService($permission->party))->getDTRow();

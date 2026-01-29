@@ -11,6 +11,7 @@ class TrainingTypeController extends Controller
     public function index()
     {
         $trainings = TrainingType::orderBy('Name')->get();
+
         return view('legal.setup.training_types.index', compact('trainings'));
     }
 
@@ -27,6 +28,7 @@ class TrainingTypeController extends Controller
         ]);
 
         TrainingType::create($validated + ['IsActive' => 1]);
+
         return redirect()->route('legal.setup.training_types.index')
             ->with('success', 'Training Type added successfully.');
     }
@@ -34,6 +36,7 @@ class TrainingTypeController extends Controller
     public function edit($id)
     {
         $training = TrainingType::findOrFail($id);
+
         return view('legal.setup.training_types.edit', compact('training'));
     }
 
@@ -47,6 +50,7 @@ class TrainingTypeController extends Controller
         ]);
 
         $training->update($validated);
+
         return redirect()->route('legal.setup.training_types.index')
             ->with('success', 'Training Type updated successfully.');
     }
@@ -55,6 +59,7 @@ class TrainingTypeController extends Controller
     {
         $training = TrainingType::findOrFail($id);
         $training->delete();
+
         return back()->with('success', 'Training Type deleted.');
     }
 }

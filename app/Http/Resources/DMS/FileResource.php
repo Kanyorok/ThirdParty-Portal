@@ -16,6 +16,7 @@ class FileResource extends JsonResource
     public function setMinified(bool $minified = false): static
     {
         $this->minified = $minified;
+
         return $this;
     }
 
@@ -27,7 +28,7 @@ class FileResource extends JsonResource
     public function toArray(Request $request): array
     {
         $extra = [];
-        if (!$this->minified) {
+        if (! $this->minified) {
             $service = new DocumentService($this->resource);
             $users = $service->users()->with('photo')->paginate(7, ['ImageId', 'UserID', 'Name']);
             $tags = $service->tags(auth()->user())->paginate(4, ['t_DMSTags.TagID', 't_DMSTags.Name', 't_DMSTags.Visibility']);
@@ -57,7 +58,7 @@ class FileResource extends JsonResource
                 'mime' => $this->MimeType,
                 'extension' => $this->resource->ext()->value,
                 'img' => $this->resource->ext()?->getIcon('img'),
-                'icon' => $this->resource->ext()?->getIcon('fa')
+                'icon' => $this->resource->ext()?->getIcon('fa'),
             ],
             'size' => [
                 'string' => Number::fileSize($this->resource->current->Size, 2),
@@ -70,8 +71,8 @@ class FileResource extends JsonResource
             'links' => [
                 'detail' => route('files.show', [$this->resource->repository->RepositoryId, $this->DocumentId]),
                 'summary' => route('files.edit', [$this->resource->repository->RepositoryId, $this->DocumentId]),
-                'move' => route('file-move.index', ['document' => $this->DocumentId])
-            ]
+                'move' => route('file-move.index', ['document' => $this->DocumentId]),
+            ],
         ], $extra);
     }
 }

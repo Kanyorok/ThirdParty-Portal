@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyUnit;
 use Illuminate\Database\Seeder;
-use App\Models\Auth\User;
 
 class LeaseManagementSeeder extends Seeder
 {
@@ -31,7 +31,7 @@ class LeaseManagementSeeder extends Seeder
         foreach ($properties as $propertyId) {
             $tenantId = $tenants[$index - 1] ?? $tenants->first();
             $unit = $units[$propertyId]->first();
-            if (!$unit) {
+            if (! $unit) {
                 continue;
             }
 
@@ -74,5 +74,3 @@ class LeaseManagementSeeder extends Seeder
         }
     }
 }
-
-

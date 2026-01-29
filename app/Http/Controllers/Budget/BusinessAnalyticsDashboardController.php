@@ -3,12 +3,9 @@
 namespace App\Http\Controllers\Budget;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class BusinessAnalyticsDashboardController extends Controller
 {
-
-    //
     public function index()
     {
         return view('budgetandanalytics.businessintelligenceandanalytics.bianalyticsanddashboard.index');
@@ -18,5 +15,4 @@ class BusinessAnalyticsDashboardController extends Controller
     {
         return view('budgetandanalytics.businessintelligenceandanalytics.bianalyticsanddashboard.create');
     }
-
 }

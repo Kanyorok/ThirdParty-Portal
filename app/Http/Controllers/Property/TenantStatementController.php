@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyInvoice;
+use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyReceipt;
-use App\Models\PropertyManagement\TenantLedger;
-use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class TenantStatementController extends Controller
 {
@@ -73,40 +72,42 @@ class TenantStatementController extends Controller
                 $credit = $entry['type'] === 'credit' ? $entry['amount'] : 0;
                 $runningBalance += $debit - $credit;
                 $entry['balance'] = $runningBalance;
+
                 return $entry;
             });
         }
-        
+
 
         // Return the view with data
         return view('property.billingandreceipting.tenantledger.index', compact('newleases', 'ledger'));
     }
+
     public function exportPdf(Request $request)
-{
-    $tenantId = $request->tenant_id;
-    $from = $request->from;
-    $to = $request->to;
+    {
+        $tenantId = $request->tenant_id;
+        $from = $request->from;
+        $to = $request->to;
 
-    if (!$tenantId || !$from || !$to) {
-        return redirect()->back()->with('error', 'Please provide tenant and date range.');
-    }
+        if (! $tenantId || ! $from || ! $to) {
+            return redirect()->back()->with('error', 'Please provide tenant and date range.');
+        }
 
-    $lease = PropertyNewLease::with('tenant')->findOrFail($tenantId);
-    $ledger = $this->generateLedger($tenantId, $from, $to);
+        $lease = PropertyNewLease::with('tenant')->findOrFail($tenantId);
+        $ledger = $this->generateLedger($tenantId, $from, $to);
 
-    $balance = 0;
-    $totalDebit = 0;
-    $totalCredit = 0;
-    $rows = '';
+        $balance = 0;
+        $totalDebit = 0;
+        $totalCredit = 0;
+        $rows = '';
 
-    foreach ($ledger as $entry) {
-        $debit = $entry['type'] === 'debit' ? $entry['amount'] : 0;
-        $credit = $entry['type'] === 'credit' ? $entry['amount'] : 0;
-        $balance += $debit - $credit;
-        $totalDebit += $debit;
-        $totalCredit += $credit;
+        foreach ($ledger as $entry) {
+            $debit = $entry['type'] === 'debit' ? $entry['amount'] : 0;
+            $credit = $entry['type'] === 'credit' ? $entry['amount'] : 0;
+            $balance += $debit - $credit;
+            $totalDebit += $debit;
+            $totalCredit += $credit;
 
-        $rows .= '<tr>
+            $rows .= '<tr>
                     <td>' . e($entry['date']) . '</td>
                     <td>' . e($entry['reference']) . '</td>
                     <td>' . e($entry['description']) . '</td>
@@ -114,9 +115,9 @@ class TenantStatementController extends Controller
                     <td style="text-align:right">' . ($credit > 0 ? number_format($credit, 2) : '-') . '</td>
                     <td style="text-align:right">' . number_format($balance, 2) . '</td>
                 </tr>';
-    }
+        }
 
-    $html = '
+        $html = '
         <html>
         <head>
             <style>
@@ -156,44 +157,46 @@ class TenantStatementController extends Controller
         </body>
         </html>';
 
-    $pdf = Pdf::loadHTML($html);
-    return $pdf->download('Tenant_Ledger_' . $lease->tenant->TenantName . '.pdf');
-}
-private function generateLedger($tenantId, $from, $to)
-{
-    $fromDate = Carbon::parse($from)->startOfDay();
-    $toDate = Carbon::parse($to)->endOfDay();
+        $pdf = Pdf::loadHTML($html);
 
-    $ledger = collect();
-
-    $invoices = PropertyInvoice::where('TenantId', $tenantId)
-        ->whereBetween('InvoiceDate', [$fromDate, $toDate])
-        ->get();
-
-    $receipts = PropertyReceipt::where('TenantId', $tenantId)
-        ->whereBetween('PaymentDate', [$fromDate, $toDate])
-        ->get();
-
-    foreach ($invoices as $invoice) {
-        $ledger->push([
-            'date' => $invoice->InvoiceDate,
-            'reference' => $invoice->InvoiceNumber,
-            'description' => 'Invoice - ' . ($invoice->InvoiceNotes ?? 'Rent'),
-            'type' => 'debit',
-            'amount' => $invoice->RentAmount,
-        ]);
+        return $pdf->download('Tenant_Ledger_' . $lease->tenant->TenantName . '.pdf');
     }
 
-    foreach ($receipts as $receipt) {
-        $ledger->push([
-            'date' => $receipt->PaymentDate,
-            'reference' => $receipt->ReferenceNo ?? '-',
-            'description' => 'Payment - ' . $receipt->PaymentMethod,
-            'type' => 'credit',
-            'amount' => $receipt->Amount,
-        ]);
-    }
+    private function generateLedger($tenantId, $from, $to)
+    {
+        $fromDate = Carbon::parse($from)->startOfDay();
+        $toDate = Carbon::parse($to)->endOfDay();
 
-    return $ledger->sortBy('date')->values()->toArray();
-}
+        $ledger = collect();
+
+        $invoices = PropertyInvoice::where('TenantId', $tenantId)
+            ->whereBetween('InvoiceDate', [$fromDate, $toDate])
+            ->get();
+
+        $receipts = PropertyReceipt::where('TenantId', $tenantId)
+            ->whereBetween('PaymentDate', [$fromDate, $toDate])
+            ->get();
+
+        foreach ($invoices as $invoice) {
+            $ledger->push([
+                'date' => $invoice->InvoiceDate,
+                'reference' => $invoice->InvoiceNumber,
+                'description' => 'Invoice - ' . ($invoice->InvoiceNotes ?? 'Rent'),
+                'type' => 'debit',
+                'amount' => $invoice->RentAmount,
+            ]);
+        }
+
+        foreach ($receipts as $receipt) {
+            $ledger->push([
+                'date' => $receipt->PaymentDate,
+                'reference' => $receipt->ReferenceNo ?? '-',
+                'description' => 'Payment - ' . $receipt->PaymentMethod,
+                'type' => 'credit',
+                'amount' => $receipt->Amount,
+            ]);
+        }
+
+        return $ledger->sortBy('date')->values()->toArray();
+    }
 }

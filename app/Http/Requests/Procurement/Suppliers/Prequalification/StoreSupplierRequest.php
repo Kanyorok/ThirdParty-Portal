@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Procurement\Suppliers\Prequalification;
 
+use App\Enums\BusinessTypeEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
-use App\Enums\BusinessTypeEnum;
 
 class StoreSupplierRequest extends FormRequest
 {

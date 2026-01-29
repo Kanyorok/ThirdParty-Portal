@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\DB;
 
 class ClaimPaymentController extends Controller
 {
-
     public function create()
     {
         // IDs from CodeDetail
@@ -32,7 +31,6 @@ class ClaimPaymentController extends Controller
 
         return view('bancassurance.claims.payments.create', compact('unpaidClaims', 'payments', 'Users'));
     }
-
 
     public function index()
     {

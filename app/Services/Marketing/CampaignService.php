@@ -31,15 +31,15 @@ class CampaignService
     {
         $campaign = new Campaign();
         $campaign->fill([
-                         'CampaignID'      => self::_ID($label),
-                         'Label'           => $label,
-                         'Status'          => CampaignStatusEnum::Draft->value,
-                         'Type'            => $type,
-                         'Processing'      => true,
+                         'CampaignID' => self::_ID($label),
+                         'Label' => $label,
+                         'Status' => CampaignStatusEnum::Draft->value,
+                         'Type' => $type,
+                         'Processing' => true,
                          'MarketingListId' => $list->MarketingListID,
-                         'Notes'           => $notes,
-                         'CreatedBy'       => $actor->Id,
-                         'ModifiedBy'      => $actor->Id,
+                         'Notes' => $notes,
+                         'CreatedBy' => $actor->Id,
+                         'ModifiedBy' => $actor->Id,
                         ])->save();
 
         event(new NewCampaignEvent($campaign, $actor, $autoSend));
@@ -57,6 +57,7 @@ class CampaignService
                 $slug .= " -" . $id;
             }
         } while (Campaign::withTrashed()->where('CampaignID', $slug)->exists());
+
         return $slug;
     }
 
@@ -84,7 +85,6 @@ class CampaignService
         return $this;
     }
 
-
     /**
      * @throws ErroredException
      */
@@ -96,25 +96,26 @@ class CampaignService
                 if ($party instanceof Client) {
                     $data->add([
                                 'CampaignId' => $this->campaign->Id,
-                                'Party'      => Client::getPrimaryKey(),
-                                'PartyID'    => $party->ClientID,
-                                'Status'     => CampaignStatusEnum::Draft->value,
-                                'CreatedBy'  => $actor->Id,
+                                'Party' => Client::getPrimaryKey(),
+                                'PartyID' => $party->ClientID,
+                                'Status' => CampaignStatusEnum::Draft->value,
+                                'CreatedBy' => $actor->Id,
                                 'ModifiedBy' => $actor->Id,
-                                'CreatedOn'  => $dated,
+                                'CreatedOn' => $dated,
                                 'ModifiedOn' => $dated,
                                ]);
+
                     continue;
                 }
                 if ($party instanceof Lead) {
                     $data->add([
                                 'CampaignId' => $this->campaign->Id,
-                                'Party'      => Lead::getPrimaryKey(),
-                                'PartyID'    => $party->LeadID,
-                                'Status'     => CampaignStatusEnum::Draft->value,
-                                'CreatedBy'  => $actor->Id,
+                                'Party' => Lead::getPrimaryKey(),
+                                'PartyID' => $party->LeadID,
+                                'Status' => CampaignStatusEnum::Draft->value,
+                                'CreatedBy' => $actor->Id,
                                 'ModifiedBy' => $actor->Id,
-                                'CreatedOn'  => $dated,
+                                'CreatedOn' => $dated,
                                 'ModifiedOn' => $dated,
                                ]);
                 }
@@ -123,6 +124,7 @@ class CampaignService
                 DB::table('t_CampaignParties')->lock('WITH(NOLOCK)')->insert($data->toArray());
             }
         });
+
         return $this;
     }
 
@@ -133,12 +135,12 @@ class CampaignService
             foreach ($parties as $party) {
                 $data->add([
                             'CampaignId' => $this->campaign->Id,
-                            'Party'      => $party->Party,
-                            'PartyID'    => $party->PartyID,
-                            'Status'     => CampaignStatusEnum::Draft->value,
-                            'CreatedBy'  => $actor->Id,
+                            'Party' => $party->Party,
+                            'PartyID' => $party->PartyID,
+                            'Status' => CampaignStatusEnum::Draft->value,
+                            'CreatedBy' => $actor->Id,
                             'ModifiedBy' => $actor->Id,
-                            'CreatedOn'  => $dated,
+                            'CreatedOn' => $dated,
                             'ModifiedOn' => $dated,
                            ]);
             }
@@ -146,13 +148,14 @@ class CampaignService
                 DB::table('t_CampaignParties')->lock('WITH(NOLOCK)')->insert($data->toArray());
             }
         });
+
         return $this;
     }
 
     public function run(User $actor): static
     {
         $this->campaign->fill([
-                               'Status'     => CampaignStatusEnum::Processing,
+                               'Status' => CampaignStatusEnum::Processing,
                                'Processing' => true,
                               ])->save(['timestamps' => false]);
 
@@ -226,10 +229,10 @@ class CampaignService
                                                                                                   ]);
 
         $this->campaign->workflows()->create([
-                                              'Stage'      => CampaignStatusEnum::Approval->name,
-                                              'Status'     => WorkflowStatus::Accepted->value,
-                                              'Notes'      => 'Campaign Approval',
-                                              'CreatedBy'  => $actor->Id,
+                                              'Stage' => CampaignStatusEnum::Approval->name,
+                                              'Status' => WorkflowStatus::Accepted->value,
+                                              'Notes' => 'Campaign Approval',
+                                              'CreatedBy' => $actor->Id,
                                               'ModifiedBy' => $actor->Id,
                                              ]);
 
@@ -260,12 +263,14 @@ class CampaignService
                                    ])->save(['timestamps' => false]);
 
         //add workflow
-        $this->campaign->workflows()->whereNotIn('t_Users.Id',
-            $this->campaign->workflows()->whereIn('Status', [WorkflowStatus::Submitted->value, WorkflowStatus::Accepted->value])->select('CreatedBy'))->create([
-                                              'Stage'      => CampaignStatusEnum::Draft->name,
-                                              'Status'     => WorkflowStatus::Submitted->value,
-                                              'Notes'      => 'User Submitted',
-                                              'CreatedBy'  => $actor->Id,
+        $this->campaign->workflows()->whereNotIn(
+            't_Users.Id',
+            $this->campaign->workflows()->whereIn('Status', [WorkflowStatus::Submitted->value, WorkflowStatus::Accepted->value])->select('CreatedBy')
+        )->create([
+                                              'Stage' => CampaignStatusEnum::Draft->name,
+                                              'Status' => WorkflowStatus::Submitted->value,
+                                              'Notes' => 'User Submitted',
+                                              'CreatedBy' => $actor->Id,
                                               'ModifiedBy' => $actor->Id,
                                              ]);
 
@@ -290,10 +295,10 @@ class CampaignService
                                                                                                   ]);
 
         $this->campaign->workflows()->create([
-                                              'Stage'      => CampaignStatusEnum::Approval->name,
-                                              'Status'     => WorkflowStatus::RejectReturn->value,
-                                              'Notes'      => $reason,
-                                              'CreatedBy'  => $actor->Id,
+                                              'Stage' => CampaignStatusEnum::Approval->name,
+                                              'Status' => WorkflowStatus::RejectReturn->value,
+                                              'Notes' => $reason,
+                                              'CreatedBy' => $actor->Id,
                                               'ModifiedBy' => $actor->Id,
                                              ]);
 

@@ -20,7 +20,6 @@ class BoardMessageController extends Controller
         $this->middleware('ajax');
     }
 
-
     /**
      * Display a listing of the resource.
      * @throws Exception
@@ -37,12 +36,13 @@ class BoardMessageController extends Controller
     public function store(MessageRequest $request, $boardMember_Id): JsonResponse
     {
         $boardMember = Board::query()->where('BoardMemberID', $boardMember_Id)->first();
-        if (!$boardMember instanceof Board) {
+        if (! $boardMember instanceof Board) {
             return $this->errored('board member may be invalid reload page.');
         }
 
         $request->getBoardMemberPhone($boardMember);
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($boardMember, $actor, $request) {
                 (new BoardService($boardMember))->sendMessage($request->validated('message_content'), $actor);
@@ -50,6 +50,7 @@ class BoardMessageController extends Controller
             });
         } catch (\Throwable | Exception $e) {
             Log::error('Error sending sms to board member ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

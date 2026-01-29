@@ -2,27 +2,23 @@
 
 namespace App\Models\Core\Approval;
 
+use App\Models\Settings\WorkFlowType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Settings\WorkFlowLimit;
-use App\Models\Settings\WorkFlowType;
 use Spatie\Permission\Models\Permission;
-use App\Models\Core\Approval\CodeDetail;
-use App\Models\Core\Approval\Workflow;
 
 class WorkflowStage extends Model
 {
-
     use SoftDeletes;
 
     protected $table = 't_WorkFlowStages';
     protected $primaryKey = 'Id';
 
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
 
     protected $fillable = [

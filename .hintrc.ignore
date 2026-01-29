@@ -1,0 +1,12 @@
+# Vendor files
+vendor/
+
+# Generated files
+public/build/
+
+# Documentation files
+public/hr-*.html
+public/*-documentation.html
+
+# Storage
+storage/

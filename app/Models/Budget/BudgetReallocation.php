@@ -2,9 +2,9 @@
 
 namespace App\Models\Budget;
 
+use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
-use App\Models\Auth\User;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,8 +17,8 @@ class BudgetReallocation extends Model
     public $timestamps = false;
 
     // Define custom timestamp column names
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = null; // No updated_at equivalent in your table
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = null; // No updated_at equivalent in your table
 
     public static function getPrimaryKey(): string
     {
@@ -159,7 +159,7 @@ class BudgetReallocation extends Model
         $this->update([
             'Status' => 'approved',
             'ApprovedBy' => $userId ?? \Illuminate\Support\Facades\Auth::id(),
-            'ApprovedOn' => now()
+            'ApprovedOn' => now(),
         ]);
     }
 

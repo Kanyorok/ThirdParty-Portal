@@ -2,17 +2,15 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Procurement\PlanLineItem;
 use App\Enums\ProcurementPlanStatusEnum;
+use App\Http\Controllers\Controller;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Policies\Procurement\PlanEditPolicy;
+use App\Models\Procurement\PlanLineItem;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PlanEditController extends Controller
 {
-    //
     public function index(Request $request)
     {
         $this->authorize('viewAny', PlanLineItem::class);
@@ -56,13 +54,15 @@ class PlanEditController extends Controller
             // Enforce minimum quantity of 1 - if item is not required, user should use Remove option
             if ($qty < 1) {
                 $errors[] = "Adjust Qty for item '{$item->item->ItemName}' (ID: $id) must be greater than or equal to 1. Use Remove option to exclude items.";
+
                 continue;
             }
 
             // Enforce upper bound only for non-manual items
             $isManual = strtolower((string)($item->SourceType ?? '')) === 'manual';
-            if (!$isManual && $qty > $item->OriginalQTY) {
+            if (! $isManual && $qty > $item->OriginalQTY) {
                 $errors[] = "Cannot set quantity for item '{$item->item->ItemName}' (ID: $id) greater than original quantity ({$item->OriginalQTY}).";
+
                 continue;
             }
 
@@ -79,7 +79,7 @@ class PlanEditController extends Controller
                 ->performedOn($updatedItem)
                 ->event('update')
                 ->log("Updated draft item: LineItemID {$id}");
-    }
+        }
         if (count($errors) > 0) {
             return redirect()->back()->with('error', implode(' ', $errors));
         }
@@ -111,7 +111,8 @@ class PlanEditController extends Controller
         return redirect()->back()->with('success', 'Item removed successfully.');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('procurement.procurementplan.planapproval.ammendplan.create');
     }
 }

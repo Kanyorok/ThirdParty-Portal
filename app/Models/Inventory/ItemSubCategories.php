@@ -9,9 +9,9 @@ class ItemSubCategories extends Model
 {
     use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $connection = 'sqlsrv';
     protected $table = 't_ItemSubCategories';
@@ -27,15 +27,15 @@ class ItemSubCategories extends Model
                            'SubCategoryName',
                            'ParentCategory',
                            'Description',
-                           'Status'
+                           'Status',
                           ];
 
     protected $casts = [
-                            'SubCategoryCode'       => 'string',
-                            'SubCategoryName'       => 'string',
-                            'ParentCategory'     => 'string',
-                            'Description'      => 'string',
-                            'Status'      => 'boolean',
+                            'SubCategoryCode' => 'string',
+                            'SubCategoryName' => 'string',
+                            'ParentCategory' => 'string',
+                            'Description' => 'string',
+                            'Status' => 'boolean',
 
     ];
 

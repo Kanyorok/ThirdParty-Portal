@@ -29,6 +29,7 @@ class RepositoryMoveController extends Controller
     public function index(Request $request, Repository $repository): View
     {
         $this->authorize('update', $repository);
+
         return view('dms.files.move')
             ->with('file', $repository)
             ->with('parent', $repository->parent)
@@ -46,7 +47,7 @@ class RepositoryMoveController extends Controller
         $repo = $request->getRepository($actor);
         if ($repo->Id === $repository->ParentId) {
             throw ValidationException::withMessages([
-                'repository_id' => 'repository cannot be moved to itself'
+                'repository_id' => 'repository cannot be moved to itself',
             ]);
         }
 
@@ -60,10 +61,10 @@ class RepositoryMoveController extends Controller
                 activity()->causedBy($actor)->performedOn($repository)->event('Change Repository')->log('File moved to repository ' . $repo->Name . '.');
 
                 return $this->succeeded('repository moved to repository ' . $repo->Name . ' successfully', data: [
-                    'data' => (new RepositoryResource($repository))->setMinified(true)
+                    'data' => (new RepositoryResource($repository))->setMinified(true),
                 ]);
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Could not move repository ' . $e);
         }
 

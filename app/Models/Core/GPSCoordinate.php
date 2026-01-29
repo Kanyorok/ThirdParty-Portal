@@ -10,14 +10,14 @@ class GPSCoordinate extends Model
 {
     use UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
+    public const string CREATED_AT = 'CreatedOn';
+    public const string UPDATED_AT = 'ModifiedOn';
     protected $table = 't_GPSCoordinates';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
         "Source", "SourceID", "Latitude", "Longitude", "Extra",
-        "CreatedBy", "CreatedOn", "ModifiedBy", "ModifiedOn"
+        "CreatedBy", "CreatedOn", "ModifiedBy", "ModifiedOn",
     ];
 
     protected $casts = [
@@ -25,7 +25,6 @@ class GPSCoordinate extends Model
         'Longitude' => 'float',
         'Extra' => 'array',
     ];
-
 
     public static function getPrimaryKey(): string
     {

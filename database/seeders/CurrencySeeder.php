@@ -1,13 +1,13 @@
 <?php
+
 namespace Database\Seeders;
 
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
-
 
 class CurrencySeeder extends Seeder
 {
@@ -16,14 +16,15 @@ class CurrencySeeder extends Seeder
         $user = SystemHelper::user();
         $date = now();
         $source = 'https://raw.githubusercontent.com/ourworldincode/currency/main/currencies.json';
+
         try {
             $json = file_get_contents($source);
-            if (!is_string($json)) {
+            if (! is_string($json)) {
                 throw new ErroredException('Unable to fetch the currencies data.');
             }
 
             $currencies = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-            if (!is_array($currencies)) {
+            if (! is_array($currencies)) {
                 throw new ErroredException('Unable to decode currencies data.');
             }
         } catch (Throwable $e) {
@@ -32,6 +33,7 @@ class CurrencySeeder extends Seeder
             if (method_exists(SystemHelper::class, 'notifyAdmin')) {
                 SystemHelper::notifyAdmin('Could not fetch currencies data from ' . $source . '.');
             }
+
             return;
         }
 
@@ -56,30 +58,31 @@ class CurrencySeeder extends Seeder
             }
 
             $upserts[] = [
-                'Name'          => $name,
-                'Demonym'       => $c['demonym'] ?? null,
-                'Code'          => $code,
-                'Symbol'        => $symbol,
-                'SymbolNative'  => $symbolNative,
+                'Name' => $name,
+                'Demonym' => $c['demonym'] ?? null,
+                'Code' => $code,
+                'Symbol' => $symbol,
+                'SymbolNative' => $symbolNative,
                 'DecimalDigits' => $decimalDigits,
-                'Rounding'      => isset($c['rounding']) ? (float)$c['rounding'] : 0.0,
-                'MajorSingle'   => $c['majorSingle'] ?? null,
-                'MajorPlural'   => $c['majorPlural'] ?? null,
-                'ISOnum'        => $isOnum,
-                'MinorSingle'   => $c['minorSingle'] ?? null,
-                'MinorPlural'   => $c['minorPlural'] ?? null,
-                'ISOdigits'     => isset($c['ISOdigits']) ? (int)$c['ISOdigits'] : null,
-                'Decimals'      => isset($c['decimals']) ? (int)$c['decimals'] : null,
-                'NumToBasic'    => isset($c['numToBasic']) ? (int)$c['numToBasic'] : null,
-                'CreatedOn'     => $now,
-                'CreatedBy'     => $userId,
-                'ModifiedOn'    => $now,
-                'ModifiedBy'    => $userId,
+                'Rounding' => isset($c['rounding']) ? (float)$c['rounding'] : 0.0,
+                'MajorSingle' => $c['majorSingle'] ?? null,
+                'MajorPlural' => $c['majorPlural'] ?? null,
+                'ISOnum' => $isOnum,
+                'MinorSingle' => $c['minorSingle'] ?? null,
+                'MinorPlural' => $c['minorPlural'] ?? null,
+                'ISOdigits' => isset($c['ISOdigits']) ? (int)$c['ISOdigits'] : null,
+                'Decimals' => isset($c['decimals']) ? (int)$c['decimals'] : null,
+                'NumToBasic' => isset($c['numToBasic']) ? (int)$c['numToBasic'] : null,
+                'CreatedOn' => $now,
+                'CreatedBy' => $userId,
+                'ModifiedOn' => $now,
+                'ModifiedBy' => $userId,
             ];
         }
 
         if (empty($upserts)) {
             Log::warning('CurrencySeeder: no currencies to upsert.');
+
             return;
         }
 
@@ -106,7 +109,7 @@ class CurrencySeeder extends Seeder
             'Decimals',
             'NumToBasic',
             'ModifiedOn',
-            'ModifiedBy'
+            'ModifiedBy',
         ];
 
         foreach (array_chunk($upserts, $chunkSize) as $chunk) {

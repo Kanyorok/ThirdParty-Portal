@@ -10,7 +10,6 @@ use App\Models\Insurance\MedicalFundContributor;
 use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Support\Carbon;
 
-
 class MedicalFundContributorController extends Controller
 {
     public function __construct()
@@ -28,7 +27,9 @@ class MedicalFundContributorController extends Controller
         if ($search = request('search')) {
             $q->where(function ($x) use ($search) {
                 $x->where('ContributorNo', 'like', "%{$search}%")
-                    ->orWhereHas('thirdParty', fn($q) =>
+                    ->orWhereHas(
+                        'thirdParty',
+                        fn ($q) =>
                         $q->where('Name', 'like', "%{$search}%")
                           ->orWhere('Email', 'like', "%{$search}%")
                           ->orWhere('Phone', 'like', "%{$search}%")
@@ -92,46 +93,45 @@ class MedicalFundContributorController extends Controller
             ->with('success', 'Contributor created successfully with number ' . $data['ContributorNo']);
     }
 
-
     /**
      * Display the specified contributor details.
      */
-public function show(MedicalFundContributor $contributor)
-{
-    // Load relationships
-    $contributor->load(['fund', 'beneficiaries', 'packages']);
-    $medical_fund = $contributor->fund;
+    public function show(MedicalFundContributor $contributor)
+    {
+        // Load relationships
+        $contributor->load(['fund', 'beneficiaries', 'packages']);
+        $medical_fund = $contributor->fund;
 
-    // Paginate beneficiaries for the view
-    $beneficiaries = $contributor->beneficiaries()->orderByDesc('Id')->paginate(10);
+        // Paginate beneficiaries for the view
+        $beneficiaries = $contributor->beneficiaries()->orderByDesc('Id')->paginate(10);
 
-    // Totals for contributions and disbursements
-    $totals = [
-        'contrib_sum' => $contributor->contributions()->sum('Amount'),
-        'disb_sum'    => $contributor->disbursements()->sum('Amount'),
-    ];
+        // Totals for contributions and disbursements
+        $totals = [
+            'contrib_sum' => $contributor->contributions()->sum('Amount'),
+            'disb_sum' => $contributor->disbursements()->sum('Amount'),
+        ];
 
-    // ✅ Fetch relationships directly from t_CodeDetails
-    $relationships = \DB::table('t_CodeDetails')
-        ->where('CodeID', 'BeneficiaryRelationship')
-        ->orderBy('Description')
-        ->get(['ID', 'Description']);
+        // ✅ Fetch relationships directly from t_CodeDetails
+        $relationships = \DB::table('t_CodeDetails')
+            ->where('CodeID', 'BeneficiaryRelationship')
+            ->orderBy('Description')
+            ->get(['ID', 'Description']);
 
-    return view('bancassurance.medical_fund_contributors.show', compact(
-        'contributor', 'medical_fund', 'beneficiaries', 'totals', 'relationships'
-    ));
-}
-
-
-
-
+        return view('bancassurance.medical_fund_contributors.show', compact(
+            'contributor',
+            'medical_fund',
+            'beneficiaries',
+            'totals',
+            'relationships'
+        ));
+    }
 
     /**
      * Show the form for editing the specified contributor.
      */
     public function edit($id)
     {
-        $contributor  = MedicalFundContributor::with(['fund', 'packages'])->findOrFail($id);
+        $contributor = MedicalFundContributor::with(['fund', 'packages'])->findOrFail($id);
         $medical_fund = $contributor->fund ?? MedicalFund::findOrFail($contributor->FundId);
 
         $statuses = CodeDetail::query()
@@ -177,9 +177,10 @@ public function show(MedicalFundContributor $contributor)
      */
     private function syncPackages(MedicalFundContributor $contributor, array $packageIds = [])
     {
-        $ids = collect($packageIds)->map(fn($v) => (int)$v)->unique()->values();
+        $ids = collect($packageIds)->map(fn ($v) => (int)$v)->unique()->values();
         if ($ids->isEmpty()) {
             $contributor->packages()->detach();
+
             return;
         }
 
@@ -188,7 +189,7 @@ public function show(MedicalFundContributor $contributor)
         $existing = $contributor->packages()
             ->whereIn('t_MedicalFundPackages.Id', $ids)
             ->get()
-            ->mapWithKeys(fn($p) => [(int)$p->Id => optional($p->pivot)->SubscribedOn]);
+            ->mapWithKeys(fn ($p) => [(int)$p->Id => optional($p->pivot)->SubscribedOn]);
 
         $primaryId = optional(
             $contributor->packages()->wherePivot('IsPrimary', 1)->first()
@@ -196,11 +197,12 @@ public function show(MedicalFundContributor $contributor)
 
         $sync = $ids->mapWithKeys(function ($pid) use ($existing, $today, $primaryId) {
             $subOn = $existing->get((int)$pid) ?: $today;
+
             return [
                 $pid => [
-                    'IsActive'     => true,
+                    'IsActive' => true,
                     'SubscribedOn' => $subOn,
-                    'IsPrimary'    => $pid === $primaryId ? true : false,
+                    'IsPrimary' => $pid === $primaryId ? true : false,
                 ],
             ];
         })->all();

@@ -16,7 +16,6 @@ class ProcessContactsListener implements ShouldQueue
      */
     public function __construct()
     {
-        //
     }
 
     /**

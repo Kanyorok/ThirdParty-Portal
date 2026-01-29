@@ -20,6 +20,7 @@ class DocumentSignatureRequest extends FormRequest
     public function rules(): array
     {
         $size = (int)bcmul(config('app.dms.file_size'), 1024, 0);
+
         return [
             'file' => [
                 'nullable', Rule::file()->types(ExtensionsEnum::Png->getMimeType())->max($size),
@@ -49,6 +50,7 @@ class DocumentSignatureRequest extends FormRequest
         if ($Visibility instanceof VisibilityEnum) {
             return $Visibility;
         }
+
         throw ValidationException::withMessages(['Visibility' => 'invalid visibility type']);
     }
 
@@ -58,6 +60,7 @@ class DocumentSignatureRequest extends FormRequest
         if ($ContentPosition instanceof ImageGravityEnum) {
             return $ContentPosition;
         }
+
         throw ValidationException::withMessages(['ContentPosition' => 'invalid Content Position']);
     }
 }

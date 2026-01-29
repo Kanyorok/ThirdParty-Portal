@@ -20,7 +20,7 @@ class ThirdPartyRepository implements ThirdPartyRepositoryInterface
         return Cache::remember(
             $this->getCacheKey($id),
             self::CACHE_TTL,
-            fn() => ThirdParties::find($id)
+            fn () => ThirdParties::find($id)
         );
     }
 
@@ -31,7 +31,7 @@ class ThirdPartyRepository implements ThirdPartyRepositoryInterface
         return Cache::remember(
             $cacheKey,
             self::CACHE_TTL,
-            fn() => ThirdParties::with($relations)->find($id)
+            fn () => ThirdParties::with($relations)->find($id)
         );
     }
 
@@ -42,6 +42,7 @@ class ThirdPartyRepository implements ThirdPartyRepositoryInterface
             self::CACHE_TTL,
             function () use ($userId) {
                 $user = ThirdPartyUser::find($userId);
+
                 return $user?->ThirdPartyId ? ThirdParties::find($user->ThirdPartyId) : null;
             }
         );
@@ -98,7 +99,7 @@ class ThirdPartyRepository implements ThirdPartyRepositoryInterface
                     'PartyID' => $partyId,
                     'CreatedBy' => $userId,
                     'ModifiedBy' => $userId,
-                ]
+                ],
             ]);
 
             $this->clearCache($thirdParty->Id);
@@ -117,7 +118,7 @@ class ThirdPartyRepository implements ThirdPartyRepositoryInterface
 
     public function getUserProfiles(ThirdPartyUser $user): ?ThirdParties
     {
-        if (!$user->ThirdPartyId) {
+        if (! $user->ThirdPartyId) {
             return null;
         }
 

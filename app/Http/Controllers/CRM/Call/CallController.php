@@ -26,7 +26,7 @@ class CallController extends Controller
                                                ],
                                    ]);
         $phone = '';
-        if (array_key_exists('phone', $data) && !is_null($data['phone'])) {
+        if (array_key_exists('phone', $data) && ! is_null($data['phone'])) {
             $phoneNo = trim($data['phone']);
             $phone = filter_var(Str::of(explode('/', $phoneNo)[0])->replace(['"', '+'], ['', ''])->toString(), FILTER_SANITIZE_NUMBER_INT);
         }

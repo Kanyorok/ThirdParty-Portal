@@ -2,16 +2,16 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\ItemCategories;
-use App\Models\Core\Approval\CodeDetail;
-use App\Models\DMS\Image;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\DMS\Image;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\ItemMasterList;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Carbon;
-use Illuminate\Http\UploadedFile;
 
 class ItemMasterListService
 {
@@ -94,7 +94,7 @@ class ItemMasterListService
             $item->Category = $data['SubCategory'] ?? $data['Category'] ?? $item->Category;
 
             // Handle image removal
-            if (!empty($data['remove_image']) && $data['remove_image'] == '1') {
+            if (! empty($data['remove_image']) && $data['remove_image'] == '1') {
                 if ($item->ImageId) {
                     Image::destroy($item->ImageId);
                 }
@@ -154,7 +154,7 @@ class ItemMasterListService
             $item->Status = $inactiveId;
             $item->DeletedBy = Auth::id();
             $item->DeletedOn = Carbon::now();
-            
+
             $item->save();
 
             // Delete linked image

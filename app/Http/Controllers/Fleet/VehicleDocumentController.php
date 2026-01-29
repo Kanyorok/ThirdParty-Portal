@@ -3,15 +3,13 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\FleetVehicleDocument;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class VehicleDocumentController extends Controller
 {
-
     public function index()
     {
         $documents = FleetVehicleDocument::with('vehicle')

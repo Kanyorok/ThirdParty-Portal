@@ -29,6 +29,7 @@ class TeamUserController extends Controller
     public function index(Team $team): JsonResponse
     {
         $this->authorize('view', $team);
+
         return UserService::dt($team->users(), ['photo'], ['pivot_date', 'action_team' => $team->TeamID]);
     }
 
@@ -50,6 +51,7 @@ class TeamUserController extends Controller
 
         $actor = $request->user();
         $dated = now();
+
         try {
             DB::transaction(static function () use ($dated, $team, $request, $actor) {
                 $users = User::query()->whereIn('t_Users.UserID', $request->get('users'))->whereNotIn('t_Users.UserID', $team->users()->select('t_Users.UserID'))->get(['Id', 'UserID']);
@@ -57,11 +59,11 @@ class TeamUserController extends Controller
                 $data = collect([]);
                 foreach ($users as $user) {
                     $data->add([
-                                'TeamId'     => $team->TeamID,
-                                'UserId'     => $user->Id,
-                                'CreatedBy'  => $actor->Id,
+                                'TeamId' => $team->TeamID,
+                                'UserId' => $user->Id,
+                                'CreatedBy' => $actor->Id,
                                 'ModifiedBy' => $actor->Id,
-                                'CreatedOn'  => $dated,
+                                'CreatedOn' => $dated,
                                 'ModifiedOn' => $dated,
                                ]);
                 }
@@ -76,12 +78,12 @@ class TeamUserController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error adding users to list ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
         return $this->succeeded('added successfully');
     }
-
 
     /**
      * Remove the specified resource from storage.
@@ -105,6 +107,7 @@ class TeamUserController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error removing user from team ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

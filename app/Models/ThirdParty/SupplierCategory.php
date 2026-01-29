@@ -2,23 +2,23 @@
 
 namespace App\Models\ThirdParty;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Inventory\ItemCategories;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Inventory\ItemCategories;
-
 // model representing t_ItemCategories
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class SupplierCategory extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_SupplierCategories';
     protected $primaryKey = 'SupplierCategoryID';
@@ -63,7 +63,7 @@ class SupplierCategory extends Model
                 'ModifiedBy',
                 'ModifiedOn',
                 'DeletedBy',
-                'DeletedOn'
+                'DeletedOn',
             ])
             ->whereNull('t_SupplierCategory_ItemCategory.DeletedOn');
     }
@@ -77,10 +77,11 @@ class SupplierCategory extends Model
     public function syncItemCategoriesWithAudit(array $newIds, int $userId): void
     {
         // If model not persisted, avoid pivot operations
-        if (!$this->getKey()) {
+        if (! $this->getKey()) {
             Log::warning('Attempted to sync item categories on unsaved SupplierCategory model', [
                 'new_ids' => $newIds,
             ]);
+
             return;
         }
         $newIds = collect($newIds)->filter()->unique()->values();
@@ -99,7 +100,7 @@ class SupplierCategory extends Model
         $toRemove = $current->diff($newIds); // soft delete
 
         if ($toAdd->isNotEmpty()) {
-            $insertRows = $toAdd->map(fn($id) => [
+            $insertRows = $toAdd->map(fn ($id) => [
                 'SupplierCategoryID' => $this->getKey(),
                 'ItemCategoryID' => $id,
                 'CreatedBy' => $userId,

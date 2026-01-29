@@ -22,9 +22,8 @@ class PropertyLeaseScheduleService
         float $serviceCharge,
         float $parkingFee,
         float $otherCharges,
-        User  $user
-    ): PropertyLeaseSchedule
-    {
+        User $user
+    ): PropertyLeaseSchedule {
 
         // Check if a schedule already exists for the lease
         $exists = PropertyLeaseSchedule::where('LeaseNumber', $leaseId)->exists();

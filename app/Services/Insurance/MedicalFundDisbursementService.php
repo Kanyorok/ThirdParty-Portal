@@ -4,9 +4,9 @@ namespace App\Services\Insurance;
 
 use App\Models\Auth\User;
 use App\Models\Insurance\MedicalFund;
+use App\Models\Insurance\MedicalFundBeneficiary;
 use App\Models\Insurance\MedicalFundContributor;
 use App\Models\Insurance\MedicalFundDisbursement;
-use App\Models\Insurance\MedicalFundBeneficiary;
 use Illuminate\Support\Carbon;
 
 class MedicalFundDisbursementService
@@ -16,7 +16,6 @@ class MedicalFundDisbursementService
      */
     public function __construct(public MedicalFundDisbursement $medicalFundDisbursement)
     {
-        //
     }
 
     /**
@@ -32,19 +31,18 @@ class MedicalFundDisbursementService
         float $amount,
         ?string $purpose = null,
         ?User $user = null
-    ): self
-    {
+    ): self {
         $disbursement = MedicalFundDisbursement::create([
-            'FundId'           => $fund->Id,
-            'ContributorId'    => $contributor->Id,
-            'BeneficiaryId'    => $beneficiary->Id,
-            'CoverageID'       => $coverageID,
-            'PackageID'        => $packageID,
+            'FundId' => $fund->Id,
+            'ContributorId' => $contributor->Id,
+            'BeneficiaryId' => $beneficiary->Id,
+            'CoverageID' => $coverageID,
+            'PackageID' => $packageID,
             'DisbursementDate' => $disbursementDate,
-            'Amount'           => $amount,
-            'Purpose'          => $purpose,
-            'CreatedBy'        => $user?->Id,
-            'ModifiedBy'       => $user?->Id,
+            'Amount' => $amount,
+            'Purpose' => $purpose,
+            'CreatedBy' => $user?->Id,
+            'ModifiedBy' => $user?->Id,
         ]);
 
         if (function_exists('activity')) {
@@ -66,13 +64,12 @@ class MedicalFundDisbursementService
         float $amount,
         ?string $purpose = null,
         ?User $user = null
-    ): self
-    {
+    ): self {
         $this->medicalFundDisbursement->update([
             'DisbursementDate' => $disbursementDate,
-            'Amount'           => $amount,
-            'Purpose'          => $purpose,
-            'ModifiedBy'       => $user?->Id,
+            'Amount' => $amount,
+            'Purpose' => $purpose,
+            'ModifiedBy' => $user?->Id,
         ]);
 
         if (function_exists('activity')) {

@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Models\Auth\User;
 use App\Models\HRM\Employee;
+use App\Models\Procurement\RFQ;
+use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQCommittee;
 use App\Models\Procurement\RFQCommitteeMember;
+use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderCommittee;
+use App\Models\Procurement\TenderCommitteeEvaluation;
 use App\Models\Procurement\TenderCommitteeMember;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -16,14 +19,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Procurement\RFQ;
-use App\Models\Procurement\TenderCommitteeEvaluation;
-use App\Models\Procurement\RFQEvaluation;
 
 class TenderCommitteeController extends Controller
 {
-    //
-
     public function index(Request $request)
     {
         // Tender Committees
@@ -49,7 +47,6 @@ class TenderCommitteeController extends Controller
                 'appointment_date' => $item->AppointmentDate,
             ];
         });
-//dd($rfqCommittees);
         // Combine both and sort
         $committeesCollection = collect($tenderCommittees)
             ->merge($rfqCommittees)
@@ -75,14 +72,13 @@ class TenderCommitteeController extends Controller
         ));
     }
 
-    public function create(){
+    public function create()
+    {
         return view('procurement.tendering.bidopeningandevaluation.committeeappointment.create');
     }
 
-
     public function store(Request $request)
     {
-        //dd($request->all());
         $request->validate([
             'committeeType' => 'required|in:tender,rfq',
             'referenceId' => 'required|integer',
@@ -91,6 +87,7 @@ class TenderCommitteeController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $userId = Auth::id();
             $now = Carbon::now();
@@ -162,9 +159,7 @@ class TenderCommitteeController extends Controller
 
             return redirect()->back()->with('error', 'Failed to appoint Committee: ' . $th->getMessage());
         }
-
     }
-
 
     public function show($id, $type)
     {
@@ -173,7 +168,7 @@ class TenderCommitteeController extends Controller
 
         if ($type === 'tender') {
             $tender = Tender::find($id);
-            if (!$tender) {
+            if (! $tender) {
                 return redirect()->back()->with('error', 'Tender not found with ID: ' . $id);
             }
             $title = $tender->Title;
@@ -182,7 +177,7 @@ class TenderCommitteeController extends Controller
                 ->get();
         } elseif ($type === 'rfq') {
             $rfq = RFQ::find($id);
-            if (!$rfq) {
+            if (! $rfq) {
                 return redirect()->back()->with('error', 'RFQ not found with ID: ' . $id);
             }
             $title = $rfq->RFQNumber;
@@ -190,6 +185,7 @@ class TenderCommitteeController extends Controller
                 ->with(['user.employee'])
                 ->get();
         }
+
         return view('procurement.tendering.bidopeningandevaluation.committeeappointment.TenderMembers', [
             'committeeMembers' => $committeeMembers,
             'tenderTitle' => $title,
@@ -197,7 +193,6 @@ class TenderCommitteeController extends Controller
             'committeeType' => $type,
         ]);
     }
-
 
     public function membersAdd(Request $request)
     {
@@ -212,6 +207,7 @@ class TenderCommitteeController extends Controller
         $userId = Auth::id();
 
         DB::beginTransaction();
+
         try {
             foreach ($request->memberID as $index => $userID) {
                 $role = $request->memberRole[$index];
@@ -222,7 +218,7 @@ class TenderCommitteeController extends Controller
                         ->update([
                             'Role' => $role,
                             'ModifiedBy' => $userId,
-                            'ModifiedOn' => $now
+                            'ModifiedOn' => $now,
                         ]);
                 } elseif ($request->committeeType === 'rfq') {
                     \App\Models\Procurement\RFQCommitteeMember::where('RFQID', $request->tenderID)
@@ -230,7 +226,7 @@ class TenderCommitteeController extends Controller
                         ->update([
                             'Role' => $role,
                             'ModifiedBy' => $userId,
-                            'ModifiedOn' => $now
+                            'ModifiedOn' => $now,
                         ]);
                 }
             }
@@ -262,23 +258,23 @@ class TenderCommitteeController extends Controller
                 ->where('CommitteeType', 'tender')
                 ->pluck('ReferenceId')
                 ->toArray();
-            
+
             // Also check for legacy TenderID field
             $tendersWithLegacyCommittee = TenderCommittee::whereNotNull('TenderID')
                 ->pluck('TenderID')
                 ->toArray();
-            
+
             $excludedTenderIds = array_unique(array_merge($tendersWithCommittee, $tendersWithLegacyCommittee));
-            
+
             // Get IDs of tenders where evaluation has started
             $tendersWithEvaluation = TenderCommitteeEvaluation::whereNotNull('TenderID')
                 ->distinct()
                 ->pluck('TenderID')
                 ->toArray();
-            
+
             // Combine all excluded IDs
             $allExcludedIds = array_unique(array_merge($excludedTenderIds, $tendersWithEvaluation));
-            
+
             $data = Tender::select('Id', 'TenderNo as RefNo', 'Title')
                 ->whereNotIn('Id', $allExcludedIds)
                 ->get();
@@ -287,24 +283,24 @@ class TenderCommitteeController extends Controller
             $rfqsWithCommittee = RFQCommittee::whereNotNull('RFQID')
                 ->pluck('RFQID')
                 ->toArray();
-            
+
             // Also check TenderCommittee for RFQ type entries
             $rfqsWithTenderCommittee = TenderCommittee::whereNotNull('ReferenceId')
                 ->where('CommitteeType', 'rfq')
                 ->pluck('ReferenceId')
                 ->toArray();
-            
+
             $excludedRfqIds = array_unique(array_merge($rfqsWithCommittee, $rfqsWithTenderCommittee));
-            
+
             // Get IDs of RFQs where evaluation has started
             $rfqsWithEvaluation = RFQEvaluation::whereNotNull('RFQId')
                 ->distinct()
                 ->pluck('RFQId')
                 ->toArray();
-            
+
             // Combine all excluded IDs
             $allExcludedIds = array_unique(array_merge($excludedRfqIds, $rfqsWithEvaluation));
-            
+
             $data = RFQ::select('Id', 'RFQNumber as RefNo')
                 ->whereNotIn('Id', $allExcludedIds)
                 ->get();
@@ -314,6 +310,4 @@ class TenderCommitteeController extends Controller
 
         return response()->json($data);
     }
-
-
 }

@@ -7,12 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AccountTrx extends Model
 {
-    //protected $connection = 'brcbs';
     protected $connection = 'sqlsrv';
     public $incrementing = false;
     protected $table = 'v_AccountTrx';
     protected $primaryKey = 'TrxRowID';
-
 
     protected function casts(): array
     {

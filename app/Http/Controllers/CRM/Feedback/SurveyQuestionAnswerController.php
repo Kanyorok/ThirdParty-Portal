@@ -22,6 +22,7 @@ class SurveyQuestionAnswerController extends Controller
     {
         $this->middleware('ajax');
     }
+
     /**
      * Display a listing of the resource.
      * @throws AuthorizationException
@@ -55,6 +56,7 @@ class SurveyQuestionAnswerController extends Controller
         }
 
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($question, $request, $actor) {
                 $question->answers()->create(['Answer' => '1. One', 'Notes' => "", 'CreatedBy' => $actor->Id, 'ModifiedBy' => $actor->Id]);
@@ -65,8 +67,9 @@ class SurveyQuestionAnswerController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error add option 1-5  to question (' . $question->SurveyQuestionId . ') :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -90,18 +93,19 @@ class SurveyQuestionAnswerController extends Controller
         }
 
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($question, $actor) {
                 $question->answers()->create([
-                                              'Answer'     => "Yes",
-                                              'Notes'      => 'Agree',
-                                              'CreatedBy'  => $actor->Id,
+                                              'Answer' => "Yes",
+                                              'Notes' => 'Agree',
+                                              'CreatedBy' => $actor->Id,
                                               'ModifiedBy' => $actor->Id,
                                              ]);
                 $question->answers()->create([
-                                              'Answer'     => "No",
-                                              'Notes'      => 'Disagree',
-                                              'CreatedBy'  => $actor->Id,
+                                              'Answer' => "No",
+                                              'Notes' => 'Disagree',
+                                              'CreatedBy' => $actor->Id,
                                               'ModifiedBy' => $actor->Id,
                                              ]);
             });
@@ -109,6 +113,7 @@ class SurveyQuestionAnswerController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error add option (yes/no) to question (' . $question->SurveyQuestionId . ') :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -125,7 +130,7 @@ class SurveyQuestionAnswerController extends Controller
     {
         $this->authorize('update', $question?->survey);
         $request->validate([
-                            'QuestionOption'     => [
+                            'QuestionOption' => [
                                                      'required',
                                                      'max:500',
                                                     ],
@@ -140,12 +145,13 @@ class SurveyQuestionAnswerController extends Controller
         }
 
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($question, $request, $actor) {
                 $question->answers()->create([
-                                              'Answer'     => $request->get('QuestionOption'),
-                                              'Notes'      => $request->get('QuestionOptionHelp'),
-                                              'CreatedBy'  => $actor->Id,
+                                              'Answer' => $request->get('QuestionOption'),
+                                              'Notes' => $request->get('QuestionOptionHelp'),
+                                              'CreatedBy' => $actor->Id,
                                               'ModifiedBy' => $actor->Id,
                                              ]);
             });
@@ -153,6 +159,7 @@ class SurveyQuestionAnswerController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error add option to question (' . $question->SurveyQuestionId . ') :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -169,11 +176,12 @@ class SurveyQuestionAnswerController extends Controller
     {
         $this->authorize('update', $question?->survey);
         $option = $question->answers()->where('t_SurveyQuestionAnswers.Id', $surveyQuestionAnswer)->first();
-        if (!$option instanceof SurveyQuestionAnswer) {
+        if (! $option instanceof SurveyQuestionAnswer) {
             return $this->errored('Option does not exist');
         }
 
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($option, $actor) {
                 $option->forceFill([
@@ -184,6 +192,7 @@ class SurveyQuestionAnswerController extends Controller
             });
         } catch (Exception $e) {
             Log::error('Error removing option :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

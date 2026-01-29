@@ -30,7 +30,7 @@ class ProductDevelopmentCommentController extends Controller
     public function index(Request $request, string $product_id): CommentCollection|JsonResponse
     {
         $product = ProductDevelopment::where('ProductID', $product_id)->first();
-        if (!$product instanceof ProductDevelopment) {
+        if (! $product instanceof ProductDevelopment) {
             return $this->errored('Product development not found', status: 404);
         }
         $this->authorize('view', $product);
@@ -49,7 +49,7 @@ class ProductDevelopmentCommentController extends Controller
     public function store(Request $request, string $product_id): JsonResponse|CommentResource
     {
         $product = ProductDevelopment::where('ProductID', $product_id)->first();
-        if (!$product instanceof ProductDevelopment) {
+        if (! $product instanceof ProductDevelopment) {
             return $this->errored('Product development not found', status: 404);
         }
         $this->authorize('view', $product);
@@ -74,12 +74,12 @@ class ProductDevelopmentCommentController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error create product development comment ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
         return $this->succeeded('comment added', data: ['data' => new CommentResource($comment)]);
     }
-
 
     /**
      * Remove the specified resource from storage.
@@ -87,15 +87,15 @@ class ProductDevelopmentCommentController extends Controller
     public function destroy(Request $request, string $product_id, $comment_id): JsonResponse
     {
         $product = ProductDevelopment::where('ProductID', $product_id)->first();
-        if (!$product instanceof ProductDevelopment) {
+        if (! $product instanceof ProductDevelopment) {
             return $this->errored('Product development not found', status: 404);
         }
-        if (!(new ProductDevService($product))->commenting()) {
+        if (! (new ProductDevService($product))->commenting()) {
             return $this->errored('comments not enabled');
         }
         $this->authorize('view', $product);
         $comment = Comment::query()->where('t_Comments.Id', $comment_id)->first();
-        if (!$comment instanceof Comment || $comment->trashed()) {
+        if (! $comment instanceof Comment || $comment->trashed()) {
             return $this->errored('comment could have been trashed', status: 404);
         }
 

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 
 class InspectionController extends Controller
 {
-    //
     public function index()
     {
         return view('procurement.goodinspection.index');
@@ -17,4 +16,3 @@ class InspectionController extends Controller
         return view('procurement.goodinspection.create');
     }
 }
-

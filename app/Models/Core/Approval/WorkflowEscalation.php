@@ -1,9 +1,10 @@
 <?php
 
 namespace App\Models\Core\Approval;
+
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WorkflowEscalation extends Model
 {
@@ -14,7 +15,7 @@ class WorkflowEscalation extends Model
     public $timestamps = false; // Disable Laravel timestamps
 
     // SoftDeletes expects 'deleted_at' by default — map to your custom column
-    const DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'WorkFlowStageId',

@@ -19,7 +19,7 @@ class WorkFlowLimitPolicy
     {
         return $user->can(PermissionEnum::WorkflowlimitOperationalLevel->value);
     }
-    
+
     /**
      * Determine whether the user can view any models.
      */

@@ -2,7 +2,6 @@
 
 namespace App\Models\Finance;
 
-use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,11 +9,12 @@ use Illuminate\Support\Str;
 
 class FinanceVoucher extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = "t_FinanceVoucher";
     protected $primaryKey = 'Id';
@@ -42,7 +42,6 @@ class FinanceVoucher extends Model
         return 'FinanceVoucherId';
     }
 
-
     public static function booted()
     {
         static::creating(function ($voucher) {
@@ -59,7 +58,6 @@ class FinanceVoucher extends Model
             $voucher->VoucherNo = 'VCN-' . $datePart . '-' . $randomPart . $nextId;
         });
     }
-
 
     public function invoice()
     {

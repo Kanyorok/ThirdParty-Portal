@@ -15,7 +15,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Throwable;
@@ -43,9 +42,9 @@ class SurveyController extends Controller
                 ->withCount('responses')
                 ->select('*')
                 ->where(function (Builder $builder) use ($actor) {
-                $builder->where('t_Surveys.CreatedBy', $actor->Id)
-                    ->where('t_Surveys.Status', SurveyStatusEnum::Draft);
-            });
+                    $builder->where('t_Surveys.CreatedBy', $actor->Id)
+                        ->where('t_Surveys.Status', SurveyStatusEnum::Draft);
+                });
 
             $status = collect([SurveyStatusEnum::Queued, SurveyStatusEnum::Complete, SurveyStatusEnum::Active]);
 
@@ -95,7 +94,6 @@ class SurveyController extends Controller
         return view('crm.feedback.surveys.index');
     }
 
-
     /**
      * Store a newly created resource in storage.
      * @throws ValidationException
@@ -110,12 +108,14 @@ class SurveyController extends Controller
             $survey = DB::transaction(static function () use ($start, $request, $actor, $end) {
                 $survey = SurveyService::create($request->validated('Label'), $start, $end, $actor, $request->validated('Notes') ?? '')->survey;
                 activity()->causedBy($actor)->performedOn($survey)->event('create')->log('added a new survey : ' . $survey->SurveyID);
+
                 return $survey;
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error create survey :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -159,6 +159,7 @@ class SurveyController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error updating survey (' . $survey->SurveyID . ') :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -171,6 +172,7 @@ class SurveyController extends Controller
     public function destroy(Request $request, Survey $survey): JsonResponse
     {
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($survey, $actor) {
                 (new SurveyService($survey))->trash($actor);
@@ -180,6 +182,7 @@ class SurveyController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error TRASH survey (' . $survey->SurveyID . ') :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

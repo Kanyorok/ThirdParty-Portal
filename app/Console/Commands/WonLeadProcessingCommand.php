@@ -38,7 +38,7 @@ class WonLeadProcessingCommand extends Command
         $actor = SystemHelper::user();
         $leads = Lead::query()->where('t_Leads.Status', LeadStatusEnum::Won->value)->whereNull(['t_Leads.ArchivedOn', 't_Leads.ArchivedBy'])->get();
         foreach ($leads as $lead) {
-            if (!$lead instanceof Lead) {
+            if (! $lead instanceof Lead) {
                 continue;
             }
 
@@ -46,7 +46,7 @@ class WonLeadProcessingCommand extends Command
                 return ClientService::search($query, $lead->Phone);
             })->first();
 
-            if (!$client instanceof Client) {
+            if (! $client instanceof Client) {
                 continue;
             }
 
@@ -87,7 +87,7 @@ class WonLeadProcessingCommand extends Command
                         "PartyID" => $client->ClientID,
                     ]);
                 });
-            } catch (Exception|Throwable $e) {
+            } catch (Exception | Throwable $e) {
                 Log::error('Could not migrate contacts details lead (' . $lead->LeadID . ') to client (' . $client->ClientID . ')');
                 Log::error($e);
             }

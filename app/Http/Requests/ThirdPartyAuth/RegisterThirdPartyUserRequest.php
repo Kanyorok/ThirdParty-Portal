@@ -2,13 +2,13 @@
 
 namespace App\Http\Requests\ThirdPartyAuth;
 
-use Illuminate\Validation\Rules\Password;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Enums\BusinessTypeEnum;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
-use App\Enums\BusinessTypeEnum;
+use Illuminate\Validation\Rules\Password;
 
 class RegisterThirdPartyUserRequest extends FormRequest
 {
@@ -28,7 +28,7 @@ class RegisterThirdPartyUserRequest extends FormRequest
                 'email',
                 'max:255',
                 'unique:t_ThirdPartyUsers,Email',
-                'unique:t_ThirdParties,Email'
+                'unique:t_ThirdParties,Email',
             ],
             'Phone' => [
                 'required',
@@ -36,7 +36,7 @@ class RegisterThirdPartyUserRequest extends FormRequest
                 'max:20',
                 'regex:/^\+[1-9]\d{7,14}$/',
                 'unique:t_ThirdPartyUsers,Phone',
-                'unique:t_ThirdParties,Phone'
+                'unique:t_ThirdParties,Phone',
             ],
             'Password' => ['required', 'string', 'min:8', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             'Password_confirmation' => ['required', 'string'],

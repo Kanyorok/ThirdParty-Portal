@@ -22,6 +22,7 @@ class SignatureDocumentsController extends Controller
     public function __invoke(Request $request, DMSSignature $dMSSignature)
     {
         $this->authorize('view', $dMSSignature);
+
         return $this->documents($dMSSignature->documents(), $request->user());
     }
 }

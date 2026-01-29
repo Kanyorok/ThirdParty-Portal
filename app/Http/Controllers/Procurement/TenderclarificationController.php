@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Models\Procurement\VendorClarifications;
 use App\Models\Procurement\Tender;
+use App\Models\Procurement\VendorClarifications;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class TenderclarificationController extends Controller
@@ -86,6 +85,7 @@ class TenderclarificationController extends Controller
             }
             $clarification->supplierName = $supplierName;
             $clarification->daysPending = now()->diffInDays($clarification->QuestionDate);
+
             return $clarification;
         });
 
@@ -147,7 +147,7 @@ class TenderclarificationController extends Controller
                 'clarification_id' => $clarification->ClarificationID,
                 'tender_id' => $clarification->TenderID,
                 'answered_by' => $userId,
-                'is_public' => $isPublished
+                'is_public' => $isPublished,
             ]);
 
             return redirect()->route('tenderclarification.index')
@@ -171,7 +171,7 @@ class TenderclarificationController extends Controller
     {
         $clarificationId = $request->query('clarification_id');
 
-        if (!$clarificationId) {
+        if (! $clarificationId) {
             return redirect()->route('tenderclarification.index')
                 ->with('error', 'Clarification ID is required.');
         }
@@ -201,7 +201,7 @@ class TenderclarificationController extends Controller
         $request->validate([
             'clarification_ids' => 'required|array',
             'clarification_ids.*' => 'exists:t_VendorClarifications,ClarificationID',
-            'action' => 'required|in:make_public,make_private,delete'
+            'action' => 'required|in:make_public,make_private,delete',
         ]);
 
         $count = 0;
@@ -211,19 +211,22 @@ class TenderclarificationController extends Controller
                 $count = VendorClarifications::whereIn('ClarificationID', $request->clarification_ids)
                     ->whereNotNull('Answer')
                     ->update(['ISPUBLISHEDTOALL' => true]);
+
                 break;
 
             case 'make_private':
                 $count = VendorClarifications::whereIn('ClarificationID', $request->clarification_ids)
                     ->update(['ISPUBLISHEDTOALL' => false]);
+
                 break;
 
             case 'delete':
                 $count = VendorClarifications::whereIn('ClarificationID', $request->clarification_ids)
                     ->update([
                         'DeletedBy' => $request->user()->Id,
-                        'DeletedOn' => now()
+                        'DeletedOn' => now(),
                     ]);
+
                 break;
         }
 

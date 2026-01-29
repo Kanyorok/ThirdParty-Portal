@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
-use App\Models\Legal\ComplianceFilingTemplate;
 use App\Models\Legal\ComplianceFiling;
 use App\Models\Legal\ComplianceFilingAcknowledgment;
+use App\Models\Legal\ComplianceFilingTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class ComplianceFilingController extends Controller
 {
@@ -16,6 +15,7 @@ class ComplianceFilingController extends Controller
     public function index()
     {
         $filings = ComplianceFiling::with(['template'])->orderBy('SubmissionDate', 'desc')->get();
+
         return view('legal.compliance.filings.index', compact('filings'));
     }
 
@@ -23,6 +23,7 @@ class ComplianceFilingController extends Controller
     public function show($id)
     {
         $filing = ComplianceFiling::with(['template', 'acknowledgments'])->findOrFail($id);
+
         return view('legal.compliance.filings.show', compact('filing'));
     }
 
@@ -30,6 +31,7 @@ class ComplianceFilingController extends Controller
     public function create()
     {
         $templates = ComplianceFilingTemplate::pluck('Name', 'Id');
+
         return view('legal.compliance.filings.create', compact('templates'));
     }
 
@@ -76,6 +78,7 @@ class ComplianceFilingController extends Controller
     public function templates()
     {
         $templates = ComplianceFilingTemplate::with(['regulator', 'type', 'format'])->get();
+
         return view('legal.compliance.filings.templates', compact('templates'));
     }
 
@@ -85,6 +88,7 @@ class ComplianceFilingController extends Controller
         $types = DB::table('t_FilingTypes')->pluck('Name', 'Id');
         $regulators = DB::table('t_RegulatoryBodies')->pluck('Name', 'Id');
         $formats = DB::table('t_FileFormats')->pluck('Name', 'Id');
+
         return view('legal.compliance.filings.create-template', compact('types', 'regulators', 'formats'));
     }
 

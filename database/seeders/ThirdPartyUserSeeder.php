@@ -43,8 +43,9 @@ class ThirdPartyUserSeeder extends Seeder
             ]
         );
 
-        if (!$thirdParty) {
+        if (! $thirdParty) {
             $this->command->error('Failed to create or retrieve ThirdParty for ThirdPartyUser seeder.');
+
             return;
         }
 

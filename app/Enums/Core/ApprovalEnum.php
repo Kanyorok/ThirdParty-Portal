@@ -16,9 +16,9 @@ enum ApprovalEnum: string
 
     case Submitted = 'S';
 
-    case Draft='dr';
+    case Draft = 'dr';
 
-    case Posted='ps';
+    case Posted = 'ps';
     case Cancelled = 'Ca';
 
     case Completed = 'Co';
@@ -30,8 +30,6 @@ enum ApprovalEnum: string
     case OnTrip = 'ot';
     case AssignedTrip = 'at';
 
-
-
     public function label(): string
     {
         return match ($this) {
@@ -39,8 +37,8 @@ enum ApprovalEnum: string
             self::Rejected => 'Rejected',
             self::Pending => 'Pending',
             self::Submitted => 'Submitted for Approval',
-            self::Draft=>'Draft',
-            self::Posted=>'Posted',
+            self::Draft => 'Draft',
+            self::Posted => 'Posted',
             self::Cancelled => 'Cancelled',
             self::Completed => 'Completed',
             self::Ongoing => 'Ongoing',
@@ -48,7 +46,6 @@ enum ApprovalEnum: string
             self::Available => 'Available',
             self::OnTrip => 'On Trip',
             self::AssignedTrip => 'Assigned Trip',
-
         };
     }
 
@@ -59,8 +56,8 @@ enum ApprovalEnum: string
             self::Pending => 'info',
             self::Rejected => 'danger',
             self::Submitted => 'warning',
-            self::Draft=>'secondary',
-            self::Posted=>'success',
+            self::Draft => 'secondary',
+            self::Posted => 'success',
             self::Cancelled => 'secondary',
             self::Completed => 'primary',
             self::Ongoing => 'info',
@@ -68,8 +65,6 @@ enum ApprovalEnum: string
             self::Available => 'success',
             self::OnTrip => 'warning',
             self::AssignedTrip => 'info',
-
         };
     }
 }
-

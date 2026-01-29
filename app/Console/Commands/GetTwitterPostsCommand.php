@@ -35,6 +35,7 @@ class GetTwitterPostsCommand extends Command
             $service = new TwitterService();
         } catch (ErroredException $e) {
             $this->error($e->getMessage());
+
             return;
         }
 
@@ -42,22 +43,20 @@ class GetTwitterPostsCommand extends Command
             $posts = $service->getPosts();
         } catch (ErroredException $e) {
             $this->error($e->getMessage());
+
             return;
         }
 
-        // $posts = json_decode(file_get_contents(storage_path('test.json')), true, 512, JSON_THROW_ON_ERROR);
-        //$posts =str_replace(PHP_EOL,'', $content);
-        //$posts = ((object)json_decode(json_encode($posts, JSON_THROW_ON_ERROR | JSON_FORCE_OBJECT), false, 512, JSON_THROW_ON_ERROR));
 
         $actor = SystemHelper::user();
         foreach ($posts->includes->tweets as $tweet) {
             $social = Social::query()->where('Type', IntegrationsEnum::Twitter->value)->where('RemoteId', $tweet->id)->first();
             if ($social instanceof Social) {
                 $social->fill([
-                               'LikesCount'    => $tweet->public_metrics->like_count,
+                               'LikesCount' => $tweet->public_metrics->like_count,
                                'CommentsCount' => $tweet->public_metrics->reply_count,
-                               'ViewsCount'    => $tweet->public_metrics->impression_count,
-                               'Response'      => json_encode($tweet),
+                               'ViewsCount' => $tweet->public_metrics->impression_count,
+                               'Response' => json_encode($tweet),
                               ])->save();
 
                 continue;
@@ -67,11 +66,11 @@ class GetTwitterPostsCommand extends Command
             $medias = $tweet->media_metadata ?? null;
 
             $mediaCollection = collect();
-            if (!is_null($medias)) {
+            if (! is_null($medias)) {
                 foreach ($medias as $media) {
                     if (is_string($media->media_key)) {
                         $response = $this->getMedia($posts->includes->media, $media->media_key);
-                        if (!is_null($response)) {
+                        if (! is_null($response)) {
                             $mediaCollection->push($response);
                         }
                     }
@@ -88,6 +87,7 @@ class GetTwitterPostsCommand extends Command
                 return $media;
             }
         }
+
         return null;
     }
 }

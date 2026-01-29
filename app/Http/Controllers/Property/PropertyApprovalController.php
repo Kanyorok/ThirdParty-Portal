@@ -3,20 +3,18 @@
 namespace App\Http\Controllers\Property;
 
 use App\Enums\Core\ApprovalEnum;
+use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
-use App\Models\Core\Approval;
 use App\Models\PropertyManagement\PropertyLeaseRenewal;
 use App\Models\PropertyManagement\PropertyLeaseTermination;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Services\Workflow\ApprovalWorkflow;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use App\Exceptions\ErroredException;
 use Exception;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PropertyApprovalController extends Controller
 {
@@ -41,13 +39,13 @@ class PropertyApprovalController extends Controller
         $terminationapprovals = PropertyLeaseTermination::with(['lease', 'lease.tenant', 'code'])
             ->where('Status', '!=', ApprovalEnum::Approved)
             ->get();
-        
+
         $renewalapprovals = PropertyLeaseRenewal::with([
         'lease.tenant.thirdParty',
         'lease.property',
         'lease.unit',
         'lease.block',
-        'lease.floor'
+        'lease.floor',
         ])->where('Status', ApprovalEnum::Pending->value)->get();
 
         return view('property.tenantmanagement.leasemanagement.approval.index', compact('approvals', 'terminationapprovals', 'renewalapprovals'));
@@ -79,9 +77,9 @@ class PropertyApprovalController extends Controller
             return redirect()->back()->with('error', $e->getMessage());
         } catch (Exception $e) {
             Log::error('Error approving lease: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Unexpected error, try again later.');
         } finally {
-
             optional($lock)->release();
         }
 
@@ -120,6 +118,7 @@ class PropertyApprovalController extends Controller
             return redirect()->back()->with('error', $e->getMessage());
         } catch (Exception $e) {
             Log::error('Error rejecting lease: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Unexpected error, try again later.');
         } finally {
             optional($lock)->release();
@@ -155,6 +154,7 @@ class PropertyApprovalController extends Controller
             return redirect()->back()->with('error', $e->getMessage());
         } catch (Exception $e) {
             Log::error('Error approving termination: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Unexpected error, try again later.');
         } finally {
             // Release lock
@@ -197,6 +197,7 @@ class PropertyApprovalController extends Controller
             return redirect()->back()->with('error', $e->getMessage());
         } catch (Exception $e) {
             Log::error('Error rejecting termination: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Unexpected error, try again later.');
         } finally {
             optional($lock)->release();
@@ -231,6 +232,7 @@ class PropertyApprovalController extends Controller
             return redirect()->back()->with('error', $e->getMessage());
         } catch (Exception $e) {
             Log::error('Error approving renewal: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Unexpected error, try again later.');
         } finally {
             // Release lock
@@ -272,6 +274,7 @@ class PropertyApprovalController extends Controller
             return redirect()->back()->with('error', $e->getMessage());
         } catch (Exception $e) {
             Log::error('Error rejecting renewal: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Unexpected error, try again later.');
         } finally {
             optional($lock)->release();

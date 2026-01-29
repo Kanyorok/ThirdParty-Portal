@@ -14,19 +14,19 @@ class TransactionTransferRequest extends FormRequest
     public function rules()
     {
         $rules = [
-            'RequisitionType'   => 'required|string|in:interbranch,procurement',
-            'TransferDate'      => 'required|date',
-            'TransferredBy'     => 'required|string',
-            'FromBranch'        => 'nullable|exists:t_Branches,Id',
-            'ToBranch'          => 'required|exists:t_Branches,Id',
+            'RequisitionType' => 'required|string|in:interbranch,procurement',
+            'TransferDate' => 'required|date',
+            'TransferredBy' => 'required|string',
+            'FromBranch' => 'nullable|exists:t_Branches,Id',
+            'ToBranch' => 'required|exists:t_Branches,Id',
 
-            'items'             => 'required|array|min:1',
-            'items.*.item'      => 'required|exists:t_Items,Id',
+            'items' => 'required|array|min:1',
+            'items.*.item' => 'required|exists:t_Items,Id',
             'items.*.unit_cost' => 'required|numeric|min:0',
-            'items.*.uom'       => 'required|exists:t_UOM,Id',
-            'items.*.approved_qty'   => 'required|numeric|min:1',
+            'items.*.uom' => 'required|exists:t_UOM,Id',
+            'items.*.approved_qty' => 'required|numeric|min:1',
             'items.*.dispatched_qty' => 'required|numeric|min:0',
-            'items.*.remarks'        => 'nullable|string|max:255',
+            'items.*.remarks' => 'nullable|string|max:255',
         ];
 
         // Conditional rule for RequisitionId

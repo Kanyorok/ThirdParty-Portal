@@ -2,9 +2,9 @@
 
 namespace App\Services\FleetManagement;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetRepairLog;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class FleetRepairLogService
 {
@@ -44,7 +44,7 @@ class FleetRepairLogService
     {
         $latestRepair = FleetRepairLog::withTrashed()->latest('CreatedOn')->first();
 
-        if (!$latestRepair || !$latestRepair->RepairID) {
+        if (! $latestRepair || ! $latestRepair->RepairID) {
             return 'REP-0001';
         }
 

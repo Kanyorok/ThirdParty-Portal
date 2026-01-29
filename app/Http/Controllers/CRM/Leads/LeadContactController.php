@@ -38,6 +38,7 @@ class LeadContactController extends Controller
         if ($lead->Status === LeadStatusEnum::Won->value) {
             return $this->errored('lead already won');
         }
+
         return view('crm.contacts.create')
             ->with('email', '')
             ->with('route', route('lead-contacts.store', $lead->LeadID));
@@ -52,6 +53,7 @@ class LeadContactController extends Controller
             ? EmailConversation::query()->where('Id', $request->conversation)->first() : null;
 
         $phone = $request->getPhone($lead->country->CountryCode);
+
         try {
             DB::transaction(function () use ($phone, $lead, $emailConversation, $request) {
                 $this->save($lead->contacts(), $request->savable($phone));
@@ -68,8 +70,9 @@ class LeadContactController extends Controller
                     ]);
                 }
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error adding  Lead Contact. e: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

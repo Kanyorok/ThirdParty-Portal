@@ -3,6 +3,7 @@
 namespace App\Services\Procurement\Orders;
 
 use App\Models\Auth\User;
+use App\Models\Core\Branch;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -15,7 +16,7 @@ class OrderService
      */
     public function __construct()
     {
-        //
+
     }
 
     public static function addPO($supplier, $poDate, $rfqNo, $priority, $terms, User $actor, $taxId = null)
@@ -24,8 +25,8 @@ class OrderService
             $response = DB::transaction(function () use ($supplier, $poDate, $rfqNo, $priority, $terms, $actor, $taxId) {
                 // Execute the stored procedure and capture the result
                 // Use the actor's BranchId so PO is linked to the correct branch
-                $branchId = $actor->BranchId ?? 0;
-                
+                $branchId = Branch::where('isHQ', 1)->value('Id');
+
                 $result = DB::select('EXEC p_AddPurchaseOrder ?, ?, ?, ?, ?, ?, ?, ?', [
                     $supplier,
                     $poDate,
@@ -34,14 +35,14 @@ class OrderService
                     $terms,
                     $actor->Id, // use lowercase `id`, Laravel convention
                     $branchId, // Use user's branch ID
-                    $taxId // New TaxId param
+                    $taxId, // New TaxId param
                 ]);
 
 
 
                 $poId = $result[0]->POID ?? null;
 
-                if (!$poId) {
+                if (! $poId) {
                     throw new \Exception('Stored procedure executed but PO ID was not returned.');
                 }
 
@@ -56,30 +57,30 @@ class OrderService
         } catch (QueryException $e) {
             Log::error('SQL Error executing p_AddPurchaseOrder', [
                 'message' => $e->getMessage(),
-                'exception' => $e
+                'exception' => $e,
             ]);
 
             return [
                 'status' => 'error',
                 'message' => 'SQL error executing order creation',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         } catch (Throwable $e) {
             Log::error('Error executing p_AddPurchaseOrder', [
                 'message' => $e->getMessage(),
-                'exception' => $e
+                'exception' => $e,
             ]);
 
             return [
                 'status' => 'error',
                 'message' => 'Error executing order creation',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
 
 
-    //
+
 
     public static function addPOLines($item, $quantity, $price, $taxId, $discount, $linetotal, User $actor, $orderId)
     {
@@ -95,43 +96,42 @@ class OrderService
                     $discount,
                     $linetotal,
                     $actor->Id, // Pass the User ID, not the entire User model
-                    $orderId
+                    $orderId,
                 ]);
             });
 
             return [
                 'status' => 'success',
-                'message' => 'Order successfully created.'
+                'message' => 'Order successfully created.',
             ];
         } catch (QueryException $e) {
             // Log the SQL error
             Log::error('SQL Error executing p_AddPurchaseOrder', [
                 'message' => $e->getMessage(),
-                'exception' => $e
+                'exception' => $e,
             ]);
 
             // Return the error message back to the controller
             return [
                 'status' => 'error',
                 'message' => 'SQL error executing order creation',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         } catch (Throwable $e) {
             // Log the exception for debugging
             Log::error('Error executing p_AddPurchaseOrder', [
                 'message' => $e->getMessage(),
-                'exception' => $e
+                'exception' => $e,
             ]);
 
             // Return a custom error message or handle as needed
             return [
                 'status' => 'error',
                 'message' => 'Error executing order creation',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
-
 
     public static function fetchOrders()
     {
@@ -233,7 +233,6 @@ class OrderService
         return $query->paginate($perPage);
     }
 
-
     public static function fetchOrderDetails($id)
     {
 
@@ -299,7 +298,6 @@ class OrderService
         return $result;
     }
 
-
     public static function fetchOrderLineDetails($id)
     {
 
@@ -335,12 +333,15 @@ class OrderService
     {
         try {
             DB::statement('EXEC p_AddPurchaseOrderSum @OrderId = ?', [$orderId]);
+
             return true;
         } catch (QueryException $e) {
             Log::error("Failed to execute p_AddPurchaseOrderSum: " . $e->getMessage());
+
             return false;
         } catch (\Throwable $e) {
             Log::error("Unexpected error in AddPurchaseOrderSum: " . $e->getMessage());
+
             return false;
         }
     }
@@ -371,15 +372,15 @@ class OrderService
     {
         // 1. Get previously ordered quantities
         $orderedQuantities = $this->getOrderedQuantities($sourceType, $sourceId);
-        
+
         // 2. Get original source quantities based on type
         $originalItems = collect([]);
-        
+
         if ($sourceType === 'RFQ') {
-             $originalItems = DB::table('t_RFQLines')
-                ->where('RFQId', $sourceId)
-                ->select('ItemId as itemCode', 'Quantity')
-                ->get();
+            $originalItems = DB::table('t_RFQLines')
+               ->where('RFQId', $sourceId)
+               ->select('ItemId as itemCode', 'Quantity')
+               ->get();
         } elseif ($sourceType === 'TENDER') {
             $originalItems = DB::table('t_TenderItems as ti')
                 ->join('t_Items as i', 'ti.ItemID', '=', 'i.Id')
@@ -387,65 +388,65 @@ class OrderService
                 ->select('i.Id as itemCode', 'ti.QtyToTender as Quantity')
                 ->get();
         } elseif ($sourceType === 'CONTRACT') {
-             $contract = DB::table('t_TenderAwards')->where('Id', $sourceId)->first();
-             if ($contract && $contract->TenderID) {
-                 // Check aggregated usage (Tender + Contract)
-                 $originalItems = DB::table('t_TenderItems as ti')
-                    ->join('t_Items as i', 'ti.ItemID', '=', 'i.Id')
-                    ->where('ti.TenderID', $contract->TenderID)
-                    ->select('i.Id as itemCode', 'ti.QtyToTender as Quantity')
-                    ->get();
+            $contract = DB::table('t_TenderAwards')->where('Id', $sourceId)->first();
+            if ($contract && $contract->TenderID) {
+                // Check aggregated usage (Tender + Contract)
+                $originalItems = DB::table('t_TenderItems as ti')
+                   ->join('t_Items as i', 'ti.ItemID', '=', 'i.Id')
+                   ->where('ti.TenderID', $contract->TenderID)
+                   ->select('i.Id as itemCode', 'ti.QtyToTender as Quantity')
+                   ->get();
 
-                 $orderedTender = $this->getOrderedQuantities('TENDER', $contract->TenderID);
-                 $orderedContract = $this->getOrderedQuantities('CONTRACT', $sourceId);
+                $orderedTender = $this->getOrderedQuantities('TENDER', $contract->TenderID);
+                $orderedContract = $this->getOrderedQuantities('CONTRACT', $sourceId);
 
-                 // Merge used quantities
-                 $orderedQuantities = [];
-                 foreach ($orderedTender as $code => $qty) {
-                     $orderedQuantities[$code] = $qty;
-                 }
-                 foreach ($orderedContract as $code => $qty) {
-                     $orderedQuantities[$code] = ($orderedQuantities[$code] ?? 0) + $qty;
-                 }
-             } else {
-                 return false;
-             }
+                // Merge used quantities
+                $orderedQuantities = [];
+                foreach ($orderedTender as $code => $qty) {
+                    $orderedQuantities[$code] = $qty;
+                }
+                foreach ($orderedContract as $code => $qty) {
+                    $orderedQuantities[$code] = ($orderedQuantities[$code] ?? 0) + $qty;
+                }
+            } else {
+                return false;
+            }
 
         } elseif ($sourceType === 'CONTRACT-RFQ') {
-             $rfqContract = DB::table('t_RFQAward')->where('Id', $sourceId)->first();
-             if ($rfqContract && $rfqContract->RFQId) {
-                 $originalItems = DB::table('t_RFQLines')
-                    ->where('RFQId', $rfqContract->RFQId)
-                    ->select('ItemId as itemCode', 'Quantity')
-                    ->get();
-                 
-                 $orderedRFQ = $this->getOrderedQuantities('RFQ', $rfqContract->RFQId);
-                 $orderedContract = $this->getOrderedQuantities('CONTRACT-RFQ', $sourceId);
-                 
-                  // Merge used quantities
-                 $orderedQuantities = [];
-                 foreach ($orderedRFQ as $code => $qty) {
-                     $orderedQuantities[$code] = $qty;
-                 }
-                 foreach ($orderedContract as $code => $qty) {
-                     $orderedQuantities[$code] = ($orderedQuantities[$code] ?? 0) + $qty;
-                 }
-             } else {
-                 return false;
-             }
+            $rfqContract = DB::table('t_RFQAward')->where('Id', $sourceId)->first();
+            if ($rfqContract && $rfqContract->RFQId) {
+                $originalItems = DB::table('t_RFQLines')
+                   ->where('RFQId', $rfqContract->RFQId)
+                   ->select('ItemId as itemCode', 'Quantity')
+                   ->get();
 
-        } elseif ($sourceType === 'PLAN') { 
-             $directMethod = DB::table('t_CodeDetails')
-                ->where('CodeID', 'ProcurementMethod')
-                ->where(function ($q) {
-                    $q->where('Description', 'LIKE', '%Direct Purchase%')
-                      ->orWhere('Value', 'Like', '%D%');
-                })
-                ->value('ID');
+                $orderedRFQ = $this->getOrderedQuantities('RFQ', $rfqContract->RFQId);
+                $orderedContract = $this->getOrderedQuantities('CONTRACT-RFQ', $sourceId);
+
+                // Merge used quantities
+                $orderedQuantities = [];
+                foreach ($orderedRFQ as $code => $qty) {
+                    $orderedQuantities[$code] = $qty;
+                }
+                foreach ($orderedContract as $code => $qty) {
+                    $orderedQuantities[$code] = ($orderedQuantities[$code] ?? 0) + $qty;
+                }
+            } else {
+                return false;
+            }
+
+        } elseif ($sourceType === 'PLAN') {
+            $directMethod = DB::table('t_CodeDetails')
+               ->where('CodeID', 'ProcurementMethod')
+               ->where(function ($q) {
+                   $q->where('Description', 'LIKE', '%Direct Purchase%')
+                     ->orWhere('Value', 'Like', '%D%');
+               })
+               ->value('ID');
 
             $originalItems = DB::table('t_PlanLineItem')
                 ->where('PlanID', $sourceId)
-                ->where('ProcurementMethod', $directMethod) 
+                ->where('ProcurementMethod', $directMethod)
                 ->whereNull('DeletedOn')
                 ->select('ItemID as itemCode', 'MergedQty as Quantity')
                 ->get();
@@ -453,22 +454,23 @@ class OrderService
 
         // 3. Compare
         $fullyExhausted = true;
-        
+
         if ($originalItems->isEmpty()) {
-            return true; 
+            return true;
         }
 
         foreach ($originalItems as $item) {
             $code = $item->itemCode;
             $qty = $item->Quantity;
             $ordered = $orderedQuantities[$code] ?? 0;
-            
+
             if (($qty - $ordered) > 0) {
                 $fullyExhausted = false;
+
                 break;
             }
         }
-        
+
         return $fullyExhausted;
     }
 }

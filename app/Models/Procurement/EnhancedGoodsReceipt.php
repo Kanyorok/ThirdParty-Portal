@@ -4,23 +4,24 @@ namespace App\Models\Procurement;
 
 use App\Enums\Core\PostingEnum;
 use App\Models\Auth\User;
-use App\Models\ThirdParies\Supplier;
+use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\StockTransaction;
-use App\Models\Finance\FinanceJournalEntry;
+use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EnhancedGoodsReceipt extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_GoodsReceipts';
     protected $primaryKey = 'id';
@@ -63,20 +64,20 @@ class EnhancedGoodsReceipt extends Model
     ];
 
     // Item type constants
-    const ITEM_TYPE_STOCK = 'stock';
-    const ITEM_TYPE_ASSET = 'asset';
-    const ITEM_TYPE_SERVICE = 'service';
+    public const ITEM_TYPE_STOCK = 'stock';
+    public const ITEM_TYPE_ASSET = 'asset';
+    public const ITEM_TYPE_SERVICE = 'service';
 
     // Processing status constants
-    const STATUS_PENDING = 'pending';
-    const STATUS_PROCESSED = 'processed';
-    const STATUS_ERROR = 'error';
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_PROCESSED = 'processed';
+    public const STATUS_ERROR = 'error';
 
     // Quality status constants
-    const QUALITY_PENDING = 'pending';
-    const QUALITY_PASSED = 'passed';
-    const QUALITY_FAILED = 'failed';
-    const QUALITY_NOT_REQUIRED = 'not_required';
+    public const QUALITY_PENDING = 'pending';
+    public const QUALITY_PASSED = 'passed';
+    public const QUALITY_FAILED = 'failed';
+    public const QUALITY_NOT_REQUIRED = 'not_required';
 
     public static function getPrimaryKey(): string
     {

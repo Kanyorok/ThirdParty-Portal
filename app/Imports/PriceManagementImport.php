@@ -6,11 +6,11 @@ use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\UnitOfMeasure;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use Maatwebsite\Excel\Row;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Row;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class PriceManagementImport implements OnEachRow, WithHeadingRow
@@ -40,14 +40,14 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
 
             // Normalize incoming row
             $newData = [
-                'ItemID'        => $item->Id,
-                'ItemCode'      => $itemCode,
-                'UOM'           => $uomId,
-                'ActualPrice'   => (float) $actualPrice,
-                'CurrencyCode'  => $data['currencycode'] ?? $data['currency'] ?? 'KES',
+                'ItemID' => $item->Id,
+                'ItemCode' => $itemCode,
+                'UOM' => $uomId,
+                'ActualPrice' => (float) $actualPrice,
+                'CurrencyCode' => $data['currencycode'] ?? $data['currency'] ?? 'KES',
                 // 'EffectiveFrom' => $this->parseDate($data['effectivefrom'] ?? $data['effective_from'] ?? null),
                 // 'EffectiveTo'   => $this->parseDate($data['effectiveto'] ?? $data['effective_to'] ?? null),
-                'IsDefault'     => $this->parseBoolean($data['isdefault'] ?? $data['default'] ?? $data['is_default'] ?? 0),
+                'IsDefault' => $this->parseBoolean($data['isdefault'] ?? $data['default'] ?? $data['is_default'] ?? 0),
                 // 'Source'        => $data['source'] ?? 'ExcelImport',
             ];
 
@@ -64,13 +64,15 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
                 foreach ($newData as $field => $val) {
                     if (($latest->$field ?? null) != ($val ?? null)) {
                         $hasChanges = true;
+
                         break;
                     }
                 }
 
-                if (!$hasChanges) {
+                if (! $hasChanges) {
                     // Nothing changed → skip
                     Log::info("⏭ No changes for ItemCode: {$itemCode}, skipping");
+
                     return;
                 }
 
@@ -101,7 +103,6 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
             ]);
 
             Log::info("✅ PriceManagement created/updated for ItemCode: {$itemCode}", $created->toArray());
-
         } catch (\Exception $e) {
             Log::error("❌ Import failed: " . $e->getMessage(), $data);
         }
@@ -115,16 +116,20 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
         if ($value === null || $value === '') {
             return null;
         }
+
         try {
             // Handle Excel serial numbers and numeric-like strings
             if (is_numeric($value)) {
                 $dateTime = ExcelDate::excelToDateTimeObject((float)$value);
+
                 return Carbon::instance($dateTime)->format('Y-m-d');
             }
+
             // Fallback to Carbon parsing for string dates
             return Carbon::parse((string)$value)->format('Y-m-d');
         } catch (\Throwable $e) {
             Log::warning("Invalid date format: {$value}");
+
             return null;
         }
     }
@@ -142,10 +147,10 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
         }
         $normalized = strtolower(trim((string)$value));
         $truthy = [
-            '1', 'true', 'yes', 'y', 'on', '=true()', '✓', 'check', 'checked'
+            '1', 'true', 'yes', 'y', 'on', '=true()', '✓', 'check', 'checked',
         ];
         $falsy = [
-            '0', 'false', 'no', 'n', 'off', '=false()'
+            '0', 'false', 'no', 'n', 'off', '=false()',
         ];
         if (in_array($normalized, $truthy, true)) {
             return 1;
@@ -153,6 +158,7 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
         if (in_array($normalized, $falsy, true)) {
             return 0;
         }
+
         return 0;
     }
 
@@ -179,9 +185,10 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
         }
 
         // Fallback to item's configured UOM
-        if (!empty($item->UOM)) {
+        if (! empty($item->UOM)) {
             return (int)$item->UOM;
         }
+
         return null;
     }
 }

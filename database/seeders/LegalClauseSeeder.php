@@ -62,7 +62,7 @@ class LegalClauseSeeder extends Seeder
                 ->where('Version', $row['Version'])
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('t_LegalClauses')->insert($row);
             }
         }

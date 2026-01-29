@@ -3,26 +3,24 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Fleet\FleetVehicle;
+use App\Http\Requests\FleetManagement\VehicleManagementRequest;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\Fleet\FleetVehicleAssignment;
 use App\Models\Fleet\Branch;
+use App\Models\Fleet\ContractedDriver;
+use App\Models\Fleet\FleetContractedDriverAssignment;
+use App\Models\Fleet\FleetDriver;
+use App\Models\Fleet\FleetDriverAssignment;
+use App\Models\Fleet\FleetInspectionSchedule;
+use App\Models\Fleet\FleetInsuranceTracker;
+use App\Models\Fleet\FleetMaintenanceSchedule;
+use App\Models\Fleet\FleetRepairLog;
+use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FleetVehicleAssignment;
 use App\Models\Fleet\FuelType;
 use App\Models\FleetManagement\FleetMake;
 use App\Models\FleetManagement\FleetModel;
-use App\Http\Requests\FleetManagement\VehicleManagementRequest;
 use App\Services\FleetManagement\VehicleManagementService;
-use App\Models\Fleet\FleetTripLog;
-use App\Models\Fleet\FleetDriverAssignment;
-use App\Models\Fleet\FleetContractedDriverAssignment;
-use App\Models\Fleet\FleetDriver;
-use App\Models\Fleet\ContractedDriver;
-use App\Models\Fleet\FleetInsuranceTracker;
-use App\Models\Fleet\FleetInspectionSchedule;
-use App\Models\Fleet\FleetMaintenanceSchedule;
-use App\Models\Fleet\FleetRepairLog;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class VehicleController extends Controller
 {
@@ -53,14 +51,19 @@ class VehicleController extends Controller
     {
         $this->authorize('create', FleetVehicle::class);
         $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
-        $fuelTypes = FuelType::where('IsActive' , '1')->get();
+        $fuelTypes = FuelType::where('IsActive', '1')->get();
         $branches = Branch::all();
         $brands = FleetMake::all();
         $fleetModels = FleetModel::all();
         $vehicleStatuses = CodeDetail::where('CodeID', 'VehicleStatus')->orderBy('Value')->get();
 
         return view('fleet.vehicles.create', compact(
-            'vehicleTypes', 'fuelTypes', 'branches', 'brands', 'fleetModels', 'vehicleStatuses'
+            'vehicleTypes',
+            'fuelTypes',
+            'branches',
+            'brands',
+            'fleetModels',
+            'vehicleStatuses'
         ));
     }
 
@@ -95,19 +98,19 @@ class VehicleController extends Controller
     public function show($id)
     {
         $vehicle = FleetVehicle::with([
-            'vehicleType', 
-            'fuelType', 
-            'branch', 
-            'brand', 
+            'vehicleType',
+            'fuelType',
+            'branch',
+            'brand',
             'model',
-            'vehicleStatus'
+            'vehicleStatus',
         ])->findOrFail($id);
 
         $this->authorize('view', $vehicle);
 
         // Get assignments for this vehicle
         $assignments = FleetVehicleAssignment::where('VehicleID', $vehicle->Id)
-            ->with(['trip' => function($query) {
+            ->with(['trip' => function ($query) {
                 $query->with(['parentTripType', 'parentVehicleType', 'statusDetail']);
             }])
             ->get();
@@ -117,46 +120,46 @@ class VehicleController extends Controller
 
         // Get driver assignments for this vehicle
         $driverList = $this->getVehicleDrivers($vehicle->Id);
-        
+
         $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
         $fuelTypes = FuelType::all();
         $branches = Branch::all();
         $brands = FleetMake::all();
         $fleetModels = FleetModel::all();
-        
+
         // Get other related records
         $insuranceRecords = FleetInsuranceTracker::with(['insurance', 'insuranceStatus'])
             ->where('VehicleID', $vehicle->Id)
             ->orderByDesc('CoverageEndDate')
             ->get();
-            
+
         $inspections = FleetInspectionSchedule::with(['inspectionStatus', 'inspector'])
             ->where('VehicleID', $vehicle->Id)
             ->orderByDesc('InspectionDate')
             ->get();
-            
+
         $maintenanceLogs = FleetMaintenanceSchedule::with(['maintenanceType', 'maintenanceStatus'])
             ->where('VehicleID', $vehicle->Id)
             ->orderByDesc('ScheduledDate')
             ->get();
-            
+
         $repairLogs = FleetRepairLog::with(['repairType', 'schedule'])
             ->where('VehicleID', $vehicle->Id)
             ->orderByDesc('RepairDate')
             ->get();
 
         return view('fleet.vehicles.show', compact(
-            'vehicle', 
-            'vehicleTypes', 
-            'fuelTypes', 
-            'branches', 
-            'brands', 
-            'fleetModels', 
-            'driverList', 
-            'insuranceRecords', 
-            'inspections', 
-            'repairLogs', 
-            'maintenanceLogs', 
+            'vehicle',
+            'vehicleTypes',
+            'fuelTypes',
+            'branches',
+            'brands',
+            'fleetModels',
+            'driverList',
+            'insuranceRecords',
+            'inspections',
+            'repairLogs',
+            'maintenanceLogs',
             'trips'
         ));
     }
@@ -208,6 +211,7 @@ class VehicleController extends Controller
 
         return $allDrivers->map(function ($item) use ($permanentDrivers, $contractedDrivers) {
             $driver = $permanentDrivers->get($item['Id']) ?? $contractedDrivers->get($item['Id']);
+
             return [
                 'Id' => $item['Id'],
                 'Name' => $driver?->FullName,
@@ -234,7 +238,13 @@ class VehicleController extends Controller
         $vehicleStatuses = CodeDetail::where('CodeID', 'VehicleStatus')->orderBy('Value')->get();
 
         return view('fleet.vehicles.edit', compact(
-            'vehicle', 'vehicleTypes', 'fuelTypes', 'branches', 'brands', 'fleetModels', 'vehicleStatuses'
+            'vehicle',
+            'vehicleTypes',
+            'fuelTypes',
+            'branches',
+            'brands',
+            'fleetModels',
+            'vehicleStatuses'
         ));
     }
 
@@ -287,6 +297,7 @@ class VehicleController extends Controller
     public function getByMake($Id)
     {
         $models = FleetModel::where('BrandID', $Id)->get();
+
         return response()->json($models);
     }
 }

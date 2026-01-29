@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class ScheduleBoard extends Pivot
 {
-    use  UserActorTrait;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
 
     protected $table = 't_ScheduleBoard';
 
@@ -35,8 +35,8 @@ class ScheduleBoard extends Pivot
                           ];
 
     protected $casts = [
-                        'DecidedOn'      => 'datetime',
-                        'ReminderOn'     => 'datetime',
+                        'DecidedOn' => 'datetime',
+                        'ReminderOn' => 'datetime',
                         'ScheduleStatus' => ScheduleUserStatusEnum::class,
                        ];
 

@@ -22,7 +22,7 @@ class MapToBudgetRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+
         ];
     }
 }

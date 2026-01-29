@@ -10,7 +10,7 @@ class RegulatoryTaskController extends Controller
     public function index()
     {
         return view('legal.compliance.tasks.index', [
-            'tasks' => []
+            'tasks' => [],
         ]);
     }
 
@@ -27,7 +27,7 @@ class RegulatoryTaskController extends Controller
     public function edit($id)
     {
         return view('legal.compliance.tasks.edit', [
-            'task' => null
+            'task' => null,
         ]);
     }
 

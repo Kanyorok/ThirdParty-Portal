@@ -39,11 +39,10 @@ class TeamController extends Controller
                 return Str::limit($team->Notes ?? '', 50);
             })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
                                                                                                    'dbl_click_url' => function (Team $team) {
-                                                                                                    return route('teams.show', [$team->TeamID]);
+                                                                                                       return route('teams.show', [$team->TeamID]);
                                                                                                    },
                                                                                                   ])->rawColumns(['action'])->make();
 
-        //return view('settings.teams.index');
     }
 
     /**
@@ -53,20 +52,20 @@ class TeamController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-                                    'TeamName'    => [
+                                    'TeamName' => [
                                                       'required',
                                                       'string',
                                                       'max:250',
                                                       'min:5',
                                                       Rule::unique('t_Teams', 'Name'),
                                                      ],
-                                    'TeamEmail'   => [
+                                    'TeamEmail' => [
                                                       'required',
                                                       'string',
                                                       'email:rfc,dns',
                                                       'max:200',
                                                      ],
-                                    'TeamLead'    => [
+                                    'TeamLead' => [
                                                       'nullable',
                                                       'string',
                                                      ],
@@ -75,7 +74,7 @@ class TeamController extends Controller
                                                       'array',
                                                       'max:100',
                                                      ],
-                                    'TeamNotes'   => [
+                                    'TeamNotes' => [
                                                       'nullable',
                                                       'max:50000',
                                                      ],
@@ -83,9 +82,9 @@ class TeamController extends Controller
         $userIds = (is_array($data['TeamMembers'])) ? $data['TeamMembers'] : [];
 
         $userID = null;
-        if (!empty($data['TeamLead'])) {
+        if (! empty($data['TeamLead'])) {
             $user = User::query()->where('UserID', $data['TeamLead'])->first();
-            if (!$user instanceof User) {
+            if (! $user instanceof User) {
                 throw ValidationException::withMessages(['TeamLead' => 'user selected may be invalid']);
             }
 
@@ -96,14 +95,15 @@ class TeamController extends Controller
 
         $actor = $request->user();
         $dated = now();
+
         try {
             DB::transaction(static function () use ($dated, $userIds, $userID, $actor, $data) {
                 $team = Team::create([
-                                      'Name'       => $data['TeamName'],
-                                      'Email'      => $data['TeamEmail'],
-                                      'Notes'      => $data['TeamNotes'],
-                                      'UserId'     => $userID,
-                                      'CreatedBy'  => $actor->Id,
+                                      'Name' => $data['TeamName'],
+                                      'Email' => $data['TeamEmail'],
+                                      'Notes' => $data['TeamNotes'],
+                                      'UserId' => $userID,
+                                      'CreatedBy' => $actor->Id,
                                       'ModifiedBy' => $actor->Id,
                                      ]);
 
@@ -112,11 +112,11 @@ class TeamController extends Controller
                 $data = collect([]);
                 foreach ($users as $user) {
                     $data->add([
-                                'TeamId'     => $team->TeamID,
-                                'UserId'     => $user->Id,
-                                'CreatedBy'  => $actor->Id,
+                                'TeamId' => $team->TeamID,
+                                'UserId' => $user->Id,
+                                'CreatedBy' => $actor->Id,
                                 'ModifiedBy' => $actor->Id,
-                                'CreatedOn'  => $dated,
+                                'CreatedOn' => $dated,
                                 'ModifiedOn' => $dated,
                                ]);
                 }
@@ -128,6 +128,7 @@ class TeamController extends Controller
             });
         } catch (Exception $e) {
             Log::error('Error updating branch failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -143,7 +144,6 @@ class TeamController extends Controller
         return view('settings.teams.show', compact('team'));
     }
 
-
     /**
      * Update the specified resource in storage.
      * @throws ValidationException
@@ -151,7 +151,7 @@ class TeamController extends Controller
     public function update(Request $request, Team $team): JsonResponse
     {
         $data = $request->validate([
-                                    'Name'      => [
+                                    'Name' => [
                                                     'required',
                                                     'string',
                                                     'max:250',
@@ -159,22 +159,22 @@ class TeamController extends Controller
                                                     Rule::unique('t_Teams', 'Name')->whereNotIn('TeamID', [$team->TeamID]),
                                                    ],
                                     'team_lead' => ['nullable'],//Rule::exists('t_Users','UserID')
-                                    'Email'     => [
+                                    'Email' => [
                                                     'required',
                                                     'string',
                                                     'email:rfc,dns',
                                                     'max:200',
                                                    ],
-                                    'Notes'     => [
+                                    'Notes' => [
                                                     'nullable',
                                                     'max:50000',
                                                    ],
                                    ]);
 
         $userID = null;
-        if (!empty($data['team_lead'])) {
+        if (! empty($data['team_lead'])) {
             $user = $team->users()->where('t_Users.UserID', $data['team_lead'])->first();
-            if (!$user instanceof User) {
+            if (! $user instanceof User) {
                 throw ValidationException::withMessages(['team_lead' => 'user not a member of team']);
             }
             $userID = $user->Id;
@@ -184,10 +184,10 @@ class TeamController extends Controller
         try {
             DB::transaction(static function () use ($userID, $actor, $data, $team) {
                 $team->fill([
-                             'Name'       => $data['Name'],
-                             'UserId'     => $userID,
-                             'Email'      => $data['Email'],
-                             'Notes'      => $data['Notes'],
+                             'Name' => $data['Name'],
+                             'UserId' => $userID,
+                             'Email' => $data['Email'],
+                             'Notes' => $data['Notes'],
                              'ModifiedBy' => $actor->Id,
                             ])->save();
 
@@ -195,6 +195,7 @@ class TeamController extends Controller
             });
         } catch (Exception $e) {
             Log::error('Error updating team failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -207,6 +208,7 @@ class TeamController extends Controller
     public function destroy(Request $request, Team $team): JsonResponse
     {
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($actor, $team) {
                 $team->forceFill([
@@ -218,6 +220,7 @@ class TeamController extends Controller
             });
         } catch (Exception $e) {
             Log::error('Error deleting team failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

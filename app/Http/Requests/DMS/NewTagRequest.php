@@ -34,6 +34,7 @@ class NewTagRequest extends FormRequest
                 return $document;
             }
         }
+
         return null;
     }
 
@@ -46,6 +47,7 @@ class NewTagRequest extends FormRequest
         if ($Visibility instanceof VisibilityEnum) {
             return $Visibility;
         }
+
         throw ValidationException::withMessages(['Visibility' => 'invalid visibility type']);
     }
 }

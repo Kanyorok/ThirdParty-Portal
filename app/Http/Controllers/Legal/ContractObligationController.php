@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Auth\User;
 use App\Models\Legal\ContractObligation;
 use App\Models\Legal\LegalDocument;
-use App\Models\Auth\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ContractObligationController extends Controller

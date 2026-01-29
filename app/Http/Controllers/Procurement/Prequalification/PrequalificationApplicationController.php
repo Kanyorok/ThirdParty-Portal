@@ -29,13 +29,12 @@ class PrequalificationApplicationController extends Controller
             ->orderByDesc('SubmittedOn')
             ->orderByDesc('CreatedOn')
             ->paginate(10);
+
         return view('procurement.suppliers.prequalification.supplier-applications.index', compact('applications'));
     }
 
     public function show(PrequalificationApplication $application): View
     {
-        // $application->load('round.masterSections.criteria');
-        // return view('procurement.suppliers.prequalification.supplier-applications.show', compact('application'));
 
         $application->load('round.prequalificationSections.masterSection.criteria', 'category', 'supplier.party');
 
@@ -51,7 +50,7 @@ class PrequalificationApplicationController extends Controller
             // TODO: Implement proper token validation for supplier portal integration
             // Temporary bypass for supplier portal while maintaining security
             $bearerToken = $request->bearerToken();
-            if (!Auth::check() && !$bearerToken) {
+            if (! Auth::check() && ! $bearerToken) {
                 return response()->json(['message' => 'Unauthorized - No authentication provided'], 401);
             }
 
@@ -93,7 +92,7 @@ class PrequalificationApplicationController extends Controller
 
             // Validate sortBy parameter
             $allowedSortFields = ['startDate', 'endDate', 'title', 'createdOn'];
-            if (!in_array($sortBy, $allowedSortFields)) {
+            if (! in_array($sortBy, $allowedSortFields)) {
                 $sortBy = 'startDate';
             }
 
@@ -105,7 +104,7 @@ class PrequalificationApplicationController extends Controller
                 'startDate' => 't_PrequalificationRounds.StartDate',
                 'endDate' => 't_PrequalificationRounds.EndDate',
                 'title' => 't_PrequalificationRounds.Title',
-                'createdOn' => 't_PrequalificationRounds.CreatedOn'
+                'createdOn' => 't_PrequalificationRounds.CreatedOn',
             ];
 
             $sortColumn = $sortColumnMap[$sortBy] ?? 't_PrequalificationRounds.StartDate';
@@ -127,7 +126,7 @@ class PrequalificationApplicationController extends Controller
             }
 
             // Apply search functionality
-            if (!empty($search)) {
+            if (! empty($search)) {
                 $query->where(function ($q) use ($search) {
                     $q->where('t_PrequalificationRounds.Title', 'LIKE', '%' . $search . '%')
                         ->orWhere('t_PrequalificationRounds.Description', 'LIKE', '%' . $search . '%');
@@ -176,7 +175,7 @@ class PrequalificationApplicationController extends Controller
                         ->whereNull('DeletedOn')
                         ->get(['RoundID', 'ItemCategoryID'])
                         ->groupBy('RoundID')
-                        ->map(fn($rows) => $rows->pluck('ItemCategoryID')->filter()->unique()->values());
+                        ->map(fn ($rows) => $rows->pluck('ItemCategoryID')->filter()->unique()->values());
                 } elseif (
                     Schema::hasTable('t_PrequalificationRoundItemCategories')
                     && Schema::hasColumn('t_PrequalificationRoundItemCategories', 'RoundID')
@@ -187,7 +186,7 @@ class PrequalificationApplicationController extends Controller
                         ->whereNull('DeletedOn')
                         ->get(['RoundID', 'ItemCategoryID'])
                         ->groupBy('RoundID')
-                        ->map(fn($rows) => $rows->pluck('ItemCategoryID')->filter()->unique()->values());
+                        ->map(fn ($rows) => $rows->pluck('ItemCategoryID')->filter()->unique()->values());
                 }
 
                 $categoriesByRound = $roundIds->mapWithKeys(function ($rid) use ($supplierCats, $roundItemCategoryMap) {
@@ -208,7 +207,7 @@ class PrequalificationApplicationController extends Controller
                         return [$rid => $supplierCats->isNotEmpty() ? $supplierCats : $getAllActiveCats()];
                     }
                     $itemIds = $roundItemCategoryMap->get($rid, collect());
-                    if (!$itemIds instanceof \Illuminate\Support\Collection) {
+                    if (! $itemIds instanceof \Illuminate\Support\Collection) {
                         $itemIds = collect($itemIds);
                     }
                     if ($itemIds->isEmpty()) {
@@ -228,6 +227,7 @@ class PrequalificationApplicationController extends Controller
                         if ($supplierCats->isNotEmpty()) {
                             return [$rid => $supplierCats];
                         }
+
                         return [$rid => $getAllActiveCats()];
                     }
 
@@ -278,8 +278,11 @@ class PrequalificationApplicationController extends Controller
             $mapStatus = function ($appStatusCode = null, $catStatusCode = null, $stage = null) {
                 // Category status overrides application status when present
                 $code = $catStatusCode ?? $appStatusCode;
-                if (!$code) return 'NOT_APPLIED';
+                if (! $code) {
+                    return 'NOT_APPLIED';
+                }
                 $code = is_string($code) ? $code : (string) $code;
+
                 return match ($code) {
                     'A', 'P' => 'APPROVED',
                     'R' => 'REJECTED',
@@ -342,7 +345,7 @@ class PrequalificationApplicationController extends Controller
 
                 // Compute round-level eligibility helpers (day-level; today is applicable)
                 $now = now()->startOfDay();
-                $windowOpen = (!$round->StartDate || $round->StartDate <= $now) && (!$round->EndDate || $round->EndDate >= $now);
+                $windowOpen = (! $round->StartDate || $round->StartDate <= $now) && (! $round->EndDate || $round->EndDate >= $now);
                 $statusValue = is_object($round->Status) && property_exists($round->Status, 'value') ? $round->Status->value : (string) $round->Status;
                 $statusOpen = strtolower((string) $statusValue) === 'open' || (defined('App\\Enums\\Procurement\\PrequalificationRoundEnum::Open') && (string) $statusValue === (string) \App\Enums\Procurement\PrequalificationRoundEnum::Open->value);
                 $isClosed = (string) $statusValue === (string) \App\Enums\Procurement\PrequalificationRoundEnum::Closed->value;
@@ -354,7 +357,7 @@ class PrequalificationApplicationController extends Controller
                 });
                 $supplierHasNoAppsInRound = $roundAppsCount === 0;
                 // Enforce Closed and Expired
-                $backendCanApply = $supplierId !== null && $windowOpen && $statusOpen && $hasCategories && !$isClosed && !$isExpired;
+                $backendCanApply = $supplierId !== null && $windowOpen && $statusOpen && $hasCategories && ! $isClosed && ! $isExpired;
 
                 // New flags
                 $isFutureWindow = ($round->StartDate && $round->StartDate > $now);
@@ -386,15 +389,11 @@ class PrequalificationApplicationController extends Controller
                 $canApply = $backendCanApply
                     && ($hasUnapplied || $supplierHasNoAppsInRound)
                     && $supplierEligible
-                    && !$isFutureWindow
-                    && !$duplicateWithinRange;
+                    && ! $isFutureWindow
+                    && ! $duplicateWithinRange;
 
                 // Not Applicable per business rules only:
-                // - expired
-                // - strictly future (today is applicable)
-                // - no classifications
-                // - already applied to all classifications
-                $notApplicable = (bool) ($isExpired || $isFutureWindow || !$hasCategories || !$hasUnapplied);
+                $notApplicable = (bool) ($isExpired || $isFutureWindow || ! $hasCategories || ! $hasUnapplied);
 
                 return [
                     'id' => (int) $round->RoundID,
@@ -453,7 +452,7 @@ class PrequalificationApplicationController extends Controller
                 'sortOrder' => $sortOrder,
                 'filters' => [
                     'status' => $status,
-                    'q' => $search
+                    'q' => $search,
                 ],
             ]);
         } catch (\Throwable $e) {
@@ -461,6 +460,7 @@ class PrequalificationApplicationController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return response()->json([
                 'message' => 'Failed to fetch rounds. Please try again later.',
             ], 500);
@@ -471,6 +471,7 @@ class PrequalificationApplicationController extends Controller
     {
         try {
             $round->load(['sections.masterSection', 'sections.criteria.masterCriteria', 'applications']);
+
             return (new PrequalificationRoundResource($round))->response();
         } catch (\Throwable $e) {
             Log::error('Prequalification apiShow failed', [
@@ -478,6 +479,7 @@ class PrequalificationApplicationController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return response()->json([
                 'message' => 'Failed to fetch round. Please try again later.',
             ], 500);
@@ -486,17 +488,21 @@ class PrequalificationApplicationController extends Controller
 
     public function store(StorePrequalificationApplicationRequest $request): JsonResponse
     {
-        if (!Auth::check()) return response()->json(['error' => 'User not authenticated'], 401);
+        if (! Auth::check()) {
+            return response()->json(['error' => 'User not authenticated'], 401);
+        }
 
         $user = Auth::user();
-        if (!$user->thirdParty) return response()->json(['error' => 'User not associated with a third party.'], 400);
+        if (! $user->thirdParty) {
+            return response()->json(['error' => 'User not associated with a third party.'], 400);
+        }
 
         $validatedData = $request->validated();
 
         // CRITICAL FIX: Get SupplierMaster.Id, not ThirdParty.Id
         // t_SupplierPrequalificationApplications.SupplierID references t_SupplierMaster.Id
         $supplierMaster = \App\Models\ThirdParty\SupplierMaster::where('ThirdPartyId', $user->thirdParty->Id)->first();
-        if (!$supplierMaster) {
+        if (! $supplierMaster) {
             return response()->json(['error' => 'Supplier profile not found for this third party.'], 400);
         }
         $supplierId = $supplierMaster->Id;
@@ -521,7 +527,7 @@ class PrequalificationApplicationController extends Controller
             ->pluck('CategoryID')
             ->toArray();
 
-        if (!empty($existing)) {
+        if (! empty($existing)) {
             // fetch category names for better message
             $dupNames = \App\Models\ThirdParty\SupplierCategory::whereIn('SupplierCategoryID', $existing)
                 ->pluck('CategoryName', 'SupplierCategoryID')
@@ -546,8 +552,8 @@ class PrequalificationApplicationController extends Controller
             ->whereIn('t_SupplierPrequalificationApplications.CategoryID', $categoryIds)
             ->whereNull('t_SupplierPrequalificationApplications.DeletedOn')
             ->whereIn('t_SupplierPrequalificationApplications.Status', [
-                PrequalificationApplicationEnum::Prequalified, 
-                PrequalificationApplicationEnum::Approved
+                PrequalificationApplicationEnum::Prequalified,
+                PrequalificationApplicationEnum::Approved,
             ])
             ->where('r.EndDate', '>=', now()) // The previous round is still valid
             ->select('t_SupplierPrequalificationApplications.CategoryID', 'r.Title as RoundTitle', 'r.EndDate as ValidUntil')
@@ -556,7 +562,7 @@ class PrequalificationApplicationController extends Controller
         if ($validPrequalifications->isNotEmpty()) {
             $conflicts = [];
             $conflictNames = [];
-            
+
             // Get category names
             $conflictingCatIds = $validPrequalifications->pluck('CategoryID')->unique()->toArray();
             $catNames = \App\Models\ThirdParty\SupplierCategory::whereIn('SupplierCategoryID', $conflictingCatIds)
@@ -571,24 +577,27 @@ class PrequalificationApplicationController extends Controller
 
             return response()->json([
                 'message' => 'You already have a valid prequalification for ' . count($conflicts) . ' category(ies). You cannot apply again until the current validity expires.',
-                'details' => $conflicts
+                'details' => $conflicts,
             ], 409);
         }
 
 
         // server-side guard: round must be Open, within window, not expired, not closed
         $round = PrequalificationRound::query()->find($roundId);
-        if (!$round) return response()->json(['error' => 'Round not found.'], 404);
+        if (! $round) {
+            return response()->json(['error' => 'Round not found.'], 404);
+        }
         $now = now();
         $statusValue = is_object($round->Status) && property_exists($round->Status, 'value') ? $round->Status->value : (string) $round->Status;
         $isClosed = (string) $statusValue === (string) \App\Enums\Procurement\PrequalificationRoundEnum::Closed->value;
         $isOpen = (string) $statusValue === (string) \App\Enums\Procurement\PrequalificationRoundEnum::Open->value;
-        $windowOpen = (!$round->StartDate || $round->StartDate <= $now) && (!$round->EndDate || $round->EndDate >= $now);
+        $windowOpen = (! $round->StartDate || $round->StartDate <= $now) && (! $round->EndDate || $round->EndDate >= $now);
         $isExpired = $round->EndDate && $round->EndDate < $now;
-        if ($isClosed || !$isOpen || !$windowOpen || $isExpired) {
-            $reason = $isExpired ? 'This round has expired.' : ($isClosed ? 'Applications are closed for this round.' : (!$isOpen ? 'Round is not open for applications.' : 'Application window is not active.'));
+        if ($isClosed || ! $isOpen || ! $windowOpen || $isExpired) {
+            $reason = $isExpired ? 'This round has expired.' : ($isClosed ? 'Applications are closed for this round.' : (! $isOpen ? 'Round is not open for applications.' : 'Application window is not active.'));
             // 410 Gone for expired, 403 Forbidden for closed/not-open
             $code = $isExpired ? 410 : 403;
+
             return response()->json(['message' => $reason], $code);
         }
 
@@ -602,13 +611,14 @@ class PrequalificationApplicationController extends Controller
                 ->toArray();
 
             // If I am not in the list and the list is full, block me
-            if (!in_array($supplierId, $distinctSuppliers) && count($distinctSuppliers) >= $round->MaxVendors) {
+            if (! in_array($supplierId, $distinctSuppliers) && count($distinctSuppliers) >= $round->MaxVendors) {
                 return response()->json(['message' => 'This prequalification round has reached the maximum number of allowed vendors.'], 403);
             }
         }
 
         // create records — one row per category and attach any uploaded docs to the created application
         DB::beginTransaction();
+
         try {
             $createdIds = [];
             $categoryToApp = [];
@@ -650,7 +660,7 @@ class PrequalificationApplicationController extends Controller
             DB::rollBack();
             Log::error('Failed to create prequalification application', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json(['error' => 'Failed to submit application.'], 500);
@@ -661,16 +671,19 @@ class PrequalificationApplicationController extends Controller
     {
         try {
             $application->delete();
+
             return redirect()
                 ->route('prequalification.applications.index')
                 ->with('success', 'Application deleted successfully.');
         } catch (\Exception $e) {
             Log::error('Failed to delete application: ' . $e->getMessage());
+
             return redirect()
                 ->route('prequalification.applications.index')
                 ->with('error', 'Failed to delete application. Please try again.');
         }
     }
+
     public function create(Request $request): View
     {
         $roundId = $request->get('round_id');
@@ -683,15 +696,15 @@ class PrequalificationApplicationController extends Controller
             ->where(function ($q) {
                 // Ensure current date is within range
                 $now = now();
-                $q->where(fn($q2) => $q2->whereNull('StartDate')->orWhere('StartDate', '<=', $now))
-                  ->where(fn($q2) => $q2->whereNull('EndDate')->orWhere('EndDate', '>=', $now));
+                $q->where(fn ($q2) => $q2->whereNull('StartDate')->orWhere('StartDate', '<=', $now))
+                  ->where(fn ($q2) => $q2->whereNull('EndDate')->orWhere('EndDate', '>=', $now));
             })
             ->orderByDesc('CreatedOn')
             ->get();
-        
+
         // If specific round requested but not in "Open" list, fetch it separately to allow manual override?
         // For now, let's stick to only open rounds unless specifically requested
-        if ($prequalificationRound && !$rounds->contains('RoundID', $prequalificationRound->RoundID)) {
+        if ($prequalificationRound && ! $rounds->contains('RoundID', $prequalificationRound->RoundID)) {
             $rounds->push($prequalificationRound);
         }
 
@@ -720,10 +733,11 @@ class PrequalificationApplicationController extends Controller
             ->toArray();
 
 
-        if (!empty($existing)) {
+        if (! empty($existing)) {
             $dupNames = \App\Models\ThirdParty\SupplierCategory::whereIn('SupplierCategoryID', $existing)
                 ->pluck('CategoryName')
                 ->implode(', ');
+
             return back()->withInput()->with('error', 'Supplier has already applied for the following categories in this round: ' . $dupNames);
         }
 
@@ -735,8 +749,8 @@ class PrequalificationApplicationController extends Controller
             ->whereIn('t_SupplierPrequalificationApplications.CategoryID', $categoryIds)
             ->whereNull('t_SupplierPrequalificationApplications.DeletedOn')
             ->whereIn('t_SupplierPrequalificationApplications.Status', [
-                PrequalificationApplicationEnum::Prequalified, 
-                PrequalificationApplicationEnum::Approved
+                PrequalificationApplicationEnum::Prequalified,
+                PrequalificationApplicationEnum::Approved,
             ])
             ->where('r.EndDate', '>=', now()) // The previous round is still valid
             ->select('t_SupplierPrequalificationApplications.CategoryID', 'r.Title as RoundTitle', 'r.EndDate as ValidUntil')
@@ -761,29 +775,30 @@ class PrequalificationApplicationController extends Controller
 
         // Validate Round Status
         $round = PrequalificationRound::findOrFail($roundId);
-        // Note: For manual admin entry, we might want to bypass some strict checks (like date window) 
+        // Note: For manual admin entry, we might want to bypass some strict checks (like date window)
         // but generally should enforce status. Let's enforce standard rules for now.
         $now = now();
         $isClosed = $round->Status === PrequalificationRoundEnum::Closed;
         // Allow if Draft? Probably not.
         if ($isClosed) {
-             return back()->withInput()->with('error', 'Applications are closed for this round.');
+            return back()->withInput()->with('error', 'Applications are closed for this round.');
         }
 
         // Check Max Vendors
         if ($round->MaxVendors && $round->MaxVendors > 0) {
-              $distinctSuppliers = PrequalificationApplication::where('RoundID', $roundId)
-                ->whereNull('DeletedOn')
-                ->distinct()
-                ->pluck('SupplierID')
-                ->toArray();
-            
-             if (!in_array($supplierId, $distinctSuppliers) && count($distinctSuppliers) >= $round->MaxVendors) {
-                 return back()->withInput()->with('error', 'This round has reached the maximum number of allowed vendors.');
-             }
+            $distinctSuppliers = PrequalificationApplication::where('RoundID', $roundId)
+              ->whereNull('DeletedOn')
+              ->distinct()
+              ->pluck('SupplierID')
+              ->toArray();
+
+            if (! in_array($supplierId, $distinctSuppliers) && count($distinctSuppliers) >= $round->MaxVendors) {
+                return back()->withInput()->with('error', 'This round has reached the maximum number of allowed vendors.');
+            }
         }
 
         DB::beginTransaction();
+
         try {
             foreach ($categoryIds as $cid) {
                 PrequalificationApplication::create([
@@ -803,6 +818,7 @@ class PrequalificationApplicationController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Manual prequalification application failed', ['error' => $e->getMessage()]);
+
             return back()->withInput()->with('error', 'Failed to save application. Please try again.');
         }
     }

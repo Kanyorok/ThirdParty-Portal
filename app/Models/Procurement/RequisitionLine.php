@@ -2,28 +2,28 @@
 
 namespace App\Models\Procurement;
 
-use App\Traits\Model\UserActorTrait;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RequisitionLine extends Model
 {
     use SoftDeletes;
     use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $connection = 'sqlsrv';
     protected $table = 't_RequisitionLines';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
         'RequisitionID', 'Module', 'Type', 'Item', 'Description', 'UOM', 'Quantity', 'ExpectedPrice',
-        'Urgency','NeededBy', 'CreatedBy', 'ModifiedBy', 'DeletedBy', 'CategoryId'
+        'Urgency','NeededBy', 'CreatedBy', 'ModifiedBy', 'DeletedBy', 'CategoryId',
     ];
 
     public static function getPrimaryKey(): string
@@ -34,11 +34,10 @@ class RequisitionLine extends Model
     protected $casts = [
         // 'Status' => CampaignStatusEnum::class,
         // 'Type' => CampaignTypeEnum::class,
-                        'CreatedBy'  => 'integer',
+                        'CreatedBy' => 'integer',
                         'ModifiedBy' => 'integer',//,
         // 'Processing' => 'boolean'
                        ];
-
 
     public function item()
     {
@@ -54,5 +53,4 @@ class RequisitionLine extends Model
     {
         return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
     }
-
 }

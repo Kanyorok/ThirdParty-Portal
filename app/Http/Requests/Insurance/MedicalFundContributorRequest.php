@@ -22,8 +22,8 @@ class MedicalFundContributorRequest extends FormRequest
         // Clean up package_ids: remove blanks and cast to integers
         $this->merge([
             'package_ids' => collect($this->package_ids ?? [])
-                ->filter(fn($v) => is_numeric($v))
-                ->map(fn($v) => (int)$v)
+                ->filter(fn ($v) => is_numeric($v))
+                ->map(fn ($v) => (int)$v)
                 ->values()
                 ->all(),
         ]);
@@ -38,12 +38,12 @@ class MedicalFundContributorRequest extends FormRequest
         $isUpdate = $this->route('contributor') !== null;
 
         return [
-            'ThirdPartyId'  => ['required', 'exists:t_ThirdParties,Id'],
+            'ThirdPartyId' => ['required', 'exists:t_ThirdParties,Id'],
             'EffectiveFrom' => ['nullable', 'date'],
-            'EffectiveTo'   => ['nullable', 'date', 'after_or_equal:EffectiveFrom'],
-            'Status'        => ['required', 'exists:t_CodeDetails,ID'],
-            'PartyId'       => ['nullable', 'integer'],
-            'package_ids'   => ['nullable', 'array'],
+            'EffectiveTo' => ['nullable', 'date', 'after_or_equal:EffectiveFrom'],
+            'Status' => ['required', 'exists:t_CodeDetails,ID'],
+            'PartyId' => ['nullable', 'integer'],
+            'package_ids' => ['nullable', 'array'],
             'package_ids.*' => ['integer'], // Now guaranteed to be integers by prepareForValidation()
         ];
     }
@@ -54,13 +54,13 @@ class MedicalFundContributorRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'ThirdPartyId.required'      => 'Please select a third party.',
-            'ThirdPartyId.exists'        => 'The selected third party does not exist.',
+            'ThirdPartyId.required' => 'Please select a third party.',
+            'ThirdPartyId.exists' => 'The selected third party does not exist.',
             'EffectiveTo.after_or_equal' => 'The end date must be after or equal to the start date.',
-            'Status.required'            => 'Please select a valid contributor status.',
-            'Status.exists'              => 'The selected status is invalid.',
-            'package_ids.array'          => 'Invalid package data format.',
-            'package_ids.*.integer'      => 'Each selected package must be a valid ID.',
+            'Status.required' => 'Please select a valid contributor status.',
+            'Status.exists' => 'The selected status is invalid.',
+            'package_ids.array' => 'Invalid package data format.',
+            'package_ids.*.integer' => 'Each selected package must be a valid ID.',
         ];
     }
 }

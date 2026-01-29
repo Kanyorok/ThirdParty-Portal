@@ -41,6 +41,7 @@ class EmailConversationService
             '<p>You have been removed from email conversation ' . $this->emailConversation->Id . '. As a result, you will no longer receive updates or notifications related to this email conversation.</p>
                 <p>Thank you for your continued support and collaboration.</p>'
         );
+
         return $this;
     }
 
@@ -49,18 +50,18 @@ class EmailConversationService
         if ($watcher instanceof Team) {
             $conversationUser = $this->emailConversation->watchers()->lock('WITH(NOLOCK)')
                 ->where('Party', Team::getPrimaryKey())->where('PartyID', $watcher->TeamID)->first();
-            if (!$conversationUser instanceof EmailConversationUser) {
+            if (! $conversationUser instanceof EmailConversationUser) {
                 $conversationUser = new EmailConversationUser();
                 $conversationUser->fill([
                                          'EmailConversationId' => $this->emailConversation->Id,
-                                         'Party'               => Team::getPrimaryKey(),
-                                         'CreatedBy'           => $actor->Id,
-                                         'PartyID'             => $watcher->TeamID,
-                                         'CreatedOn'           => now(),
+                                         'Party' => Team::getPrimaryKey(),
+                                         'CreatedBy' => $actor->Id,
+                                         'PartyID' => $watcher->TeamID,
+                                         'CreatedOn' => now(),
                                         ]);
             }
             $conversationUser->fill([
-                                     'Role'       => $role->value,
+                                     'Role' => $role->value,
                                      'ModifiedBy' => $actor->Id,
                                      'ModifiedOn' => now(),
                                     ])->save();
@@ -89,18 +90,18 @@ class EmailConversationService
         $conversationUser = $this->emailConversation->watchers()->lock('WITH(NOLOCK)')
             ->where('Party', User::getPrimaryKey())->where('PartyID', $watcher->Id)->first();
 
-        if (!$conversationUser instanceof EmailConversationUser) {
+        if (! $conversationUser instanceof EmailConversationUser) {
             $conversationUser = new EmailConversationUser();
             $conversationUser->fill([
                                      'EmailConversationId' => $this->emailConversation->Id,
-                                     'Party'               => User::getPrimaryKey(),
-                                     'CreatedBy'           => $actor->Id,
-                                     'PartyID'             => $watcher->Id,
-                                     'CreatedOn'           => now(),
+                                     'Party' => User::getPrimaryKey(),
+                                     'CreatedBy' => $actor->Id,
+                                     'PartyID' => $watcher->Id,
+                                     'CreatedOn' => now(),
                                     ]);
         }
         $conversationUser->fill([
-                                 'Role'       => $role->value,
+                                 'Role' => $role->value,
                                  'ModifiedBy' => $actor->Id,
                                  'ModifiedOn' => now(),
                                 ])->save();
@@ -115,6 +116,7 @@ class EmailConversationService
                 actor: SystemHelper::user()
             );
         }
+
         return $this;
     }
 }

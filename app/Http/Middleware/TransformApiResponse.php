@@ -3,8 +3,8 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class TransformApiResponse
@@ -31,6 +31,7 @@ class TransformApiResponse
             $camelKey = is_numeric($key) ? $key : Str::camel($key);
             $transformedArray[$camelKey] = is_array($value) ? $this->transformKeysToCamelCase($value) : $value;
         }
+
         return $transformedArray;
     }
 }

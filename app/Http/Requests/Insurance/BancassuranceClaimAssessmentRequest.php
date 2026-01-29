@@ -26,7 +26,7 @@ class BancassuranceClaimAssessmentRequest extends FormRequest
             'Decision' => 'required|exists:t_CodeDetails,ID',
             'AssessmentAmount' => 'required|numeric|regex:/^\d+(\.\d{1,2})?$/',
             'file' => 'nullable|array',
-            'file.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,docx,xlsx|max:25600'
+            'file.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,docx,xlsx|max:25600',
         ];
     }
 }

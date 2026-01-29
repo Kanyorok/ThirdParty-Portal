@@ -3,8 +3,8 @@
 namespace App\Models\Finance;
 
 use App\Traits\Model\UserActorTrait;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Credit Movement Model
@@ -17,11 +17,12 @@ use Illuminate\Database\Eloquent\Model;
  */
 class FinanceCreditMovement extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $table = 't_FinanceCreditMovements';
     protected $primaryKey = 'Id';
 
@@ -39,7 +40,7 @@ class FinanceCreditMovement extends Model
         'ModifiedBy',
         'ModifiedOn',
         'DeletedBy',
-        'DeletedOn'
+        'DeletedOn',
     ];
 
     protected $casts = [
@@ -72,5 +73,3 @@ class FinanceCreditMovement extends Model
             ->where('ReferenceType', 'credit_adjustment');
     }
 }
-
-

@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
-use App\Models\Settings\Workflow;
 
 class WorkflowPolicy
 {

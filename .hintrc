@@ -2,7 +2,16 @@
   "connector": {
     "name": "local",
     "options": {
-      "pattern": ["**", "!.git/**", "!node_modules/**"]
+      "pattern": [
+        "**",
+        "!.git/**",
+        "!node_modules/**",
+        "!vendor/**",
+        "!storage/**",
+        "!public/build/**",
+        "!public/hr-*.html",
+        "!public/*-documentation.html"
+      ]
     }
   },
   "extends": ["development"],

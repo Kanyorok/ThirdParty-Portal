@@ -16,7 +16,7 @@ class ApplicationCategoryStatus extends Model
         'ApplicationId', 'CategoryId', 'Status', 'ProgressPercent',
         'Stage', 'StageLabel', 'DecisionDate', 'RejectionReason',
         'ReviewerNotes', 'CreatedBy', 'CreatedOn', 'ModifiedBy',
-        'ModifiedOn', 'DeletedBy', 'DeletedOn'
+        'ModifiedOn', 'DeletedBy', 'DeletedOn',
     ];
 
     protected $casts = [

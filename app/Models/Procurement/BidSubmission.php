@@ -12,11 +12,12 @@ use Illuminate\Support\Facades\Auth;
 
 class BidSubmission extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_BidSubmissions';
 
@@ -175,7 +176,7 @@ class BidSubmission extends Model
 
     public function isOpened(): bool
     {
-        return !is_null($this->OpenedAt);
+        return ! is_null($this->OpenedAt);
     }
 
     public function isEvaluated(): bool
@@ -200,15 +201,15 @@ class BidSubmission extends Model
 
     public function isEvaluationInProgress(): bool
     {
-        return $this->BidStatus === 'responsive' && !is_null($this->TechnicalScore);
+        return $this->BidStatus === 'responsive' && ! is_null($this->TechnicalScore);
     }
 
     public function isEvaluationComplete(): bool
     {
         return $this->BidStatus === 'evaluated' &&
-            !is_null($this->TechnicalScore) &&
-            !is_null($this->FinancialScore) &&
-            !is_null($this->TotalScore);
+            ! is_null($this->TechnicalScore) &&
+            ! is_null($this->FinancialScore) &&
+            ! is_null($this->TotalScore);
     }
 
     /**
@@ -221,16 +222,16 @@ class BidSubmission extends Model
                 'status' => 'non-responsive',
                 'label' => 'Non-Responsive',
                 'badge_class' => 'bg-danger',
-                'icon' => 'fas fa-times-circle'
+                'icon' => 'fas fa-times-circle',
             ];
         }
 
-        if ($this->BidStatus === 'submitted' || !$this->IsResponsive) {
+        if ($this->BidStatus === 'submitted' || ! $this->IsResponsive) {
             return [
                 'status' => 'pending-responsiveness',
                 'label' => 'Pending Responsiveness Check',
                 'badge_class' => 'bg-warning',
-                'icon' => 'fas fa-clock'
+                'icon' => 'fas fa-clock',
             ];
         }
 
@@ -239,7 +240,7 @@ class BidSubmission extends Model
                 'status' => 'pending-evaluation',
                 'label' => 'Ready for Evaluation',
                 'badge_class' => 'bg-info',
-                'icon' => 'fas fa-clipboard-check'
+                'icon' => 'fas fa-clipboard-check',
             ];
         }
 
@@ -248,7 +249,7 @@ class BidSubmission extends Model
                 'status' => 'evaluation-in-progress',
                 'label' => 'Evaluation in Progress',
                 'badge_class' => 'bg-primary',
-                'icon' => 'fas fa-spinner'
+                'icon' => 'fas fa-spinner',
             ];
         }
 
@@ -257,7 +258,7 @@ class BidSubmission extends Model
                 'status' => 'evaluation-complete',
                 'label' => 'Evaluation Complete',
                 'badge_class' => 'bg-success',
-                'icon' => 'fas fa-check-circle'
+                'icon' => 'fas fa-check-circle',
             ];
         }
 
@@ -266,7 +267,7 @@ class BidSubmission extends Model
                 'status' => 'awarded',
                 'label' => 'Awarded',
                 'badge_class' => 'bg-success',
-                'icon' => 'fas fa-trophy'
+                'icon' => 'fas fa-trophy',
             ];
         }
 
@@ -274,7 +275,7 @@ class BidSubmission extends Model
             'status' => 'unknown',
             'label' => 'Unknown Status',
             'badge_class' => 'bg-secondary',
-            'icon' => 'fas fa-question'
+            'icon' => 'fas fa-question',
         ];
     }
 
@@ -284,7 +285,7 @@ class BidSubmission extends Model
             'OpenedAt' => now(),
             'OpenedBy' => $openedBy->Id,
             'DocumentsAccessible' => true,
-            'BidStatus' => $this->BidStatus === 'draft' ? 'submitted' : $this->BidStatus
+            'BidStatus' => $this->BidStatus === 'draft' ? 'submitted' : $this->BidStatus,
         ];
 
         // Add ceremony details if provided
@@ -317,7 +318,7 @@ class BidSubmission extends Model
             'BidStatus' => 'responsive',
             'ResponsivenessRemarks' => $remarks,
             'ResponsivenessCheckedAt' => now(),
-            'ResponsivenessCheckedBy' => Auth::id()
+            'ResponsivenessCheckedBy' => Auth::id(),
         ]);
     }
 
@@ -328,7 +329,7 @@ class BidSubmission extends Model
             'BidStatus' => 'non-responsive',
             'ResponsivenessRemarks' => $remarks,
             'ResponsivenessCheckedAt' => now(),
-            'ResponsivenessCheckedBy' => Auth::id()
+            'ResponsivenessCheckedBy' => Auth::id(),
         ]);
     }
 
@@ -355,7 +356,7 @@ class BidSubmission extends Model
             'BidStatus' => $isResponsive ? 'responsive' : 'non-responsive',
             'ResponsivenessRemarks' => $overallRemarks,
             'ResponsivenessCheckedAt' => now(),
-            'ResponsivenessCheckedBy' => $checkedBy->Id
+            'ResponsivenessCheckedBy' => $checkedBy->Id,
         ]);
     }
 
@@ -367,20 +368,20 @@ class BidSubmission extends Model
         return [
             'submitted_timely' => [
                 'status' => $this->SubmittedTimely,
-                'remarks' => $this->TimelySubmissionRemarks
+                'remarks' => $this->TimelySubmissionRemarks,
             ],
             'has_mandatory_documents' => [
                 'status' => $this->HasMandatoryDocuments,
-                'remarks' => $this->DocumentComplianceRemarks
+                'remarks' => $this->DocumentComplianceRemarks,
             ],
             'is_eligible' => [
                 'status' => $this->IsEligible,
-                'remarks' => $this->EligibilityRemarks
+                'remarks' => $this->EligibilityRemarks,
             ],
             'overall_responsive' => $this->IsResponsive,
             'overall_remarks' => $this->ResponsivenessRemarks,
             'checked_at' => $this->ResponsivenessCheckedAt,
-            'checked_by' => $this->responsivenessCheckedByUser?->Name ?? 'Unknown'
+            'checked_by' => $this->responsivenessCheckedByUser?->Name ?? 'Unknown',
         ];
     }
 
@@ -392,7 +393,7 @@ class BidSubmission extends Model
             'FinancialScore' => $financial,
             'TotalScore' => $total,
             'BidStatus' => 'evaluated',
-            'EvaluationNotes' => $notes
+            'EvaluationNotes' => $notes,
         ]);
     }
 
@@ -429,12 +430,13 @@ class BidSubmission extends Model
 
     public function getStatusAttribute(): string
     {
-        if (!$this->canAccessDocuments()) {
+        if (! $this->canAccessDocuments()) {
             return 'sealed';
         }
+
         return $this->isBidOpeningCeremonyStarted() ? 'opened' : 'accessible';
     }
 
-    // Document management integration 
+    // Document management integration
     // Will be implemented once DMS schema compatibility is resolved
 }

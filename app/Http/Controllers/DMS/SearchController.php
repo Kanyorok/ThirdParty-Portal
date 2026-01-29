@@ -59,6 +59,5 @@ class SearchController extends Controller
 
 
         return $this->errored('Search functionality is not implemented yet.', status: 501);
-
     }
 }

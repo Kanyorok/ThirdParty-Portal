@@ -21,7 +21,7 @@ class LegalObligationAssignment extends Model
         'ModifiedOn',
         'DeletedBy',
         'DeletedOn',
-        'IsActive'
+        'IsActive',
     ];
 
     public function obligation(): BelongsTo

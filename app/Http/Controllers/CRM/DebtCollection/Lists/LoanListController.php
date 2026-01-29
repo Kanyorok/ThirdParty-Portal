@@ -75,6 +75,7 @@ class LoanListController extends Controller
             $dated = null;
         }
         $service = $this->service($list);
+
         return view('crm.debt-collection.lists.show', compact('list', 'dated'))
             ->with('isProcessing', $service->isProcessing())
             ->with('contacts_count', $service->contacts());
@@ -90,6 +91,7 @@ class LoanListController extends Controller
         if ($list->Source !== DebtProduct::getPrimaryKey()) {
             return redirect()->back()->with(['fail' => 'list not found.']);
         }
+
         try {
             $dated = Carbon::parse(DebtProduct::query()->max('processdate'));
         } catch (Exception $exception) {

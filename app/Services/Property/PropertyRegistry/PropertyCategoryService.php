@@ -18,10 +18,9 @@ class PropertyCategoryService
         string $propertyCategoryName,
         string $description,
         string $propertytype,
-        int    $propertyCode,
-        User   $user,
-    ): self
-    {
+        int $propertyCode,
+        User $user,
+    ): self {
         $propertycategory = CategoryMaster::create([
             'Name' => $propertyCategoryName,
             'Description' => $description,
@@ -32,6 +31,7 @@ class PropertyCategoryService
         ]);
 
         activity()->causedBy(auth()->user()->Id)->performedOn($propertycategory)->event('create')->log("Added Property category {$propertycategory->Id}.");
+
         return new self($propertycategory);
     }
 }

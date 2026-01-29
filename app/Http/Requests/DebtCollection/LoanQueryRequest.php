@@ -28,7 +28,7 @@ class LoanQueryRequest extends FormRequest
     {
         if ($this->method() === 'POST') {
             return [
-                    'Label'   => [
+                    'Label' => [
                                   'required',
                                   'string',
                                   'max:255',
@@ -46,9 +46,10 @@ class LoanQueryRequest extends FormRequest
 
     public function getDated(): ?Carbon
     {
-        if (!$this->has('dated') || !StringHelper::isInteger($this->dated) || !((int) $this->dated > 0)) {
+        if (! $this->has('dated') || ! StringHelper::isInteger($this->dated) || ! ((int) $this->dated > 0)) {
             return null;
         }
+
         try {
             $dated = Carbon::createFromFormat('U', $this->dated);
             $dated?->setTimezone(new DateTimeZone(config('app.timezone')));
@@ -57,6 +58,7 @@ class LoanQueryRequest extends FormRequest
             }
         } catch (Exception) {
         }
+
         return null;
     }
 
@@ -142,31 +144,37 @@ class LoanQueryRequest extends FormRequest
 
         if (array_key_exists('Categorization', $filters)) {
             if (array_key_exists('Product', $filters) && is_array($filters['Product']) && ((count($filters['Product']) > 0))) {
-                $products  =  $filters['Product'];
+                $products = $filters['Product'];
                 switch ($filters['Categorization']) {
                     case LoanCategorizationEnum::BOSA->name:
                         $query->whereIn('ProductID', ProductParameter::query()->whereIn('ProductID', $products)->where('SysParamID', LoanCategorizationEnum::BOSA->value)
                             ->select('ProductID')->pluck('ProductID')->toArray());
+
                         break;
                     case LoanCategorizationEnum::FOSA->name:
                         $query->whereIn('ProductID', ProductParameter::query()->whereIn('ProductID', $products)->where('SysParamID', LoanCategorizationEnum::FOSA->value)
                             ->select('ProductID')->pluck('ProductID')->toArray());
+
                         break;
                     case LoanCategorizationEnum::MicroLoans->name:
                         $query->whereNotIn('ProductID', ProductParameter::query()->whereIn('ProductID', $products)
                             ->whereIn('SysParamID', [LoanCategorizationEnum::BOSA->value, LoanCategorizationEnum::FOSA->value])->select('ProductID')->pluck('ProductID')->toArray());
+
                         break;
                 }
             } else {
                 switch ($filters['Categorization']) {
                     case LoanCategorizationEnum::BOSA->name:
                         $query->whereIn('ProductID', ProductParameter::query()->where('SysParamID', LoanCategorizationEnum::BOSA->value)->select('ProductID')->pluck('ProductID')->toArray());
+
                         break;
                     case LoanCategorizationEnum::FOSA->name:
                         $query->whereIn('ProductID', ProductParameter::query()->where('SysParamID', LoanCategorizationEnum::FOSA->value)->select('ProductID')->pluck('ProductID')->toArray());
+
                         break;
                     case LoanCategorizationEnum::MicroLoans->name:
                         $query->whereNotIn('ProductID', ProductParameter::query()->whereIn('SysParamID', [LoanCategorizationEnum::BOSA->value, LoanCategorizationEnum::FOSA->value])->select('ProductID')->pluck('ProductID')->toArray());
+
                         break;
                 }
             }
@@ -224,6 +232,7 @@ class LoanQueryRequest extends FormRequest
                                     $name => $values[$name],
                                    ]);
         }
+
         return $filters;
     }
 
@@ -231,7 +240,7 @@ class LoanQueryRequest extends FormRequest
     {
         $values = collect();
         foreach (['ArrearsDaysMin', 'ArrearsDaysMax', 'Contacted', 'MaturityMin', 'MaturityMax', 'ArrearsAmountMin', 'ArrearsAmountMax', 'Status', 'Branch', 'Product', 'Categorization'] as $filter) {
-            if (!is_null($this->$filter)) {
+            if (! is_null($this->$filter)) {
                 $values->put($filter, $this->$filter);
             }
         }

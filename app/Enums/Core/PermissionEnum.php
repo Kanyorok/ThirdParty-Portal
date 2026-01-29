@@ -10,7 +10,7 @@ enum PermissionEnum: string
 {
     use UsefulEnumTrait;
 
-        //calls
+    //calls
     case CallRead = 'call-read';
     case CallWrite = 'call-create';
     case CallUpdate = 'call-update';
@@ -20,40 +20,40 @@ enum PermissionEnum: string
     case ScheduleWrite = 'schedule-create';
     case ScheduleDelete = 'schedule-delete';
 
-        //Marketing List
+    //Marketing List
     case MarketingListRead = 'marketing-list-read';
     case MarketingListWrite = 'marketing-list-create';
     case MarketingListUpdate = 'marketing-list-update';
     case MarketingListDelete = 'marketing-list-delete';
-        //case MarketingListApproval = 'marketing-list-approval';
+    //case MarketingListApproval = 'marketing-list-approval';
 
-        //Marketing Plan
+    //Marketing Plan
     case MarketingPlannerRead = 'marketing-planner-read';
     case MarketingPlannerWrite = 'marketing-planner-create';
     case MarketingPlannerUpdate = 'marketing-planner-update';
     case MarketingPlannerDelete = 'marketing-planner-delete';
     case MarketingPlannerApproval = 'marketing-planner-approval';
 
-        //campaigns
+    //campaigns
     case CampaignRead = 'campaign-read';
     case CampaignWrite = 'campaign-create';
     case CampaignUpdate = 'campaign-update';
     case CampaignDelete = 'campaign-delete';
     case CampaignApproval = 'campaign-approval';
 
-        //Emails
+    //Emails
     case EmailRead = 'email-read';
     case EmailAssign = 'email-assign';
     case EmailDelete = 'email-delete';
 
-        //tickets
+    //tickets
     case TicketRead = 'ticket-read';
     case TicketWrite = 'ticket-create';
     case TicketUpdate = 'ticket-update';
     case TicketDelete = 'ticket-delete';
     case TicketApproval = 'ticket-approval';
 
-        //Leads
+    //Leads
     case LeadRead = 'lead-read';
     case LeadDelegate = 'lead-delegate';
     case LeadWrite = 'lead-create';
@@ -62,33 +62,33 @@ enum PermissionEnum: string
     case LeadDelete = 'lead-delete';
     case LeadsManager = 'leadsManager';
 
-        //Clients
+    //Clients
     case ClientRead = 'client-read';
     case ClientWrite = 'client-create';
     case ClientUpdate = 'client-update';
     case ClientDelete = 'client-delete';
 
-        //Product Development
+    //Product Development
     case ProductDevelopmentRead = 'product-development-read';
     case ProductDevelopmentWrite = 'product-development-create';
     case ProductDevelopmentUpdate = 'product-development-update';
     case ProductDevelopmentDelete = 'product-development-delete';
 
-        //surveys
+    //surveys
     case SurveyRead = 'survey-read';
     case SurveyWrite = 'survey-create';
-        //case SurveyUpdate = 'survey-update';
+    //case SurveyUpdate = 'survey-update';
     case SurveyDelete = 'survey-delete';
     case SurveyApproval = 'survey-approval';
 
-        //Competitor Analysis
+    //Competitor Analysis
     case Competitor = 'competitor';
     case CompetitorLLM = 'competitor-crawlAi';
 
-        // Reviews
+    // Reviews
     case ReviewsView = 'review-view';
 
-        // Debt Recovery
+    // Debt Recovery
     case DebtCollectionView = 'debt-collection-view';
     case DebtNotificationView = 'debt-notificationsView';
     case DebtCollectionLists = 'debt-marketingLists';
@@ -97,12 +97,12 @@ enum PermissionEnum: string
     case DebtCollectionAdmin = 'debt-collection-admin';
 
 
-        //Socials
+    //Socials
     case SocialRead = 'social-read';
     case SocialWrite = 'social-create';
     case SocialDelete = 'social-delete';
 
-        //System Codes
+    //System Codes
     case ListsView = 'lists-view';
     case ListsUpdate = 'lists-update';
     case Teams = 'teams';
@@ -130,7 +130,7 @@ enum PermissionEnum: string
     case Roles = 'roles';
     case Members = 'members';
 
-        //User role
+    //User role
     case Ceo = 'ceo';
 
     case MarketingManager = 'marketingManager';
@@ -142,65 +142,65 @@ enum PermissionEnum: string
     case WorkflowUpdate = 'workflow-update';
     case WorkflowDelete = 'workflow-delete';
 
-        /*
+    /*
      *
      * ========================================  Procurement  ========================================
      */
-        //Requisitions
+    //Requisitions
     case RequisitionRead = 'requisition-read';
     case RequisitionWrite = 'requisition-create';
     case RequisitionUpdate = 'requisition-update';
     case RequisitionDelete = 'requisition-delete';
     case RequisitionApproval = 'requisition-approval';
 
-        //RequisitionItems
+    //RequisitionItems
     case RequisitionItemsRead = 'requisitionItem-read';
     case RequisitionItemsWrite = 'requisitionItem-create';
     case RequisitionItemsUpdate = 'requisitionItem-update';
     case RequisitionItemsDelete = 'requisitionItem-delete';
     case RequisitionItemsApproval = 'requisitionItem-approval';
 
-        //RFQ
+    //RFQ
     case RfqRead = 'rfq-read';
     case RfqWrite = 'rfq-create';
     case RfqUpdate = 'rfq-update';
     case RfqDelete = 'rfq-delete';
     case RfqApproval = 'rfq-approval';
 
-        //RequisitionItems
+    //RequisitionItems
 
-        //ProcurementPlan Department Needs
+    //ProcurementPlan Department Needs
     case DepartmentNeedsRead = 'departmentneeds-read';
     case DepartmentNeedsWrite = 'departmentneeds-create';
     case DepartmentNeedsUpdate = 'departmentneeds-update';
     case DepartmentNeedsDelete = 'departmentneeds-delete';
     case DepartmentNeedsApproval = 'departmentneeds-approval';
-        // Department Plan (Added for granularity if needed, otherwise maps to Needs)
+    // Department Plan (Added for granularity if needed, otherwise maps to Needs)
     case DepartmentPlanRead = 'departmentplan-read';
     case DepartmentPlanWrite = 'departmentplan-create';
 
-        //Procurement Plan
+    //Procurement Plan
     case ProcurementPlanRead = 'procurementplan-read';
     case ProcurementPlanWrite = 'procurementplan-create';
     case ProcurementPlanUpdate = 'procurementplan-update';
     case ProcurementPlanDelete = 'procurementplan-delete';
     case ProcurementPlanApprove = 'procurementplan-approve';
 
-        //Tender
+    //Tender
     case TenderRead = 'tender-read';
     case TenderWrite = 'tender-create';
     case TenderUpdate = 'tender-update';
     case TenderDelete = 'tender-delete';
     case TenderApproval = 'tender-approval';
 
-        //Supplier
+    //Supplier
     case SupplierRead = 'supplier-read';
     case SupplierWrite = 'supplier-create';
     case SupplierUpdate = 'supplier-update';
     case SupplierDelete = 'supplier-delete';
     case SupplierApprove = 'supplier-approve';
 
-        //Tender Suppliers
+    //Tender Suppliers
     case BidSubmissionRead = 'BidSubmission-read';
     case BidSubmissionWrite = 'BidSubmission-create';
     case BidSubmissionUpdate = 'BidSubmission-update';
@@ -216,23 +216,23 @@ enum PermissionEnum: string
     case VendorClarificationsUpdate = 'VendorClarifications-update';
     case VendorClarificationsDelete = 'VendorClarifications-delete';
 
-        // Bid Opening
+    // Bid Opening
     case BidOpeningRead = 'bidopening-read';
     case BidOpeningWrite = 'bidopening-create';
 
-        // RFQ Response
+    // RFQ Response
     case RFQResponseRead = 'rfqresponse-read';
     case RFQResponseWrite = 'rfqresponse-create';
     case RFQResponseUpdate = 'rfqresponse-update';
 
-        // Committees
+    // Committees
     case RFQCommitteeRead = 'rfqcommittee-read';
     case RFQCommitteeWrite = 'rfqcommittee-create';
 
     case TenderCommitteeRead = 'tendercommittee-read';
     case TenderCommitteeWrite = 'tendercommittee-create';
 
-        // Contracts
+    // Contracts
     case ContractView = 'contract-view';
     case ContractCreate = 'contract-create';
     case ContractUpdate = 'contract-update';
@@ -246,104 +246,104 @@ enum PermissionEnum: string
     case AwardDelete = 'award-delete';
     case AwardApprove = 'award-approve';
 
-        // Purchase Orders (LPO)
+    // Purchase Orders (LPO)
     case PurchaseOrderRead = 'purchaseOrder-read';
     case PurchaseOrderWrite = 'purchaseOrder-create';
     case PurchaseOrderUpdate = 'purchaseOrder-update';
     case PurchaseOrderDelete = 'purchaseOrder-delete';
     case PurchaseOrderApprove = 'purchaseOrder-approval';
 
-        // Goods Receipt (GRN)
+    // Goods Receipt (GRN)
     case GoodsReceiptRead = 'goodsreceipt-read';
     case GoodsReceiptWrite = 'goodsreceipt-create';
     case GoodsReceiptUpdate = 'goodsreceipt-update';
     case GoodsReceiptDelete = 'goodsreceipt-delete';
     case GoodsReceiptApprove = 'goodsreceipt-approve';
 
-        //Procument Plan- Plan Consolidation
+    //Procument Plan- Plan Consolidation
     case PlanConsolidationRead = 'planconsolidation-read';
     case PlanConsolidationWrite = 'planconsolidation-write';
     case PlanConsolidationUpdate = 'planconsolidation-update';
     case PlanConsolidationDelete = 'planconsolidation-delete';
     case PlanConsolidationApproval = 'planconsolidation-approval';
 
-        //Procument Plan- Plan Maintain
+    //Procument Plan- Plan Maintain
     case PlanMaintenanceRead = 'planmaintenance-read';
     case PlanMaintenanceWrite = 'planmaintenance-write';
     case PlanMaintenanceUpdate = 'planmaintenance-update';
     case PlanMaintenanceDelete = 'planmaintenance-delete';
     case PlanMaintenanceApproval = 'planmaintenance-approval';
 
-        //Procument Plan- Plan Manual Input
+    //Procument Plan- Plan Manual Input
     case PlanManualInputRead = 'planmanualinput-read';
     case PlanManualInputWrite = 'planmanualinput-write';
     case PlanManualInputUpdate = 'planmanualinput-update';
     case PlanManualInputDelete = 'planmanualinput-delete';
 
-        //Procument Plan- Plan Amend
+    //Procument Plan- Plan Amend
     case PlanEditRead = 'planedit-read';
     case PlanEditWrite = 'planedit-write';
     case PlanEditUpdate = 'planedit-update';
     case PlanEditDelete = 'planedit-delete';
 
-        //Procument Plan- Plan Line Items
+    //Procument Plan- Plan Line Items
     case PlanLineItemsRead = 'planlineitems-read';
     case PlanLineItemsWrite = 'planlineitems-write';
     case PlanLineItemsUpdate = 'planlineitems-update';
     case PlanLineItemsDelete = 'planlineitems-delete';
 
-        //ProcurementPlan ProcurementMethod
+    //ProcurementPlan ProcurementMethod
     case ProcurementMethodRead = 'procurementmethod-read';
     case ProcurementMethodWrite = 'procurementmethod-create';
     case ProcurementMethodUpdate = 'procurementmethod-update';
 
-        // Plan Consolidation & Submission
+    // Plan Consolidation & Submission
     case ProcurementPlanSubmit = 'procurementplan-submit';
 
-        // Prequalification
+    // Prequalification
     case PrequalificationRoundRead = 'prequalificationround-read';
     case PrequalificationRoundCreate = 'prequalificationround-create';
     case PrequalificationRoundUpdate = 'prequalificationround-update';
     case PrequalificationRoundDelete = 'prequalificationround-delete';
     case PrequalificationRoundApproval = 'prequalificationround-approval';
 
-        // Third Party Management
+    // Third Party Management
     case ThirdPartyRead = 'thirdparty-read';
     case ThirdPartyCreate = 'thirdparty-create';
     case ThirdPartyUpdate = 'thirdparty-update';
     case ThirdPartyDelete = 'thirdparty-delete';
     case ThirdPartyApprove = 'thirdparty-approve';
 
-        // Procurement Settings - Approval Setup
+    // Procurement Settings - Approval Setup
     case ApprovalSetupRead = 'approvalsetup-read';
     case ApprovalSetupWrite = 'approvalsetup-create';
     case ApprovalSetupUpdate = 'approvalsetup-update';
     case ApprovalSetupDelete = 'approvalsetup-delete';
 
-        // Procurement Settings - Evaluation Criteria
+    // Procurement Settings - Evaluation Criteria
     case EvaluationCriteriaRead = 'evaluationcriteria-read';
     case EvaluationCriteriaWrite = 'evaluationcriteria-create';
     case EvaluationCriteriaUpdate = 'evaluationcriteria-update';
     case EvaluationCriteriaDelete = 'evaluationcriteria-delete';
 
-        // Procurement Settings - Sections
+    // Procurement Settings - Sections
     case ProcurementSectionRead = 'procurementsection-read';
     case ProcurementSectionWrite = 'procurementsection-create';
     case ProcurementSectionUpdate = 'procurementsection-update';
     case ProcurementSectionDelete = 'procurementsection-delete';
 
-        // Procurement Settings - Configuration (Modes & Periods)
+    // Procurement Settings - Configuration (Modes & Periods)
     case ProcurementConfigRead = 'procurementconfig-read';
     case ProcurementConfigWrite = 'procurementconfig-create';
     case ProcurementConfigUpdate = 'procurementconfig-update';
     case ProcurementConfigDelete = 'procurementconfig-delete';
 
-        //ProcurementPlan Procurement Schedule
-        //case SchedulePlanRead = 'scheduleplan-read';
-        //case SchedulePlanWrite = 'scheduleplan-create';
-        //case SchedulePlanUpdate = 'scheduleplan-update';
-        
-        /*
+    //ProcurementPlan Procurement Schedule
+    //case SchedulePlanRead = 'scheduleplan-read';
+    //case SchedulePlanWrite = 'scheduleplan-create';
+    //case SchedulePlanUpdate = 'scheduleplan-update';
+
+    /*
     *
     * ========================================  Inventory  ========================================
     */
@@ -434,46 +434,46 @@ enum PermissionEnum: string
     case InventoryDashboardView = 'inventoryDashboard-view';
     case InventoryReportsView = 'inventoryReports-view';
 
-        /*
+    /*
      *
      * ========================================  Property Management  ========================================
      */
 
-        //property category
+    //property category
     case PropertyCategoryCreate = 'propertycategory-create';
     case PropertyCategoryUpdate = 'propertycategory-update';
     case PropertyCategoryDelete = 'propertycategory-delete';
     case PropertyCategoryView = 'propertycategory-view';
 
-        //Property type
+    //Property type
     case PropertyTypeCreate = 'propertytype-create';
     case PropertyTypeUpdate = 'propertytype-update';
     case PropertyTypeDelete = 'propertytype-delete';
     case PropertyTypeView = 'propertytype-view';
 
 
-        //Property Registry
+    //Property Registry
     case PropertyRegistryCreate = 'propertyregistry-create';
     case PropertyRegistryUpdate = 'propertyregistry-update';
     case PropertyRegistryDelete = 'propertyregistry-delete';
     case PropertyRegistryView = 'propertyregistry-view';
 
 
-        //Property Structure
+    //Property Structure
     case PropertyStructuralCreate = 'propertystructural-create';
     case PropertyStructuralUpdate = 'propertystructural-update';
     case PropertyStructuralDelete = 'propertystructural-delete';
     case PropertyStructuralView = 'propertystructural-view';
 
 
-        //Pricing and Rates
+    //Pricing and Rates
     case PropertyRateAndPricingCreate = 'propertyrateandpricing-create';
     case PropertyRateAndPricingUpdate = 'propertyrateandpricing-update';
     case PropertyRateAndPricingDelete = 'propertyrateandpricing-delete';
     case PropertyRateAndPricingView = 'propertyrateandpricing-view';
 
 
-        //Property Attachments
+    //Property Attachments
     case PropertyAttachmentsCreate = 'propertyattachments-create';
     case PropertyAttachmentsUpdate = 'propertyattachments-update';
     case PropertyAttachmentsDelete = 'propertyattachments-delete';
@@ -481,20 +481,20 @@ enum PermissionEnum: string
 
 
 
-        //Tenant Mentenance
+    //Tenant Mentenance
     case TenantMaintenanceCreate = 'tenantmaintenance-create';
     case TenantMaintenanceUpdate = 'tenantmaintenance-update';
     case TenantMaintenanceDelete = 'tenantmaintenance-delete';
     case TenantMaintenanceView = 'tenantmaintenance-view';
 
-        //Property Tenant Clearance
+    //Property Tenant Clearance
     case TenantClearanceCreate = 'tenantclearance-create';
     case TenantClearanceUpdate = 'tenantclearance-update';
     case TenantClearanceDelete = 'tenantclearance-delete';
     case TenantClearanceView = 'tenantclearance-view';
 
 
-        //Property New Lease
+    //Property New Lease
     case PropertyNewLeaseCreate = 'propertynewlease-create';
     case PropertyNewLeaseUpdate = 'propertynewlease-update';
     case PropertyNewLeaseDelete = 'propertynewlease-delete';
@@ -502,14 +502,14 @@ enum PermissionEnum: string
     case PropertyNewLeaseApproval = 'propertynewlease-appoval';
 
 
-        //Property lease schedule
+    //Property lease schedule
     case PropertyLeaseScheduleCreate = 'propertyleaseschedule-create';
     case PropertyLeaseScheduleUpdate = 'propertyleaseschedule-update';
     case PropertyLeaseScheduleDelete = 'propertyleaseschedule-delete';
     case PropertyLeaseScheduleView = 'propertyleaseschedule-view';
     case PropertyLeaseSchedulePrint = 'propertyleaseschedule-print';
 
-        //Property lease Renewal
+    //Property lease Renewal
     case PropertyLeaseRenewalCreate = 'propertyleaserenewal-create';
     case PropertyLeaseRenewalUpdate = 'propertyleaserenewal-update';
     case PropertyLeaseRenewalDelete = 'propertyleaserenewal-delete';
@@ -518,20 +518,20 @@ enum PermissionEnum: string
 
 
 
-        //Property Lease Termination
+    //Property Lease Termination
     case PropertyLeaseTerminationCreate = 'propertyleasetermination-create';
     case PropertyLeaseTerminationUpdate = 'propertyleasetermination-update';
     case PropertyLeaseTerminationDelete = 'propertyleasetermination-delete';
     case PropertyLeaseTerminationView = 'propertyleasetermination-view';
     case PropertyLeaseTerminationApproval = 'propertyleasetermination-approval';
 
-        //Property Invoice
+    //Property Invoice
     case PropertyInvoiceCreate = 'propertyinvoice-create';
     case PropertyInvoiceUpdate = 'propertyinvoice-update';
     case PropertyInvoiceDelete = 'propertyinvoice-delete';
     case PropertyInvoiceView = 'propertyinvoice-view';
 
-        //Property Receipt
+    //Property Receipt
 
     case PropertyReceiptCreate = 'propertyreceipt-create';
     case PropertyReceiptUpdate = 'propertyreceipt-update';
@@ -539,20 +539,20 @@ enum PermissionEnum: string
     case PropertyReceiptView = 'propertyreceipt-view';
     case PropertyReceiptPrint = 'propertyreceipt-print';
 
-        //Property Maintenance Request
+    //Property Maintenance Request
     case PropertyMaintenanceRequestCreate = 'propertymaintenancerequest-create';
     case PropertyMaintenanceRequestUpdate = 'propertymaintenancerequest-update';
     case PropertyMaintenanceRequestDelete = 'propertymaintenancerequest-delete';
     case PropertyMaintenanceRequestView = 'propertymaintenancerequest-view';
 
 
-        //Property Maintenance Assign
+    //Property Maintenance Assign
     case PropertyMaintenanceAssignCreate = 'propertymaintenanceassign-create';
     case PropertyMaintenanceAssignUpdate = 'propertymaintenanceassign-update';
     case PropertyMaintenanceAssignDelete = 'propertymaintenanceassign-delete';
     case PropertyMaintenanceAssignView = 'propertymaintenanceassign-view';
 
-        //Property Maintenance Work Completion
+    //Property Maintenance Work Completion
     case PropertyMaintenanceWorkCompletionCreate = 'propertymaintenanceworkcompletion-create';
     case PropertyMaintenanceWorkCompletionUpdate = 'propertymaintenanceworkcompletion-update';
     case PropertyMaintenanceWorkCompletionDelete = 'propertymaintenanceworkcompletion-delete';
@@ -560,45 +560,45 @@ enum PermissionEnum: string
 
 
 
-        /*
+    /*
      *
      * ========================================  Insurance  ========================================
      */
 
 
-        //Bancassurance Referral
+    //Bancassurance Referral
     case BancassuranceReferralCreate = 'bancassurancereferral-create';
     case BancassuranceReferralUpdate = 'bancassurancereferral-update';
     case BancassuranceReferralDelete = 'bancassurancereferral-delete';
     case BancassuranceReferralView = 'bancassurancereferral-view';
 
-        //Bancassurance Policy
+    //Bancassurance Policy
     case BancassurancePolicyCreate = 'bancassurancepolicy-create';
     case BancassurancePolicyView = 'bancassurancepolicy-view';
     case BancassurancePolicyUpdate = 'bancassurancepolicy-update';
     case BancassurancePolicyDelete = 'bancassurancepolicy-delete';
 
 
-        // Bancassurance Customers
+    // Bancassurance Customers
     case BancassuranceCustomersCreate = 'bancassurancecustomers-create';
     case BancassuranceCustomersView = 'bancassurancecustomers-view';
     case BancassuranceCustomersUpdate = 'bancassurancecustomers-update';
     case BancassuranceCustomersDelete = 'bancassurancecustomers-delete';
 
-        // Bancassurance Customers Contacts
+    // Bancassurance Customers Contacts
     case BancassuranceCustomersContactsCreate = 'bancassurancecustomerscontacts-create';
     case BancassuranceCustomersContactsView = 'bancassurancecustomerscontacts-view';
     case BancassuranceCustomersContactsUpdate = 'bancassurancecustomerscontacts-update';
     case BancassuranceCustomersContactsDelete = 'bancassurancecustomerscontacts-delete';
 
 
-        // Bancassurance Customers Beneficiaries
+    // Bancassurance Customers Beneficiaries
     case BancassuranceCustomersBeneficiariesCreate = 'bancassurancecustomersbeneficiaries-create';
     case BancassuranceCustomersBeneficiariesView = 'bancassurancecustomersbeneficiaries-view';
     case BancassuranceCustomersBeneficiariesUpdate = 'bancassurancecustomersbeneficiaries-update';
     case BancassuranceCustomersBeneficiariesDelete = 'bancassurancecustomersbeneficiaries-delete';
 
-        // Bancassurance Premium Payments
+    // Bancassurance Premium Payments
     case BancassurancePremiumPaymentsView = 'bancassurancepremiumpayments-view';
     case BancassurancePremiumPaymentsCreate = 'bancassurancepremiumpayments-create';
     case BancassurancePremiumPaymentsUpdate = 'bancassurancepremiumpayments-update';
@@ -629,57 +629,57 @@ enum PermissionEnum: string
     case BancassurancePaymentDelete = 'bancassurancepayment-delete';
     case BancassurancePaymentUpdate = 'bancassurancepayment-update';
 
-        // Medical Fund Management
+    // Medical Fund Management
     case MedicalFundView = 'medicalfund-view';
     case MedicalFundCreate = 'medicalfund-create';
     case MedicalFundUpdate = 'medicalfund-update';
     case MedicalFundDelete = 'medicalfund-delete';
 
-        // Medical Fund Contribution
+    // Medical Fund Contribution
     case MedicalFundContributionView = 'medicalfundcontribution-view';
     case MedicalFundContributionCreate = 'medicalfundcontribution-create';
     case MedicalFundContributionUpdate = 'medicalfundcontribution-update';
     case MedicalFundContributionDelete = 'medicalfundcontribution-delete';
 
-        // Medical Fund Beneficiary
+    // Medical Fund Beneficiary
     case MedicalFundBeneficiaryView = 'medicalfundbeneficiary-view';
     case MedicalFundBeneficiaryCreate = 'medicalfundbeneficiary-create';
     case MedicalFundBeneficiaryUpdate = 'medicalfundbeneficiary-update';
     case MedicalFundBeneficiaryDelete = 'medicalfundbeneficiary-delete';
 
 
-        // Insurance Provider
+    // Insurance Provider
     case InsuranceProviderView = 'insuranceprovider-view';
     case InsuranceProviderCreate = 'insuranceprovider-create';
     case InsuranceProviderUpdate = 'insuranceprovider-update';
     case InsuranceProviderDelete = 'insuranceprovider-delete';
 
-        // Insurance Product
+    // Insurance Product
     case InsuranceProductView = 'insuranceproduct-view';
     case InsuranceProductCreate = 'insuranceproduct-create';
     case InsuranceProductUpdate = 'insuranceproduct-update';
     case InsuranceProductDelete = 'insuranceproduct-delete';
 
 
-        // Insurance Product Rider
+    // Insurance Product Rider
     case InsuranceProductRiderView = 'insuranceproductrider-view';
     case InsuranceProductRiderCreate = 'insuranceproductrider-create';
     case InsuranceProductRiderUpdate = 'insuranceproductrider-update';
     case InsuranceProductRiderDelete = 'insuranceproductrider-delete';
 
-        // Insurance Pricing Rule
+    // Insurance Pricing Rule
     case InsurancePricingRuleView = 'insurancepricingrule-view';
     case InsurancePricingRuleCreate = 'insurancepricingrule-create';
     case InsurancePricingRuleUpdate = 'insurancepricingrule-update';
     case InsurancePricingRuleDelete = 'insurancepricingrule-delete';
 
-        //Insurance Claim Closure
+    //Insurance Claim Closure
     case InsuranceClaimClosureView = 'insuranceclaimclosure-view';
     case InsuranceClaimClosureCreate = 'insuranceclaimclosure-create';
     case InsuranceClaimClosureUpdate = 'insuranceclaimclosure-update';
     case InsuranceClaimClosureDelete = 'insuranceclaimclosure-delete';
 
-        // Commission Rule
+    // Commission Rule
     case CommissionRuleView = 'commissionrule-view';
     case CommissionRuleCreate = 'commissionrule-create';
     case CommissionRuleUpdate = 'commissionrule-update';
@@ -688,7 +688,7 @@ enum PermissionEnum: string
 
 
 
-        /*
+    /*
      *
      * ========================================  Human Resource management  ========================================
      */
@@ -769,92 +769,92 @@ enum PermissionEnum: string
     case DMSLegalHoldRelease = 'dmsLegalHold-release';
 
 
-        /*
+    /*
     *
     * ========================================  Finance  ========================================
     */
-        //Chart Of Accounts
+    //Chart Of Accounts
     case FinanceCOAView = 'financeCOA-view';
     case FinanceCOACreate = 'financeCOA-create';
     case FinanceCOAUpdate = 'financeCOA-update';
     case FinanceCOADelete = 'financeCOA-delete';
 
-        //General Ledger
+    //General Ledger
     case FinanceGeneralLedgerView = 'financeGeneralLedger-view';
     case FinanceGeneralLedgerCreate = 'financeGeneralLedger-create';
     case FinanceGeneralLedgerUpdate = 'financeGeneralLedger-update';
     case FinanceGeneralLedgerDelete = 'financeGeneralLedger-delete';
 
-        //GL Mapping
+    //GL Mapping
     case FinanceGLMappingView = 'financeGLMapping-view';
     case FinanceGLMappingCreate = 'financeGLMapping-create';
     case FinanceGLMappingUpdate = 'financeGLMapping-update';
     case FinanceGLMappingDelete = 'financeGLMapping-delete';
 
-        //Accounts Payable
+    //Accounts Payable
     case FinanceAccountsPayableView = 'financeAccountsPayable-view';
     case FinanceAccountsPayableCreate = 'financeAccountsPayable-create';
     case FinanceAccountsPayableUpdate = 'financeAccountsPayable-update';
     case FinanceAccountsPayableDelete = 'financeAccountsPayable-delete';
 
-        //Accounts Receivable
+    //Accounts Receivable
     case FinanceAccountsReceivableView = 'financeAccountsReceivable-view';
     case FinanceAccountsReceivableCreate = 'financeAccountsReceivable-create';
     case FinanceAccountsReceivableUpdate = 'financeAccountsReceivable-update';
     case FinanceAccountsReceivableDelete = 'financeAccountsReceivable-delete';
 
-        //Credit Note
+    //Credit Note
     case CreditNoteView = 'creditNote-view';
     case CreditNoteCreate = 'creditNote-create';
     case CreditNoteUpdate = 'creditNote-update';
     case CreditNoteDelete = 'creditNote-delete';
 
-        //Payment Voucher
+    //Payment Voucher
     case PaymentVoucherView = 'paymentVoucher-view';
     case PaymentVoucherCreate = 'paymentVoucher-create';
     case PaymentVoucherUpdate = 'paymentVoucher-update';
     case PaymentVoucherDelete = 'paymentVoucher-delete';
 
-        //Payment Processing
+    //Payment Processing
     case PaymentProcessingView = 'paymentProcessing-view';
     case PaymentProcessingCreate = 'paymentProcessing-create';
     case PaymentProcessingUpdate = 'paymentProcessing-update';
     case PaymentProcessingDelete = 'paymentProcessing-delete';
 
-        //Receivables - Receipt Posting
+    //Receivables - Receipt Posting
     case ReceiptPostingView = 'receiptPosting-view';
     case ReceiptPostingCreate = 'receiptPosting-create';
     case ReceiptPostingUpdate = 'receiptPosting-update';
     case ReceiptPostingDelete = 'receiptPosting-delete';
 
-        //Receivables - Debit Note
+    //Receivables - Debit Note
     case DebitNoteView = 'debitNote-view';
     case DebitNoteCreate = 'debitNote-create';
     case DebitNoteUpdate = 'debitNote-update';
     case DebitNoteDelete = 'debitNote-delete';
 
-        //Supplier Permissions
+    //Supplier Permissions
     case SupplierView = 'supplier-view';
     case SupplierApproval = 'supplier-approval';
 
-        //Tax Setting
+    //Tax Setting
     case FinanceTaxSettingView = 'financeTaxSetting-view';
     case FinanceTaxSettingCreate = 'financeTaxSetting-create';
     case FinanceTaxSettingUpdate = 'financeTaxSetting-update';
     case FinanceTaxSettingDelete = 'financeTaxSetting-delete';
 
-        /*
+    /*
      *
      * ========================================  Main Settings  ========================================
      */
 
-        //Credit Management
+    //Credit Management
     case FinanceCreditManagementView = 'financeCreditManagement-view';
     case FinanceCreditManagementCreate = 'financeCreditManagement-create';
     case FinanceCreditManagementUpdate = 'financeCreditManagement-update';
     case FinanceCreditManagementDelete = 'financeCreditManagement-delete';
 
-        //Posting
+    //Posting
     case FinanceJournalPosting = 'financeJournal-posting';
     case FinanceAPInvoicePosting = 'financeAPInvoice-posting';
     case FinanceARInvoicePosting = 'financeARInvoice-posting'; // AR Account Receivables
@@ -865,7 +865,7 @@ enum PermissionEnum: string
     case FinanceReceiptPosting = 'financeReceipt-posting';
 
 
-        /*
+    /*
     *
     * ========================================  FleetManagement  ========================================
     */
@@ -944,39 +944,39 @@ enum PermissionEnum: string
 
 
 
-        /*
+    /*
 *
 * ========================================  Legal  ========================================
 */
-        //Document Registry and Contracts Creation
+    //Document Registry and Contracts Creation
 
     case ContractApproval = 'contract-approval';
 
-        //Disputes and Ltigations
+    //Disputes and Ltigations
     case DisputeLitigationView = 'disputelitigation-view';
     case DisputeLitigationCreate = 'disputelitigation-create';
     case DisputeLitigationUpdate = 'disputelitigation-update';
     case DisputeLitigationDelete = 'disputelitigation-delete';
 
-        //LegalObligations
+    //LegalObligations
     case LegalObligationView = 'legalobligation-view';
     case LegalObligationCreate = 'legalobligation-create';
     case LegalObligationUpdate = 'legalobligation-update';
     case LegalObligationDelete = 'legalobligation-delete';
 
-        //Legal Search
+    //Legal Search
     case LegalSearchView = 'legalsearch-view';
     case LegalSearchCreate = 'legalsearch-create';
     case LegalSearchUpdate = 'legalsearch-update';
     case LegalSearchDelete = 'legalsearch-delete';
 
-        //LoanSecurity
+    //LoanSecurity
     case LoanSecurityView = 'loansecurity-view';
     case LoanSecurityCreate = 'loansecurity-create';
     case LoanSecurityUpdate = 'loansecurity-update';
     case LoanSecurityDelete = 'loansecurity-delete';
 
-        //IntellectualProperty
+    //IntellectualProperty
     case IntellectualPropertyView = 'intellectualproperty-view';
     case IntellectualPropertyCreate = 'intellectualproperty-create';
     case IntellectualPropertyUpdate = 'intellectualproperty-update';
@@ -984,7 +984,7 @@ enum PermissionEnum: string
 
 
 
-        //Compliance
+    //Compliance
     case ComplianceSetupView = 'compliance-setup-view';
     case ComplianceSetupCreate = 'compliance-setup-create';
     case ComplianceSetupUpdate = 'compliance-setup-update';
@@ -1014,9 +1014,6 @@ enum PermissionEnum: string
     case CompliancePolicyDelete = 'compliance-policy-delete';
 
     case ComplianceGenericView = 'compliance-generic-view';
-
-
-
 
     public static function display(): Collection
     {
@@ -1064,7 +1061,7 @@ enum PermissionEnum: string
             //Tenders
             [self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval],
 
-    
+
 
             //Inventory
             [self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy],
@@ -1122,7 +1119,7 @@ enum PermissionEnum: string
             [self::FinanceJournalPosting, self::FinanceAPInvoicePosting, self::FinanceARInvoicePosting, self::FinanceCreditNotePosting, self::FinanceDebitNotePosting, self::FinanceVoucherPosting, self::FinancePaymentProcessingPosting, self::FinanceReceiptPosting],
 
             ///////////////////////  Settings  /////////////////////////////////////
-            [self::WorkflowView, self::WorkflowCreate, self::WorkflowUpdate, self::WorkflowDelete],      
+            [self::WorkflowView, self::WorkflowCreate, self::WorkflowUpdate, self::WorkflowDelete],
 
             ///////////////////////  Fleet Management  /////////////////////////////////////
             [self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy],
@@ -1234,10 +1231,9 @@ enum PermissionEnum: string
             self::PurchaseOrderApprove,
             self::RequisitionApproval,
             self::RequisitionItemsApproval,
-            self::PropertyNewLeaseApproval
+            self::PropertyNewLeaseApproval,
         ]);
     }
-
 
     public function module(): ModulesEnum
     {
@@ -1633,11 +1629,11 @@ enum PermissionEnum: string
             self::WorkflowView, self::WorkflowCreate, self::WorkflowUpdate, self::WorkflowDelete => 'GlobalWorkflow',
             self::BranchView, self::BranchCreate, self::BranchUpdate, self::BranchDelete => 'Branch',
 
-            default      => 'System Codes' // Fallback to System Codes or specific category if unknown, but better to be explicit.
+            default => 'System Codes' // Fallback to System Codes or specific category if unknown, but better to be explicit.
         };
     }
 
-        /*
+    /*
      *
      * ========================================  Workflow  ========================================
      */

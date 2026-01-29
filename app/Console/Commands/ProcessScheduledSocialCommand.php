@@ -34,6 +34,7 @@ class ProcessScheduledSocialCommand extends Command
         foreach ($posts as $post) {
             if (in_array($post->Type->value, [IntegrationsEnum::Twitter->value, IntegrationsEnum::Facebook->value], true)) {
                 (new SocialMediaService($post))->publish();
+
                 continue;
             }
             SystemHelper::notifyAdmin('Unknown Social to post: ' . $post->Id);

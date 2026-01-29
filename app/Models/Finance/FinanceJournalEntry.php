@@ -6,7 +6,6 @@ use App\Models\Auth\User;
 use App\Models\Core\Approval\Workflow;
 use App\Models\Core\Approval\WorkflowHistory;
 use App\Models\Core\Approval\WorkflowPending;
-use App\Models\Finance\ReverseJournalEntry;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,13 +16,14 @@ use Illuminate\Support\Facades\DB;
 
 class FinanceJournalEntry extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     protected $table = 't_FinanceJournalEntries';
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $primaryKey = 'Id';
 
@@ -102,8 +102,9 @@ class FinanceJournalEntry extends Model
     }
 
     // Relationship to find reversals where this journal is the original
-    public function reversalsAsOriginal(){
-        return $this->hasMany(ReverseJournalEntry::class,'OriginalJournalEntryID','Id');
+    public function reversalsAsOriginal()
+    {
+        return $this->hasMany(ReverseJournalEntry::class, 'OriginalJournalEntryID', 'Id');
     }
 
     public function sourceModule()
@@ -111,14 +112,14 @@ class FinanceJournalEntry extends Model
         return $this->belongsTo(\App\Models\Core\Module::class, 'SourceModule', 'ModuleID');
     }
 
-    public function modifiedBy():BelongsTo
+    public function modifiedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class,'ModifiedBy','Id');
+        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
     }
 
-    public function createdBy():BelongsTo
+    public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(User::class,'CreatedBy','Id');
+        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
 
     // Accessor to get source module name
@@ -135,6 +136,7 @@ class FinanceJournalEntry extends Model
         }
 
         $reversal = ReverseJournalEntry::where('OriginalJournalEntryID', $this->Id)->first();
+
         return $reversal;
     }
 
@@ -145,6 +147,7 @@ class FinanceJournalEntry extends Model
         if ($reversal) {
             return User::find($reversal->CreatedBy);
         }
+
         return null;
     }
 
@@ -161,6 +164,7 @@ class FinanceJournalEntry extends Model
             localKey: 'Id'           // Local key
         );
     }
+
     public function workflowHistory()
     {
         return $this->morphMany(
@@ -172,13 +176,10 @@ class FinanceJournalEntry extends Model
         );
     }
 
-
     public function workflowPending()
     {
         return $this->hasMany(WorkflowPending::class, 'SourceID', 'Id')
             ->where('Source', 'FinanceJournalEntryId')
             ->whereNull('DeletedOn');
     }
-
-
 }

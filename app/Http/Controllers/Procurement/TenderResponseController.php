@@ -2,41 +2,39 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\TenderApprovalStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderInvitation;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
-use App\Enums\TenderApprovalStatusEnum;
-use App\Enums\TenderStatusEnum;
 
 class TenderResponseController extends Controller
 {
-    //
-
     public function index()
     {
         $invitations = TenderInvitation::all();
+
         return view('procurement.tendering.suppliermanagement.invitationresponsetracking.index', compact('invitations'));
     }
 
-    public function create(){
-        // Get only active/approved tenders that are not closed
-        
-        $tenders = Tender::where('Status', TenderStatusEnum::Published)
-             ->where('ApprovalStatus', TenderApprovalStatusEnum::APPROVED)
-             ->where('SubmissionDeadline', '>', now())
-             ->whereNot('Status', TenderStatusEnum::Awarded)
-             // Exclude tenders that already have an Accepted or Declined response.
-             // Note: This hides the tender if *any* supplier has responded, per user request.
-            //  ->whereDoesntHave('invitations', function($q) {
-            //      $q->whereIn('ResponseStatus', ['Accepted', 'Declined']);
-            //  })
-             ->select('Id', 'TenderNo', 'Title')
-             ->get();
+    public function create()
+    {
+        $tenders = Tender::where('ApprovalStatus', TenderApprovalStatusEnum::APPROVED)
+            ->select('Id', 'TenderNo', 'Title')
+            ->get();
 
-        // Pass empty suppliers list initially - they will be loaded via AJAX
-        $suppliers = [];
+
+        $suppliers = Supplier::with('supplierMaster.thirdParty')
+            ->whereNull('DeletedOn')
+            ->get()
+            ->map(function ($supplier) {
+                return (object) [
+                    'Id' => $supplier->Id,
+                    'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName
+                        ?? $supplier->supplierMaster->thirdParty->ThirdPartyName,
+                ];
+            });
 
         return view('procurement.tendering.suppliermanagement.invitationresponsetracking.create', compact('tenders', 'suppliers'));
     }
@@ -68,7 +66,7 @@ class TenderResponseController extends Controller
         if ($invitation) {
             // Prevent overwriting if already responded
             if ($invitation->ResponseStatus !== 'Pending') {
-                 return back()->with('error', 'A response ' . $invitation->ResponseStatus . ' has already been recorded for this supplier.');
+                return back()->with('error', 'A response ' . $invitation->ResponseStatus . ' has already been recorded for this supplier.');
             }
 
             $invitation->update([
@@ -98,33 +96,16 @@ class TenderResponseController extends Controller
 
     public function getInvitedSuppliers($tenderId)
     {
-        $tender = Tender::findOrFail($tenderId);
+        $tender = Tender::with(['invitedSuppliers.supplierMaster.thirdParty'])
+            ->findOrFail($tenderId);
 
-        if ($tender->TenderType === \App\Enums\TenderTypeEnum::Open) { // Public Tender
-             // List all approved and prequalified suppliers
-             $suppliers = Supplier::where('Active_Status', 1)
-                ->with('supplierMaster.thirdParty')
-                ->get()
-                ->map(function($supplier) {
-                    return [
-                        'Id' => $supplier->Id,
-                        'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName 
-                            ?? $supplier->supplierMaster->thirdParty->ThirdPartyName
-                    ];
-                })
-                ->unique('SupplierName')
-                ->values();
-        } else {
-            // Restricted Tender - load active invitations
-             // Re-using the relationship approach from original code for safety
-             $suppliers = $tender->invitedSuppliers->map(function($supplier) {
-                return [
-                    'Id' => $supplier->Id,
-                    'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName 
-                        ?? $supplier->supplierMaster->thirdParty->ThirdPartyName
-                ];
-            });
-        }
+        $suppliers = $tender->invitedSuppliers->map(function ($supplier) {
+            return [
+                'Id' => $supplier->Id,
+                'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName
+                    ?? $supplier->supplierMaster->thirdParty->ThirdPartyName,
+            ];
+        });
 
         return response()->json($suppliers);
     }

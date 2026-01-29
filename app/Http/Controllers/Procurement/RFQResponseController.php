@@ -9,8 +9,8 @@ use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\RFQResponseItem;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class RFQResponseController extends Controller
@@ -19,12 +19,14 @@ class RFQResponseController extends Controller
     {
         $this->authorize('viewAny', RFQResponse::class);
         $rfqResponses = RFQResponse::with(['rfq', 'items', 'items.uom'])->latest()->paginate(10);
+
         return view('procurement.rfqresponses.index', compact('rfqResponses'));
     }
+
     public function create()
     {
         $this->authorize('create', RFQResponse::class);
-        
+
         // Include both Approved and Published RFQs
         // Include both Approved and Published RFQs
         // Status values: 'Ap'/'AP'/'Approved' for approved, 'Pub'/'Published' for published
@@ -58,7 +60,7 @@ class RFQResponseController extends Controller
                 return [
                     'Id' => $supplier->Id,
                     'SupplierName' => $supplier->supplierMaster->party->TradingName
-                        ?? $supplier->supplierMaster->party->ThirdPartyName
+                        ?? $supplier->supplierMaster->party->ThirdPartyName,
                 ];
             });
 
@@ -165,6 +167,7 @@ class RFQResponseController extends Controller
     public function show($id)
     {
         $rfqResponse = RFQResponse::with(['rfq'])->findOrFail($id);
+
         return view('procurement.rfqresponses.show', compact('rfqResponse'));
     }
 
@@ -172,6 +175,7 @@ class RFQResponseController extends Controller
     {
         $rfqResponse = RFQResponse::with(['rfq', 'items'])->findOrFail($id);
         $rfqs = RFQ::all();
+
         return view('procurement.rfqresponses.edit', compact('rfqResponse', 'rfqs'));
     }
 
@@ -197,7 +201,7 @@ class RFQResponseController extends Controller
 
         // Only update editable fields in items
         foreach ($request->RequisitionItems as $itemData) {
-            if (!empty($itemData['id'])) {
+            if (! empty($itemData['id'])) {
                 $item = RFQResponseItem::findOrFail($itemData['id']);
                 $item->update([
                     'QuotedPrice' => $itemData['quotedprice'],
@@ -214,6 +218,7 @@ class RFQResponseController extends Controller
     {
         $rfqResponse = RFQResponse::findOrFail($id);
         $rfqResponse->delete();
+
         return redirect()->route('rfqresponses.index')->with('success', 'RFQ Response deleted successfully.');
     }
 
@@ -242,12 +247,10 @@ class RFQResponseController extends Controller
         ]);
     }
 
-
-
     public function getSuppliers($rfqId)
     {
         $rfq = RFQ::with('rfqLines')->find($rfqId);
-        if (!$rfq) {
+        if (! $rfq) {
             return response()->json([], 404);
         }
 
@@ -257,14 +260,18 @@ class RFQResponseController extends Controller
         $allCategoryIds = collect();
         foreach ($itemCategoryIds as $catId) {
             $catId = (int)$catId;
-            if (!$catId) continue;
+            if (! $catId) {
+                continue;
+            }
 
             // Climb ancestors
             $current = $catId;
             while ($current) {
                 $allCategoryIds->push($current);
                 $parent = DB::table('t_ItemCategories')->where('Id', $current)->value('ParentId');
-                if ($parent === null || (int)$parent === 0) break;
+                if ($parent === null || (int)$parent === 0) {
+                    break;
+                }
                 $current = (int)$parent;
             }
         }
@@ -340,7 +347,7 @@ class RFQResponseController extends Controller
         $rfqId = (int)$request->query('rfqId');
         $supplierId = (int)$request->query('supplierId');
 
-        if (!$rfqId || !$supplierId) {
+        if (! $rfqId || ! $supplierId) {
             return response()->json(['exists' => false]);
         }
 
@@ -350,7 +357,7 @@ class RFQResponseController extends Controller
             ->where('s.Id', $supplierId)
             ->value('sm.ThirdPartyId');
 
-        if (!$thirdPartyId) {
+        if (! $thirdPartyId) {
             return response()->json(['exists' => false]);
         }
 
@@ -367,7 +374,7 @@ class RFQResponseController extends Controller
             ->orderByDesc('Id')
             ->first();
 
-        if (!$existing) {
+        if (! $existing) {
             return response()->json(['exists' => false]);
         }
 

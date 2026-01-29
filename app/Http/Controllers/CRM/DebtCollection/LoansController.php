@@ -46,7 +46,7 @@ class LoansController extends Controller
                     $query = (new UserService($request->user()))->hideUsers(DebtProduct::query()->where('processDate', $dated));
 
                     //assignments.
-                    if (($request->get('assignee') === $actor->UserID) || (!$request->user()->can('assign', DebtProduct::class))) {
+                    if (($request->get('assignee') === $actor->UserID) || (! $request->user()->can('assign', DebtProduct::class))) {
                         $query->whereIn('AccountID', $actor->loansAssigned()->whereNull('t_LoanAssignments.EndOn')->select('t_LoanAssignments.AccountID'));
                     } elseif ($request->get('assignee') === 'none') {
                         $query->whereNotIn('AccountID', LoanAssignment::query()->whereNull('t_LoanAssignments.EndOn')->select('t_LoanAssignments.AccountID'));
@@ -67,7 +67,7 @@ class LoansController extends Controller
                         }
                     }
 
-                    if (!empty($member_no)) {
+                    if (! empty($member_no)) {
                         $query->where('ClientID', '=', $member_no);
                     }
 
@@ -82,6 +82,7 @@ class LoansController extends Controller
             } else {
                 $query = collect();
             }
+
             return $this->getLoans($query);
         }
 
@@ -90,6 +91,7 @@ class LoansController extends Controller
         } catch (Exception $exception) {
             $dated = null;
         }
+
         return view('crm.debt-collection.index')
             ->with('LoanSubClasses', UserCodeDetail::query()->where('ID', 'LoanSubClassID')->orderBy('DisplayOrder')->get())
             ->with('dated', $dated);
@@ -101,16 +103,16 @@ class LoansController extends Controller
     public function show(string $loan_id): RedirectResponse|View
     {
         $loan = DebtProduct::query()->where('AccountID', $loan_id)->latest('processDate')->withCount(['guarantors', 'collaterals'])->first();
-        if (!$loan instanceof DebtProduct) {
+        if (! $loan instanceof DebtProduct) {
             return redirect()->back()->with('fail', 'loan not found, maybe closed.');
         }
         $this->authorize('view', $loan);
 
         $assignment = $loan->assignment()->whereNull('EndOn')->with('user')->first();
-        if (!$assignment instanceof LoanAssignment) {
+        if (! $assignment instanceof LoanAssignment) {
             $assignment = null;
         }
-        //dd($loan->branch);
+
         return view('crm.debt-collection.show', compact('loan'))
             ->with('client', Client::query()->where('ClientID', $loan->ClientID)->with('type')->first(['ClientTypeID', 'Name', 'ClientID', 'PhotoID', 'Mobile', 'Phone1', 'Phone2', 'Email']))
             ->with('assignment', $assignment);

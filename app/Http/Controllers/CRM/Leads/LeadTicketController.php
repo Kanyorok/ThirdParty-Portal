@@ -73,7 +73,7 @@ class LeadTicketController extends Controller
                     ? $this->save($lead, $category, $request->validated('ticket_title'), $request->validated('ticket_description'), $owner, Email::getPrimaryKey(), $priority, $start, $end, SourceID: $emailConversation->email->EmailID)
                     : $this->save($lead, $category, $request->validated('ticket_title'), $request->validated('ticket_description'), $owner, $source, $priority, $start, $end);
 
-                   $service->assign($assignee);
+                $service->assign($assignee);
                 foreach ($watchers as $watcher) {
                     if ($watcher instanceof Team && $assignee instanceof Team && $watcher->TeamID === $assignee->TeamID) {
                         continue;
@@ -98,13 +98,15 @@ class LeadTicketController extends Controller
                         }
                     }
                 }
+
                 return $service;
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error creating ticket ' . $e->getMessage());
             Log::error($e);
+
             return $this->errored('unexpected error creating ticket, try again later');
         }
 

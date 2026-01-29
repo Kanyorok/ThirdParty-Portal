@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Models\ThirdParty\SupplierCategory;
-use Illuminate\Http\Request;
-use Yajra\DataTables\Facades\DataTables;
 use App\Http\Requests\Procurement\Suppliers\StoreSupplierCategoryRequest;
 use App\Http\Requests\Procurement\Suppliers\UpdateSupplierCategoryRequest;
-use Illuminate\Http\JsonResponse;
 use App\Models\Inventory\ItemCategories;
+use App\Models\ThirdParty\SupplierCategory;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Yajra\DataTables\Facades\DataTables;
 
 class SupplierCategoryController extends Controller
 {
@@ -38,7 +38,7 @@ class SupplierCategoryController extends Controller
                         </form>
                     ';
                 })
-                ->editColumn('IsActive', fn($row) => $row->IsActive ? 'Yes' : 'No')
+                ->editColumn('IsActive', fn ($row) => $row->IsActive ? 'Yes' : 'No')
                 ->rawColumns(['actions'])
                 ->make(true);
         }
@@ -51,12 +51,14 @@ class SupplierCategoryController extends Controller
     public function all(): JsonResponse
     {
         $categories = SupplierCategory::all();
+
         return response()->json($categories);
     }
 
     public function create()
     {
         $itemCategories = ItemCategories::whereNull('ParentId')->orderBy('Name')->get(['Id', 'Name']);
+
         return view('procurement.suppliers.supplier_categories.create', compact('itemCategories'));
     }
 
@@ -86,6 +88,7 @@ class SupplierCategoryController extends Controller
     {
         $supplier_cat->load('itemCategories');
         $itemCategories = ItemCategories::whereNull('ParentId')->orderBy('Name')->get(['Id', 'Name']);
+
         return view('procurement.suppliers.supplier_categories.edit', [
             'category' => $supplier_cat,
             'itemCategories' => $itemCategories,
@@ -107,7 +110,7 @@ class SupplierCategoryController extends Controller
 
         if ($itemCategoryIds->isNotEmpty()) {
             $supplier_cat->syncItemCategoriesWithAudit($itemCategoryIds->all(), Auth::id());
-        } else if ($request->has('item_category_ids')) {
+        } elseif ($request->has('item_category_ids')) {
             // Treat as removing all (soft delete existing pivots)
             $supplier_cat->syncItemCategoriesWithAudit([], Auth::id());
         }
