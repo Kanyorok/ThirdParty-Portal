@@ -84,8 +84,8 @@ class PrequalificationEvaluationController extends Controller
                 // Hide prequalify button if:
                 // 1. Supplier is already prequalified for this category, OR
                 // 2. Supplier has NOT been evaluated yet (no decision)
-                $hasBeenEvaluated = !is_null($decision);
-                $prequalifyAllowed = !$categoryPrequalified && $hasBeenEvaluated;
+                $hasBeenEvaluated = ! is_null($decision);
+                $prequalifyAllowed = ! $categoryPrequalified && $hasBeenEvaluated;
 
                 return [
                     'application_no' => $app->applicationNo,
