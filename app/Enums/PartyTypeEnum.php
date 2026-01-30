@@ -4,5 +4,4 @@ namespace App\Enums;
 
 enum PartyTypeEnum
 {
-    //
 }

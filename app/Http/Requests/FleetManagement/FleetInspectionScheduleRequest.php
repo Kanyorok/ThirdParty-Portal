@@ -30,17 +30,15 @@ class FleetInspectionScheduleRequest extends FormRequest
             'Inspector' => 'required|integer|exists:t_Employees,Id',
             'Status' => 'required|integer|exists:t_CodeDetails,ID',
             'Remarks' => 'required|string',
-            //
+
         ];
     }
 
-
-
-/**
-     * Custom error messages for validation.
-     *
-     * @return array<string, string>
-     */
+    /**
+         * Custom error messages for validation.
+         *
+         * @return array<string, string>
+         */
     public function messages(): array
     {
         return [

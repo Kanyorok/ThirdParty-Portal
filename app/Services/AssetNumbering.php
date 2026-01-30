@@ -1,11 +1,13 @@
 <?php
+
 // app/Services/AssetNumbering.php
+
 namespace App\Services;
 
+use App\Models\Assets\Settings\{AssetBook, AssetLocation, FixedAssetClass};
 use App\Models\Assets\Settings\AssetNumberingRule;
-use App\Models\Assets\Settings\{FixedAssetClass, AssetLocation, AssetBook};
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AssetNumbering
 {
@@ -19,14 +21,14 @@ class AssetNumbering
 
         return DB::transaction(function () use ($ctx, $today) {
             // Match rule where each of Class/Loc/Book either NULL (wildcard) or equals context
-            $rule = AssetNumberingRule::where('IsActive',1)
-                ->where(function($q) use ($ctx){
+            $rule = AssetNumberingRule::where('IsActive', 1)
+                ->where(function ($q) use ($ctx) {
                     $q->whereNull('ClassID')->orWhere('ClassID', $ctx['ClassID'] ?? null);
                 })
-                ->where(function($q) use ($ctx){
+                ->where(function ($q) use ($ctx) {
                     $q->whereNull('LocationID')->orWhere('LocationID', $ctx['LocationID'] ?? null);
                 })
-                ->where(function($q) use ($ctx){
+                ->where(function ($q) use ($ctx) {
                     $q->whereNull('BookID')->orWhere('BookID', $ctx['BookID'] ?? null);
                 })
                 // Prefer most specific: class+loc+book > class+loc > class > loc > book > global
@@ -38,17 +40,17 @@ class AssetNumbering
                 ->lockForUpdate()
                 ->first();
 
-            if (!$rule) {
+            if (! $rule) {
                 // fallback safe code
-                return 'AST-'.now()->format('ymdHisv');
+                return 'AST-' . now()->format('ymdHisv');
             }
 
             // Handle resets (YEAR/MONTH)
             $needsReset = false;
             if ($rule->ResetPeriod === 'YEAR') {
-                $needsReset = !$rule->LastResetOn || (Carbon::parse($rule->LastResetOn)->year !== $today->year);
+                $needsReset = ! $rule->LastResetOn || (Carbon::parse($rule->LastResetOn)->year !== $today->year);
             } elseif ($rule->ResetPeriod === 'MONTH') {
-                $needsReset = !$rule->LastResetOn || (Carbon::parse($rule->LastResetOn)->format('Ym') !== $today->format('Ym'));
+                $needsReset = ! $rule->LastResetOn || (Carbon::parse($rule->LastResetOn)->format('Ym') !== $today->format('Ym'));
             }
             if ($needsReset) {
                 $rule->NextSeq = 1;
@@ -57,11 +59,13 @@ class AssetNumbering
 
             $seq = (int)$rule->NextSeq;
             $rule->NextSeq = $seq + 1;
-            if (!$rule->LastResetOn) $rule->LastResetOn = $today->toDateString();
+            if (! $rule->LastResetOn) {
+                $rule->LastResetOn = $today->toDateString();
+            }
             $rule->save();
 
             // Build code
-            $pad   = max(1, (int)$rule->PadLength);
+            $pad = max(1, (int)$rule->PadLength);
             $seqStr = str_pad((string)$seq, $pad, '0', STR_PAD_LEFT);
             $prefix = (string)($rule->Prefix ?? '');
             $suffix = (string)($rule->Suffix ?? '');
@@ -70,35 +74,35 @@ class AssetNumbering
 
             // Optional lookups for tokens
             $classCode = $ctx['ClassID'] ?? null;
-            $locCode   = $ctx['LocationID'] ?? null;
-            $bookCode  = $ctx['BookID'] ?? null;
+            $locCode = $ctx['LocationID'] ?? null;
+            $bookCode = $ctx['BookID'] ?? null;
 
-            if (str_contains($pattern, '{CLASS}') && !empty($ctx['ClassID'])) {
+            if (str_contains($pattern, '{CLASS}') && ! empty($ctx['ClassID'])) {
                 $fc = FixedAssetClass::find($ctx['ClassID']);
                 $classCode = $fc?->Code ?: (string)$ctx['ClassID'];
             }
-            if (str_contains($pattern, '{LOC}') && !empty($ctx['LocationID'])) {
+            if (str_contains($pattern, '{LOC}') && ! empty($ctx['LocationID'])) {
                 $lc = AssetLocation::find($ctx['LocationID']);
                 $locCode = $lc?->Code ?: (string)$ctx['LocationID'];
             }
-            if (str_contains($pattern, '{BOOK}') && !empty($ctx['BookID'])) {
+            if (str_contains($pattern, '{BOOK}') && ! empty($ctx['BookID'])) {
                 $bk = AssetBook::find($ctx['BookID']);
                 $bookCode = $bk?->Code ?: ($bk?->Name ?? (string)$ctx['BookID']);
                 // keep it compact
-                $bookCode = preg_replace('/[^A-Za-z0-9]/','', substr((string)$bookCode,0,8));
+                $bookCode = preg_replace('/[^A-Za-z0-9]/', '', substr((string)$bookCode, 0, 8));
             }
 
             $code = $pattern;
             $repl = [
                 '{PREFIX}' => $prefix,
-                '{SUFFIX}' => $suffix ? ('-'.$suffix) : '',
-                '{YYYY}'   => $today->format('Y'),
-                '{YY}'     => $today->format('y'),
-                '{MM}'     => $today->format('m'),
-                '{SEQ}'    => $seqStr,
-                '{CLASS}'  => (string)($classCode ?? ''),
-                '{LOC}'    => (string)($locCode ?? ''),
-                '{BOOK}'   => (string)($bookCode ?? ''),
+                '{SUFFIX}' => $suffix ? ('-' . $suffix) : '',
+                '{YYYY}' => $today->format('Y'),
+                '{YY}' => $today->format('y'),
+                '{MM}' => $today->format('m'),
+                '{SEQ}' => $seqStr,
+                '{CLASS}' => (string)($classCode ?? ''),
+                '{LOC}' => (string)($locCode ?? ''),
+                '{BOOK}' => (string)($bookCode ?? ''),
             ];
             $code = strtr($code, $repl);
 

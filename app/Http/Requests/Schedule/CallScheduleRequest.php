@@ -22,14 +22,14 @@ class CallScheduleRequest extends FormRequest
     {
         return [
                 'call_start' => 'required|date_format:"Y-m-d H:i"|before:call_end',
-                'call_end'   => 'required|date_format:"Y-m-d H:i"|after:call_start',
+                'call_end' => 'required|date_format:"Y-m-d H:i"|after:call_start',
                 'call_notes' => [
                                  'required',
                                  'min:1',
                                  'max:250',
                                  'string',
                                 ],
-                'call_user'  => [
+                'call_user' => [
                                  'required',
                                  'string',
                                 ],
@@ -42,7 +42,7 @@ class CallScheduleRequest extends FormRequest
     public function getAssignee(): User
     {
         $user = User::query()->where('t_Users.UserID', Str::upper($this->validated('call_user')))->where('t_Users.UserID', '!=', SystemHelper::ID)->first(['Id', 'UserID']);
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             throw ValidationException::withMessages(['call_user' => 'invalid user']);
         }
 
@@ -50,11 +50,13 @@ class CallScheduleRequest extends FormRequest
             return $user;
         }
 
-        if (!$this->user()->can(PermissionEnum::ScheduleWrite->value)) {
+        if (! $this->user()->can(PermissionEnum::ScheduleWrite->value)) {
             throw ValidationException::withMessages(['call_user' => 'You cannot assign to another person']);
         }
+
         return $user;
     }
+
     public function getNotes(): string
     {
         return $this->validated('call_notes');
@@ -66,7 +68,7 @@ class CallScheduleRequest extends FormRequest
     public function getEnd(Carbon $start): Carbon
     {
         $end = Carbon::createFromFormat('Y-m-d H:i', $this->input('call_end'));
-        if (!$end instanceof Carbon) {
+        if (! $end instanceof Carbon) {
             throw ValidationException::withMessages(['call_start' => 'invalid date format']);
         }
 
@@ -96,6 +98,7 @@ class CallScheduleRequest extends FormRequest
         if ($start instanceof Carbon) {
             return $start;
         }
+
         throw ValidationException::withMessages(['call_start' => 'invalid date format']);
     }
 }

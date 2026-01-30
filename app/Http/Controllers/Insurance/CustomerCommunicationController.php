@@ -2,27 +2,27 @@
 
 namespace App\Http\Controllers\Insurance;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use App\Models\HRM\Employee;
-use App\Models\Core\Approval\CodeDetail;
 use App\Enums\Core\PermissionEnum;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Insurance\Customers\BancassuranceCustomersContactsRequest;
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\HRM\Employee;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassuranceCustomerContact;
 use App\Services\Insurance\Customers\BancassuranceCustomersContactsService;
-use App\Http\Requests\Insurance\Customers\BancassuranceCustomersContactsRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CustomerCommunicationController extends Controller
 {
-    //
     public function create()
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersContactsView, BancassuranceCustomerContact::class);
         $customers = BancassuranceCustomer::all();
         $employees = Employee::all();
         $contacttypes = CodeDetail::where('CodeID', 'ContactType')->get();
+
         return view('bancassurance.customers.communication.create', compact('customers', 'employees', 'contacttypes'));
     }
 
@@ -46,7 +46,6 @@ class CustomerCommunicationController extends Controller
         );
 
         return redirect()->route('bancassurance.customers.communication.index')->with('success', 'Customer Contacts saved.');
-
     }
 
     public function index()
@@ -64,6 +63,7 @@ class CustomerCommunicationController extends Controller
         $customers = BancassuranceCustomer::all();
         $employees = Employee::all();
         $contacttypes = CodeDetail::where('CodeID', 'ContactType')->get();
+
         return view('bancassurance.customers.communication.edit', compact('log', 'customers', 'employees', 'contacttypes'));
     }
 
@@ -112,6 +112,7 @@ class CustomerCommunicationController extends Controller
     public function destroy($id)
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersContactsDelete, BancassuranceCustomerContact::class);
+
         try {
             $log = BancassuranceCustomerContact::findOrFail($id);
             $log->delete();
@@ -121,12 +122,10 @@ class CustomerCommunicationController extends Controller
         } catch (\Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting Customer contacts: ' . $th->getMessage());
+
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to delete Customer Contacts. Please try again.'])
                 ->withInput();
         }
     }
-
-
 }
-

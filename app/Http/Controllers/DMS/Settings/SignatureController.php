@@ -56,12 +56,26 @@ class SignatureController extends Controller
     {
         $visibility = $request->getVisibility();
         $contentPosition = $request->getContentPosition();
+
         try {
             return \DB::transaction(function () use ($request, $visibility, $contentPosition) {
-                SignatureService::create($request->user(), $request->string('Name')->trim()->toString(), $visibility, $request->integer('Width', 100), $request->integer('Height', 200),
-                    $request->integer('Horizontal', 10), $request->integer('Vertical', 10), $request->integer('Opacity', 100), $request->str('Content')->trim()->toString(),
-                    $request->string('ContentColour'), $request->integer('ContentSize', 10), $contentPosition, $request->string('ContentBorderColour'), $request->integer('ContentBorderWeight', 1)
-                    , $request->file('file'), $request->string('Description', null)->trim()->toString()
+                SignatureService::create(
+                    $request->user(),
+                    $request->string('Name')->trim()->toString(),
+                    $visibility,
+                    $request->integer('Width', 100),
+                    $request->integer('Height', 200),
+                    $request->integer('Horizontal', 10),
+                    $request->integer('Vertical', 10),
+                    $request->integer('Opacity', 100),
+                    $request->str('Content')->trim()->toString(),
+                    $request->string('ContentColour'),
+                    $request->integer('ContentSize', 10),
+                    $contentPosition,
+                    $request->string('ContentBorderColour'),
+                    $request->integer('ContentBorderWeight', 1),
+                    $request->file('file'),
+                    $request->string('Description', null)->trim()->toString()
                 );
 
                 return $this->succeeded('signature created successfully');
@@ -69,6 +83,7 @@ class SignatureController extends Controller
         } catch (\Throwable $e) {
             Log::error('creating signature failed : ' . $e);
         }
+
         return $this->errored('an unexpected error occurred, try again later');
     }
 
@@ -80,7 +95,9 @@ class SignatureController extends Controller
         $actor = $request->user();
         $Content = Str::of($dMSSignature->Content)->trim()->replace(
             [" ", '#name#', '#userid#', '#datetime#', '#date#'],
-            ["<br/>", $actor->Name, $actor->UserID, now()->format('d M Y H:i'), now()->format('d M Y')])->limit(100, '>>')->toString();
+            ["<br/>", $actor->Name, $actor->UserID, now()->format('d M Y H:i'), now()->format('d M Y')]
+        )->limit(100, '>>')->toString();
+
         return view('dms.signatures.show', ['signature' => $dMSSignature->loadCount('documents'), 'SignatureContent' => $Content]);
     }
 
@@ -100,6 +117,7 @@ class SignatureController extends Controller
         $visibility = $request->getVisibility();
         $contentPosition = $request->getContentPosition();
         $actor = $request->user();
+
         try {
             return \DB::transaction(function () use ($dMSSignature, $request, $visibility, $contentPosition, $actor) {
                 $service = new SignatureService($dMSSignature);
@@ -107,16 +125,30 @@ class SignatureController extends Controller
                     $service->setImage($request->file('file'), $actor);
                 }
 
-                $service->update($actor, $request->string('Name')->trim()->toString(), $visibility, $request->integer('Width', 100), $request->integer('Height', 200),
-                    $request->integer('Horizontal', 10), $request->integer('Vertical', 10), $request->integer('Opacity', 100), $request->str('Content')->trim()->toString(),
-                    $request->string('ContentColour'), $request->integer('ContentSize', 10), $contentPosition, $request->string('ContentBorderColour'),
-                    $request->integer('ContentBorderWeight', 1), $request->string('Description', null)->trim()->toString());
+                $service->update(
+                    $actor,
+                    $request->string('Name')->trim()->toString(),
+                    $visibility,
+                    $request->integer('Width', 100),
+                    $request->integer('Height', 200),
+                    $request->integer('Horizontal', 10),
+                    $request->integer('Vertical', 10),
+                    $request->integer('Opacity', 100),
+                    $request->str('Content')->trim()->toString(),
+                    $request->string('ContentColour'),
+                    $request->integer('ContentSize', 10),
+                    $contentPosition,
+                    $request->string('ContentBorderColour'),
+                    $request->integer('ContentBorderWeight', 1),
+                    $request->string('Description', null)->trim()->toString()
+                );
 
                 return $this->succeeded('signature updated successfully', route: route('document-signature.show', [$dMSSignature->SignatureId]));
             });
         } catch (\Throwable $e) {
             Log::error('updating signature failed : ' . $e);
         }
+
         return $this->errored('an unexpected error occurred, try again later');
     }
 
@@ -130,11 +162,13 @@ class SignatureController extends Controller
                 if ((new SignatureService($dMSSignature))->trash($request->user())) {
                     return $this->succeeded('signature trashed successfully', route: route('document-signature.index'));
                 }
+
                 throw new \RuntimeException('signature trashed failed, returned false');
             });
         } catch (\Throwable $e) {
             Log::error('updating signature failed : ' . $e);
         }
+
         return $this->errored('an unexpected error occurred, try again later');
     }
 }

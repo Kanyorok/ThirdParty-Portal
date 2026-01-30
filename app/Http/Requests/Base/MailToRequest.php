@@ -22,22 +22,22 @@ class MailToRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'mail_to'       => [
+                'mail_to' => [
                                     'required',
                                     'email:rfc,dns',
                                     'max:200',
                                    ],
-                'mail_cc'       => [
+                'mail_cc' => [
                                     'nullable',
                                     'array',
                                     'max:20',
                                    ],
-                'mail_subject'  => [
+                'mail_subject' => [
                                     'required',
                                     'string',
                                     'max:200',
                                    ],
-                'mail_content'  => [
+                'mail_content' => [
                                     'required',
                                     'string',
                                     'min:5',
@@ -80,7 +80,6 @@ class MailToRequest extends FormRequest
  *
      * return $ccEmails->toArray();
      * } */
-
     public function messages(): array
     {
         return ['mail_content.min' => 'Write something about it.'];
@@ -95,7 +94,6 @@ class MailToRequest extends FormRequest
 
         throw ValidationException::withMessages(['mail_reply_to' => 'reply to email invalid, maybe deleted']);
     }
-
 
     /**
      * @throws ValidationException
@@ -157,7 +155,7 @@ class MailToRequest extends FormRequest
     public function getCarbonCopyEmails(): array
     {
         $cc = $this->validated('mail_cc');
-        if (!is_array($cc)) {
+        if (! is_array($cc)) {
             return [];
         }
         $valid = [];
@@ -171,6 +169,7 @@ class MailToRequest extends FormRequest
                 $valid[] = $user->Email;
             }
         }
+
         return $valid;
     }
     /**

@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EmailConversationUser extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     /**
      * Get the primary key for the model.
@@ -20,12 +21,12 @@ class EmailConversationUser extends Model
      */
     public static function getPrimaryKey(): string
     {
-        return (new self)->primaryKey;
+        return (new self())->primaryKey;
     }
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_EmailConversationUsers';
     protected $primaryKey = 'Id';
@@ -42,7 +43,7 @@ class EmailConversationUser extends Model
                           ];
 
     protected $casts = [
-                        'Role'                => RoleEnum::class,
+                        'Role' => RoleEnum::class,
                         'EmailConversationId' => 'integer',
                        ];
 

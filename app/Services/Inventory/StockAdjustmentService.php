@@ -8,11 +8,10 @@ use App\Models\Inventory\InventoryHold;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockAdjustmentItem;
 use App\Models\Inventory\StockItem;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use App\Models\Inventory\StockTransaction;
 use App\Services\Workflow\ApprovalWorkflow;
-use Exception;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class StockAdjustmentService
@@ -21,7 +20,7 @@ class StockAdjustmentService
 
     public function __construct(ApprovalWorkflow $workflow)
     {
-        $this->workflow = new ApprovalWorkflow('TransferStatus','Status');
+        $this->workflow = new ApprovalWorkflow('TransferStatus', 'Status');
     }
 
     public function create(array $validated): void
@@ -74,6 +73,7 @@ class StockAdjustmentService
             DB::commit();
         } catch (Throwable $th) {
             DB::rollBack();
+
             throw $th;
         }
     }
@@ -95,7 +95,7 @@ class StockAdjustmentService
             $incomingItemIds = $incomingItems->pluck('Item')->toArray();
 
             $itemsToDelete = array_diff($existingItemIds, $incomingItemIds);
-            if (!empty($itemsToDelete)) {
+            if (! empty($itemsToDelete)) {
                 $adjustment->items()->whereIn('Item', $itemsToDelete)->delete();
             }
 
@@ -269,6 +269,7 @@ class StockAdjustmentService
             DB::commit();
         } catch (Throwable $th) {
             DB::rollBack();
+
             throw $th;
         }
     }

@@ -14,22 +14,33 @@ class BudgetActivitiesSeeder extends Seeder
 
         // Fetch foreign key data
         $userIds = DB::table('t_Users')->pluck('Id')->toArray();
-        if (empty($userIds)) throw new \Exception('❌ No users found in t_Users table.');
+        if (empty($userIds)) {
+            throw new \Exception('❌ No users found in t_Users table.');
+        }
 
         $budgetLines = DB::table('t_BudgetLines')->select('Id', 'LineName')->get()->keyBy('LineName');
-        if ($budgetLines->isEmpty()) throw new \Exception('❌ No budget lines found in t_BudgetLines.');
+        if ($budgetLines->isEmpty()) {
+            throw new \Exception('❌ No budget lines found in t_BudgetLines.');
+        }
 
         $branchIds = DB::table('t_Branches')->pluck('Id')->toArray();
-        if (empty($branchIds)) throw new \Exception('❌ No branches found in t_Branches.');
+        if (empty($branchIds)) {
+            throw new \Exception('❌ No branches found in t_Branches.');
+        }
 
         $budgets = DB::table('t_Budgets')->pluck('Id')->toArray();
-        if (empty($budgets)) throw new \Exception('❌ No budgets found in t_Budgets.');
+        if (empty($budgets)) {
+            throw new \Exception('❌ No budgets found in t_Budgets.');
+        }
 
         $activityMasters = DB::table('t_BudgetActivityMaster')->select('Id', 'ActivityName')->get()->keyBy('ActivityName');
-        if ($activityMasters->isEmpty()) throw new \Exception('❌ No activities found in t_BudgetActivityMaster.');
+        if ($activityMasters->isEmpty()) {
+            throw new \Exception('❌ No activities found in t_BudgetActivityMaster.');
+        }
 
         if (DB::table('t_BudgetActivities')->exists()) {
             echo "✅ t_BudgetActivities already seeded. Skipping...\n";
+
             return;
         }
 
@@ -76,8 +87,9 @@ class BudgetActivitiesSeeder extends Seeder
             $line = $budgetLines[$activity['LineName']] ?? null;
             $activityMaster = $activityMasters[$activity['ActivityName']] ?? null;
 
-            if (!$line || !$activityMaster) {
+            if (! $line || ! $activityMaster) {
                 echo "⚠️ Skipping: '{$activity['ActivityName']}' (Budget Line/Activity Master not found)\n";
+
                 continue;
             }
 

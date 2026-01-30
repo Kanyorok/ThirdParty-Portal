@@ -54,7 +54,7 @@ class LeadProductController extends Controller
         ]);
 
         $product = Product::query()->where('ProductID', $request->lead_product)->select(['ProductID', 'Description'])->first(['ProductID', 'Description']);
-        if (!$product instanceof Product) {
+        if (! $product instanceof Product) {
             throw ValidationException::withMessages(['lead_product' => 'Product not found']);
         }
 
@@ -75,6 +75,7 @@ class LeadProductController extends Controller
                 ]);
 
                 activity()->causedBy($actor)->performedOn($lead)->event('add-product')->log("add lead  L" . Str::padLeft($lead->LeadID, 5, '0') . " product ({$product->ProductID}) interested.");
+
                 return $this->succeeded('Product added successfully');
             });
         } catch (\Throwable $e) {
@@ -87,9 +88,10 @@ class LeadProductController extends Controller
     public function show(Lead $lead, string $lead_product_id): View|JsonResponse
     {
         $leadProduct = $lead->products()->where('Id', $lead_product_id)->with(['product'])->first();
-        if (!$leadProduct instanceof LeadProduct) {
+        if (! $leadProduct instanceof LeadProduct) {
             return $this->errored('product not found');
         }
+
         return view(
             'crm.leads.product',
             compact('lead', 'leadProduct')
@@ -102,7 +104,7 @@ class LeadProductController extends Controller
     public function destroy(Request $request, Lead $lead, string $lead_product_id): JsonResponse
     {
         $leadProduct = $lead->products()->where('Id', $lead_product_id)->with(['product'])->first();
-        if (!$leadProduct instanceof LeadProduct) {
+        if (! $leadProduct instanceof LeadProduct) {
             return $this->errored('product not found');
         }
 

@@ -5,10 +5,7 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
-use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetDriverRates;
-use App\Models\Budget\BudgetGLAccount;
-use App\Models\Budget\BudgetGLAccountSubType;
 use App\Models\Budget\BudgetGLMaster;
 use App\Models\Budget\BudgetGLSubType;
 use App\Models\Budget\BudgetLine;
@@ -18,16 +15,15 @@ use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
 use App\Models\Budget\BudgetProjection;
 use App\Models\Budget\BudgetProjectionData;
-use App\Models\Core\Branch;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Branch;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Shuchkin\SimpleXLSXGen;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class BudgetConsolidationController extends Controller
 {
-    //
     public function index()
     {
         $this->authorize(PermissionEnum::BudgetConsolidationView, BudgetConsolidationController::class);
@@ -40,10 +36,9 @@ class BudgetConsolidationController extends Controller
         $period = null;
         //check if request comes with a budget id
         if (request()->has('BudgetLineID')) {
-
             $budgetId = request()->get('BudgetLineID');
             $budget = Budget::find($budgetId);
-            if (!$budget) {
+            if (! $budget) {
                 return redirect()->back()->with('error', 'Budget not found');
             } else {
                 //Fetching the GLACCountTypes From Core details
@@ -59,11 +54,8 @@ class BudgetConsolidationController extends Controller
                         ->select('Id', 'Description', 'BudgetLineID', 'BranchID', 'AllocationType', 'FullAllocation', 'ActivityID')
                         ->get();
 
-                    //return $budgetActivities;
                     foreach ($budgetActivities as $activity) {
                         //Get the name for the GLAccountSubType
-                        //return $activity;
-                        //$glAccountSubType = BudgetGLSubType::find($activity->budgetLine->GLAccountSubTypeID)->Description ?? 'N/A';
                         $glAccountSubType = $activity->budgetLine->LineName ?? 'N/A';
                         $budgetLineName = $activity->activity->ActivityName ?? 'N/A';
                         //Fetch allocation values if allocationType is monthly
@@ -85,7 +77,6 @@ class BudgetConsolidationController extends Controller
                             [$budgetLineID, $b_id, $asDate, 'L']
                         );
 
-                        // $result is an array of objects
                         $actual = ($result[0]->ClosingBalance == '.00' ? 0.00 : $result[0]->ClosingBalance) ?? 0.00;
 
                         $actual = abs($actual);
@@ -109,13 +100,13 @@ class BudgetConsolidationController extends Controller
                         ->latest()->get();
                     //Get allocation for this lines and place them in data array
                     foreach ($entriesByLine as $entry) {
-                        //return $entry;
                         //Have a check to filter based on the GLType
                         $typeCheck = BudgetLine::find($entry->BudgetLineID)->GLAccountTypeID;
-                        if ($typeCheck !== $type->Value) continue;
+                        if ($typeCheck !== $type->Value) {
+                            continue;
+                        }
                         $budgetLine = BudgetLine::find($entry->BudgetLineID);
                         if ($budgetLine) {
-                            //$glAccountSubType = BudgetGLAccountSubType::find($budgetLine->glSubType)->GLAccountSubTypeName ?? 'Entry By Line';
                             $glAccountSubType = $budgetLine->glSubType->Description;
                             $budgetLineName = $budgetLine->LineName ?? 'N/A';
                             //fetch allocations
@@ -129,11 +120,9 @@ class BudgetConsolidationController extends Controller
                                 $allocationValues = $values;
                             }
                             $fullAllocation = BudgetManualEntry::where('Id', $entry->Id)->pluck('Amount')->first() ?? 0;
-                            //return $glAccountSubType;
 
                             //Fetch Actuals
                             //For Just pick for branch
-                            //$b_id = Branch::find(session('LoginBranchId'))->BranchID ?? 1;
                             $b_id = '001';// Branch::find(session('LoginBranchId'))->BranchID ?? 1;
                             $asDate = date('Y-m-d');
                             $budgetLineID = $entry->BudgetLineID;
@@ -142,7 +131,6 @@ class BudgetConsolidationController extends Controller
                                 [$budgetLineID, $b_id, $asDate, 'L']
                             );
 
-                            // $result is an array of objects
                             $actual = ($result[0]->ClosingBalance == '.00' ? 0.00 : $result[0]->ClosingBalance) ?? 0.00;
 
                             $actual = abs($actual);
@@ -200,7 +188,6 @@ class BudgetConsolidationController extends Controller
                         [$budgetLineID, $b_id, $asDate, 'L']
                     );
 
-                    // $result is an array of objects
                     $actual = ($result[0]->ClosingBalance == '.00' ? 0.00 : $result[0]->ClosingBalance) ?? 0.00;
 
                     $actual = abs($actual);
@@ -233,7 +220,6 @@ class BudgetConsolidationController extends Controller
                     } else {
                         $budgetLineGLType = 'INCOME';
                     }
-                    //$budgetLineGLType=CodeDetail::where('CodeID', 'GLAccountType')->where('Value', $budgetLineGLType)->pluck('Description')->first();
                     $budgetLineGLName = $budgetLineGLData->Description;
                     $budgetLineName = $budgetlineData->LineName;
                     //Get the Product rate value
@@ -268,7 +254,9 @@ class BudgetConsolidationController extends Controller
         }
 
         $budgets = Budget::select('Id', 'Name')->get();
-        return view('budgetandanalytics.budgetworkspace.budgetconsolidation.index',
+
+        return view(
+            'budgetandanalytics.budgetworkspace.budgetconsolidation.index',
             compact('budgets', 'data', 'isSet', 'budgetId', 'budgetName', 'period')
         );
     }
@@ -286,6 +274,7 @@ class BudgetConsolidationController extends Controller
         $safeName = $safeName !== '' ? $safeName : 'Budget';
         $filename = $safeName . '-budget-consolidation-' . now()->format('Ymd_His') . '.xlsx';
         $xlsx = SimpleXLSXGen::fromArray($rows)->download($filename);
+
         // SimpleXLSXGen::download() echoes and exits; as a fallback return a standard response
         return response()->noContent();
     }
@@ -299,6 +288,7 @@ class BudgetConsolidationController extends Controller
         $safeName = trim(preg_replace('/[^A-Za-z0-9\- _\.]+/', '', $rawName));
         $safeName = $safeName !== '' ? $safeName : 'Budget';
         $filename = $safeName . '-budget-consolidation-' . now()->format('Ymd_His') . '.pdf';
+
         return $pdf->download($filename);
     }
 
@@ -321,6 +311,7 @@ class BudgetConsolidationController extends Controller
                 $r['change'] ?? '',
             ];
         }
+
         return $rows;
     }
 }

@@ -20,24 +20,24 @@ class LeadCollection extends ResourceCollection
                     $name = explode(' ', $lead->Name);
                     $others = ($lead->Type->value === LeadTypeEnum::Individual->value) ? [
                                                                                           'FirstName' => $lead->Name,
-                                                                                          'LastName'  => $lead->OtherNames,
+                                                                                          'LastName' => $lead->OtherNames,
                                                                                          ] : [
                                                                                               'name' => $lead->Name,
                                                                                              ];
 
                     return array_merge($others, [
-                                                 'id'           => $lead->LeadID,
-                                                 'type'         => $lead->Type->name,
-                                                 'title'        => ($lead->JobTitle) ?? '',
-                                                 'contacts'     => [
+                                                 'id' => $lead->LeadID,
+                                                 'type' => $lead->Type->name,
+                                                 'title' => ($lead->JobTitle) ?? '',
+                                                 'contacts' => [
                                                                     'email' => $lead->Email,
                                                                     'phone' => $lead->Phone,
                                                                    ],
                                                  'relationship' => [
-                                                                    'id'   => $lead->RelationshipManager->UserID,
+                                                                    'id' => $lead->RelationshipManager->UserID,
                                                                     'name' => $lead->RelationshipManager->Name,
                                                                    ],
-                                                 'url'          => route('leads.show', $lead->LeadID),
+                                                 'url' => route('leads.show', $lead->LeadID),
                                                 ]);
                 }),
                ];

@@ -18,6 +18,7 @@ class LegalClauseController extends Controller
         $this->authorize(PermissionEnum::ContractView, LegalClause::class);
 
         $clauses = LegalClause::orderByDesc('CreatedOn')->paginate(15);
+
         return view('legal.clauses.index', compact('clauses'));
     }
 
@@ -82,6 +83,7 @@ class LegalClauseController extends Controller
                 ->log('Error creating clause');
 
             Log::error('Error creating clause: ' . $th->getMessage());
+
             return back()->with('error', 'Error creating clause: ' . $th->getMessage());
         }
     }
@@ -143,6 +145,7 @@ class LegalClauseController extends Controller
                 ->log('Error updating clause');
 
             Log::error('Error updating clause: ' . $th->getMessage());
+
             return back()->with('error', 'Error updating clause: ' . $th->getMessage());
         }
     }
@@ -178,6 +181,7 @@ class LegalClauseController extends Controller
                 ->log('Error deleting clause');
 
             Log::error('Error deleting clause: ' . $th->getMessage());
+
             return back()->with('error', 'Error deleting clause: ' . $th->getMessage());
         }
     }
@@ -187,6 +191,7 @@ class LegalClauseController extends Controller
         $this->authorize(PermissionEnum::ContractView, LegalClause::class);
 
         $clause = LegalClause::findOrFail($id);
+
         return view('legal.clauses.show', compact('clause'));
     }
 }

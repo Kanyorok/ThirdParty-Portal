@@ -5,7 +5,6 @@ namespace App\Policies\Inventory;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Inventory\Store;
-use Illuminate\Auth\Access\Response;
 
 class StorePolicy
 {
@@ -56,5 +55,4 @@ class StorePolicy
     {
         return $user->can(PermissionEnum::StoreRestore->value);
     }
-
 }

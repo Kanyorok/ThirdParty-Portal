@@ -14,14 +14,11 @@ use App\Models\Insurance\BancassuranceClaimAssessment;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Services\Insurance\BancassuranceClaimAssessmentService;
 use App\Services\Insurance\BancassuranceClaimService;
-use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
 
 class ClaimController extends Controller
 {
-    //
     public function create()
     {
         $this->authorize(PermissionEnum::BancassuranceClaimView, BancassuranceClaim::class);
@@ -43,17 +40,17 @@ class ClaimController extends Controller
         $Currency = Currency::findOrFail($validated['CurrencyId']);
 
         foreach ($request->file('file', []) as $uploadedFile) {
-        $claim = BancassuranceClaimService::create(
-            $PolicyId,
-            $ClaimType,
-            $validated['ClaimReason'],
-            $validated['ClaimAmount'],
-            $Currency,
-            Carbon::parse($validated['ClaimDate']),
-            $Status,
-            $request->user(),
-            $uploadedFile
-        );
+            $claim = BancassuranceClaimService::create(
+                $PolicyId,
+                $ClaimType,
+                $validated['ClaimReason'],
+                $validated['ClaimAmount'],
+                $Currency,
+                Carbon::parse($validated['ClaimDate']),
+                $Status,
+                $request->user(),
+                $uploadedFile
+            );
         }
 
         return redirect()->route('bancassurance.claims.index')->with('success', 'Claim initiated successfully.');
@@ -81,13 +78,12 @@ class ClaimController extends Controller
         $claim = BancassuranceClaim::find($id);
         $decisions = CodeDetail::where('CodeID', 'Decision')->get();
 
-        if (!$claim) {
+        if (! $claim) {
             return redirect()->route('bancassurance.claims.index')->with('error', 'Claim not found.');
         }
 
         return view('bancassurance.claims.assess', compact('claim', 'decisions'));
     }
-
 
     public function storeAssessment(BancassuranceClaimAssessmentRequest $request, $id)
     {
@@ -98,14 +94,14 @@ class ClaimController extends Controller
         $Decision = CodeDetail::findOrFail($validated['Decision']);
 
         foreach ($request->file('file', []) as $uploadedFile) {
-        $assessment = BancassuranceClaimAssessmentService::create(
-            $claim,
-            $validated['AssessmentComments'],
-            $validated['AssessmentAmount'],
-            $Decision,
-            $request->user(),
-            $uploadedFile
-        );
+            $assessment = BancassuranceClaimAssessmentService::create(
+                $claim,
+                $validated['AssessmentComments'],
+                $validated['AssessmentAmount'],
+                $Decision,
+                $request->user(),
+                $uploadedFile
+            );
         }
 
         return redirect()->route('bancassurance.claims.index')->with('success', 'Assessment submitted.');
@@ -115,6 +111,7 @@ class ClaimController extends Controller
     {
         $this->authorize(PermissionEnum::BancassuranceClaimAssessmentView, BancassuranceClaimAssessment::class);
         $assessment = BancassuranceClaimAssessment::findOrFail($id);
+
         return view('bancassurance.claims.assessment_show', compact('assessment'));
     }
 
@@ -122,6 +119,7 @@ class ClaimController extends Controller
     {
         $assessment = BancassuranceClaimAssessment::findOrFail($id);
         $decisions = CodeDetail::where('CodeID', 'Decision')->get();
+
         return view('bancassurance.claims.assessment_edit', compact('assessment', 'decisions'));
     }
 
@@ -136,18 +134,18 @@ class ClaimController extends Controller
             return redirect()->back()
             ->withErrors(['error' => 'This claim has been paid cannot be modified.']);
         }
-         
+
         $Decision = CodeDetail::findOrFail($validated['Decision']);
 
         foreach ($request->file('file', []) as $uploadedFile) {
-        $assessment = BancassuranceClaimAssessmentService::update(
-            $assessment,
-            $validated['AssessmentComments'],
-            $validated['AssessmentAmount'],
-            $Decision,
-            $request->user(),
-            $uploadedFile
-        );
+            $assessment = BancassuranceClaimAssessmentService::update(
+                $assessment,
+                $validated['AssessmentComments'],
+                $validated['AssessmentAmount'],
+                $Decision,
+                $request->user(),
+                $uploadedFile
+            );
         }
 
 

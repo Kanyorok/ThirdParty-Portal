@@ -16,10 +16,9 @@ class MedicalFundContributionService
      */
     public function __construct(public MedicalFundContribution $medicalfundcontribution)
     {
-        //
     }
 
-    Public static function create(
+    public static function create(
         MedicalFund $FundId,
         CodeDetail $ContributorType,
         ?ThirdParties $ContributorId = null,
@@ -27,20 +26,20 @@ class MedicalFundContributionService
         Carbon $ContributionDate,
         ?string $Notes = null,
         User $user
-    ): self
-    {
+    ): self {
         $medicalfundcontribution = MedicalFundContribution::create([
-            'FundId'           => $FundId->Id,
-            'ContributorType'  => $ContributorType->ID,
-            'ContributorId'    => $ContributorId->Id ?? null,
-            'Amount'           => $Amount,
+            'FundId' => $FundId->Id,
+            'ContributorType' => $ContributorType->ID,
+            'ContributorId' => $ContributorId->Id ?? null,
+            'Amount' => $Amount,
             'ContributionDate' => $ContributionDate,
-            'Notes'            => $Notes,
-            'CreatedBy'        => $user->Id,
-            'ModifiedBy'       => $user->Id,
+            'Notes' => $Notes,
+            'CreatedBy' => $user->Id,
+            'ModifiedBy' => $user->Id,
         ]);
 
         activity()->causedBy($user->Id)->performedOn($medicalfundcontribution)->event('create')->log("Added Medical Fund Contribution {$medicalfundcontribution->Id}.");
+
         return new self($medicalfundcontribution);
     }
 }

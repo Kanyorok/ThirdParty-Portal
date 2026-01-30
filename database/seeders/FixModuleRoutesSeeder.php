@@ -12,7 +12,7 @@ class FixModuleRoutesSeeder extends Seeder
         $updates = [
             // Avoid parameterized routes in navbar modules
             'bancassurance.medicalfunds.update' => 'bancassurance.medicalfunds.index',
-            'bancassurance.medicalfunds.edit'   => 'bancassurance.medicalfunds.index',
+            'bancassurance.medicalfunds.edit' => 'bancassurance.medicalfunds.index',
 
             // Fix known typo route to a safe fallback
             'bancassurance.medfund.requests.index' => null,
@@ -27,4 +27,3 @@ class FixModuleRoutesSeeder extends Seeder
         }
     }
 }
-

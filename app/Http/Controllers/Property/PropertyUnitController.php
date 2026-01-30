@@ -2,29 +2,28 @@
 
 namespace App\Http\Controllers\Property;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Property\PropertyRegistry\PropertyUnitRequest;
 use App\Http\Requests\Property\PropertyRegistry\PropertyUnitBulkRequest;
-use App\Services\Property\PropertyRegistry\PropertyUnitService;
-use App\Services\Property\PropertyRegistry\PropertyUnitBulkService;
-use Illuminate\Http\Request;
-use App\Models\PropertyManagement\PropertyUnit;
+use App\Http\Requests\Property\PropertyRegistry\PropertyUnitRequest;
+use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyRegistry;
-use App\Models\PropertyManagement\PropertyBlock;
+use App\Models\PropertyManagement\PropertyUnit;
+use App\Services\Property\PropertyRegistry\PropertyUnitBulkService;
+use App\Services\Property\PropertyRegistry\PropertyUnitService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
-
 
 class PropertyUnitController extends Controller
 {
-    //
     public function index()
     {
         $units = PropertyUnit::all();
+
         return view('property.propertyregistry.structuralmapping.addunit.index', compact('units'));
     }
 
@@ -32,21 +31,23 @@ class PropertyUnitController extends Controller
     {
         $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyUnit::class);
         $lineentries = PropertyRegistry::with(['getBlockByProperty.floor'])->where('IsActive', true)->get();
+
         return view('property.propertyregistry.structuralmapping.addunit.create', compact('lineentries'));
     }
 
     public function getBlockByProperty($propertyId)
     {
         $blocks = PropertyBlock::where('PropertyID', $propertyId)->get();
+
         return response()->json($blocks);
     }
 
     public function getFloorByBlock($blockId)
     {
         $floors = PropertyFloor::where('BlockID', $blockId)->get();
+
         return response()->json($floors);
     }
-
 
     public function store(PropertyUnitRequest $request)
     {
@@ -64,13 +65,11 @@ class PropertyUnitController extends Controller
                 $validated['CurrentStatus'] ? 1 : 0,
                 $validated['Remarks'] ?? '',
                 auth()->user()
-
             );
+
             return redirect()->route('addunit.index')->with('success', 'property unit Added successfully');
         } catch (\Exception $e) {
-
             return back()->withErrors('Failed:' . $e->getMessage())->withInput();
-
         }
     }
 
@@ -100,7 +99,6 @@ class PropertyUnitController extends Controller
             'lineentries'
         ));
     }
-
 
     public function update(Request $request, $id)
     {
@@ -144,6 +142,7 @@ class PropertyUnitController extends Controller
             return redirect()->route('addunit.index')->with('success', 'Unit updated successfully');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return back()->withErrors(['error' => $th->getMessage()])->withInput();
         }
     }
@@ -152,6 +151,7 @@ class PropertyUnitController extends Controller
     {
         //Check if user has permission to delete property categories
         $this->authorize(PermissionEnum::PropertyStructuralDelete, PropertyUnit::class);
+
         try {
             $unit = PropertyUnit::findOrFail($id);
 
@@ -167,6 +167,7 @@ class PropertyUnitController extends Controller
         } catch (\Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting property unit: ' . $th->getMessage());
+
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to delete Property Unit. Please try again.'])
                 ->withInput();
@@ -176,6 +177,7 @@ class PropertyUnitController extends Controller
     public function bulkCreate()
     {
         $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyUnit::class);
+
         return view('property.propertyregistry.structuralmapping.addunit.bulk-create');
     }
 
@@ -185,13 +187,13 @@ class PropertyUnitController extends Controller
 
         try {
             $file = $request->file('file');
-            
+
             // Parse CSV/Excel file
             $data = Excel::toArray([], $file)[0];
-            
+
             // Get headers from first row
             $headers = array_shift($data);
-            
+
             // Map headers to data
             $mappedData = [];
             foreach ($data as $row) {
@@ -207,7 +209,7 @@ class PropertyUnitController extends Controller
 
             // Prepare success/error messages
             $message = "Bulk upload completed. Successful: {$results['successful']}, Failed: {$results['failed']}";
-            
+
             if ($results['failed'] > 0) {
                 return redirect()
                     ->route('addunit.index')
@@ -218,10 +220,9 @@ class PropertyUnitController extends Controller
             return redirect()
                 ->route('addunit.index')
                 ->with('success', $message);
-
         } catch (\Exception $e) {
             Log::error('Bulk unit upload failed: ' . $e->getMessage());
-            
+
             if (request()->expectsJson()) {
                 return response()->json(['message' => 'Bulk upload failed', 'error' => $e->getMessage()], 500);
             }
@@ -235,7 +236,9 @@ class PropertyUnitController extends Controller
     public function bulkTemplate()
     {
         return Excel::download(
-            new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
+            new class () implements
+                \Maatwebsite\Excel\Concerns\FromArray,
+                \Maatwebsite\Excel\Concerns\WithHeadings {
                 public function array(): array
                 {
                     return [
@@ -252,6 +255,3 @@ class PropertyUnitController extends Controller
         );
     }
 }
-
-
-

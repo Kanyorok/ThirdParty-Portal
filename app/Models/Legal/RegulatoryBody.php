@@ -16,6 +16,6 @@ class RegulatoryBody extends Model
         'ContactPerson',
         'ContactEmail',
         'ContactPhone',
-        'IsActive'
+        'IsActive',
     ];
 }

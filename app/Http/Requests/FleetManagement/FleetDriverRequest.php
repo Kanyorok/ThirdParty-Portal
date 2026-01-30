@@ -35,5 +35,4 @@ class FleetDriverRequest extends FormRequest
             'ImageFile' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ];
     }
-
 }

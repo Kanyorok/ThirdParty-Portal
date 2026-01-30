@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FleetManagement\FleetVehicleInspectionRequest;
-use App\Models\Fleet\FleetVehicleInspection;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\FleetDriver;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Fleet\ContractedDriver;
+use App\Models\Fleet\FleetDriver;
+use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FleetVehicleInspection;
 use App\Models\Fleet\FuelType;
 use App\Services\FleetManagement\FleetVehicleInspectionService;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Core\Approval\CodeDetail;
 
 class FleetVehicleInspectionController extends Controller
 {
@@ -27,14 +27,14 @@ class FleetVehicleInspectionController extends Controller
         $this->authorize('viewAny', FleetVehicleInspection::class);
 
         $inspections = FleetVehicleInspection::with([
-            'vehicle', 
-            'driver', 
-            'contractedDriver', 
-            'engineOil', 
-            'postTrips', 
-            'fuel', 
-            'coolant', 
-            'inspectionType'
+            'vehicle',
+            'driver',
+            'contractedDriver',
+            'engineOil',
+            'postTrips',
+            'fuel',
+            'coolant',
+            'inspectionType',
         ])
         ->where('CreatedBy', Auth::id())
         ->whereNull('ParentInspectionID')
@@ -58,9 +58,14 @@ class FleetVehicleInspectionController extends Controller
         $contractedDrivers = ContractedDriver::all();
 
         return view('fleet.vehicle_inspection.create', compact(
-            'vehicles', 'fuels', 'inspectionTypes', 
-            'engineOilUOMs', 'fuelUOMs', 'coolantUOMs', 
-            'drivers', 'contractedDrivers'
+            'vehicles',
+            'fuels',
+            'inspectionTypes',
+            'engineOilUOMs',
+            'fuelUOMs',
+            'coolantUOMs',
+            'drivers',
+            'contractedDrivers'
         ));
     }
 
@@ -83,9 +88,15 @@ class FleetVehicleInspectionController extends Controller
         $contractedDrivers = ContractedDriver::all();
 
         return view('fleet.vehicle_inspection.create', compact(
-            'vehicles', 'fuels', 'inspectionTypes', 
-            'engineOilUOMs', 'fuelUOMs', 'coolantUOMs',
-            'drivers', 'contractedDrivers', 'parentInspection'
+            'vehicles',
+            'fuels',
+            'inspectionTypes',
+            'engineOilUOMs',
+            'fuelUOMs',
+            'coolantUOMs',
+            'drivers',
+            'contractedDrivers',
+            'parentInspection'
         ));
     }
 
@@ -106,12 +117,12 @@ class FleetVehicleInspectionController extends Controller
         $this->authorize('view', FleetVehicleInspection::class);
 
         $inspection = FleetVehicleInspection::with([
-            'vehicle', 
-            'driver', 
+            'vehicle',
+            'driver',
             'contractedDriver', // include contracted driver
-            'fuel', 
-            'postTrips', 
-            'inspectionType'
+            'fuel',
+            'postTrips',
+            'inspectionType',
         ])->findOrFail($id);
 
         return view('fleet.vehicle_inspection.show', compact('inspection'));
@@ -132,8 +143,15 @@ class FleetVehicleInspectionController extends Controller
         $coolantUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
 
         return view('fleet.vehicle_inspection.edit', compact(
-            'inspection', 'vehicles', 'drivers', 'contractedDrivers',
-            'engineOilUOMs', 'fuelUOMs', 'coolantUOMs', 'inspectionTypes','fuels'
+            'inspection',
+            'vehicles',
+            'drivers',
+            'contractedDrivers',
+            'engineOilUOMs',
+            'fuelUOMs',
+            'coolantUOMs',
+            'inspectionTypes',
+            'fuels'
         ));
     }
 
@@ -170,7 +188,7 @@ class FleetVehicleInspectionController extends Controller
             ->first();
 
         $driverType = 'FleetDriver';
-        if (!$driverAssignment) {
+        if (! $driverAssignment) {
             $driverAssignment = \App\Models\Fleet\FleetContractedDriverAssignment::where('VehicleID', $Id)
                 ->whereNull('DeletedOn')
                 ->latest('AssignmentDate')
@@ -179,11 +197,11 @@ class FleetVehicleInspectionController extends Controller
         }
 
         return response()->json([
-            'driverId'      => $driverAssignment?->DriverID,
-            'driverName'    => $driverAssignment?->driver?->FullName ?? $driverAssignment?->contractedDriver?->FullName ?? 'No driver assigned',
-            'driverType'    => $driverType,
-            'fuelTypeId'    => $vehicle?->fuelType?->Id,
-            'fuelTypeName'  => $vehicle?->fuelType?->FuelName,
+            'driverId' => $driverAssignment?->DriverID,
+            'driverName' => $driverAssignment?->driver?->FullName ?? $driverAssignment?->contractedDriver?->FullName ?? 'No driver assigned',
+            'driverType' => $driverType,
+            'fuelTypeId' => $vehicle?->fuelType?->Id,
+            'fuelTypeName' => $vehicle?->fuelType?->FuelName,
         ]);
     }
 

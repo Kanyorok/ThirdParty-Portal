@@ -44,6 +44,7 @@ trait SpecialPermissionsTrait
         if ($permissions->count() > 0) {
             return self::bulkInsert($permissions);
         }
+
         return true;
     }
 
@@ -53,6 +54,7 @@ trait SpecialPermissionsTrait
         foreach ($permissions->chunk(210) as $chunk) {//MSSQL 2100/10
             $result = $result && DB::table("t_SpecialPermissions")->insert($chunk->toArray());
         }
+
         return $result;
     }
 
@@ -88,6 +90,7 @@ trait SpecialPermissionsTrait
         if (is_array($traits)) {
             return in_array(SpecialPermissionTrait::class, $traits, true);
         }
+
         return false;
     }
 
@@ -96,13 +99,13 @@ trait SpecialPermissionsTrait
      */
     protected function _addPermissions(SpecialPermissionContract $destination, User|Team $assignee, RoleEnum $role, User $actor, bool $notify = true): SpecialPermission
     {
-        if (!$this->_checkPermissions($destination, $actor, $role)) {
+        if (! $this->_checkPermissions($destination, $actor, $role)) {
             throw new ErroredException('You do not have permission to add this permission.');
         }
         if ($assignee instanceof Team) {
             $permission = $destination->permissions()->lock('WITH(NOLOCK)')
                 ->where('Party', Team::getPrimaryKey())->where('PartyID', $assignee->TeamID)->first();
-            if (!$permission instanceof SpecialPermission) {
+            if (! $permission instanceof SpecialPermission) {
                 $permission = new SpecialPermission();
                 $permission->fill([
                     'Model' => $destination->getMorphClass(),
@@ -138,7 +141,7 @@ trait SpecialPermissionsTrait
 
         $permission = $destination->permissions()->lock('WITH(NOLOCK)')
             ->where('Party', User::getPrimaryKey())->where('PartyID', $assignee->Id)->first();
-        if (!$permission instanceof SpecialPermission) {
+        if (! $permission instanceof SpecialPermission) {
             $permission = new SpecialPermission();
             $permission->fill([
                 'Model' => $destination->getMorphClass(),
@@ -162,6 +165,7 @@ trait SpecialPermissionsTrait
                 actor: SystemHelper::user()
             );
         }
+
         return $permission;
     }
 
@@ -171,7 +175,7 @@ trait SpecialPermissionsTrait
             return true;
         }
 
-        if (!$role instanceof RoleEnum) {
+        if (! $role instanceof RoleEnum) {
             return $destination->permissions()->lock('WITH(NOLOCK)')
                 ->where('Party', User::getPrimaryKey())->where('PartyID', $actor->Id)
                 ->whereIn('Permission', [RoleEnum::Share->value, RoleEnum::Admin->value])
@@ -180,11 +184,11 @@ trait SpecialPermissionsTrait
         $permission = $destination->permissions()->lock('WITH(NOLOCK)')
             ->where('Party', User::getPrimaryKey())->where('PartyID', $actor->Id)->first();
 
-        if (!$permission instanceof SpecialPermission) {
+        if (! $permission instanceof SpecialPermission) {
             return false;
         }
 
-        if (!in_array($permission->Permission->value, [RoleEnum::Admin->value, RoleEnum::Share->value], true)) {
+        if (! in_array($permission->Permission->value, [RoleEnum::Admin->value, RoleEnum::Share->value], true)) {
             return false;
         }
         if ($permission->Permission->value !== RoleEnum::Admin->value && $role->value === RoleEnum::Admin->value) {
@@ -203,7 +207,7 @@ trait SpecialPermissionsTrait
             throw new ErroredException('This permission is not part of this item.');
         }
 
-        if (!$this->_checkPermissions($destination, $actor)) {
+        if (! $this->_checkPermissions($destination, $actor)) {
             throw new ErroredException('You do not have permission to modify this permission.');
         }
 
@@ -220,6 +224,7 @@ trait SpecialPermissionsTrait
             '<p>Your permission (' . $permission->Permission->name . ') for ' . $destination->getSharedName() . ' has been revoked, you cannot access it.</p>
                    <p>Thank you for your continued support and collaboration.</p>'
         );
+
         return $destination;
     }
 }

@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +33,7 @@ class LegalCasesSeeder extends Seeder
                 'ModifiedBy' => 1,
                 'ModifiedOn' => $now,
                 'DeletedBy' => null,
-                'DeletedOn' => null
+                'DeletedOn' => null,
             ],
             [
                 'CaseTitle' => 'Jane Smith vs XYZ Ltd',
@@ -53,14 +52,14 @@ class LegalCasesSeeder extends Seeder
                 'ModifiedBy' => 1,
                 'ModifiedOn' => $now,
                 'DeletedBy' => null,
-                'DeletedOn' => null
-            ]
+                'DeletedOn' => null,
+            ],
         ];
 
         foreach ($cases as $case) {
             $exists = DB::table('t_LegalCases')->where('CaseNumber', $case['CaseNumber'])->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('t_LegalCases')->insert($case);
             }
         }

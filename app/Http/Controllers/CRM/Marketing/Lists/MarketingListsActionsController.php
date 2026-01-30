@@ -64,7 +64,7 @@ class MarketingListsActionsController extends Controller
                 return $this->errored('list is processing');
             }
 
-            if (!in_array($list->Source, [Lead::getPrimaryKey(), null], true)) {
+            if (! in_array($list->Source, [Lead::getPrimaryKey(), null], true)) {
                 return $this->errored('list does not support leads.');
             }
 
@@ -74,6 +74,7 @@ class MarketingListsActionsController extends Controller
                     (new ListService($list))->removeLeads($leadIDs, $request->user()) :
                     (new ListService($list))->addLeads($leadIDs, $request->user());
             }
+
             return $this->succeeded('added successfully');
         }
 
@@ -116,7 +117,7 @@ class MarketingListsActionsController extends Controller
             if (is_array($list->Processing)) {
                 return $this->errored('list is processing');
             }
-            if (!in_array($list->Source, [Client::getPrimaryKey(), null], true)) {
+            if (! in_array($list->Source, [Client::getPrimaryKey(), null], true)) {
                 return $this->errored('list does not support clients.');
             }
             if ($request->has('clients')) {
@@ -125,6 +126,7 @@ class MarketingListsActionsController extends Controller
                     (new ListService($list))->removeClients($clientIDs, $request->user()) :
                     (new ListService($list))->addClients($clientIDs, $request->user());
             }
+
             return $this->succeeded('processed successfully');
         }
 

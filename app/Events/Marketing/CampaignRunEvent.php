@@ -19,6 +19,5 @@ class CampaignRunEvent
      */
     public function __construct(public Campaign $campaign, public User $actor)
     {
-        //
     }
 }

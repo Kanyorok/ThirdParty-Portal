@@ -43,6 +43,7 @@ class PrequalificationRoundResource extends JsonResource
                             'badgeClass' => $statusEnum->getBadgeClass(),
                         ];
                     }
+
                     return [
                         'Value' => is_string($this->Status) ? $this->Status : null,
                         'Label' => is_string($this->Status) ? $this->Status : null,
@@ -59,6 +60,7 @@ class PrequalificationRoundResource extends JsonResource
                             'badgeClass' => $statusEnum->getBadgeClass(),
                         ];
                     }
+
                     return [
                         'value' => is_string($this->Status) ? $this->Status : null,
                         'label' => is_string($this->Status) ? $this->Status : null,
@@ -80,12 +82,12 @@ class PrequalificationRoundResource extends JsonResource
             'Applications' => PrequalificationApplicationResource::collection($this->whenLoaded('applications')),
             'applications' => PrequalificationApplicationResource::collection($this->whenLoaded('applications')),
             // Application state for current supplier (present only when joined in apiIndex)
-            'applicationId' => $this->when(isset($this->applicationId), fn() => $this->applicationId),
+            'applicationId' => $this->when(isset($this->applicationId), fn () => $this->applicationId),
             // hasApplied now means the current authenticated user has an application (user-scoped)
-            'hasApplied' => $this->when(isset($this->applicationId), fn() => (bool)$this->applicationId),
-            'createdByOwner' => $this->when(isset($this->createdByOwner), fn() => (bool)$this->createdByOwner),
+            'hasApplied' => $this->when(isset($this->applicationId), fn () => (bool)$this->applicationId),
+            'createdByOwner' => $this->when(isset($this->createdByOwner), fn () => (bool)$this->createdByOwner),
             // canApply combines: not yet applied AND not owner of related categories (currently only hasApplied available)
-            'canApply' => $this->when(true, fn() => !(isset($this->applicationId) && $this->applicationId)),
+            'canApply' => $this->when(true, fn () => ! (isset($this->applicationId) && $this->applicationId)),
         ];
     }
 }

@@ -13,7 +13,7 @@ use Illuminate\Http\UploadedFile;
 
 class PropertyMaintenanceWorkCompletionService
 {
-   private $assignment;
+    private $assignment;
 
     public function __construct(PropertyMaintenanceWorkCompletion $propertyMaintenanceWorkCompletion)
     {
@@ -24,7 +24,7 @@ class PropertyMaintenanceWorkCompletionService
         string $completionDate,
         string $workDoneSummary,
         ?string $partsUsed = null,
-        ?int    $cost = null,
+        ?int $cost = null,
         CodeDetail $finalstatus,
         User $user,
         UploadedFile $document = null
@@ -55,8 +55,8 @@ class PropertyMaintenanceWorkCompletionService
                 $document,
                 [PermissionEnum::PropertyMaintenanceAssignView->value],
                 $user
-                );
-            }
+            );
+        }
 
         activity()
             ->causedBy($user)
@@ -67,7 +67,6 @@ class PropertyMaintenanceWorkCompletionService
 
         return new self($workCompletion);
     }
-
 
     public static function update(
         PropertyMaintenanceWorkCompletion $workCompletion,

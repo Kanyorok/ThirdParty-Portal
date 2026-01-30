@@ -17,7 +17,6 @@ class DebtProductPolicy
         return $user->can(PermissionEnum::DebtCollectionView->value);
     }
 
-
     public function assign(User $user): bool
     {
         return $user->can(PermissionEnum::DebtCollectionAdmin->value);
@@ -29,7 +28,7 @@ class DebtProductPolicy
     public function view(User $user, DebtProduct $debtProduct): bool
     {
         //check if debt loan is staff
-        if (!$user->can(PermissionEnum::Managers->value) && (User::query()->where('ClientID', $debtProduct->ClientID)->exists() || Board::query()->where('ClientID', $debtProduct->ClientID)->exists())) {
+        if (! $user->can(PermissionEnum::Managers->value) && (User::query()->where('ClientID', $debtProduct->ClientID)->exists() || Board::query()->where('ClientID', $debtProduct->ClientID)->exists())) {
             return false;
         }
 

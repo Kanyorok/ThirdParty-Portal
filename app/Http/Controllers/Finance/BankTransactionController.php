@@ -66,7 +66,7 @@ class BankTransactionController extends Controller
         return DB::transaction(function () use ($request) {
             $data = $request->only([
                 'BankAccountID', 'TransactionTypeID', 'DocDate', 'CurrencyID',
-                'ExchangeRate', 'Amount', 'Reference', 'Narration'
+                'ExchangeRate', 'Amount', 'Reference', 'Narration',
             ]);
             $data['ExchangeRate'] = $data['ExchangeRate'] ?: 1;
             $data['AmountBase'] = round($data['Amount'] * $data['ExchangeRate'], 2);
@@ -82,6 +82,7 @@ class BankTransactionController extends Controller
     public function show($id)
     {
         $row = BankTransaction::with(['bankAccount.bank', 'currency', 'txnType'])->findOrFail($id);
+
         return view('finance.bank-transactions.show', compact('row'));
     }
 
@@ -126,7 +127,7 @@ class BankTransactionController extends Controller
         return DB::transaction(function () use ($request, $row) {
             $row->fill($request->only([
                 'BankAccountID', 'TransactionTypeID', 'DocDate', 'CurrencyID',
-                'ExchangeRate', 'Amount', 'Reference', 'Narration'
+                'ExchangeRate', 'Amount', 'Reference', 'Narration',
             ]));
             $row->ExchangeRate = $row->ExchangeRate ?: 1;
             $row->AmountBase = round($row->Amount * $row->ExchangeRate, 2);
@@ -144,6 +145,7 @@ class BankTransactionController extends Controller
             return back()->with('error', 'Posted bank transactions cannot be deleted.');
         }
         $row->delete();
+
         return redirect()->route('finance.banktransactions.index')->with('success', 'Bank transaction deleted.');
     }
 
@@ -160,14 +162,14 @@ class BankTransactionController extends Controller
             ->where('IsActive', 1)
             ->first();
 
-        if (!$map) {
+        if (! $map) {
             $map = FinanceGLMapping::where('ModuleID', self::CASHBOOK_MODULE_ID_FALL)
                 ->where('TransactionTypeID', $bt->TransactionTypeID)
                 ->where('IsActive', 1)
                 ->first();
         }
 
-        if (!$map) {
+        if (! $map) {
             return back()->with('error', 'No GL Mapping found for this Transaction Type.');
         }
 
@@ -175,7 +177,7 @@ class BankTransactionController extends Controller
         $entryType = $map->CreditGLAccountID ? 'RECEIPT' : 'PAYMENT';
         $counterGL = $map->CreditGLAccountID ?: $map->DebitGLAccountID;
 
-        if (!$counterGL) {
+        if (! $counterGL) {
             return back()->with('error', 'Mapping has no Debit/Credit GL configured.');
         }
 

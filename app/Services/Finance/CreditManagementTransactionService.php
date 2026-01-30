@@ -2,21 +2,20 @@
 
 namespace App\Services\Finance;
 
-use App\Models\Finance\FinanceCreditManagement;
 use App\Models\Finance\FinanceCreditAdjustment;
+use App\Models\Finance\FinanceCreditManagement;
 use App\Models\Finance\FinanceCreditMovement;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class CreditManagementTransactionService
 {
     protected TransactionService $transactionService;
 
     // Module and Transaction Type IDs from your seeder
-    const FINANCE_MODULE_ID = 1100000;
-    const CREDIT_MANAGEMENT_TRANSACTION_TYPE = 21; // From your seeder mapping
+    public const FINANCE_MODULE_ID = 1100000;
+    public const CREDIT_MANAGEMENT_TRANSACTION_TYPE = 21; // From your seeder mapping
 
     public function __construct(TransactionService $transactionService)
     {
@@ -59,18 +58,17 @@ class CreditManagementTransactionService
                     ->withProperties([
                         'action' => 'credit_approval_posted',
                         'transaction_batch' => $result['batch_number'] ?? null,
-                        'amount' => $credit->CreditLimit
+                        'amount' => $credit->CreditLimit,
                     ])
                     ->log("Posted GL transactions for credit approval #{$credit->Id}");
             }
 
             return $result;
-
         } catch (\Throwable $e) {
             Log::error('Credit approval GL posting failed', [
                 'credit_id' => $credit->Id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             throw new \Exception("Failed to post GL transactions for credit approval: " . $e->getMessage());
@@ -121,18 +119,17 @@ class CreditManagementTransactionService
                         'action' => 'credit_adjustment_posted',
                         'adjustment_type' => $adjustment->AdjustmentType,
                         'transaction_batch' => $result['batch_number'] ?? null,
-                        'amount' => $adjustment->Amount
+                        'amount' => $adjustment->Amount,
                     ])
                     ->log("Posted GL transactions for credit adjustment #{$adjustment->Id}");
             }
 
             return $result;
-
         } catch (\Throwable $e) {
             Log::error('Credit adjustment GL posting failed', [
                 'adjustment_id' => $adjustment->Id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             throw new \Exception("Failed to post GL transactions for credit adjustment: " . $e->getMessage());
@@ -191,20 +188,19 @@ class CreditManagementTransactionService
                         'action' => 'credit_utilization_posted',
                         'transaction_batch' => $result['batch_number'] ?? null,
                         'amount' => $amount,
-                        'reference' => $referenceNumber
+                        'reference' => $referenceNumber,
                     ])
                     ->log("Posted GL transactions for credit utilization #{$referenceNumber}");
             }
 
             return $result;
-
         } catch (\Throwable $e) {
             Log::error('Credit utilization GL posting failed', [
                 'credit_id' => $credit->Id,
                 'amount' => $amount,
                 'reference' => $referenceNumber,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             throw new \Exception("Failed to post GL transactions for credit utilization: " . $e->getMessage());
@@ -263,20 +259,19 @@ class CreditManagementTransactionService
                         'action' => 'credit_payment_posted',
                         'transaction_batch' => $result['batch_number'] ?? null,
                         'amount' => $amount,
-                        'reference' => $referenceNumber
+                        'reference' => $referenceNumber,
                     ])
                     ->log("Posted GL transactions for credit payment #{$referenceNumber}");
             }
 
             return $result;
-
         } catch (\Throwable $e) {
             Log::error('Credit payment GL posting failed', [
                 'credit_id' => $credit->Id,
                 'amount' => $amount,
                 'reference' => $referenceNumber,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             throw new \Exception("Failed to post GL transactions for credit payment: " . $e->getMessage());
@@ -294,7 +289,7 @@ class CreditManagementTransactionService
                 ->where('IdempotencyKey', $originalIdempotencyKey)
                 ->first();
 
-            if (!$originalTx) {
+            if (! $originalTx) {
                 throw new \Exception("Original transaction not found for reversal");
             }
 
@@ -330,19 +325,18 @@ class CreditManagementTransactionService
                         'action' => 'credit_transaction_reversed',
                         'original_key' => $originalIdempotencyKey,
                         'reversal_batch' => $result['batch_number'] ?? null,
-                        'reason' => $reason
+                        'reason' => $reason,
                     ])
                     ->log("Reversed GL transaction: {$originalIdempotencyKey}");
             }
 
             return $result;
-
         } catch (\Throwable $e) {
             Log::error('Credit transaction reversal failed', [
                 'original_key' => $originalIdempotencyKey,
                 'reason' => $reason,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             throw new \Exception("Failed to reverse GL transaction: " . $e->getMessage());

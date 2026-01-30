@@ -31,7 +31,6 @@ class ClientContactController extends Controller
         return $this->contacts($client->contacts());
     }
 
-
     public function create(Client $client): View
     {
         return view('crm.contacts.create')
@@ -49,6 +48,7 @@ class ClientContactController extends Controller
             $emailConversation = EmailConversation::query()->where('Id', $request->conversation)->first();
         }
         $phone = $request->getPhone($client->CountryID);
+
         try {
             $this->save($client->contacts(), $request->savable($phone));
 
@@ -63,8 +63,9 @@ class ClientContactController extends Controller
                     'PartyID' => $client->ClientID,
                 ]);
             }
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error adding  client Contact. e: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

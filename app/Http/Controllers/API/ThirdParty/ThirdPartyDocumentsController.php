@@ -3,13 +3,10 @@
 namespace App\Http\Controllers\API\ThirdParty;
 
 use App\Enums\Core\ModulesEnum;
-use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class ThirdPartyDocumentsController extends Controller
 {
@@ -34,13 +31,15 @@ class ThirdPartyDocumentsController extends Controller
         }
 
         $files = $request->file('files');
-        if (!is_array($files)) {
+        if (! is_array($files)) {
             $files = [$files];
         }
 
         $attached = [];
         foreach ($files as $file) {
-            if (!$file) { continue; }
+            if (! $file) {
+                continue;
+            }
             // Use DocumentsTrait via DocumentService to create internal document and relate to model
             $doc = $thirdParty->newDocument(ModulesEnum::ThirdParty, $file, [], $actor);
             $attached[] = [

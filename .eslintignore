@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Generated files
+public/build/
+public/js/jquery*.js
+public/js/datatables*.js
+public/js/select2*.js
+public/js/bootstrap*.js
+public/js/moment*.js
+public/js/chart*.js
+public/js/sweetalert*.js
+public/js/custom-datatables.js
+public/assets/
+
+# Storage
+storage/
+
+# Documentation HTML files  
+public/hr-*.html
+public/*-documentation.html
+
+# Build artifacts
+*.min.js
+*.bundle.js

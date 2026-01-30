@@ -20,7 +20,6 @@ use Throwable;
 
 class DocumentVerificationController extends Controller
 {
-    //
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -36,25 +35,28 @@ class DocumentVerificationController extends Controller
             'captured_by' => 'required|string',
             'status' => 'required|string',
             'member_status' => 'nullable|string',
-            'member_number' => 'required|string'
+            'member_number' => 'required|string',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $validated = $validator->validated();
 
-        if (DocumentValidation::query()->where('Type', DocumentValidationTypeEnum::ClientOnboarding->value)
+        if (
+            DocumentValidation::query()->where('Type', DocumentValidationTypeEnum::ClientOnboarding->value)
             ->where('t_DocumentValidation.ValidationId', $validated['application_id'])
-            ->exists()) {
+            ->exists()
+        ) {
             return $this->errored('Application ID already exists.', data: ['status' => '999']);
         }
 
         $actor = SystemHelper::user();
+
         try {
             return DB::transaction(function () use ($actor, $validated) {
                 $validation = DocumentValidation::create([
@@ -98,7 +100,7 @@ class DocumentVerificationController extends Controller
                     $fields->add([
                         "FieldName" => strtoupper($item),
                         "Item" => $value,
-                        "ItemElementName" => $type->name
+                        "ItemElementName" => $type->name,
                     ]);
                 }
 
@@ -108,7 +110,6 @@ class DocumentVerificationController extends Controller
                     'status' => '000',
                     "Fields" => $fields,
                 ]);
-
             });
         } catch (Throwable $e) {
             Log::error('Saving data failed ' . $e);

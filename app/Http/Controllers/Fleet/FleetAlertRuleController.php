@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
+use App\Models\Fleet\FleetAlertRule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Fleet\FleetAlertRule;
 
 class FleetAlertRuleController extends Controller
 {
     public function index()
     {
         $rules = FleetAlertRule::orderBy('CreatedOn', 'desc')->get();
+
         return view('fleet.alert_rules.index', compact('rules'));
     }
 
@@ -43,6 +44,7 @@ class FleetAlertRuleController extends Controller
     public function edit($id)
     {
         $rule = FleetAlertRule::findOrFail($id);
+
         return view('fleet.alert_rules.edit', compact('rule'));
     }
 

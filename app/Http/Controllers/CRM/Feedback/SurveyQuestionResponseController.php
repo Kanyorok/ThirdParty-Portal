@@ -13,7 +13,6 @@ class SurveyQuestionResponseController extends Controller
      */
     public function index()
     {
-        //
     }
 
     /**
@@ -21,7 +20,6 @@ class SurveyQuestionResponseController extends Controller
      */
     public function create()
     {
-        //
     }
 
     /**
@@ -29,7 +27,6 @@ class SurveyQuestionResponseController extends Controller
      */
     public function store(Request $request)
     {
-        //
     }
 
     /**
@@ -37,7 +34,6 @@ class SurveyQuestionResponseController extends Controller
      */
     public function show(SurveyQuestionResponse $surveyQuestionResponse)
     {
-        //
     }
 
     /**
@@ -45,7 +41,6 @@ class SurveyQuestionResponseController extends Controller
      */
     public function edit(SurveyQuestionResponse $surveyQuestionResponse)
     {
-        //
     }
 
     /**
@@ -53,7 +48,6 @@ class SurveyQuestionResponseController extends Controller
      */
     public function update(Request $request, SurveyQuestionResponse $surveyQuestionResponse)
     {
-        //
     }
 
     /**
@@ -61,6 +55,5 @@ class SurveyQuestionResponseController extends Controller
      */
     public function destroy(SurveyQuestionResponse $surveyQuestionResponse)
     {
-        //
     }
 }

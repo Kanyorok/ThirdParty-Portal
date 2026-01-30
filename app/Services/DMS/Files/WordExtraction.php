@@ -15,7 +15,7 @@ class WordExtraction extends FileExtraction
 {
     public function processContent(): bool
     {
-        if (!$this->extension->isDocument()) {
+        if (! $this->extension->isDocument()) {
             return false;
         }
         $name = $this->createTempFile();
@@ -24,12 +24,13 @@ class WordExtraction extends FileExtraction
         if ($content !== '') {
             return $this->handleContent($content);
         }
+
         return $this->handleContent();
     }
 
     private function extractDocumentText(string $filePath): string
     {
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             return '';
         }
         $reader = $this->type->getDocumentType();
@@ -54,8 +55,8 @@ class WordExtraction extends FileExtraction
     private function extractElementText(AbstractElement $element): string
     {
         $text = '';
-        try {
 
+        try {
             // Handle TextRun elements specifically
             if ($element instanceof Text) {
                 $text .= $element->getText() . ' ';
@@ -75,7 +76,7 @@ class WordExtraction extends FileExtraction
                 $elementText = $element->getText();
                 if (is_string($elementText)) {
                     $text .= $elementText . ' ';
-                } else if ($elementText instanceof TextRun) {
+                } elseif ($elementText instanceof TextRun) {
                     foreach ($elementText->getElements() as $childElement) {
                         $text .= $this->extractElementText($childElement);
                     }
@@ -90,13 +91,10 @@ class WordExtraction extends FileExtraction
         } catch (Throwable $e) {
             // Log the error but continue processing other elements
             Log::warning('Error extracting text from element: ' . get_class($element), [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
 
         return $text;
-
-
     }
-
 }

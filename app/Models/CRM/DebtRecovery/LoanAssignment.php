@@ -13,8 +13,8 @@ class LoanAssignment extends Model
 {
     use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
     protected $connection = 'sqlsrv';
     protected $table = 't_LoanAssignments';
     protected $primaryKey = 'Id';
@@ -35,10 +35,10 @@ class LoanAssignment extends Model
                           ];
 
     protected $casts = [
-                        'StartOn'   => 'datetime',
-                        'EndOn'     => 'datetime',
+                        'StartOn' => 'datetime',
+                        'EndOn' => 'datetime',
                         'CreatedBy' => 'integer',
-                        'UserId'    => 'integer',
+                        'UserId' => 'integer',
                        ];
 
     public function user(): BelongsTo

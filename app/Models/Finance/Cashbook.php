@@ -10,15 +10,15 @@ class Cashbook extends Model
     protected $primaryKey = 'CashbookID';
 
     public $timestamps = true;
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
 
     protected $fillable = [
         'BankAccountID', 'CurrencyID', 'ExchangeRate',
         'DocDate', 'DocNo', 'EntryType', 'PartyType', 'PartyID', 'PartyName',
         'Reference', 'Narration', 'Amount', 'AmountBase',
         'SourceModule', 'SourceID', 'IsSystemGenerated',
-        'Status'
+        'Status',
     ];
 
     protected $casts = [

@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\ThirdPartyAuth;
 
+use App\Enums\Employee\GenderEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Enums\Employee\GenderEnum;
 
 class UpdateThirdPartyProfileRequest extends FormRequest
 {
@@ -34,13 +34,13 @@ class UpdateThirdPartyProfileRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:100',
-                Rule::unique('t_ThirdParties', 'RegistrationNumber')->ignore($thirdPartyId, 'Id')
+                Rule::unique('t_ThirdParties', 'RegistrationNumber')->ignore($thirdPartyId, 'Id'),
             ],
             'taxPin' => [
                 'nullable',
                 'string',
                 'max:50',
-                Rule::unique('t_ThirdParties', 'TaxPIN')->ignore($thirdPartyId, 'Id')
+                Rule::unique('t_ThirdParties', 'TaxPIN')->ignore($thirdPartyId, 'Id'),
             ],
             'vatNumber' => ['nullable', 'string', 'max:50'],
             'country' => ['nullable', 'string', 'max:100'],

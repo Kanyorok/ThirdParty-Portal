@@ -12,6 +12,6 @@ class FleetAlertRule extends Model
     protected $fillable = [
         'Name', 'AlertType', 'Description', 'TriggerMileage',
         'TriggerDays', 'Frequency', 'EscalationLevel',
-        'IsActive', 'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn'
+        'IsActive', 'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn',
     ];
 }

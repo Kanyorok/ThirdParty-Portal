@@ -10,6 +10,6 @@ class DashboardWidget extends Model
     public $timestamps = false; // using custom ERP timestamp columns
     protected $primaryKey = 'Id';
     protected $fillable = [
-        'Key','Name','Module','Type','Description','View','DataEndpoint','DefaultFilters','DefaultW','DefaultH','IsActive','CreatedBy','CreatedOn','ModifiedBy','ModifiedOn','DeletedBy'
+        'Key','Name','Module','Type','Description','View','DataEndpoint','DefaultFilters','DefaultW','DefaultH','IsActive','CreatedBy','CreatedOn','ModifiedBy','ModifiedOn','DeletedBy',
     ];
 }

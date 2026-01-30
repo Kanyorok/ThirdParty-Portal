@@ -8,10 +8,10 @@ use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\SchedulePlan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
-use Illuminate\Support\Facades\Validator;
 
 class SchedulePlanService
 {
@@ -43,7 +43,7 @@ class SchedulePlanService
 
             // Delete all old periods associated with this schedule
             $schedule->periods()->delete();
-            $validPeriods = array_filter($data['periods'], fn($qty) => (int)$qty > 0);
+            $validPeriods = array_filter($data['periods'], fn ($qty) => (int)$qty > 0);
 
             foreach ($validPeriods as $period => $qty) {
                 $schedule->periods()->create([
@@ -55,6 +55,7 @@ class SchedulePlanService
                     'ModifiedOn' => now(),
                 ]);
             }
+
             return $schedule;
         });
     }

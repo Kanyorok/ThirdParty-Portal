@@ -62,7 +62,7 @@ class NewLeadRequest extends FormRequest
                     return $query->where('CodeID', StaticListsService::MarketingModes);
                 }),
             ],
-            'Phone' => ['required', (new Phone)->countryField('Country')],
+            'Phone' => ['required', (new Phone())->countryField('Country')],
             'Email' => [
                 'nullable', Rule::email()->rfcCompliant(strict: false)->validateMxRecord()->preventSpoofing(), 'max:250',
             ],
@@ -77,7 +77,7 @@ class NewLeadRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'Phone.*' => 'invalid phone number provided.'
+            'Phone.*' => 'invalid phone number provided.',
         ];
     }
 
@@ -88,6 +88,7 @@ class NewLeadRequest extends FormRequest
         if ($code instanceof CodeDetail) {
             return $code;
         }
+
         throw ValidationException::withMessages(['CustomerType' => 'invalid customer type given']);
     }
 
@@ -98,6 +99,7 @@ class NewLeadRequest extends FormRequest
         if ($code instanceof CodeDetail) {
             return $code;
         }
+
         throw ValidationException::withMessages(['Source' => 'invalid source given']);
     }
 
@@ -108,6 +110,7 @@ class NewLeadRequest extends FormRequest
         if ($code instanceof CodeDetail) {
             return $code;
         }
+
         throw ValidationException::withMessages(['Industry' => 'invalid industry given']);
     }
 
@@ -139,6 +142,7 @@ class NewLeadRequest extends FormRequest
         $data = $this->_data($actor, $update);
         $image = $this->getImage();
         $lead = (is_null($lead)) ? new Lead() : $lead;
+
         return DB::transaction(static function () use ($update, $data, $lead, $image, $actor) {
             $lead->fill($data)->save();
 
@@ -196,6 +200,7 @@ class NewLeadRequest extends FormRequest
             return GenderEnum::from($this->validated('Gender'));
         } catch (Exception) {
         }
+
         throw ValidationException::withMessages(['Gender' => 'invalid gender provided.']);
     }
 
@@ -211,6 +216,7 @@ class NewLeadRequest extends FormRequest
                 throw ValidationException::withMessages(['LastContact' => 'invalid date format provided.']);
             }
         }
+
         return null;
     }
 
@@ -220,11 +226,11 @@ class NewLeadRequest extends FormRequest
     public function getAssignee(): User
     {
         $userID = $this->validated('RelationshipManager');
-        if (!is_string($userID)) {
+        if (! is_string($userID)) {
             return $this->user();
         }
         $user = User::query()->where('t_Users.UserID', Str::upper($userID))->where('t_Users.UserID', '!=', SystemHelper::ID)->first(['Id', 'UserID']);
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             throw ValidationException::withMessages(['RelationshipManager' => 'invalid user selected.']);
         }
 
@@ -232,11 +238,11 @@ class NewLeadRequest extends FormRequest
             return $user;
         }
 
-        if (!$this->user()->can(PermissionEnum::LeadDelegate->value)) {
+        if (! $this->user()->can(PermissionEnum::LeadDelegate->value)) {
             throw ValidationException::withMessages(['RelationshipManager' => 'You cannot assign to another person']);
         }
 
-        if (!$user->can('viewAny', Lead::class)) {
+        if (! $user->can('viewAny', Lead::class)) {
             throw ValidationException::withMessages([
                 'Assignee' => $user->Name . ' does not have permission to manage a lead.',
             ]);

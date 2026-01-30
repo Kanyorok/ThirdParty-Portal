@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\Procurement\PrequalificationApplicationEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
-use App\Enums\Procurement\PrequalificationApplicationEnum;
 use Illuminate\View\View;
 
 class PrequalifiedSuppliersController extends Controller

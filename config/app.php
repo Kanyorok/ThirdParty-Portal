@@ -16,7 +16,7 @@ return [
     'name' => env('APP_NAME', 'Nimble ERP'),
 
     'versioning' => [
-        'version' => '0.0.1'
+        'version' => '0.0.1',
     ],
 
     'dms' => [

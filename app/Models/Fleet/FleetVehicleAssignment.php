@@ -2,26 +2,20 @@
 
 namespace App\Models\Fleet;
 
-use Illuminate\Database\Eloquent\Model;
-use App\Traits\Model\UserActorTrait;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Core\Branch;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\FleetVehicleInspection;
-use App\Models\Fleet\FleetTripLog;
-use App\Models\Fleet\FleetDriver;
-use App\Models\Auth\User;
-use App\Models\HRM\Employee;
 use App\Models\Core\Approval\CodeDetail;
-
+use App\Models\HRM\Employee;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FleetVehicleAssignment extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
 
     protected $table = 't_FleetVehicleAssignments';
@@ -53,6 +47,7 @@ class FleetVehicleAssignment extends Model
     {
         return 'AssgId';
     }
+
     public function vehicle()
     {
         return $this->belongsTo(FleetVehicle::class, 'VehicleID', 'Id');
@@ -68,13 +63,6 @@ class FleetVehicleAssignment extends Model
         return $this->belongsTo(FleetDriver::class, 'DriverID', 'Id');
     }
 
-
-    // public function branch()
-    // {
-    //     return $this->belongsTo(Branch::class, 'BranchID', 'Id');
-    // }
-
-
     public function assigner()
     {
         return $this->belongsTo(Employee::class, 'AssignedBy', 'Id');
@@ -84,7 +72,6 @@ class FleetVehicleAssignment extends Model
     {
         return $this->belongsTo(FleetTripLog::class, 'TripNo', 'Id');
     }
-    
 
     public function inspectionDate()
     {

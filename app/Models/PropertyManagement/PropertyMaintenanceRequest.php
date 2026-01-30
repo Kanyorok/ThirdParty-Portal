@@ -2,22 +2,24 @@
 
 namespace App\Models\PropertyManagement;
 
-
+use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\ThirdParty\ThirdParties;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Auth\User;
+
 class PropertyMaintenanceRequest extends Model
 {
-    //
-    use SoftDeletes, UserActorTrait,DocumentsTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
+
     protected $table = 't_MaintenanceRequest';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -32,40 +34,49 @@ class PropertyMaintenanceRequest extends Model
         'IssueDescription',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
+
     public static function getPrimaryKey(): string
     {
         return 'PropertyMaintenanceRequestId';
     }
+
     public function requestId()
     {
         return $this->belongsTo(PropertyMaintenanceAssign::class, 'Id', 'RequestNumber');
     }
+
     public function property()
     {
         return $this->belongsTo(PropertyRegistry::class, 'Property', 'Id');
     }
+
     public function block()
     {
         return $this->belongsTo(PropertyBlock::class, 'Block', 'Id');
     }
+
     public function floor()
     {
         return $this->belongsTo(PropertyFloor::class, 'Floor', 'Id');
     }
+
     public function unit()
     {
         return $this->belongsTo(PropertyUnit::class, 'Unit', 'Id');
     }
+
     public function issueType()
     {
         return $this->belongsTo(CodeDetail::class, 'IssueType', 'ID');
     }
+
     public function priority()
     {
         return $this->belongsTo(CodeDetail::class, 'Priority', 'ID');
     }
+
     public function reportedByUser()
     {
         return $this->belongsTo(ThirdParties::class, 'ReportedBy', 'Id');
@@ -75,6 +86,7 @@ class PropertyMaintenanceRequest extends Model
     {
         return $this->belongsTo(User::class, 'CreatedBy');
     }
+
     public function modifiedByUser()
     {
         return $this->belongsTo(User::class, 'ModifiedBy');

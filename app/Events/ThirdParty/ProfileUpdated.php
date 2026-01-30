@@ -10,11 +10,14 @@ use Illuminate\Queue\SerializesModels;
 
 class ProfileUpdatedEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     public function __construct(
         public ThirdParties $thirdParty,
         public ThirdPartyUser $user,
         public array $changes
-    ) {}
+    ) {
+    }
 }

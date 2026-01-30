@@ -2,14 +2,11 @@
 
 namespace App\Policies\FleetManagement;
 
-use App\Models\Auth\User;
 use App\Enums\Core\PermissionEnum;
-use App\Models\Fleet\FleetRepairLog;
-use Illuminate\Auth\Access\Response;
+use App\Models\Auth\User;
 
 class FleetRepairLogPolicy
 {
-
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::FleetRepairLogView->value);
@@ -55,8 +52,4 @@ class FleetRepairLogPolicy
     {
         return $user->can(PermissionEnum::FleetRepairLogUpdate->value);
     }
-
 }
-
-
-

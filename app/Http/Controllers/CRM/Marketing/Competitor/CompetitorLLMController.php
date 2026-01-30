@@ -35,9 +35,9 @@ class CompetitorLLMController extends Controller
         }
 
         return $this->succeeded('ok', data: [
-                                             'progress'    => (int) ($total > 0) ? (($done / $total) * 100) : 100,
-                                             'done'        => $done,
-                                             'total'       => (int) $total,
+                                             'progress' => (int) ($total > 0) ? (($done / $total) * 100) : 100,
+                                             'done' => $done,
+                                             'total' => (int) $total,
                                              'description' => 'Fetching & Processing Data (' . number_format($done) . ' / ' . number_format($total) . ')',
                                             ]);
     }
@@ -49,16 +49,16 @@ class CompetitorLLMController extends Controller
     {
         $this->authorize('llm', $competitor);
 
-        if (!AIService::hasValid()) {
+        if (! AIService::hasValid()) {
             return $this->errored('No valid LLM (AI) Credentials defined.');
         }
 
-        if (!is_null($competitor->Processing)) {
+        if (! is_null($competitor->Processing)) {
             return $this->errored('processing already started');
         }
 
         try {
-            if (!filter_var($competitor->Website, FILTER_VALIDATE_URL) || !Http::get($competitor->Website)->successful()) {
+            if (! filter_var($competitor->Website, FILTER_VALIDATE_URL) || ! Http::get($competitor->Website)->successful()) {
                 return $this->errored('Invalid Website URL');
             }
         } catch (\Exception | \Throwable) {
@@ -74,8 +74,10 @@ class CompetitorLLMController extends Controller
         } catch (Exception | \Throwable $e) {
             Log::error('Start LLM Competitor data fetching and processing failed: .');
             Log::error($e);
+
             return $this->errored('an unexpected error occurred');
         }
+
         return $this->succeeded('processing started', route('competitors.show', $competitor->CompetitorID));
     }
 }

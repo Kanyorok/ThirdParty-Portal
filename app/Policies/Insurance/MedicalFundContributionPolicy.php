@@ -13,24 +13,28 @@ class MedicalFundContributionPolicy
      */
     public function __construct()
     {
-        //
     }
+
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::MedicalFundContributionView->value);
     }
+
     public function store(User $user): bool
     {
         return $user->can(PermissionEnum::MedicalFundContributionCreate->value);
     }
+
     public function view(User $user, MedicalFundContribution $medicalFundcontribution): bool
     {
         return $user->can(PermissionEnum::MedicalFundContributionView->value);
     }
+
     public function update(User $user, MedicalFundContribution $medicalFundcontribution): bool
     {
         return $user->can(PermissionEnum::MedicalFundContributionUpdate->value);
     }
+
     public function destroy(User $user, MedicalFundContribution $medicalFundcontribution): bool
     {
         return $user->can(PermissionEnum::MedicalFundContributionDelete->value);

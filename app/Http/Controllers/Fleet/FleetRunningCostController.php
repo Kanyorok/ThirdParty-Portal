@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetRunningCost;
 use App\Models\Fleet\FleetVehicle;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class FleetRunningCostController extends Controller
 {
@@ -14,6 +14,7 @@ class FleetRunningCostController extends Controller
     public function index()
     {
         $costs = FleetRunningCost::with('vehicle')->orderByDesc('CostDate')->get();
+
         return view('fleet.running_costs.index', compact('costs'));
     }
 
@@ -21,6 +22,7 @@ class FleetRunningCostController extends Controller
     public function create()
     {
         $vehicles = FleetVehicle::where('IsActive', 1)->get();
+
         return view('fleet.running_costs.create', compact('vehicles'));
     }
 
@@ -39,7 +41,7 @@ class FleetRunningCostController extends Controller
         FleetRunningCost::create([
             ...$validated,
             'CreatedBy' => Auth::id(),
-            'CreatedOn' => now()
+            'CreatedOn' => now(),
         ]);
 
         return redirect()->route('fleet.running_costs.index')->with('success', 'Running cost logged successfully.');

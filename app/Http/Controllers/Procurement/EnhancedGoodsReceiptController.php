@@ -2,19 +2,17 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\Core\PostingEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Inventory\ItemMasterList;
 use App\Models\Procurement\EnhancedGoodsReceipt;
 use App\Models\Procurement\Order;
-use App\Models\Procurement\OrderLines;
-use App\Models\Inventory\ItemMasterList;
 use App\Services\Procurement\GRN\GRNProcessingService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Collection;
-use App\Enums\Core\PostingEnum;
 
 class EnhancedGoodsReceiptController extends Controller
 {
@@ -38,7 +36,7 @@ class EnhancedGoodsReceiptController extends Controller
             'item',
             'order',
             'qualityChecker',
-            'poster'
+            'poster',
         ]);
 
         // Apply filters
@@ -115,7 +113,7 @@ class EnhancedGoodsReceiptController extends Controller
                 'o.OrderNo',
                 'o.AccountID',
                 'tp.TradingName as SupplierName',
-                'tp.ThirdPartyName as SupplierFullName'
+                'tp.ThirdPartyName as SupplierFullName',
             ])
             ->distinct()
             ->get()
@@ -139,8 +137,8 @@ class EnhancedGoodsReceiptController extends Controller
                 $order->supplier = (object)[
                     'thirdParty' => (object)[
                         'TradingName' => $order->SupplierName,
-                        'ThirdPartyName' => $order->SupplierFullName
-                    ]
+                        'ThirdPartyName' => $order->SupplierFullName,
+                    ],
                 ];
 
                 return $order;
@@ -155,8 +153,10 @@ class EnhancedGoodsReceiptController extends Controller
                         ->where('ItemNo', $line->iStockCodeID)
                         ->whereNull('DeletedOn')
                         ->sum('ReceivedQTY');
+
                     return $line->fQuantity > $receivedQty;
                 });
+
                 return $order;
             })
             ->filter(function ($order) {
@@ -328,7 +328,7 @@ class EnhancedGoodsReceiptController extends Controller
             'poster',
             'supplier.thirdParty',
             'order',
-            'orderLine'
+            'orderLine',
         ])
             ->byGRN($grnId)
             ->byPO($poId)
@@ -378,12 +378,13 @@ class EnhancedGoodsReceiptController extends Controller
             foreach ($grnLines as $grnLine) {
                 // Validate before processing
                 $validationErrors = $this->grnProcessingService->validateGRNLine($grnLine);
-                if (!empty($validationErrors)) {
+                if (! empty($validationErrors)) {
                     $results['failed']++;
                     $results['errors'][] = [
                         'item_no' => $grnLine->ItemNo,
                         'errors' => $validationErrors,
                     ];
+
                     continue;
                 }
 
@@ -491,7 +492,7 @@ class EnhancedGoodsReceiptController extends Controller
 
     protected function determineItemType($item): string
     {
-        if (!$item) {
+        if (! $item) {
             return EnhancedGoodsReceipt::ITEM_TYPE_STOCK;
         }
 

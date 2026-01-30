@@ -17,8 +17,9 @@ class BudgetRatesSeeder extends Seeder
 
         // Ensure at least one user exists
         $userId = DB::table('t_Users')->value('Id');
-        if (!$userId) {
+        if (! $userId) {
             echo "❌ No users found in t_Users.\n";
+
             return;
         }
 

@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class UnifiedPOTestDataSeeder extends Seeder
 {
@@ -86,12 +85,12 @@ class UnifiedPOTestDataSeeder extends Seeder
                 'ModifiedBy' => 1,
                 'CreatedOn' => now()->subDays(35),
                 'ModifiedOn' => now()->subDays(15),
-            ]
+            ],
         ];
 
         foreach ($additionalTenders as $tender) {
             $exists = DB::table('t_Tenders')->where('TenderNo', $tender['TenderNo'])->exists();
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('t_Tenders')->insert($tender);
                 $this->command->info("  ✅ Created tender: {$tender['TenderNo']}");
             }
@@ -141,12 +140,12 @@ class UnifiedPOTestDataSeeder extends Seeder
                     'ModifiedBy' => 1,
                     'CreatedOn' => now()->subDays(40),
                     'ModifiedOn' => now()->subDays(40),
-                ]
+                ],
             ];
 
             foreach ($additionalSuppliers as $supplier) {
                 $exists = DB::table('t_Suppliers')->where('TradingName', $supplier['TradingName'])->exists();
-                if (!$exists) {
+                if (! $exists) {
                     DB::table('t_Suppliers')->insert($supplier);
                     $this->command->info("  ✅ Created supplier: {$supplier['TradingName']}");
                 }
@@ -168,7 +167,7 @@ class UnifiedPOTestDataSeeder extends Seeder
             ['name' => 'Office Chairs', 'description' => 'Ergonomic office chairs with lumbar support', 'qty' => 15],
             ['name' => 'Cleaning Services', 'description' => 'Daily office cleaning and maintenance', 'qty' => 12], // months
             ['name' => 'Security Services', 'description' => '24/7 security guard services', 'qty' => 12], // months
-            ['name' => 'Stationery Package', 'description' => 'Complete office stationery supplies', 'qty' => 50]
+            ['name' => 'Stationery Package', 'description' => 'Complete office stationery supplies', 'qty' => 50],
         ];
 
         foreach ($tenders as $tender) {
@@ -209,7 +208,7 @@ class UnifiedPOTestDataSeeder extends Seeder
         foreach ($tenders as $tender) {
             $existingAward = DB::table('t_TenderAwards')->where('TenderID', $tender->Id)->exists();
 
-            if (!$existingAward && isset($suppliers[$awardIndex])) {
+            if (! $existingAward && isset($suppliers[$awardIndex])) {
                 $supplier = $suppliers[$awardIndex];
                 $awardIndex++;
 
@@ -238,7 +237,7 @@ class UnifiedPOTestDataSeeder extends Seeder
                         'ModifiedBy' => 1,
                         'CreatedOn' => now()->subDays(15),
                         'ModifiedOn' => now()->subDays(10),
-                    ]
+                    ],
                 ];
 
                 foreach ($awards as $award) {
@@ -299,7 +298,7 @@ class UnifiedPOTestDataSeeder extends Seeder
                     'Remarks' => 'IT equipment and infrastructure procurement plan',
                     'CreatedOn' => now()->subDays(85),
                     'ModifiedOn' => now()->subDays(65),
-                ]
+                ],
             ];
 
             foreach ($plans as $plan) {
@@ -307,7 +306,7 @@ class UnifiedPOTestDataSeeder extends Seeder
                     ->where('ReferenceNumber', $plan['ReferenceNumber'])
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     DB::table('t_ConsolidatedProcurementPlan')->insert($plan);
                     $this->command->info("  ✅ Created plan: {$plan['ReferenceNumber']}");
                 }
@@ -368,7 +367,7 @@ class UnifiedPOTestDataSeeder extends Seeder
                         'ModifiedBy' => 1,
                         'CreatedOn' => now()->subDays(55),
                         'ModifiedOn' => now()->subDays(55),
-                    ]
+                    ],
                 ];
 
                 foreach ($lineItems as $item) {
@@ -398,7 +397,7 @@ class UnifiedPOTestDataSeeder extends Seeder
             ->update([
                 'ContractStatus' => 'Draft',
                 'ModifiedBy' => 1,
-                'ModifiedOn' => now()
+                'ModifiedOn' => now(),
             ]);
 
         if ($updated > 0) {
@@ -420,7 +419,7 @@ class UnifiedPOTestDataSeeder extends Seeder
                     'ContractEndDate' => now()->addDays(360),
                     'ContractRef' => 'CONT-ACTIVE-001',
                     'ModifiedBy' => 1,
-                    'ModifiedOn' => now()
+                    'ModifiedOn' => now(),
                 ]);
 
             $this->command->info("  ✅ Created at least one active contract");

@@ -11,7 +11,7 @@ class StoreBankDetailsRequest extends FormRequest
     {
         $user = auth()->guard('sanctum')->user();
 
-        if (!$user) {
+        if (! $user) {
             return true;
         }
 

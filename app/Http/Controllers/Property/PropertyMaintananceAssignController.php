@@ -3,21 +3,20 @@
 namespace App\Http\Controllers\Property;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\ThirdParty\SupplierMaster;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\MaintenanceAndIssues\PropertyMaintenanceAssignRequest;
-use App\Services\Property\MaintenanceAndIssues\PropertyMaintenanceAssignService;
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\HRM\Employee;
 use App\Models\PropertyManagement\PropertyMaintenanceAssign;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
-use Illuminate\Support\Facades\Auth;
-use App\Models\HRM\Employee;
 use App\Models\ThirdParies\Supplier;
-use App\Models\Core\Approval\CodeDetail;
+use App\Models\ThirdParty\SupplierMaster;
+use App\Services\Property\MaintenanceAndIssues\PropertyMaintenanceAssignService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PropertyMaintananceAssignController extends Controller
 {
-    //
     public function index()
     {
         $assignments = PropertyMaintenanceAssign::orderBy('Id', 'desc')->get();
@@ -45,7 +44,7 @@ class PropertyMaintananceAssignController extends Controller
             ->get();
 
         $assignmentTypes = CodeDetail::where('CodeID', 'AssignmentType')->get();
-        $priorityLevels  = CodeDetail::where('CodeID', 'PriorityLevel')->get();
+        $priorityLevels = CodeDetail::where('CodeID', 'PriorityLevel')->get();
 
         return view(
             'property.maintenanceandissues.assignrequests.create',
@@ -63,6 +62,7 @@ class PropertyMaintananceAssignController extends Controller
     {
         $this->authorize(PermissionEnum::PropertyMaintenanceAssignView, PropertyMaintenanceAssign::class);
         $assignment = PropertyMaintenanceAssign::with('request')->findOrFail($Id);
+
         return view('property.maintenanceandissues.assignrequests.show', compact('assignment'));
     }
 
@@ -100,16 +100,18 @@ class PropertyMaintananceAssignController extends Controller
 
         return redirect()->route('assignrequest.index')->with('success', 'Assignment created successfully');
     }
+
     public function edit($Id)
     {
         $this->authorize(PermissionEnum::PropertyMaintenanceAssignUpdate, PropertyMaintenanceAssign::class);
         $assignment = PropertyMaintenanceAssign::with('request')->findOrFail($Id);
         $assignmentTypes = CodeDetail::where('CodeID', 'AssignmentType')->get();
-        $priorityLevels = CodeDetail::where('CodeID','PriorityLevel')->get();
+        $priorityLevels = CodeDetail::where('CodeID', 'PriorityLevel')->get();
         $technicians = Employee::all();
         $vendors = SupplierMaster::where('IsPrequalified', true)
             ->select('ThirdPartyId')->get();
-        return view('property.maintenanceandissues.assignrequests.edit', compact('assignment','assignmentTypes', 'priorityLevels', 'technicians', 'vendors'));
+
+        return view('property.maintenanceandissues.assignrequests.edit', compact('assignment', 'assignmentTypes', 'priorityLevels', 'technicians', 'vendors'));
     }
 
     public function update(PropertyMaintenanceAssignRequest $request, $Id)
@@ -152,12 +154,11 @@ class PropertyMaintananceAssignController extends Controller
         return redirect()->route('assignrequest.index')->with('success', 'Assignment updated successfully.');
     }
 
-
-
     public function destroy($id)
     {
 
         $this->authorize(PermissionEnum::PropertyMaintenanceAssignDelete, PropertyMaintenanceAssign::class);
+
         try {
             $assignment = PropertyMaintenanceAssign::findOrFail($id);
 
@@ -171,14 +172,11 @@ class PropertyMaintananceAssignController extends Controller
             return redirect()->route('assignrequest.index')
                 ->with('success', 'Property Assignment Deleted Successfully!');
         } catch (\Throwable $th) {
-
             Log::error('Error deleting property assignment: ' . $th->getMessage());
+
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to delete Property Maintenance Assignment. Please try again.'])
                 ->withInput();
         }
     }
-
 }
-
-

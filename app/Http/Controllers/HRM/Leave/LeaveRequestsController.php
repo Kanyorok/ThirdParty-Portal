@@ -15,6 +15,4 @@ class LeaveRequestsController extends Controller
     {
         return view("hrms.leaverequests.create");
     }
-
-
 }

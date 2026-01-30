@@ -11,7 +11,6 @@ use App\Exceptions\ThirdParty\ProfileCreationException;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\ThirdParty\SupplierMaster;
 use App\Models\ThirdParty\ThirdParties;
-use App\Models\ThirdParty\ThirdPartyType;
 use App\Models\ThirdParty\ThirdPartyUser;
 use App\Repositories\ThirdParty\Contracts\SupplierRepositoryInterface;
 use App\Repositories\ThirdParty\Contracts\ThirdPartyRepositoryInterface;
@@ -24,7 +23,8 @@ class ProfileService
     public function __construct(
         protected ThirdPartyRepositoryInterface $thirdPartyRepository,
         protected SupplierRepositoryInterface $supplierRepository
-    ) {}
+    ) {
+    }
 
     /**
      * Create a supplier profile for the user
@@ -55,7 +55,7 @@ class ProfileService
                 $this->linkProfileType($thirdParty, ThirdPartyTypeEnum::Supplier, $supplierMaster->Id, $user);
 
                 // Attach supplier categories if provided
-                if (!empty($data['supplier_categories'])) {
+                if (! empty($data['supplier_categories'])) {
                     $this->supplierRepository->attachCategories($supplierMaster, $data['supplier_categories']);
                 }
 
@@ -249,12 +249,12 @@ class ProfileService
      */
     protected function checkDuplicateProfile(ThirdPartyUser $user, ThirdPartyTypeEnum $profileType): void
     {
-        if (!$user->hasProfile()) {
+        if (! $user->hasProfile()) {
             return;
         }
 
         $thirdParty = $this->thirdPartyRepository->findByUserId($user->Id);
-        if (!$thirdParty) {
+        if (! $thirdParty) {
             return;
         }
 
@@ -320,7 +320,7 @@ class ProfileService
      */
     protected function linkUserToThirdParty(ThirdPartyUser $user, ThirdParties $thirdParty): void
     {
-        if (!$user->ThirdPartyId) {
+        if (! $user->ThirdPartyId) {
             $user->update(['ThirdPartyId' => $thirdParty->Id]);
         }
     }

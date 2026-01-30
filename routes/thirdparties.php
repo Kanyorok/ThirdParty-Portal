@@ -1,12 +1,12 @@
 <?php
 
 use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
-use App\Http\Controllers\Procurement\ThirdParties\ThirdPartyAuthController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
-use App\Http\Controllers\Procurement\ThirdParties\ThirdPartiesController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyProfileController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyDocumentsController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyProfileController;
+use App\Http\Controllers\Procurement\ThirdParties\ThirdPartiesController;
+use App\Http\Controllers\Procurement\ThirdParties\ThirdPartyAuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -28,7 +28,6 @@ Route::prefix('portal/auth')->group(function () {
 // Step 2: Register company info (associated third party) - NO AUTH REQUIRED FOR INITIAL SETUP
 Route::post('third-parties/register-details', [ThirdPartiesController::class, 'store']);
 
-// --- General Public / Unprotected Third Party-related Endpoints ---
 
 // Enums (public)
 Route::prefix('enums')->group(function () {
@@ -45,13 +44,13 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
             $query->where('Id', $thirdPartyId);
         })->first();
 
-        if (!$supplier) {
+        if (! $supplier) {
             return response()->json([
                 'debug' => 'No supplier found',
                 'third_party_id' => $thirdPartyId,
                 'third_parties_count' => DB::table('t_ThirdParties')->count(),
                 'suppliers_count' => DB::table('t_Suppliers')->count(),
-                'sample_third_party' => DB::table('t_ThirdParties')->first()
+                'sample_third_party' => DB::table('t_ThirdParties')->first(),
             ]);
         }
 
@@ -71,28 +70,27 @@ Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $reque
                     'InvitationID' => $inv->InvitationID,
                     'TenderId' => (int)$inv->TenderId,
                     'ResponseStatus' => strtolower($inv->ResponseStatus),
-                    'tender_title' => $inv->tender ? $inv->tender->Title : 'No tender loaded'
+                    'tender_title' => $inv->tender ? $inv->tender->Title : 'No tender loaded',
                 ];
-            })
+            }),
         ]);
     } catch (\Exception $e) {
         return response()->json([
             'debug' => 'Error in debug endpoint',
             'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
+            'trace' => $e->getTraceAsString(),
         ]);
     }
 });
 
 
-// --- Authenticated Third Party Routes (Requires auth:sanctum & VerifiedUser middleware) ---
 
 Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
 
     // Token validation for session checks
     Route::post('auth/validate-token', function (Request $request) {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json(['valid' => false], 401);
         }
 
@@ -100,7 +98,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
         $isActive = method_exists($user, 'isActive') ? $user->isActive() : (bool)($user->IsActive ?? $user->isActive ?? false);
         $isApproved = method_exists($user, 'isApproved') ? $user->isApproved() : (bool)($user->isApproved ?? false);
 
-        if (!$isActive || !$isApproved) {
+        if (! $isActive || ! $isApproved) {
             return response()->json(['valid' => false], 403);
         }
 
@@ -164,25 +162,14 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
         // Prequalification API endpoints (for frontend compatibility)
         Route::prefix('prequalification')->name('prequalification.')->group(function () {
             // Controller not included in the 'use' statements, but path is clearly third-party/procurement
-            // Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
-            // Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
-            // Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
         });
 
         // Supplier RFQ endpoints (supplier portal)
         // Controller not included in the 'use' statements, but path is clearly third-party/procurement
-        // Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
-        // Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation'])->whereNumber('rfq');
-        // Route::post('rfq-responses', [SupplierRFQController::class, 'submitResponse']);
-        // Route::post('rfq-clarifications', [SupplierRFQController::class, 'postClarification']);
-        // Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications'])->whereNumber('rfq');
     });
 
     // Prequalification Progress (Third Party Application State)
     Route::prefix('v1')->group(function () {
         // Controller not included in the 'use' statements, but path is clearly third-party/procurement
-        // Route::get('/prequalification/applications/{roundId}/progress', [PrequalificationProgressController::class, 'getApplicationProgress']);
-        // Route::post('/prequalification/applications/{roundId}/categories/{categoryId}/progress', [PrequalificationProgressController::class, 'updateCategoryProgress']);
-        // Route::get('/prequalification/applications/my-applications', [PrequalificationProgressController::class, 'getMyApplications']);
     });
 });

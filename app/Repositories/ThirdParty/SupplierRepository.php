@@ -18,7 +18,7 @@ class SupplierRepository implements SupplierRepositoryInterface
         return Cache::remember(
             $this->getCacheKey($id),
             self::CACHE_TTL,
-            fn() => SupplierMaster::with(['party', 'categories'])->find($id)
+            fn () => SupplierMaster::with(['party', 'categories'])->find($id)
         );
     }
 
@@ -27,7 +27,7 @@ class SupplierRepository implements SupplierRepositoryInterface
         return Cache::remember(
             $this->getCacheKey('tp_' . $thirdPartyId),
             self::CACHE_TTL,
-            fn() => SupplierMaster::where('ThirdPartyId', $thirdPartyId)
+            fn () => SupplierMaster::where('ThirdPartyId', $thirdPartyId)
                 ->with(['party', 'categories'])
                 ->first()
         );
@@ -61,7 +61,7 @@ class SupplierRepository implements SupplierRepositoryInterface
 
     public function attachCategories(SupplierMaster $supplier, array $categoryIds): void
     {
-        if (!empty($categoryIds)) {
+        if (! empty($categoryIds)) {
             $supplier->categories()->attach($categoryIds);
             $this->clearCache($supplier->Id);
         }

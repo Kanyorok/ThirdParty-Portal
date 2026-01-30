@@ -3,8 +3,8 @@
 namespace App\Services\Property\PropertyRegistry;
 
 use App\Models\Auth\User;
-use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyBlock;
+use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyRegistry;
 use Exception;
 
@@ -12,7 +12,7 @@ class PropertyFloorBulkService
 {
     /**
      * Process bulk floor upload from CSV/Excel data
-     * 
+     *
      * Expected columns:
      * - PropertyID (property code or Id)
      * - BlockID (block name or Id)
@@ -25,7 +25,7 @@ class PropertyFloorBulkService
             'successful' => 0,
             'failed' => 0,
             'errors' => [],
-            'created_floors' => []
+            'created_floors' => [],
         ];
 
         foreach ($data as $index => $row) {
@@ -57,12 +57,12 @@ class PropertyFloorBulkService
                 $property = null;
                 if (is_numeric($row['PropertyID'])) {
                     $property = PropertyRegistry::find($row['PropertyID']);
-                    if (!$property) {
+                    if (! $property) {
                         throw new Exception("Error in row " . ($index + 1) . ": PropertyID {$row['PropertyID']} does not exist. Please enter a valid PropertyID.");
                     }
                 } else {
                     $property = PropertyRegistry::where('PropertyCode', $row['PropertyID'])->first();
-                    if (!$property) {
+                    if (! $property) {
                         throw new Exception("Error in row " . ($index + 1) . ": PropertyCode '{$row['PropertyID']}' does not exist. Please enter a valid PropertyCode.");
                     }
                 }
@@ -71,14 +71,14 @@ class PropertyFloorBulkService
                 $block = null;
                 if (is_numeric($row['BlockID'])) {
                     $block = PropertyBlock::where('PropertyID', $property->Id)->find($row['BlockID']);
-                    if (!$block) {
+                    if (! $block) {
                         throw new Exception("Error in row " . ($index + 1) . ": BlockID {$row['BlockID']} does not exist in Property {$row['PropertyID']}. Please enter a valid BlockID.");
                     }
                 } else {
                     $block = PropertyBlock::where('BlockName', $row['BlockID'])
                         ->where('PropertyID', $property->Id)
                         ->first();
-                    if (!$block) {
+                    if (! $block) {
                         throw new Exception("Error in row " . ($index + 1) . ": Block '{$row['BlockID']}' does not exist in Property {$row['PropertyID']}. Please enter a valid BlockName.");
                     }
                 }
@@ -109,12 +109,11 @@ class PropertyFloorBulkService
 
                 $results['successful']++;
                 $results['created_floors'][] = $floor->Id;
-
             } catch (Exception $e) {
                 $results['failed']++;
                 $results['errors'][] = [
                     'row' => $index + 1,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }

@@ -2,20 +2,22 @@
 
 namespace App\Models\Insurance;
 
+use App\Enums\Insurance\InsurancePolicyStatus;
 use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
-use App\Enums\Insurance\InsurancePolicyStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BancassurancePolicy extends Model
 {
-    use SoftDeletes, UserActorTrait, DocumentsTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_BancassurancePolicies';
     protected $primaryKey = 'Id';
@@ -24,15 +26,15 @@ class BancassurancePolicy extends Model
         'CustomerID', 'ProductID', 'InsurerID', 'PolicyNumber', 'SumAssured',
         'PremiumAmount', 'PolicyStartDate', 'PolicyEndDate', 'PaymentFrequency',
         'ReferralID', 'IssuedDate', 'ExpiryDate', 'IsActive', 'Status', 'RiderAddOnId', 'CreatedBy',
-        'ModifiedBy', 'DeletedBy'
+        'ModifiedBy', 'DeletedBy',
     ];
 
     protected $casts = [
     'Status' => InsurancePolicyStatus::class,
     'PolicyStartDate' => 'date',
-    'PolicyEndDate'   => 'date',
-    'IssuedDate'      => 'date',
-    'ExpiryDate'      => 'date',
+    'PolicyEndDate' => 'date',
+    'IssuedDate' => 'date',
+    'ExpiryDate' => 'date',
     ];
 
     /**

@@ -16,7 +16,6 @@ class ScheduleActionController extends Controller
         $this->middleware('ajax');
     }
 
-
     public function board(BoardMeetingRequest $request): JsonResponse
     {
         return $this->succeeded('deprecated use the other one');

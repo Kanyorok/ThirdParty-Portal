@@ -2,10 +2,8 @@
 
 namespace App\Services\Insurance;
 
-
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
-use App\Models\ThirdParty\ThirdPartyUser;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\Finance\FinanceRole;
@@ -13,6 +11,7 @@ use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancAssuranceReferral;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyType;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\ThirdParties\ThirdPartiesService;
 use App\Services\ThirdParties\ThirdPartyService;
 use DateTime;
@@ -49,7 +48,7 @@ class BancassuranceCustomersService extends ThirdPartiesService
     }
 
     public static function create(
-        string                 $name,
+        string $name,
         ?string $tradingName,
         CodeDetail $businessType,
         string $registrationNumber,
@@ -57,7 +56,7 @@ class BancassuranceCustomersService extends ThirdPartiesService
         ?string $vatNumber,
         Locality $locationID,
         ?string $physicalAddress,
-        ?string                $email,
+        ?string $email,
         ?string $phone,
         ?string $website,
         ?CodeDetail $status,
@@ -93,7 +92,6 @@ class BancassuranceCustomersService extends ThirdPartiesService
         );
     }
 
-
     /*  public static function create(
           ThirdParties $ThirdPartyId,
           ?BancAssuranceReferral $ReferralID = null,
@@ -126,6 +124,7 @@ class BancassuranceCustomersService extends ThirdPartiesService
                 throw new \RuntimeException("No finance roles found " . __CLASS__);
             }
             $actor = SystemHelper::user();
+
             return ThirdPartyType::create([
                 'FinanceRole' => $role->FinanceRoleID,
                 'Code' => ThirdPartyService::TypeCustomer,

@@ -2,14 +2,12 @@
 
 namespace App\Policies\Inventory;
 
-use App\Models\Auth\User;
 use App\Enums\Core\PermissionEnum;
+use App\Models\Auth\User;
 use App\Models\FleetManagement\UOMConversion;
-use Illuminate\Auth\Access\Response;
 
 class UOMConversionPolicy
 {
-
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::UOMConversionView->value);
@@ -54,8 +52,4 @@ class UOMConversionPolicy
     {
         return $user->can(PermissionEnum::UOMConversionUpdate->value);
     }
-
 }
-
-
-

@@ -32,7 +32,7 @@ class PartyTaskRequest extends FormRequest
     public function getAssignee(): User
     {
         $user = User::query()->where('t_Users.UserID', Str::upper($this->validated('task_user')))->where('t_Users.UserID', '!=', SystemHelper::ID)->first(['Id', 'UserID']);
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             throw ValidationException::withMessages(['task_user' => 'invalid user']);
         }
 
@@ -40,9 +40,10 @@ class PartyTaskRequest extends FormRequest
             return $user;
         }
 
-        if (!$this->user()->can('delegate', Task::class)) {
+        if (! $this->user()->can('delegate', Task::class)) {
             throw ValidationException::withMessages(['task_user' => 'You cannot assign to another person']);
         }
+
         return $user;
     }
 
@@ -57,11 +58,11 @@ class PartyTaskRequest extends FormRequest
     public function getDated(Carbon $current = null): Carbon
     {
         $date = Carbon::createFromFormat('Y-m-d', $this->string('task_date'));
-        if (!$date instanceof Carbon) {
+        if (! $date instanceof Carbon) {
             throw ValidationException::withMessages(['task_date' => 'Invalid date format']);
         }
 
-        if (!$current instanceof Carbon) {//not an update
+        if (! $current instanceof Carbon) {//not an update
             $current = now();
         }
 

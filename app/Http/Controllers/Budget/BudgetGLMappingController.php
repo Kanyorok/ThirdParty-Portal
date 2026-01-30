@@ -6,11 +6,9 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetGLAccount;
 use App\Models\Budget\BudgetGLMaster;
-use Illuminate\Http\Request;
 
 class BudgetGLMappingController extends Controller
 {
-    //
     public function index()
     {
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetGLAccount::class);
@@ -27,7 +25,6 @@ class BudgetGLMappingController extends Controller
 
         return view('budgetandanalytics.glmapping.index', compact('gls'));
     }
-
 
     public function create()
     {

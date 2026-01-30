@@ -22,25 +22,23 @@ use App\Services\Insurance\BancassurancePolicyService;
 use App\Services\Insurance\BancassuranceUnderwritingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 
 class PolicyController extends Controller
 {
-
     public function index(Request $request)
     {
         $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
         $statuses = InsurancePolicyStatus::cases();
 
         $query = BancassurancePolicy::with(['customer.thirdParty', 'product', 'insurer'])
-            ->when($request->status, fn($q) => $q->where('Status', $request->status))
-            ->when($request->from, fn($q) => $q->whereDate('PolicyStartDate', '>=', $request->from))
-            ->when($request->to, fn($q) => $q->whereDate('PolicyEndDate', '<=', $request->to))
+            ->when($request->status, fn ($q) => $q->where('Status', $request->status))
+            ->when($request->from, fn ($q) => $q->whereDate('PolicyStartDate', '>=', $request->from))
+            ->when($request->to, fn ($q) => $q->whereDate('PolicyEndDate', '<=', $request->to))
             ->when($request->customer, function ($q) use ($request) {
-                $q->whereHas('customer.thirdParty', fn($q2) => $q2->where('ThirdPartyName', 'like', '%' . $request->customer . '%'));
+                $q->whereHas('customer.thirdParty', fn ($q2) => $q2->where('ThirdPartyName', 'like', '%' . $request->customer . '%'));
             })
             ->orderByDesc('Id')
             ->get();
@@ -64,23 +62,14 @@ class PolicyController extends Controller
         ));
     }
 
-    // public function getReferralsByCustomer($customerId)
-    // {
-    //     $referrals = BancAssuranceReferral::with([
     //             'customerreferral.thirdParty',
     //             'referredByEmployee'
-    //         ])
-    //         ->where('ClientId', $customerId)
-    //         ->orderByDesc('Id')
-    //         ->get();
 
-    //     return response()->json($referrals);
-    // }
     public function getReferralsByCustomer($customerId)
     {
         $referrals = BancAssuranceReferral::with([
             'customerreferral.thirdParty',
-            'referredByEmployee'
+            'referredByEmployee',
         ])
             ->where('ClientId', $customerId)
             ->orderByDesc('Id')
@@ -98,17 +87,17 @@ class PolicyController extends Controller
         return response()->json($referrals);
     }
 
-
-
     public function getProductsByInsurer($insurerId)
     {
         $products = InsuranceProduct::where('InsuranceProviderID', $insurerId)->get();
+
         return response()->json($products);
     }
 
     public function getRiderAddOnsByProduct($productId)
     {
         $rideraddons = InsuranceProductRider::where('Product', $productId)->get();
+
         return response()->json($rideraddons);
     }
 
@@ -163,7 +152,6 @@ class PolicyController extends Controller
         return view('bancassurance.policies.print', compact('policy'));
     }
 
-
     //Proposal Review
     public function reviewIndex()
     {
@@ -179,7 +167,7 @@ class PolicyController extends Controller
         $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
         $policy = BancassurancePolicy::with(['customer', 'product'])->find($id);
 
-        if (!$policy) {
+        if (! $policy) {
             return redirect()->route('bancassurance.policies.index')->with('error', 'Policy not found.');
         }
 
@@ -201,7 +189,7 @@ class PolicyController extends Controller
 
         try {
             $policy = BancassurancePolicy::find($id);
-            if (!$policy) {
+            if (! $policy) {
                 return response()->json(['error' => 'Policy not found.'], 404);
             }
 
@@ -214,12 +202,13 @@ class PolicyController extends Controller
             }
 
             $policy->update([
-                'Status'     => InsurancePolicyStatus::SubmittedForUnderwriting->value,
+                'Status' => InsurancePolicyStatus::SubmittedForUnderwriting->value,
                 'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now()
+                'ModifiedOn' => now(),
             ]);
         } catch (\Exception $e) {
             \Log::error('Error submitting policy for underwriting: ' . $e->getMessage());
+
             return response()->json(['error' => 'Unexpected error, try again later.'], 500);
         }
 
@@ -228,9 +217,6 @@ class PolicyController extends Controller
         // Optionally add document summary if needed
     }
 
-
-
-
     // Show the feedback form
     public function feedbackForm($id)
     {
@@ -238,7 +224,7 @@ class PolicyController extends Controller
         $policy = BancassurancePolicy::with('customer')
             ->find($id);
 
-        if (!$policy) {
+        if (! $policy) {
             return redirect()->route('bancassurance.policies.index')
                 ->with('error', 'Policy not found.');
         }
@@ -256,7 +242,7 @@ class PolicyController extends Controller
 
         // Check if policy exists before inserting
         $Policy = BancassurancePolicy::find($id);
-        if (!$Policy) {
+        if (! $Policy) {
             return redirect()->route('bancassurance.policies.index')
                 ->with('error', 'Policy not found for feedback.');
         }
@@ -277,15 +263,15 @@ class PolicyController extends Controller
         // Update policy status based on decision
         if ($Decision->Description === 'Approved') {
             $Policy->update([
-                'Status'     => InsurancePolicyStatus::AwaitingIssuance->value,
+                'Status' => InsurancePolicyStatus::AwaitingIssuance->value,
                 'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now()
+                'ModifiedOn' => now(),
             ]);
         } elseif ($Decision->Description === 'Decline') {
             $Policy->update([
-                'Status'     => InsurancePolicyStatus::Rejected->value,
+                'Status' => InsurancePolicyStatus::Rejected->value,
                 'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now()
+                'ModifiedOn' => now(),
             ]);
         }
         // else → do nothing if decision is something else
@@ -293,7 +279,6 @@ class PolicyController extends Controller
         return redirect()->route('bancassurance.policies.index')
             ->with('success', 'Underwriting feedback recorded successfully.');
     }
-
 
     public function feedbackList()
     {
@@ -322,9 +307,9 @@ class PolicyController extends Controller
         $this->authorize(PermissionEnum::BancassurancePolicyUpdate->value, BancassurancePolicy::class);
         $Policy = BancassurancePolicy::find($id);
         $Policy->update([
-            'Status'     => InsurancePolicyStatus::Issued->value,
+            'Status' => InsurancePolicyStatus::Issued->value,
             'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now()
+            'ModifiedOn' => now(),
         ]);
 
         // Update related referral status to Converted
@@ -351,7 +336,6 @@ class PolicyController extends Controller
         return view('bancassurance.policies.register', compact('policies'));
     }
 
-
     public function renewalIndex()
     {
         $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
@@ -369,8 +353,10 @@ class PolicyController extends Controller
     {
         $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
         $policy = BancassurancePolicy::with('customer')->findOrFail($id);
+
         return view('bancassurance.policies.renewals.create', compact('policy'));
     }
+
     public function storeRenewal(PolicyRenewalRequest $request, $id)
     {
         $this->authorize(PermissionEnum::BancassurancePolicyCreate, BancassurancePolicy::class);
@@ -381,16 +367,16 @@ class PolicyController extends Controller
 
         // Use Eloquent if you have a model for renewals, otherwise keep DB::table
         DB::table('t_BancassurancePolicyRenewals')->insert([
-            'PolicyID'     => $id,
-            'RenewalDate'  => $request->RenewalDate,
+            'PolicyID' => $id,
+            'RenewalDate' => $request->RenewalDate,
             'NewStartDate' => $request->NewStartDate,
-            'NewEndDate'   => $request->NewEndDate,
-            'Status'       => InsurancePolicyStatus::Issued->value,
-            'Notes'        => $request->Notes,
-            'CreatedBy'    => Auth::id(),
-            'CreatedOn'    => now(),
-            'ModifiedBy'   => Auth::id(),
-            'ModifiedOn'   => now(),
+            'NewEndDate' => $request->NewEndDate,
+            'Status' => InsurancePolicyStatus::Issued->value,
+            'Notes' => $request->Notes,
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
+            'ModifiedBy' => Auth::id(),
+            'ModifiedOn' => now(),
         ]);
 
         return redirect()->route('bancassurance.policies.renewals.index')

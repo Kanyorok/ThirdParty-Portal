@@ -16,7 +16,7 @@ use App\Http\Controllers\Property\PropertyMaintenanceWorkCompletionController;
 use App\Http\Controllers\Property\PropertyNewLeaseController;
 use App\Http\Controllers\Property\PropertyNewTenantController;
 use App\Http\Controllers\Property\PropertyRateAndPricingControllert;
-use App\Http\Controllers\Property\PropertyRatesAndPricingControllert;
+use App\Http\Controllers\Property\PropertyReceiptController;
 use App\Http\Controllers\Property\PropertyRegistryController;
 use App\Http\Controllers\Property\PropertyReportsController;
 use App\Http\Controllers\Property\PropertyReportsVisualController;
@@ -26,10 +26,7 @@ use App\Http\Controllers\Property\PropertyUnitController;
 use App\Http\Controllers\Property\RentDashboardController;
 use App\Http\Controllers\Property\ReportsController;
 use App\Http\Controllers\Property\TenantStatementController;
-use App\Http\Controllers\Property\PropertyReceiptController;
-
 use Illuminate\Support\Facades\Route;
-
 
 Route::middleware(['module:500000'])->namespace('Property')->prefix('property')->group(function () {
 
@@ -66,7 +63,6 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::post('propertyregistry/bulk/store', [PropertyRegistryController::class, 'bulkStore'])->name('PropertyRegistry.bulkStore');
     Route::get('propertyregistry/bulk/template', [PropertyRegistryController::class, 'bulkTemplate'])->name('PropertyRegistry.bulkTemplate');
 
-    //Route::resource('attachments', PropertyAttachmentsController::class);
     Route::get('attachments', [PropertyAttachmentsController::class, 'index'])->name('attachments.index');
     Route::get('attachments/create', [PropertyAttachmentsController::class, 'create'])->name('attachments.create');
     Route::post('attachments', [PropertyAttachmentsController::class, 'store'])->name('attachments.store');
@@ -76,7 +72,6 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::delete('attachments/delete/{Id}', [PropertyAttachmentsController::class, 'destroy'])->name('attachments.destroy');
 
     //Property Block
-    //Route::resource('addblock', PropertyBlockController::class);
     Route::get('propertyaddblock', [PropertyBlockController::class, 'index'])->name('addblock.index');
     Route::get('propertyaddblock/create', [PropertyBlockController::class, 'create'])->name('addblock.create');
     Route::post('propertyaddblock', [PropertyBlockController::class, 'store'])->name('addblock.store');
@@ -92,7 +87,7 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
 
     //Property Settings
     Route::resource('propertysettings', PropertyUnitController::class);
-    
+
 
     //Property Rate and Pricing
     Route::get('propertyrateandpricing', [PropertyRateAndPricingControllert::class, 'index'])->name('propertyrateandpricing.index');
@@ -111,7 +106,6 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('/propertyrateandpricing/unit/{UnitId}', [PropertyRateAndPricingControllert::class, 'getPricingByUnit'])->name('getpricing.byunit');
 
 
-    //Route::resource('addfloor', PropertyFloorController::class);
     Route::get('propertyaddfloor', [PropertyFloorController::class, 'index'])->name('addfloor.index');
     Route::get('propertyaddfloor/create', [PropertyFloorController::class, 'create'])->name('addfloor.create');
     Route::post('propertyaddfloor', [PropertyFloorController::class, 'store'])->name('addfloor.store');
@@ -125,7 +119,6 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('propertyaddfloor/bulk/template', [PropertyFloorController::class, 'bulkTemplate'])->name('addfloor.bulkTemplate');
 
 
-    //Route::resource('addunit', PropertyUnitController::class);
     Route::get('propertyaddunit', [PropertyUnitController::class, 'index'])->name('addunit.index');
     Route::get('propertyaddunit/create', [PropertyUnitController::class, 'create'])->name('addunit.create');
     Route::post('propertyaddunit', [PropertyUnitController::class, 'store'])->name('addunit.store');
@@ -141,7 +134,6 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('propertyaddunit/bulk/template', [PropertyUnitController::class, 'bulkTemplate'])->name('addunit.bulkTemplate');
 
 
-    //Route::resource('addtenant', PropertyNewTenantController::class);
     Route::get('propertyaddtenant', [PropertyNewTenantController::class, 'index'])->name('addtenant.index');
     Route::get('propertyaddtenant/create', [PropertyNewTenantController::class, 'create'])->name('addtenant.create');
     Route::post('propertyaddtenant', [PropertyNewTenantController::class, 'store'])->name('addtenant.store');
@@ -150,7 +142,6 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::put('propertyaddtenant/edit/{Id}', [PropertyNewTenantController::class, 'update'])->name('addtenant.update');
 
 
-    //Route::resource('tenantclearance', PropertyTenantClearanceController::class);
     Route::get('propertytenantclearance', [PropertyTenantClearanceController::class, 'index'])->name('tenantclearance.index');
     Route::get('propertytenantclearance/create', [PropertyTenantClearanceController::class, 'create'])->name('tenantclearance.create');
     Route::post('propertytenantclearance', [PropertyTenantClearanceController::class, 'store'])->name('tenantclearance.store');
@@ -160,7 +151,6 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::delete('propertytenantclearance/delete/{Id}', [PropertyTenantClearanceController::class, 'destroy'])->name('tenantclearance.destroy');
 
 
-    //Route::resource('addlease', PropertyNewLeaseController::class);
     Route::get('propertyaddlease', [PropertyNewLeaseController::class, 'index'])->name('addlease.index');
     Route::get('propertyaddlease/create', [PropertyNewLeaseController::class, 'create'])->name('addlease.create');
     Route::post('propertyaddlease', [PropertyNewLeaseController::class, 'store'])->name('addlease.store');
@@ -175,10 +165,9 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('/propertyaddlease/pricing/{UnitId}', [PropertyNewLeaseController::class, 'getPricingUnit'])->name('getpricingunit.lease');
     Route::get('lease-offer/{Id}', [PropertyNewLeaseController::class, 'leaseOfferLetter'])->name('addlease.offer');
 
-    
 
 
-    //Route::resource('terminatelease', PropertyLeaseTerminationController::class);
+
     Route::get('propertyterminatelease', [PropertyLeaseTerminationController::class, 'index'])->name('terminatelease.index');
     Route::get('propertyterminatelease/create', [PropertyLeaseTerminationController::class, 'create'])->name('terminatelease.create');
     Route::post('propertyterminatelease', [PropertyLeaseTerminationController::class, 'store'])->name('terminatelease.store');
@@ -189,7 +178,6 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
 
 
 
-    //Route::resource('schedulelease', PropertyLeaseScheduleController::class);
     Route::get('schedulelease', [PropertyLeaseScheduleController::class, 'index'])->name('schedulelease.index');
     Route::get('schedulelease/create', [PropertyLeaseScheduleController::class, 'create'])->name('schedulelease.create');
     Route::post('schedulelease', [PropertyLeaseScheduleController::class, 'store'])->name('schedulelease.store');
@@ -202,7 +190,6 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('/schedulelease/print/{Id}', [PropertyLeaseScheduleController::class, 'print'])->name('schedulelease.print');
 
 
-    //Route::resource('renewlease', PropertyLeaseRenewalController::class);
     Route::get('renewlease', [PropertyLeaseRenewalController::class, 'index'])->name('renewlease.index');
     Route::get('renewlease/create', [PropertyLeaseRenewalController::class, 'create'])->name('renewlease.create');
     Route::post('renewlease', [PropertyLeaseRenewalController::class, 'store'])->name('renewlease.store');
@@ -215,11 +202,10 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('lease-renewaloffer/{Id}', [PropertyLeaseRenewalController::class, 'leaseOfferLetter'])->name('renewlease.renewaloffer');
 
     //Property Approval
-    //Route::resource('approval', PropertyApprovalController::class);
     Route::resource('approvals', PropertyApprovalController::class)->only([
         'index',
     ])->names([
-        'index' => 'propertyapproval.index'
+        'index' => 'propertyapproval.index',
     ]);
     // Approval actions: view, approve, reject
     Route::post('approvals/offer/approve/{Id}', [PropertyApprovalController::class, 'approve'])->name('propertyapproval.approve');
@@ -228,9 +214,8 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::post('approvals/terminate/reject/{Id}', [PropertyApprovalController::class, 'rejectTermination'])->name('propertyapproval.rejectTermination');
     Route::post('approvals/renewal/approve/{Id}', [PropertyApprovalController::class, 'approveRenewal'])->name('propertyapproval.approveRenewal');
     Route::post('approvals/renewal/reject/{Id}', [PropertyApprovalController::class, 'rejectRenewal'])->name('propertyapproval.rejectRenewal');
-    
 
-    //Route::resource('rentinvoice', PropertyInvoiceController::class);
+
     Route::get('rentinvoice', [PropertyInvoiceController::class, 'index'])->name('rentinvoice.index');
     Route::get('rentinvoice/create', [PropertyInvoiceController::class, 'create'])->name('rentinvoice.create');
     Route::post('rentinvoice', [PropertyInvoiceController::class, 'store'])->name('rentinvoice.store');
@@ -239,7 +224,6 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::put('rentinvoice/edit/{id}', [PropertyInvoiceController::class, 'update'])->name('rentinvoice.update');
     Route::delete('rentinvoice/delete/{id}', [PropertyInvoiceController::class, 'destroy'])->name('rentinvoice.destroy');
 
-    //Route::resource('rentreceipt', PropertyReceiptController::class);
     Route::get('rentreceipt', [PropertyReceiptController::class, 'index'])->name('rentreceipt.index');
     Route::get('/rentreceipt/amount-paid/{invoiceId}', [PropertyReceiptController::class, 'getAmountPaidSoFar'])->name('rentreceipt.amountPaid');
     Route::get('rentreceipt/create', [PropertyReceiptController::class, 'create'])->name('rentreceipt.create');
@@ -250,13 +234,9 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
 
 
 
-    //Route::resource('tenantledger', TenantStatementController::class);
     Route::get('tenantledger', [TenantStatementController::class, 'index'])->name('tenantledger.index');
-    // Route::get('tenantledger/create', [TenantStatementController::class,'create'])->name('tenantledger.create');
-    // Route::get('tenantledger/store', [TenantStatementController::class,'store'])->name('tenantledger.store');   
     Route::get('tenantledger/pdf', [TenantStatementController::class, 'exportpdf'])->name('tenantledger.pdf');
 
-    //Route::resource('maintenancerequest', PropertyMaintenanceRequestController::class);
     Route::get('maintenancerequest', [PropertyMaintenanceRequestController::class, 'index'])->name('maintenancerequest.index');
     Route::get('maintenancerequest/create', [PropertyMaintenanceRequestController::class, 'create'])->name('maintenancerequest.create');
     Route::post('maintenancerequest', [PropertyMaintenanceRequestController::class, 'store'])->name('maintenancerequest.store');
@@ -268,7 +248,6 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::put('maintenancerequest/edit/{Id}', [PropertyMaintenanceRequestController::class, 'update'])->name('maintenancerequest.update');
     Route::delete('maintenancerequest/delete/{Id}', [PropertyMaintenanceRequestController::class, 'destroy'])->name('maintenancerequest.destroy');
 
-    //Route::resource('assignrequest', PropertyMaintananceAssignController::class);
     Route::get('assignrequest', [PropertyMaintananceAssignController::class, 'index'])->name('assignrequest.index');
     Route::get('assignrequest/create', [PropertyMaintananceAssignController::class, 'create'])->name('assignrequest.create');
     Route::post('assignrequest', [PropertyMaintananceAssignController::class, 'store'])->name('assignrequest.store');
@@ -278,7 +257,6 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::delete('assignrequest/delete/{Id}', [PropertyMaintananceAssignController::class, 'destroy'])->name('assignrequest.destroy');
 
 
-    //Route::resource('workcompletion', PropertyMaintenanceWorkCompletionController::class);
     Route::get('workcompletion', [PropertyMaintenanceWorkCompletionController::class, 'index'])->name('workcompletion.index');
     Route::get('workcompletion/create', [PropertyMaintenanceWorkCompletionController::class, 'create'])->name('workcompletion.create');
     Route::post('workcompletion', [PropertyMaintenanceWorkCompletionController::class, 'store'])->name('workcompletion.store');
@@ -297,6 +275,6 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('property-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'property-reports.index',
-        'show' => 'property-reports.show'
+        'show' => 'property-reports.show',
     ]);
 });

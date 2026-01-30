@@ -18,5 +18,4 @@ class CommissionEarnedController extends Controller
 
         return view('bancassurance.commissions.earned.index', compact('claims'));
     }
-
 }

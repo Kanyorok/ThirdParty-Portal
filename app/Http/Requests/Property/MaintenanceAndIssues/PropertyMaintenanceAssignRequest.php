@@ -36,7 +36,6 @@ class PropertyMaintenanceAssignRequest extends FormRequest
         ];
     }
 
-
     public function messages()
     {
         return [
@@ -48,5 +47,4 @@ class PropertyMaintenanceAssignRequest extends FormRequest
             'PrequalifiedVendor.required_without' => 'Please assign a prequalified vendor.',
         ];
     }
-
 }

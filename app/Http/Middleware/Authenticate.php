@@ -11,12 +11,9 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\ThirdParty\ThirdPartyUser;
 
 class Authenticate extends Middleware
 {
-
-
     /**
      * Handle an incoming request.
      *
@@ -33,12 +30,12 @@ class Authenticate extends Middleware
         $this->authenticate($request, $guards);
         $actor = $request->user();
 
-        if (!$request->hasSession() || in_array('sanctum', $guards)) {
+        if (! $request->hasSession() || in_array('sanctum', $guards)) {
             return $next($request);
         }
 
         $branch = $actor->branch;
-        if (!$actor instanceof User || !$branch instanceof Branch) {
+        if (! $actor instanceof User || ! $branch instanceof Branch) {
             $this->unauthenticated($request, $guards, $actor);
         }
 
@@ -47,7 +44,7 @@ class Authenticate extends Middleware
                 ->where('model_type', User::getPrimaryKey())
                 ->where('BranchId', $branch->Id)->with('role')->first();
             $role = $modelRole?->role;
-            if (!$modelRole instanceof ModelRole || !$role instanceof Role) {
+            if (! $modelRole instanceof ModelRole || ! $role instanceof Role) {
                 $this->unauthenticated($request, $guards);
             }
 

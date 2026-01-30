@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\SupplierCategory;
+use App\Models\ThirdParty\ThirdParties;
+use Illuminate\Database\Seeder;
 
 class ThirdPartySupplierCategorySeeder extends Seeder
 {

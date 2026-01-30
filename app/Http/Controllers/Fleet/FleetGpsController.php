@@ -23,6 +23,7 @@ class FleetGpsController extends Controller
             }
 
             $vehicles = FleetVehicle::query()->whereNotNull('TrackerNo')->get(['Id', 'RegistrationNo', 'TrackerNo']);
+
             try {
                 $locations = $service->findMultipleTrack($vehicles->pluck('TrackerNo')->toArray());
             } catch (ErroredException $e) {
@@ -47,15 +48,14 @@ class FleetGpsController extends Controller
                         'Speed' => $location['speed'],
                         'Direction' => $location['course'],
                         'Status' => $status,
-                        'LastUpdated' => now()->timestamp($location['gpstime'])->toDateTimeString()
+                        'LastUpdated' => now()->timestamp($location['gpstime'])->toDateTimeString(),
                     ]);
-
                 }
             });
 
             return response()->json([
                 'data' => $vehicleLocations,
-                'timestamp' => now()->toDateTimeString()
+                'timestamp' => now()->toDateTimeString(),
             ]);
         }
 
@@ -97,5 +97,4 @@ class FleetGpsController extends Controller
             'selectedVehicle'
         ));
     }
-
 }

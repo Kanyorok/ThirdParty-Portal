@@ -13,22 +13,22 @@ class ThirdPartyResource extends JsonResource
             'id' => $this->Id,
             'profileCompletion' => $this->profile_completion ?? 0,
             'thirdPartyDetails' => [
-                'thirdPartyName'     => $this->ThirdPartyName,
-                'tradingName'        => $this->TradingName,
-                'businessType'       => $this->businessType?->CodeDetailsName,
+                'thirdPartyName' => $this->ThirdPartyName,
+                'tradingName' => $this->TradingName,
+                'businessType' => $this->businessType?->CodeDetailsName,
                 'registrationNumber' => $this->RegistrationNumber,
-                'taxPIN'             => $this->TaxPIN,
-                'physicalAddress'    => $this->PhysicalAddress,
-                'website'            => $this->Website,
-                'countryId'          => (string) $this->CountryId,
+                'taxPIN' => $this->TaxPIN,
+                'physicalAddress' => $this->PhysicalAddress,
+                'website' => $this->Website,
+                'countryId' => (string) $this->CountryId,
             ],
             'isPrequalified' => (bool) ($this->supplierMaster?->IsPrequalified ?? false),
-            'supplierId'     => $this->supplierMaster?->SupplierID,
+            'supplierId' => $this->supplierMaster?->SupplierID,
             'approvalStatus' => $this->supplierMaster?->ApprovalStatus,
             'types' => $this->whenLoaded('types', function () {
-                return $this->types->map(fn($t) => [
-                    'id'    => $t->Id,
-                    'code'  => $t->TypeCode,
+                return $this->types->map(fn ($t) => [
+                    'id' => $t->Id,
+                    'code' => $t->TypeCode,
                     'label' => $t->TypeName,
                 ]);
             }, []),

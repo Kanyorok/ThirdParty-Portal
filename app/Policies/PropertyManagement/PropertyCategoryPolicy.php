@@ -36,4 +36,3 @@ class PropertyCategoryPolicy
         return $user->can(PermissionEnum::PropertyCategoryDelete->value);
     }
 }
-

@@ -6,8 +6,6 @@ use App\Models\Core\Locality;
 
 class LocalityService
 {
-
-
     public function __construct(public Locality $locality)
     {
     }

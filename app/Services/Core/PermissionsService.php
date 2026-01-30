@@ -7,5 +7,4 @@ use App\Traits\Services\SpecialPermissionsTrait;
 abstract class PermissionsService
 {
     use SpecialPermissionsTrait;
-
 }

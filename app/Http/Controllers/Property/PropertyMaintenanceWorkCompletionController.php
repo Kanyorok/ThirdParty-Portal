@@ -5,28 +5,29 @@ namespace App\Http\Controllers\Property;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Core\PostingEnum;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\MaintenanceAndIssues\PropertyMaintenanceWorkCompletionRequest;
-use App\Services\Property\MaintenanceAndIssues\PropertyMaintenanceWorkCompletionService;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\PropertyManagement\PropertyMaintenanceAssign;
 use App\Models\PropertyManagement\PropertyMaintenanceWorkCompletion;
+use App\Services\Property\MaintenanceAndIssues\PropertyMaintenanceWorkCompletionService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PropertyMaintenanceWorkCompletionController extends Controller
 {
-    //
     public function index()
     {
         $workCompletions = PropertyMaintenanceWorkCompletion::with('request','finalstatus')->orderBy('Id', 'desc')->get();
         return view('property.maintenanceandissues.workcompletion.index', compact('workCompletions'));
     }
 
-    public function create(){
+    public function create()
+    {
         $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionCreate, PropertyMaintenanceWorkCompletion::class);
-        $assignments = PropertyMaintenanceAssign::where('Status','!=',PostingEnum::Completed)->with('request')->get();
+        $assignments = PropertyMaintenanceAssign::where('Status', '!=', PostingEnum::Completed)->with('request')->get();
         $finalstatus = CodeDetail::where('CodeID', 'FinalStatus')->get();
+
         return view('property.maintenanceandissues.workcompletion.create', compact('assignments', 'finalstatus'));
     }
 
@@ -65,7 +66,6 @@ class PropertyMaintenanceWorkCompletionController extends Controller
         }
 
         return redirect()->route('workcompletion.index')->with('success', 'Work completion created successfully');
-
     }
     public function edit($Id)
     {
@@ -111,6 +111,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
     {
         $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionView, PropertyMaintenanceWorkCompletion::class);
         $workCompletion = PropertyMaintenanceWorkCompletion::with('request', 'finalstatus')->findOrFail($Id);
+
         return view('property.maintenanceandissues.workcompletion.show', compact('workCompletion'));
     }
 

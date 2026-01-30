@@ -12,16 +12,16 @@ use App\Models\Finance\Cheque;
 use App\Models\Finance\ChequeBook;
 use App\Models\Finance\FinanceGLMapping;
 use App\Services\ChequeValidationService;
+use App\Services\Finance\TransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Services\Finance\TransactionService;
 
 class ChequeController extends Controller
 {
-    const CHEQUE_MODULE_ID = 'FIN004';
-    const CASHBOOK_MODULE_ID = 'FIN002';
+    public const CHEQUE_MODULE_ID = 'FIN004';
+    public const CASHBOOK_MODULE_ID = 'FIN002';
 
     protected $validationService;
     protected $transactionService;
@@ -41,11 +41,13 @@ class ChequeController extends Controller
             ->where('Direction', $dir)
             ->orderByDesc('ChequeID');
 
-        if ($status) $q->where('Status', $status);
+        if ($status) {
+            $q->where('Status', $status);
+        }
 
         if ($request->filled('search')) {
             $s = $request->search;
-            $q->where(function($query) use ($s) {
+            $q->where(function ($query) use ($s) {
                 $query->where('ChequeNumber', 'like', "%$s%")
                       ->orWhere('PartyName', 'like', "%$s%")
                       ->orWhere('Amount', 'like', "%$s%")
@@ -54,23 +56,22 @@ class ChequeController extends Controller
         }
 
         $rows = $q->paginate(25);
-        
+
         // Fetch CodeDetails
         $chequeLeafStatuses = CodeDetail::where('CodeID', 'ChequeLeafStatus')
             ->where('IsActive', 1)
             ->orderBy('DisplayOrder')
             ->get();
-            
+
         return view('finance.cheques.index', compact('rows', 'dir', 'status', 'chequeLeafStatuses'));
     }
 
-    // ---------- Create ----------
     public function createIssued()
     {
         $bankAccounts = BankAccount::with('bank')->orderBy('AccountNumber')->get();
         $books = ChequeBook::where('IsActive', 1)->orderByDesc('ChequeBookID')->get();
         $currencies = Currency::orderBy('Name')->get(['Id', 'Code', 'Name', 'DecimalDigits']);
-        
+
         // Fetch CodeDetails
         $chequePartyTypes = CodeDetail::where('CodeID', 'ChequePartyType')
             ->where('IsActive', 1)
@@ -84,17 +85,16 @@ class ChequeController extends Controller
     {
         $bankAccounts = BankAccount::with('bank')->orderBy('AccountNumber')->get(); // for deposit later
         $currencies = Currency::orderBy('Name')->get(['Id', 'Code', 'Name', 'DecimalDigits']);
-        
+
         // Fetch CodeDetails
         $chequePartyTypes = CodeDetail::where('CodeID', 'ChequePartyType')
             ->where('IsActive', 1)
             ->orderBy('DisplayOrder')
             ->get();
-            
+
         return view('finance.cheques.received.create', compact('bankAccounts', 'currencies', 'chequePartyTypes'));
     }
 
-    // ---------- Store ----------
     public function storeIssued(Request $request)
     {
         $request->validate([
@@ -123,14 +123,14 @@ class ChequeController extends Controller
                     ->where('LeafNumber', '>=', $book->NextLeafNumber)
                     ->orderBy('LeafNumber')
                     ->first();
-                if (!$leaf) {
+                if (! $leaf) {
                     return back()->withInput()->withErrors(['ChequeNumber' => 'No unused leaves available in this book.']);
                 }
                 $chequeNumber = $leaf->ChequeNumber;
             } else {
                 $leaf = \App\Models\Finance\ChequeLeaf::where('ChequeBookID', $book->ChequeBookID)
                     ->where('ChequeNumber', $chequeNumber)->lockForUpdate()->first();
-                if (!$leaf) {
+                if (! $leaf) {
                     return back()->withInput()->withErrors(['ChequeNumber' => 'Cheque number not found in this book.']);
                 }
                 if ($leaf->Status !== 'Unused') {
@@ -149,14 +149,14 @@ class ChequeController extends Controller
                             ->where('LeafNumber', '>=', $book->NextLeafNumber)
                             ->orderBy('LeafNumber')
                             ->first();
-                        if (!$leaf) {
+                        if (! $leaf) {
                             return back()->withInput()->withErrors(['ChequeNumber' => 'No unused leaves available in this book.']);
                         }
                         $chequeNumber = $leaf->ChequeNumber;
                     } else {
                         $leaf = \App\Models\Finance\ChequeLeaf::where('ChequeBookID', $book->ChequeBookID)
                             ->where('ChequeNumber', $chequeNumber)->lockForUpdate()->first();
-                        if (!$leaf) {
+                        if (! $leaf) {
                             return back()->withInput()->withErrors(['ChequeNumber' => 'Cheque number not found in this book.']);
                         }
                         if ($leaf->Status !== 'Unused') {
@@ -238,6 +238,7 @@ class ChequeController extends Controller
             return redirect()->route('finance.cheques.show', $row->ChequeID)
                 ->with('success', 'Issued cheque recorded; leaf consumed.');
         });
+
         return DB::transaction(function () use ($request) {
             $book = ChequeBook::lockForUpdate()->findOrFail($request->ChequeBookID);
 
@@ -245,8 +246,6 @@ class ChequeController extends Controller
             $num = (int)preg_replace('/\D/', '', $request->ChequeNumber);
             if ($num < $book->StartNumber || $num > $book->EndNumber) {
                 return back()->withInput()->withErrors(['ChequeNumber' => 'Cheque number is out of book range.']);
-
-
             }
 
             $row = Cheque::create([
@@ -318,73 +317,73 @@ class ChequeController extends Controller
             ->with('success', 'Received cheque recorded (On Hand).');
     }
 
-    // ---------- Show ----------
     public function show($id)
     {
         $row = Cheque::with(['bankAccount.bank', 'chequeBook', 'currency'])->findOrFail($id);
         $amountInWords = $this->numberToWords($row->Amount);
-        
+
         // Fetch CodeDetails for statuses and party types
         $chequeLeafStatuses = CodeDetail::where('CodeID', 'ChequeLeafStatus')
             ->where('IsActive', 1)
             ->orderBy('DisplayOrder')
             ->get()
             ->keyBy('Value'); // Key by Value for easy lookup
-        
+
         $chequePartyTypes = CodeDetail::where('CodeID', 'ChequePartyType')
             ->where('IsActive', 1)
             ->orderBy('DisplayOrder')
             ->get()
             ->keyBy('Value'); // Key by Value for easy lookup
-            
+
         return view('finance.cheques.show', compact('row', 'amountInWords', 'chequeLeafStatuses', 'chequePartyTypes'));
     }
 
-    private function numberToWords($number) {
-        $hyphen      = '-';
+    private function numberToWords($number)
+    {
+        $hyphen = '-';
         $conjunction = ' and ';
-        $separator   = ', ';
-        $negative    = 'negative ';
-        $decimal     = ' point ';
-        $dictionary  = array(
-            0                   => 'zero',
-            1                   => 'one',
-            2                   => 'two',
-            3                   => 'three',
-            4                   => 'four',
-            5                   => 'five',
-            6                   => 'six',
-            7                   => 'seven',
-            8                   => 'eight',
-            9                   => 'nine',
-            10                  => 'ten',
-            11                  => 'eleven',
-            12                  => 'twelve',
-            13                  => 'thirteen',
-            14                  => 'fourteen',
-            15                  => 'fifteen',
-            16                  => 'sixteen',
-            17                  => 'seventeen',
-            18                  => 'eighteen',
-            19                  => 'nineteen',
-            20                  => 'twenty',
-            30                  => 'thirty',
-            40                  => 'forty',
-            50                  => 'fifty',
-            60                  => 'sixty',
-            70                  => 'seventy',
-            80                  => 'eighty',
-            90                  => 'ninety',
-            100                 => 'hundred',
-            1000                => 'thousand',
-            1000000             => 'million',
-            1000000000          => 'billion',
-            1000000000000       => 'trillion',
-            1000000000000000    => 'quadrillion',
-            1000000000000000000 => 'quintillion'
-        );
+        $separator = ', ';
+        $negative = 'negative ';
+        $decimal = ' point ';
+        $dictionary = [
+            0 => 'zero',
+            1 => 'one',
+            2 => 'two',
+            3 => 'three',
+            4 => 'four',
+            5 => 'five',
+            6 => 'six',
+            7 => 'seven',
+            8 => 'eight',
+            9 => 'nine',
+            10 => 'ten',
+            11 => 'eleven',
+            12 => 'twelve',
+            13 => 'thirteen',
+            14 => 'fourteen',
+            15 => 'fifteen',
+            16 => 'sixteen',
+            17 => 'seventeen',
+            18 => 'eighteen',
+            19 => 'nineteen',
+            20 => 'twenty',
+            30 => 'thirty',
+            40 => 'forty',
+            50 => 'fifty',
+            60 => 'sixty',
+            70 => 'seventy',
+            80 => 'eighty',
+            90 => 'ninety',
+            100 => 'hundred',
+            1000 => 'thousand',
+            1000000 => 'million',
+            1000000000 => 'billion',
+            1000000000000 => 'trillion',
+            1000000000000000 => 'quadrillion',
+            1000000000000000000 => 'quintillion',
+        ];
 
-        if (!is_numeric($number)) {
+        if (! is_numeric($number)) {
             return false;
         }
 
@@ -394,6 +393,7 @@ class ChequeController extends Controller
                 'numberToWords only accepts numbers between -' . PHP_INT_MAX . ' and ' . PHP_INT_MAX,
                 E_USER_WARNING
             );
+
             return false;
         }
 
@@ -410,22 +410,25 @@ class ChequeController extends Controller
         switch (true) {
             case $number < 21:
                 $string = $dictionary[$number];
+
                 break;
             case $number < 100:
-                $tens   = ((int) ($number / 10)) * 10;
-                $units  = $number % 10;
+                $tens = ((int) ($number / 10)) * 10;
+                $units = $number % 10;
                 $string = $dictionary[$tens];
                 if ($units) {
                     $string .= $hyphen . $dictionary[$units];
                 }
+
                 break;
             case $number < 1000:
-                $hundreds  = $number / 100;
+                $hundreds = $number / 100;
                 $remainder = $number % 100;
                 $string = $dictionary[$hundreds] . ' ' . $dictionary[100];
                 if ($remainder) {
                     $string .= $conjunction . $this->numberToWords($remainder);
                 }
+
                 break;
             default:
                 $baseUnit = pow(1000, floor(log($number, 1000)));
@@ -436,12 +439,13 @@ class ChequeController extends Controller
                     $string .= $remainder < 100 ? $conjunction : $separator;
                     $string .= $this->numberToWords($remainder);
                 }
+
                 break;
         }
 
         if (null !== $fraction && is_numeric($fraction)) {
             $string .= $decimal;
-            $words = array();
+            $words = [];
             foreach (str_split((string) $fraction) as $number) {
                 $words[] = $dictionary[$number];
             }
@@ -451,12 +455,11 @@ class ChequeController extends Controller
         return $string;
     }
 
-    // ---------- Actions ----------
     // Deposit a RECEIVED cheque -> creates Cashbook RECEIPT (counter = Cheques-On-Hand mapping)
     public function deposit(Request $request, $id)
     {
         $row = Cheque::findOrFail($id);
-        if ($row->Direction !== 'RECEIVED' || !in_array($row->Status, ['OnHand', 'Deposited'])) {
+        if ($row->Direction !== 'RECEIVED' || ! in_array($row->Status, ['OnHand', 'Deposited'])) {
             return back()->with('error', 'Only OnHand received cheques can be deposited.');
         }
 
@@ -468,17 +471,17 @@ class ChequeController extends Controller
         // Mapping: expect CreditGLAccountID to be Cheques-On-Hand (counter CR)
         $map = FinanceGLMapping::where('ModuleID', self::CHEQUE_MODULE_ID)
             ->where('IsActive', 1)
-            ->whereHas('transactions', fn($q) => $q->where('Code', 'CHQ_RECEIVED_DEPOSIT'))
+            ->whereHas('transactions', fn ($q) => $q->where('Code', 'CHQ_RECEIVED_DEPOSIT'))
             ->first();
 
-        if (!$map) {
+        if (! $map) {
             // fallback to cashbook module mapping
             $map = FinanceGLMapping::where('ModuleID', self::CASHBOOK_MODULE_ID)
                 ->where('IsActive', 1)
-                ->whereHas('transactions', fn($q) => $q->where('Code', 'CHQ_RECEIVED_DEPOSIT'))
+                ->whereHas('transactions', fn ($q) => $q->where('Code', 'CHQ_RECEIVED_DEPOSIT'))
                 ->first();
         }
-        if (!$map || !$map->CreditGLAccountID) {
+        if (! $map || ! $map->CreditGLAccountID) {
             return back()->with('error', 'Mapping for CHQ_RECEIVED_DEPOSIT not configured.');
         }
 
@@ -521,8 +524,6 @@ class ChequeController extends Controller
     }
 
     // Clear a cheque:
-    //  - ISSUED -> create Cashbook PAYMENT, counter DR from mapping CHQ_ISSUED_CLEAR
-    //  - RECEIVED -> (already deposited) optionally just mark Cleared, or create a second receipt if you separate deposit vs clear by value date.
     public function clear(Request $request, $id)
     {
         $row = Cheque::with('bankAccount')->findOrFail($id);
@@ -532,7 +533,7 @@ class ChequeController extends Controller
         ]);
 
         if ($row->Direction === 'ISSUED') {
-            if (!in_array($row->Status, ['Issued'])) {
+            if (! in_array($row->Status, ['Issued'])) {
                 return back()->with('error', 'Only Issued cheques can be cleared.');
             }
 
@@ -569,14 +570,13 @@ class ChequeController extends Controller
                 }
 
                 return back()->with('error', 'Transaction posting failed: ' . ($result['message'] ?? 'Unknown error'));
-
             } catch (\Exception $e) {
-                 Log::error('Cheque clearance error', ['id'=>$id, 'error'=>$e->getMessage()]);
-                 return back()->with('error', 'Error clearing cheque: ' . $e->getMessage());
-            }
+                Log::error('Cheque clearance error', ['id' => $id, 'error' => $e->getMessage()]);
 
+                return back()->with('error', 'Error clearing cheque: ' . $e->getMessage());
+            }
         } else { // RECEIVED
-            if (!in_array($row->Status, ['Deposited'])) {
+            if (! in_array($row->Status, ['Deposited'])) {
                 return back()->with('error', 'Only Deposited received cheques can be cleared.');
             }
             // Often, deposit = value date, so just mark cleared
@@ -627,13 +627,14 @@ class ChequeController extends Controller
                 $leaf->save();
             }
         }
+
         return back()->with('error', 'Cheque cannot be bounced in its current state.');
     }
 
     public function cancel($id)
     {
         $row = Cheque::findOrFail($id);
-        if (!in_array($row->Status, ['Draft', 'Issued', 'OnHand'])) {
+        if (! in_array($row->Status, ['Draft', 'Issued', 'OnHand'])) {
             return back()->with('error', 'Only Draft/Issued/OnHand cheques can be cancelled.');
         }
         $row->Status = 'Cancelled';
@@ -670,6 +671,7 @@ class ChequeController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $cheque = Cheque::with(['bankAccount', 'chequeBook', 'currency'])->findOrFail($id);
 
@@ -703,9 +705,9 @@ class ChequeController extends Controller
                     ->log('Rejected Draft Cheque #' . $cheque->ChequeNumber);
 
                 DB::commit();
+
                 return redirect()->route('finance.cheques.index', ['dir' => 'ISSUED'])
                     ->with('success', 'Cheque #' . $cheque->ChequeNumber . ' rejected successfully.');
-
             } elseif ($validated['action_type'] === 'approve') {
                 // Approve and issue the cheque
                 $cheque->update([
@@ -751,27 +753,29 @@ class ChequeController extends Controller
                     // Log the full result for debugging
                     Log::info('Transaction Service Result', [
                         'cheque_id' => $cheque->ChequeID,
-                        'result' => $result
+                        'result' => $result,
                     ]);
 
                     // Check if result is an array and has status key
-                    if (!is_array($result) || !isset($result['status'])) {
+                    if (! is_array($result) || ! isset($result['status'])) {
                         Log::error('Transaction service returned invalid result', [
                             'cheque_id' => $cheque->ChequeID,
                             'payload' => $payload,
-                            'result' => $result
+                            'result' => $result,
                         ]);
+
                         throw new \Exception('Transaction service returned an invalid response. Please check the logs for details.');
                     }
 
-                    if (!in_array($result['status'], ['posted', 'success', 'exists'], true)) {
+                    if (! in_array($result['status'], ['posted', 'success', 'exists'], true)) {
                         $errorMsg = $result['message'] ?? 'Transaction posting failed with unknown status: ' . ($result['status'] ?? 'null');
                         Log::error('Transaction posting failed', [
                             'cheque_id' => $cheque->ChequeID,
                             'payload' => $payload,
-                            'result' => $result
+                            'result' => $result,
                         ]);
-                        throw new \Exception('Failed to record transaction: ' . $errorMsg . 
+
+                        throw new \Exception('Failed to record transaction: ' . $errorMsg .
                             '. Please ensure TransactionTypeID 22 (Cheque Issue) has a GL mapping configured in t_FinanceGLMapping.');
                     }
                 } catch (\Exception $e) {
@@ -780,15 +784,15 @@ class ChequeController extends Controller
                         'cheque_id' => $cheque->ChequeID,
                         'payload' => $payload,
                         'exception' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
+                        'trace' => $e->getTraceAsString(),
                     ]);
-                    
+
                     // Check if it's a mapping error
                     if (strpos($e->getMessage(), 'No active GL mapping') !== false) {
-                        throw new \Exception('GL Mapping Error: ' . $e->getMessage() . 
+                        throw new \Exception('GL Mapping Error: ' . $e->getMessage() .
                             ' Please configure a GL mapping for ModuleID 1100000, TransactionTypeID 22 in t_FinanceGLMapping.');
                     }
-                    
+
                     // Re-throw the original exception
                     throw $e;
                 }
@@ -800,6 +804,7 @@ class ChequeController extends Controller
                     ->log('Issued Cheque #' . $cheque->ChequeNumber);
 
                 DB::commit();
+
                 return redirect()->route('finance.cheques.show', $cheque->ChequeID)
                     ->with('success', 'Cheque #' . $cheque->ChequeNumber . ' issued successfully and transaction recorded.');
             }
@@ -808,8 +813,9 @@ class ChequeController extends Controller
             Log::error('Cheque Issue Failed: ' . $th->getMessage(), [
                 'cheque_id' => $id,
                 'action_type' => $validated['action_type'] ?? null,
-                'trace' => $th->getTraceAsString()
+                'trace' => $th->getTraceAsString(),
             ]);
+
             return back()->with('error', 'Cheque issuance failed: ' . $th->getMessage());
         }
     }

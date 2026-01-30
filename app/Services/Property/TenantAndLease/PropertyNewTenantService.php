@@ -7,13 +7,13 @@ use App\Enums\Core\PermissionEnum;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
-use App\Models\ThirdParty\ThirdPartyUser;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\Finance\FinanceRole;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyType;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\ThirdParties\ThirdPartiesService;
 use App\Services\ThirdParties\ThirdPartyService;
 use Illuminate\Http\UploadedFile;
@@ -37,6 +37,7 @@ class PropertyNewTenantService extends ThirdPartiesService
                 throw new RuntimeException("No finance roles found " . __CLASS__);
             }
             $actor = SystemHelper::user();
+
             return ThirdPartyType::create([
                 'FinanceRole' => $role->FinanceRoleID,
                 'Code' => ThirdPartyService::TypeTenant,
@@ -74,11 +75,12 @@ class PropertyNewTenantService extends ThirdPartiesService
         activity()->causedBy($user->Id)->performedOn($tenant)->event('create')->log("Added New Tenant {$tenant->Id}.");
         $service = new self($tenant);
         $service->addType(self::getType(), PropertyNewTenant::getPrimaryKey(), $tenant->Id, $user);
+
         return $service;
     }
 
     public static function create(
-        string  $name,
+        string $name,
         ?string $tradingName,
         CodeDetail $businessType,
         string $registrationNumber,
@@ -140,9 +142,9 @@ class PropertyNewTenantService extends ThirdPartiesService
     public static function update(
         PropertyNewTenant $propertyNewTenant,
         CodeDetail $TenantType,
-        ?string      $Remarks = null,
-        bool         $IsActive,
-        User         $user,
+        ?string $Remarks = null,
+        bool $IsActive,
+        User $user,
         UploadedFile $document = null
     ): self {
         // Update tenant details
@@ -153,7 +155,7 @@ class PropertyNewTenantService extends ThirdPartiesService
             'ModifiedBy' => $user->Id,
         ]);
 
-        if (!empty($document)) {
+        if (! empty($document)) {
             foreach ($document as $doc) {
                 $propertyNewTenant->newDocument(
                     ModulesEnum::Property,

@@ -3,17 +3,9 @@
 namespace App\Http\Controllers\FleetManagement;
 
 use App\Http\Controllers\Controller;
-use App\Models\FleetManagement\FleetMake;
 use App\Http\Requests\FleetManagement\FleetMakeRequest;
-use App\Http\Requests\FleetManagement\FleetModelRequest;
-use App\Policies\FleetManagement\FleetMakePolicy;
-
+use App\Models\FleetManagement\FleetMake;
 use App\Services\FleetManagement\FleetMakeService;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-
-use Illuminate\Http\Request;
 
 class FleetMakeController extends Controller
 {
@@ -28,15 +20,16 @@ class FleetMakeController extends Controller
     {
         $this->authorize('viewAny', FleetMake::class);
         $fleetMakes = FleetMake::withCount('vehicles')->get();
+
         return view('fleetmanagement.fleetmake.index', compact('fleetMakes'));
-    }  
+    }
 
     public function create()
     {
         $this->authorize('create', FleetMake::class);
+
         return view('fleetmanagement.fleetmake.create');
     }
-
 
     public function store(FleetMakeRequest $request)
     {
@@ -58,11 +51,11 @@ class FleetMakeController extends Controller
         }
     }
 
-
     public function show($id)
     {
         $this->authorize('view', FleetMake::class);
         $fleetMake = FleetMake::findOrFail($id);
+
         return view('fleetmanagement.fleetmake.show', compact('fleetMake'));
     }
 
@@ -81,6 +74,7 @@ class FleetMakeController extends Controller
     {
         $this->authorize('edit', FleetMake::class);
         $fleetMake = FleetMake::findOrFail($id);
+
         return view('fleetmanagement.fleetmake.edit', compact('fleetMake'));
     }
 
@@ -94,5 +88,4 @@ class FleetMakeController extends Controller
             ->route("fleetmake.index")
             ->with('success', 'Fleet Make/Brand deleted successfully.');
     }
-
 }

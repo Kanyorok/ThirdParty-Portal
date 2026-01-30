@@ -286,9 +286,9 @@
                     <div class="modal-body">
                         <p>Are you sure you want to submit this requisition for approval?</p>
                         <div class="mb-3">
-                            <label for="submitRemarks" class="form-label">Remarks</label>
+                            <label for="submitRemarks" class="form-label">Remarks <span class="text-danger">*</span></label>
                             <textarea class="form-control" id="submitRemarks" name="remarks" rows="3" 
-                                      placeholder="Add any additional comments..."></textarea>
+                                      placeholder="Add any additional comments..." required></textarea>
                         </div>
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle"></i> 

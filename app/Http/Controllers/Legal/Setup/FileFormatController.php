@@ -11,6 +11,7 @@ class FileFormatController extends Controller
     public function index()
     {
         $formats = FileFormat::orderBy('Name')->get();
+
         return view('legal.setup.file_formats.index', compact('formats'));
     }
 
@@ -27,6 +28,7 @@ class FileFormatController extends Controller
         ]);
 
         FileFormat::create($validated + ['IsActive' => 1]);
+
         return redirect()->route('legal.setup.file_formats.index')
             ->with('success', 'File Format added successfully.');
     }
@@ -34,6 +36,7 @@ class FileFormatController extends Controller
     public function edit($id)
     {
         $format = FileFormat::findOrFail($id);
+
         return view('legal.setup.file_formats.edit', compact('format'));
     }
 
@@ -47,6 +50,7 @@ class FileFormatController extends Controller
         ]);
 
         $format->update($validated);
+
         return redirect()->route('legal.setup.file_formats.index')
             ->with('success', 'File Format updated successfully.');
     }
@@ -55,6 +59,7 @@ class FileFormatController extends Controller
     {
         $format = FileFormat::findOrFail($id);
         $format->delete();
+
         return back()->with('success', 'File Format deleted.');
     }
 }

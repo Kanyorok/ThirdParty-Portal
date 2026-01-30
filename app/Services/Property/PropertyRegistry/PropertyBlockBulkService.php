@@ -11,7 +11,7 @@ class PropertyBlockBulkService
 {
     /**
      * Process bulk block upload from CSV/Excel data
-     * 
+     *
      * Expected columns:
      * - PropertyID (property Id)
      * - BlockName
@@ -23,7 +23,7 @@ class PropertyBlockBulkService
             'successful' => 0,
             'failed' => 0,
             'errors' => [],
-            'created_blocks' => []
+            'created_blocks' => [],
         ];
 
         foreach ($data as $index => $row) {
@@ -52,12 +52,12 @@ class PropertyBlockBulkService
                 $property = null;
                 if (is_numeric($row['PropertyID'])) {
                     $property = PropertyRegistry::find($row['PropertyID']);
-                    if (!$property) {
+                    if (! $property) {
                         throw new Exception("Error in row " . ($index + 1) . ": PropertyID {$row['PropertyID']} does not exist. Please enter a valid PropertyID.");
                     }
                 } else {
                     $property = PropertyRegistry::where('PropertyCode', $row['PropertyID'])->first();
-                    if (!$property) {
+                    if (! $property) {
                         throw new Exception("Error in row " . ($index + 1) . ": PropertyCode '{$row['PropertyID']}' does not exist. Please enter a valid PropertyCode.");
                     }
                 }
@@ -87,12 +87,11 @@ class PropertyBlockBulkService
 
                 $results['successful']++;
                 $results['created_blocks'][] = $block->Id;
-
             } catch (Exception $e) {
                 $results['failed']++;
                 $results['errors'][] = [
                     'row' => $index + 1,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }

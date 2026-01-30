@@ -50,14 +50,18 @@
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.16",
         "fakerphp/faker": "^1.23",
+        "friendsofphp/php-cs-fixer": "^3.93",
         "kitloong/laravel-migrations-generator": "^7.2",
+        "larastan/larastan": "^3.9",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.26",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.0",
+        "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^11.0.1",
         "roave/security-advisories": "dev-latest",
-        "spatie/laravel-ignition": "^2.4"
+        "spatie/laravel-ignition": "^2.4",
+        "squizlabs/php_codesniffer": "*"
     },
     "autoload": {
         "files": [
@@ -89,7 +93,22 @@
             "@php artisan key:generate --ansi",
             "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
             "@php artisan migrate --graceful --ansi"
-        ]
+        ],
+        "lint": [
+            "@php-cs-fixer",
+            "@phpcs",
+            "@phpstan",
+            "@detect-debug"
+        ],
+        "lint-fix": [
+            "php-cs-fixer fix --config=.php-cs-fixer.dist.php --allow-risky=yes"
+        ],
+        "php-cs-fixer": "php-cs-fixer fix --config=.php-cs-fixer.dist.php --dry-run --diff --allow-risky=yes",
+        "phpcs": "phpcs --standard=phpcs.xml --report=summary",
+        "phpcs-full": "phpcs --standard=phpcs.xml",
+        "phpcbf": "phpcbf --standard=phpcs.xml",
+        "phpstan": "phpstan analyse --memory-limit=2G",
+        "detect-debug": "php scripts/detect-debug-logs.php"
     },
     "extra": {
         "laravel": {

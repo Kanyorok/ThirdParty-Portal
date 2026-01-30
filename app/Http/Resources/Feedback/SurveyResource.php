@@ -15,12 +15,12 @@ class SurveyResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-                'id'          => $this->SurveyID,
-                'Label'       => $this->Label,
+                'id' => $this->SurveyID,
+                'Label' => $this->Label,
                 'Description' => ($this->Notes) ?? '',
-                'Dates'       => [
+                'Dates' => [
                                   'Start' => $this->StartOn?->format('d-m-Y H:i'),
-                                  'End'   => $this->EndOn?->format('d-m-Y H:i'),
+                                  'End' => $this->EndOn?->format('d-m-Y H:i'),
                                  ],
                ];
     }

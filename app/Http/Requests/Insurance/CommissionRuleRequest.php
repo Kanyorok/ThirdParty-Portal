@@ -33,7 +33,8 @@ class CommissionRuleRequest extends FormRequest
                 'string',
                 Rule::unique(BancassuranceCommissionRule::class, 'RuleName')
                     ->ignore($this->route('Id'), 'Id')
-                    ->where(fn($query) => $query
+                    ->where(
+                        fn ($query) => $query
                         ->where('ProductId', $this->ProductId)
                         ->where('PolicyTypeId', $this->PolicyTypeId)
                     ),

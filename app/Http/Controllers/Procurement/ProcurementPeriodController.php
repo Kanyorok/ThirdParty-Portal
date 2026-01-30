@@ -8,7 +8,6 @@ use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-
 class ProcurementPeriodController extends Controller
 {
     /**
@@ -18,6 +17,7 @@ class ProcurementPeriodController extends Controller
     {
         $this->authorize('viewAny', ProcurementPeriod::class);
         $periods = ProcurementPeriod::orderBy('StartDate', 'desc')->get();
+
         return view('procurement.periods.index', compact('periods'));
     }
 
@@ -27,6 +27,7 @@ class ProcurementPeriodController extends Controller
     public function create()
     {
         $this->authorize('create', ProcurementPeriod::class);
+
         return view('procurement.periods.create');
     }
 
@@ -52,6 +53,7 @@ class ProcurementPeriodController extends Controller
         $validated['ProcurementPeriodNumber'] = $prefix . $nextCode;
 
         ProcurementPeriod::create($validated);
+
         return redirect()->route('procurement-periods.index')->with('success', 'Procurement period created.');
     }
 
@@ -63,6 +65,7 @@ class ProcurementPeriodController extends Controller
         $period = ProcurementPeriod::with('Suppliers')->findOrFail($id);
         $this->authorize('view', $period);
         $plans = ProcurementPeriod::with('ProcurementPlans')->findOrFail($id);
+
         return view('procurement.periods.show', compact('period', 'plans'));
     }
 

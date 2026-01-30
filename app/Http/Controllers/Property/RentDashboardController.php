@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
 use App\Models\PropertyManagement\PropertyInvoice;
-use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\PropertyManagement\PropertyRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +26,7 @@ class RentDashboardController extends Controller
             'receipts',
             'lease.property',
             'lease.unit',
-            'lease.tenant.thirdParty'
+            'lease.tenant.thirdParty',
         ]);
 
         if ($request->filled('property_id')) {
@@ -98,7 +98,8 @@ class RentDashboardController extends Controller
             );
         }
 
-        $receiptByMonth = $allocations->groupBy(fn ($r) =>
+        $receiptByMonth = $allocations->groupBy(
+            fn ($r) =>
             Carbon::parse($r->ReceiptDate)->format('Y-m')
         )->map(fn ($g) => $g->sum('AmountAllocated'));
 
@@ -108,7 +109,7 @@ class RentDashboardController extends Controller
             $m => [
                 'invoiced' => $invoiceByMonth->get($m, 0),
                 'collected' => $receiptByMonth->get($m, 0),
-            ]
+            ],
         ]);
 
         $collected = (float) $allocations->sum('AmountAllocated');

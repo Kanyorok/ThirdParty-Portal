@@ -19,6 +19,5 @@ class ReopenTicketEvent
      */
     public function __construct(public Ticket $ticket, public User $actor, public string $reason)
     {
-        //
     }
 }

@@ -3,8 +3,8 @@
 namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\Inventory\ItemMasterList;
 use App\Models\Auth\User;
+use App\Models\Inventory\ItemMasterList;
 
 class ItemMasterListPolicy
 {

@@ -2,14 +2,11 @@
 
 namespace App\Services\Procurement\ProcurementPlan;
 
-use App\Models\Procurement\DepartmentNeed;
-use App\Models\Auth\User;
-use App\Services\Procurement\DepartmentNeedsWorkflow;
 use App\Enums\Procurement\DepartmentNeedsEnum;
-use App\Models\Core\ApprovalLimits;
+use App\Models\Auth\User;
+use App\Models\Procurement\DepartmentNeed;
 use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class DepartmentNeedsService
 {
@@ -41,7 +38,7 @@ class DepartmentNeedsService
             throw new \Exception('A pending need for this item already exists for your department.');
         }
 
-        // Generate NeedID safely 
+        // Generate NeedID safely
         $prefix = 'NEED-';
         $lastNEED = DepartmentNeed::where('NeedID', 'like', $prefix . '%')
             ->orderBy('Id', 'desc')
@@ -49,7 +46,7 @@ class DepartmentNeedsService
         $lastNumber = $lastNEED ? intval(substr($lastNEED->NeedID, strlen($prefix))) : 0;
         $newNEEDNumber = $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
 
-       
+
         try {
             // Create with Pending status - workflow will be initiated immediately
             $departmentNeed = DepartmentNeed::create([
@@ -60,7 +57,7 @@ class DepartmentNeedsService
                 'RequestedQty' => $data['RequestedQty'],
                 'EstimatedUnitCost' => $data['EstimatedUnitCost'],
                 'Justification' => $data['Justification'],
-                'Status' =>  DepartmentNeedsEnum::Pending->value, // Start as sub,iited for approval 
+                'Status' => DepartmentNeedsEnum::Pending->value, // Start as sub,iited for approval
                 'FiscalYear' => $data['FiscalYear'],
                 'PriorityLevel' => $data['PriorityLevel'],
                 'IsEmergency' => $data['IsEmergency'],
@@ -68,8 +65,8 @@ class DepartmentNeedsService
                 'ModifiedBy' => $actor->Id,
                 'RequestedDate' => $data['RequestedDate'],
             ]);
-            
-            
+
+
 
             // Submit to workflow (this creates WorkflowHistory and WorkflowPending)
             $this->workflow->submit(
@@ -77,7 +74,6 @@ class DepartmentNeedsService
                 $actor,
                 DepartmentNeedsEnum::Pending,  // Required: Pending status enum
                 'Submitted for approval'
-
             );
 
             activity()
@@ -86,11 +82,12 @@ class DepartmentNeedsService
                 ->event('create')
                 ->log('Created and submitted Department Need ' . $departmentNeed->NeedID);
 
-            
+
 
             return $departmentNeed;
         } catch (\Exception $e) {
             DB::rollBack();
+
             throw $e;
         }
     }

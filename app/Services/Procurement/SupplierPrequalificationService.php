@@ -3,7 +3,6 @@
 namespace App\Services\Procurement;
 
 use App\Models\Procurement\Prequalification\PrequalificationEvaluation;
-use App\Models\Procurement\Prequalification\PrequalificationSection;
 use Illuminate\Database\Eloquent\Collection;
 
 class SupplierPrequalificationService

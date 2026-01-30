@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FleetManagement\FleetServiceAlertRequest;
-use App\Services\FleetManagement\FleetServiceAlertService;
 use App\Models\Fleet\FleetMaintenanceSchedule;
 use App\Models\Fleet\FleetServiceAlert;
+use App\Services\FleetManagement\FleetServiceAlertService;
 
 class FleetServiceAlertController extends Controller
 {
@@ -38,7 +38,6 @@ class FleetServiceAlertController extends Controller
             ->with('success', 'Service Alert created successfully.');
     }
 
-
     // Complete a service alert
     public function complete(int $id)
     {
@@ -49,7 +48,6 @@ class FleetServiceAlertController extends Controller
             ->with('success', 'Service alert marked as completed.');
     }
 
-
     public function acknowledge(int $scheduleId)
     {
         $this->authorize('acknowledge', FleetServiceAlert::class);
@@ -58,6 +56,4 @@ class FleetServiceAlertController extends Controller
         return redirect()->route('fleet.alerts.index')
             ->with('success', 'Service alert acknowledged successfully.');
     }
-
-
 }

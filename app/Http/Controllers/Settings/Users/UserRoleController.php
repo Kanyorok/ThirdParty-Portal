@@ -9,7 +9,6 @@ use App\Models\Core\Branch;
 use App\Services\Core\ModuleService;
 use App\Services\HRM\UserService;
 use Exception;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -43,7 +42,7 @@ class UserRoleController extends Controller
         /** @var Branch|null $branch */
         $branch = Branch::query()->where('Id', $validated['BranchId'])->first();
 
-        if (!$role instanceof Role) {
+        if (! $role instanceof Role) {
             throw ValidationException::withMessages(['Role' => 'invalid role defined']);
         }
 
@@ -79,7 +78,7 @@ class UserRoleController extends Controller
             $role = Role::query()->where('id', $validated['role_id'])->first();
             $branch = Branch::query()->where('Id', $validated['BranchId'])->first();
 
-            if (!$role instanceof Role) {
+            if (! $role instanceof Role) {
                 throw ValidationException::withMessages(['Role' => 'invalid role defined']);
             }
 
@@ -108,6 +107,7 @@ class UserRoleController extends Controller
             if ($request->ajax()) {
                 return response()->json(['message' => $e->getMessage() ?: 'Server error'], 500);
             }
+
             throw $e;
         }
     }
@@ -121,11 +121,13 @@ class UserRoleController extends Controller
             if (request()->ajax()) {
                 return response()->json(['message' => 'Role assignment deleted successfully.']);
             }
+
             return back()->with('success', 'Role assignment deleted successfully.');
         } catch (Exception $e) {
             if (request()->ajax()) {
                 return response()->json(['message' => 'Failed to delete role assignment.'], 500);
             }
+
             return back()->with('error', 'Failed to delete role assignment.');
         }
     }
@@ -146,12 +148,12 @@ class UserRoleController extends Controller
             ->where('model_type', $validated['model_type'])
             ->where('BranchId', $validated['BranchId']);
 
-        if (!empty($validated['role_id'])) {
+        if (! empty($validated['role_id'])) {
             $query->where('role_id', $validated['role_id']);
         }
 
         $modelRole = $query->first();
-        if (!$modelRole instanceof ModelRole) {
+        if (! $modelRole instanceof ModelRole) {
             return back()->with('error', 'Role assignment not found.');
         }
 
@@ -161,11 +163,13 @@ class UserRoleController extends Controller
             if ($request->ajax()) {
                 return response()->json(['message' => 'Role assignment deleted successfully.']);
             }
+
             return back()->with('success', 'Role assignment deleted successfully.');
         } catch (Exception $e) {
             if ($request->ajax()) {
                 return response()->json(['message' => 'Failed to delete role assignment.'], 500);
             }
+
             return back()->with('error', 'Failed to delete role assignment.');
         }
     }
@@ -190,7 +194,7 @@ class UserRoleController extends Controller
                 ->where('BranchId', $validated['BranchId'])
                 ->first();
 
-            if (!$modelRole instanceof ModelRole) {
+            if (! $modelRole instanceof ModelRole) {
                 return back()->with('error', 'Role assignment not found.');
             }
 
@@ -223,6 +227,7 @@ class UserRoleController extends Controller
             if ($request->ajax()) {
                 return response()->json(['message' => $e->getMessage() ?: 'Server error'], 500);
             }
+
             throw $e;
         }
     }

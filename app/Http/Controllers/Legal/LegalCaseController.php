@@ -21,6 +21,7 @@ class LegalCaseController extends Controller
         $this->authorize(PermissionEnum::DisputeLitigationView, LegalCase::class);
 
         $cases = LegalCase::all();
+
         return view('legal.disputes.index', compact('cases'));
     }
 
@@ -91,9 +92,9 @@ class LegalCaseController extends Controller
                 ->log('Error creating legal case: ' . $th->getMessage());
 
             Log::error('Error creating legal case: ' . $th->getMessage());
+
             return back()->with('error', 'Error creating legal case: ' . $th->getMessage());
         }
-
     }
 
     public function edit($id)
@@ -163,6 +164,7 @@ class LegalCaseController extends Controller
                 ->log('Error updating legal case: ' . $th->getMessage());
 
             Log::error('Error updating legal case: ' . $th->getMessage());
+
             return back()->with('error', 'Error updating legal case: ' . $th->getMessage());
         }
     }
@@ -174,6 +176,7 @@ class LegalCaseController extends Controller
         $case = LegalCase::findOrFail($id);
         $counsels = LegalCaseCounsel::where('LegalCaseID', $id)->get();
         $outcomes = LegalCaseOutcome::where('LegalCaseID', $id)->get();
+
         return view('legal.disputes.show', compact('case', 'outcomes', 'counsels'));
     }
 
@@ -206,6 +209,7 @@ class LegalCaseController extends Controller
                 ->causedBy(Auth::user())
                 ->log('Legal case deleted');
             DB::commit();
+
             return back()->with('success', 'Legal case deleted successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -214,9 +218,8 @@ class LegalCaseController extends Controller
                 ->causedBy(Auth::user())
                 ->log('Error deleting legal case: ' . $th->getMessage());
             Log::error('Error deleting legal case: ' . $th->getMessage());
+
             return back()->with('error', 'Legal case not found.');
         }
-
     }
-
 }

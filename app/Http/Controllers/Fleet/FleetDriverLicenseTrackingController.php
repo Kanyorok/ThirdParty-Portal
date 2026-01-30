@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
+use App\Http\Requests\FleetManagement\FleetDriverLicenseTrackingRequest;
 use App\Models\Fleet\FleetDriver;
 use App\Models\Fleet\FleetDriverLicenseTracking;
 use App\Services\FleetManagement\FleetDriverLicenseTrackingService;
-use App\Http\Requests\FleetManagement\FleetDriverLicenseTrackingRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class FleetDriverLicenseTrackingController extends Controller
 {
@@ -42,7 +42,7 @@ class FleetDriverLicenseTrackingController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'License created successfully.',
-                'license' => $license
+                'license' => $license,
             ]);
         }
 
@@ -54,6 +54,7 @@ class FleetDriverLicenseTrackingController extends Controller
     public function edit($Id)
     {
         $license = FleetDriverLicenseTracking::findOrFail($Id);
+
         return response()->json($license);
     }
 
@@ -68,7 +69,7 @@ class FleetDriverLicenseTrackingController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'License updated successfully.',
-                'license' => $license->fresh()
+                'license' => $license->fresh(),
             ]);
         }
 
@@ -86,7 +87,7 @@ class FleetDriverLicenseTrackingController extends Controller
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'License deleted successfully.'
+                'message' => 'License deleted successfully.',
             ]);
         }
 
@@ -98,6 +99,7 @@ class FleetDriverLicenseTrackingController extends Controller
     public function show($Id)
     {
         $license = FleetDriverLicenseTracking::findOrFail($Id);
+
         return view('fleet.drivers.license-show', compact('license'));
     }
 }

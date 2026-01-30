@@ -3,8 +3,6 @@
 namespace App\Http\Requests\ThirdPartyAuth;
 
 use Illuminate\Foundation\Http\FormRequest;
-// use Illuminate\Validation\Rule;
-use App\Enums\ThirdParty\ThirdPartyTypeEnum;
 
 class LoginThirdPartyRequest extends FormRequest
 {
@@ -16,16 +14,11 @@ class LoginThirdPartyRequest extends FormRequest
     public function rules(): array
     {
         return [
-<<<<<<< HEAD
             'email' => ['required', 'string', 'email:rfc,dns', 'max:255'],
             'password' => ['required', 'string'],
-                \Illuminate\Validation\Rule::in($allowedLabels),
-            ],
-            'email' => 'required|email',
-            'password' => ['required', 'string', Password::min(8)],
->>>>>>> origin/dev
         ];
     }
+
     public function messages(): array
     {
         return [
@@ -34,8 +27,11 @@ class LoginThirdPartyRequest extends FormRequest
             'email.required' => __('auth.email_required'),
             'email.email' => __('auth.invalid_email_format'),
             'password.required' => __('auth.password_required'),
+        ];
+    }
 
     protected function prepareForValidation(): void
+    {
         $this->merge([
             'email' => strtolower(trim($this->email)),
         ]);
