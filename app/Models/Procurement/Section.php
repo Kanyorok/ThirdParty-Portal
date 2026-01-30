@@ -62,7 +62,7 @@ class Section extends Model
 
     public function criteria(): HasMany
     {
-        return $this->hasMany(Criteria::class, 'SectionID', 'Id');
+        return $this->hasMany(Criteria::class, 'SectionID', 'Id')->where('IsActive', true);
     }
 
     public function sectionable()

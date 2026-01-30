@@ -399,11 +399,12 @@ class PrequalificationApplicationController extends Controller
                     'id' => (int) $round->RoundID,
                     'title' => $round->Title,
                     'description' => $round->Description,
-                    'status' => (function($status) {
+                    'status' => (function ($status) {
                         $enum = ($status instanceof \App\Enums\Procurement\PrequalificationRoundEnum) ? $status : \App\Enums\Procurement\PrequalificationRoundEnum::tryFrom((string)$status);
                         if ($enum) {
                             return ['value' => $enum->value, 'label' => $enum->label(), 'badgeClass' => $enum->getBadgeClass()];
                         }
+
                         return ['value' => (string)$status, 'label' => (string)$status];
                     })($round->Status),
                     'startDate' => $round->StartDate ? $round->StartDate->format('Y-m-d') : null,

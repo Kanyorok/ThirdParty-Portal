@@ -48,6 +48,7 @@ class ExpirePrequalificationRounds extends Command
 
         if ($count === 0) {
             $this->info('No expired rounds found.');
+
             return;
         }
 
@@ -56,7 +57,7 @@ class ExpirePrequalificationRounds extends Command
         foreach ($rounds as $round) {
             try {
                 $round->update([
-                    'Status' => PrequalificationRoundEnum::Expired
+                    'Status' => PrequalificationRoundEnum::Expired,
                 ]);
                 $this->info("Expired Round ID: {$round->RoundID} - {$round->Title}");
             } catch (\Exception $e) {
