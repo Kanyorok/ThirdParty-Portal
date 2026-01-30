@@ -7,6 +7,7 @@ enum PrequalificationRoundEnum: string
     case Draft = 'D';
     case Open = 'O';
     case Closed = 'CL';
+    case Expired = 'E';
 
     public function label(): string
     {
@@ -14,6 +15,7 @@ enum PrequalificationRoundEnum: string
             self::Draft => 'Draft Round',
             self::Open => 'Open for Application',
             self::Closed => 'Closed - Applications not Allowed',
+            self::Expired => 'Expired',
         };
     }
 
@@ -23,6 +25,7 @@ enum PrequalificationRoundEnum: string
             self::Draft => 'bg-secondary',
             self::Open => 'bg-success',
             self::Closed => 'bg-warning text-dark',
+            self::Expired => 'bg-danger',
         };
     }
 }

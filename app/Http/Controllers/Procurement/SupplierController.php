@@ -51,11 +51,23 @@ class SupplierController extends Controller
                 ->filter(function ($query) use ($request) {
                     if ($request->filled('search.value')) {
                         $searchValue = $request->input('search.value');
-                        $query->whereHas('party', function ($q) use ($searchValue) {
-                            $q->where(function ($subQ) use ($searchValue) {
-                                $subQ->where('ThirdPartyName', 'like', "%{$searchValue}%")
+                        $query->where(function ($q) use ($searchValue) {
+                            // Search in Party details (Name, Trading Name, Email) and Associated Users (Contacts)
+                            $q->whereHas('party', function ($pq) use ($searchValue) {
+                                $pq->where('ThirdPartyName', 'like', "%{$searchValue}%")
                                     ->orWhere('TradingName', 'like', "%{$searchValue}%")
-                                    ->orWhere('Email', 'like', "%{$searchValue}%");
+                                    ->orWhere('Email', 'like', "%{$searchValue}%")
+                                    ->orWhereHas('users', function ($uq) use ($searchValue) {
+                                        $uq->where('FirstName', 'like', "%{$searchValue}%")
+                                            ->orWhere('LastName', 'like', "%{$searchValue}%")
+                                            ->orWhere('Email', 'like', "%{$searchValue}%")
+                                            ->orWhere(DB::raw("CONCAT(FirstName, ' ', LastName)"), 'like', "%{$searchValue}%");
+                                    });
+                            })
+                            // Search in Assigned Categories
+                            ->orWhereHas('suppliers.category', function ($cq) use ($searchValue) {
+                                $cq->where('CategoryName', 'like', "%{$searchValue}%")
+                                   ->orWhere('Description', 'like', "%{$searchValue}%");
                             });
                         });
                     }

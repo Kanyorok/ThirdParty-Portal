@@ -14,8 +14,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\LicenseVerifyCommand::class,
         \App\Console\Commands\LicenseInfoCommand::class,
         \App\Console\Commands\SeedGrnMappingCommand::class,
-
-
+        \App\Console\Commands\Procurement\ExpirePrequalificationRounds::class,
     ];
 
     // ✅ Define your task scheduling here
@@ -26,6 +25,9 @@ class Kernel extends ConsoleKernel
         $schedule->job(new \App\Jobs\CleanExpiredTokens())->daily();
 
         $schedule->command('trips:start-pending')->everyMinute();
+
+        // Expire prequalification rounds daily
+        $schedule->command('prequalification:expire-rounds')->daily();
     }
 
     // ✅ Register commands from the app/Console/Commands directory
