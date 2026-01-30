@@ -163,7 +163,7 @@
 
                 {{-- ================= DESCRIPTION ================= --}}
                 <div class="mb-4">
-                    <h6 class="section-title">Issue Description</h6>
+                    <h6 class="section-title">Issue Description<span class="text-danger">*</span></h6>
 
                     <textarea name="IssueDescription"
                               class="form-control form-control-sm @error('IssueDescription') is-invalid @enderror"

@@ -35,15 +35,19 @@ class PropertyRateAndPricingRequest extends FormRequest
                 'required',
                 'exists:t_Currencies,Id',
                 function ($attribute, $value, $fail) {
-                    $exists = \DB::table('t_PropertyRateAndPricing')
+                    $query = \DB::table('t_PropertyRateAndPricing')
                         ->where('PropertyId', $this->PropertyId)
                         ->where('BlockId', $this->BlockId)
                         ->where('FloorId', $this->FloorId)
                         ->where('UnitId', $this->UnitId)
-                        ->where('CurrencyId', $value)
-                        ->exists();
+                        ->where('CurrencyId', $value);
 
-                    if ($exists) {
+                    // Exclude current record during update
+                    if ($this->route('Id')) {
+                        $query->where('Id', '!=', $this->route('Id'));
+                    }
+
+                    if ($query->exists()) {
                         $fail('This combination of property, block, floor, unit, and currency already exists.');
                     }
                 },

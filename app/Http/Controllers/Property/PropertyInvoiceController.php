@@ -24,7 +24,7 @@ class PropertyInvoiceController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::PropertyInvoiceView, PropertyInvoice::class);
-        $invoices = PropertyInvoice::all();
+        $invoices = PropertyInvoice::with('tax')->get();
         
         // Map Finance invoices by RequestID (Property-side reads only)
         $requestIds = $invoices->pluck('RequestID')->filter()->unique()->values();
@@ -45,7 +45,8 @@ class PropertyInvoiceController extends Controller
             $fin = $inv->RequestID ? $financeByReq->get($inv->RequestID) : null;
             $paid = $fin ? (float)($fin->AmountPaid ?? 0) : 0.0;
 
-            $inv->DerivedDue = $due;
+            $taxRate = (float)(($inv->tax->Rate ?? 0) / 100);
+            $inv->DerivedDue = $due * $taxRate;
             $inv->DerivedPaid = $paid;
             $inv->DerivedStatus = $due <= 0 ? 'Pending'
                 : ($paid >= $due ? 'Fully Paid' : ($paid > 0 ? 'Partial Paid' : 'Pending'));

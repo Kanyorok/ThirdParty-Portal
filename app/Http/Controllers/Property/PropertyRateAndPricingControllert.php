@@ -115,12 +115,13 @@ class PropertyRateAndPricingControllert extends Controller
         try {
             $pricing = PropertyRateAndPricing::findOrFail($id);
 
+            // Keep the original property, block, floor, and unit (read-only fields)
             PropertyRateAndPricingService::update(
                 $pricing,
-                PropertyRegistry::findOrFail($validated['PropertyId']),
-                PropertyBlock::findOrFail($validated['BlockId']),
-                PropertyFloor::findOrFail($validated['FloorId']),
-                PropertyUnit::findOrFail($validated['UnitId']),
+                PropertyRegistry::findOrFail($pricing->PropertyId),
+                PropertyBlock::findOrFail($pricing->BlockId),
+                PropertyFloor::findOrFail($pricing->FloorId),
+                PropertyUnit::findOrFail($pricing->UnitId),
                 $validated['Rent'],
                 $validated['ParkingFee'],
                 $validated['ServiceCharge'],

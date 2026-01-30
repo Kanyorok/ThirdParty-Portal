@@ -67,7 +67,7 @@ class PropertyLeaseTerminationController extends Controller
     }
 
 
-    public function leaseTerminationLetter($Id)
+public function leaseTerminationLetter($Id)
 {
     $this->authorize(
         PermissionEnum::PropertyLeaseTerminationView,
