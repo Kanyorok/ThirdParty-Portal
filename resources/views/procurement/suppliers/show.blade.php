@@ -36,18 +36,9 @@
         background-color: #dc3545;
     }
 
-    .card {
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
-
-    .table td,
-    .table th {
-        padding: 0.75rem;
-    }
-
-    .table-striped>tbody>tr:nth-of-type(odd)>* {
-        background-color: #f8f9fa;
+    .status-pill.info {
+        background-color: #0dcaf0;
+        color: #212529;
     }
 </style>
 @endsection
@@ -102,10 +93,11 @@
                             $statusClass = $approvalStatus?->getBadgeClass() ?? 'pending';
                             $statusLabel = $approvalStatus?->label() ?? 'Pending';
                             $statusIcon = match($statusLabel) {
-                            'Approved' => 'fas fa-check-circle',
-                            'Pending' => 'fas fa-clock',
-                            'Rejected' => 'fas fa-times-circle',
-                            default => ''
+                                'Approved' => 'fas fa-check-circle',
+                                'Pending' => 'fas fa-clock',
+                                'Rejected', 'Suspended' => 'fas fa-times-circle',
+                                'Submitted' => 'fas fa-paper-plane',
+                                default => 'fas fa-info-circle'
                             };
                             @endphp
                             <span class="status-pill {{ $statusClass }}">
