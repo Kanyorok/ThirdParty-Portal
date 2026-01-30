@@ -307,7 +307,7 @@ class PurchaseOrderController extends Controller
                         }
                     }
                 } catch (\Exception $e) {
-                    Log::warning('Source quantity validation skipped due to error', ['error' => $e->getMessage()]);
+
                 }
             }
 

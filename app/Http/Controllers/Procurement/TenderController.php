@@ -128,7 +128,7 @@ class TenderController extends Controller
         $itemsCategories = PlanLineItem::select('LineItemID', 'PlanID', 'ItemID', 'MergedQty', 'BranchID', 'DepartmentID', 'ProcurementMethod')
             ->with([
                 'item' => function ($query) {
-                    $query->select('Id', 'ItemName');
+                    $query->select('Id', 'ItemName', 'Category');
                 },
                 'procurementMode',
                 'departmentNeed' => function ($q) {
@@ -174,6 +174,10 @@ class TenderController extends Controller
 
             $needId = optional($lineItem->departmentNeed)->NeedID;
 
+            // Resolve top-level category
+            $catId = $item->Category;
+            $topLevelCatId = $categoryToTopLevel[$catId] ?? $catId;
+
             $entry = [
                 'id' => $planId,
                 'planLineItemId' => $lineItem->LineItemID,
@@ -183,6 +187,7 @@ class TenderController extends Controller
                 'usedQty' => $usedQty,
                 'remainingQty' => round($remainingQty, 2), // Round for display
                 'needId' => $needId,
+                'categoryId' => $topLevelCatId,
             ];
 
             $procurementPlansOutput[$planId][] = $entry;
@@ -620,10 +625,17 @@ class TenderController extends Controller
 
     ////before
 
-    public function edit(string $id)
+    public function edit(string $id, Request $request)
     {
         $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
         $tender = Tender::findOrFail($id);
+
+        $validated = $request->validate(
+            [
+            'submission_deadline.after_or_equal' => 'The submission deadline cannot be in the past.',
+            'opening_date.after' => 'The opening date must be after the submission deadline.',
+        ]
+        );
 
         $show = true;
         if (
@@ -681,7 +693,9 @@ class TenderController extends Controller
 
                 // Check if item's top-level category matches tender's category
                 $itemTopCategory = $categoryToTopLevel[$item->Category] ?? $item->Category;
-                if ($itemTopCategory != $tender->ItemCategoryId) {
+
+                // Allow if item is directly in the category OR if item is in a sub-category of the tender category (if tender is root)
+                if ($item->Category != $tender->ItemCategoryId && $itemTopCategory != $tender->ItemCategoryId) {
                     return false;
                 }
 
@@ -718,7 +732,9 @@ class TenderController extends Controller
                 ->filter(function ($item) use ($categoryToTopLevel, $tender, $allowedTypeIds, $checkItemTypes) {
                     // Check if item's top-level category matches tender's category
                     $itemTopCategory = $categoryToTopLevel[$item->Category] ?? $item->Category;
-                    if ($itemTopCategory != $tender->ItemCategoryId) {
+
+                    // Allow if item is directly in the category OR if item is in a sub-category of the tender category (if tender is root)
+                    if ($item->Category != $tender->ItemCategoryId && $itemTopCategory != $tender->ItemCategoryId) {
                         return false;
                     }
 
@@ -1862,15 +1878,6 @@ class TenderController extends Controller
                 }
             }
 
-            // Debug logging
-            // \Log::info('Workflow History Debug', [
-            //     'tender_id' => $tender->Id,
-            //     'has_workflow' => $hasWorkflow,
-            //     'history_count' => $history->count(),
-            //     'current_stage' => $currentStage,
-            //     'pending_count' => $totalPending,
-            //     'completed_count' => $totalCompleted,
-            //     'next_stage' => $nextStage?->StageName ?? 'None',
 
 
             // Fetch additional workflow details

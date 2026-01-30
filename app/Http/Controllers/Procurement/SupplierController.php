@@ -51,11 +51,23 @@ class SupplierController extends Controller
                 ->filter(function ($query) use ($request) {
                     if ($request->filled('search.value')) {
                         $searchValue = $request->input('search.value');
-                        $query->whereHas('party', function ($q) use ($searchValue) {
-                            $q->where(function ($subQ) use ($searchValue) {
-                                $subQ->where('ThirdPartyName', 'like', "%{$searchValue}%")
+                        $query->where(function ($q) use ($searchValue) {
+                            // Search in Party details (Name, Trading Name, Email) and Associated Users (Contacts)
+                            $q->whereHas('party', function ($pq) use ($searchValue) {
+                                $pq->where('ThirdPartyName', 'like', "%{$searchValue}%")
                                     ->orWhere('TradingName', 'like', "%{$searchValue}%")
-                                    ->orWhere('Email', 'like', "%{$searchValue}%");
+                                    ->orWhere('Email', 'like', "%{$searchValue}%")
+                                    ->orWhereHas('users', function ($uq) use ($searchValue) {
+                                        $uq->where('FirstName', 'like', "%{$searchValue}%")
+                                            ->orWhere('LastName', 'like', "%{$searchValue}%")
+                                            ->orWhere('Email', 'like', "%{$searchValue}%")
+                                            ->orWhere(DB::raw("CONCAT(FirstName, ' ', LastName)"), 'like', "%{$searchValue}%");
+                                    });
+                            })
+                            // Search in Assigned Categories
+                            ->orWhereHas('suppliers.category', function ($cq) use ($searchValue) {
+                                $cq->where('CategoryName', 'like', "%{$searchValue}%")
+                                   ->orWhere('Description', 'like', "%{$searchValue}%");
                             });
                         });
                     }
@@ -119,6 +131,40 @@ class SupplierController extends Controller
         }
 
         return view('procurement.suppliers.index');
+    }
+
+    public function search(Request $request)
+    {
+        $term = $request->get('q');
+
+        $query = SupplierMaster::query()
+            ->with('party')
+            ->where('IsPrequalified', true)
+            ->where('ApprovalStatus', \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved);
+
+        if (! empty($term)) {
+            $query->whereHas('party', function ($q) use ($term) {
+                $q->where('ThirdPartyName', 'like', "%{$term}%")
+                  ->orWhere('TradingName', 'like', "%{$term}%")
+                  ->orWhere('RegistrationNumber', 'like', "%{$term}%");
+            });
+        }
+
+        \Illuminate\Support\Facades\Log::info('Supplier Search Term: ' . $term);
+
+        $suppliers = $query->limit(20)->get()->map(function ($supplier) {
+            return [
+                'id' => $supplier->Id,
+                'text' => $supplier->party->ThirdPartyName ?? 'Unknown', // Select2 expects 'text' field
+                'company_name' => $supplier->party->ThirdPartyName ?? 'Unknown',
+                'registration_number' => $supplier->party->RegistrationNumber ?? 'N/A',
+                // Add status for clarity in UI if needed, but Select2 text is simple
+            ];
+        })->values();
+
+        \Illuminate\Support\Facades\Log::info('Supplier Search Result Count: ' . $suppliers->count());
+
+        return response()->json($suppliers);
     }
 
     public function create()
@@ -221,9 +267,15 @@ class SupplierController extends Controller
             // Handle Suspended Toggle Logic
             if ($request->boolean('Suspended')) {
                 $masterData['ApprovalStatus'] = ThirdPartyApprovalStatusEnum::Suspended;
+                // Also deactivate associated ThirdPartyUsers when suspended
+                \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyId', $supplier->Id)
+                    ->update(['IsActive' => false]);
             } elseif ($request->input('ApprovalStatus') === ThirdPartyApprovalStatusEnum::Suspended->value) {
                 // If switch was turned off, default back to Approved or Pending (A or P)
                 $masterData['ApprovalStatus'] = ThirdPartyApprovalStatusEnum::Approved;
+                // Reactivate associated ThirdPartyUsers when unsuspended
+                \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyId', $supplier->Id)
+                    ->update(['IsActive' => true]);
             }
 
             $masterData['ModifiedBy'] = $userId;

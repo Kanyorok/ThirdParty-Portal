@@ -26,7 +26,7 @@ class RFQEvaluationController extends Controller
             // Use unscoped relation consistently and eager-load nested relations for names/sections
             'evaluations.rfqCriteriaUnscoped.criteria',
             'evaluations.rfqCriteriaUnscoped.section',
-            'evaluations.supplier.thirdParty',
+            'evaluations.supplier.thirdParty.thirdParty', // Supplier → SupplierMaster → ThirdParties
         ])->get();
 
         $evaluationsRanked = [];
@@ -40,6 +40,42 @@ class RFQEvaluationController extends Controller
             ->map(function ($rows) {
                 return $rows->pluck('Weight', 'SectionID')->map(fn ($w) => (float)$w)->toArray();
             })->toArray();
+
+        // Build award status per RFQ
+        $awards = \App\Models\Procurement\RFQAward::whereIn('RFQId', $rfqIds)->get()->keyBy('RFQId');
+
+        // Build evaluation completion status per RFQ
+        $rfqAwardStatus = [];
+        foreach ($rfqIds as $rfqId) {
+            // Get accepted committee members for this RFQ
+            $acceptedMembers = RFQCommitteeMember::where('RFQID', $rfqId)
+                ->where('Response', 1)
+                ->pluck('UserID')
+                ->toArray();
+
+            // Get members who have evaluated
+            $evaluatedMembers = RFQEvaluation::where('RFQId', $rfqId)
+                ->pluck('UserCode')
+                ->map(fn ($c) => (int)$c)
+                ->toArray();
+
+            $pendingMembers = array_diff($acceptedMembers, $evaluatedMembers);
+            $allMembersEvaluated = empty($pendingMembers);
+
+            // Get top-ranked supplier for awarding
+            $topSupplier = null;
+            if ($allMembersEvaluated) {
+                // Find highest weighted score supplier for this RFQ from evaluationsRanked later
+            }
+
+            $rfqAwardStatus[$rfqId] = [
+                'allMembersEvaluated' => $allMembersEvaluated,
+                'acceptedCount' => count($acceptedMembers),
+                'evaluatedCount' => count($evaluatedMembers),
+                'award' => $awards[$rfqId] ?? null,
+                'isAwarded' => isset($awards[$rfqId]),
+            ];
+        }
 
         foreach ($rfqEvaluations as $evaluation) {
             $grouped = $evaluation->evaluations->groupBy('SupplierId');
@@ -69,7 +105,8 @@ class RFQEvaluationController extends Controller
                     'supplierId' => $supplierId,
                     'rfq' => $evaluation->rfq,
                     'weightedTotal' => $grandWeightedTotal,
-                    'response' => RFQResponse::where('SupplierId', $supplierId)
+                    'response' => RFQResponse::with(['supplier.thirdParty.thirdParty'])
+                        ->where('SupplierId', $supplierId)
                         ->where('RFQId', $evaluation->RFQId)
                         ->first(),
                 ];
@@ -95,6 +132,7 @@ class RFQEvaluationController extends Controller
             'rfqEvaluations' => $rfqEvaluations,
             'evaluationsRanked' => $finalRanked,
             'rfqSectionWeights' => $rfqSectionWeights,
+            'rfqAwardStatus' => $rfqAwardStatus,
         ]);
     }
 
@@ -271,6 +309,20 @@ class RFQEvaluationController extends Controller
                 return $row;
             })->all();
 
+        // Check committee evaluation status
+        $acceptedMembers = RFQCommitteeMember::where('RFQID', $rfqId)
+            ->where('Response', 1)
+            ->with('user.employee')
+            ->get();
+
+        $evaluatedUserIds = RFQEvaluation::where('RFQId', $rfqId)
+            ->pluck('UserCode')
+            ->map(fn ($code) => (int)$code)
+            ->toArray();
+
+        $pendingMembers = $acceptedMembers->filter(fn ($m) => ! in_array($m->UserID, $evaluatedUserIds));
+        $allMembersEvaluated = $pendingMembers->isEmpty();
+
         $viewData = [
             'rfqId' => $rfqId,
             'rfq' => $rfqEvaluations->first()->rfq ?? null,
@@ -282,6 +334,10 @@ class RFQEvaluationController extends Controller
             'evaluatorCount' => $evaluatorCount,
             'sectionColumns' => $sectionColumns,
             'supplierCriterionAvgScores' => $supplierCriterionAvgScores,
+            'allMembersEvaluated' => $allMembersEvaluated,
+            'acceptedMembersCount' => $acceptedMembers->count(),
+            'evaluatedMembersCount' => count($evaluatedUserIds),
+            'pendingMembers' => $pendingMembers->map(fn ($m) => $m->user?->employee?->full_name ?? $m->user?->Name ?? "User ID: {$m->UserID}")->values()->all(),
         ];
 
         if ($request->boolean('embed')) {
@@ -297,11 +353,41 @@ class RFQEvaluationController extends Controller
             'Comments' => 'nullable|string',
         ]);
 
+        // Check if all accepted committee members have submitted evaluations
+        $acceptedMembers = RFQCommitteeMember::where('RFQID', $rfqId)
+            ->where('Response', 1) // Accepted the appointment
+            ->pluck('UserID')
+            ->toArray();
+
+        $evaluatedMembers = RFQEvaluation::where('RFQId', $rfqId)
+            ->pluck('UserCode')
+            ->map(fn ($code) => (int)$code)
+            ->toArray();
+
+        $pendingMembers = array_diff($acceptedMembers, $evaluatedMembers);
+
+        if (count($pendingMembers) > 0) {
+            // Get names of pending members for the error message
+            $pendingMemberNames = RFQCommitteeMember::where('RFQID', $rfqId)
+                ->whereIn('UserID', $pendingMembers)
+                ->with('user.employee')
+                ->get()
+                ->map(fn ($m) => $m->user?->employee?->full_name ?? $m->user?->Name ?? "User ID: {$m->UserID}")
+                ->join(', ');
+
+            $totalAccepted = count($acceptedMembers);
+            $totalEvaluated = count($evaluatedMembers);
+
+            return back()->with('error', "Cannot award yet. Only {$totalEvaluated} of {$totalAccepted} committee members have completed their evaluations. Pending members: {$pendingMemberNames}");
+        }
+
         $award = \App\Models\Procurement\RFQAward::updateOrCreate(
             ['RFQId' => (int)$rfqId],
             [
                 'SupplierId' => (int)$supplierId,
                 'Comments' => $request->input('Comments'),
+                'AwardStatus' => \App\Models\Procurement\RFQAward::STATUS_PENDING,
+                'AwardDate' => now(),
                 'CreatedBy' => auth()->id(),
                 'CreatedOn' => now(),
                 'ModifiedBy' => auth()->id(),
@@ -309,7 +395,7 @@ class RFQEvaluationController extends Controller
             ]
         );
 
-        // Notify supplier portal API
+        // Initialize workflow for RFQ Award
         try {
             $payload = [
                 'rfqId' => (int)$rfqId,
@@ -366,17 +452,35 @@ class RFQEvaluationController extends Controller
             Log::error('Error sending award email', ['error' => $ex->getMessage(), 'rfqId' => $rfqId, 'supplierId' => $supplierId]);
         }
 
-        return back()->with('success', 'Award saved and supplier notified.');
+        return back()->with('success', 'Award submitted for approval. The award will be finalized once approved.');
     }
 
     public function create()
     {
+        // Get awarded RFQ IDs to exclude from dropdown
+        $awardedRfqIds = \App\Models\Procurement\RFQAward::pluck('RFQId')->toArray();
+
+        // Get RFQ IDs that the current user has already evaluated
+        $employeeId = optional(auth()->user())->EmployeeId ?? optional(auth()->user()?->employee)->Id;
+        $evaluatedRfqIds = RFQEvaluation::where('UserCode', $employeeId)
+            ->pluck('RFQId')
+            ->toArray();
+
+        // Combine both exclusion lists
+        $excludedRfqIds = array_unique(array_merge($awardedRfqIds, $evaluatedRfqIds));
+
         // Load RFQs with sections (from t_Sections) and their criteria (from t_Criterias)
+        // Exclude RFQs that have already been awarded or evaluated by this user
         $rfqs = RFQ::with([
             'sections.section.criteria',
             'rfqResponses.supplier',
             'committeeMembers.user.employee',
-        ])->whereHas('rfqResponses')->get();
+        ])
+            ->whereHas('rfqResponses')
+            ->when(! empty($excludedRfqIds), function ($query) use ($excludedRfqIds) {
+                $query->whereNotIn('Id', $excludedRfqIds);
+            })
+            ->get();
 
         $currencies = config('app.currencies');
 
@@ -449,6 +553,79 @@ class RFQEvaluationController extends Controller
             DB::rollBack();
 
             return back()->with('error', 'Error saving evaluation: ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * Show form to edit an existing evaluation
+     */
+    public function edit($id)
+    {
+        $evaluation = RFQEvaluation::with([
+            'rfq',
+            'evaluations.rfqCriteriaUnscoped.criteria',
+            'evaluations.rfqCriteriaUnscoped.section',
+            'evaluations.supplier.thirdParty',
+        ])->findOrFail($id);
+
+        // Group evaluations by section for the view
+        $groupedEvaluations = $evaluation->evaluations->groupBy(function ($e) {
+            return $e->rfqCriteriaUnscoped?->section?->SectionName ?? 'Uncategorized';
+        });
+
+        // Get section weights
+        $sectionWeights = DB::table('t_RFQSection')
+            ->where('RFQID', $evaluation->RFQId)
+            ->pluck('Weight', 'SectionID')
+            ->toArray();
+
+        return view('procurement.rfqevaluation.edit', compact('evaluation', 'groupedEvaluations', 'sectionWeights'));
+    }
+
+    /**
+     * Update an existing evaluation
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'Evaluations' => 'required|array',
+        ]);
+
+        $evaluation = RFQEvaluation::findOrFail($id);
+
+        // Check if user owns this evaluation
+        $employeeId = optional(auth()->user())->EmployeeId ?? optional(auth()->user()?->employee)->Id;
+        if ((int)$evaluation->UserCode !== (int)$employeeId) {
+            return back()->with('error', 'You can only edit your own evaluations.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            foreach ($request->Evaluations as $evalId => $data) {
+                $score = (int)($data['Score'] ?? 0);
+
+                // Enforce score range
+                if ($score < 1 || $score > 10) {
+                    throw new \Exception("Score must be between 1 and 10.");
+                }
+
+                RFQSupplierResponseEvaluation::where('Id', $evalId)
+                    ->where('RFQEvaluationId', $id)
+                    ->update([
+                        'Score' => $score,
+                        'Comments' => $data['Comments'] ?? null,
+                        'ModifiedBy' => auth()->id(),
+                    ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('evaluations.index')->with('success', 'Evaluation updated successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            return back()->with('error', 'Error updating evaluation: ' . $th->getMessage());
         }
     }
 

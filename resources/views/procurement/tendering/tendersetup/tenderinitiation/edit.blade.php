@@ -74,6 +74,7 @@
                         <label for="submissionDeadline" class="form-label fw-bold">Submission Deadline:</label>
                         <input type="date"
                             value="{{ \Carbon\Carbon::parse($tender->SubmissionDeadline)->format('Y-m-d') }}"
+                            min="{{ date('Y-m-d') }}"
                             class="form-control" id="submissionDeadline" name="submission_deadline" required>
                         @error('submission_deadline')
                         <div class="text-danger">{{ $message }}</div>
@@ -83,6 +84,7 @@
                         <label for="openingDate" class="form-label fw-bold">Opening Date:</label>
                         <input type="date"
                             value="{{ \Carbon\Carbon::parse($tender->OpeningDate)->format('Y-m-d') }}"
+                            min="{{ date('Y-m-d') }}"
                             class="form-control" id="openingDate" name="opening_date" required>
                         @error('opening_date')
                         <div class="text-danger">{{ $message }}</div>

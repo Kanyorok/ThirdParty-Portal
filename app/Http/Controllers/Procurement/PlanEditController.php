@@ -51,6 +51,13 @@ class PlanEditController extends Controller
             $qty = (int)$qty;
             $cost = (float)$cost;
 
+            // Enforce minimum quantity of 1 - if item is not required, user should use Remove option
+            if ($qty < 1) {
+                $errors[] = "Adjust Qty for item '{$item->item->ItemName}' (ID: $id) must be greater than or equal to 1. Use Remove option to exclude items.";
+
+                continue;
+            }
+
             // Enforce upper bound only for non-manual items
             $isManual = strtolower((string)($item->SourceType ?? '')) === 'manual';
             if (! $isManual && $qty > $item->OriginalQTY) {

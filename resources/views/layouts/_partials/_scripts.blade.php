@@ -47,8 +47,8 @@
 <script src="{{ asset('assets/js/icon/custom-font.js') }}"></script>
 <script src="{{ asset('assets/js/plugins/feather.min.js') }}"></script>
 <script src="{{ asset('assets/js/script.js') }}"></script>
-<script src="{{ asset('assets/libs/dataTables/dataTables.min.js') }}"></script>
-<script src="{{ asset('assets/libs/dataTables/bootstrap5.min.js') }}"></script>
+<script src="{{ asset('assets/libs/dataTables/jquery.dataTables.min.js') }}"></script>
+<script src="{{ asset('assets/libs/dataTables/dataTables.bootstrap5.min.js') }}"></script>
 <script src="{{ asset('assets/libs/flatpickr/flatpickr.min.js') }}"></script>
 {{-- Use CDN for Notyf to avoid minification issues --}}
 <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>

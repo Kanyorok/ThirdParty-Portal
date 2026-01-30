@@ -18,6 +18,18 @@
       </div>
     @endif
 
+    @if ($errors->any())
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Please correct the following errors:</strong>
+        <ul class="mb-0 mt-2">
+          @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+          @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    @endif
+
     <form method="POST" action="{{ route('evaluations.store') }}" id="evaluationForm" novalidate>
       @csrf
       @php
@@ -138,34 +150,74 @@
         let isValid = true;
         let errorMessages = [];
 
+        // Check if RFQ is selected
+        const rfqValue = rfqSelect.value;
+        if (!rfqValue) {
+          isValid = false;
+          errorMessages.push('Please select an RFQ number.');
+          rfqSelect.classList.add('is-invalid');
+        } else {
+          rfqSelect.classList.remove('is-invalid');
+        }
+
         // Check if user is assigned to committee
         const committeeMember = committeeMemberInput.value.trim();
         const userId = userIdInput.value.trim();
 
-        if (committeeMember === 'You are not assigned to the committee' || committeeMember === 'Error' || !userId) {
+        if (!committeeMember || committeeMember === 'You are not assigned to the committee' || committeeMember === 'Error' || !userId) {
           isValid = false;
-          errorMessages.push('You are not assigned to the evaluation committee for this RFQ. Please contact your administrator.');
+          errorMessages.push('Committee member information is required. You may not be assigned to the evaluation committee for this RFQ.');
           committeeMemberInput.classList.add('is-invalid');
         } else {
           committeeMemberInput.classList.remove('is-invalid');
         }
 
-        // Check if all score inputs have values
+        // Check if Confirmation checkbox is checked
+        const confirmCheckbox = document.getElementById('confirmCheck');
+        if (!confirmCheckbox.checked) {
+          isValid = false;
+          errorMessages.push('Please confirm that the scoring is done independently and fairly.');
+          confirmCheckbox.classList.add('is-invalid');
+        } else {
+          confirmCheckbox.classList.remove('is-invalid');
+        }
+
+        // Check if all score inputs have values (only if RFQ is selected and has responses)
         const scoreInputs = evaluationFormsContainer.querySelectorAll(
           'input[name^="Evaluations"][name$="[Score]"]');
+        let hasScoreErrors = false;
         scoreInputs.forEach(input => {
           if (!input.value || input.value < 1 || input.value > 10) {
             isValid = false;
+            hasScoreErrors = true;
             input.classList.add('is-invalid');
           } else {
             input.classList.remove('is-invalid');
           }
         });
+        if (hasScoreErrors) {
+          errorMessages.push('Please ensure all scores are between 1 and 10.');
+        }
 
         if (!isValid) {
           event.preventDefault();
-          const errorMessage = errorMessages.length > 0 ? errorMessages.join('\n') : 'Please fill in all required fields and ensure scores are between 1 and 10.';
-          alert(errorMessage);
+          // Show error alert at top of form
+          let alertHtml = '<div class="alert alert-danger alert-dismissible fade show" role="alert" id="validation-error-alert">';
+          alertHtml += '<strong>Please correct the following errors:</strong><ul class="mb-0 mt-2">';
+          errorMessages.forEach(msg => {
+            alertHtml += '<li>' + msg + '</li>';
+          });
+          alertHtml += '</ul><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+          
+          // Remove existing validation alert if any
+          const existingAlert = document.getElementById('validation-error-alert');
+          if (existingAlert) existingAlert.remove();
+          
+          // Insert at top of form
+          form.insertAdjacentHTML('afterbegin', alertHtml);
+          
+          // Scroll to top to show errors
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       });
 

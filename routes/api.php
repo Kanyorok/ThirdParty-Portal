@@ -20,7 +20,6 @@ use App\Http\Controllers\Procurement\TenderInvitationController;
 use App\Http\Controllers\Procurement\ThirdParties\ThirdPartiesController;
 use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 // Token validation (Sanctum) for frontend session checks
@@ -89,123 +88,12 @@ Route::middleware('auth:sanctum')->get('/test-auth', function (Illuminate\Http\R
     ]);
 });
 
-// Test endpoint for debugging (NO AUTH REQUIRED)
-Route::get('/debug/tender-invitations', function (Illuminate\Http\Request $request) {
-    try {
-        $thirdPartyId = $request->query('third_party_id', 1); // Default to ID 1 for testing
 
-        // Get supplier ID from third party ID
-        $supplier = \App\Models\ThirdParies\Supplier::whereHas('thirdParty', function ($query) use ($thirdPartyId) {
-            $query->where('Id', $thirdPartyId);
-        })->first();
 
-        if (! $supplier) {
-            return response()->json([
-                'debug' => 'No supplier found',
-                'third_party_id' => $thirdPartyId,
-                'third_parties_count' => DB::table('t_ThirdParties')->count(),
-                'suppliers_count' => DB::table('t_Suppliers')->count(),
-                'sample_third_party' => DB::table('t_ThirdParties')->first(),
-            ]);
-        }
+//   Route::get('bid-submissions', [\App\Http\Controllers\Procurement\TenderBidResponsivenessController::class, 'getSupplierBids']);
+//         Route::get('bid-submissions/existing', [\App\Http\Controllers\API\Procurement\BidSubmissionApiController::class, 'getExistingBid']);
 
-        // Fetch tender invitations
-        $invitations = \App\Models\Procurement\TenderInvitation::where('SupplierId', $supplier->Id)
-            ->with(['tender.documents'])
-            ->take(5)
-            ->get();
 
-        return response()->json([
-            'debug' => 'Debug endpoint working',
-            'third_party_id' => $thirdPartyId,
-            'supplier_found' => $supplier ? $supplier->Id : null,
-            'invitations_count' => $invitations->count(),
-            'invitations' => $invitations->map(function ($inv) {
-                return [
-                    'InvitationID' => $inv->InvitationID,
-                    'TenderId' => (int)$inv->TenderId,
-                    'ResponseStatus' => strtolower($inv->ResponseStatus),
-                    'tender_title' => $inv->tender ? $inv->tender->Title : 'No tender loaded',
-                    'documents_count' => $inv->tender && $inv->tender->documents ? $inv->tender->documents->count() : 0,
-                    'documents' => $inv->tender && $inv->tender->documents ? $inv->tender->documents->toArray() : [],
-                ];
-            }),
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'debug' => 'Error in debug endpoint',
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-        ]);
-    }
-});
-
-// Auth diagnostic endpoint (REQUIRES AUTH) - Check your authentication status
-Route::get('/debug/auth-status', function (Illuminate\Http\Request $request) {
-    try {
-        $user = Auth::guard('sanctum')->user();
-
-        $response = [
-            'authenticated' => $user !== null,
-            'timestamp' => now()->toDateTimeString(),
-        ];
-
-        if ($user) {
-            $response['user'] = [
-                'id' => $user->Id ?? null,
-                'username' => $user->Username ?? null,
-                'email' => $user->Email ?? null,
-                'class' => get_class($user),
-                'is_third_party_user' => $user instanceof \App\Models\ThirdParty\ThirdPartyUser,
-            ];
-
-            if ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
-                $response['third_party_id'] = $user->ThirdPartyId;
-
-                // Get supplier IDs for this third party
-                $supplierIds = DB::table('t_Suppliers')
-                    ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
-                    ->where('t_SupplierMaster.ThirdPartyId', (int)$user->ThirdPartyId)
-                    ->whereNull('t_Suppliers.DeletedOn')
-                    ->pluck('t_Suppliers.Id')
-                    ->toArray();
-
-                $response['supplier_ids'] = $supplierIds;
-                $response['supplier_count'] = count($supplierIds);
-
-                // Check tender invitations
-                if (! empty($supplierIds)) {
-                    $invitationCount = DB::table('t_TenderInvitations')
-                        ->whereIn('SupplierId', $supplierIds)
-                        ->whereNull('DeletedOn')
-                        ->count();
-                    $response['tender_invitations_count'] = $invitationCount;
-                }
-
-                // Check available tenders
-                $openTendersCount = DB::table('t_Tenders')
-                    ->where('TenderType', 'Open')
-                    ->whereIn('Status', ['pb', 'opening_in_progress'])
-                    ->whereNull('DeletedOn')
-                    ->count();
-                $response['open_tenders_count'] = $openTendersCount;
-            }
-        } else {
-            $response['error'] = 'Not authenticated. Please ensure you have a valid Bearer token.';
-            $response['headers'] = [
-                'authorization' => $request->header('Authorization') ? 'Present (hidden)' : 'Missing',
-            ];
-        }
-
-        return response()->json($response);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => 'Exception occurred',
-            'message' => $e->getMessage(),
-            'trace' => config('app.debug') ? $e->getTraceAsString() : 'Enable debug mode to see trace',
-        ], 500);
-    }
-})->middleware('auth:sanctum');
 
 
 
@@ -370,25 +258,15 @@ Route::prefix('procurement')->name('api.procurement.')
     });
 
 
-// PROTECTED routes for prequalification (submitting applications) - AUTH REQUIRED
-Route::middleware(['web', 'auth:sanctum', \App\Http\Middleware\VerifiedUser::class])
-    ->prefix('prequalification')
-    ->name('api.prequalification.')
-    ->group(function () {
-        Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
-        Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
-        Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
-    });
+
+// NOTE: Prequalification routes are available at /api/procurement/prequalification/...
+// The routes below were removed because 'web' middleware causes HTML responses instead of JSON.
 
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // Admin and Public Routes for Prequalification Periods
 
     // Supplier Routes
 });
-
-
-
-
 
 /***
  *  This Are the API Routes for Central Report Unit C.R.U
