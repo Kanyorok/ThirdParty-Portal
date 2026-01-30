@@ -88,7 +88,8 @@ class PrequalificationEvaluationController extends Controller
                 return [
                     'application_no' => $app->applicationNo,
                     'supplier' => $app->supplier?->party?->ThirdPartyName,
-                    'status' => $app->Status,
+                    // Status is already cast to enum in model, so we can call getLabel() directly
+                    'status' => $app->Status?->getLabel() ?? 'Unknown',
                     'submitted_on' => optional($app->SubmittedOn)->format('Y-m-d'),
                     'total_score' => $res ? number_format($res->TotalScore, 2) : null,
                     'decision' => $decision,

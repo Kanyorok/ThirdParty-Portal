@@ -102,33 +102,111 @@
 </div>
 @endsection
 
-@php
-try {
-    $singlePrequalifyTemplate = route('prequalification.prequalification-evaluation.prequalify.single', [
-        'roundId' => '__RID__',
-        'thirdPartyId' => '__TPID__',
-        'categoryId' => '__CID__',
-    ]);
-} catch (\Throwable $e) {
-    $singlePrequalifyTemplate = '#ROUTE_ERROR';
-}
-@endphp
-
 @section('scripts')
 <script>
-setTimeout(function() {
-    if (typeof jQuery === 'undefined' || typeof jQuery.fn.DataTable === 'undefined') {
-        console.error('Required libraries not loaded');
+// Use document ready instead of setTimeout for reliability
+$(document).ready(function() {
+    // Check if required libraries are loaded
+    if (typeof $.fn.DataTable === 'undefined') {
+        console.error('DataTables library not loaded');
+        alert('DataTables library failed to load. Please refresh the page.');
         return;
     }
     
-    var $ = jQuery;
-    var SINGLE_URL = @json($singlePrequalifyTemplate);
-    var DT_URL = '{{ route('prequalification.prequalification-evaluation.datatable') }}';
-    var BULK_URL = '{{ route('prequalification.prequalification-evaluation.prequalify.bulk', '__RID__') }}';
-    var TOKEN = '{{ csrf_token() }}';
+    // Configuration
+    const DT_URL = '{{ route('prequalification.prequalification-evaluation.datatable') }}';
+    const BULK_URL = '{{ route('prequalification.prequalification-evaluation.prequalify.bulk', ':roundId') }}';
+    const TOKEN = '{{ csrf_token() }}';
+    const EVAL_SHOW_URL = '{{ route('prequalification.prequalification-evaluation.show', ':appId') }}';
+    const PREQUALIFY_SINGLE_URL = '{{ route('prequalification.prequalification-evaluation.prequalify.single', ['roundId' => ':roundId', 'thirdPartyId' => ':thirdPartyId', 'categoryId' => ':categoryId']) }}';
     
-    var pendingDt = $('#pendingTable').DataTable({
+    // Common DataTable configuration
+    const commonConfig = {
+        pageLength: 25,
+        processing: true,
+        language: {
+            processing: '<i class="fas fa-spinner fa-spin fa-2x"></i>',
+            emptyTable: 'No data available',
+            zeroRecords: 'No matching records found',
+            loadingRecords: 'Loading...',
+            info: 'Showing _START_ to _END_ of _TOTAL_ entries',
+            infoEmpty: 'Showing 0 to 0 of 0 entries',
+            infoFiltered: '(filtered from _MAX_ total entries)'
+        },
+        order: [[3, 'desc']]
+    };
+    
+    // Column definitions (shared across all tables)
+    const columns = [
+        { data: 'application_no', name: 'application_no' },
+        { data: 'supplier', name: 'supplier' },
+        { data: 'status', name: 'status' },
+        { 
+            data: 'submitted_on', 
+            name: 'submitted_on',
+            render: function(data) {
+                return data ? data : 'N/A';
+            }
+        },
+        { 
+            data: 'total_score', 
+            name: 'total_score',
+            render: function(data) {
+                return data ? data + '%' : '';
+            }
+        },
+        { 
+            data: 'decision', 
+            name: 'decision',
+            render: function(data) {
+                if (!data) return '';
+                const badgeClass = (data === 'Passed') ? 'bg-success' : 'bg-danger';
+                return `<span class="badge ${badgeClass}">${data}</span>`;
+            }
+        },
+        { 
+            data: null, 
+            name: 'actions',
+            orderable: false,
+            searchable: false,
+            render: function(data, type, row) {
+                const evalUrl = EVAL_SHOW_URL.replace(':appId', row.application_id);
+                const prequalifyUrl = PREQUALIFY_SINGLE_URL
+                    .replace(':roundId', row.round_id)
+                    .replace(':thirdPartyId', row.supplier_id)
+                    .replace(':categoryId', row.category_id);
+                
+                let html = '';
+                
+                // Edit button (only if no decision yet)
+                if (!row.decision) {
+                    html += `<a href="${evalUrl}" class="btn btn-sm btn-warning text-dark me-1" title="Evaluate">
+                        <i class="fas fa-edit"></i>
+                    </a>`;
+                }
+                
+                // Prequalify button logic
+                if (row.prequalify_allowed) {
+                    html += `<form method="POST" action="${prequalifyUrl}" class="d-inline preq-form">
+                        <input type="hidden" name="_token" value="${TOKEN}">
+                        <button type="submit" class="btn btn-sm btn-success" title="Prequalify Supplier">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </form>`;
+                } else {
+                    html += `<span class="btn btn-sm btn-secondary disabled" title="Already Prequalified">
+                        <i class="fas fa-check-circle"></i>
+                    </span>`;
+                }
+                
+                return html;
+            }
+        }
+    ];
+    
+    // Initialize Pending Table
+    const pendingDt = $('#pendingTable').DataTable({
+        ...commonConfig,
         ajax: {
             url: DT_URL,
             type: 'GET',
@@ -136,62 +214,18 @@ setTimeout(function() {
                 d.status = 'pending';
                 d.round_id = $('#round_id').val();
             },
-            dataSrc: 'data'
-        },
-        columns: [
-            { data: 'application_no', name: 'application_no' },
-            { data: 'supplier', name: 'supplier' },
-            { data: 'status', name: 'status' },
-            { 
-                data: 'submitted_on', 
-                name: 'submitted_on',
-                render: function(data, type, row, meta) {
-                    return data ? data : 'N/A';
-                }
-            },
-            { 
-                data: 'total_score', 
-                name: 'total_score',
-                render: function(data, type, row, meta) {
-                    return data ? data + '%' : '';
-                }
-            },
-            { 
-                data: 'decision', 
-                name: 'decision',
-                render: function(data, type, row, meta) {
-                    if (!data) return '';
-                    var cls = (data === 'Passed') ? 'bg-success' : 'bg-danger';
-                    return '<span class="badge ' + cls + '">' + data + '</span>';
-                }
-            },
-            { 
-                data: null, 
-                name: 'actions',
-                orderable: false,
-                searchable: false,
-                render: function(data, type, row, meta) {
-                    var evalUrl = '{{ route('prequalification.prequalification-evaluation.show', '__ID__') }}'.replace('__ID__', row.application_id);
-                    var singleUrl = SINGLE_URL.replace('__RID__', row.round_id).replace('__TPID__', row.supplier_id).replace('__CID__', row.category_id);
-                    var html = '';
-                    if (!row.decision) {
-                        html += '<a href="' + evalUrl + '" class="btn btn-sm btn-warning text-dark me-1"><i class="fas fa-edit"></i></a>';
-                    }
-                    if (row.prequalify_allowed) {
-                        html += '<form method="POST" action="' + singleUrl + '" class="d-inline preq-form">@csrf<button type="submit" class="btn btn-sm btn-success"><i class="fas fa-check"></i></button></form>';
-                    } else {
-                        html += '<span class="btn btn-sm btn-secondary disabled"><i class="fas fa-check-circle"></i></span>';
-                    }
-                    return html;
-                }
+            dataSrc: 'data',
+            error: function(xhr, error, thrown) {
+                console.error('Pending Table Error:', {xhr, error, thrown});
+                alert('Failed to load pending applications. Please try again.');
             }
-        ],
-        pageLength: 25,
-        order: [[3, 'desc']],
-        processing: true
+        },
+        columns: columns
     });
     
-    var passedDt = $('#passedTable').DataTable({
+    // Initialize Passed Table
+    const passedDt = $('#passedTable').DataTable({
+        ...commonConfig,
         ajax: {
             url: DT_URL,
             type: 'GET',
@@ -199,38 +233,18 @@ setTimeout(function() {
                 d.status = 'passed';
                 d.round_id = $('#round_id').val();
             },
-            dataSrc: 'data'
-        },
-        columns: [
-            { data: 'application_no' },
-            { data: 'supplier' },
-            { data: 'status' },
-            { data: 'submitted_on', render: function(d) { return d || 'N/A'; } },
-            { data: 'total_score', render: function(d) { return d ? d + '%' : ''; } },
-            { data: 'decision', render: function(d) { return d ? '<span class="badge ' + (d === 'Passed' ? 'bg-success' : 'bg-danger') + '">' + d + '</span>' : ''; } },
-            { 
-                data: null, 
-                orderable: false,
-                render: function(d, t, row) {
-                    var evalUrl = '{{ route('prequalification.prequalification-evaluation.show', '__ID__') }}'.replace('__ID__', row.application_id);
-                    var singleUrl = SINGLE_URL.replace('__RID__', row.round_id).replace('__TPID__', row.supplier_id).replace('__CID__', row.category_id);
-                    var h = '';
-                    if (!row.decision) h += '<a href="' + evalUrl + '" class="btn btn-sm btn-warning text-dark me-1"><i class="fas fa-edit"></i></a>';
-                    if (row.prequalify_allowed) {
-                        h += '<form method="POST" action="' + singleUrl + '" class="d-inline preq-form">@csrf<button type="submit" class="btn btn-sm btn-success"><i class="fas fa-check"></i></button></form>';
-                    } else {
-                        h += '<span class="btn btn-sm btn-secondary disabled"><i class="fas fa-check-circle"></i></span>';
-                    }
-                    return h;
-                }
+            dataSrc: 'data',
+            error: function(xhr, error, thrown) {
+                console.error('Passed Table Error:', {xhr, error, thrown});
+                alert('Failed to load passed applications. Please try again.');
             }
-        ],
-        pageLength: 25,
-        order: [[3, 'desc']],
-        processing: true
+        },
+        columns: columns
     });
     
-    var failedDt = $('#failedTable').DataTable({
+    // Initialize Failed Table
+    const failedDt = $('#failedTable').DataTable({
+        ...commonConfig,
         ajax: {
             url: DT_URL,
             type: 'GET',
@@ -238,35 +252,13 @@ setTimeout(function() {
                 d.status = 'failed';
                 d.round_id = $('#round_id').val();
             },
-            dataSrc: 'data'
-        },
-        columns: [
-            { data: 'application_no' },
-            { data: 'supplier' },
-            { data: 'status' },
-            { data: 'submitted_on', render: function(d) { return d || 'N/A'; } },
-            { data: 'total_score', render: function(d) { return d ? d + '%' : ''; } },
-            { data: 'decision', render: function(d) { return d ? '<span class="badge ' + (d === 'Passed' ? 'bg-success' : 'bg-danger') + '">' + d + '</span>' : ''; } },
-            { 
-                data: null, 
-                orderable: false,
-                render: function(d, t, row) {
-                    var evalUrl = '{{ route('prequalification.prequalification-evaluation.show', '__ID__') }}'.replace('__ID__', row.application_id);
-                    var singleUrl = SINGLE_URL.replace('__RID__', row.round_id).replace('__TPID__', row.supplier_id).replace('__CID__', row.category_id);
-                    var h = '';
-                    if (!row.decision) h += '<a href="' + evalUrl + '" class="btn btn-sm btn-warning text-dark me-1"><i class="fas fa-edit"></i></a>';
-                    if (row.prequalify_allowed) {
-                        h += '<form method="POST" action="' + singleUrl + '" class="d-inline preq-form">@csrf<button type="submit" class="btn btn-sm btn-success"><i class="fas fa-check"></i></button></form>';
-                    } else {
-                        h += '<span class="btn btn-sm btn-secondary disabled"><i class="fas fa-check-circle"></i></span>';
-                    }
-                    return h;
-                }
+            dataSrc: 'data',
+            error: function(xhr, error, thrown) {
+                console.error('Failed Table Error:', {xhr, error, thrown});
+                alert('Failed to load failed applications. Please try again.');
             }
-        ],
-        pageLength: 25,
-        order: [[3, 'desc']],
-        processing: true
+        },
+        columns: columns
     });
     
     // Reload tables when round selection changes
@@ -276,49 +268,79 @@ setTimeout(function() {
         failedDt.ajax.reload();
     });
     
+    // Bulk Prequalify Form Handler
     $('#bulkPrequalifyForm').on('submit', function(e) {
         e.preventDefault();
-        var rid = $('#round_id').val();
-        if (!rid) { alert('Select round'); return; }
-        var btn = $(this).find('button[type="submit"]');
-        var orig = btn.html();
+        
+        const roundId = $('#round_id').val();
+        if (!roundId) {
+            alert('Please select a round first');
+            return;
+        }
+        
+        if (!confirm('Are you sure you want to bulk prequalify all passed suppliers for this round?')) {
+            return;
+        }
+        
+        const btn = $(this).find('button[type="submit"]');
+        const originalHtml = btn.html();
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+        
         $.ajax({
-            url: BULK_URL.replace('__RID__', rid),
+            url: BULK_URL.replace(':roundId', roundId),
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': TOKEN },
-            success: function(r) {
-                alert(r.message || 'Success');
+            success: function(response) {
+                alert(response.message || 'Suppliers prequalified successfully');
+                // Reload all tables
                 pendingDt.ajax.reload();
                 passedDt.ajax.reload();
                 failedDt.ajax.reload();
             },
-            error: function() { alert('Failed'); },
-            complete: function() { btn.prop('disabled', false).html(orig); }
+            error: function(xhr) {
+                console.error('Bulk prequalify error:', xhr);
+                const message = xhr.responseJSON?.message || 'Failed to prequalify suppliers';
+                alert(message);
+            },
+            complete: function() {
+                btn.prop('disabled', false).html(originalHtml);
+            }
         });
     });
     
+    // Individual Prequalify Form Handler (delegated event)
     $(document).on('submit', '.preq-form', function(e) {
         e.preventDefault();
-        if (!confirm('Prequalify?')) return;
-        var f = $(this);
-        var b = f.find('button');
-        var o = b.html();
-        b.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+        
+        if (!confirm('Are you sure you want to prequalify this supplier for this category?')) {
+            return;
+        }
+        
+        const form = $(this);
+        const btn = form.find('button[type="submit"]');
+        const originalHtml = btn.html();
+        
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+        
         $.ajax({
-            url: f.attr('action'),
+            url: form.attr('action'),
             method: 'POST',
-            headers: { 'X-CSRF-TOKEN': TOKEN },
-            success: function(r) {
-                alert(r.message || 'Success');
+            data: form.serialize(),
+            success: function(response) {
+                alert(response.message || 'Supplier prequalified successfully');
+                // Reload all tables
                 pendingDt.ajax.reload();
                 passedDt.ajax.reload();
                 failedDt.ajax.reload();
             },
-            error: function() { alert('Failed'); b.prop('disabled', false).html(o); }
+            error: function(xhr) {
+                console.error('Single prequalify error:', xhr);
+                const message = xhr.responseJSON?.message || 'Failed to prequalify supplier';
+                alert(message);
+                btn.prop('disabled', false).html(originalHtml);
+            }
         });
     });
-    
-}, 1500);
+});
 </script>
 @endsection
