@@ -411,7 +411,7 @@ class RequisitionsController extends Controller
 
                 $actionText = ucfirst($action) . 'd';
 
-                return redirect()->route('requisition.index')
+                return redirect()->route('requisition.create')
                     ->with('success', "Requisition {$actionText} successfully.");
             } catch (\Exception $e) {
                 DB::rollBack();

@@ -96,14 +96,23 @@
                                         <input type="hidden" name="Comments" value="Awarded via consolidated view">
                                         @php
                                             $isAwarded = $award && $award->SupplierId == $sup['supplier_id'];
-                                            $canAward = $allMembersEvaluated ?? true;
+                                            $hasExistingAward = !empty($award); // Check if ANY award exists
+                                            $canAward = ($allMembersEvaluated ?? true) && !$hasExistingAward;
                                         @endphp
-                                        <button
-                                            class="btn btn-sm {{ $isAwarded ? 'btn-success' : ($canAward ? 'btn-outline-primary' : 'btn-secondary') }}"
-                                            {{ !$canAward && !$isAwarded ? 'disabled' : '' }}
-                                            title="{{ !$canAward && !$isAwarded ? 'All committee members must complete evaluations before awarding' : '' }}">
-                                            {{ $isAwarded ? 'Awarded' : 'Award' }}
-                                        </button>
+                                        @if($isAwarded)
+                                            <span class="badge bg-success">Awarded</span>
+                                        @elseif($hasExistingAward)
+                                            <button class="btn btn-sm btn-secondary" disabled title="RFQ already awarded to another supplier">
+                                                Award
+                                            </button>
+                                        @else
+                                            <button
+                                                class="btn btn-sm {{ $canAward ? 'btn-outline-primary' : 'btn-secondary' }}"
+                                                {{ !$canAward ? 'disabled' : '' }}
+                                                title="{{ !$canAward ? 'All committee members must complete evaluations before awarding' : '' }}">
+                                                Award
+                                            </button>
+                                        @endif
                                     </form>
                                 </td>
                             </tr>

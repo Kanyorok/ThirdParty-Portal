@@ -21,11 +21,17 @@ class BidScoreConsolidationController extends Controller
         $tenderId = $request->get('tender_id');
 
         if (! $tenderId) {
-            // If no tender specified, show only tenders that have passed responsiveness check
+            // If no tender specified, show only tenders that:
+            // 1. Have completed evaluation (submissions with BidStatus = 'evaluated')
+            // 2. Have NOT been awarded yet (no approved TenderAward)
             $tenders = Tender::whereHas('submissions', function ($query) {
                 $query->where('IsResponsive', true)
-                      ->whereIn('BidStatus', ['responsive', 'evaluated']);
+                      ->where('BidStatus', 'evaluated'); // Only show tenders with completed evaluations
             })
+                // Exclude tenders that have approved awards
+                ->whereDoesntHave('awards', function ($query) {
+                    $query->where('AwardStatus', \App\Models\Procurement\TenderAward::STATUS_APPROVED);
+                })
                 ->select('Id', 'Title', 'TenderNo')
                 ->orderByDesc('OpeningDate')
                 ->get();

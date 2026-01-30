@@ -36,9 +36,15 @@ class PrequalificationEvaluationController extends Controller
     {
         try {
             $statusFilter = $request->get('status'); // passed | failed
+            $roundId = $request->get('round_id'); // Filter by specific round
 
             // Modified to show all applications, allowing all authorized users to see suppliers
-            $appsQuery = PrequalificationApplication::with(['result', 'supplier.party', 'category']);
+            $appsQuery = PrequalificationApplication::with(['result', 'supplier.party']);
+
+            // Filter by round if specified
+            if ($roundId) {
+                $appsQuery->where('RoundID', $roundId);
+            }
 
             if ($statusFilter === 'pending') {
                 $appsQuery->doesntHave('result');
@@ -82,7 +88,6 @@ class PrequalificationEvaluationController extends Controller
                 return [
                     'application_no' => $app->applicationNo,
                     'supplier' => $app->supplier?->party?->ThirdPartyName,
-                    'category_name' => $app->category?->CategoryName ?? 'N/A', // Add Category Name
                     'status' => $app->Status,
                     'submitted_on' => optional($app->SubmittedOn)->format('Y-m-d'),
                     'total_score' => $res ? number_format($res->TotalScore, 2) : null,
@@ -100,7 +105,6 @@ class PrequalificationEvaluationController extends Controller
 
             return response()->json(['data' => $data]);
         } catch (\Throwable $e) {
-            Log::error('Prequalification datatable error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
             return response()->json(['data' => [], 'error' => 'Failed to load data'], 200);
         }
@@ -117,10 +121,8 @@ class PrequalificationEvaluationController extends Controller
         // Validate round existence before proceeding to avoid FK violations
         $round = \App\Models\Procurement\Prequalification\PrequalificationRound::find($roundId);
         if (! $round) {
-            Log::warning('Bulk prequalify aborted: Round not found', [
-                'roundId' => $roundId,
-                'userId' => $userId,
-            ]);
+
+
             if (request()->expectsJson()) {
                 return response()->json([
                     'status' => 'error',
@@ -131,8 +133,7 @@ class PrequalificationEvaluationController extends Controller
             return back()->with('error', "Round $roundId not found. Please provide a valid RoundID.");
         }
         // Get applications with passed decision
-        // Eager load supplier to access ThirdPartyId
-        $passedApps = PrequalificationApplication::with(['result', 'supplier'])
+        $passedApps = PrequalificationApplication::with('result')
             ->where('RoundID', $roundId)
             ->whereHas('result', fn ($q) => $q->where('Decision', 'Passed'))
             ->get();
@@ -147,15 +148,11 @@ class PrequalificationEvaluationController extends Controller
 
         DB::transaction(function () use ($passedApps, $roundId, $now, $userId) {
             foreach ($passedApps as $app) {
-                // Resolve ThirdPartyId from SupplierMaster (supplier relationship)
-                $thirdPartyId = $app->supplier?->ThirdPartyId;
-
-
                 // Create category-specific prequalification record
                 DB::table('t_PrequalificationRoundSupplierCategory')->updateOrInsert(
                     [
                         'RoundID' => $roundId,
-                        'ThirdPartyID' => $thirdPartyId, // Corrected from $app->SupplierID
+                        'ThirdPartyID' => $app->SupplierID,
                         'SupplierCategoryID' => $app->CategoryID,
                     ],
                     [
@@ -215,11 +212,7 @@ class PrequalificationEvaluationController extends Controller
                         'CreatedOn' => $now,
                     ]);
                 } catch (\Throwable $e) {
-                    Log::warning('Failed to update category progress (bulk prequalify)', [
-                        'applicationId' => $app->ApplicationID,
-                        'categoryId' => $app->CategoryID,
-                        'error' => $e->getMessage(),
-                    ]);
+
                 }
 
                 // Set application status to Prequalified for the same triplet
@@ -227,10 +220,7 @@ class PrequalificationEvaluationController extends Controller
                     PrequalificationApplication::where('ApplicationID', $app->ApplicationID)
                         ->update(['Status' => PrequalificationApplicationEnum::Prequalified]);
                 } catch (\Throwable $e) {
-                    Log::warning('Failed to set application status Prequalified (bulk)', [
-                        'applicationId' => $app->ApplicationID,
-                        'error' => $e->getMessage(),
-                    ]);
+
                 }
             }
         });
@@ -253,12 +243,7 @@ class PrequalificationEvaluationController extends Controller
         // Validate round existence before proceeding to avoid FK violations
         $round = \App\Models\Procurement\Prequalification\PrequalificationRound::find($roundId);
         if (! $round) {
-            Log::warning('Single prequalify aborted: Round not found', [
-                'roundId' => $roundId,
-                'thirdPartyId' => $thirdPartyId,
-                'categoryId' => $categoryId,
-                'userId' => $userId,
-            ]);
+
             if (request()->expectsJson()) {
                 return response()->json([
                     'status' => 'error',

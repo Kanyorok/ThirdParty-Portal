@@ -460,13 +460,27 @@ class RFQEvaluationController extends Controller
         // Get awarded RFQ IDs to exclude from dropdown
         $awardedRfqIds = \App\Models\Procurement\RFQAward::pluck('RFQId')->toArray();
 
+        // Get RFQ IDs that the current user has already evaluated
+        $employeeId = optional(auth()->user())->EmployeeId ?? optional(auth()->user()?->employee)->Id;
+        $evaluatedRfqIds = RFQEvaluation::where('UserCode', $employeeId)
+            ->pluck('RFQId')
+            ->toArray();
+
+        // Combine both exclusion lists
+        $excludedRfqIds = array_unique(array_merge($awardedRfqIds, $evaluatedRfqIds));
+
         // Load RFQs with sections (from t_Sections) and their criteria (from t_Criterias)
-        // Exclude RFQs that have already been awarded
+        // Exclude RFQs that have already been awarded or evaluated by this user
         $rfqs = RFQ::with([
             'sections.section.criteria',
             'rfqResponses.supplier',
             'committeeMembers.user.employee',
-        ])->whereHas('rfqResponses')->get();
+        ])
+            ->whereHas('rfqResponses')
+            ->when(! empty($excludedRfqIds), function ($query) use ($excludedRfqIds) {
+                $query->whereNotIn('Id', $excludedRfqIds);
+            })
+            ->get();
 
         $currencies = config('app.currencies');
 
