@@ -81,9 +81,11 @@ class PrequalificationEvaluationController extends Controller
                 $supplierActive = (bool)($supplierRow?->Active_Status);   // flag on t_Suppliers
                 $decision = $res?->Decision;
 
-                // Hide prequalify button only if supplier already prequalified for this specific category
-                // Allow both Passed (normal prequalify) and Failed (force prequalify) actions when not yet prequalified
-                $prequalifyAllowed = ! $categoryPrequalified;
+                // Hide prequalify button if:
+                // 1. Supplier is already prequalified for this category, OR
+                // 2. Supplier has NOT been evaluated yet (no decision)
+                $hasBeenEvaluated = !is_null($decision);
+                $prequalifyAllowed = !$categoryPrequalified && $hasBeenEvaluated;
 
                 return [
                     'application_no' => $app->applicationNo,
