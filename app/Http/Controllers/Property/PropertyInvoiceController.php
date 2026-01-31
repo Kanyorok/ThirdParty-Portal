@@ -24,7 +24,7 @@ class PropertyInvoiceController extends Controller
     {
         $this->authorize(PermissionEnum::PropertyInvoiceView, PropertyInvoice::class);
         $invoices = PropertyInvoice::with('tax')->get();
-        
+
         // Map Finance invoices by RequestID (Property-side reads only)
         $requestIds = $invoices->pluck('RequestID')->filter()->unique()->values();
         $financeByReq = collect();

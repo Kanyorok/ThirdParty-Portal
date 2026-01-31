@@ -14,9 +14,9 @@ class RentDashboardController extends Controller
 {
     public function index(Request $request)
     {
-        if (!$request->filled('billing_month')) {
+        if (! $request->filled('billing_month')) {
             $request->merge([
-                'billing_month' => Carbon::now()->format('Y-m')
+                'billing_month' => Carbon::now()->format('Y-m'),
             ]);
         }
 
@@ -81,7 +81,8 @@ class RentDashboardController extends Controller
                 : ($paid > 0 ? 'Partial Paid' : 'Pending');
         });
 
-        $invoiceByMonth = $invoiceCollection->groupBy(fn ($i) =>
+        $invoiceByMonth = $invoiceCollection->groupBy(
+            fn ($i) =>
             Carbon::parse($i->InvoiceDate)->format('Y-m')
         )->map(fn ($g) => $g->sum('DerivedDue'));
 
@@ -114,11 +115,13 @@ class RentDashboardController extends Controller
 
         $collected = (float) $allocations->sum('AmountAllocated');
 
-        $overdue = $invoiceCollection->sum(fn ($i) =>
+        $overdue = $invoiceCollection->sum(
+            fn ($i) =>
             max(($i->DerivedDue ?? 0) - ($i->DerivedPaid ?? 0), 0)
         );
 
-        $partial = $invoiceCollection->sum(fn ($i) =>
+        $partial = $invoiceCollection->sum(
+            fn ($i) =>
             ($i->DerivedPaid > 0 && $i->DerivedPaid < $i->DerivedDue)
                 ? $i->DerivedPaid
                 : 0

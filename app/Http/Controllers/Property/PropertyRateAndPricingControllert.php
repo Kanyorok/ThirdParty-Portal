@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Property;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Property\PropertyRateAndPricingRequest;
 use App\Http\Requests\Property\PropertyRateAndPricingBulkRequest;
+use App\Http\Requests\Property\PropertyRateAndPricingRequest;
 use App\Models\Core\Currency;
 use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Models\PropertyManagement\PropertyBlock;
@@ -13,13 +13,12 @@ use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyRateAndPricing;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyUnit;
-use App\Services\Property\PropertyRateAndPricingService;
 use App\Services\Property\PropertyRateAndPricingBulkService;
-use Illuminate\Http\Request;
+use App\Services\Property\PropertyRateAndPricingService;
 use Log;
-use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PropertyRateAndPricingControllert extends Controller
 {
@@ -175,6 +174,7 @@ class PropertyRateAndPricingControllert extends Controller
     public function bulkCreate()
     {
         $this->authorize(PermissionEnum::PropertyRateAndPricingCreate, PropertyRateAndPricing::class);
+
         return view('property.propertyrateandpricing.bulk-create');
     }
 
@@ -188,14 +188,14 @@ class PropertyRateAndPricingControllert extends Controller
         try {
             $file = $request->file('file');
             $data = Excel::toArray([], $file)[0];
-            
+
             // Extract headers from first row
             $headers = array_shift($data);
-            
+
             // Map data to associative arrays
             $mappedData = [];
             foreach ($data as $row) {
-                if (!empty(array_filter($row))) {
+                if (! empty(array_filter($row))) {
                     $mappedData[] = array_combine($headers, $row);
                 }
             }
@@ -206,10 +206,11 @@ class PropertyRateAndPricingControllert extends Controller
             return redirect()->route('propertyrateandpricing.index')->with([
                 'success' => "Bulk upload completed. {$results['successful']} records created successfully.",
                 'errors' => $results['errors'],
-                'summary' => $results
+                'summary' => $results,
             ]);
         } catch (\Exception $e) {
             Log::error('Error in bulk upload: ' . $e->getMessage());
+
             return back()->withErrors('An error occurred during bulk upload: ' . $e->getMessage());
         }
     }
@@ -226,7 +227,7 @@ class PropertyRateAndPricingControllert extends Controller
             [1, 1, 1, 1, 50000, 3000, 20, 100, 34000, 75, 1],
         ];
 
-        return Excel::download(new class($sampleData, $headers) implements FromArray, WithHeadings {
+        return Excel::download(new class ($sampleData, $headers) implements FromArray, WithHeadings {
             private $data;
             private $headers;
 
@@ -247,6 +248,4 @@ class PropertyRateAndPricingControllert extends Controller
             }
         }, 'PropertyRateAndPricing_Bulk_Template.xlsx');
     }
-
 }
-

@@ -20,6 +20,7 @@ class PropertyMaintananceAssignController extends Controller
     public function index()
     {
         $assignments = PropertyMaintenanceAssign::orderBy('Id', 'desc')->get();
+
         return view('property.maintenanceandissues.assignrequests.index', compact('assignments'));
     }
 

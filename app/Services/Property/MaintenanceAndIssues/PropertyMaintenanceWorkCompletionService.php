@@ -45,7 +45,7 @@ class PropertyMaintenanceWorkCompletionService
             $requestNumber->update([
                 'Status' => PostingEnum::Completed->value,
                 'ModifiedBy' => $user->Id,
-                'ModifiedOn' => now()
+                'ModifiedOn' => now(),
             ]);
         }
 

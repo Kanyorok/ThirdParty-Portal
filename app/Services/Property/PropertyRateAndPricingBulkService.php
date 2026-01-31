@@ -11,13 +11,12 @@ use App\Models\PropertyManagement\PropertyRateAndPricing;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyUnit;
 use Exception;
-use Illuminate\Support\Carbon;
 
 class PropertyRateAndPricingBulkService
 {
     /**
      * Process bulk property rate and pricing upload from CSV/Excel data
-     * 
+     *
      * Expected columns:
      * - PropertyId
      * - BlockId
@@ -37,7 +36,7 @@ class PropertyRateAndPricingBulkService
             'successful' => 0,
             'failed' => 0,
             'errors' => [],
-            'created_pricings' => []
+            'created_pricings' => [],
         ];
 
         foreach ($data as $index => $row) {
@@ -66,12 +65,12 @@ class PropertyRateAndPricingBulkService
                 $property = null;
                 if (is_numeric($row['PropertyId'])) {
                     $property = PropertyRegistry::find($row['PropertyId']);
-                    if (!$property) {
+                    if (! $property) {
                         throw new Exception("Error in row " . ($index + 1) . ": PropertyId {$row['PropertyId']} does not exist. Please enter a valid PropertyId.");
                     }
                 } else {
                     $property = PropertyRegistry::where('PropertyCode', $row['PropertyId'])->first();
-                    if (!$property) {
+                    if (! $property) {
                         throw new Exception("Error in row " . ($index + 1) . ": PropertyCode '{$row['PropertyId']}' does not exist. Please enter a valid PropertyCode.");
                     }
                 }
@@ -80,14 +79,14 @@ class PropertyRateAndPricingBulkService
                 $block = null;
                 if (is_numeric($row['BlockId'])) {
                     $block = PropertyBlock::where('PropertyID', $property->Id)->find($row['BlockId']);
-                    if (!$block) {
+                    if (! $block) {
                         throw new Exception("Error in row " . ($index + 1) . ": BlockId {$row['BlockId']} does not exist in Property {$row['PropertyId']}. Please enter a valid BlockId.");
                     }
                 } else {
                     $block = PropertyBlock::where('BlockName', $row['BlockId'])
                         ->where('PropertyID', $property->Id)
                         ->first();
-                    if (!$block) {
+                    if (! $block) {
                         throw new Exception("Error in row " . ($index + 1) . ": Block '{$row['BlockId']}' does not exist in Property {$row['PropertyId']}. Please enter a valid BlockName.");
                     }
                 }
@@ -96,14 +95,14 @@ class PropertyRateAndPricingBulkService
                 $floor = null;
                 if (is_numeric($row['FloorId'])) {
                     $floor = PropertyFloor::where('BlockID', $block->Id)->find($row['FloorId']);
-                    if (!$floor) {
+                    if (! $floor) {
                         throw new Exception("Error in row " . ($index + 1) . ": FloorId {$row['FloorId']} does not exist in Block {$row['BlockId']}. Please enter a valid FloorId.");
                     }
                 } else {
                     $floor = PropertyFloor::where('FloorLabel', $row['FloorId'])
                         ->where('BlockID', $block->Id)
                         ->first();
-                    if (!$floor) {
+                    if (! $floor) {
                         throw new Exception("Error in row " . ($index + 1) . ": Floor '{$row['FloorId']}' does not exist in Block {$row['BlockId']}. Please enter a valid FloorLabel.");
                     }
                 }
@@ -112,14 +111,14 @@ class PropertyRateAndPricingBulkService
                 $unit = null;
                 if (is_numeric($row['UnitId'])) {
                     $unit = PropertyUnit::where('FloorID', $floor->Id)->find($row['UnitId']);
-                    if (!$unit) {
+                    if (! $unit) {
                         throw new Exception("Error in row " . ($index + 1) . ": UnitId {$row['UnitId']} does not exist in Floor {$row['FloorId']}. Please enter a valid UnitId.");
                     }
                 } else {
                     $unit = PropertyUnit::where('UnitCode', $row['UnitId'])
                         ->where('FloorID', $floor->Id)
                         ->first();
-                    if (!$unit) {
+                    if (! $unit) {
                         throw new Exception("Error in row " . ($index + 1) . ": Unit '{$row['UnitId']}' does not exist in Floor {$row['FloorId']}. Please enter a valid UnitCode.");
                     }
                 }
@@ -128,12 +127,12 @@ class PropertyRateAndPricingBulkService
                 $currency = null;
                 if (is_numeric($row['CurrencyId'])) {
                     $currency = Currency::find($row['CurrencyId']);
-                    if (!$currency) {
+                    if (! $currency) {
                         throw new Exception("Error in row " . ($index + 1) . ": CurrencyId {$row['CurrencyId']} does not exist. Please enter a valid CurrencyId.");
                     }
                 } else {
                     $currency = Currency::where('CurrencyCode', $row['CurrencyId'])->first();
-                    if (!$currency) {
+                    if (! $currency) {
                         throw new Exception("Error in row " . ($index + 1) . ": Currency '{$row['CurrencyId']}' does not exist. Please enter a valid Currency code.");
                     }
                 }
@@ -142,12 +141,12 @@ class PropertyRateAndPricingBulkService
                 $tax = null;
                 if (is_numeric($row['TaxId'])) {
                     $tax = FinanceTaxRuleConfiguration::find($row['TaxId']);
-                    if (!$tax) {
+                    if (! $tax) {
                         throw new Exception("Error in row " . ($index + 1) . ": TaxId {$row['TaxId']} does not exist. Please enter a valid TaxId.");
                     }
                 } else {
                     $tax = FinanceTaxRuleConfiguration::where('TaxName', $row['TaxId'])->first();
-                    if (!$tax) {
+                    if (! $tax) {
                         throw new Exception("Error in row " . ($index + 1) . ": Tax '{$row['TaxId']}' does not exist. Please enter a valid Tax name.");
                     }
                 }
@@ -155,7 +154,7 @@ class PropertyRateAndPricingBulkService
                 // Validate numeric fields
                 $numeric_fields = ['Rent', 'ParkingFee', 'ServiceCharge', 'OtherCharges', 'DepositAmount'];
                 foreach ($numeric_fields as $field) {
-                    if (!is_numeric($row[$field])) {
+                    if (! is_numeric($row[$field])) {
                         throw new Exception("Error in row " . ($index + 1) . ": $field must be a numeric value, got '{$row[$field]}'.");
                     }
                     $row[$field] = (float)$row[$field];
@@ -197,7 +196,7 @@ class PropertyRateAndPricingBulkService
                 $results['failed']++;
                 $results['errors'][] = [
                     'row' => $index + 1,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
