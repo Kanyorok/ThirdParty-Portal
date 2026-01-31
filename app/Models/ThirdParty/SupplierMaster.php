@@ -40,7 +40,6 @@ class SupplierMaster extends Model
 
     public static function getPrimaryKey(): string
     {
-        // return 'SupplierId';
         return 'SupplierMasterId';
     }
 

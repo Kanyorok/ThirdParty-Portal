@@ -179,16 +179,12 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
 
     public function isActive(): bool
     {
-        // return (bool)$this->IsActive();
-        // User must be explicitly active AND have a verified email
         return (bool)$this->IsActive && ! is_null($this->EmailVerifiedOn);
     }
 
     public function isApproved(): bool
     {
-        // Treat null as false, 1/true as true
-        // return (bool) $this->IsApproved;
-        return true;
+        return (bool) ($this->IsApproved ?? false);
     }
 
     public function isSupplier(): bool
@@ -277,8 +273,6 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
             <p><small>If you're having trouble clicking the \"Reset Password\" button, copy and paste the URL below into your web browser: <a href='{$url}'>{$url}</a></small></p>
         ";
 
-        // System actor as sender
-        // $actor = User::find(1);
         $actor = \App\Models\Auth\User::where('Id', 1)->first() ?? \App\Models\Auth\User::first();
 
         if ($actor) {
