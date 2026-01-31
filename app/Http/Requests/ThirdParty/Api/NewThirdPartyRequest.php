@@ -37,7 +37,7 @@ class NewThirdPartyRequest extends FormRequest
             'TaxPIN' => ['nullable', 'string', 'max:200'],
             'VATNumber' => ['nullable', 'string', 'max:200'],
             'Email' => ['nullable', 'email', 'max:250'],
-            'Phone' => ['required', (new Phone)->countryField('Country')],
+            'Phone' => ['required', (new Phone())->countryField('Country')],
             'PhysicalAddress' => ['nullable', 'string', 'max:200'],
             'types' => ['required', 'array', 'min:1'],
             'logo' => ['nullable', Rule::imageFile()->max(9000)],
@@ -63,16 +63,16 @@ class NewThirdPartyRequest extends FormRequest
             'supplier_category_id' => [
                 'nullable',
                 Rule::requiredIf($isSupplier),
-                Rule::exists('t_SupplierCategories', 'SupplierCategoryID')
+                Rule::exists('t_SupplierCategories', 'SupplierCategoryID'),
             ],
             'user_DateOfBirth' => ['nullable', Rule::requiredIf($isCustomer), 'date'],
             'user_MaritalStatus' => ['nullable', Rule::requiredIf($isCustomer), 'string'],
             'user_Occupation' => ['nullable', Rule::requiredIf($isCustomer), 'string'],
             'user_Remarks' => [
                 'nullable',
-                Rule::requiredIf($isTenant), 
+                Rule::requiredIf($isTenant),
                 'string',
-                'max:500'
+                'max:500',
             ],
         ];
     }
@@ -115,7 +115,7 @@ class NewThirdPartyRequest extends FormRequest
     {
         $location = $country->localities()->find($this->validated('Location'));
 
-        if (!$location) {
+        if (! $location) {
             throw ValidationException::withMessages(['Location' => 'Location is not a valid location for the selected country.']);
         }
 

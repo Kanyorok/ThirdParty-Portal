@@ -19,7 +19,7 @@ class LookupController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data' => $options
+            'data' => $options,
         ]);
     }
 
@@ -37,14 +37,14 @@ class LookupController extends Controller
             ->orderBy('DisplayOrder')
             ->get(['CodeID', 'Value', 'Description'])
             ->groupBy('CodeID')
-            ->map(fn($group) => $group->map(fn($item) => [
+            ->map(fn ($group) => $group->map(fn ($item) => [
                 'Value' => $item->Value,
-                'Description' => $item->Description
+                'Description' => $item->Description,
             ]));
 
         return response()->json([
             'status' => 'success',
-            'data' => $data
+            'data' => $data,
         ]);
     }
 }

@@ -26,7 +26,7 @@ class PreqApplicationController extends Controller
         try {
             $user = Auth::user();
 
-            if (!$user) {
+            if (! $user) {
                 return $this->errorResponse('Unauthenticated', 401);
             }
 
@@ -105,7 +105,7 @@ class PreqApplicationController extends Controller
                     'categories' => $categories,
                     'supplier_eligible' => $supplierEligible,
                     'can_apply' => $supplierEligible
-                        && !$isExpired
+                        && ! $isExpired
                         && $round->Status === PrequalificationRoundEnum::Open,
                 ];
             })->values();
@@ -129,13 +129,13 @@ class PreqApplicationController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return $this->errorResponse('Unauthenticated', 401);
         }
 
         $supplierMaster = SupplierMaster::where('ThirdPartyId', $user->third_party_id)->first();
 
-        if (!$supplierMaster) {
+        if (! $supplierMaster) {
             return $this->errorResponse('No supplier profile found', 400);
         }
 
@@ -153,7 +153,7 @@ class PreqApplicationController extends Controller
                 ->all();
 
             $existingSet = array_flip(array_map('intval', $existing));
-            $toCreate = array_values(array_filter($categoryIds, fn ($cid) => !isset($existingSet[$cid])));
+            $toCreate = array_values(array_filter($categoryIds, fn ($cid) => ! isset($existingSet[$cid])));
 
             $ids = [];
 

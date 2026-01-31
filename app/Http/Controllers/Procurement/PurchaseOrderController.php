@@ -975,6 +975,7 @@ class PurchaseOrderController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to fetch Contract Items: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch Contract Items',
@@ -1011,6 +1012,7 @@ class PurchaseOrderController extends Controller
                 ->orWhereNull('ParentID')
                 ->select('Id', 'Name')
                 ->get();
+
             return response()->json(['success' => true, 'data' => $categories]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'data' => []]);

@@ -21,7 +21,7 @@ class ThirdPartyUserResource extends JsonResource
             'imageId' => $this->ImageId,
             'thirdPartyId' => $this->ThirdPartyId,
             'isActive' => (bool) $this->IsActive,
-            'emailVerified' => !is_null($this->EmailVerifiedOn),
+            'emailVerified' => ! is_null($this->EmailVerifiedOn),
             'emailVerifiedOn' => $this->EmailVerifiedOn?->toDateTimeString(),
             'isSupplier' => (bool) $this->isSupplier(),
             'isTenant' => (bool) $this->isTenant(),

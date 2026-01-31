@@ -95,13 +95,13 @@ class RequisitionItemsController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
-        
+
         $items = $this->itemService->getItemByType($type, $requisitionId);
-        
+
         Log::info('Items fetched from service', [
             'count' => is_countable($items) ? count($items) : 'not countable',
             'type' => gettype($items),
-            'first_item' => $items ? (is_array($items) || $items instanceof \Illuminate\Support\Collection ? $items[0] ?? null : $items) : null
+            'first_item' => $items ? (is_array($items) || $items instanceof \Illuminate\Support\Collection ? $items[0] ?? null : $items) : null,
         ]);
     }
 
@@ -494,6 +494,7 @@ class RequisitionItemsController extends Controller
     public function index()
     {
         $this->authorize('viewAny', RequisitionLine::class);
+
         try {
             $details = $this->service->getRequisitionPriorityList();
 

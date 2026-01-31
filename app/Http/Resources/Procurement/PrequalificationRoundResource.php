@@ -37,8 +37,8 @@ class PrequalificationRoundResource extends JsonResource
             'criteria' => PrequalificationCriteriaResource::collection($this->whenLoaded('criteria')),
             'applications' => PrequalificationApplicationResource::collection($this->whenLoaded('applications')),
 
-            'applicationId' => $this->when(isset($this->applicationId), fn() => $this->applicationId),
-            'hasApplied' => $this->when(isset($this->applicationId), fn() => (bool)$this->applicationId),
+            'applicationId' => $this->when(isset($this->applicationId), fn () => $this->applicationId),
+            'hasApplied' => $this->when(isset($this->applicationId), fn () => (bool)$this->applicationId),
         ];
     }
 }

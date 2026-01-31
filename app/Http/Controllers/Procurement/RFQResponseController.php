@@ -3,17 +3,16 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Core\Currency;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\RFQResponseItem;
 use App\Models\ThirdParies\Supplier;
-use App\Models\Core\Currency;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Carbon;
 
 class RFQResponseController extends Controller
 {
@@ -157,6 +156,7 @@ class RFQResponseController extends Controller
     public function show($id)
     {
         $rfqResponse = RFQResponse::with(['rfq', 'items'])->findOrFail($id);
+
         return view('procurement.rfqresponses.show', compact('rfqResponse'));
     }
 
@@ -217,7 +217,7 @@ class RFQResponseController extends Controller
             return response()->json(['error' => 'No RFQ lines found'], 404);
         }
 
-        $items = $rfqLines->map(fn($line) => [
+        $items = $rfqLines->map(fn ($line) => [
             'id' => $line->Id,
             'ItemName' => $line->ItemName,
             'Quantity' => $line->Quantity,
@@ -244,9 +244,9 @@ class RFQResponseController extends Controller
         }
 
         $suppliers = $query->select(
-                's.Id',
-                DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName) as SupplierName")
-            )
+            's.Id',
+            DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName) as SupplierName")
+        )
             ->get();
 
         return response()->json($suppliers);
@@ -294,7 +294,7 @@ class RFQResponseController extends Controller
                 'status' => $existing->Status,
                 'submittedOn' => $existing->created_at ? $existing->created_at->toISOString() : null,
             ],
-            'items' => $existing->items->map(fn($it) => [
+            'items' => $existing->items->map(fn ($it) => [
                 'name' => $it->ItemName,
                 'uom' => $it->UOM,
                 'quantity' => (float)$it->Quantity,

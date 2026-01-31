@@ -11,16 +11,16 @@ class ApplicationResource extends JsonResource
     {
         return [
             'ApplicationID' => $this->ApplicationID,
-            'SupplierID'    => $this->SupplierID,
-            'RoundID'       => $this->RoundID,
-            'CategoryID'    => $this->CategoryID,
-            'Status'        => $this->Status,
-            'CategoryName'  => $this->category?->CategoryName,
-            'Documents'     => $this->documents->map(fn($doc) => [
-                'Id'          => $doc->Id,
+            'SupplierID' => $this->SupplierID,
+            'RoundID' => $this->RoundID,
+            'CategoryID' => $this->CategoryID,
+            'Status' => $this->Status,
+            'CategoryName' => $this->category?->CategoryName,
+            'Documents' => $this->documents->map(fn ($doc) => [
+                'Id' => $doc->Id,
                 'Description' => $doc->Description,
-                'FileName'    => $doc->dmsDocument?->FileName,
-                'Url'         => asset('storage/' . $doc->dmsDocument?->FilePath),
+                'FileName' => $doc->dmsDocument?->FileName,
+                'Url' => asset('storage/' . $doc->dmsDocument?->FilePath),
             ]),
         ];
     }

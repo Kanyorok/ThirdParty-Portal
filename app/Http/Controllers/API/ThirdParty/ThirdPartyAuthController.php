@@ -66,7 +66,7 @@ class ThirdPartyAuthController extends Controller
                 ]);
             }
 
-            if (!$user->isActive()) {
+            if (! $user->isActive()) {
                 return response()->json([
                     'success' => false,
                     'message' => __('auth.account_inactive'),
@@ -93,6 +93,7 @@ class ThirdPartyAuthController extends Controller
             throw $e;
         } catch (\Exception $e) {
             Log::error('Login Exception', ['message' => $e->getMessage()]);
+
             return response()->json([
                 'message' => __('auth.login_failed'),
                 'error' => config('app.debug') ? $e->getMessage() : null,
@@ -131,6 +132,7 @@ class ThirdPartyAuthController extends Controller
 
                 return response()->json(['message' => __('auth.logout_successful')]);
             }
+
             return response()->json(['message' => __('auth.not_authenticated')], 401);
         } catch (\Exception $e) {
             return response()->json([
@@ -181,14 +183,14 @@ class ThirdPartyAuthController extends Controller
         if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => "Not Authorized"
+                'message' => "Not Authorized",
             ], 401);
         }
 
         if ($user->hasVerifiedEmail()) {
             return response()->json([
                 'success' => false,
-                'message' =>"Email already verified!"
+                'message' => "Email already verified!",
             ], 400);
         }
 
@@ -196,7 +198,7 @@ class ThirdPartyAuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Email Verification Resent Successfully!"
+            'message' => "Email Verification Resent Successfully!",
         ], 200);
     }
 

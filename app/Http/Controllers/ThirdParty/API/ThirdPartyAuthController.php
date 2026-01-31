@@ -2,22 +2,22 @@
 
 namespace App\Http\Controllers\ThirdParty\API;
 
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\ThirdParty\ThirdPartyUser;
-use App\Models\ThirdParty\SupplierMaster;
-use App\Models\PropertyManagement\PropertyNewTenant;
-use App\Models\Insurance\BancassuranceCustomer;
 use App\Http\Requests\ThirdParty\Api\LoginThirdPartyRequest;
 use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
+use App\Http\Requests\ThirdParty\ResetPasswordRequest;
 use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
+use App\Models\Insurance\BancassuranceCustomer;
+use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\ThirdParty\SupplierMaster;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\RegistrationService;
-use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
-use App\Http\Requests\ThirdParty\ResetPasswordRequest;
 
 class ThirdPartyAuthController extends Controller
 {

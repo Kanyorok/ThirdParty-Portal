@@ -32,7 +32,7 @@ class WorkflowStagesController extends Controller
             Log::info('Storing new workflow stage', [
                 'workflow_id' => $validated['WorkFlowId'],
                 'stage_name' => $validated['StageName'],
-                'is_final' => !empty($validated['IsFinalStage'])
+                'is_final' => ! empty($validated['IsFinalStage']),
             ]);
 
             // Create the stage

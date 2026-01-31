@@ -8,10 +8,10 @@ use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\Procurement\Prequalification\PrequalificationRound;
 use App\Models\ThirdParty\SupplierMaster;
+use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Exception;
 
 class PrequalificationService
 {
@@ -30,7 +30,7 @@ class PrequalificationService
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return [
                 'user' => null,
                 'third_party_id' => null,
@@ -63,15 +63,15 @@ class PrequalificationService
     {
         $ctx = $this->resolveSupplierContext();
 
-        if (!$ctx['user']) {
+        if (! $ctx['user']) {
             throw new Exception('Unauthenticated.');
         }
 
-        if (!$ctx['supplier_master']) {
+        if (! $ctx['supplier_master']) {
             throw new Exception('No supplier profile found.');
         }
 
-        if (!$ctx['supplier_eligible']) {
+        if (! $ctx['supplier_eligible']) {
             throw new Exception('Supplier profile not approved.');
         }
 
@@ -92,7 +92,7 @@ class PrequalificationService
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             throw new Exception('Unauthenticated.');
         }
 
@@ -104,12 +104,12 @@ class PrequalificationService
                 'ModifiedBy' => $user->Id,
             ]);
 
-            if (!empty($data['documents']) && method_exists($application, 'documents')) {
+            if (! empty($data['documents']) && method_exists($application, 'documents')) {
                 foreach ($data['documents'] as $doc) {
                     $file = $doc['file'] ?? null;
                     $docTypeId = $doc['DocumentTypeID'] ?? null;
 
-                    if (!$file || !$docTypeId) {
+                    if (! $file || ! $docTypeId) {
                         continue;
                     }
 
@@ -133,7 +133,7 @@ class PrequalificationService
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             throw new Exception('Unauthenticated.');
         }
 
@@ -143,7 +143,7 @@ class PrequalificationService
             throw new Exception('Application already submitted.');
         }
 
-        if (!$application->CategoryID) {
+        if (! $application->CategoryID) {
             throw new Exception('Category selection is required.');
         }
 
