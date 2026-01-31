@@ -23,9 +23,6 @@ class TenderClarificationApiController extends Controller
                 ], 422);
             }
 
-        $supplier = $this->resolveSupplier();
-
-
             // Resolve supplier
             $supplier = null;
             $user = Auth::user();
@@ -331,71 +328,6 @@ class TenderClarificationApiController extends Controller
         ]);
     }
 
-    private function resolveSupplier(): ?Supplier
-    {
-        $user = Auth::guard('third_party')->user() ?? Auth::user();
-
-            $query = VendorClarifications::with(['tenderID', 'vendorID'])
-                ->whereNull('Answer')
-                ->whereNull('DeletedOn');
-
-            // Filter by specific tender if requested
-            if ($tenderId) {
-                $query->where('TenderID', $tenderId);
-            }
-
-            $total = $query->count();
-            $offset = ($page - 1) * $limit;
-
-            $clarifications = $query->orderBy('QuestionDate', 'asc')
-                ->skip($offset)
-                ->take($limit)
-                ->get();
-
-            // Format the response with additional supplier information
-            $formattedClarifications = $clarifications->map(function ($clarification) {
-                // Get supplier name from third party relationship
-                $supplierName = 'Unknown Supplier';
-                if ($clarification->vendorID && $clarification->vendorID->thirdParty) {
-                    $supplierName = $clarification->vendorID->thirdParty->TradingName
-                        ?? $clarification->vendorID->thirdParty->ThirdPartyName;
-                }
-
-                return [
-                    'clarificationId' => $clarification->ClarificationID,
-                    'tenderId' => $clarification->TenderID,
-                    'tenderNo' => $clarification->tenderID->TenderNo ?? 'N/A',
-                    'tenderTitle' => $clarification->tenderID->Title ?? 'N/A',
-                    'vendorId' => $clarification->VendorID,
-                    'supplierName' => $supplierName,
-                    'question' => $clarification->Question,
-                    'questionDate' => $clarification->QuestionDate,
-                    'daysPending' => now()->diffInDays($clarification->QuestionDate),
-                    'createdBy' => $clarification->CreatedBy,
-                    'createdOn' => $clarification->CreatedOn,
-                ];
-            });
-
-            return response()->json([
-                'data' => $formattedClarifications,
-                'pagination' => [
-                    'total' => $total,
-                    'page' => $page,
-                    'limit' => $limit,
-                    'pages' => ceil($total / $limit),
-                ],
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error fetching pending clarifications', [
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'error' => 'Failed to fetch pending clarifications',
-                'message' => $e->getMessage(),
-            ], 500);
-        }
-
     /**
      * Submit a response to a clarification from ERP staff
      * PUT /api/tender-clarifications/{id}/respond
@@ -476,8 +408,5 @@ class TenderClarificationApiController extends Controller
             ], 500);
         }
 
-        return Supplier::whereHas('supplierMaster', fn ($q) =>
-            $q->where('ThirdPartyId', $thirdPartyId)
-        )->first();
     }
 }
