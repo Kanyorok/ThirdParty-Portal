@@ -254,7 +254,11 @@ Route::middleware(['module:300000'])->group(function () {
     Route::post('suppliers-approval/{id}/approve', [\App\Http\Controllers\Procurement\SupplierApprovalController::class, 'approve'])->name('suppliers-approval.approve');
     Route::post('suppliers-approval/{id}/reject', [\App\Http\Controllers\Procurement\SupplierApprovalController::class, 'reject'])->name('suppliers-approval.reject');
 
+    // Supplier Categories - JSON
+    Route::get('supplier-categories/all', [\App\Http\Controllers\Procurement\SupplierCategoryController::class, 'all'])->name('supplier-categories.all');
+
     // Suppliers
+    Route::get('suppliers/search', [SupplierController::class, 'search'])->name('suppliers.search');
     Route::post('suppliers/{id}/submit', [SupplierController::class, 'submit'])->name('suppliers.submit');
     Route::post('suppliers/{id}/reject', [SupplierController::class, 'reject'])->name('suppliers.reject');
     Route::post('suppliers/{id}/activate', [SupplierController::class, 'activate'])->name('suppliers.activate');
@@ -334,6 +338,10 @@ Route::middleware(['module:300000'])->group(function () {
     // Consolidated scoring view and award action
     Route::get('/rfq-evaluations/consolidated/{rfq}', [RFQEvaluationController::class, 'consolidated'])->name('evaluations.consolidated');
     Route::post('/rfq-evaluations/{rfq}/award/{supplier}', [RFQEvaluationController::class, 'awardSupplier'])->name('evaluations.award');
+
+    // Edit and Update evaluation routes
+    Route::get('/rfq-evaluations/{id}/edit', [RFQEvaluationController::class, 'edit'])->name('evaluations.edit');
+    Route::put('/rfq-evaluations/{id}', [RFQEvaluationController::class, 'update'])->name('evaluations.update');
 
     //GoodsReceipts
     Route::get('/procurementreceipts', [GoodsReceiptController::class, 'index'])->name('procurementreceipts.index');
@@ -531,6 +539,7 @@ Route::middleware(['module:300000'])->group(function () {
     Route::post('/tenderclarification/bulk-action', [TenderclarificationController::class, 'bulkAction'])->name('tenderclarification.bulk-action');
 
     //Bid Submission
+    Route::get('/tendersubmission/invited-suppliers/{tenderId}', [TenderSubmissionController::class, 'getInvitedSuppliers'])->name('tendersubmission.getInvitedSuppliers');
     // Use resourceful routes for tender submissions. Custom manual view/edit URIs remain below.
     Route::resource('tendersubmission', TenderSubmissionController::class);
     // Custom manual routes (unique names) - keep these if you need different URIs for manual submissions
@@ -687,10 +696,8 @@ Route::post('/awards/switch-type', [AwardsController::class, 'switchType'])->nam
 
 // Awards approval/rejection routes with permission middleware
 Route::post('/awards/{award}/approve', [AwardsController::class, 'approve'])
-    ->middleware(\App\Http\Middleware\CanAction::class . ':approve,procawards')
     ->name('awards.approve');
 Route::post('/awards/{award}/reject', [AwardsController::class, 'reject'])
-    ->middleware(\App\Http\Middleware\CanAction::class . ':approve,procawards')
     ->name('awards.reject');
 Route::post('/awards/{award}/cancel', [AwardsController::class, 'cancel'])->name('awards.cancel');
 Route::post('/awards/{id}/submit-approval', [AwardsController::class, 'submitForApproval'])->name('awards.submit-approval');
@@ -702,10 +709,9 @@ Route::get('/{id}/workflow-history', [AwardsController::class, 'workflowHistory'
 Route::get('/create-from-consolidation/{tenderId}', [AwardsController::class, 'createFromConsolidation'])
     ->name('create-from-consolidation');
 
-// RFQ direct award approval (no TenderAward model yet)
-Route::post('/awards/rfq/{rfq}/approve', [AwardsController::class, 'approveRfq'])
-    ->middleware(\App\Http\Middleware\CanAction::class . ':approve,procawards')
-    ->name('awards.rfq.approve');
+
+
+
 
 // Award creation from consolidated scores
 Route::get('awards/create-from-consolidation/{tenderId}', [AwardsController::class, 'createFromConsolidation'])->name('awards.create-from-consolidation');

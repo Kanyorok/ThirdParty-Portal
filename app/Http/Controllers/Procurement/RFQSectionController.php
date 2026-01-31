@@ -25,8 +25,12 @@ class RFQSectionController extends Controller
             ->paginate(10);
         // Use Sections maintained at tendering settings (t_Sections)
         $sections = Section::isActive()->get();
-        // Include Comments so the modal select can show RFQNumber-Comments
-        $rfqList = RFQ::select('Id', 'RFQNumber', 'Comments')->get(); // or any other fields you need
+        // Only include RFQs that don't have any active sections assigned yet
+        $rfqList = RFQ::select('Id', 'RFQNumber', 'Comments')
+            ->whereDoesntHave('sections', function ($query) {
+                $query->where('IsActive', true);
+            })
+            ->get();
 
         return view('procurement.rfqcriteriasetup.rfqevaluations', compact('rfqs', 'sections', 'rfqList'));
     }

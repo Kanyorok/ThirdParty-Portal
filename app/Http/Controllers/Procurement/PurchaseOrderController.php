@@ -307,7 +307,7 @@ class PurchaseOrderController extends Controller
                         }
                     }
                 } catch (\Exception $e) {
-                    Log::warning('Source quantity validation skipped due to error', ['error' => $e->getMessage()]);
+
                 }
             }
 
@@ -975,10 +975,6 @@ class PurchaseOrderController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to fetch Contract Items: ' . $e->getMessage());
-<<<<<<< HEAD
-=======
-
->>>>>>> origin
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch Contract Items',

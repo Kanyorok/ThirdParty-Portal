@@ -215,6 +215,13 @@ class RequisitionsController extends Controller
                 return back()->with('error', 'Only draft requisitions can be submitted for approval.');
             }
 
+            // Validate remarks
+            $request->validate([
+                'remarks' => 'required|string|max:1000',
+            ], [
+                'remarks.required' => 'Please enter Remarks to proceed.',
+            ]);
+
             DB::beginTransaction();
 
             try {
@@ -225,7 +232,7 @@ class RequisitionsController extends Controller
                     $requisition,
                     $user,
                     WorkflowStatus::Pending,
-                    $request->input('remarks', 'Submitted for approval')
+                    $request->input('remarks')
                 );
 
                 // Update DocStatus to Pending

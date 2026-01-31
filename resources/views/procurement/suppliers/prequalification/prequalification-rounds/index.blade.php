@@ -86,7 +86,7 @@
                             @if($Round->Status === \App\Enums\Procurement\PrequalificationRoundEnum::Draft)
                                 @php $isExpired = $Round->EndDate && $Round->EndDate->isPast(); @endphp
                                 @if($Round->Status === \App\Enums\Procurement\PrequalificationRoundEnum::Draft && !$isExpired)
-                            <a href="{{ route('prequalification.prequalification-rounds.edit', $Round) }}#Status"
+                            <a href="{{ route('prequalification.prequalification-rounds.edit', $Round) }}?publish=1"
                                class="btn btn-sm btn-secondary me-1" title="Publish (set status to Open)" data-bs-toggle="tooltip" data-ajax="1">
                                 <i class="bi bi-upload"></i> Publish
                             </a>

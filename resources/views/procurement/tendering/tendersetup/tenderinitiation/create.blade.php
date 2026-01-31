@@ -297,6 +297,7 @@
     function loadPlanItemsForPlan() {
       const planSel = document.getElementById('selectedProcurementPlan');
       const itemSel = document.getElementById('planItemSelect');
+      const itemCatSel = document.getElementById('itemCategory');
 
       if (!planSel || !itemSel) {
         console.error('Plan or item select not found');
@@ -313,22 +314,23 @@
 
       //  Ensure planId is treated as string for object key lookup
       const items = planItemsByPlan[String(planId)] || [];
+      const selectedCategory = itemCatSel ? itemCatSel.value : '';
 
       if (DEBUG) {
         console.log('Loading items for plan:', planId);
-        console.log('Found items:', items.length);
-        console.log('Items data:', items);
+        console.log('Selected Category:', selectedCategory);
+        console.log('Found items (total):', items.length);
       }
 
-      if (items.length === 0) {
-        const opt = document.createElement('option');
-        opt.disabled = true;
-        opt.textContent = 'No available items in this plan';
-        itemSel.appendChild(opt);
-        return;
-      }
+      let visibleCount = 0;
 
       items.forEach(it => {
+        // Filter by Item Category
+        if (selectedCategory && String(it.categoryId) !== String(selectedCategory)) {
+            return;
+        }
+
+        visibleCount++;
         const opt = document.createElement('option');
         opt.value = String(it.planLineItemId);
 
@@ -345,8 +347,15 @@
 
         itemSel.appendChild(opt);
       });
+      
+      if (visibleCount === 0) {
+        const opt = document.createElement('option');
+        opt.disabled = true;
+        opt.textContent = selectedCategory ? 'No items match the selected category' : 'No available items in this plan';
+        itemSel.appendChild(opt);
+      }
 
-      if (DEBUG) console.log('Populated item select with', items.length, 'items');
+      if (DEBUG) console.log('Populated item select with', visibleCount, 'items (filtered)');
     }
 
     // ============================================================================
@@ -745,21 +754,42 @@
           populateSuppliers(itemCatSel.value);
         }
 
-        // Enable plan select after category selection
+        // Enable plan select after category selection AND filter available plans
         const planSel = document.getElementById('selectedProcurementPlan');
         if (planSel) {
-          const hasCategory = Boolean(itemCatSel.value);
-          planSel.disabled = !hasCategory;
-          planSel.innerHTML = '<option selected disabled>-- Choose Procurement Plan --</option>';
+            const selectedCategory = itemCatSel.value;
+            const hasCategory = Boolean(selectedCategory);
+            planSel.disabled = !hasCategory;
+            planSel.innerHTML = '<option selected disabled>-- Choose Procurement Plan --</option>';
 
-          if (hasCategory) {
-            availablePlans.forEach(p => {
-              const opt = document.createElement('option');
-              opt.value = p.PlanID;
-              opt.textContent = `${p.Title} - ${p.ReferenceNumber}`;
-              planSel.appendChild(opt);
-            });
-          }
+            if (hasCategory) {
+               let planCount = 0;
+               availablePlans.forEach(p => {
+                    // Check if this plan has ANY items matching the category
+                    const planItems = planItemsByPlan[String(p.PlanID)] || [];
+                    const hasMatchingItems = planItems.some(it => String(it.categoryId) === String(selectedCategory));
+
+                    if (hasMatchingItems) {
+                        const opt = document.createElement('option');
+                        opt.value = p.PlanID;
+                        opt.textContent = `${p.Title} - ${p.ReferenceNumber}`;
+                        planSel.appendChild(opt);
+                        planCount++;
+                    }
+               });
+               
+               if (planCount === 0) {
+                   const opt = document.createElement('option');
+                   opt.disabled = true;
+                   opt.textContent = '-- No Plans found for this Category --';
+                   planSel.appendChild(opt);
+               }
+            }
+            // Clear items dropdown since plan might have changed or been cleared
+            const planItemSel = document.getElementById('planItemSelect');
+            if (planItemSel) {
+                planItemSel.innerHTML = '<option selected disabled>-- Select Item (Tender-method, not already used) --</option>';
+            }
         }
       });
     }

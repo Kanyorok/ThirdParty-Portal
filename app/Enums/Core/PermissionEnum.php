@@ -247,11 +247,11 @@ enum PermissionEnum: string
     case AwardApprove = 'award-approve';
 
     // Purchase Orders (LPO)
-    case PurchaseOrderRead = 'purchaseorder-read';
-    case PurchaseOrderWrite = 'purchaseorder-create';
-    case PurchaseOrderUpdate = 'purchaseorder-update';
-    case PurchaseOrderDelete = 'purchaseorder-delete';
-    case PurchaseOrderApprove = 'purchaseorder-approve';
+    case PurchaseOrderRead = 'purchaseOrder-read';
+    case PurchaseOrderWrite = 'purchaseOrder-create';
+    case PurchaseOrderUpdate = 'purchaseOrder-update';
+    case PurchaseOrderDelete = 'purchaseOrder-delete';
+    case PurchaseOrderApprove = 'purchaseOrder-approval';
 
     // Goods Receipt (GRN)
     case GoodsReceiptRead = 'goodsreceipt-read';
@@ -1056,6 +1056,7 @@ enum PermissionEnum: string
             [self::SupplierRead, self::SupplierWrite, self::SupplierUpdate, self::SupplierDelete, self::SupplierApprove],
             [self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval],
             [self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApprove],
+            [self::GoodsReceiptRead, self::GoodsReceiptWrite, self::GoodsReceiptUpdate, self::GoodsReceiptDelete, self::GoodsReceiptApprove],
 
             //Tenders
             [self::TenderRead, self::TenderWrite, self::TenderUpdate, self::TenderDelete, self::TenderApproval],
@@ -1480,6 +1481,9 @@ enum PermissionEnum: string
 
             //PurchaseOrder
             self::PurchaseOrderRead, self::PurchaseOrderWrite, self::PurchaseOrderUpdate, self::PurchaseOrderDelete, self::PurchaseOrderApprove => 'Purchase Order',
+
+            //Goods Receipt (GRN)
+            self::GoodsReceiptRead, self::GoodsReceiptWrite, self::GoodsReceiptUpdate, self::GoodsReceiptDelete, self::GoodsReceiptApprove => 'Goods Receipt',
 
             self::BidOpeningRead, self::BidOpeningWrite => 'Bid Opening',
             self::RFQResponseRead, self::RFQResponseWrite, self::RFQResponseUpdate => 'RFQ Response',

@@ -7,8 +7,10 @@ use App\Models\HRM\Employee;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQCommittee;
 use App\Models\Procurement\RFQCommitteeMember;
+use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderCommittee;
+use App\Models\Procurement\TenderCommitteeEvaluation;
 use App\Models\Procurement\TenderCommitteeMember;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -250,9 +252,57 @@ class TenderCommitteeController extends Controller
     public function getReferences($type)
     {
         if ($type === 'tender') {
-            $data = Tender::select('Id', 'TenderNo as RefNo', 'Title')->get();
+            // Get IDs of tenders with existing committees
+            $tendersWithCommittee = TenderCommittee::whereNotNull('ReferenceId')
+                ->where('CommitteeType', 'tender')
+                ->pluck('ReferenceId')
+                ->toArray();
+
+            // Also check for legacy TenderID field
+            $tendersWithLegacyCommittee = TenderCommittee::whereNotNull('TenderID')
+                ->pluck('TenderID')
+                ->toArray();
+
+            $excludedTenderIds = array_unique(array_merge($tendersWithCommittee, $tendersWithLegacyCommittee));
+
+            // Get IDs of tenders where evaluation has started
+            $tendersWithEvaluation = TenderCommitteeEvaluation::whereNotNull('TenderID')
+                ->distinct()
+                ->pluck('TenderID')
+                ->toArray();
+
+            // Combine all excluded IDs
+            $allExcludedIds = array_unique(array_merge($excludedTenderIds, $tendersWithEvaluation));
+
+            $data = Tender::select('Id', 'TenderNo as RefNo', 'Title')
+                ->whereNotIn('Id', $allExcludedIds)
+                ->get();
         } elseif ($type === 'rfq') {
-            $data = RFQ::select('Id', 'RFQNumber as RefNo')->get();
+            // Get IDs of RFQs with existing committees
+            $rfqsWithCommittee = RFQCommittee::whereNotNull('RFQID')
+                ->pluck('RFQID')
+                ->toArray();
+
+            // Also check TenderCommittee for RFQ type entries
+            $rfqsWithTenderCommittee = TenderCommittee::whereNotNull('ReferenceId')
+                ->where('CommitteeType', 'rfq')
+                ->pluck('ReferenceId')
+                ->toArray();
+
+            $excludedRfqIds = array_unique(array_merge($rfqsWithCommittee, $rfqsWithTenderCommittee));
+
+            // Get IDs of RFQs where evaluation has started
+            $rfqsWithEvaluation = RFQEvaluation::whereNotNull('RFQId')
+                ->distinct()
+                ->pluck('RFQId')
+                ->toArray();
+
+            // Combine all excluded IDs
+            $allExcludedIds = array_unique(array_merge($excludedRfqIds, $rfqsWithEvaluation));
+
+            $data = RFQ::select('Id', 'RFQNumber as RefNo')
+                ->whereNotIn('Id', $allExcludedIds)
+                ->get();
         } else {
             return response()->json([], 400);
         }

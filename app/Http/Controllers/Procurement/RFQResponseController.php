@@ -28,8 +28,16 @@ class RFQResponseController extends Controller
     public function create()
     {
         $this->authorize('create', RFQResponse::class);
-        
+
+        // Include both Approved and Published RFQs
+        // Include both Approved and Published RFQs
+        // Status values: 'Ap'/'AP'/'Approved' for approved, 'Pub'/'Published' for published
+        // AND check SubmissionDeadline
         $rfqs = RFQ::whereIn('Status', ['Ap', 'AP', 'Approved', 'Pub', 'Published'])
+            ->where(function ($query) {
+                $query->whereNull('SubmissionDeadline')
+                      ->orWhere('SubmissionDeadline', '>=', now());
+            })
             ->select('Id', 'RFQNumber', 'Comments', 'Status')
             ->get();
 
@@ -72,6 +80,14 @@ class RFQResponseController extends Controller
             'RequisitionItems.*.quotedprice' => 'required|numeric|min:0',
             'RequisitionItems.*.totalpayable' => 'required|numeric|min:0',
         ]);
+
+        // Check Submission Deadline
+        $rfq = RFQ::find($request->RFQId);
+        if ($rfq && $rfq->SubmissionDeadline && \Carbon\Carbon::parse($rfq->SubmissionDeadline)->isPast()) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'The submission deadline for this RFQ has passed. Responses can no longer be submitted.');
+        }
 
         $userId = Auth::user()->Id;
 

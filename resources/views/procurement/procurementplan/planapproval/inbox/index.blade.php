@@ -38,7 +38,7 @@
           <th>Plan Ref</th>
           <th>Title</th>
           <th>Year</th>
-          <th>Submitted By</th>
+          <th>Requested By</th>
           <th>Submitted On</th>
           <th>Approval Level</th>
           <th>Actions</th>

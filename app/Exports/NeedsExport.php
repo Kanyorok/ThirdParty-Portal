@@ -44,7 +44,7 @@ class NeedsExport implements FromQuery, WithHeadings, WithMapping
             'Department',
             'Requested Qty',
             'Estimated Cost',
-            'Date Needed',
+            'Expected Delivery Date',
             'Status',
         ];
     }

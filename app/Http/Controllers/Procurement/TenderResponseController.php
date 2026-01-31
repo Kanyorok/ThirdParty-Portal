@@ -49,6 +49,11 @@ class TenderResponseController extends Controller
             'ConfirmationAttachment' => 'nullable|file|max:2048',
         ]);
 
+        $tender = Tender::findOrFail($validated['TenderId']);
+        if ($tender->SubmissionDeadline && now()->greaterThan($tender->SubmissionDeadline)) {
+            return back()->with('error', 'The submission deadline for this tender has passed. Response cannot be recorded.');
+        }
+
         $path = null;
         if ($request->hasFile('ConfirmationAttachment')) {
             $path = $request->file('ConfirmationAttachment')->store('attachments', 'public');
@@ -59,6 +64,11 @@ class TenderResponseController extends Controller
             ->first();
 
         if ($invitation) {
+            // Prevent overwriting if already responded
+            if ($invitation->ResponseStatus !== 'Pending') {
+                return back()->with('error', 'A response ' . $invitation->ResponseStatus . ' has already been recorded for this supplier.');
+            }
+
             $invitation->update([
                 'ResponseStatus' => $validated['ResponseStatus'],
                 'ResponseDate' => now(),
@@ -67,7 +77,7 @@ class TenderResponseController extends Controller
                 'ModifiedBy' => $request->user()->Id,
             ]);
         } else {
-            // Fallback for creation if strictly needed, though user implies it should be an update
+            // Create new response record if it doesn't exist (e.g. public tender self-nomination)
             TenderInvitation::create([
                 'TenderId' => $validated['TenderId'],
                 'SupplierId' => $validated['SupplierId'],

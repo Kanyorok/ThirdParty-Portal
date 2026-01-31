@@ -22,6 +22,7 @@ Route::middleware('auth')->group(function () {
     Route::get('module-search', [DashboardController::class, 'search'])->name('modules.search');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+    Route::get('logout', [AuthenticatedSessionController::class, 'destroy']);
     Route::post('timeout', [AuthenticatedSessionController::class, 'timeout'])->name('timeout');
 
     Route::get('user', [ProfileController::class, 'profile'])->name('profile');

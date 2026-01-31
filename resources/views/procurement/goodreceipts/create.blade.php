@@ -25,6 +25,7 @@
                       data-OrderNo="{{ $po->OrderNo }}"
                       data-remarks="{{ $po->ExtOrdNum }}"
                       data-account-id="{{ $po->AccountID }}"
+                      data-branch-id="{{ $po->BranchID }}"
                       data-lines='@json($po->OrderLines)'>
                   {{ $po->OrderNo }}
           </option>
@@ -53,7 +54,9 @@
             <th>Category</th>
             <th>UOM</th>
             <th>PO Qty</th>
-            <th>Received Qty</th>
+            <th>Received So Far</th>
+            <th>Remaining</th>
+            <th>Receive Now</th>
             <th>Unit Price</th>
             <th>Transfer To</th>
             <th>Tag Required?</th>
@@ -73,6 +76,9 @@
 </div>
 
 <script>
+// Pass branches data from PHP to JavaScript
+const branches = @json($branches);
+
 function handleFormSubmit() {
   const select = document.getElementById("poSelect");
   const selectedOption = select.options[select.selectedIndex];
@@ -107,7 +113,8 @@ function populatePODetails() {
   const selectedOption = select.options[select.selectedIndex];
   const poId = selectedOption.getAttribute("data-id");  // Use Id, not OrderNo
   const remarks = selectedOption.getAttribute("data-remarks");
-    const accountId = selectedOption.getAttribute("data-account-id"); // <-- new
+  const accountId = selectedOption.getAttribute("data-account-id");
+  const poBranchId = selectedOption.getAttribute("data-branch-id"); // Get branch from PO
   const lines = JSON.parse(selectedOption.getAttribute("data-lines"));
 
   document.getElementById("poIDInput").value = poId;  // Set to Id
@@ -117,19 +124,36 @@ function populatePODetails() {
   const itemsBody = document.getElementById("itemsBody");
   itemsBody.innerHTML = "";
 
+  // Build branch options for the dropdown, pre-select PO's branch
+  let branchOptions = '<option value="">-- Select Branch --</option>';
+  branches.forEach(branch => {
+    const selected = (poBranchId && branch.Id == poBranchId) ? 'selected' : '';
+    branchOptions += `<option value="${branch.Id}" ${selected}>${branch.Name}</option>`;
+  });
+
   lines.forEach((item, index) => {
+    const receivedSoFar = item.fReceivedSoFar || 0;
+    const remainingQty = item.fRemainingQty || item.fQuantity;
+    
     const row = `
       <tr>
-        <td><input type="text" class="form-control" name="items[${index}][ItemNo]" value="${item.iStockCodeID}" readonly></td>
+        <td><input type="text" class="form-control form-control-sm" name="items[${index}][ItemNo]" value="${item.iStockCodeID}" readonly></td>
         <td>${item.ItemName}</td>
         <td>${item.ItemDescription}</td>
         <td>${item.Category}</td>
         <td>${item.UOM}</td>
-        <td><input type="number" class="form-control" name="items[${index}][POQTY]" value="${item.fQuantity}" readonly></td>
-        <td><input type="number" class="form-control" name="items[${index}][ReceivedQTY]" value="${item.fQuantity}"></td>
-        <td><input type="number" class="form-control" name="items[${index}][UnitPrice]" value="${item.fUnitPriceExcl || 0}" readonly></td>
-        <td><input type="text" class="form-control" name="items[${index}][TransferTo]" value="${item.InventoryType}" readonly></td>
-        <td><input type="hidden" name="items[${index}][TagRequired]" value="0">
+        <td class="text-center">${item.fQuantity}</td>
+        <td class="text-center text-muted">${receivedSoFar}</td>
+        <td class="text-center fw-bold text-primary">${remainingQty}</td>
+        <td><input type="number" class="form-control form-control-sm" name="items[${index}][ReceivedQTY]" value="${remainingQty}" min="0" max="${remainingQty}"></td>
+        <td><input type="hidden" name="items[${index}][POQTY]" value="${item.fQuantity}">
+            <input type="number" class="form-control form-control-sm" name="items[${index}][UnitPrice]" value="${item.fUnitPriceExcl || 0}" readonly></td>
+        <td>
+          <select class="form-select form-select-sm" name="items[${index}][TransferTo]">
+            ${branchOptions}
+          </select>
+        </td>
+        <td class="text-center"><input type="hidden" name="items[${index}][TagRequired]" value="0">
         <input type="checkbox" name="items[${index}][TagRequired]" value="1"></td>
       </tr>
     `;

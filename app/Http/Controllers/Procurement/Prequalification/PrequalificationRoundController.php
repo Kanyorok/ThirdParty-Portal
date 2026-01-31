@@ -45,7 +45,7 @@ class PrequalificationRoundController extends Controller
     {
         $this->authorize('create', PrequalificationRound::class);
 
-        $masterSections = Section::with('criteria')->get();
+        $masterSections = Section::with('criteria')->isActive()->get();
         $prequalificationRound = new PrequalificationRound();
 
         return view(
