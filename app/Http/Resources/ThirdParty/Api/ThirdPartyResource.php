@@ -31,7 +31,7 @@ class ThirdPartyResource extends JsonResource
             'supplierId' => $this->supplierMaster?->SupplierID,
             'approvalStatus' => $this->supplierMaster?->ApprovalStatus,
             'types' => $this->types->map(fn($t) => [
-                'id'    => $t->TypeId,
+                // 'id'    => $t->TypeId,
                 'code'  => $t->Code,
                 'label' => $t->Description,
             ]),

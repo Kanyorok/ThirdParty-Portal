@@ -36,7 +36,10 @@ class ThirdPartyAuthController extends Controller
             return response()->json([
                 'success' => true,
                 'email_verification_required' => true,
-                'userId' => $user->UserID,
+                // 'userId' => $user->UserID,
+                'userIid' => $user->Id,
+
+
             ], 201);
         } catch (\Throwable $e) {
             Log::error('Third-party registration failed', [

@@ -11,7 +11,7 @@ class ThirdPartyUserResource extends JsonResource
     {
         return [
             'id' => $this->Id,
-            'userId' => $this->Id,
+            // 'userId' => $this->Id,
             'firstName' => $this->FirstName,
             'lastName' => $this->LastName,
             'fullName' => trim($this->FirstName . ' ' . $this->LastName),
