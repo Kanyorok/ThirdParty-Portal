@@ -15,9 +15,6 @@ class PropertyMaintenanceWorkCompletionService
 {
     private $assignment;
 
-    /**
-     * Create a new class instance.
-     */
     public function __construct(PropertyMaintenanceWorkCompletion $propertyMaintenanceWorkCompletion)
     {
     }
@@ -47,6 +44,8 @@ class PropertyMaintenanceWorkCompletionService
         if (strtolower($finalstatus->Description) === 'completed') {
             $requestNumber->update([
                 'Status' => PostingEnum::Completed->value,
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => now(),
             ]);
         }
 
@@ -70,36 +69,39 @@ class PropertyMaintenanceWorkCompletionService
     }
 
     public static function update(
-        PropertyMaintenanceWorkCompletion $requestNumber,
+        PropertyMaintenanceWorkCompletion $workCompletion,
         string $completionDate,
         string $workDoneSummary,
-        ?string $partsUsed = null,
-        ?int $cost = null,
+        ?string $partsUsed,
+        ?int $cost,
         CodeDetail $finalstatus,
         User $user,
         UploadedFile $document = null
     ): self {
-        $requestNumber->update([
-            'RequestNumber' => $requestNumber->RequestNumber,
+
+        $workCompletion->update([
             'CompletionDate' => $completionDate,
             'WorkDoneSummary' => $workDoneSummary,
-            'PartsUsed' => $partsUsed ?? null,
-            'Cost' => $cost ?? null,
+            'PartsUsed' => $partsUsed,
+            'Cost' => $cost,
             'FinalStatus' => $finalstatus->ID,
-            'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
 
+        $assignment = PropertyMaintenanceAssign::find($workCompletion->RequestNumber);
 
-        if (strtolower($finalstatus->Description) === 'completed') {
-            $requestNumber->update([
-                'Status' => PostingEnum::Completed->value,
+        if ($assignment) {
+            $assignment->update([
+                'Status' => strtolower($finalstatus->Description) === 'completed'
+                    ? PostingEnum::Completed->value
+                    : PostingEnum::Pending->value,
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => now(),
             ]);
         }
 
-
         if ($document) {
-            $requestNumber->newDocument(
+            $workCompletion->newDocument(
                 ModulesEnum::Property,
                 $document,
                 [PermissionEnum::PropertyMaintenanceWorkCompletionView->value],
@@ -109,12 +111,10 @@ class PropertyMaintenanceWorkCompletionService
 
         activity()
             ->causedBy($user)
-            ->performedOn($requestNumber->withoutRelations())
+            ->performedOn($workCompletion)
             ->event('update')
-            ->log("Updated Work Completion {$requestNumber->Id}");
+            ->log("Updated Work Completion {$workCompletion->Id}");
 
-
-
-        return new self($requestNumber);
+        return new self($workCompletion);
     }
 }

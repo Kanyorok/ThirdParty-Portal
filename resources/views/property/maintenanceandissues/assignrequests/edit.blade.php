@@ -75,7 +75,7 @@
                             @foreach ($technicians as $employee)
                                 <option value="{{ $employee->Id }}"
                                     {{ (string) old('InternalTechnician', $assignment->InternalTechnician) === (string) $employee->Id ? 'selected' : '' }}>
-                                    {{ $employee->JobTitle }}
+                                    {{ $employee->EmployeeID }} - {{ $employee->FirstName }}
                                 </option>
                             @endforeach
                         </select>
