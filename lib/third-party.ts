@@ -46,11 +46,6 @@ export function toPascalPayload(frontend: any) {
     return out;
 }
 
-function toStringSafe(v: unknown) {
-    if (v == null) return "";
-    return String(v);
-}
-
 export function normalizeRawToDomain(raw: RawThirdParty) {
     const parsed = RawThirdPartySchema.parse(raw);
     const id = parsed.Id ?? null;

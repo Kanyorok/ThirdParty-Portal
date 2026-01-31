@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { clsx, type ClassValue } from "clsx"
@@ -34,7 +34,7 @@ export default function LoginPage() {
         register,
         handleSubmit,
         setValue,
-        watch,
+        control,
         formState: {
             errors,
             touchedFields,
@@ -46,12 +46,13 @@ export default function LoginPage() {
         mode: "onBlur",
     })
 
-    const emailValue = watch("email")
+    const emailValue = useWatch({ control, name: "email" })
     const showError = (field: keyof FormValues) =>
         (touchedFields[field] || isSubmitted) && errors[field]
 
     const onSubmit = async (data: FormValues) => {
         setAuthError(null)
+
         try {
             const result = await signIn("credentials", {
                 email: data.email,
@@ -60,18 +61,23 @@ export default function LoginPage() {
             })
 
             if (result?.error) {
+                if (result.error === "EMAIL_NOT_VERIFIED") {
+                    router.push(`/verify-email/expired?email=${encodeURIComponent(data.email)}`)
+                    return
+                }
+
                 setAuthError("Invalid email or password. Please try again.")
-            } else {
-                router.push("/dashboard")
-                router.refresh()
+                return
             }
-        } catch (error) {
+
+            router.push("/dashboard")
+        } catch {
             setAuthError("An unexpected error occurred. Please try again later.")
         }
     }
 
     return (
-        <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background p-6 font-sans relative overflow-hidden">
+        <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 font-sans relative overflow-hidden">
             <div className="absolute top-[-5%] left-[-5%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
             <div className="absolute bottom-[-5%] right-[-5%] w-[40%] h-[40%] bg-chart-2/5 rounded-full blur-[120px] pointer-events-none" />
 

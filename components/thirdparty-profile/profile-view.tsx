@@ -1,7 +1,9 @@
 "use client"
 
+import type React from "react"
+
 import { memo, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import {
   Mail,
   Phone,
@@ -11,47 +13,32 @@ import {
   CreditCard,
   Edit3,
   Copy,
-  ArrowUpRight,
   Building2,
   CheckCircle2,
   Clock,
   Briefcase,
-  MoreVertical,
   RefreshCw,
   AlertCircle,
   ExternalLink,
 } from "lucide-react"
 import { Button } from "@/components/common/button"
 import { Badge } from "@/components/common/badge"
-import { Progress } from "@/components/common/progress"
 import { Separator } from "@/components/common/separator"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/common/tooltip"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/common/dropdown-menu"
 import { Skeleton } from "@/components/common/skeleton"
 import { useProfile } from "@/hooks/use-profile"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
 const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 0, y: 15 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -20 },
+  exit: { opacity: 0, y: -15 },
 }
 
 const staggerContainer = {
   animate: {
     transition: {
-      staggerChildren: 0.1,
+      staggerChildren: 0.05,
     },
   },
 }
@@ -61,17 +48,16 @@ interface ProfileViewProps {
 }
 
 export function ProfileView({ onEdit }: ProfileViewProps) {
-  const { profile, thirdParty, thirdPartyDetails, isLoading, error, refetch, profileCompletion } =
-    useProfile()
+  const { profile, thirdParty, thirdPartyDetails, isLoading, error, refetch, profileCompletion } = useProfile()
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
     try {
       await refetch?.()
-      toast.success("Profile refreshed")
-    } catch (err) {
-      toast.error("Failed to refresh profile")
+      toast.success("Identity refreshed")
+    } catch {
+      toast.error("Sync failed")
     } finally {
       setIsRefreshing(false)
     }
@@ -80,25 +66,18 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
   if (isLoading) return <ProfileViewSkeleton />
 
   if (error) {
-    return (
-      <ErrorState
-        onRetry={handleRefresh}
-        isRetrying={isRefreshing}
-      />
-    )
+    return <ErrorState onRetry={handleRefresh} isRetrying={isRefreshing} />
   }
 
   if (!profile || !thirdParty || !thirdPartyDetails) {
     return <EmptyState onEdit={onEdit} />
   }
 
-  const verified = ["active", "approved"].includes(
-    thirdParty.approvalStatus?.toLowerCase() || ""
-  )
+  const verified = ["active", "approved"].includes(thirdParty.approvalStatus?.toLowerCase() || "")
 
   const copy = (value: string, label: string) => {
     navigator.clipboard.writeText(value)
-    toast.success(`${label} copied to clipboard`)
+    toast.success(`${label} copied`)
   }
 
   return (
@@ -106,116 +85,100 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
       initial="initial"
       animate="animate"
       variants={staggerContainer}
-      className="mx-auto w-full max-w-6xl space-y-8 md:space-y-12"
+      className="w-full space-y-16 antialiased"
     >
       <ProfileHeader
         name={thirdPartyDetails.thirdPartyName}
         tradingName={thirdPartyDetails.tradingName}
         registrationNumber={thirdPartyDetails.registrationNumber}
         verified={verified}
-        profileCompletion={profileCompletion}
         onEdit={onEdit}
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
       />
 
-      <Separator className="my-6 md:my-8" />
-
-      <motion.section
-        variants={fadeInUp}
-        className="grid grid-cols-1 gap-8 md:gap-10 lg:grid-cols-3"
-      >
-        <div className="space-y-6 lg:col-span-2">
-          <SectionTitle title="Business information" />
-
-          <div className="space-y-4">
-            <InfoRow
-              label="Legal name"
-              value={thirdPartyDetails.thirdPartyName}
-            />
-            <InfoRow
-              label="Registration number"
-              value={thirdPartyDetails.registrationNumber}
-              icon={<Hash className="h-4 w-4" />}
-              copyable
-              onCopy={() => copy(thirdPartyDetails.registrationNumber, "Registration number")}
-            />
-            {thirdPartyDetails.businessType && (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-20">
+        <motion.div variants={fadeInUp} className="lg:col-span-2 space-y-12">
+          <section className="space-y-6">
+            <SectionTitle title="Core Entity Details" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+              <InfoRow label="Legal Name" value={thirdPartyDetails.thirdPartyName} />
               <InfoRow
-                label="Business type"
-                value={thirdPartyDetails.businessType}
-                icon={<Briefcase className="h-4 w-4" />}
-              />
-            )}
-            {thirdPartyDetails.taxPIN && (
-              <InfoRow
-                label="Tax PIN / VAT"
-                value={thirdPartyDetails.taxPIN}
-                icon={<CreditCard className="h-4 w-4" />}
+                label="Reg. Number"
+                value={thirdPartyDetails.registrationNumber}
+                icon={<Hash className="size-3" />}
                 copyable
-                onCopy={() => copy(thirdPartyDetails.taxPIN!, "Tax PIN")}
+                onCopy={() => copy(thirdPartyDetails.registrationNumber, "Registration")}
               />
-            )}
-          </div>
-        </div>
+              {thirdPartyDetails.businessType && (
+                <InfoRow
+                  label="Entity Type"
+                  value={thirdPartyDetails.businessType}
+                  icon={<Briefcase className="size-3" />}
+                />
+              )}
+              {thirdPartyDetails.taxPIN && (
+                <InfoRow
+                  label="Tax Identifier"
+                  value={thirdPartyDetails.taxPIN}
+                  icon={<CreditCard className="size-3" />}
+                  copyable
+                  onCopy={() => copy(thirdPartyDetails.taxPIN!, "Tax PIN")}
+                />
+              )}
+            </div>
+          </section>
 
-        <div className="space-y-6">
-          <SectionTitle title="Contact" />
+          <Separator className="bg-border/40" />
 
-          <div className="space-y-4">
-            <CopyRow
-              label="Email"
-              value={profile.email}
-              icon={<Mail className="h-4 w-4" />}
-              onCopy={() => copy(profile.email, "Email")}
-            />
+          <section className="space-y-6">
+            <SectionTitle title="Presence & Location" />
+            <div className="space-y-8">
+              {thirdPartyDetails.physicalAddress && (
+                <InfoRow
+                  label="Global Headquarters"
+                  value={thirdPartyDetails.physicalAddress}
+                  icon={<MapPin className="size-3" />}
+                />
+              )}
+              {thirdPartyDetails.website && <WebsiteLink url={thirdPartyDetails.website} />}
+            </div>
+          </section>
+        </motion.div>
 
-            {profile.phone && (
+        <motion.aside variants={fadeInUp} className="space-y-12">
+          <section className="space-y-6">
+            <SectionTitle title="Primary Contact" />
+            <div className="space-y-4">
               <CopyRow
-                label="Phone"
-                value={profile.phone}
-                icon={<Phone className="h-4 w-4" />}
-                onCopy={() => copy(profile.phone!, "Phone")}
+                label="Enterprise Email"
+                value={profile.email}
+                icon={<Mail className="size-3" />}
+                onCopy={() => copy(profile.email, "Email")}
               />
-            )}
-          </div>
-        </div>
-      </motion.section>
+              {profile.phone && (
+                <CopyRow
+                  label="Phone System"
+                  value={profile.phone}
+                  icon={<Phone className="size-3" />}
+                  onCopy={() => copy(profile.phone!, "Phone")}
+                />
+              )}
+            </div>
+          </section>
 
-      <Separator className="my-6 md:my-8" />
+          <Separator className="bg-border/40" />
 
-      <motion.section
-        variants={fadeInUp}
-        className="grid grid-cols-1 gap-8 md:gap-10 lg:grid-cols-3"
-      >
-        <div className="space-y-6 lg:col-span-2">
-          <SectionTitle title="Location & web" />
-
-          <div className="space-y-4">
-            {thirdPartyDetails.physicalAddress && (
-              <InfoRow
-                label="Address"
-                value={thirdPartyDetails.physicalAddress}
-                icon={<MapPin className="h-4 w-4" />}
-              />
-            )}
-
-            {thirdPartyDetails.website && (
-              <WebsiteLink url={thirdPartyDetails.website} />
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <SectionTitle title="Account status" />
-
-          <div className="space-y-3">
-            <StatusRow label="Email verified" ok={profile.emailVerified} />
-            <StatusRow label="Account active" ok={profile.isActive} />
-            <StatusRow label="Profile complete" ok={profile.hasProfile} />
-          </div>
-        </div>
-      </motion.section>
+          <section className="space-y-6">
+            <SectionTitle title="Compliance Matrix" />
+            <div className="space-y-2">
+              <StatusRow label="Identity Verified" ok={!!profile.emailVerifiedOn} />
+              <StatusRow label="System Authority" ok={profile.isActive} />
+              <StatusRow label="Data Integrity" ok={profileCompletion === 100} />
+            </div>
+          </section>
+        </motion.aside>
+      </div>
     </motion.div>
   )
 }
@@ -225,7 +188,6 @@ const ProfileHeader = memo(function ProfileHeader({
   tradingName,
   registrationNumber,
   verified,
-  profileCompletion,
   onEdit,
   onRefresh,
   isRefreshing,
@@ -234,125 +196,67 @@ const ProfileHeader = memo(function ProfileHeader({
   tradingName?: string | null
   registrationNumber: string
   verified: boolean
-  profileCompletion: number
   onEdit?: () => void
   onRefresh: () => void
   isRefreshing: boolean
 }) {
   return (
-    <motion.section variants={fadeInUp} className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 flex-1 space-y-2">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-              {name}
-            </h1>
-            <Badge
-              variant={verified ? "default" : "secondary"}
-              className="gap-1.5 transition-colors"
-            >
-              {verified ? (
-                <CheckCircle2 className="h-3.5 w-3.5" />
-              ) : (
-                <Clock className="h-3.5 w-3.5" />
-              )}
-              {verified ? "Verified" : "Pending"}
-            </Badge>
-          </div>
-
-          {tradingName && (
-            <p className="text-sm text-muted-foreground md:text-base">
-              {tradingName}
-            </p>
-          )}
-
-          <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
-            <Hash className="h-4 w-4" />
-            <span>{registrationNumber}</span>
-          </div>
+    <motion.section
+      variants={fadeInUp}
+      className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-border/40 pb-10"
+    >
+      <div className="space-y-2 min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-3xl font-black uppercase tracking-tighter text-foreground truncate">{name}</h1>
+          <Badge
+            variant={verified ? "default" : "secondary"}
+            className={cn(
+              "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border-none",
+              verified ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+            )}
+          >
+            {verified ? "Verified" : "Pending"}
+          </Badge>
         </div>
 
-        <div className="flex items-center gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={onRefresh}
-                  disabled={isRefreshing}
-                  className="shrink-0"
-                >
-                  <RefreshCw
-                    className={cn(
-                      "h-4 w-4",
-                      isRefreshing && "animate-spin"
-                    )}
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Refresh profile</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+        {tradingName && (
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">{tradingName}</p>
+        )}
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="shrink-0">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {onEdit && (
-                <DropdownMenuItem onClick={onEdit}>
-                  <Edit3 className="mr-2 h-4 w-4" />
-                  Edit profile
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-primary/60">
+          <Hash className="size-3" strokeWidth={3} />
+          <span>{registrationNumber}</span>
         </div>
       </div>
 
-      <ProfileCompletionCard completion={profileCompletion} />
+      <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onRefresh}
+          disabled={isRefreshing}
+          className="size-9 rounded-full border border-border/40 hover:bg-primary/5"
+        >
+          <RefreshCw className={cn("size-4 text-muted-foreground", isRefreshing && "animate-spin")} strokeWidth={2.5} />
+        </Button>
+
+        {onEdit && (
+          <Button onClick={onEdit} variant="ghost" className="h-9 group hover:bg-transparent px-0 ml-2">
+            <div className="flex items-center gap-2 border-b border-transparent group-hover:border-primary pb-1 transition-all">
+              <Edit3 className="size-3 text-muted-foreground group-hover:text-primary" strokeWidth={3} />
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-primary">
+                Update Record
+              </span>
+            </div>
+          </Button>
+        )}
+      </div>
     </motion.section>
   )
 })
 
-const ProfileCompletionCard = memo(function ProfileCompletionCard({
-  completion,
-}: {
-  completion: number
-}) {
-  const isComplete = completion === 100
-
-  return (
-    <div className="rounded-lg border bg-card p-4 transition-colors hover:bg-accent/5">
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h3 className="text-sm font-medium">Profile completion</h3>
-            <p className="text-xs text-muted-foreground">
-              {isComplete
-                ? "Your profile is complete"
-                : "Complete your profile to unlock all features"}
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold">{completion}%</div>
-          </div>
-        </div>
-        <Progress value={completion} className="h-2" />
-      </div>
-    </div>
-  )
-})
-
 function SectionTitle({ title }: { title: string }) {
-  return (
-    <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-      {title}
-    </h2>
-  )
+  return <h2 className="text-[9px] font-black uppercase tracking-[0.4em] text-muted-foreground/40">{title}</h2>
 }
 
 function InfoRow({
@@ -369,40 +273,20 @@ function InfoRow({
   onCopy?: () => void
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      className="group flex items-start justify-between gap-3 rounded-lg p-3 transition-colors hover:bg-accent/5"
-    >
-      <div className="flex items-start gap-3 min-w-0 flex-1">
-        {icon && (
-          <div className="mt-0.5 shrink-0 text-muted-foreground">{icon}</div>
+    <div className="group space-y-1">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
+        {icon && <span className="text-primary/40">{icon}</span>}
+        {label}
+      </p>
+      <div className="flex items-center gap-2">
+        <p className="text-sm font-bold uppercase tracking-tight text-foreground">{value}</p>
+        {copyable && (
+          <button onClick={onCopy} className="opacity-0 group-hover:opacity-100 transition-opacity">
+            <Copy className="size-3 text-primary/40 hover:text-primary" />
+          </button>
         )}
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {label}
-          </p>
-          <p className="mt-1 text-sm font-medium break-words">{value}</p>
-        </div>
       </div>
-      {copyable && onCopy && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onCopy}
-                className="h-8 w-8 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-              >
-                <Copy className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Copy to clipboard</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
-    </motion.div>
+    </div>
   )
 }
 
@@ -411,70 +295,44 @@ function CopyRow({
   value,
   icon,
   onCopy,
-}: {
-  label: string
-  value: string
-  icon: React.ReactNode
-  onCopy: () => void
-}) {
+}: { label: string; value: string; icon: React.ReactNode; onCopy: () => void }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      className="group flex items-center justify-between gap-3 rounded-lg p-3 transition-colors hover:bg-accent/5"
-    >
-      <div className="flex min-w-0 flex-1 items-center gap-3">
-        <div className="shrink-0 text-muted-foreground">{icon}</div>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+    <div className="group flex items-center justify-between p-3 rounded-xl border border-border/40 bg-card hover:border-primary/20 transition-all shadow-sm">
+      <div className="flex items-center gap-3 truncate">
+        <div className="size-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary/60 shrink-0">
+          {icon}
+        </div>
+        <div className="truncate">
+          <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 leading-none mb-1">
             {label}
           </p>
-          <p className="mt-1 truncate text-sm font-medium">{value}</p>
+          <p className="text-sm font-bold tracking-tight truncate uppercase">{value}</p>
         </div>
       </div>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onCopy}
-              className="h-8 w-8 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-            >
-              <Copy className="h-3.5 w-3.5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Copy to clipboard</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    </motion.div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onCopy}
+        className="size-8 opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <Copy className="size-3" />
+      </Button>
+    </div>
   )
 }
 
 function StatusRow({ label, ok }: { label: string; ok: boolean }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      className="flex items-center justify-between rounded-lg p-3 text-sm transition-colors hover:bg-accent/5"
-    >
-      <span className="font-medium">{label}</span>
+    <div className="flex items-center justify-between py-3 border-b border-border/20 last:border-0">
+      <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">{label}</span>
       <div className="flex items-center gap-2">
         {ok ? (
-          <>
-            <span className="text-xs text-green-600 dark:text-green-400">
-              Active
-            </span>
-            <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-          </>
+          <CheckCircle2 className="size-4 text-primary" strokeWidth={3} />
         ) : (
-          <>
-            <span className="text-xs text-muted-foreground">Pending</span>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </>
+          <Clock className="size-4 text-muted-foreground/30" strokeWidth={3} />
         )}
       </div>
-    </motion.div>
+    </div>
   )
 }
 
@@ -483,163 +341,74 @@ function WebsiteLink({ url }: { url: string }) {
   const displayUrl = url.replace(/^https?:\/\//, "")
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      className="group rounded-lg p-3 transition-colors hover:bg-accent/5"
-    >
-      <div className="flex items-start gap-3">
-        <Globe className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Website
-          </p>
-          <a
-            href={formattedUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-1 inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:underline"
-          >
-            <span className="truncate">{displayUrl}</span>
-            <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-          </a>
-        </div>
-      </div>
-    </motion.div>
+    <div className="space-y-1">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
+        <Globe className="size-3 text-primary/40" />
+        External Presence
+      </p>
+      <a
+        href={formattedUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group inline-flex items-center gap-2 text-sm font-black uppercase tracking-tight text-primary transition-all hover:gap-3"
+      >
+        {displayUrl}
+        <ExternalLink className="size-3" />
+      </a>
+    </div>
   )
 }
 
 function EmptyState({ onEdit }: { onEdit?: () => void }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="flex min-h-[500px] items-center justify-center"
-    >
-      <div className="mx-auto max-w-md space-y-6 text-center">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-          <Building2 className="h-10 w-10 text-muted-foreground" />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-2xl font-semibold">Profile not configured</h2>
-          <p className="text-sm text-muted-foreground">
-            Complete your business profile to unlock platform features and start
-            collaborating with partners.
-          </p>
-        </div>
-        {onEdit && (
-          <Button onClick={onEdit} size="lg" className="mt-4">
-            <Edit3 className="mr-2 h-4 w-4" />
-            Complete your profile
-          </Button>
-        )}
-      </div>
-    </motion.div>
+    <div className="flex min-h-[400px] flex-col items-center justify-center p-20 rounded-3xl border border-dashed border-border bg-muted/5 text-center">
+      <Building2 className="size-12 text-muted-foreground/20 mb-6" strokeWidth={1} />
+      <h2 className="text-xl font-black uppercase tracking-tighter mb-2">Entity Unconfigured</h2>
+      <p className="text-sm text-muted-foreground max-w-xs mb-8">
+        Establish your corporate identity to begin transacting.
+      </p>
+      {onEdit && (
+        <Button onClick={onEdit} className="rounded-full px-8 font-black uppercase tracking-widest text-[10px]">
+          Initialize Profile
+        </Button>
+      )}
+    </div>
   )
 }
 
-function ErrorState({
-  onRetry,
-  isRetrying,
-}: {
-  onRetry: () => void
-  isRetrying: boolean
-}) {
+function ErrorState({ onRetry, isRetrying }: { onRetry: () => void; isRetrying: boolean }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="flex min-h-[500px] items-center justify-center"
-    >
-      <div className="mx-auto max-w-md space-y-6 text-center">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-destructive/10">
-          <AlertCircle className="h-10 w-10 text-destructive" />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-2xl font-semibold">Failed to load profile</h2>
-          <p className="text-sm text-muted-foreground">
-            We couldn't load your profile data. Please try again.
-          </p>
-        </div>
-        <Button
-          onClick={onRetry}
-          disabled={isRetrying}
-          variant="outline"
-          size="lg"
-          className="mt-4"
-        >
-          {isRetrying ? (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              Retrying...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Try again
-            </>
-          )}
-        </Button>
-      </div>
-    </motion.div>
+    <div className="flex min-h-[400px] flex-col items-center justify-center p-20 rounded-3xl border border-destructive/20 bg-destructive/5 text-center">
+      <AlertCircle className="size-10 text-destructive/40 mb-4" />
+      <p className="text-[10px] font-black uppercase tracking-widest text-destructive/60 mb-6">Synchronization Error</p>
+      <Button
+        onClick={onRetry}
+        disabled={isRetrying}
+        variant="outline"
+        className="border-destructive/20 hover:bg-destructive/5 text-destructive font-black uppercase tracking-widest text-[10px] bg-transparent"
+      >
+        {isRetrying ? <RefreshCw className="size-3 animate-spin mr-2" /> : "Retry Handshake"}
+      </Button>
+    </div>
   )
 }
 
 function ProfileViewSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-8 md:space-y-12">
-      <div className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex-1 space-y-3">
-            <Skeleton className="h-9 w-64" />
-            <Skeleton className="h-5 w-48" />
-            <Skeleton className="h-4 w-32" />
-          </div>
-          <Skeleton className="h-10 w-24" />
+    <div className="w-full space-y-16">
+      <div className="flex justify-between items-end border-b border-border/40 pb-10">
+        <div className="space-y-4">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-10 w-64" />
         </div>
-        <Skeleton className="h-24 w-full max-w-md rounded-lg" />
+        <Skeleton className="size-10 rounded-full" />
       </div>
-
-      <Separator />
-
-      <div className="grid grid-cols-1 gap-8 md:gap-10 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <Skeleton className="h-5 w-40" />
-          <div className="space-y-4">
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
-            ))}
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-20">
+        <div className="lg:col-span-2 space-y-12">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
         </div>
-        <div className="space-y-6">
-          <Skeleton className="h-5 w-32" />
-          <div className="space-y-4">
-            {[...Array(2)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <Separator />
-
-      <div className="grid grid-cols-1 gap-8 md:gap-10 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <Skeleton className="h-5 w-36" />
-          <div className="space-y-4">
-            {[...Array(2)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
-            ))}
-          </div>
-        </div>
-        <div className="space-y-6">
-          <Skeleton className="h-5 w-32" />
-          <div className="space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
-            ))}
-          </div>
-        </div>
+        <Skeleton className="h-64 w-full" />
       </div>
     </div>
   )

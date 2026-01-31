@@ -1,24 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { format } from "date-fns";
+import { useState } from "react";
 import {
-    Search, Loader2, SlidersHorizontal, ArrowUpRight,
-    Inbox, X, Hash, Calendar, ShoppingBag, DollarSign
+    Search, SlidersHorizontal
 } from "lucide-react";
 
 import { Input } from "@/components/common/input";
-import { Button } from "@/components/common/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/common/table";
-import { Badge } from "@/components/common/badge";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/common/table";
 
 export default function OrdersPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [status, setStatus] = useState("all");
-    const [isLoading, setIsLoading] = useState(false);
-    const [orders, setOrders] = useState<any[]>([]);
+    const [orders] = useState<any[]>([]);
 
     // Uniform Header and Filter Logic as seen in RFQs...
     return (

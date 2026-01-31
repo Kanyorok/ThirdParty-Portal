@@ -1,32 +1,55 @@
-export type RfqInvitationStatus = "OPEN" | "CLOSED" | "DRAFT" | "CANCELLED" | "SUBMITTED" | "PARTIAL";
+export type RfqStatus =
+    | "DRAFT"
+    | "OPEN"
+    | "SUBMITTED"
+    | "PARTIAL"
+    | "CLOSED"
+    | "CANCELLED"
+    | "APPROVED"
+    | "REJECTED";
+
+export type ActorRole = "SUPPLIER" | "ADMIN";
+
+export type CurrencyCode = string;
+
+export interface RfqId {
+    readonly value: string;
+}
+
+export interface SupplierId {
+    readonly value: string | number;
+}
 
 export interface RfqInvitationSummary {
-    id: string;
-    title: string;
+    id: RfqId["value"];
     referenceNumber: string;
-    closingDate: string; // ISO string
-    status: RfqInvitationStatus;
+    title: string;
+    closingDate: string;
+    status: RfqStatus;
 }
 
 export interface RfqDocumentAttachment {
     id: string;
     fileName: string;
+    mimeType: string;
     url: string;
 }
 
 export interface RfqHeader {
-    id: string;
-    title: string;
+    id: RfqId["value"];
     referenceNumber: string;
+    title: string;
     buyerName?: string;
-    closingDate: string; // ISO string
-    description?: string;
-    attachments?: RfqDocumentAttachment[];
+    description?: string | null;
+    closingDate: string;
+    status: RfqStatus;
+    currency: CurrencyCode;
+    attachments: RfqDocumentAttachment[];
 }
 
 export interface RfqLineItem {
     id: string;
-    lineNumber?: number;
+    lineNumber: number;
     description: string;
     quantity: number;
     unitOfMeasure: string;
@@ -42,38 +65,38 @@ export interface SupplierLineResponseInput {
 }
 
 export interface SupplierRfqResponsePayload {
-    rfqId: string;
-    supplierId: string | number;
-    isDraft?: boolean;
+    rfqId: RfqId["value"];
+    supplierId: SupplierId["value"];
+    status: "DRAFT" | "SUBMITTED" | "PARTIAL";
     lines: SupplierLineResponseInput[];
 }
 
 export interface SupplierRfqResponseResult {
     success: boolean;
-    message?: string;
     responseId?: string;
+    message?: string;
 }
 
 export interface RfqClarificationThread {
     id: string;
-    rfqId: string;
+    rfqId: RfqId["value"];
     lineItemId?: string | null;
     subject: string;
-    createdBy: "SUPPLIER" | "ADMIN";
-    createdOn: string; // ISO
+    createdBy: ActorRole;
+    createdOn: string;
     messages: RfqClarificationMessage[];
 }
 
 export interface RfqClarificationMessage {
     id: string;
     threadId: string;
-    sender: "SUPPLIER" | "ADMIN";
+    sender: ActorRole;
     body: string;
-    createdOn: string; // ISO
+    createdOn: string;
 }
 
 export interface CreateClarificationPayload {
-    rfqId: string;
+    rfqId: RfqId["value"];
     lineItemId?: string | null;
     subject: string;
     message: string;

@@ -53,7 +53,7 @@ export const ErrorState = memo(({ message, showActions = true, className }: Erro
                 animate="visible"
                 className="max-w-md w-full"
             >
-                <Card className="relative overflow-hidden border-destructive/20 bg-card/50 backdrop-blur-md shadow-2xl">
+                <Card className="relative overflow-hidden border-destructive/20 bg-card shadow-none">
                     <div className="absolute top-0 left-0 w-full h-1 bg-destructive/20" />
 
                     <CardContent className="p-8 text-center flex flex-col items-center">
@@ -88,7 +88,7 @@ export const ErrorState = memo(({ message, showActions = true, className }: Erro
                                 </Button>
                                 <Button
                                     onClick={() => router.push('/')}
-                                    className="h-11 font-semibold shadow-lg shadow-primary/20"
+                                    className="h-11 font-semibold shadow-none"
                                 >
                                     <Home className="mr-2 h-4 w-4" />
                                     Go home

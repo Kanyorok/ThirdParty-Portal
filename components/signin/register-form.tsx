@@ -1,307 +1,408 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { AlertCircle, Loader2 } from "lucide-react"
+import * as React from "react"
+import { AlertCircle, CheckCircle2, Eye, EyeOff, UserPlus } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Spinner } from "@/components/common/spinner"
+import { Button } from "@/components/common/button"
+import { Input } from "@/components/common/input"
+import { useRouter } from "next/navigation"
+import { cn } from "@/lib/utils"
+import { useRegisterForm } from "@/hooks/use-register"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { FormField } from "@/components/signin/form-field"
-import { PasswordField } from "@/components/signin/password-field"
-import { AuthHeader } from "@/components/signin/auth-header"
-// import { ContactSection } from "@/components/signin/contact-section"
-import { registerUser } from "@/actions/auth"
-
-const registerSchema = z
-  .object({
-    firstName: z.string().min(2, "First name is required"),
-    lastName: z.string().min(2, "Last name is required"),
-    email: z.string().email("Please enter a valid email address"),
-    phone: z.string().min(10, "Phone number is required"),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(/[A-Z]/, "Must mention one uppercase letter")
-      .regex(/[a-z]/, "Must mention one lowercase letter")
-      .regex(/[0-9]/, "Must mention one number"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  })
-
-type RegisterValues = z.infer<typeof registerSchema>
-
-export function RegisterForm() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+export default function RegisterForm() {
+  const router = useRouter()
+  const [step, setStep] = React.useState<1 | 2>(1)
+  const [authError, setAuthError] = React.useState<string | null>(null)
+  const [success, setSuccess] = React.useState(false)
+  const [showPassword, setShowPassword] = React.useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
 
   const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors, isSubmitting, isValid, touchedFields },
-  } = useForm<RegisterValues>({
-    resolver: zodResolver(registerSchema),
-    mode: "onChange",
-  })
+    form,
+    errors,
+    metadata,
+    isLoadingMetadata,
+    metadataError,
+    onSubmit,
+    isSubmitting,
+    toggleType,
+    selectedTypes,
+    isSupplier,
+    isTenant,
+    isCustomer
+  } = useRegisterForm()
 
-  // Watch fields for dynamic styling
-  const watchedFields = watch()
+  const createUser = form.watch("createUser")
 
-  // Helper to determine field status
-  const getFieldStatus = (fieldName: keyof RegisterValues) => {
-    if (errors[fieldName]) return "error"
-    if (touchedFields[fieldName] && !errors[fieldName] && watchedFields[fieldName]) return "success"
-    return "default"
-  }
-
-  const fieldStatuses = {
-    firstName: getFieldStatus("firstName"),
-    lastName: getFieldStatus("lastName"),
-    email: getFieldStatus("email"),
-    phone: getFieldStatus("phone"),
-    password: getFieldStatus("password"),
-    confirmPassword: getFieldStatus("confirmPassword"),
-  }
-
-  const onSubmit = async (data: RegisterValues) => {
-    // try {
-    await registerUser(data)
-    // } catch (error) {
-    //   // Error is handled by the action which throws
-    //   console.error(error)
-    // }
-  }
-
-  const resolveInputStyles = (fieldName: keyof RegisterValues, hasError: boolean) => {
-    if (hasError) {
-      return "border-red-300 focus:border-red-500 focus:ring-red-500/20 bg-red-50"
+  const submitDirectly = async () => {
+    setAuthError(null)
+    try {
+      await onSubmit()
+      setSuccess(true)
+    } catch (error: any) {
+      setAuthError(error?.message ?? "An unexpected error occurred.")
     }
-    if (touchedFields[fieldName] && !errors[fieldName] && watchedFields[fieldName]) {
-      return "border-green-300 focus:border-green-500 focus:ring-green-500/20 bg-green-50"
-    }
-    return "border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
   }
+
+  const nextStep = async () => {
+    const fields: string[] = [
+      "Name",
+      "TradingName",
+      "BusinessType",
+      "RegistrationNumber",
+      "Country",
+      "Location",
+      "TaxPIN",
+      "VATNumber",
+      "Email",
+      "Phone",
+      "Website",
+      "PhysicalAddress",
+      "types"
+    ]
+
+    if (isTenant) fields.push("user_Remarks")
+    if (isSupplier) fields.push("user_SupplierCategoryId")
+
+    const valid = await form.trigger(fields)
+    if (!valid) return
+
+    if (!createUser) {
+      await submitDirectly()
+      return
+    }
+
+    setStep(2)
+    window.scrollTo({ top: 0 })
+  }
+
+  const handleFinalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (isSubmitting) return
+    await submitDirectly()
+  }
+
+  const inputStyle =
+    "h-12 w-full border border-slate-200 bg-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-50"
+  const labelStyle =
+    "text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2 block"
+  const errorStyle =
+    "text-xs text-red-600 mt-1.5 flex items-center gap-1"
+
+  if (isLoadingMetadata)
+    return (
+      <div className="py-20 text-center">
+        <Spinner className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
+      </div>
+    )
+
+  if (metadataError)
+    return (
+      <div className="py-20 text-center text-red-600">
+        {metadataError}
+      </div>
+    )
+
+  if (success)
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-md mx-auto text-center py-20 px-8"
+      >
+        <CheckCircle2 className="h-20 w-20 text-green-600 mx-auto mb-6" />
+        <h2 className="text-2xl font-bold mb-4">Registration Complete</h2>
+        <Button
+          onClick={() => router.replace("/signin")}
+          className="w-full h-12 bg-blue-600 text-white font-bold rounded-lg"
+        >
+          GO TO SIGN IN
+        </Button>
+      </motion.div>
+    )
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-100 dark:border-zinc-800 p-8">
-      <AuthHeader />
+    <div className="max-w-5xl mx-auto px-6 pb-20">
+      <div className="flex items-center border-b border-slate-200 mb-12">
+        <div
+          className={cn(
+            "flex items-center gap-3 pb-4 pr-12 border-b-2 transition-all",
+            step === 1 ? "border-blue-600" : "border-transparent opacity-40"
+          )}
+        >
+          <span className="text-[10px] font-black uppercase tracking-[0.3em]">
+            Organization
+          </span>
+        </div>
+        <div
+          className={cn(
+            "flex items-center gap-3 pb-4 pr-12 border-b-2 transition-all",
+            step === 2 ? "border-blue-600" : "border-transparent opacity-40"
+          )}
+        >
+          <span className="text-[10px] font-black uppercase tracking-[0.3em]">
+            Admin User
+          </span>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {authError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg flex items-center gap-3"
+          >
+            <AlertCircle className="h-5 w-5" />
+            <span>{authError}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <form
-        onSubmit={handleSubmit(onSubmit)}
-        noValidate
-        aria-label="Registration form"
-        className="space-y-8"
+        onSubmit={handleFinalSubmit}
+        onKeyDown={e => e.key === "Enter" && e.preventDefault()}
+        className="grid grid-cols-1 lg:grid-cols-12 gap-16"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            status={fieldStatuses.firstName}
-            label="First Name"
-            required
-            error={errors.firstName?.message}
-            id="firstName"
-          >
-            <Input
-              id="firstName"
-              type="text"
-              placeholder="e.g. Mary"
-              {...register("firstName")}
-              aria-invalid={!!errors.firstName}
-              className={resolveInputStyles("firstName", !!errors.firstName)}
-            />
-          </FormField>
+        <div className="lg:col-span-8">
+          {step === 1 ? (
+            <motion.div
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-10"
+            >
+              <section className="space-y-6">
+                <label className={labelStyle}>Select Your Business Roles</label>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    { id: "SU", label: "Supplier" },
+                    { id: "TN", label: "Tenant" },
+                    { id: "CU", label: "Customer" }
+                  ].map(type => (
+                    <button
+                      key={type.id}
+                      type="button"
+                      onClick={() => toggleType(type.id)}
+                      className={cn(
+                        "px-6 h-12 text-[11px] font-bold uppercase border-2 rounded-lg transition-all",
+                        selectedTypes?.includes(type.id)
+                          ? "border-blue-600 bg-blue-600 text-white"
+                          : "border-slate-200 text-slate-600"
+                      )}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+                {errors.types && (
+                  <p className={errorStyle}>{errors.types.message}</p>
+                )}
+              </section>
 
-          <FormField
-            status={fieldStatuses.lastName}
-            label="Last Name"
-            required
-            error={errors.lastName?.message}
-            id="lastName"
-          >
-            <Input
-              id="lastName"
-              type="text"
-              placeholder="e.g. Ochieng"
-              {...register("lastName")}
-              aria-invalid={!!errors.lastName}
-              className={resolveInputStyles("lastName", !!errors.lastName)}
-            />
-          </FormField>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div className="md:col-span-2">
+                  <label className={labelStyle}>Legal Company Name</label>
+                  <Input {...form.register("Name")} className={inputStyle} />
+                </div>
 
-          <FormField
-            status={fieldStatuses.email}
-            label="Email Address"
-            required
-            error={errors.email?.message}
-            id="email"
-          >
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              autoComplete="email"
-              {...register("email")}
-              aria-invalid={!!errors.email}
-              className={resolveInputStyles("email", !!errors.email)}
-            />
-          </FormField>
+                <div className="md:col-span-2">
+                  <label className={labelStyle}>Trading Name</label>
+                  <Input {...form.register("TradingName")} className={inputStyle} />
+                </div>
 
-          <FormField
-            status={fieldStatuses.phone}
-            label="Phone Number"
-            required
-            error={errors.phone?.message}
-            id="phoneNumber"
-          >
-            {(() => {
-              const phoneReg = register("phone")
+                <div>
+                  <label className={labelStyle}>Business Type</label>
+                  <select {...form.register("BusinessType")} className={inputStyle}>
+                    <option value="">Select...</option>
+                    {metadata.businessTypes.map(bt => (
+                      <option key={bt.value} value={bt.value}>
+                        {bt.description}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              const handleBeforeInput = (e: any) => {
-                // Prevent typing any non-digit characters
-                const data = e?.data
-                if (data && /\D/.test(data)) {
-                  e.preventDefault()
-                }
-              }
+                <div>
+                  <label className={labelStyle}>Registration Number</label>
+                  <Input {...form.register("RegistrationNumber")} className={inputStyle} />
+                </div>
 
-              const handlePaste = (e: any) => {
-                const pasted = e?.clipboardData?.getData?.("text") || (window as any).clipboardData?.getData?.("Text") || ""
-                if (!pasted) return
-                const cleaned = pasted.replace(/\D/g, "")
-                if (cleaned === pasted) return // no invalid chars
-                e.preventDefault()
-                const target = e.target as HTMLInputElement
-                const start = target.selectionStart ?? target.value.length
-                const end = target.selectionEnd ?? start
-                const newVal = target.value.slice(0, start) + cleaned + target.value.slice(end)
-                const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
-                if (nativeSetter) {
-                  nativeSetter.call(target, newVal)
-                } else {
-                  target.value = newVal
-                }
-                const ev = new Event("input", { bubbles: true })
-                target.dispatchEvent(ev)
-                // let react-hook-form know about the change
-                if (phoneReg.onChange) phoneReg.onChange({ target } as any)
-              }
+                <div>
+                  <label className={labelStyle}>Tax PIN</label>
+                  <Input {...form.register("TaxPIN")} className={inputStyle} />
+                </div>
 
-              const handleChange = (e: any) => {
-                const cleaned = (e.target.value || "").replace(/\D/g, "")
-                if (cleaned !== e.target.value) {
-                  const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
-                  if (nativeSetter) nativeSetter.call(e.target, cleaned)
-                  else e.target.value = cleaned
-                  const ev = new Event("input", { bubbles: true })
-                  e.target.dispatchEvent(ev)
-                }
-                if (phoneReg.onChange) phoneReg.onChange(e)
-              }
+                <div>
+                  <label className={labelStyle}>VAT Number</label>
+                  <Input {...form.register("VATNumber")} className={inputStyle} />
+                </div>
 
-              return (
-                <Input
-                  id="phoneNumber"
-                  type="tel"
-                  placeholder="254712345678"
-                  autoComplete="tel"
-                  {...phoneReg}
-                  aria-invalid={!!errors.phone}
-                  onBeforeInput={handleBeforeInput}
-                  onPaste={handlePaste}
-                  onChange={handleChange}
-                  className={resolveInputStyles("phone", !!errors.phone)}
-                />
-              )
-            })()}
-          </FormField>
+                <div>
+                  <label className={labelStyle}>Business Email</label>
+                  <Input type="email" {...form.register("Email")} className={inputStyle} />
+                </div>
 
-          <PasswordField
-            id="password"
-            label="Password"
-            placeholder="Enter your password"
-            value={watchedFields.password}
-            error={errors.password?.message}
-            status={fieldStatuses.password}
-            showPassword={showPassword}
-            onTogglePassword={() => setShowPassword(!showPassword)}
-            register={register("password")}
-          />
+                <div>
+                  <label className={labelStyle}>Phone</label>
+                  <Input {...form.register("Phone")} className={inputStyle} />
+                </div>
 
-          <PasswordField
-            id="confirmPassword"
-            label="Confirm Password"
-            placeholder="Confirm your password"
-            value={watchedFields.confirmPassword}
-            error={errors.confirmPassword?.message}
-            status={fieldStatuses.confirmPassword}
-            showPassword={showConfirmPassword}
-            onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
-            register={register("confirmPassword")}
-            showMatchIndicator={touchedFields.confirmPassword}
-            passwordsMatch={
-              watchedFields.confirmPassword === watchedFields.password &&
-              watchedFields.confirmPassword !== ""
-            }
-            onPaste={(e: React.ClipboardEvent) => e.preventDefault()}
-          />
+                <div>
+                  <label className={labelStyle}>Website</label>
+                  <Input {...form.register("Website")} className={inputStyle} />
+                </div>
+
+                <div>
+                  <label className={labelStyle}>Country</label>
+                  <select {...form.register("Country")} className={inputStyle}>
+                    <option value="">Select...</option>
+                    {metadata.countries.map(c => (
+                      <option key={c.code} value={c.code}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className={labelStyle}>City / Locality</label>
+                  <select {...form.register("Location")} className={inputStyle}>
+                    <option value="">Select...</option>
+                    {metadata.localities.map(l => (
+                      <option key={l.id} value={l.id}>
+                        {l.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className={labelStyle}>Physical Address</label>
+                  <Input {...form.register("PhysicalAddress")} className={inputStyle} />
+                </div>
+
+                {isTenant && (
+                  <div className="md:col-span-2">
+                    <label className={labelStyle}>Tenant Remarks</label>
+                    <Input {...form.register("user_Remarks")} className={inputStyle} />
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-blue-600">
+                    <UserPlus className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800">
+                      Create Admin Account
+                    </h4>
+                    <p className="text-xs text-slate-500">
+                      Enable portal access for this organization
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => form.setValue("createUser", !createUser)}
+                  className={cn(
+                    "w-12 h-6 rounded-full transition-all relative",
+                    createUser ? "bg-blue-600" : "bg-slate-300"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
+                      createUser ? "right-1" : "left-1"
+                    )}
+                  />
+                </button>
+              </div>
+
+              <Button
+                type="button"
+                onClick={nextStep}
+                disabled={isSubmitting}
+                className="h-14 bg-blue-600 text-white font-bold uppercase rounded-lg w-full"
+              >
+                {createUser ? "Continue to User Details" : "Finish Registration"}
+              </Button>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-10"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <Input {...form.register("user_FirstName")} placeholder="First Name" className={inputStyle} />
+                <Input {...form.register("user_LastName")} placeholder="Last Name" className={inputStyle} />
+                <Input {...form.register("user_Email")} placeholder="Admin Email" className={inputStyle} />
+                <Input {...form.register("user_Phone")} placeholder="Admin Phone" className={inputStyle} />
+
+                <select {...form.register("user_Gender")} className={inputStyle}>
+                  <option value="">Gender...</option>
+                  {metadata.genders.map(g => (
+                    <option key={g.value} value={g.value}>
+                      {g.description}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    {...form.register("user_Password")}
+                    placeholder="Password"
+                    className={cn(inputStyle, "pr-11")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                  >
+                    {showPassword ? <EyeOff /> : <Eye />}
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <Input
+                    type={showConfirmPassword ? "text" : "password"}
+                    {...form.register("user_Password_confirmation")}
+                    placeholder="Confirm Password"
+                    className={cn(inputStyle, "pr-11")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                  >
+                    {showConfirmPassword ? <EyeOff /> : <Eye />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <Button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="h-14 bg-slate-200 text-slate-700 font-bold rounded-lg px-8"
+                >
+                  Back
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="h-14 flex-1 bg-blue-600 text-white font-bold rounded-lg"
+                >
+                  Register
+                </Button>
+              </div>
+            </motion.div>
+          )}
         </div>
-
-        {errors.root?.message && (
-          <div
-            className="p-4 bg-red-50 border border-red-200 rounded-lg"
-            role="alert"
-            aria-live="polite"
-          >
-            <p className="text-red-600 text-sm flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              {errors.root.message}
-            </p>
-          </div>
-        )}
-
-        <div className="pt-6 flex flex-col sm:flex-row gap-4 w-full">
-          <Link
-            href="/signin"
-            className="flex-1 inline-flex items-center justify-center min-h-[56px] px-6 text-base font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 transition-all text-center"
-          >
-            Back to Login
-          </Link>
-
-          <Button
-            type="submit"
-            disabled={isSubmitting || !isValid}
-            className="flex-1 inline-flex items-center justify-center gap-2 min-h-[56px] px-6 text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all text-center"
-            aria-describedby={isSubmitting ? "submit-status" : undefined}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span id="submit-status">Creating Account...</span>
-              </>
-            ) : (
-              "Create Account"
-            )}
-          </Button>
-        </div>
-
-        <div className="text-center pt-4 text-base text-gray-600">
-          Already have an account?{" "}
-          <Link
-            href="/signin"
-            className="text-blue-600 hover:underline font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
-          >
-            Sign in
-          </Link>
-        </div>
-
-        {/* <div className="mt-10">
-          <ContactSection />
-        </div> */}
       </form>
     </div>
   )

@@ -15,7 +15,7 @@ export function ThemeToggle() {
     }, [])
 
     if (!mounted) {
-        return <Button size="icon" aria-label="Loading..." disabled />
+        return <Button size="icon" aria-label="Loading..." className="rounded-xl" disabled />
     }
 
     const isDarkMode = resolvedTheme === "dark"
@@ -29,6 +29,7 @@ export function ThemeToggle() {
             onClick={() => setTheme(nextTheme)}
             aria-label={`Toggle theme to ${nextTheme}`}
             title={`Switch to ${nextTheme} mode`}
+            className="rounded-xl"
         >
             {currentIcon}
             <span className="sr-only">Toggle theme</span>

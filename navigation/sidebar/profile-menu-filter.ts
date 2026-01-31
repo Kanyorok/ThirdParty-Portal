@@ -1,26 +1,21 @@
-import { NavSection, NavMainItem, UserProfile } from "@/types/profile-types"
+import { NavSection, UserProfile } from "@/types/profile-types"
 
-export function getProfileMenu(
-    userProfile: UserProfile,
-    menuData: readonly NavSection[]
-): readonly NavSection[] {
-    const filteredSections = menuData.filter((section) => {
-        if (section.allowedProfiles) {
-            return section.allowedProfiles.includes(userProfile)
-        }
-        return true
-    })
-
-    return filteredSections
-        .map((section) => {
-            const filteredItems = section.items.filter((item) =>
-                item.allowedProfiles.includes(userProfile)
-            ) as NavMainItem[]
-
-            return {
-                ...section,
-                items: filteredItems,
+export function getFilteredMenus(
+    activeProfile: UserProfile,
+    items: readonly NavSection[]
+): NavSection[] {
+    return items
+        .filter((section) => {
+            if (activeProfile === 'base') {
+                return section.id === 'general' || section.id === 'utility'
             }
+            return section.allowedProfiles.includes(activeProfile)
         })
-        .filter((section) => section.items.length > 0)
+        .map((section) => ({
+            ...section,
+            items: section.items.filter((item) => {
+                if (activeProfile === 'base') return true
+                return item.allowedProfiles.includes(activeProfile)
+            })
+        }))
 }

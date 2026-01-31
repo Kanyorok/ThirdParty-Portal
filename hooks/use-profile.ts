@@ -1,16 +1,18 @@
-import { useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+"use client"
+
+import { useCallback } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   getProfile,
   updateProfile,
   getCurrentUser,
   type UpdateProfilePayload,
   type ProfileResponse,
-} from "@/lib/api/profile-management";
-import { toast } from "sonner";
+} from "@/lib/api/profile-management"
+import { toast } from "sonner"
 
 export function useProfile() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   const {
     data: profileResponse,
@@ -21,20 +23,20 @@ export function useProfile() {
     queryKey: ["profile"],
     queryFn: getProfile,
     retry: 1,
-  });
+  })
 
   const updateMutation = useMutation({
     mutationFn: (data: UpdateProfilePayload) => updateProfile(data),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-      toast.success(response.message || "Profile updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["profile"] })
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] })
+      toast.success(response.message || "Profile updated successfully")
     },
     onError: (error: any) => {
-      const message = error?.message || "Failed to update profile";
-      toast.error(message);
+      const message = error?.message || "Failed to update profile"
+      toast.error(message)
     },
-  });
+  })
 
   const {
     data: currentUserResponse,
@@ -44,23 +46,39 @@ export function useProfile() {
     queryKey: ["currentUser"],
     queryFn: getCurrentUser,
     staleTime: 5 * 60 * 1000,
-  });
+  })
 
   const updateProfileData = useCallback(
     (data: UpdateProfilePayload) => {
-      return updateMutation.mutateAsync(data);
+      return updateMutation.mutateAsync(data)
     },
-    [updateMutation]
-  );
+    [updateMutation],
+  )
 
-  const user = profileResponse?.data;
-  const thirdParty = user?.thirdParty;
+  const profile = profileResponse?.data || profileResponse?.user
+  const currentUser = currentUserResponse?.user || currentUserResponse?.data
+  
+  const thirdParty = profile?.thirdParty as any
+  const details = thirdParty?.thirdPartyDetails
+
+  const rawProfileCompletion =
+    thirdParty?.profileCompletion ??
+    thirdParty?.ProfileCompletion ??
+    thirdParty?.profile_completion ??
+    profile?.profileCompletion ??
+    profile?.ProfileCompletion ??
+    profile?.profile_completion
+
+  const profileCompletion = Number.isFinite(Number(rawProfileCompletion))
+    ? Number(rawProfileCompletion)
+    : 0
 
   return {
-    profile: user,
-    thirdParty: thirdParty,
-    thirdPartyDetails: thirdParty?.thirdPartyDetails,
-    profileCompletion: thirdParty?.profileCompletion || 0,
+    profile,
+    thirdParty,
+    details,
+    thirdPartyDetails: details,
+    profileCompletion,
 
     isLoading,
     isUpdating: updateMutation.isPending,
@@ -70,7 +88,7 @@ export function useProfile() {
     refetch,
     refreshCurrentUser: refetchCurrentUser,
 
-    currentUser: currentUserResponse?.data,
+    currentUser,
     error,
-  };
+  }
 }

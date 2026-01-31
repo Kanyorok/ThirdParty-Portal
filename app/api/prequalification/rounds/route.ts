@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 
-const BASE_URL = process.env.NEXTAUTH_URL;
-
 export async function GET(request: NextRequest) {
     // Get session for authentication
     const session = await getServerSession(authOptions);
@@ -24,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     try {
         // Backend doesn't support query parameters, so call it without any
-        const res = await fetch(`${BASE_URL}/api/prequalification/rounds`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/prequalification/rounds`, {
             headers: {
                 Accept: "application/json",
                 "Content-Type": "application/json",
@@ -117,5 +115,3 @@ export async function GET(request: NextRequest) {
         );
     }
 }
-
-

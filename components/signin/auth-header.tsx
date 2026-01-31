@@ -4,7 +4,7 @@ interface AuthHeaderProps {
   isRegistration?: boolean;
 }
 
-export function AuthHeader({ isRegistration = false }: AuthHeaderProps) {
+export function AuthHeader({ isRegistration: _isRegistration = false }: AuthHeaderProps) {
   const descriptionText = "Self-Service Portal";
 
   return (

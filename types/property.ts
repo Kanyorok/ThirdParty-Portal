@@ -1,33 +1,32 @@
+export interface Unit {
+    id: number;
+    unitCode: string;
+    unitSize: string | number;
+    isRentable: boolean;
+    currentStatus: boolean;
+    availabilityLabel: string;
+}
+
+export interface Floor {
+    id: number;
+    floorLabel: string;
+    floorNotes?: string;
+    units: Unit[];
+}
+
+export interface Block {
+    id: number;
+    blockName: string;
+    floors: Floor[];
+}
+
 export interface Property {
-    id: string | number;
-    name: string;
-    code: string;
-    category_name?: string;
-    monthly_rent?: number;
-    location_name?: string;
-}
-
-export interface RentablePropertiesResponse {
-    data: Property[];
-    links: {
-        first: string;
-        last: string;
-        prev: string | null;
-        next: string | null;
-    };
-    meta: {
-        currentPage: number;
-        lastPage: number;
-        perPage: number;
-        total: number;
-        path: string;
-    };
-}
-
-export interface PaginationLink {
-    url: string | null;
-    label: string;
-    active: boolean;
+    id: number;
+    propertyName: string;
+    propertyCode: string;
+    blocks: Block[];
+    locationId?: number | undefined;
+    propertyDescription?: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -42,7 +41,11 @@ export interface PaginatedResponse<T> {
         currentPage: number;
         from: number | null;
         lastPage: number;
-        links: PaginationLink[];
+        links: Array<{
+            url: string | null;
+            label: string;
+            active: boolean;
+        }>;
         path: string;
         perPage: number;
         to: number | null;

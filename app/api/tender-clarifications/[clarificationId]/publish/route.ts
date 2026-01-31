@@ -1,113 +1,81 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
+import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth-options"
 
-interface PublishClarificationRequest {
-  publishToAll: boolean;
-  notifySuppliers?: boolean;
-  publishedBy?: string;
+const API_URL = process.env.NEXT_PUBLIC_API_URL
+const TIMEOUT = 10000
+
+function timeoutSignal() {
+  return AbortSignal.timeout(TIMEOUT)
 }
 
-export async function PATCH(request: NextRequest) {
+function errorResponse(message: string, status = 500, details?: unknown) {
+  return NextResponse.json(
+    { error: message, ...(details ? { details } : {}) },
+    { status }
+  )
+}
+
+async function requireSession() {
+  const session = await getServerSession(authOptions)
+  if (!session?.user || !session.accessToken) return null
+  return session
+}
+
+export async function PATCH(req: NextRequest) {
+  const session = await requireSession()
+  if (!session) return errorResponse("Unauthorized", 401)
+  if (!API_URL) return errorResponse("Service misconfigured", 500)
+
+  const url = new URL(req.url)
+  const segments = url.pathname.split("/").filter(Boolean)
+  const clarificationId = segments[segments.length - 2]
+
+  if (!clarificationId) {
+    return errorResponse("Clarification ID is required", 400)
+  }
+
+  const body = await req.json()
+
+  const publishToAll = body.publishToAll !== false
+  const notifySuppliers = body.notifySuppliers !== false
+
+  const payload = {
+    is_public: publishToAll,
+    notify_suppliers: notifySuppliers,
+    published_by: body.publishedBy ?? "Procurement Team",
+    published_on: new Date().toISOString(),
+    modified_by: session.user.id,
+    modified_on: new Date().toISOString()
+  }
+
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const url = new URL(request.url);
-    const parts = url.pathname.split("/");
-    const clarificationId = parts[parts.length - 2];
-    const body: PublishClarificationRequest = await request.json();
-    const { publishToAll, notifySuppliers, publishedBy } = body;
-
-    // Validate required fields
-    if (!clarificationId) {
-      return NextResponse.json(
-        { error: "Clarification ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Prepare payload for external ERP API
-    const publishPayload = {
-      clarificationId,
-      publishToAll: publishToAll !== false, // Default to true
-      notifySuppliers: notifySuppliers !== false, // Default to true - notify all suppliers
-      publishedBy: publishedBy || 'Procurement Team',
-      publishedDate: new Date().toISOString(),
-      modifiedBy: session.user.id,
-      modifiedOn: new Date().toISOString(),
-    };
-
-    const externalApiUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
-
-    if (externalApiUrl) {
-      try {
-        // Send publish request to external ERP API
-        const apiUrl = `${externalApiUrl}/api/tender-clarifications/${clarificationId}/publish`;
-
-        const response = await fetch(apiUrl, {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${session.accessToken}`,
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(publishPayload),
-          signal: AbortSignal.timeout(10000)
-        });
-
-        if (response.ok) {
-          const publishedClarification = await response.json();
-
-          return NextResponse.json({
-            message: publishToAll
-              ? "Clarification published to all suppliers successfully"
-              : "Clarification set to private successfully",
-            data: publishedClarification,
-            suppliersNotified: notifySuppliers && publishToAll,
-          });
-        }
-      } catch (error) {
-        console.warn('External ERP API not available for clarification publishing, using mock response:', error);
+    const res = await fetch(
+      `${API_URL}/api/v1/supplier/tender-clarifications/${clarificationId}/publish`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify(payload),
+        signal: timeoutSignal()
       }
-    }
+    )
 
-    // Fallback: Mock successful publishing
-    const mockPublishedClarification = {
-      id: parseInt(clarificationId),
-      isPublic: publishToAll,
-      publishedDate: new Date().toISOString(),
-      publishedBy: publishedBy || 'Procurement Team',
-      suppliersNotified: notifySuppliers && publishToAll,
-      modifiedBy: session.user.id,
-      modifiedOn: new Date().toISOString(),
-    };
-
-
+    const data = await res.json()
+    if (!res.ok) return NextResponse.json(data, { status: res.status })
 
     return NextResponse.json({
+      success: true,
       message: publishToAll
-        ? "Clarification published to all suppliers successfully (mock mode)"
-        : "Clarification set to private successfully (mock mode)",
-      data: mockPublishedClarification,
-      suppliersNotified: notifySuppliers && publishToAll,
-      fallback: true,
-    });
-
-  } catch (error) {
-    console.error('Failed to publish clarification:', error);
-    return NextResponse.json(
-      {
-        error: "Failed to publish clarification",
-        message: error instanceof Error ? error.message : "Unknown error"
-      },
-      { status: 500 }
-    );
+        ? "Clarification published successfully"
+        : "Clarification set to private",
+      data,
+      suppliersNotified: publishToAll && notifySuppliers
+    })
+  } catch {
+    return errorResponse("Upstream service unavailable", 502)
   }
 }

@@ -22,10 +22,6 @@ export async function POST(request: NextRequest) {
     const apiUrl = getApiUrl()
     const requestUrl = `${apiUrl}/api/v1/portal/profiles/supplier`
 
-    console.log("[Create Supplier] Request body:", JSON.stringify(body).substring(0, 200))
-    console.log("[Create Supplier] Token (first 20):", accessToken?.substring(0, 20) + "...")
-    console.log("[Create Supplier] Request URL:", requestUrl)
-
     const response = await fetch(requestUrl, {
       method: "POST",
       headers: {

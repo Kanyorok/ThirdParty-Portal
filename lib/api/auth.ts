@@ -1,62 +1,55 @@
-/**
- * Authentication API Service
- * Handles all authentication-related API calls
- */
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 interface ApiResponse<T = any> {
-  success: boolean;
-  message: string;
-  data?: T;
-  user?: T;
+  success: boolean
+  message?: string
+  error?: string
+  user?: T
+  token?: string
 }
 
 interface LoginRequest {
-  email: string;
-  password: string;
+  email: string
+  password: string
 }
 
 interface RegisterRequest {
-  FirstName: string;
-  LastName: string;
-  Email: string;
-  Phone: string;
-  Password: string;
-  Password_confirmation: string;
-}
-
-interface CompleteProfileRequest {
-  ThirdPartyName: string;
-  TradingName: string;
-  RegistrationNumber: string;
-  TaxPIN: string;
-  BusinessType: number;
-  CountryId: number;
-  PhysicalAddress: string;
-  Website?: string | null;
-  accountType: 'supplier' | 'tenant' | 'customer' | 'both';
-  supplierCategories?: number[];
-  tenantCategories?: number[];
+  FirstName: string
+  LastName: string
+  Email: string
+  Phone: string
+  Password: string
+  Password_confirmation: string
 }
 
 interface UserData {
-  id: number;
-  userId: string;
-  firstName: string;
-  lastName: string;
-  fullName: string;
-  email: string;
-  phone: string | null;
-  thirdPartyId: string | null;
-  isActive: boolean;
-  hasProfile: boolean;
-  emailVerified: boolean;
-  isSupplier: boolean;
-  isTenant: boolean;
-  isCustomer: boolean;
-  approvalStatus: string;
-  thirdParty?: any;
+  id: number
+  userId: number
+  firstName: string
+  lastName: string
+  fullName: string
+  email: string
+  phone: string | null
+  gender?: unknown
+  imageId?: number | null
+  thirdPartyId: string | null
+  isActive: boolean
+  isSupplier: boolean
+  isTenant: boolean
+  isCustomer: boolean
+  approvalStatus?: string
+  emailVerifiedOn?: string | null
+  createdOn?: string | null
+  modifiedOn?: string | null
+  thirdParty?: unknown
+}
+
+class ApiError extends Error {
+  code?: string
+  constructor(message: string, code?: string) {
+    super(message)
+    this.code = code
+  }
 }
 
 const request = async <T = any>(
@@ -64,161 +57,119 @@ const request = async <T = any>(
   options: RequestInit = {},
   token?: string
 ): Promise<T> => {
-  const url = `${BASE_URL}${endpoint}`;
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    ...options.headers,
-  };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const response = await fetch(url, {
+  const response = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
-    headers,
-  });
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  })
 
-  const data = await response.json();
+  const text = await response.text()
+  const data = text ? JSON.parse(text) : {}
 
-  if (!response.ok) {
-    throw new Error(data.message || `Request failed with status ${response.status}`);
+  if (!response.ok || data?.success === false) {
+    throw new ApiError(data?.message || "Request failed", data?.error)
   }
 
-  return data;
-};
+  return data
+}
 
 export const authService = {
-  /**
-   * Login user with email and password
-   */
-  login: async (credentials: LoginRequest): Promise<{ user: UserData; token: string }> => {
-    const response = await request<ApiResponse<UserData>>('/api/v1/portal/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    });
-
-    return {
-      user: response.user!,
-      token: response.data as any || '',
-    };
-  },
-
-  /**
-   * Register new user account (Step 1)
-   */
-  register: async (data: RegisterRequest): Promise<{ user: UserData; token: string }> => {
-    const response = await request<ApiResponse<UserData>>('/api/v1/portal/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-
-    return {
-      user: response.user!,
-      token: response.data as any || '',
-    };
-  },
-
-  /**
-   * Complete user profile (Step 2)
-   */
-  completeProfile: async (
-    data: CompleteProfileRequest,
-    token: string
-  ): Promise<{ user: UserData }> => {
-    const response = await request<ApiResponse<UserData>>(
-      '/api/v1/portal/auth/complete-profile',
+  register: async (data: RegisterRequest): Promise<{ userId: string }> => {
+    const res = await request<ApiResponse>(
+      "/api/v1/portal/auth/register",
       {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify(data),
-      },
-      token
-    );
+      }
+    )
+
+    return { userId: (res as any).userId }
+  },
+
+  login: async (
+    credentials: LoginRequest
+  ): Promise<{ user: UserData; token: string }> => {
+    const res = await request<ApiResponse<UserData>>(
+      "/api/v1/portal/auth/login",
+      {
+        method: "POST",
+        body: JSON.stringify(credentials),
+      }
+    )
 
     return {
-      user: response.data!,
-    };
+      user: res.user!,
+      token: res.token!,
+    }
   },
 
-  /**
-   * Get current user data
-   */
   me: async (token: string): Promise<UserData> => {
-    const response = await request<ApiResponse<UserData>>(
-      '/api/v1/portal/auth/me',
-      {
-        method: 'POST',
-      },
+    const res = await request<ApiResponse<UserData>>(
+      "/api/v1/portal/auth/me",
+      { method: "GET" },
       token
-    );
+    )
 
-    return response.user!;
+    return res.user!
   },
 
-  /**
-   * Logout user
-   */
   logout: async (token: string): Promise<void> => {
     await request(
-      '/api/v1/portal/auth/logout',
-      {
-        method: 'POST',
-      },
+      "/api/v1/portal/auth/logout",
+      { method: "POST" },
       token
-    );
+    )
   },
 
-  /**
-   * Resend email verification
-   */
-  resendVerificationEmail: async (token: string): Promise<{ message: string }> => {
-    return await request(
-      '/api/v1/portal/auth/email/verification-notification',
+  resendVerificationEmail: async (email: string): Promise<void> => {
+    await request(
+      "/api/v1/portal/auth/email/resend",
       {
-        method: 'POST',
-      },
-      token
-    );
+        method: "POST",
+        body: JSON.stringify({ email }),
+      }
+    )
   },
 
-  /**
-   * Request password reset
-   */
-  forgotPassword: async (email: string): Promise<{ message: string }> => {
-    return await request('/api/v1/portal/auth/password/forgot', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-    });
+  forgotPassword: async (email: string): Promise<void> => {
+    await request(
+      "/api/v1/portal/auth/password/forgot",
+      {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      }
+    )
   },
 
-  /**
-   * Reset password with token
-   */
   resetPassword: async (data: {
-    email: string;
-    password: string;
-    password_confirmation: string;
-    token: string;
-  }): Promise<{ message: string }> => {
-    return await request('/api/v1/portal/auth/password/reset', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
-
-  /**
-   * Validate token
-   */
-  validateToken: async (token: string): Promise<{ valid: boolean; user: UserData }> => {
-    return await request(
-      '/api/v1/portal/auth/validate-token',
+    email: string
+    password: string
+    password_confirmation: string
+    token: string
+  }): Promise<void> => {
+    await request(
+      "/api/v1/portal/auth/password/reset",
       {
-        method: 'GET',
-      },
-      token
-    );
+        method: "POST",
+        body: JSON.stringify(data),
+      }
+    )
   },
-};
 
-export default authService;
+  validateToken: async (
+    token: string
+  ): Promise<{ valid: boolean; user: UserData }> => {
+    return await request(
+      "/api/v1/portal/auth/validate-token",
+      { method: "GET" },
+      token
+    )
+  },
+}
+
+export { ApiError }
+export default authService

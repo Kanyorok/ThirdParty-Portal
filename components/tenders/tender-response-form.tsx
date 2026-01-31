@@ -102,7 +102,7 @@ export default function TenderResponseForm({
         if (responseText.trim()) {
           data = JSON.parse(responseText);
         }
-      } catch (parseError) {
+      } catch {
         data = { parseError: 'Invalid JSON response' };
       }
 
@@ -224,7 +224,6 @@ export default function TenderResponseForm({
   }
 
   const currentStatus = optimisticStatus || invitation?.ResponseStatus || invitation?.responseStatus || 'pending';
-  const isResponseSubmitted = currentStatus !== 'pending';
   const canRespond = currentStatus === 'pending' && isRestrictedTender;
 
   return (
@@ -246,11 +245,11 @@ export default function TenderResponseForm({
               </span>
             </div>
 
-            {(invitation?.ResponseDate || invitation?.responseDate) && (
+            {invitation && (invitation.ResponseDate || invitation.responseDate) && (
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Response Date:</span>
                 <span className="text-sm">
-                  {new Date(invitation?.ResponseDate || invitation?.responseDate!).toLocaleDateString()}
+                  {new Date(invitation.ResponseDate || invitation.responseDate).toLocaleDateString()}
                 </span>
               </div>
             )}

@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/card";
 import { Button } from "@/components/common/button";
 import { Textarea } from "@/components/common/textarea";
 import { Badge } from "@/components/common/badge";
 import { ScrollArea } from "@/components/common/scroll-area";
-import { Alert, AlertDescription } from "@/components/common/alert";
 import { toast } from "sonner";
 import {
   MessageSquare,
@@ -17,10 +16,7 @@ import {
   User,
   AlertCircle,
   Plus,
-  Paperclip,
   RefreshCw,
-  Globe,
-  Eye
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -70,7 +66,7 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
   const [isPublic, setIsPublic] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
-  const fetchClarifications = async (showLoadingIndicator = true) => {
+  const fetchClarifications = useCallback(async (showLoadingIndicator = true) => {
     if (showLoadingIndicator) {
       setIsLoading(true);
     }
@@ -84,7 +80,7 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
           const errorData = await response.json();
           errorMessage = errorData.message || errorData.error || errorMessage;
           console.error('API Error:', { status: response.status, data: errorData });
-        } catch (e) {
+        } catch {
           console.error('API Error (Parse Fail):', response.status, response.statusText);
           errorMessage = `Failed to fetch: ${response.status} ${response.statusText}`;
         }
@@ -106,21 +102,14 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
         setIsLoading(false);
       }
     }
-  };
+  }, [tenderId]);
 
-  // Auto-refresh clarifications every 30 seconds to check for new responses
+  // Load clarifications once; no auto-refresh to avoid interrupting long actions on the screen.
   useEffect(() => {
     if (tenderId) {
       fetchClarifications();
-
-      // Set up auto-refresh interval
-      const refreshInterval = setInterval(() => {
-        fetchClarifications(false); // Silent refresh without loading indicator
-      }, 30000); // 30 seconds
-
-      return () => clearInterval(refreshInterval);
     }
-  }, [tenderId]);
+  }, [tenderId, fetchClarifications]);
 
   // Manual refresh function for button
   const handleRefresh = () => {

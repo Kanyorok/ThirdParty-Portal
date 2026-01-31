@@ -1,70 +1,6 @@
-import CredentialsProvider from "next-auth/providers/credentials";
-import type { NextAuthOptions, User, Session } from "next-auth";
-import type { JWT } from "next-auth/jwt";
-import type { BaseUser } from "@/types/next-auth";
-
-type BackendUser = {
-  id: number;
-  userId: string;
-  firstName: string;
-  lastName: string;
-  fullName: string;
-  email: string;
-  phone: string | null;
-  imageId: string | null;
-  gender: string | null;
-  thirdPartyId: string | null;
-  isActive: boolean;
-  isPrequalified: boolean;
-  approvalStatus: string;
-  isSupplier: boolean;
-  isTenant: boolean;
-  isCustomer: boolean;
-  hasProfile: boolean;
-  emailVerified: boolean;
-  emailVerifiedOn: string | null;
-  createdOn: string;
-  modifiedOn: string | null;
-  thirdParty?: {
-    id: number;
-    profileCompletion: number;
-    thirdPartyDetails: {
-      thirdPartyName: string;
-      tradingName: string | null;
-      businessType: string | null;
-      registrationNumber: string;
-      taxPIN: string;
-      physicalAddress: string;
-      website: string | null;
-      countryId: string;
-    };
-    isPrequalified: boolean;
-    supplierId: string | null;
-    approvalStatus: string;
-    types?: Array<{
-      id: number;
-      code: string;
-      label: string;
-    }>;
-    createdOn: string;
-  } | null;
-};
-
-type AuthResponse = {
-  success: boolean;
-  message: string;
-  user: BackendUser;
-  token: string;
-};
-
-const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_EXTERNAL_API_URL || "http://127.0.0.1:8000";
-const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || "";
-
-if (!baseUrl && typeof window === "undefined") {
-  console.warn(
-    "Connection not set!"
-  );
-}
+import CredentialsProvider from "next-auth/providers/credentials"
+import type { NextAuthOptions, Session } from "next-auth"
+import type { JWT } from "next-auth/jwt"
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -73,132 +9,138 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
-        profile_type: { label: "Profile Type", type: "text" },
       },
-      async authorize(credentials): Promise<User | null> {
+      async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("MISSING_FIELDS");
+          return null
         }
 
-        const res = await fetch(`${baseUrl}/api/v1/portal/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({
-            email: credentials.email,
-            password: credentials.password,
-            profile_type: credentials.profile_type,
-          }),
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/login`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          }
+        )
 
-        const text = await res.text();
-        let data: Partial<AuthResponse> | null = null;
-        try {
-          data = text ? JSON.parse(text) : null;
-        } catch {
-          throw new Error("SERVER_ERROR");
+        if (!res.ok) {
+          return null
         }
 
-        if (!res.ok || !data?.success || !data?.user || !data?.token) {
-          throw new Error(data?.message || "AUTH_FAILURE");
+        const data = await res.json()
+
+        if (data?.success !== true || !data?.user || !data?.token) {
+          return null
         }
 
-        const u = data.user;
+        const u = data.user
 
         return {
           id: String(u.id),
           user_id: u.id,
+          userId: u.userId ?? u.id,
           third_party_id: u.thirdPartyId ? Number(u.thirdPartyId) : null,
           first_name: u.firstName,
           last_name: u.lastName,
           full_name: u.fullName,
           email: u.email,
           phone: u.phone,
-          email_verified: u.emailVerified,
-          is_active: u.isActive,
-          has_profile: u.hasProfile,
-          is_approved: u.approvalStatus === 'Approved' || u.approvalStatus === 'Active',
+          gender: u.gender ?? null,
+          image_id: u.imageId ?? null,
+          is_active: u.isActive ?? null,
           is_supplier: u.isSupplier,
           is_tenant: u.isTenant,
           is_customer: u.isCustomer,
           approval_status: u.approvalStatus,
-          profile: u.thirdParty ? {
-            name: u.thirdParty.thirdPartyDetails.thirdPartyName,
-            trading_name: u.thirdParty.thirdPartyDetails.tradingName,
-            approval_status: u.thirdParty.approvalStatus,
-          } : null,
+          email_verified_on: u.emailVerifiedOn ?? null,
+          created_on: u.createdOn ?? null,
+          modified_on: u.modifiedOn ?? null,
+          third_party: u.thirdParty ?? null,
           accessToken: data.token,
-        } as unknown as User;
+          tokenType: data.tokenType ?? "Bearer",
+          profile: u.thirdParty
+            ? {
+              name: u.thirdParty.thirdPartyDetails.thirdPartyName,
+              trading_name: u.thirdParty.thirdPartyDetails.tradingName,
+              registration_number:
+                u.thirdParty.thirdPartyDetails.registrationNumber,
+              tax_pin: u.thirdParty.thirdPartyDetails.taxPIN,
+              physical_address:
+                u.thirdParty.thirdPartyDetails.physicalAddress,
+              supplier_data: u.supplier || null,
+              tenant_data: u.tenant || null,
+              customer_data: u.customer || null,
+            }
+            : null,
+        } as any
       },
     }),
   ],
   session: { strategy: "jwt", maxAge: 23 * 60 * 60 },
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production' ? (process.env.NEXTAUTH_URL?.startsWith('https') ?? false) : false,
-      },
-    },
-  },
   callbacks: {
-    async jwt({ token, user }): Promise<JWT> {
+    async jwt({ token, user, trigger, session }): Promise<JWT> {
       if (user) {
-        const u = user as unknown as BaseUser & { accessToken: string };
+        return { ...token, ...user }
+      }
+      if (trigger === "update" && session?.user) {
         return {
           ...token,
-          user_id: u.user_id,
-          third_party_id: u.third_party_id,
-          first_name: u.first_name,
-          last_name: u.last_name,
-          full_name: u.full_name,
-          email: u.email,
-          phone: u.phone,
-          email_verified: u.email_verified,
-          is_active: u.is_active,
-          has_profile: u.has_profile,
-          is_approved: u.is_approved,
-          is_supplier: u.is_supplier,
-          is_tenant: u.is_tenant,
-          is_customer: u.is_customer,
-          approval_status: u.approval_status,
-          profile: u.profile,
-          accessToken: u.accessToken,
-        };
+          ...session.user,
+          accessToken: token.accessToken,
+        }
       }
-      return token;
+      return token
     },
     async session({ session, token }): Promise<Session> {
-      const t = token as any;
-      session.user = {
-        id: String(t.user_id),
-        name: t.full_name,
-        email: t.email,
-        image: null,
-        user_id: t.user_id,
-        third_party_id: t.third_party_id,
-        first_name: t.first_name,
-        last_name: t.last_name,
-        full_name: t.full_name,
-        phone: t.phone,
-        email_verified: t.email_verified,
-        is_active: t.is_active,
-        has_profile: t.has_profile,
-        is_approved: t.is_approved,
-        is_supplier: t.is_supplier,
-        is_tenant: t.is_tenant,
-        is_customer: t.is_customer,
-        approval_status: t.approval_status,
-        profile: t.profile,
-      } as any;
-
-      session.accessToken = t.accessToken;
-      return session;
+      if (token) {
+        session.user = {
+          ...session.user,
+          id: String(token.user_id || token.id),
+          user_id: token.user_id,
+          userId: token.userId ?? token.user_id,
+          third_party_id: token.third_party_id,
+          thirdPartyId: token.third_party_id,
+          first_name: token.first_name,
+          last_name: token.last_name,
+          full_name: token.full_name,
+          email: token.email,
+          phone: token.phone,
+          gender: token.gender,
+          image_id: token.image_id,
+          imageId: token.image_id,
+          is_active: token.is_active,
+          isActive: token.is_active,
+          is_supplier: token.is_supplier,
+          isSupplier: token.is_supplier,
+          is_tenant: token.is_tenant,
+          isTenant: token.is_tenant,
+          is_customer: token.is_customer,
+          isCustomer: token.is_customer,
+          approval_status: token.approval_status,
+          approvalStatus: token.approval_status,
+          email_verified_on: token.email_verified_on,
+          emailVerifiedOn: token.email_verified_on,
+          created_on: token.created_on,
+          createdOn: token.created_on,
+          modified_on: token.modified_on,
+          modifiedOn: token.modified_on,
+          third_party: token.third_party,
+          thirdParty: token.third_party,
+          profile: token.profile,
+        } as any
+        session.accessToken = token.accessToken as string
+          ; (session as any).tokenType = (token as any).tokenType
+      }
+      return session
     },
   },
   pages: { signIn: "/signin", error: "/signin" },
-  secret: NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === "development",
-};
+  secret: process.env.NEXTAUTH_SECRET,
+}

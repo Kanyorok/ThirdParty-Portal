@@ -4,10 +4,8 @@ import React, { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     MessageSquare,
-    Send,
     CheckCircle2,
     XCircle,
-    ArrowUpRight,
     Lightbulb,
     Bug,
     Zap,
@@ -44,7 +42,7 @@ export default function FeedbackPage() {
             } else {
                 setSent('Transmission Error')
             }
-        } catch (err) {
+        } catch {
             setSent('Uplink Failure')
         } finally {
             setSending(false)

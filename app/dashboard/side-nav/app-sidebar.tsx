@@ -1,10 +1,8 @@
 'use client'
 
-import React, { useCallback, useMemo, useEffect } from "react"
-import { Command, LogOut, User, LucideIcon, ChevronsUpDown } from "lucide-react"
+import React, { useMemo, useEffect, useState } from "react"
+import { Command, LogOut } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
-import { motion } from "framer-motion"
-
 import {
     Sidebar,
     SidebarContent,
@@ -13,220 +11,157 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    useSidebar,
 } from "@/components/common/sidebar"
-
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/common/dropdown-menu"
-
-import { CLIENT_APP_NAME_STRING } from "@/config/client-config"
 import { sidebarItems } from "@/navigation/sidebar/sidebar-nav-items"
-import { NavMainItem, NavSection, UserProfile } from "@/types/profile-types"
-import { getProfileMenu } from "@/navigation/sidebar/profile-menu-filter"
-import { useProfileStore } from "@/store/profile-store"
+import { useProfileStore } from "@/store/use-profile-store"
 import { NavMain } from "@/app/dashboard/side-nav/nav-main"
-import { NavSecondary } from "@/app/dashboard/side-nav/nav-secondary"
+import { CLIENT_APP_NAME_STRING } from "@/config/client-config"
 import { cn } from "@/lib/utils"
 
-const DASHBOARD_ROOT_PATH = "/dashboard"
-const API_URL = process.env.NEXT_PUBLIC_API_URL!
+function NavItemSkeleton() {
+    return (
+        <div className="flex items-center gap-3 px-3.5 h-11 w-full">
+            <div className="size-7 rounded-lg bg-sidebar-accent/70 animate-pulse shrink-0" />
+            <div className="h-3 w-24 bg-sidebar-accent/70 animate-pulse rounded-md" />
+        </div>
+    )
+}
 
-interface SecondaryNavItem {
-    title: string
-    url: string
-    icon: LucideIcon
-    onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void
+function SidebarSkeleton() {
+    return (
+        <div className="flex flex-col gap-8 py-4 px-3">
+            {[1, 2].map((group) => (
+                <div key={group} className="space-y-4">
+                    <div className="px-5 h-2 w-16 bg-sidebar-accent/40 rounded-full mb-4" />
+                    <div className="space-y-2">
+                        {[1, 2, 3].map((i) => (
+                            <NavItemSkeleton key={i} />
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+    )
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-    const { data: session, status } = useSession()
-
+    const { data: session } = useSession()
+    const { state } = useSidebar()
     const {
+        initializeProfiles,
         activeProfile,
-        availableProfiles: profilesFromStore,
         setActiveProfile,
-        initializeProfiles
+        isHydrated
     } = useProfileStore()
 
-    const availableProfiles: UserProfile[] = useMemo(() => {
-        if (status !== 'authenticated' || !session?.user) return []
+    const [mounted, setMounted] = useState(false)
 
-        const user = session.user as any
-        const profiles: UserProfile[] = []
-        if (user.is_supplier) profiles.push("Supplier")
-        if (user.is_tenant) profiles.push("Tenant")
-        if (user.is_customer) profiles.push("Customer")
+    useEffect(() => setMounted(true), [])
 
-        return profiles.length > 0 ? profiles : ["Supplier"]
-    }, [session, status])
+    const authorizedRoles = useMemo(() => {
+        if (!session?.user) return []
+        const u = session.user
+        const roles: any[] = []
+        if (u.is_supplier) roles.push("Supplier")
+        if (u.is_tenant) roles.push("Tenant")
+        if (u.is_customer) roles.push("Customer")
+        return roles
+    }, [session])
 
     useEffect(() => {
-        if (availableProfiles.length > 0 || status === 'authenticated') {
-            initializeProfiles(availableProfiles)
+        if (authorizedRoles.length > 0 && isHydrated) {
+            initializeProfiles(authorizedRoles)
+
+            const isProfileStillValid = authorizedRoles.includes(activeProfile)
+
+            if (!activeProfile || activeProfile === 'base' || !isProfileStillValid) {
+                setActiveProfile(authorizedRoles[0])
+            }
         }
-    }, [availableProfiles, initializeProfiles, status])
+    }, [authorizedRoles, isHydrated, initializeProfiles, activeProfile, setActiveProfile])
 
-    const userProfile: UserProfile = activeProfile
-    const currentYear = useMemo(() => new Date().getFullYear(), [])
+    const { primaryNav, utilityNav } = useMemo(() => {
+        if (!mounted || !isHydrated) return { primaryNav: [], utilityNav: [] }
 
-    const handleLogout = useCallback(async (e: React.MouseEvent<HTMLAnchorElement>) => {
-        e.preventDefault()
-        try {
-            await fetch(`${API_URL}/api/v1/portal/auth/logout`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "Accept": "application/json" },
-                credentials: 'include',
+        const filteredMenus = sidebarItems
+            .filter(section => {
+                if (activeProfile === 'base') return section.id === 'general' || section.id === 'utility'
+                return section.allowedProfiles.includes(activeProfile)
             })
-        } catch (error) {
-            console.error("Logout error:", error)
-        } finally {
-            await signOut({ callbackUrl: "/signin", redirect: true })
-        }
-    }, [])
-
-    const resolveDashboardPath = useCallback((path: string): string => {
-        if (!path || path.startsWith("http") || path.startsWith("#")) return path
-        if (path === "/") return DASHBOARD_ROOT_PATH
-        if (path.startsWith(DASHBOARD_ROOT_PATH)) return path
-        return `${DASHBOARD_ROOT_PATH}/${path.startsWith('/') ? path.substring(1) : path}`
-    }, [])
-
-    const mainNavigationSections = useMemo((): NavSection[] => {
-        const filteredSections = getProfileMenu(userProfile, sidebarItems);
-        return filteredSections
-            .filter(section => section.id !== "utility")
-            .map((group) => ({
-                ...group,
-                items: group.items.map((item: NavMainItem) => ({
-                    ...item,
-                    url: resolveDashboardPath(item.url),
-                    subItems: item.subItems?.map((subItem) => ({
-                        ...subItem,
-                        url: resolveDashboardPath(subItem.url),
-                    })),
-                })),
+            .map(section => ({
+                id: section.id,
+                allowedProfiles: section.allowedProfiles,
+                items: section.items.filter(item =>
+                    activeProfile === 'base' ? true : item.allowedProfiles.includes(activeProfile)
+                )
             }))
-    }, [userProfile, resolveDashboardPath])
 
-    const bottomNavigationItems = useMemo((): SecondaryNavItem[] => {
-        const utilitySection = getProfileMenu(userProfile, sidebarItems).find(s => s.id === "utility");
-        const items = utilitySection?.items.map(item => ({
-            title: item.title,
-            url: resolveDashboardPath(item.url),
-            icon: item.icon || User,
-        })) || []
+        return {
+            primaryNav: filteredMenus.filter(s => s.id !== "utility"),
+            utilityNav: filteredMenus.filter(s => s.id === "utility")
+        }
+    }, [activeProfile, mounted, isHydrated])
 
-        return [...items, { title: "Logout", url: "/logout", icon: LogOut, onClick: handleLogout }]
-    }, [userProfile, resolveDashboardPath, handleLogout])
+    if (!mounted) return null
 
     return (
-        <Sidebar className="border-r border-border/40 bg-background" {...props}>
-            <SidebarHeader className="p-6 space-y-6">
+        <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar" {...props}>
+            <SidebarHeader className="p-4">
+                <div className="flex items-center gap-3 px-2 py-1">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground ring-1 ring-primary/15 transition-colors">
+                        <Command className="size-5" />
+                    </div>
+                    <div className={cn(
+                        "flex flex-col transition-all duration-300",
+                        state === "collapsed" ? "opacity-0 invisible w-0" : "opacity-100 visible w-auto"
+                    )}>
+                        <span className="font-semibold tracking-tight text-sm leading-tight line-clamp-1">
+                            {CLIENT_APP_NAME_STRING}
+                        </span>
+                    </div>
+                </div>
+            </SidebarHeader>
+
+            <SidebarContent className="px-3 mt-2 scrollbar-none overflow-y-auto">
+                {!isHydrated ? (
+                    <SidebarSkeleton />
+                ) : (
+                    <>
+                        <div className="flex flex-col gap-6">
+                            <NavMain items={primaryNav} />
+                        </div>
+                        <div className="mt-auto pb-4">
+                            <NavMain items={utilityNav} />
+                        </div>
+                    </>
+                )}
+            </SidebarContent>
+
+            <SidebarFooter className="p-4 border-t border-sidebar-border/50">
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
-                            <motion.a
-                                href={DASHBOARD_ROOT_PATH}
-                                whileHover={{ x: 2 }}
-                                className="flex items-center gap-4 px-2"
-                            >
-                                <div className="flex aspect-square size-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30">
-                                    <Command className="size-6" />
-                                </div>
-                                <div className="grid flex-1 text-left leading-tight">
-                                    <span className="truncate font-black uppercase tracking-tight text-xl">
-                                        {CLIENT_APP_NAME_STRING}
-                                    </span>
-                                    <span className="truncate text-[10px] font-bold text-muted-foreground/60 tracking-widest uppercase mt-0.5">
-                                        Enterprise Portal
-                                    </span>
-                                </div>
-                            </motion.a>
+                        <SidebarMenuButton
+                            onClick={() => signOut({ callbackUrl: "/signin" })}
+                            tooltip="Logout"
+                            className={cn(
+                                "group h-11 w-full rounded-xl transition-all text-muted-foreground hover:bg-destructive/10 hover:text-destructive",
+                                state === "collapsed" ? "justify-center px-0" : "justify-start"
+                            )}
+                        >
+                            <LogOut className={cn(
+                                "size-4 shrink-0 transition-transform",
+                                state === "collapsed" ? "" : "group-hover:-translate-x-1"
+                            )} />
+                            <span className={cn(
+                                "font-semibold text-[12px] tracking-tight ml-3 transition-all",
+                                state === "collapsed" ? "opacity-0 w-0" : "opacity-100"
+                            )}>
+                                Logout Session
+                            </span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
-
-                {profilesFromStore.length > 1 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                    >
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <SidebarMenuButton
-                                    size="sm"
-                                    className="h-12 border-2 border-border/50 bg-gradient-to-r from-muted/30 to-muted/20 hover:from-muted/50 hover:to-muted/40 hover:border-border transition-all duration-300 rounded-xl shadow-sm hover:shadow-md"
-                                >
-                                    <User className="size-4 text-primary" />
-                                    <span className="flex-1 text-left text-xs font-bold uppercase tracking-tight ml-3">
-                                        {userProfile} Profile
-                                    </span>
-                                    <ChevronsUpDown className="size-4 text-muted-foreground" />
-                                </SidebarMenuButton>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-64 p-2 rounded-xl shadow-xl" align="start" side="bottom" sideOffset={8}>
-                                <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                    Switch Identity
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator className="my-2" />
-                                {profilesFromStore.map((profile, index) => (
-                                    <motion.div
-                                        key={profile}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: index * 0.05 }}
-                                    >
-                                        <DropdownMenuItem
-                                            onClick={() => setActiveProfile(profile)}
-                                            className={cn(
-                                                "flex items-center justify-between font-bold text-sm uppercase tracking-tight py-3 px-3 my-1 rounded-lg cursor-pointer transition-all duration-200",
-                                                activeProfile === profile
-                                                    ? "bg-primary/10 text-primary border-2 border-primary/20 shadow-sm"
-                                                    : "hover:bg-muted/50 border-2 border-transparent"
-                                            )}
-                                        >
-                                            {profile}
-                                            {activeProfile === profile && (
-                                                <motion.div
-                                                    initial={{ scale: 0 }}
-                                                    animate={{ scale: 1 }}
-                                                    className="size-2 rounded-full bg-primary shadow-sm"
-                                                />
-                                            )}
-                                        </DropdownMenuItem>
-                                    </motion.div>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </motion.div>
-                )}
-            </SidebarHeader>
-
-            <SidebarContent className="scrollbar-none px-3 py-4">
-                <NavMain items={mainNavigationSections} />
-            </SidebarContent>
-
-            <SidebarFooter className="p-4 mt-auto border-t border-border/40 bg-gradient-to-t from-muted/20 to-transparent">
-                <div className="space-y-4">
-                    <NavSecondary items={bottomNavigationItems} />
-
-                    <div className="flex flex-col gap-3 px-1">
-                        <div className="pt-3 border-t border-border/20 flex items-center justify-between opacity-30 hover:opacity-100 transition-all duration-500 group">
-                            <span className="text-[8px] font-black tracking-widest uppercase group-hover:text-primary transition-colors">
-                                &copy; {currentYear} <br /> {CLIENT_APP_NAME_STRING}
-                            </span> 
-                            <span className="text-[8px] font-medium tracking-widest uppercase">
-                                Privacy & Terms
-                            </span>
-                        </div>
-                    </div>
-                </div>
             </SidebarFooter>
         </Sidebar>
     )

@@ -1,17 +1,17 @@
-import { sidebarItems } from "@/navigation/sidebar/sidebar-nav-items";
-import type { LucideIcon } from "lucide-react";
+import { sidebarItems } from "@/navigation/sidebar/sidebar-nav-items"
+import type { LucideIcon } from "lucide-react"
 
 export interface SearchableNavItem {
-    readonly label: string;
-    readonly group: string;
-    readonly href: string;
-    readonly icon?: LucideIcon;
+    readonly label: string
+    readonly group: string
+    readonly href: string
+    readonly icon?: LucideIcon
 }
 
 export function getFlatNavItems(): SearchableNavItem[] {
     return sidebarItems.flatMap((group) =>
         group.items.flatMap((item) => {
-            const allItems: SearchableNavItem[] = [];
+            const allItems: SearchableNavItem[] = []
 
             if (!item.disabled && !item.comingSoon) {
                 allItems.push({
@@ -19,7 +19,7 @@ export function getFlatNavItems(): SearchableNavItem[] {
                     group: group.id || "General",
                     href: item.url,
                     icon: item.icon,
-                });
+                })
             }
 
             if (item.subItems) {
@@ -30,12 +30,12 @@ export function getFlatNavItems(): SearchableNavItem[] {
                         group: item.title,
                         href: subItem.url,
                         icon: subItem.icon,
-                    }));
+                    }))
 
-                allItems.push(...searchableSubItems);
+                allItems.push(...searchableSubItems)
             }
 
-            return allItems;
+            return allItems
         })
-    );
+    )
 }

@@ -112,14 +112,14 @@ const StatusBadge = ({ status, className = "" }: { status: string; className?: s
         switch (s.toLowerCase()) {
             case "o":
             case "open":
-                return { label: "Open", className: "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 animate-pulse", icon: <CheckCircle2 className="w-3 h-3" /> };
+                return { label: "Open", className: "bg-emerald-50 text-emerald-700 border-emerald-200", icon: <CheckCircle2 className="w-3 h-3" /> };
             case "cl":
             case "closed":
-                return { label: "Closed", className: "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800", icon: <X className="w-3 h-3" /> };
+                return { label: "Closed", className: "bg-amber-50 text-amber-800 border-amber-200", icon: <X className="w-3 h-3" /> };
             case "pending":
-                return { label: "Pending", className: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800", icon: <Clock className="w-3 h-3" /> };
+                return { label: "Pending", className: "bg-slate-50 text-slate-700 border-slate-200", icon: <Clock className="w-3 h-3" /> };
             default:
-                return { label: s, className: "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-800", icon: <Info className="w-3 h-3" /> };
+                return { label: s, className: "bg-slate-50 text-slate-700 border-slate-200", icon: <Info className="w-3 h-3" /> };
         }
     };
     const config = getStatusConfig(status);
@@ -133,38 +133,38 @@ const StatusBadge = ({ status, className = "" }: { status: string; className?: s
 
 const LoadingSkeleton = () => (
     <div
-        className="w-full flex flex-col gap-4 p-4 rounded-lg border bg-card text-card-foreground shadow-sm animate-pulse"
+        className="w-full flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 animate-pulse"
         role="status"
         aria-live="polite"
         aria-label="Loading ... "
     >
         {[...Array(3)].map((_, index) => (
-            <div key={index} className="flex items-center space-x-4 p-4 border rounded-md">
+            <div key={index} className="flex items-center space-x-4 rounded-xl border border-slate-200 bg-white p-4">
                 <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-gray-300 rounded w-full dark:bg-gray-700" />
-                    <div className="h-4 bg-gray-200 rounded w-4/5 dark:bg-gray-800" />
+                    <div className="h-4 w-full rounded bg-slate-200" />
+                    <div className="h-4 w-4/5 rounded bg-slate-100" />
                 </div>
-                <div className="w-16 h-8 bg-gray-200 rounded-full dark:bg-gray-800" />
+                <div className="h-8 w-16 rounded-full bg-slate-100" />
             </div>
         ))}
     </div>
 );
 
 const EmptyState = ({ onRetry }: { onRetry: () => void }) => (
-    <div className="flex flex-col items-center justify-center p-8 text-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300">
-        <div className="flex items-center justify-center w-12 h-12 mb-4 text-blue-500 bg-blue-100 rounded-full dark:bg-blue-900/50 dark:text-blue-400">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-8 text-center transition-colors duration-300">
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
             <Frown className="w-6 h-6" />
         </div>
-        <h3 className="text-xl font-bold tracking-tight text-gray-900 dark:text-gray-100 mb-2">
+        <h3 className="mb-2 text-xl font-bold tracking-tight text-slate-900">
             Nothing to see here
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mb-6">
+        <p className="mb-6 max-w-sm text-sm text-slate-600">
             No open prequalification rounds are available at the moment. Please check back later or try refreshing.
         </p>
         <Button
             variant="ghost"
             onClick={onRetry}
-            className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            className="text-slate-700 hover:text-blue-700"
         >
             <RefreshCw className="w-4 h-4 mr-2" />
             Try Again
@@ -174,22 +174,22 @@ const EmptyState = ({ onRetry }: { onRetry: () => void }) => (
 
 const ErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) => (
     <div
-        className="flex flex-col items-center justify-center p-8 text-center bg-red-50 rounded-xl border-2 border-dashed border-red-200 dark:bg-red-950 dark:border-red-800"
+        className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-rose-200 bg-rose-50/60 p-8 text-center"
         role="alert"
     >
-        <div className="flex items-center justify-center w-12 h-12 mb-4 text-red-500 bg-red-100 rounded-full dark:bg-red-900/50 dark:text-red-400">
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-700">
             <XCircle className="w-6 h-6" />
         </div>
-        <h3 className="text-xl font-bold tracking-tight text-red-900 dark:text-red-100 mb-2">
+        <h3 className="mb-2 text-xl font-bold tracking-tight text-rose-950">
             Something went wrong
         </h3>
-        <p className="text-sm text-red-600 dark:text-red-400 max-w-sm mb-6">
+        <p className="mb-6 max-w-sm text-sm text-rose-700">
             {error || "An unexpected error occurred. Please try again later."}
         </p>
         <Button
             variant="ghost"
             onClick={onRetry}
-            className="text-red-600 dark:text-red-300 hover:text-red-700 dark:hover:text-red-400 transition-colors"
+            className="text-rose-700 hover:text-rose-800"
         >
             <RefreshCw className="w-4 h-4 mr-2" />
             Try Again
@@ -199,16 +199,16 @@ const ErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) 
 
 const WarningState = ({ message }: { message: string }) => (
     <div
-        className="flex flex-col items-center justify-center p-8 text-center bg-yellow-50 rounded-xl border-2 border-dashed border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800"
+        className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-amber-200 bg-amber-50/60 p-8 text-center"
         role="alert"
     >
-        <div className="flex items-center justify-center w-12 h-12 mb-4 text-yellow-500 bg-yellow-100 rounded-full dark:bg-yellow-900/50 dark:text-yellow-400">
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-800">
             <InfoIcon className="w-6 h-6" />
         </div>
-        <h3 className="text-xl font-bold tracking-tight text-yellow-900 dark:text-yellow-100 mb-2">
+        <h3 className="mb-2 text-xl font-bold tracking-tight text-amber-950">
             Already Applied
         </h3>
-        <p className="text-sm text-yellow-600 dark:text-yellow-400 max-w-sm mb-6">
+        <p className="mb-6 max-w-sm text-sm text-amber-800">
             {message}
         </p>
     </div>
@@ -216,19 +216,19 @@ const WarningState = ({ message }: { message: string }) => (
 
 const SuccessState = ({ onClose }: { onClose: () => void }) => (
     <div
-        className="flex flex-col items-center justify-center p-8 text-center bg-green-50 rounded-xl border-2 border-dashed border-green-200 dark:bg-green-950 dark:border-green-800"
+        className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/60 p-8 text-center"
         role="status"
     >
-        <div className="flex items-center justify-center w-16 h-16 mb-6 text-green-500 bg-green-100 rounded-full dark:bg-green-900/50 dark:text-green-400">
+        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
             <CheckCheck className="w-8 h-8" />
         </div>
-        <h3 className="text-2xl font-bold tracking-tight text-green-900 dark:text-green-100 mb-2">
-            Application Submitted! 🎉
+        <h3 className="mb-2 text-2xl font-bold tracking-tight text-emerald-950">
+            Application submitted
         </h3>
-        <p className="text-sm text-green-600 dark:text-green-400 max-w-sm mb-6">
+        <p className="mb-6 max-w-sm text-sm text-emerald-800">
             Your prequalification application has been successfully submitted. We&apos;ll send you an email with the next steps.
         </p>
-        <Button onClick={onClose} className="w-full sm:w-auto px-8">
+        <Button onClick={onClose} className="h-11 w-full rounded-xl px-8 sm:w-auto">
             Continue
         </Button>
     </div>
@@ -241,12 +241,11 @@ const CategorySelector = ({ categories, selectedIds, onToggle, error }: { catego
                 key={category.id}
                 onClick={() => onToggle(category.id)}
                 className={cn(
-                    "cursor-pointer p-4 rounded-lg border-2 transition-all duration-200",
-                    "hover:border-blue-500 hover:shadow-md",
-                    "dark:border-gray-700 dark:hover:border-blue-600",
+                    "cursor-pointer rounded-xl border border-slate-200 bg-white p-4 transition-colors duration-200",
+                    "hover:border-slate-300",
                     selectedIds.includes(category.id)
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md"
-                        : "border-gray-200"
+                        ? "border-blue-300 bg-blue-50/60"
+                        : ""
                 )}
                 role="checkbox"
                 aria-checked={selectedIds.includes(category.id)}
@@ -262,16 +261,16 @@ const CategorySelector = ({ categories, selectedIds, onToggle, error }: { catego
                     <span className={cn(
                         "font-medium transition-colors duration-200",
                         selectedIds.includes(category.id)
-                            ? "text-blue-600 dark:text-blue-400"
-                            : "text-gray-900 dark:text-gray-100"
+                            ? "text-blue-700"
+                            : "text-slate-900"
                     )}>
                         {category.name}
                     </span>
                     <div className={cn(
-                        "w-5 h-5 rounded-full border-2 transition-all duration-200 flex items-center justify-center",
+                        "flex h-5 w-5 items-center justify-center rounded-full border transition-colors duration-200",
                         selectedIds.includes(category.id)
-                            ? "bg-blue-600 border-blue-600 scale-100"
-                            : "bg-white border-gray-400 dark:bg-gray-900 dark:border-gray-600"
+                            ? "border-blue-600 bg-blue-600"
+                            : "border-slate-300 bg-white"
                     )}>
                         {selectedIds.includes(category.id) && <Check className="w-3 h-3 text-white" />}
                     </div>
@@ -279,7 +278,7 @@ const CategorySelector = ({ categories, selectedIds, onToggle, error }: { catego
             </div>
         ))}
         {error && (
-            <div className="flex items-center gap-2 text-red-600 text-sm animate-in slide-in-from-left-2" role="alert" aria-live="assertive">
+            <div className="flex items-center gap-2 text-rose-700 text-sm animate-in slide-in-from-left-2" role="alert" aria-live="assertive">
                 <AlertCircle className="w-4 h-4" />
                 <span>{error}</span>
             </div>
@@ -688,18 +687,33 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                         {roundsLoadingState === "success" && rounds.length > 0 && (
                                             <>
                                                 <Select value={form.watch("roundId")} onValueChange={(value) => form.setValue("roundId", value, { shouldValidate: true })}>
-                                                    <SelectTrigger id="roundId" className={`h-12 transition-all duration-300 ${roundValidationState === "valid" ? "border-green-300 focus:border-green-500 focus:ring-green-200" : roundValidationState === "invalid" ? "border-red-300 focus:border-red-500 focus:ring-red-200" : "focus:border-blue-500 focus:ring-blue-200"}`} aria-invalid={!!form.formState.errors.roundId} aria-describedby="roundId-error" aria-labelledby="rounds-label">
+                                                    <SelectTrigger
+                                                        id="roundId"
+                                                        className={cn(
+                                                            "h-11 w-full rounded-xl border-slate-200 bg-white focus-visible:ring-blue-100",
+                                                            roundValidationState === "valid" && "border-emerald-300 focus-visible:ring-emerald-100",
+                                                            roundValidationState === "invalid" && "border-rose-300 focus-visible:ring-rose-100"
+                                                        )}
+                                                        aria-invalid={!!form.formState.errors.roundId}
+                                                        aria-describedby="roundId-error"
+                                                        aria-labelledby="rounds-label"
+                                                    >
                                                         <SelectValue placeholder="Choose a prequalification round" />
                                                     </SelectTrigger>
-                                                    <SelectContent className="max-w-md">
+                                                    <SelectContent className="max-w-md rounded-xl border-slate-200 shadow-none">
                                                         {rounds.map((round) => (
-                                                            <SelectItem key={round.id} value={round.id} disabled={round.status.toLowerCase() === "cl" || round.status.toLowerCase() === "closed"} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                                            <SelectItem
+                                                                key={round.id}
+                                                                value={round.id}
+                                                                disabled={round.status.toLowerCase() === "cl" || round.status.toLowerCase() === "closed"}
+                                                                className="rounded-lg p-3 transition-colors hover:bg-slate-50 focus:bg-slate-50"
+                                                            >
                                                                 <div className="w-full">
                                                                     <div className="flex items-center justify-between mb-2">
-                                                                        <span className="font-medium text-gray-900 dark:text-gray-100">{round.name}</span>
+                                                                        <span className="font-medium text-slate-900">{round.name}</span>
                                                                         <StatusBadge status={round.status} />
                                                                     </div>
-                                                                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
+                                                                    <div className="flex items-center gap-4 text-xs text-slate-600">
                                                                         {round.deadline && (
                                                                             <span className="flex items-center gap-1">
                                                                                 <Clock className="w-3 h-3" />
@@ -719,7 +733,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                                     </SelectContent>
                                                 </Select>
                                                 {form.formState.errors.roundId && (
-                                                    <div className="flex items-center gap-2 text-red-600 text-sm animate-in slide-in-from-left-2" role="alert">
+                                                    <div className="flex items-center gap-2 text-rose-700 text-sm animate-in slide-in-from-left-2" role="alert">
                                                         <AlertCircle className="w-4 h-4" />
                                                         <span id="roundId-error">{form.formState.errors.roundId.message}</span>
                                                     </div>
@@ -730,16 +744,16 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                     </>
                                 )}
                                 {defaultRoundId && roundsLoadingState === "success" && rounds[0] && (
-                                    <div className="p-4 rounded-lg border bg-gray-50 dark:bg-gray-900/30 dark:border-gray-700">
+                                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center gap-2">
                                                 <Calendar className="w-4 h-4 text-blue-500" />
-                                                <span className="font-medium text-gray-900 dark:text-gray-100">{rounds[0].name}</span>
+                                                <span className="font-medium text-slate-900">{rounds[0].name}</span>
                                             </div>
                                             <StatusBadge status={rounds[0].status} />
                                         </div>
                                         {roundDetail.description && (
-                                            <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 whitespace-pre-wrap">
+                                            <div className="mb-2 whitespace-pre-wrap text-sm text-slate-600">
                                                 {roundDetail.description}
                                             </div>
                                         )}
@@ -763,11 +777,11 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                             </div>
                                         )}
                                         {rounds[0].hasApplied && (
-                                            <div className="mt-2 text-xs text-emerald-600 dark:text-emerald-400 font-medium" role="note">
+                                            <div className="mt-2 text-xs font-medium text-emerald-700" role="note">
                                                 Already applied{rounds[0].applicationId ? ` • Ref ${rounds[0].applicationId}` : ''}
                                             </div>
                                         )}
-                                        <div className="flex flex-wrap gap-4 text-xs text-gray-600 dark:text-gray-400">
+                                        <div className="flex flex-wrap gap-4 text-xs text-slate-600">
                                             {rounds[0].deadline && (
                                                 <span className="flex items-center gap-1">
                                                     <Clock className="w-3 h-3" />
@@ -787,16 +801,16 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                             {selectedRoundId && (
                                 <div className="space-y-4 pt-6 transition-all duration-300 ease-in-out animate-in slide-in-from-bottom-4">
                                     {currentRound && (
-                                        <div className="p-4 rounded-lg border bg-gray-50 dark:bg-gray-900/30 dark:border-gray-700">
+                                        <div className="rounded-2xl border border-slate-200 bg-white p-4">
                                             <div className="flex items-center justify-between mb-2">
                                                 <div className="flex items-center gap-2">
                                                     <Calendar className="w-4 h-4 text-blue-500" />
-                                                    <span className="font-medium text-gray-900 dark:text-gray-100">{currentRound.name}</span>
+                                                    <span className="font-medium text-slate-900">{currentRound.name}</span>
                                                 </div>
                                                 <StatusBadge status={currentRound.status} />
                                             </div>
                                             {roundDetail.description && (
-                                                <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 whitespace-pre-wrap">
+                                                <div className="mb-2 whitespace-pre-wrap text-sm text-slate-600">
                                                     {roundDetail.description}
                                                 </div>
                                             )}
@@ -821,13 +835,16 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                                     <div className="space-y-4">
                                                         <h4 className="text-sm font-semibold">Supporting Documents</h4>
                                                         {selectedCategoryIds.map((cid) => (
-                                                            <div key={cid} className="rounded-md border p-3 space-y-3">
+                                                            <div key={cid} className="rounded-2xl border border-slate-200 bg-white p-4 space-y-4">
                                                                 <div className="flex items-center justify-between">
-                                                                    <div className="font-medium text-sm">{categories.find(c => c.id === cid)?.name || 'Category'} — Optional Description</div>
+                                                                    <div className="flex flex-col gap-1">
+                                                                        <div className="text-sm font-medium text-slate-900">{categories.find(c => c.id === cid)?.name || 'Category'}</div>
+                                                                        <div className="text-xs text-slate-600">Optional notes and supporting documents</div>
+                                                                    </div>
                                                                 </div>
                                                                 <textarea
-                                                                    className="w-full text-sm rounded-md border p-2"
-                                                                    placeholder="Describe your capability or any notes (optional)"
+                                                                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-100"
+                                                                    placeholder="Add a short note (optional)"
                                                                     value={(descriptionsMap?.[cid] ?? '')}
                                                                     onChange={(e) => {
                                                                         const next = { ...(descriptionsMap || {}), [cid]: e.target.value };
@@ -836,8 +853,8 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                                                 />
                                                                 <div className="grid gap-2">
                                                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
-                                                                        <label className="text-xs text-gray-600">Upload file</label>
-                                                                        <input className="sm:col-span-2 h-9 rounded border px-2 text-sm" type="file" id={`fileinput-${cid}`} onChange={async (e) => {
+                                                                        <label className="text-xs text-slate-600">Upload file</label>
+                                                                        <input className="sm:col-span-2 h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200" type="file" id={`fileinput-${cid}`} onChange={async (e) => {
                                                                             const inputEl = e.currentTarget as HTMLInputElement | null;
                                                                             const f = inputEl?.files?.[0]
                                                                             if (!f) return
@@ -855,17 +872,17 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                                                     {uploads.filter(u => u.categoryId === cid).length > 0 && (
                                                                         <div className="space-y-2 text-xs">
                                                                             {uploads.filter(u => u.categoryId === cid).map((u) => (
-                                                                                <div key={u.id} className="flex flex-col gap-2 border rounded p-2">
+                                                                                <div key={u.id} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50/40 p-3">
                                                                                     <div className="flex items-center justify-between">
                                                                                         <span className="truncate font-medium">{u.file ? u.file.name : 'staged'}</span>
-                                                                                        <span className={u.status === 'done' ? 'text-emerald-600' : u.status === 'error' ? 'text-red-600' : u.status === 'uploading' ? 'text-blue-600' : 'text-gray-500'}>
+                                                                                        <span className={u.status === 'done' ? 'text-emerald-700' : u.status === 'error' ? 'text-rose-700' : u.status === 'uploading' ? 'text-blue-700' : 'text-slate-500'}>
                                                                                             {u.status}
                                                                                         </span>
                                                                                     </div>
                                                                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
-                                                                                        <label className="text-[11px] text-gray-600">Document type</label>
+                                                                                        <label className="text-[11px] text-slate-600">Document type</label>
                                                                                         <select
-                                                                                            className="sm:col-span-2 h-8 rounded border px-2"
+                                                                                            className="sm:col-span-2 h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-100"
                                                                                             value={u.sectionId ?? ''}
                                                                                             onChange={(ev) => {
                                                                                                 const val = ev.target.value ? Number(ev.target.value) : null;
@@ -881,9 +898,9 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                                                                                 ))
                                                                                             )}
                                                                                         </select>
-                                                                                        <label className="text-[11px] text-gray-600">File type</label>
+                                                                                        <label className="text-[11px] text-slate-600">File type</label>
                                                                                         <input
-                                                                                            className="sm:col-span-2 h-8 rounded border px-2"
+                                                                                            className="sm:col-span-2 h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-100"
                                                                                             value={u.fileType || ''}
                                                                                             onChange={(ev) => setUploads((list) => list.map((x) => x.id === u.id ? { ...x, fileType: ev.target.value || undefined } : x))}
                                                                                             placeholder="e.g., Company Profile, License"
@@ -902,23 +919,23 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                         )
                                     )}
                                     {categoriesLoadingState === "success" && categories.length === 0 && (
-                                        <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50 dark:border-gray-800 dark:bg-gray-900/10">
-                                            <Info className="w-12 h-12 text-gray-500 mb-3" />
-                                            <h3 className="text-lg font-semibold text-gray-900 mb-2 dark:text-gray-100">No Categories Found</h3>
-                                            <p className="text-gray-600 mb-4 text-sm max-w-sm dark:text-gray-400">This round has no associated categories for selection.</p>
+                                        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 py-8 text-center">
+                                            <Info className="mb-3 h-12 w-12 text-slate-500" />
+                                            <h3 className="mb-2 text-lg font-semibold text-slate-900">No Categories Found</h3>
+                                            <p className="mb-4 max-w-sm text-sm text-slate-600">This round has no associated categories for selection.</p>
                                         </div>
                                     )}
                                 </div>
                             )}
                         </div>
                         <div className="flex flex-col-reverse sm:flex-row gap-3 pt-6 border-t">
-                            <Button type="button" variant="outline" onClick={handleClose} disabled={formLoadingState === "submitting"} className="flex-1 sm:flex-none transition-all duration-200 hover:scale-105 focus:scale-105">
+                            <Button type="button" variant="outline" onClick={handleClose} disabled={formLoadingState === "submitting"} className="flex-1 sm:flex-none h-11 rounded-xl border-slate-200 bg-white hover:bg-slate-50">
                                 Cancel
                             </Button>
                             {!currentRound?.hasApplied && <Button
                                 type="submit"
                                 disabled={!submitEnabled}
-                                className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 focus:scale-105"
+                                className="flex-1 sm:flex-none h-11 rounded-xl bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-100"
                             >
                                 {formLoadingState === "submitting" ? (
                                     <>
@@ -941,10 +958,10 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             {trigger}
-            <SheetContent className="w-full sm:max-w-xl md:max-w-2xl overflow-y-auto">
-                <SheetHeader className="border-b pb-6">
-                    <SheetTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Prequalification Application</SheetTitle>
-                    <SheetDescription className="text-gray-600 dark:text-gray-400">Apply to participate in procurement opportunities</SheetDescription>
+            <SheetContent className="w-full sm:max-w-xl md:max-w-2xl overflow-y-auto bg-white border-l border-slate-200 shadow-none">
+                <SheetHeader className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+                    <SheetTitle className="text-2xl font-bold tracking-tight text-slate-900">Prequalification application</SheetTitle>
+                    <SheetDescription className="text-slate-600">Apply to participate in procurement opportunities.</SheetDescription>
                 </SheetHeader>
                 {renderFormState()}
             </SheetContent>

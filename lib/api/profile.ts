@@ -1,176 +1,71 @@
-// import {
-//     Profile,
-//     ProfileType,
-//     ProfileFormData,
-//     ProfilesResponse,
-//     CreateProfileResponse
-// } from "@/types/profile-management";
+type DeleteAccountResponse = {
+  success?: boolean
+  message?: string
+  error?: string
+}
 
-// const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+type UpdateProfileResponse = {
+  success?: boolean
+  message?: string
+  error?: string
+  data?: unknown
+}
 
-// interface ApiResponse<T = any> {
-//     success?: boolean;
-//     message?: string;
-//     data?: T;
-// }
+export const apiService = {
+  async deleteAccount(password: string, accessToken: string): Promise<DeleteAccountResponse> {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL
+    const endpoint = process.env.NEXT_PUBLIC_DELETE_ACCOUNT_ENDPOINT
 
-// const request = async (
-//     url: string,
-//     accessToken: string,
-//     options: RequestInit = {}
-// ) => {
-//     const isFormData = options.body instanceof FormData;
+    if (!baseUrl || !endpoint) {
+      throw new Error("Delete account endpoint is not configured")
+    }
 
-//     const path = url.startsWith('/') ? url : `/${url}`;
-//     const fullUrl = `${BASE_URL}${path}`;
+    const res = await fetch(`${baseUrl}${endpoint}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ password }),
+      cache: "no-store",
+    })
 
-//     const res = await fetch(fullUrl, {
-//         ...options,
-//         headers: {
-//             Authorization: `Bearer ${accessToken}`,
-//             ...(isFormData
-//                 ? { Accept: "application/json" }
-//                 : {
-//                     Accept: "application/json",
-//                     "Content-Type": "application/json",
-//                 }),
-//             ...options.headers,
-//         },
-//     });
+    const body = (await res.json().catch(() => ({}))) as DeleteAccountResponse
 
-//     if (!res.ok) {
-//         const errText = await res.text();
-//         let errData;
-//         try {
-//             errData = JSON.parse(errText);
-//         } catch {
-//             errData = { message: errText };
-//         }
+    if (!res.ok || body.success === false) {
+      throw new Error(body.message || "Account deletion failed")
+    }
 
-//         throw new Error(errData.message || errData.error || `Request failed: ${res.status}`);
-//     }
+    return body
+  },
+}
 
-//     return res.json();
-// };
+export const profileService = {
+  async updateProfile(target: "me" | number | string, payload: Record<string, unknown>, accessToken: string) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL
+    if (!baseUrl) throw new Error("NEXT_PUBLIC_API_URL is not configured")
 
-// export const apiService = {
-//     uploadProfilePicture: async (
-//         file: File,
-//         token: string
-//     ): Promise<{ success: boolean; imageUrl: string; message: string }> => {
-//         const formData = new FormData();
-//         formData.append("image", file);
+    const body =
+      target === "me" || target === "" || target == null
+        ? payload
+        : { ...payload, third_party_id: target }
 
-//         return request("/api/v1/portal/profiles/upload-image", token, {
-//             method: "POST",
-//             body: formData,
-//         });
-//     },
+    const res = await fetch(`${baseUrl}/api/v1/portal/profile/update`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    })
 
-//     fetchProfiles: (token: string): Promise<ProfilesResponse> =>
-//         request("/api/v1/portal/profiles", token),
-
-//     createProfile: (
-//         type: ProfileType,
-//         data: ProfileFormData[ProfileType],
-//         token: string
-//     ): Promise<CreateProfileResponse> =>
-//         request(`/api/v1/portal/profiles/${type}`, token, {
-//             method: "POST",
-//             body: JSON.stringify(data),
-//         }),
-
-//     updateProfile: (
-//         thirdPartyId: string | number,
-//         data: Partial<Profile>,
-//         token: string
-//     ): Promise<{ success: boolean; message: string }> =>
-//         request(`/api/v1/portal/profiles/${thirdPartyId}`, token, {
-//             method: "PUT",
-//             body: JSON.stringify(data),
-//         }),
-
-//     getProfileDetails: (
-//         thirdPartyId: string | number,
-//         token: string
-//     ): Promise<Profile> =>
-//         request(`/api/v1/portal/profiles/${thirdPartyId}`, token),
-
-//     validatePortalToken: (token: string) =>
-//         request("/api/v1/portal/auth/validate-token", token, {
-//             method: "POST"
-//         }),
-
-//     logout: (token: string) =>
-//         request("/api/v1/portal/auth/logout", token, {
-//             method: "POST"
-//         }),
-
-//     // Get current user profile
-//     getProfile: (token: string): Promise<ApiResponse> =>
-//         request("/api/v1/portal/auth/profile", token, {
-//             method: "GET"
-//         }),
-
-//     // Update profile
-//     updateProfile: (data: Partial<Profile>, token: string): Promise<ApiResponse> =>
-//         request("/api/v1/portal/auth/profile", token, {
-//             method: "PATCH",
-//             body: JSON.stringify(data)
-//         }),
-
-//     // Get profile status
-//     getProfileStatus: (token: string): Promise<ApiResponse> =>
-//         request("/api/v1/portal/auth/profile/status", token, {
-//             method: "GET"
-//         }),
-
-//     // Get supplier profile
-//     getSupplierProfile: (token: string): Promise<ApiResponse> =>
-//         request("/api/v1/portal/auth/profile/supplier", token, {
-//             method: "GET"
-//         }),
-
-//     // Get tenant profile
-//     getTenantProfile: (token: string): Promise<ApiResponse> =>
-//         request("/api/v1/portal/auth/profile/tenant", token, {
-//             method: "GET"
-//         }),
-
-//     // Update supplier categories
-//     updateSupplierCategories: (categories: number[], token: string): Promise<ApiResponse> =>
-//         request("/api/v1/portal/auth/profile/supplier/categories", token, {
-//             method: "PATCH",
-//             body: JSON.stringify({ categories })
-//         }),
-
-//     // Change password
-//     changePassword: (data: {
-//         current_password: string;
-//         password: string;
-//         password_confirmation: string;
-//     }, token: string): Promise<ApiResponse> =>
-//         request("/api/v1/portal/auth/password/change", token, {
-//             method: "PATCH",
-//             body: JSON.stringify(data)
-//         }),
-
-//     // Document management
-//     getDocuments: (token: string): Promise<ApiResponse> =>
-//         request("/api/v1/portal/auth/documents", token, {
-//             method: "GET"
-//         }),
-
-//     uploadDocument: (formData: FormData, token: string): Promise<ApiResponse> =>
-//         request("/api/v1/portal/auth/documents", token, {
-//             method: "POST",
-//             body: formData
-//         }),
-
-//     deleteDocument: (documentId: string | number, token: string): Promise<ApiResponse> =>
-//         request(`/api/v1/portal/auth/documents/${documentId}`, token, {
-//             method: "DELETE"
-//         })
-// };
-
-// export const profileService = apiService;
+    const json = (await res.json().catch(() => ({}))) as UpdateProfileResponse
+    if (!res.ok || json.success === false) {
+      throw new Error(json.message || "Failed to update profile")
+    }
+    return json
+  },
+}

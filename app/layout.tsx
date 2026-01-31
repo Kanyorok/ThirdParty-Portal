@@ -2,43 +2,39 @@ import type { Metadata, Viewport } from "next"
 import { Geist } from "next/font/google"
 import "@/styles/globals.css"
 import { NextAuthProvider } from "@/components/providers/providers"
-import { CLIENT_APP_NAME, CLIENT_APP_NAME_STRING } from "@/config/client-config"
+import { CLIENT_APP_NAME, CLIENT_APP_NAME_STRING, LINKS } from "@/config/client-config"
+import { ProfileSyncWatcher } from "@/components/profiles/profile-watcher"
+import { OnboardingWatcher } from "@/components/common/onboarding-tooltip"
+import { ProfileTransitionOverlay } from "@/components/common/profile-switch-overlay"
+import { ThemeProvider } from "@/components/common/theme-provider"
 
 const geist = Geist({
-  weight: ['100', '400', '900'],
-  style: ['normal'],
+  weight: ["400", "700"],
+  style: ["normal"],
   variable: "--font-geist",
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin"],
   display: "swap",
-  preload: true,
-  fallback: ['system-ui', 'arial'],
-  adjustFontFallback: false,
+  fallback: ["system-ui", "arial"],
 })
 
-const appVersion = CLIENT_APP_NAME?.version ?? "0.1.0"
+const appVersion = CLIENT_APP_NAME.version
 const appTitleWithVersion = `${CLIENT_APP_NAME_STRING} v${appVersion}`
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://portal.com"),
+  metadataBase: new URL(LINKS.SITE_URL),
   title: {
     default: appTitleWithVersion,
     template: `%s | ${appTitleWithVersion}`,
   },
   description: CLIENT_APP_NAME.meta.description,
   applicationName: CLIENT_APP_NAME.name,
-  keywords: [
-    "third parties portal",
-    "self service",
-    "supplier management",
-    "BR Portal",
-    "partners",
-    "third party",
-    "tenant",
-  ],
   authors: [{ name: "Craft Silicon" }],
   generator: "@Craft",
   openGraph: {
@@ -64,18 +60,23 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="overflow-x-hidden">
       <body
-        suppressHydrationWarning
-        className={`${geist.variable} smooth-scroll antialiased min-h-screen`}
+        className={`${geist.variable} antialiased min-h-screen overflow-x-hidden`}
       >
-        <NextAuthProvider
+        <ThemeProvider
           attribute="class"
+          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-        </NextAuthProvider>
+          <NextAuthProvider>
+            <ProfileSyncWatcher />
+            <OnboardingWatcher />
+            <ProfileTransitionOverlay />
+            {children}
+          </NextAuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

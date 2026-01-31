@@ -40,32 +40,34 @@ function transformToPascalCase(payload: FrontendBankDetailPayload): BackendBankD
 
 export async function PUT(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const session = await getServerSession(authOptions);
-    if (!session || !session.accessToken || !session.user?.thirdParty?.id) {
+    const accessToken = (session as any)?.accessToken as string | undefined
+    const thirdPartyId =
+        Number((session?.user as any)?.thirdPartyId ?? (session?.user as any)?.third_party_id ?? 0) || undefined
+
+    if (!session || !accessToken || !thirdPartyId) {
         return NextResponse.json(
             { message: "Unauthorized or Missing ThirdPartyId in session" },
             { status: 401 }
         );
     }
 
-    const id = params.id;
+    const { id } = await params;
 
     try {
         const frontendBody: FrontendBankDetailPayload = await req.json();
-        frontendBody.thirdPartyId = session.user.thirdParty.id;
+        frontendBody.thirdPartyId = thirdPartyId;
 
         const backendBody = transformToPascalCase(frontendBody);
-
-        console.log('PUT Request to backend:', `${process.env.NEXT_PUBLIC_API_URL}/api/third-parties-bank-details/${id}`, backendBody);
 
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/third-parties-bank-details/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'Authorization': `Bearer ${session.accessToken}`,
+                'Authorization': `Bearer ${accessToken}`,
             },
             body: JSON.stringify(backendBody),
         });
@@ -86,21 +88,22 @@ export async function PUT(
 
 export async function DELETE(
     _req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const session = await getServerSession(authOptions);
-    if (!session || !session.accessToken) {
+    const accessToken = (session as any)?.accessToken as string | undefined
+    if (!session || !accessToken) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const id = params.id;
+    const { id } = await params;
 
     try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/third-parties-bank-details/${id}`, {
             method: 'DELETE',
             headers: {
                 'Accept': 'application/json',
-                'Authorization': `Bearer ${session.accessToken}`,
+                'Authorization': `Bearer ${accessToken}`,
             },
         });
 

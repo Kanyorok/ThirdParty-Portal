@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
 import { Sun, Moon, Monitor, Globe, Bell, Shield, Check, ChevronDown } from 'lucide-react'
+import { useTheme as useNextTheme } from "next-themes"
 
 type Theme = 'light' | 'dark' | 'system'
 type Language = 'en'
@@ -24,50 +25,14 @@ const LANGUAGES: SettingOption[] = [
     { value: 'sw', label: 'Swahili' }
 ];
 
-function useTheme() {
-    const [theme, setThemeState] = useState<Theme>('system');
-    const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+function usePortalTheme() {
+    const { theme, setTheme, resolvedTheme } = useNextTheme()
 
-    useEffect(() => {
-        const savedTheme = localStorage.getItem('theme') as Theme | null;
-        if (savedTheme) {
-            setThemeState(savedTheme);
-        }
-    }, []);
-
-    useEffect(() => {
-        const root = document.documentElement;
-
-        const getResolvedTheme = (): 'light' | 'dark' => {
-            if (theme === 'system') {
-                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            }
-            return theme as 'light' | 'dark';
-        };
-
-        const applyTheme = () => {
-            const resolved = getResolvedTheme();
-            setResolvedTheme(resolved);
-            root.classList.remove('light', 'dark');
-            root.classList.add(resolved);
-        };
-
-        applyTheme();
-
-        if (theme === 'system') {
-            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-            const handler = () => applyTheme();
-            mediaQuery.addEventListener('change', handler);
-            return () => mediaQuery.removeEventListener('change', handler);
-        }
-    }, [theme]);
-
-    const setTheme = (newTheme: Theme) => {
-        setThemeState(newTheme);
-        localStorage.setItem('theme', newTheme);
-    };
-
-    return { theme, setTheme, resolvedTheme };
+    return {
+        theme: (theme ?? "system") as Theme,
+        setTheme: (newTheme: Theme) => setTheme(newTheme),
+        resolvedTheme: (resolvedTheme ?? "light") as "light" | "dark",
+    }
 }
 
 const containerVariants: Variants = {
@@ -257,7 +222,7 @@ function Toggle({
 }
 
 export function GeneralSettings() {
-    const { theme, setTheme } = useTheme();
+    const { theme, setTheme } = usePortalTheme();
     const [language, setLanguage] = useState<Language>('en');
     const [notifications, setNotifications] = useState(true);
     const [emailNotifications, setEmailNotifications] = useState(true);

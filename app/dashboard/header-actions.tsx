@@ -1,27 +1,26 @@
 "use client"
 
-import { useState } from "react"
+import type { ReactNode } from "react"
 import { UserNav } from "@/components/layout/user-nav"
 import { ThemeToggle } from "./theme-toggle"
-import { ProfileSwitcher, type ProfileType } from "@/components/thirdparty-profile/profile-switcher"
-import { Separator } from "@/components/common/separator"
+import { NotificationsPopover } from "@/components/notifications/notifications-popover"
+import { cn } from "@/lib/utils"
 
-export const HeaderActions = () => {
-    const [currentProfile, setCurrentProfile] = useState<ProfileType>("base")
-
+export const HeaderActions = ({
+    layoutControls,
+    className,
+}: {
+    layoutControls?: ReactNode
+    className?: string
+}) => {
     return (
-        <div className="flex items-center gap-4">
-            <ProfileSwitcher
-                currentProfile={currentProfile}
-                onProfileChange={setCurrentProfile}
-            />
-
-            <Separator orientation="vertical" className="h-4 bg-border/50" />
-
-            <div className="flex items-center gap-2.5">
+        <div className={cn("flex items-center gap-2", className)}>
+            <div className="flex items-center gap-1 rounded-xl border border-border/50 bg-background/50 p-1">
+                {layoutControls}
+                <NotificationsPopover />
                 <ThemeToggle />
-                <UserNav />
             </div>
+            <UserNav />
         </div>
     )
 }

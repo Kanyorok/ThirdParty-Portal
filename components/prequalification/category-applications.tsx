@@ -36,7 +36,7 @@ const getCategoryStatusConfig = (status: RoundCategory['status']) => {
                 label: 'Not Applied',
                 icon: <Plus className="w-3 h-3" />,
                 variant: 'outline' as const,
-                color: 'bg-gray-50 text-gray-600 border-gray-200'
+                color: 'bg-slate-50 text-slate-600 border-slate-200'
             };
         case 'DRAFT':
             return {
@@ -71,27 +71,27 @@ const getCategoryStatusConfig = (status: RoundCategory['status']) => {
                 label: 'Rejected',
                 icon: <XCircle className="w-3 h-3" />,
                 variant: 'destructive' as const,
-                color: 'bg-red-50 text-red-700 border-red-200'
+                color: 'bg-rose-50 text-rose-700 border-rose-200'
             };
         default:
             return {
                 label: 'Unknown',
                 icon: <AlertTriangle className="w-3 h-3" />,
                 variant: 'secondary' as const,
-                color: 'bg-gray-50 text-gray-600'
+                color: 'bg-slate-50 text-slate-600 border-slate-200'
             };
     }
 };
 
 const CategoryProgressBar = ({ category }: { category: RoundCategory }) => (
     <div className="flex items-center gap-2 min-w-[80px]">
-        <div className="flex-1 h-2 rounded bg-gray-200 dark:bg-gray-800 overflow-hidden">
+        <div className="flex-1 h-2 rounded bg-slate-200 dark:bg-slate-800 overflow-hidden">
             <div 
                 className="h-2 bg-emerald-500 transition-all" 
                 style={{ width: `${Math.min(100, Math.max(0, category.progress_percent))}%` }} 
             />
         </div>
-        <span className="text-xs tabular-nums w-8 text-right">
+        <span className="text-xs tabular-nums w-8 text-right text-slate-600">
             {category.progress_percent}%
         </span>
     </div>
@@ -106,7 +106,7 @@ const CategoryDetailView = ({ categories }: { categories: RoundCategory[] }) => 
                 return (
                     <div 
                         key={category.category_id} 
-                        className="border rounded-lg p-4 space-y-3"
+                        className="rounded-xl border border-slate-200 bg-white p-4 space-y-3"
                     >
                         <div className="flex items-start justify-between">
                             <div className="space-y-1">
@@ -114,7 +114,7 @@ const CategoryDetailView = ({ categories }: { categories: RoundCategory[] }) => 
                                     {category.category_name}
                                 </h4>
                                 {category.category_description && (
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs text-slate-600">
                                         {category.category_description}
                                     </p>
                                 )}
@@ -129,7 +129,7 @@ const CategoryDetailView = ({ categories }: { categories: RoundCategory[] }) => 
                             <div className="space-y-2">
                                 <CategoryProgressBar category={category} />
                                 
-                                <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground">
+                                <div className="grid grid-cols-2 gap-4 text-xs text-slate-600">
                                     {category.application_date && (
                                         <div className="flex items-center gap-1">
                                             <Calendar className="w-3 h-3" />
@@ -151,7 +151,7 @@ const CategoryDetailView = ({ categories }: { categories: RoundCategory[] }) => 
                                 )}
                                 
                                 {category.rejection_reason && (
-                                    <div className="text-xs text-red-600 bg-red-50 p-2 rounded border border-red-200">
+                                    <div className="rounded border border-rose-200 bg-rose-50 p-2 text-xs text-rose-700">
                                         <span className="font-medium">Rejection Reason:</span> {category.rejection_reason}
                                     </div>
                                 )}
@@ -169,7 +169,7 @@ export default function CategoryApplications({ round, className }: CategoryAppli
     
     if (!round.categories || round.categories.length === 0) {
         return (
-            <span className={cn("text-xs text-muted-foreground", className)}>
+            <span className={cn("text-xs text-slate-500", className)}>
                 No categories
             </span>
         );
@@ -182,7 +182,7 @@ export default function CategoryApplications({ round, className }: CategoryAppli
     
     if (appliedCategories.length === 0) {
         return (
-            <span className={cn("text-xs text-muted-foreground", className)}>
+            <span className={cn("text-xs text-slate-500", className)}>
                 Not applied
             </span>
         );
@@ -208,7 +208,7 @@ export default function CategoryApplications({ round, className }: CategoryAppli
                         );
                     })}
                     {appliedCategories.length > 2 && (
-                        <Badge className="text-xs px-1 py-0 h-5 bg-gray-100 text-gray-600">
+                        <Badge className="text-xs px-1 py-0 h-5 bg-slate-100 text-slate-600 border border-slate-200">
                             +{appliedCategories.length - 2}
                         </Badge>
                     )}
@@ -223,7 +223,7 @@ export default function CategoryApplications({ round, className }: CategoryAppli
                 <Button 
                     variant="ghost" 
                     size="sm" 
-                    className={cn("h-auto p-1 font-normal justify-start hover:bg-transparent", className)}
+                    className={cn("h-auto p-1 font-medium justify-start hover:bg-transparent text-slate-700", className)}
                 >
                     <SimpleSummary />
                 </Button>
@@ -240,7 +240,7 @@ export default function CategoryApplications({ round, className }: CategoryAppli
                 
                 <div className="space-y-4">
                     {round.applicationSummary && (
-                        <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                        <div className="bg-slate-50 rounded-xl border border-slate-200 p-3 space-y-2">
                             <h4 className="font-medium text-sm">Summary</h4>
                             <div className="grid grid-cols-2 gap-3 text-xs">
                                 <div>Applied: {round.applicationSummary.applied_categories}/{round.applicationSummary.total_categories}</div>
@@ -257,10 +257,6 @@ export default function CategoryApplications({ round, className }: CategoryAppli
         </Dialog>
     );
 }
-
-
-
-
 
 
 

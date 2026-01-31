@@ -1,7 +1,5 @@
-import { redirect } from 'next/navigation';
+import { redirect } from "next/navigation"
 
-export default function Settings() {
-    return (
-        redirect('/dashboard/settings/general')
-    );
+export default function SettingsPage() {
+  redirect("/dashboard/settings/profile")
 }

@@ -3,7 +3,6 @@ import {
     RegisterFormInputs,
     ThirdPartyDetailsFormInputs,
     mapUserTypeToApi,
-    USER_TYPE_MAP
 } from "@/lib/validation";
 
 type TouchedFields<T> = {

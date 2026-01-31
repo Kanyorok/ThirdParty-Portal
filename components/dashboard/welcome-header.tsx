@@ -1,62 +1,84 @@
-'use client'
+"use client"
 
-import { useMemo } from 'react'
-import { motion } from 'framer-motion'
+import Link from "next/link"
+import { useEffect, useMemo, useState } from "react"
+import { motion } from "framer-motion"
+import { ArrowRight, Sparkles } from "lucide-react"
+import { Button } from "@/components/common/button"
 
-export function WelcomeHeader({ firstName }: { firstName: string }) {
-    const greeting = useMemo(() => {
-        const hour = new Date().getHours()
-        if (hour < 12) return "Good Morning"
-        if (hour < 17) return "Good Afternoon"
-        return "Good Evening"
-    }, [])
+type Action = { label: string; href: string }
 
-    return (
-        <header className="relative w-full mb-12 px-0">
-            <div className="flex flex-col gap-6">
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                    className="flex flex-col gap-2"
-                >
-                    <div className="flex items-center gap-2.5">
-                        <div className="h-1 w-1 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.6)]" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/40">
-                            Live Dashboard
-                        </span>
-                    </div>
+export function WelcomeHeader({
+  firstName,
+  contextLabel,
+  primaryAction,
+  secondaryAction,
+}: {
+  firstName: string
+  contextLabel: string
+  primaryAction: Action
+  secondaryAction: Action
+}) {
+  const [greeting, setGreeting] = useState<string>("")
 
-                    {/* <div className="flex flex-col">
-                        <motion.span
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2, duration: 0.8 }}
-                            className="text-sm font-medium text-primary/60 tracking-tight"
-                        >
-                            {greeting},
-                        </motion.span>
-                        <motion.h1
-                            initial={{ opacity: 0, filter: "blur(4px)" }}
-                            animate={{ opacity: 1, filter: "blur(0px)" }}
-                            transition={{ delay: 0.3, duration: 0.8 }}
-                            className="text-4xl md:text-5xl font-bold tracking-tighter text-foreground leading-none"
-                        >
-                            {firstName || 'User'}.
-                        </motion.h1>
-                    </div> */}
-                </motion.div>
+  useEffect(() => {
+    const hour = new Date().getHours()
+    if (hour < 12) setGreeting("Good morning")
+    else if (hour < 17) setGreeting("Good afternoon")
+    else setGreeting("Good evening")
+  }, [])
 
-                <motion.div
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ delay: 0.5, duration: 1, ease: "circOut" }}
-                    className="h-px w-full max-w-md bg-gradient-to-r from-border/60 via-border/20 to-transparent"
-                />
+  const stableLabel = useMemo(() => contextLabel, [])
+
+  return (
+    <header className="relative w-full overflow-hidden rounded-2xl border border-border/50 bg-card px-6 py-6 shadow-none md:px-8 md:py-7">
+      <div className="relative z-10 flex flex-col gap-6">
+        <div className="space-y-2.5">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-primary">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span className="text-[12px] font-semibold tracking-tight">
+              {stableLabel}
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between md:gap-6">
+            <div className="min-w-0">
+              <motion.h1
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
+              >
+                {greeting && `${greeting}, ${firstName || "there"}.`}
+              </motion.h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Here’s a quick overview and the next best actions to take.
+              </p>
             </div>
 
-            <div className="absolute -top-10 -left-10 -z-10 h-64 w-64 rounded-full bg-primary/[0.03] blur-[80px]" />
-            <div className="absolute top-0 right-0 -z-10 h-96 w-96 rounded-full bg-blue-500/[0.02] blur-[120px]" />
-        </header>
-    )
+            <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
+              <Button asChild className="h-11 rounded-xl px-4 text-sm font-semibold shadow-none">
+                <Link href={primaryAction.href}>
+                  {primaryAction.label}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="h-11 rounded-xl border-border/60 bg-background px-4 text-sm font-semibold shadow-none hover:bg-muted"
+              >
+                <Link href={secondaryAction.href}>
+                  {secondaryAction.label}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="pointer-events-none absolute -left-10 -top-10 h-64 w-64 rounded-full bg-primary/[0.06] blur-[90px]" />
+      <div className="pointer-events-none absolute -right-10 -bottom-10 h-64 w-64 rounded-full bg-sky-500/[0.06] blur-[110px]" />
+    </header>
+  )
 }

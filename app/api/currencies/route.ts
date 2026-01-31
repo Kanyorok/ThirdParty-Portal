@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { Currency } from '@/types/currencies';
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth-options"
 
 const RawCurrencySchema = z.object({
     id: z.union([z.string(), z.number()]).optional(),
@@ -49,9 +51,15 @@ export async function GET() {
     try {
         if (!process.env.NEXT_PUBLIC_API_URL) return NextResponse.json({ data: [] })
 
+        const session = await getServerSession(authOptions)
+        const hasToken = Boolean(session?.accessToken)
+
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/currencies`, {
-            headers: { "Accept": "application/json" },
-            next: { revalidate: 3600 },
+            headers: {
+                Accept: "application/json",
+                ...(hasToken ? { Authorization: `Bearer ${session!.accessToken}` } : {}),
+            },
+            ...(hasToken ? { cache: "no-store" as const } : { next: { revalidate: 3600 } }),
         })
 
         if (!res.ok) {

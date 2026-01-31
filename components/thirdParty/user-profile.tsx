@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Building2, Package, Home, Plus, Check, ChevronDown, X } from 'lucide-react';
+import { User, Package, Home, Plus, Check, ChevronDown, X } from 'lucide-react';
 
 type ProfileType = 'tenant' | 'supplier';
 

@@ -42,7 +42,7 @@ export default function EditProfileModal({
         gender: profile.gender || ''
     })
 
-    const [isPending, startTransition] = useTransition()
+    const [isPending] = useTransition()
     const [saving, setSaving] = useState(false)
 
     useEffect(() => {

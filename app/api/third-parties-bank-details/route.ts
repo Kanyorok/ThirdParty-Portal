@@ -39,21 +39,22 @@ function transformToPascalCase(payload: FrontendBankDetailPayload): BackendBankD
     };
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     const session = await getServerSession(authOptions);
-    if (!session || !session.accessToken || !session.user?.thirdParty?.id) {
+    const accessToken = (session as any)?.accessToken as string | undefined
+    const thirdPartyId =
+        Number((session?.user as any)?.thirdPartyId ?? (session?.user as any)?.third_party_id ?? 0) || undefined
+
+    if (!session || !accessToken || !thirdPartyId) {
         return NextResponse.json({ message: "Unauthorized or Missing ThirdPartyId in session" }, { status: 401 });
     }
-
-    const { searchParams } = new URL(req.url);
-    const thirdPartyId = session.user.thirdParty.id; // Use thirdPartyId from session for security
 
     try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/third-parties-bank-details?ThirdPartyId=${thirdPartyId}`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
-                'Authorization': `Bearer ${session.accessToken}`,
+                'Authorization': `Bearer ${accessToken}`,
             },
         });
 
@@ -73,13 +74,17 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
-    if (!session || !session.accessToken || !session.user?.thirdParty?.id) {
+    const accessToken = (session as any)?.accessToken as string | undefined
+    const thirdPartyId =
+        Number((session?.user as any)?.thirdPartyId ?? (session?.user as any)?.third_party_id ?? 0) || undefined
+
+    if (!session || !accessToken || !thirdPartyId) {
         return NextResponse.json({ message: "Unauthorized or Missing ThirdPartyId in session" }, { status: 401 });
     }
 
     try {
         const frontendBody: FrontendBankDetailPayload = await req.json();
-        frontendBody.thirdPartyId = session.user.thirdParty.id;
+        frontendBody.thirdPartyId = thirdPartyId;
 
         const backendBody = transformToPascalCase(frontendBody);
 
@@ -88,7 +93,7 @@ export async function POST(req: NextRequest) {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'Authorization': `Bearer ${session.accessToken}`,
+                'Authorization': `Bearer ${accessToken}`,
             },
             body: JSON.stringify(backendBody),
         });

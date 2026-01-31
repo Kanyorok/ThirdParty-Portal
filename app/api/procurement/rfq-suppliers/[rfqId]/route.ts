@@ -1,51 +1,121 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
+import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth-options"
 
-export async function GET(request: NextRequest) {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.accessToken) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-    const url = new URL(request.url);
-    // Extract the RFQ ID from the last non-empty path segment
-    const parts = url.pathname.split("/").filter(Boolean);
-    const rfqId = parts[parts.length - 1];
-    if (!rfqId || !/^\d+$/.test(rfqId)) {
-        return NextResponse.json({ message: "Invalid RFQ id" }, { status: 400 });
-    }
-    const search = request.nextUrl.searchParams.toString();
-    const targetUrl = `${process.env.NEXTAUTH_URL}/api/procurement/rfq-suppliers/${encodeURIComponent(rfqId)}${search ? `?${search}` : ""}`;
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL
+const RFQ_INVITATION_PATH_TEMPLATE =
+    process.env.RFQ_INVITATION_PATH_TEMPLATE || "/api/v1/supplier/rfqs/:rfqId"
+const RFQ_INVITATION_FALLBACK_PATH_TEMPLATE =
+    process.env.RFQ_INVITATION_FALLBACK_PATH_TEMPLATE ||
+    "/api/procurement/rfq-suppliers/:rfqId"
+
+function buildInvitationUrl(base: string, template: string, rfqId: string) {
+    const cleanBase = base.replace(/\/+$/, "")
+    const path = template.replace(":rfqId", encodeURIComponent(rfqId))
+    const cleanPath = path.startsWith("/") ? path : `/${path}`
+    return `${cleanBase}${cleanPath}`
+}
+
+export async function GET(
+    req: NextRequest,
+    context: { params: { rfqId: string } | Promise<{ rfqId: string }> }
+) {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.accessToken) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+    }
+
+    if (!API_BASE) {
+        return NextResponse.json({ message: "API not configured" }, { status: 500 })
+    }
+
+    const params = await Promise.resolve(context.params as any)
+    const rawFromParams = String(params?.rfqId ?? "")
+    const pathname = new URL(req.url).pathname
+    const parts = pathname.split("/").filter(Boolean)
+    const rawFromPath = String(parts[parts.length - 1] ?? "")
+    const raw = rawFromParams || rawFromPath
+
+    let rfqId = raw
     try {
-        const res = await fetch(targetUrl, {
-            method: "GET",
+        rfqId = decodeURIComponent(raw)
+    } catch {
+        rfqId = raw
+    }
+    rfqId = rfqId.trim()
+
+    if (!rfqId || !/^\d+$/.test(rfqId)) {
+        const matches = rfqId.match(/\d+/g)
+        const extracted = matches ? matches[matches.length - 1] : ""
+        if (!extracted || !/^\d+$/.test(extracted)) {
+            const debug = process.env.NODE_ENV !== "production"
+            return NextResponse.json(
+                debug
+                    ? {
+                          message: "Invalid RFQ id",
+                          rfqId: raw,
+                          rfqIdFromParams: rawFromParams,
+                          rfqIdFromPath: rawFromPath,
+                          pathname,
+                      }
+                    : { message: "Invalid RFQ id" },
+                { status: 400 }
+            )
+        }
+        rfqId = extracted
+    }
+
+    const primaryUrl = buildInvitationUrl(API_BASE, RFQ_INVITATION_PATH_TEMPLATE, rfqId)
+    const fallbackUrl = buildInvitationUrl(API_BASE, RFQ_INVITATION_FALLBACK_PATH_TEMPLATE, rfqId)
+
+    const fetchWithParse = async (url: string) => {
+        const res = await fetch(url, {
             headers: {
                 Accept: "application/json",
                 Authorization: `Bearer ${session.accessToken}`,
             },
             cache: "no-store",
-        });
+        })
 
-        const bodyText = await res.text();
-        const contentType = res.headers.get("content-type") || "";
-        type JsonData = Record<string, unknown>;
-        const data: JsonData | string = contentType.includes("application/json")
-            ? (JSON.parse(bodyText || "{}") as JsonData)
-            : bodyText;
+        const text = await res.text()
+        const contentType = res.headers.get("content-type") || ""
+        if (!contentType.includes("application/json")) return { res, data: text, url }
 
-        if (!res.ok) {
-            const obj = typeof data === "string" ? {} : data;
-            const message = (obj["message"] as string) || "Failed to fetch RFQ invitation";
-            const errors = obj["errors"];
-            return NextResponse.json({ message, errors }, { status: res.status });
+        try {
+            return { res, data: JSON.parse(text || "{}"), url }
+        } catch {
+            return { res, data: text, url }
+        }
+    }
+
+    try {
+        let result = await fetchWithParse(primaryUrl)
+        if (result.res.status === 404 || result.res.status === 405) {
+            result = await fetchWithParse(fallbackUrl)
         }
 
-        return NextResponse.json(data);
+        if (!result.res.ok) {
+            return NextResponse.json(
+                {
+                    message: (result.data as any)?.message || "Upstream error",
+                    upstreamStatus: result.res.status,
+                    upstream: result.data,
+                    upstreamUrl: result.url,
+                },
+                { status: result.res.status }
+            )
+        }
+
+        return NextResponse.json(result.data, { status: result.res.status })
     } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : "Unknown error";
-        return NextResponse.json({ message: "Internal server error", error: message }, { status: 500 });
+        const message = error instanceof Error ? error.message : "Unknown error"
+        return NextResponse.json(
+            { message: "Upstream request failed", error: message },
+            { status: 502 }
+        )
     }
 }
-
-

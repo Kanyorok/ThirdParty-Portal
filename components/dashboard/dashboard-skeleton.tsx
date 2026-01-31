@@ -25,7 +25,7 @@ function SkeletonCard({ index }: { index: number }) {
             variants={itemVariants}
             transition={{ delay: index * 0.05 }}
         >
-            <Card className="overflow-hidden border-border/40 bg-card/50 backdrop-blur-md shadow-sm">
+            <Card className="overflow-hidden border-border/50 bg-card shadow-none">
                 <CardContent className="p-6 space-y-5">
                     <div className="flex items-center justify-between">
                         <ShimmerSkeleton className="h-5 w-24" />
@@ -57,19 +57,18 @@ function SkeletonCard({ index }: { index: number }) {
 
 export function DashboardSkeleton() {
     return (
-        <div className="min-h-screen bg-background/95">
-            <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-10">
-                <motion.div
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
-                    className="space-y-10"
-                >
+        <div className="w-full space-y-8">
+            <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="space-y-8"
+            >
                     <motion.div variants={itemVariants}>
-                        <div className="rounded-3xl bg-gradient-to-br from-muted/20 to-transparent p-8 border border-border/30 backdrop-blur-xl">
+                        <div className="rounded-2xl bg-card p-6 border border-border/50">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                 <div className="flex items-center gap-6">
-                                    <ShimmerSkeleton className="w-20 h-20 rounded-2xl shadow-inner" />
+                                    <ShimmerSkeleton className="w-16 h-16 rounded-2xl" />
                                     <div className="space-y-3">
                                         <ShimmerSkeleton className="h-4 w-32" />
                                         <ShimmerSkeleton className="h-10 w-64 md:w-80" />
@@ -88,7 +87,7 @@ export function DashboardSkeleton() {
                         </div>
                         <div className="grid gap-6 md:grid-cols-3">
                             {Array.from({ length: 3 }).map((_, i) => (
-                                <Card key={i} className="border-border/30 bg-card/40 backdrop-blur-sm">
+                                <Card key={i} className="border-border/50 bg-card shadow-none">
                                     <CardContent className="p-6 space-y-4">
                                         <div className="flex items-center justify-between">
                                             <ShimmerSkeleton className="h-5 w-1/2" />
@@ -119,8 +118,7 @@ export function DashboardSkeleton() {
                             ))}
                         </div>
                     </motion.section>
-                </motion.div>
-            </div>
+            </motion.div>
         </div>
     )
 }

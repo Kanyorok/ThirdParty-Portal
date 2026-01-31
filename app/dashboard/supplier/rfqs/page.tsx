@@ -1,5 +1,9 @@
-import { RfqsFilter } from "@/components/rfqs";
+import { RfqInvitations } from "@/components/rfqs"
 
-export default function Rfqs() {
-    return <RfqsFilter />
+export default function Page() {
+    return (
+        <main>
+            <RfqInvitations />
+        </main>
+    )
 }
