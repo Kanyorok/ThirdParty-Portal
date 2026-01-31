@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\ThirdParty\API;
 
+use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
-use App\Services\ThirdParties\SupplierService;
-use App\Services\ThirdParties\ThirdPartiesService;
+use App\Services\ThirdParties\ThirdPartyService;
+use DateTime;
 use Illuminate\Support\Facades\DB;
 
 class NewThirdPartyController extends Controller
@@ -16,18 +17,37 @@ class NewThirdPartyController extends Controller
         return DB::transaction(function () use ($request) {
             $country = $request->getCountry();
             $location = $request->getLocation($country);
+
             $businessType = $request->getBusinessType();
 
-            $actor = SystemHelper::user();
+            if (! $businessType) {
+                throw new ErroredException("Invalid Business Type provided.");
+            }
 
-            // TODO: implement this better
+            $actor = SystemHelper::user();
+            $types = $request->validated('types') ?? [];
+
             $email = $request->validated('Email');
             if (empty($email)) {
                 $registrationNumber = $request->validated('RegistrationNumber');
                 $email = strtolower(str_replace([' ', '-', '/'], '', $registrationNumber)) . '@noreply.local';
             }
 
-            $party = ThirdPartiesService::create(
+            $data = [
+                'types' => $types,
+                'user_Remarks' => $request->validated('user_Remarks'),
+            ];
+
+            if (in_array(ThirdPartyService::TypeCustomer, $types)) {
+                $data['user_Gender'] = $request->getGender('user_Gender');
+                $data['user_MaritalStatus'] = $request->getMaritalStatus('user_MaritalStatus');
+                $data['user_Occupation'] = $request->getOccupation('user_Occupation');
+
+                $dob = $request->validated('user_DateOfBirth');
+                $data['user_DateOfBirth'] = $dob ? new DateTime($dob) : null;
+            }
+
+            $party = ThirdPartyService::create(
                 name: $request->validated('Name'),
                 tradingName: $request->validated('TradingName'),
                 businessType: $businessType,
@@ -41,52 +61,42 @@ class NewThirdPartyController extends Controller
                 website: $request->validated('Website'),
                 status: null,
                 extra: $request->validated('extra'),
-                actor: $actor
+                actor: $actor,
+                data: $data
             );
 
-            if ($request->hasFile('logo')) {
-                $partyService = new class ($party) extends ThirdPartiesService {
-                    public static function getType(): \App\Models\ThirdParty\ThirdPartyType
-                    {
-                        return \App\Services\ThirdParties\ThirdPartyService::getType();
-                    }
-                };
-                $partyService->setLogo($request->file('logo'), $actor);
-            }
+            $partyService = new ThirdPartyService($party);
 
-            if (in_array(\App\Services\ThirdParties\ThirdPartyService::TypeSupplier, $request->validated('types'))) {
-                SupplierService::createFromParty($party, $actor);
+            if ($request->hasFile('logo')) {
+                $partyService->setLogo($request->file('logo'), $actor ?? $party);
             }
 
             if ($request->boolean('createUser')) {
-                $gender = $request->getGender('user_Gender');
-                $partyService = new class ($party) extends ThirdPartiesService {
-                    public static function getType(): \App\Models\ThirdParty\ThirdPartyType
-                    {
-                        return \App\Services\ThirdParties\ThirdPartyService::getType();
-                    }
-                };
-
                 $partyService->addUser(
                     firstName: $request->validated('user_FirstName'),
                     lastName: $request->validated('user_LastName'),
                     email: $request->validated('user_Email'),
                     phone: $request->getPhoneNumber($country, 'user_Phone'),
-                    gender: $gender,
+                    gender: $request->getGender('user_Gender'),
                     actor: $actor,
                     password: $request->validated('user_Password'),
                     sendVerification: true
                 );
             }
 
+            $party->load('types');
+
             return response()->json([
                 'success' => true,
                 'message' => $request->boolean('createUser')
-                    ? 'Registration successful! Please check your email to verify your account.'
-                    : 'Third party created successfully.',
+                    ? 'Registration successful! Check your email to verify your account.'
+                    : 'Profile created successfully.',
                 'data' => [
                     'id' => $party->Id,
                     'name' => $party->ThirdPartyName,
+                    'isSupplier' => $party->isSupplier(),
+                    'isTenant' => $party->isTenant(),
+                    'isCustomer' => $party->isCustomer(),
                 ],
             ], 201);
         });

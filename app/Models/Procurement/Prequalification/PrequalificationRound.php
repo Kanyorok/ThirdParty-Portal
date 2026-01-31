@@ -96,9 +96,13 @@ class PrequalificationRound extends Model
         return $this->belongsToMany(
             \App\Models\ThirdParty\SupplierCategory::class,
             't_PrequalificationRoundSupplierCategory',
-            'round_id',
-            'supplier_category_id'
-        )->withTimestamps();
+            'RoundID',
+            'SupplierCategoryID',
+            'RoundID',
+            'SupplierCategoryID'
+            // 'round_id',
+            // 'supplier_category_id'
+        )->withPivot(['CreatedOn','ModifiedOn']);
     }
 
     public function masterSections(): HasManyThrough

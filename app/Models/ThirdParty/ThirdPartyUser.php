@@ -2,16 +2,13 @@
 
 namespace App\Models\ThirdParty;
 
-use App\Enums\EmailPriorityEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
-use App\Services\CRMEmailService;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
-use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,7 +18,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
-class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract, CanResetPasswordContract
+class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
 {
     use HasApiTokens;
     use Notifiable;
@@ -71,7 +68,7 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
         'ModifiedBy' => 'integer',
         'DeletedBy' => 'integer',
         'IsActive' => 'boolean',
-        'Password' => 'hashed',
+        // 'Password' => 'hashed', // using this conflicts with BREncryption SHA-256!
         // 'Gender' => GenderEnum::class,
     ];
 
@@ -179,20 +176,12 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
 
     public function isActive(): bool
     {
-        // User must be explicitly active AND have a verified email
         return (bool)$this->IsActive && ! is_null($this->EmailVerifiedOn);
     }
 
     public function isApproved(): bool
     {
-        // 1. If user is not yet linked to a third party (Step 1 complete),
-        // they are effectively approved to proceed to Step 2.
-        if (! $this->ThirdPartyId) {
-            return true;
-        }
-
-        // 2. If already linked, delegate to the entity's approval status
-        return $this->thirdParty?->isApproved() ?? false;
+        return (bool) ($this->IsApproved ?? false);
     }
 
     public function isSupplier(): bool
@@ -257,7 +246,7 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
 
     public function genderDetail(): BelongsTo
     {
-        return $this->belongsTo(CodeDetail::class, 'Gender', 'Id');
+        return $this->belongsTo(CodeDetail::class, 'Gender', 'ID');
     }
 
     public function getEmailForPasswordReset(): string
@@ -281,11 +270,10 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
             <p><small>If you're having trouble clicking the \"Reset Password\" button, copy and paste the URL below into your web browser: <a href='{$url}'>{$url}</a></small></p>
         ";
 
-        // Admin user acts as sender
-        $actor = User::find(1);
+        $actor = \App\Models\Auth\User::where('Id', 1)->first() ?? \App\Models\Auth\User::first();
 
         if ($actor) {
-            CRMEmailService::createRaw(
+            \App\Services\CRMEmailService::createRaw(
                 $actor,
                 $subject,
                 $body,
@@ -294,11 +282,27 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
                 (string)$this->Id,
                 [], // cc
                 [], // bcc
-                EmailPriorityEnum::Important
+                \App\Enums\EmailPriorityEnum::Important
             )->send(true); // Send immediately
         } else {
             // Fallback to default notification if admin user not found (or log error)
             $this->notify(new \Illuminate\Auth\Notifications\ResetPassword($token));
         }
+    }
+
+    public function getEmailAttribute($val)
+    {
+        return $this->attributes['Email'] ?? $val;
+    }
+
+    public function setAttribute($key, $val)
+    {
+        if ($key === 'email') {
+            $this->attributes['Email'] = $val;
+
+            return $this;
+        }
+
+        return parent::setAttribute($key, $val);
     }
 }

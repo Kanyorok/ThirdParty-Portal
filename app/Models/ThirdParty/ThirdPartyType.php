@@ -21,7 +21,6 @@ class ThirdPartyType extends Model
     public const string UPDATED_AT = 'ModifiedOn';
     public const string DELETED_AT = 'DeletedOn';
 
-
     protected $fillable = [
         'FinanceRole',
         'Code',
@@ -33,7 +32,7 @@ class ThirdPartyType extends Model
 
     protected $casts = [
         'TypeId' => 'integer',
-        'Type' => 'integer',
+        'FinanceRole' => 'integer',
     ];
 
     public function getRouteKeyName(): string
@@ -43,17 +42,15 @@ class ThirdPartyType extends Model
 
     public function parties(): HasManyThrough
     {
-        return $this->hasManyThrough(ThirdParties::class, ThirdPartyTypeTypes::class, 'TypeId', 'Id', 'TypeId', 'ThirdPartyId');
+        return $this->hasManyThrough(
+            ThirdParties::class,
+            ThirdPartyTypeTypes::class,
+            'TypeId',
+            'Id',
+            'TypeId',
+            'ThirdPartyId'
+        );
     }
-
-
-    /* public function thirdParties(): BelongsToMany
-     {
-         return $this->belongsToMany(ThirdParties::class, 't_ThirdPartyType_ThirdParties', $this->primaryKey, 'Id')
-           ->using(ThirdPartyTypeTypes::class);
-             ->withTimestamps()
-             ->withPivot('Id', 'PartyType', 'PartyID', 'CreatedBy', 'ModifiedBy', 'DeletedBy', 'CreatedOn', 'ModifiedOn', 'DeletedOn');
-     }*/
 
     public function role(): BelongsTo
     {
@@ -62,6 +59,6 @@ class ThirdPartyType extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'ThirdPartyTypeID';
+        return 'TypeId';
     }
 }

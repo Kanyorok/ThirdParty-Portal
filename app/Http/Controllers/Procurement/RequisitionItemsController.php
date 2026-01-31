@@ -23,9 +23,6 @@ class RequisitionItemsController extends Controller
         $this->middleware('ajax')->except(['index', 'create', 'show']);
     }
 
-    /**
-     * Get items by type - returns items from plan if available, otherwise items by type or all items
-     */
     public function getItems(Request $request, $type = null): JsonResponse
     {
         try {
@@ -62,7 +59,6 @@ class RequisitionItemsController extends Controller
                     'count' => $items->count(),
                 ]);
             } else {
-                // No plan, get items by type or all items
                 if ($type && $type !== 'all') {
                     Log::info('Fetching items by type (no plan)', [
                         'type' => $type,
@@ -83,7 +79,7 @@ class RequisitionItemsController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $items->values()->toArray(), // Ensure array keys are sequential
+                'data' => $items->values()->toArray(),
             ]);
         } catch (Exception $e) {
             Log::error('Failed to fetch items', [
@@ -99,11 +95,16 @@ class RequisitionItemsController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+
+        $items = $this->itemService->getItemByType($type, $requisitionId);
+
+        Log::info('Items fetched from service', [
+            'count' => is_countable($items) ? count($items) : 'not countable',
+            'type' => gettype($items),
+            'first_item' => $items ? (is_array($items) || $items instanceof \Illuminate\Support\Collection ? $items[0] ?? null : $items) : null,
+        ]);
     }
 
-    /**
-     * Get item details including price, UOM, and category
-     */
     public function getItemDetails(Request $request, $item): JsonResponse
     {
         if (empty($item)) {
@@ -149,7 +150,6 @@ class RequisitionItemsController extends Controller
                 }
             }
 
-            // Fallback to generic item details
             $genericDetails = $this->getGenericItemDetails($item);
 
             Log::info('Returning generic item details', [
@@ -178,16 +178,13 @@ class RequisitionItemsController extends Controller
         }
     }
 
-    /**
-     * Get item details from procurement plan
-     */
     private function getPlanItemDetails($itemId, $planId)
     {
         try {
             $planItems = DB::table('t_PlanLineItem as pli')
                 ->join('t_Items as itm', 'pli.ItemID', '=', 'itm.Id')
                 ->leftJoin('t_ItemCategories as cat', 'itm.Category', '=', 'cat.Id')
-                ->leftJoin('t_UOM as uom', 'itm.UOM', '=', 'uom.Id') // Join UOM table
+                ->leftJoin('t_UOM as uom', 'itm.UOM', '=', 'uom.Id')
                 ->where('pli.ItemID', $itemId)
                 ->where('pli.PlanID', $planId)
                 ->where('pli.IsDeleted', 0)
@@ -221,7 +218,6 @@ class RequisitionItemsController extends Controller
                 }
             }
 
-            // If no item with remaining quantity found, return the first one (or null)
             if ($planItems->isNotEmpty()) {
                 $item = $planItems->first();
                 $usedQty = DB::table('t_RequisitionLines')
@@ -246,9 +242,6 @@ class RequisitionItemsController extends Controller
         }
     }
 
-    /**
-     * Get generic item details (not from plan)
-     */
     private function getGenericItemDetails($itemId)
     {
         try {
@@ -283,9 +276,6 @@ class RequisitionItemsController extends Controller
         }
     }
 
-    /**
-     * Get items available from a procurement plan
-     */
     private function getPlanAvailableItems($planId)
     {
         try {
@@ -293,15 +283,13 @@ class RequisitionItemsController extends Controller
                 'plan_id' => $planId,
             ]);
 
-            // Get RFQ Procurement Method ID
             $rfqMethodId = DB::table('t_CodeDetails')
                 ->where('CodeID', 'ProcurementMethod')
-                ->where('Value', 'R') // Assuming 'R' is for RFQ based on seeder
+                ->where('Value', 'R')
                 ->value('ID');
 
             Log::info('RFQ Method ID lookup', ['id' => $rfqMethodId]);
 
-            // Get all plan line items - filter availability in PHP
             $query = DB::table('t_PlanLineItem as pli')
                 ->join('t_Items as itm', 'pli.ItemID', '=', 'itm.Id')
                 ->leftJoin('t_ItemTypes as it', 'itm.ItemType', '=', 'it.Id')
@@ -311,11 +299,8 @@ class RequisitionItemsController extends Controller
                 ->where('pli.IsDeleted', 0)
                 ->whereNull('itm.DeletedOn');
 
-            // Apply RFQ filter if ID found
             if ($rfqMethodId) {
                 $query->where('pli.ProcurementMethod', $rfqMethodId);
-            } else {
-                Log::warning('RFQ Procurement Method not found in CodeDetails');
             }
 
             $items = $query->select(
@@ -331,28 +316,20 @@ class RequisitionItemsController extends Controller
                 DB::raw('ISNULL(pli.MergedQty, ISNULL(pli.OriginalQTY, 0)) as PlanQuantity'),
                 DB::raw('CASE WHEN pli.AdjustedCost > 0 THEN pli.AdjustedCost ELSE ISNULL(pli.EstimatedUnitCost, 0) END as UnitPrice'),
                 'pli.UnitOfMeasure as UOM'
-            )
-                ->get();
+            )->get();
 
-            // Calculate usage and filter available items
             $availableItems = $items->map(function ($item) {
-                // Calculate used quantity for this line item
                 $usedQty = DB::table('t_RequisitionLines')
                     ->where('PlanLineRef', $item->LineItemID)
-                    ->whereNull('DeletedOn')
                     ->sum('Quantity') ?? 0;
 
-                $availableQty = $item->PlanQuantity - $usedQty;
-
-                // Add calculated fields
                 $item->UsedQuantity = $usedQty;
-                $item->AvailableQuantity = $availableQty;
+                $item->AvailableQuantity = $item->PlanQuantity - $usedQty;
 
                 return $item;
             })->filter(function ($item) {
-                // Only return items with available quantity
                 return $item->AvailableQuantity > 0;
-            })->values(); // Reset array keys
+            })->values();
 
             Log::info('Plan items query executed', [
                 'plan_id' => $planId,
@@ -372,9 +349,6 @@ class RequisitionItemsController extends Controller
         }
     }
 
-    /**
-     * Get all items of a specific type (not filtered by plan)
-     */
     private function getGenericItemsByType($itemType)
     {
         try {
@@ -457,9 +431,6 @@ class RequisitionItemsController extends Controller
         }
     }
 
-    /**
-     * Get all items (not filtered by plan or type)
-     */
     private function getGenericItems()
     {
         try {
@@ -571,7 +542,6 @@ class RequisitionItemsController extends Controller
 
         try {
             $validatedData = $request->validated();
-
             $actor = $request->user();
             if (! $actor) {
                 return response()->json(['message' => 'Unauthorized'], 401);
@@ -594,12 +564,6 @@ class RequisitionItemsController extends Controller
                     'route' => route('requisition.show', $validatedData['RequisitionID']),
                 ], 200);
             }
-
-            Log::error('Failed to create requisitionLines', [
-                'input' => $validatedData,
-                'user_id' => $actor->id ?? null,
-                'service_response' => $requisitionAddLines,
-            ]);
 
             return response()->json([
                 'message' => $requisitionAddLines['message'],

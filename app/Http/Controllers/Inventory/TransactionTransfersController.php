@@ -119,6 +119,11 @@ class TransactionTransfersController extends Controller
                 ->withInput()
                 ->with('error', $errorMessage);
         }
+
+        return redirect()
+            ->back()
+            ->withInput()
+            ->with('error', $errorMessage);
     }
 
     public function show($Id)

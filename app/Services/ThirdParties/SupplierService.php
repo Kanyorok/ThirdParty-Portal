@@ -8,11 +8,11 @@ use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\Finance\FinanceRole;
+use App\Models\ThirdParies\Supplier;
 use App\Models\ThirdParty\SupplierMaster;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyType;
 use App\Models\ThirdParty\ThirdPartyUser;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -20,14 +20,12 @@ class SupplierService extends ThirdPartiesService
 {
     public function __construct(public SupplierMaster $supplier)
     {
-        // Ensure relationship is loaded
         if (! $supplier->relationLoaded('party')) {
             $supplier->load('party');
         }
 
-        // Validate the relationship exists - silently skip if no ThirdParty (legacy data)
         if (! $supplier->party) {
-            return;
+            throw new \RuntimeException("Supplier {$supplier->SupplierID} has no associated ThirdParty record");
         }
 
         parent::__construct($supplier->party);
@@ -36,7 +34,7 @@ class SupplierService extends ThirdPartiesService
     public static function getType(): ThirdPartyType
     {
         return ThirdPartyType::query()->withTrashed()->where('Code', ThirdPartyService::TypeSupplier)->firstOr(function () {
-            $role = FinanceRole::query()->first(); // todo fix your Finance role
+            $role = FinanceRole::query()->first();
             if ($role instanceof FinanceRole === false) {
                 throw new \RuntimeException("No finance roles found " . __CLASS__);
             }
@@ -45,7 +43,7 @@ class SupplierService extends ThirdPartiesService
             return ThirdPartyType::create([
                 'FinanceRole' => $role->FinanceRoleID,
                 'Code' => ThirdPartyService::TypeSupplier,
-                'Description' => 'Tenant',
+                'Description' => 'Supplier',
                 'CreatedBy' => $actor->Id,
                 'ModifiedBy' => $actor->Id,
             ]);
@@ -55,7 +53,7 @@ class SupplierService extends ThirdPartiesService
     public static function create(
         string $name,
         ?string $tradingName,
-        CodeDetail $businessType,
+        ?CodeDetail $businessType,
         string $registrationNumber,
         string $taxPIN,
         ?string $vatNumber,
@@ -66,31 +64,79 @@ class SupplierService extends ThirdPartiesService
         ?string $website,
         ?CodeDetail $status,
         ?array $extra,
-        User|ThirdPartyUser $actor
-    ): self {
-        return self::createFromParty(
-            party: parent::create($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor),
-            actor: $actor
+        User|ThirdPartyUser $actor,
+        array $data = []
+    ): ThirdParties {
+        $service = self::createFromParty(
+            party: parent::create($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor, $data),
+            actor: $actor,
+            data: $data
         );
+
+        return $service->party;
     }
 
-    public static function createFromParty(ThirdParties $party, User|ThirdPartyUser $actor, UploadedFile $document = null): self
+    public static function createFromParty(ThirdParties $party, User|ThirdPartyUser $actor, array $data = []): self
     {
-        $supplier = SupplierMaster::create([
+        $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
+
+        $master = SupplierMaster::create([
             'ThirdPartyId' => $party->Id,
             'SupplierID' => self::_ID(),
             'ApprovalStatus' => ThirdPartyApprovalStatusEnum::Pending,
             'IsPrequalified' => false,
-            'Extra' => null,
-            'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
-            'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
+            'CreatedBy' => $auditId,
+            'ModifiedBy' => $auditId,
         ]);
 
-        activity()->causedBy($actor)->performedOn($supplier)->event('create')->log("Added Supplier {$supplier->SupplierID} to thirdparty {$party->ThirdPartyName}.");
-        $service = new self($supplier);
-        $service->addType(self::getType(), SupplierMaster::getPrimaryKey(), $supplier->Id, $actor);
+        Supplier::create([
+            'SupplierMasterId' => $master->Id,
+            'CategoryId' => $data['supplier_category_id'] ?? $data['category_id'] ?? null,
+            'Active_Status' => true,
+            'CreatedBy' => $auditId,
+            'ModifiedBy' => $auditId,
+        ]);
+
+        $service = new self($master);
+
+        $service->addType(
+            self::getType(),
+            'SupplierMasterId',
+            $master->Id,
+            $actor
+        );
+
+        activity()
+            ->causedBy($actor)
+            ->performedOn($master)
+            ->event('create')
+            ->log("Registered Supplier {$master->SupplierID} for {$party->ThirdPartyName}.");
 
         return $service;
+    }
+
+    public static function updateFromParty(ThirdParties $party, User|ThirdPartyUser $actor, array $data = []): void
+    {
+        $master = SupplierMaster::where('ThirdPartyId', $party->Id)->first();
+
+        if ($master) {
+            $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
+
+            $master->update([
+                'ModifiedBy' => $auditId,
+            ]);
+
+            Supplier::where('SupplierMasterId', $master->Id)->update([
+                'CategoryId' => $data['supplier_category_id'] ?? $data['category_id'] ?? null,
+                'ModifiedBy' => $auditId,
+            ]);
+
+            activity()
+                ->causedBy($actor)
+                ->performedOn($master)
+                ->event('update')
+                ->log("Updated Supplier profile for {$party->ThirdPartyName}.");
+        }
     }
 
     protected static function _ID(): string
@@ -107,35 +153,38 @@ class SupplierService extends ThirdPartiesService
     public static function getSupplierDetails($SupplierId)
     {
         return DB::table(DB::raw('t_Suppliers AS s WITH (NOLOCK)'))
-            ->join(DB::raw('t_SupplierMaster AS sm WITH (NOLOCK)'), 's.SupplierMasterId', '=', 'sm.Id')
+            ->join(DB::raw('t_SupplierMaster AS sm WITH (NOLOCK)'), 'sm.Id', '=', 's.SupplierMasterId')
             ->join(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', 'sm.ThirdPartyId')
             ->select(
-                DB::raw('tp.TradingName as Name'),
+                'tp.ThirdPartyName as Name',
+                'tp.TradingName',
                 DB::raw("COALESCE(tp.Email, '') as Email"),
                 DB::raw("COALESCE(tp.Phone, '') as Phone"),
                 DB::raw("COALESCE(tp.PhysicalAddress, '') as Address"),
-                's.CategoryId as CategoryId'
+                's.CategoryId'
             )
             ->where('s.Id', $SupplierId)
-            ->first(); // Return a single object, not a collection
+            ->first();
     }
 
     public static function getSuppliers()
     {
-        return DB::table(DB::raw('t_Suppliers AS s WITH (NOLOCK)'))
-            ->join(DB::raw('t_SupplierMaster AS sm WITH (NOLOCK)'), 's.SupplierMasterId', '=', 'sm.Id')
+        return DB::table(DB::raw('t_SupplierMaster AS sm WITH (NOLOCK)'))
             ->join(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', 'sm.ThirdPartyId')
+            ->leftJoin(DB::raw('t_Suppliers AS s WITH (NOLOCK)'), 's.SupplierMasterId', '=', 'sm.Id')
             ->select(
-                DB::raw('tp.TradingName as SupplierName'),
+                'tp.ThirdPartyName as SupplierName',
+                'tp.TradingName',
                 DB::raw("COALESCE(tp.Email, '') as Email"),
                 DB::raw("COALESCE(tp.Phone, '') as Phone"),
                 DB::raw("COALESCE(tp.PhysicalAddress, '') as Address"),
-                's.CategoryId as CategoryId',
-                DB::raw('s.Id as SupplierId'),
-                DB::raw('sm.ThirdPartyId as ThirdPartyId')
+                's.CategoryId',
+                'sm.Id as SupplierMasterId',
+                'sm.ThirdPartyId',
+                'sm.SupplierID'
             )
-            ->whereNull('s.DeletedOn')
-            ->orderBy('tp.TradingName', 'asc')
+            ->whereNull('sm.DeletedOn')
+            ->orderBy('tp.ThirdPartyName', 'asc')
             ->get();
     }
 }

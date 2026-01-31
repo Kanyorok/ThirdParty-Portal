@@ -176,7 +176,7 @@ Route::middleware(['module:300000'])->group(function () {
     // Wait, getDirectPlanItems takes param {planId} and returns all.
     // Frontend expects: url('purchase-order/plan') }}/${planId}/category/${catId}/items`
     // I need a route for this specific filtered items call.
-    Route::get('/purchase-order/plan/{planId}/category/{categoryId}/items', [PurchaseOrderController::class, 'getDirectPlanItems']);// This will map planId to method arg 1, categoryId to arg 2?
+    Route::get('/purchase-order/plan/{planId}/category/{categoryId}/items', [PurchaseOrderController::class, 'getDirectPlanItems']); // This will map planId to method arg 1, categoryId to arg 2?
     // Note: getDirectPlanItems definition is `getDirectPlanItems($planId)`. It doesn't accept categoryId.
     // I should create a new method `getDirectPlanItemsByCategory($planId, $categoryId)` or update existing to accept optional category?
     // Existing: `public function getDirectPlanItems($planId)`

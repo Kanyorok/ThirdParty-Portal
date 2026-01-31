@@ -1093,7 +1093,7 @@ class PurchaseOrderController extends Controller
                 ->where('CodeID', 'ProcurementMethod')
                 ->where(function ($q) {
                     $q->where('Description', 'LIKE', '%Direct%')
-                      ->orWhere('Value', 'Like', '%Direct%');
+                        ->orWhere('Value', 'Like', '%Direct%');
                 })
                 ->value('ID');
 

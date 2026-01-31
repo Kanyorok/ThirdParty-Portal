@@ -1,18 +1,17 @@
 <?php
 
-namespace App\Http\Controllers\Procurement;
+namespace App\Http\Controllers\API\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\Tender;
 use App\Models\ThirdParies\Supplier;
-use App\Services\Procurement\EncryptedBidDocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class TenderSubmissionController extends Controller
 {
-    public function index()
+    public function index(): JsonResponse
     {
         $this->authorize(\App\Enums\Core\PermissionEnum::BidSubmissionRead->value);
         $submissions = BidSubmission::with([
@@ -26,7 +25,7 @@ class TenderSubmissionController extends Controller
         return view('procurement.tendering.suppliermanagement.bidsubmission.index', compact('submissions'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $this->authorize(\App\Enums\Core\PermissionEnum::BidSubmissionWrite->value);
         // Exclude tenders that already have submissions & filter by Published status
@@ -157,31 +156,51 @@ class TenderSubmissionController extends Controller
                 'ModifiedBy' => $request->user()->Id,
             ]);
 
-            // Store encrypted documents if uploaded
+            // Handle file upload
             if ($request->hasFile('bid_files')) {
-                $encryptedDocs = EncryptedBidDocumentService::storeEncryptedBidDocuments(
-                    $bidSubmission,
-                    [$request->file('bid_files')],
+                $bidSubmission->newDocument(
+                    \App\Enums\Core\ModulesEnum::Procurement,
+                    $request->file('bid_files'),
+                    [\App\Enums\Core\PermissionEnum::BidSubmissionView->value],
                     $request->user()
                 );
-
-                // Update submission with encrypted document info
-                $bidSubmission->update([
-                    'EncryptedDocuments' => json_encode($encryptedDocs),
-                    'ModifiedBy' => $request->user()->Id,
-                ]);
             }
 
             DB::commit();
 
-            return redirect()->route('tendersubmission.index')
-                ->with('success', 'Manual submission recorded successfully. Documents are encrypted and sealed until bid opening ceremony.');
+            return redirect()->route('tendersubmissions.index')
+                ->with('success', 'Bid submission recorded successfully.');
         } catch (\Exception $e) {
-            DB::rollback();
+            DB::rollBack();
 
             return redirect()->back()
-                ->withErrors(['error' => 'Failed to store submission: ' . $e->getMessage()])
+                ->withErrors(['error' => 'Failed to record bid submission: ' . $e->getMessage()])
                 ->withInput();
         }
+    }
+
+    private function resolveSupplier(): ?Supplier
+    {
+        $user = Auth::user();
+
+        if (property_exists($user, 'ThirdPartyId') && $user->ThirdPartyId) {
+            return Supplier::whereHas(
+                'supplierMaster',
+                fn ($q) =>
+                $q->where('ThirdPartyId', $user->ThirdPartyId)
+            )->first();
+        }
+
+        $tpu = DB::table('t_ThirdPartyUsers')->where('Id', $user->Id)->first();
+
+        if ($tpu?->ThirdPartyId) {
+            return Supplier::whereHas(
+                'supplierMaster',
+                fn ($q) =>
+                $q->where('ThirdPartyId', $tpu->ThirdPartyId)
+            )->first();
+        }
+
+        return null;
     }
 }

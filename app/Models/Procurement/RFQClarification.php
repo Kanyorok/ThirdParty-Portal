@@ -3,9 +3,12 @@
 namespace App\Models\Procurement;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RFQClarification extends Model
 {
+    use SoftDeletes;
+
     protected $table = 't_RFQClarifications';
     protected $primaryKey = 'Id';
     public const CREATED_AT = 'CreatedOn';
