@@ -49,6 +49,7 @@
                                 <th>Invoice Date</th>
                                 <th class="text-end">Total Amount</th>
                                 <th class="text-end">Amount Paid</th>
+                                <th class="text-end">Balance</th>
                                 <th>Status</th>
                                 <th style="width: 20%">Actions</th>
                             </tr>
@@ -56,8 +57,9 @@
                         <tbody>
                             @foreach($invoices as $invoice)
                                 @php
-                                    $totalAmount = ($invoice->RentAmount ?? 0) + ($invoice->ServicesCharge ?? 0) + ($invoice->ParkingFee ?? 0) + ($invoice->OtherCharges ?? 0);
+                                    $totalAmount = ((($invoice->RentAmount ?? 0) + ($invoice->ServicesCharge ?? 0) + ($invoice->ParkingFee ?? 0) + ($invoice->OtherCharges ?? 0)) * ((($invoice->tax->Rate ?? 0) / 100) + 1));
                                     $paidAmount = $invoice->DerivedPaid ?? 0;
+                                    $Balance = $totalAmount - $paidAmount;
                                     $status = $invoice->DerivedStatus ?? 'Pending';
                                 @endphp
                                 <tr>
@@ -73,6 +75,7 @@
                                             KES {{ number_format($paidAmount, 2) }}
                                         </span>
                                     </td>
+                                    <td class="text-end fw-semibold">KES {{ number_format($Balance, 2) }}</td>
                                     <td>
                                         <span class="badge bg-{{ $status == 'Fully Paid' ? 'success' : ($status == 'Partial Paid' ? 'warning' : 'danger') }} px-3 py-2">
                                             {{ $status }}

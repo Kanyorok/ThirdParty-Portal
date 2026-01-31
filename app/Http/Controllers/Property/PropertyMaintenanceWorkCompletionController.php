@@ -18,7 +18,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
 {
     public function index()
     {
-        $workCompletions = PropertyMaintenanceWorkCompletion::with('request', 'finalstatus')->get();
+        $workCompletions = PropertyMaintenanceWorkCompletion::with('request', 'finalstatus')->orderBy('Id', 'desc')->get();
 
         return view('property.maintenanceandissues.workcompletion.index', compact('workCompletions'));
     }
@@ -68,12 +68,48 @@ class PropertyMaintenanceWorkCompletionController extends Controller
 
         return redirect()->route('workcompletion.index')->with('success', 'Work completion created successfully');
     }
-    //     //Check if user has permission to edit tender categories
 
+    public function edit($Id)
+    {
+        //Check if user has permission to edit tender categories
+        $this->authorize(PermissionEnum::PropertyMaintenanceAssignUpdate, PropertyMaintenanceAssign::class);
+        $workCompletion = PropertyMaintenanceWorkCompletion::findOrFail($Id);
 
+        // Prevent editing completed work completions
+        if (strtolower($workCompletion->finalstatus->Description) === 'completed') {
+            return redirect()->route('workcompletion.index')
+                ->with('error', 'Cannot edit a completed maintenance work record.');
+        }
 
+        $assignments = PropertyMaintenanceAssign::with('request')->get();
+        $finalstatus = CodeDetail::where('CodeID', 'FinalStatus')->get();
 
-    //             Auth::user(),
+        return view('property.maintenanceandissues.workcompletion.edit', compact('assignments', 'finalstatus', 'workCompletion'));
+    }
+
+    public function update(PropertyMaintenanceWorkCompletionRequest $request, $Id)
+    {
+        $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionUpdate, PropertyMaintenanceWorkCompletion::class);
+        $validated = $request->validated();
+
+        $workCompletions = PropertyMaintenanceWorkCompletion::findOrFail($Id);
+
+        $document = $request->file('Document');
+        $finalstatus = CodeDetail::findOrFail((int) $validated['FinalStatus']);
+
+        $Completions = PropertyMaintenanceWorkCompletionService::update(
+            $workCompletions,
+            $validated['CompletionDate'],
+            $validated['WorkDoneSummary'],
+            $validated['PartsUsed'] ?? '',
+            $validated['Cost'] ?? '0',
+            $finalstatus,
+            Auth::user(),
+            $document
+        );
+
+        return redirect()->route('workcompletion.index')->with('success', 'Work completion updated successfully');
+    }
 
     public function show($Id)
     {
@@ -83,10 +119,31 @@ class PropertyMaintenanceWorkCompletionController extends Controller
         return view('property.maintenanceandissues.workcompletion.show', compact('workCompletion'));
     }
 
+    public function destroy($Id)
+    {
+        //Check if user has permission to delete property categories
+        $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionDelete, PropertyMaintenanceWorkCompletion::class);
 
-    //     //Check if user has permission to delete property categories
-    //     try {
+        try {
+            $workCompletion = PropertyMaintenanceWorkCompletion::findOrFail($Id);
 
-    //         // Log the error for debugging
-    //         Log::error('Error deleting property work completion: ' . $th->getMessage());
+            // Prevent deleting completed work completions
+            if (strtolower($workCompletion->finalstatus->Description) === 'completed') {
+                return redirect()->route('workcompletion.index')
+                    ->with('error', 'Cannot delete a completed maintenance work record.');
+            }
+
+            $workCompletion->delete();
+
+            return redirect()->route('workcompletion.index')
+                ->with('success', 'Property Work Completion Deleted Successfully!');
+        } catch (\Throwable $th) {
+            // Log the error for debugging
+            Log::error('Error deleting property work completion: ' . $th->getMessage());
+
+            return redirect()->back()
+                ->withErrors(['error' => 'Failed to delete Property Maintenance Work Completion. Please try again.'])
+                ->withInput();
+        }
+    }
 }

@@ -5,11 +5,21 @@
 
 <div class="container mt-4">
 
-    <div class="d-flex justify-content-end mb-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <small>This screen displays a list of all property rates and pricing records.</small>
+        </div>
 
-        <a href="{{ route('propertyrateandpricing.create') }}" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Add Pricing
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('propertyrateandpricing.bulk-create') }}" class="btn btn-outline-primary shadow-sm">
+                <i class="bi bi-upload me-1"></i> Bulk Upload Pricing
+            </a>
+
+            <a href="{{ route('propertyrateandpricing.create') }}" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i> Add Pricing
+            </a>
+        </div>
     </div>
 
     <div class="card shadow">

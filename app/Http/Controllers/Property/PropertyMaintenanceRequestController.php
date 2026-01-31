@@ -22,7 +22,7 @@ class PropertyMaintenanceRequestController extends Controller
 {
     public function index()
     {
-        $maintenancerequests = PropertyMaintenanceRequest::all();
+        $maintenancerequests = PropertyMaintenanceRequest::orderBy('Id', 'desc')->get();
 
         return view('property.maintenanceandissues.maintenancerequest.index', compact('maintenancerequests'));
     }
