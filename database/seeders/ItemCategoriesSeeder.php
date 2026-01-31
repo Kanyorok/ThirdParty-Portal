@@ -2,13 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Inventory\ItemCategories;
-use Illuminate\Support\Facades\DB;
-use App\Models\Core\Approval\CodeDetail;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Auth\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ItemCategoriesSeeder extends Seeder
 {
@@ -23,7 +20,7 @@ class ItemCategoriesSeeder extends Seeder
             ->where('Description', 'Active')
             ->value('ID');
 
-        if (!$activeStatusId) {
+        if (! $activeStatusId) {
             throw new \Exception("Active status not found in t_CodeDetails. Please seed it first.");
         }
 
@@ -59,7 +56,7 @@ class ItemCategoriesSeeder extends Seeder
                     'CreatedOn' => $now,
                     'ModifiedOn' => $now,
                     'CategoryCode' => strtoupper(substr($parentName, 0, 3)) . '-PARENT',
-                    'Status' => $activeStatusId, 
+                    'Status' => $activeStatusId,
                 ]
             );
 
@@ -74,7 +71,7 @@ class ItemCategoriesSeeder extends Seeder
                         'CreatedOn' => $now,
                         'ModifiedOn' => $now,
                         'CategoryCode' => strtoupper(substr($childName, 0, 3)) . '-' . rand(100, 999),
-                        'Status' => $activeStatusId, 
+                        'Status' => $activeStatusId,
                     ]
                 );
             }

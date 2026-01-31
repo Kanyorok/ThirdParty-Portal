@@ -49,7 +49,7 @@ class NewPasswordController extends Controller
 
         $user = User::where('Email', $request->email)->first();
 
-        if (!$user || !Password::tokenExists($user, $request->token)) {
+        if (! $user || ! Password::tokenExists($user, $request->token)) {
             throw ValidationException::withMessages([
                 'email' => ['Confirm the email and token are valid.'],
             ]);
@@ -58,6 +58,7 @@ class NewPasswordController extends Controller
         if ($user->Linked) {
             (new UserService($user))->syncBR();
             Password::deleteToken($user);
+
             return $this->succeeded('Account linked with core banking, synced. Use core banking password.', route('home'));
         }
 
@@ -77,5 +78,4 @@ class NewPasswordController extends Controller
 
         return $this->succeeded('Password reset successful. Please log in and select a branch.', route('login'));
     }
-
 }

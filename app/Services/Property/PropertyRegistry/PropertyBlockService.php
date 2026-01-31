@@ -19,9 +19,8 @@ class PropertyBlockService
         PropertyRegistry $PropertyID,
         string $BlockName,
         string $Description = null,
-        User   $user
-    ): self
-    {
+        User $user
+    ): self {
         $block = PropertyBlock::create([
             'PropertyID' => $PropertyID->Id,
             'BlockName' => $BlockName,
@@ -31,6 +30,7 @@ class PropertyBlockService
         ]);
 
         activity()->causedBy($user->Id)->performedOn($block)->event('create')->log("Added Property Block {$block->Id}.");
+
         return new self($block);
     }
 }

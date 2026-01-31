@@ -24,24 +24,24 @@ class LeadController extends Controller
     {
         try {
             $data = $request->validate([
-                                        'name'         => [
+                                        'name' => [
                                                            'required',
                                                            'string',
                                                            'max:250',
                                                           ],
-                                        'website'      => [
+                                        'website' => [
                                                            'nullable',
                                                            'string',
                                                            'url:http,https',
                                                            'active_url',
                                                            'max:250',
                                                           ],
-                                        'phone'        => [
+                                        'phone' => [
                                                            'required',
                                                            'string',
                                             'max:15', /*'unique:App\Models\CRM\Lead,Phone'*/
                                                           ],
-                                        'email'        => [
+                                        'email' => [
                                                            'nullable',
                                                            'email:rfc,dns',
                                             'max:250',/* 'unique:App\Models\CRM\Lead,Email'*/
@@ -51,7 +51,7 @@ class LeadController extends Controller
                                                            'date_format:"Y-m-d H:i"',
                                                            'before:now',
                                                           ],
-                                        'notes'        => [
+                                        'notes' => [
                                                            'nullable',
                                                            'string',
                                                            'max:5000',
@@ -78,25 +78,27 @@ class LeadController extends Controller
         }
 
         $actor = SystemHelper::user();
+
         try {
             DB::transaction(static function () use ($email, $data, $actor, $last_contacted) {
                 Lead::create([
-                              "Name"                  => $data['name'],
-                              "Email"                 => $email,
-                              "Phone"                 => $data['phone'],
-                              "Website"               => $data['website'],
-                              "Notes"                 => $data['notes'],
-                              "Type"                  => LeadTypeEnum::Company->value,
-                              'ModifiedBy'            => $actor->Id,
-                              'CreatedBy'             => $actor->Id,
-                              "LastContacted"         => $last_contacted,
+                              "Name" => $data['name'],
+                              "Email" => $email,
+                              "Phone" => $data['phone'],
+                              "Website" => $data['website'],
+                              "Notes" => $data['notes'],
+                              "Type" => LeadTypeEnum::Company->value,
+                              'ModifiedBy' => $actor->Id,
+                              'CreatedBy' => $actor->Id,
+                              "LastContacted" => $last_contacted,
                               "RelationshipManagerID" => $actor->Id,
-                              'CreatedOn'             => now(),
-                              'UpdatedOn'             => now(),
+                              'CreatedOn' => now(),
+                              'UpdatedOn' => now(),
                              ]);
             });
         } catch (Exception $e) {
             Log::error('Error saving company lead from channel : ' . $e->getMessage());
+
             return $this->br_response(400, 'unexpected error, try again later');
         }
 
@@ -111,27 +113,27 @@ class LeadController extends Controller
     {
         try {
             $data = $request->validate([
-                                        'first_name'   => [
+                                        'first_name' => [
                                                            'required',
                                                            'string',
                                                            'max:250',
                                                           ],
-                                        'surname'      => [
+                                        'surname' => [
                                                            'required',
                                                            'string',
                                                            'max:150',
                                                           ],
-                                        'phone'        => [
+                                        'phone' => [
                                                            'required',
                                                            'string',
                                             'max:15',/* 'unique:App\Models\CRM\Lead,Phone'*/
                                                           ],
-                                        'email'        => [
+                                        'email' => [
                                                            'nullable',
                                                            'email:rfc,dns',
                                             'max:250',/*, 'unique:App\Models\CRM\Lead,Email'*/
                                                           ],
-                                        'job_title'    => [
+                                        'job_title' => [
                                                            'nullable',
                                                            'string',
                                                            'max:200',
@@ -141,7 +143,7 @@ class LeadController extends Controller
                                                            'date_format:"Y-m-d H:i"',
                                                            'before:now',
                                                           ],
-                                        'notes'        => [
+                                        'notes' => [
                                                            'nullable',
                                                            'string',
                                                            'max:5000',
@@ -169,26 +171,28 @@ class LeadController extends Controller
 
 
         $actor = SystemHelper::user();
+
         try {
             DB::transaction(static function () use ($email, $data, $last_contacted, $actor) {
                 Lead::create([
-                              "Name"                  => $data['first_name'],
-                              "OtherNames"            => $data['surname'],
-                              "JobTitle"              => $data['job_title'],
-                              "Email"                 => $email,
-                              "Phone"                 => $data['phone'],
-                              "Notes"                 => $data['notes'],
-                              "Type"                  => LeadTypeEnum::Individual->value,
-                              'ModifiedBy'            => $actor->Id,
-                              'CreatedBy'             => $actor->Id,
-                              "LastContacted"         => $last_contacted,
+                              "Name" => $data['first_name'],
+                              "OtherNames" => $data['surname'],
+                              "JobTitle" => $data['job_title'],
+                              "Email" => $email,
+                              "Phone" => $data['phone'],
+                              "Notes" => $data['notes'],
+                              "Type" => LeadTypeEnum::Individual->value,
+                              'ModifiedBy' => $actor->Id,
+                              'CreatedBy' => $actor->Id,
+                              "LastContacted" => $last_contacted,
                               "RelationshipManagerID" => $actor->Id,
-                              'CreatedOn'             => now(),
-                              'UpdatedOn'             => now(),
+                              'CreatedOn' => now(),
+                              'UpdatedOn' => now(),
                              ]);
             });
         } catch (Exception $e) {
             Log::error('Error saving individual lead from channel : ' . $e->getMessage());
+
             return $this->br_response(400, 'unexpected error, try again later');
         }
 

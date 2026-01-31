@@ -11,18 +11,18 @@ class PropertyCollection extends ResourceCollection
         return [
             'data' => $this->collection->map(function ($property) {
                 return [
-                    'id'            => $property->Id,
+                    'id' => $property->Id,
                     'property_name' => $property->PropertyName,
                     'property_code' => $property->PropertyCode,
 
                     'blocks' => $property->getBlockByProperty->map(function ($block) {
                         return [
-                            'id'         => $block->Id,
+                            'id' => $block->Id,
                             'block_name' => $block->BlockName,
 
                             'floors' => $block->floor->map(function ($floor) {
                                 return [
-                                    'id'          => $floor->Id,
+                                    'id' => $floor->Id,
                                     'floor_label' => $floor->FloorLabel,
                                     'floor_notes' => $floor->FloorNotes,
 
@@ -31,11 +31,11 @@ class PropertyCollection extends ResourceCollection
                                         ->where('CurrentStatus', true)
                                         ->map(function ($unit) {
                                             return [
-                                                'id'                 => $unit->Id,
-                                                'unit_code'          => $unit->UnitCode,
-                                                'unit_size'          => $unit->UnitSize,
-                                                'is_rentable'        => (bool) $unit->IsRentable,
-                                                'current_status'     => (bool) $unit->CurrentStatus,
+                                                'id' => $unit->Id,
+                                                'unit_code' => $unit->UnitCode,
+                                                'unit_size' => $unit->UnitSize,
+                                                'is_rentable' => (bool) $unit->IsRentable,
+                                                'current_status' => (bool) $unit->CurrentStatus,
                                                 'availability_label' => 'Vacant',
                                             ];
                                         })

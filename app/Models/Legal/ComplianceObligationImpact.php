@@ -12,6 +12,6 @@ class ComplianceObligationImpact extends Model
 
     protected $fillable = [
         'ObligationID', 'ImpactDescription', 'Department',
-        'AssessedBy', 'AssessedOn'
+        'AssessedBy', 'AssessedOn',
     ];
 }

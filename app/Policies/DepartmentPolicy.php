@@ -21,7 +21,7 @@ class DepartmentPolicy
      */
     public function view(User $user, Department $department): bool
     {
-         return $user->can(PermissionEnum::Departments->value);
+        return $user->can(PermissionEnum::Departments->value);
     }
 
     /**
@@ -29,7 +29,7 @@ class DepartmentPolicy
      */
     public function create(User $user): bool
     {
-         return $user->can(PermissionEnum::Departments->value);
+        return $user->can(PermissionEnum::Departments->value);
     }
 
     /**
@@ -37,7 +37,7 @@ class DepartmentPolicy
      */
     public function update(User $user, Department $department): bool
     {
-         return $user->can(PermissionEnum::Departments->value);
+        return $user->can(PermissionEnum::Departments->value);
     }
 
     /**
@@ -45,7 +45,7 @@ class DepartmentPolicy
      */
     public function delete(User $user, Department $department): bool
     {
-         return $user->can(PermissionEnum::Departments->value);
+        return $user->can(PermissionEnum::Departments->value);
     }
 
     /**

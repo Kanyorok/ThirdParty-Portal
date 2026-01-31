@@ -14,7 +14,7 @@ return [
     |
     */
 
-        'default'  => env('MAIL_MAILER', 'smtp'),
+        'default' => env('MAIL_MAILER', 'smtp'),
 
     /*
     |--------------------------------------------------------------------------
@@ -36,57 +36,56 @@ return [
     */
 
         'incoming' => [
-                       'transport'  => 'imap',
-                       'host'       => env('RECEIVE_MAIL_HOST', env('MAIL_HOST', '127.0.0.1')),
-                       'port'       => env('RECEIVE_MAIL_PORT', 993),
+                       'transport' => 'imap',
+                       'host' => env('RECEIVE_MAIL_HOST', env('MAIL_HOST', '127.0.0.1')),
+                       'port' => env('RECEIVE_MAIL_PORT', 993),
                        'encryption' => env('RECEIVE_MAIL_ENCRYPTION', 'ssl'),
-                       'folder'     => env('RECEIVE_MAIL_FOLDER', 'INBOX'),
-                       'username'   => env('RECEIVE_MAIL_USERNAME', env('MAIL_USERNAME')),
-                       'password'   => env('RECEIVE_MAIL_PASSWORD', env('MAIL_PASSWORD')),
-                       'encoding'   => env('RECEIVE_MAIL_ENCODING', 'UTF-8'),
+                       'folder' => env('RECEIVE_MAIL_FOLDER', 'INBOX'),
+                       'username' => env('RECEIVE_MAIL_USERNAME', env('MAIL_USERNAME')),
+                       'password' => env('RECEIVE_MAIL_PASSWORD', env('MAIL_PASSWORD')),
+                       'encoding' => env('RECEIVE_MAIL_ENCODING', 'UTF-8'),
                       ],
 
-        'mailers'  => [
+        'mailers' => [
 
-                       'smtp'       => [
-                                        'transport'    => 'smtp',
-                                        'url'          => env('MAIL_URL'),
-                                        'host'         => env('MAIL_HOST', '127.0.0.1'),
-                                        'port'         => env('MAIL_PORT', 465),
-                                        'encryption'   => env('MAIL_ENCRYPTION', 'tls'),
-                                        'username'     => env('MAIL_USERNAME'),
-                                        'password'     => env('MAIL_PASSWORD'),
-                                        'timeout'      => null,
+                       'smtp' => [
+                                        'transport' => 'smtp',
+                                        'url' => env('MAIL_URL'),
+                                        'host' => env('MAIL_HOST', '127.0.0.1'),
+                                        'port' => env('MAIL_PORT', 465),
+                                        'encryption' => env('MAIL_ENCRYPTION', 'tls'),
+                                        'username' => env('MAIL_USERNAME'),
+                                        'password' => env('MAIL_PASSWORD'),
+                                        'timeout' => null,
                                         'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
                                        ],
 
-                       'ses'        => ['transport' => 'ses'],
+                       'ses' => ['transport' => 'ses'],
 
-                       'postmark'   => [
+                       'postmark' => [
                        'transport' => 'postmark',
             // 'message_stream_id' => env('POSTMARK_MESSAGE_STREAM_ID'),
             // 'client' => [
             //     'timeout' => 5,
-            // ],
                                        ],
 
-                       'resend'     => ['transport' => 'resend'],
+                       'resend' => ['transport' => 'resend'],
 
-                       'sendmail'   => [
+                       'sendmail' => [
                                         'transport' => 'sendmail',
-                                        'path'      => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
+                                        'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
                                        ],
 
-                       'log'        => [
+                       'log' => [
                                         'transport' => 'log',
-                                        'channel'   => env('MAIL_LOG_CHANNEL'),
+                                        'channel' => env('MAIL_LOG_CHANNEL'),
                                        ],
 
-                       'array'      => ['transport' => 'array'],
+                       'array' => ['transport' => 'array'],
 
-                       'failover'   => [
+                       'failover' => [
                                         'transport' => 'failover',
-                                        'mailers'   => [
+                                        'mailers' => [
                                                         'smtp',
                                                         'log',
                                                        ],
@@ -94,7 +93,7 @@ return [
 
                        'roundrobin' => [
                                         'transport' => 'roundrobin',
-                                        'mailers'   => [
+                                        'mailers' => [
                                                         'ses',
                                                         'postmark',
                                                        ],
@@ -113,9 +112,9 @@ return [
     |
     */
 
-        'from'     => [
+        'from' => [
                        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-                       'name'    => env('MAIL_FROM_NAME', 'Example'),
+                       'name' => env('MAIL_FROM_NAME', 'Example'),
                       ],
 
        ];

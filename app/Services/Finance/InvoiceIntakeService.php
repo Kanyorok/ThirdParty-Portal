@@ -8,8 +8,8 @@ use App\Models\Finance\FinanceTaxRuleConfiguration;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class InvoiceIntakeService
 {
@@ -76,20 +76,20 @@ class InvoiceIntakeService
         // Compute IdempotencyKey if not provided
         $idk = $payload['IdempotencyKey'] ?? $this->computeIdempotencyKey($payload);
 
-        $lineSubtotal = array_sum(array_map(fn($l) => (int)$l['Total'], $payload['lines']));
+        $lineSubtotal = array_sum(array_map(fn ($l) => (int)$l['Total'], $payload['lines']));
 
         $invoiceAmount = $payload['InvoiceAmount'] ?? (float)$lineSubtotal;
         $taxAmount = $payload['TaxAmount'] ?? 0.0;
         $taxPercentage = $payload['TaxPercentage'] ?? null;
 
-        if (!empty($payload['TaxID'])) {
+        if (! empty($payload['TaxID'])) {
             $taxConfig = FinanceTaxRuleConfiguration::find($payload['TaxID']);
             if ($taxConfig) {
                 $taxPercentage = (float)$taxConfig->Rate;
-                if (!array_key_exists('TaxAmount', $payload)) {
+                if (! array_key_exists('TaxAmount', $payload)) {
                     $taxAmount = round($invoiceAmount * ($taxPercentage / 100), 2);
                 }
-                if (!array_key_exists('InvoiceAmount', $payload)) {
+                if (! array_key_exists('InvoiceAmount', $payload)) {
                     $invoiceAmount = $lineSubtotal + $taxAmount;
                 }
             }
@@ -141,7 +141,7 @@ class InvoiceIntakeService
             // check if invoice exists (handles double submits)
             $invoice = FinanceInvoice::where('IdempotencyKey', $idk)->first();
 
-            if (!$invoice) {
+            if (! $invoice) {
                 $invoice = new FinanceInvoice();
                 $invoice->fill(array_merge($header, [
                     'CreatedBy' => $payload['CreatedBy'],
@@ -196,7 +196,8 @@ class InvoiceIntakeService
             'InvoiceTitle' => $payload['InvoiceTitle'] ?? null,
         ];
 
-        $norm = array_map(fn($v) => is_string($v) ? trim(mb_strtoupper($v)) : $v, $parts);
+        $norm = array_map(fn ($v) => is_string($v) ? trim(mb_strtoupper($v)) : $v, $parts);
+
         return hash('sha256', json_encode($norm));
     }
 }

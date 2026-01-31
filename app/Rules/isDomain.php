@@ -14,7 +14,7 @@ class isDomain implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!$this->_isDomain($value)) {
+        if (! $this->_isDomain($value)) {
             $fail('The :attribute must a fully qualified domain.');
         }
     }
@@ -40,11 +40,11 @@ class isDomain implements ValidationRule
         }
 
         //Checking for a '.' at least, not in the beginning nor end, since http://.abcd. is reported valid
-        if (!str_contains($domain_name, '.') || $domain_name[strlen($domain_name) - 1] === '.' || $domain_name[0] == '.') {
+        if (! str_contains($domain_name, '.') || $domain_name[strlen($domain_name) - 1] === '.' || $domain_name[0] == '.') {
             return false;
         }
 
         //now we use the FILTER_VALIDATE_URL, concatenating http so we can use it, and return BOOL
-        return !((filter_var('http://' . $domain_name, FILTER_VALIDATE_URL) === false));
+        return ! ((filter_var('http://' . $domain_name, FILTER_VALIDATE_URL) === false));
     }
 }

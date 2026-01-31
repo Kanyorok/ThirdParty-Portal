@@ -19,22 +19,22 @@ use Illuminate\Support\Facades\DB;
 class PropertyLeaseRenewalService
 {
     public static function create(
-        int    $leaseId,
-        int    $paymentFrequencyId,
+        int $leaseId,
+        int $paymentFrequencyId,
         string $EndDateCurrentLease,
         string $NewStartDate,
         string $NewEndDate,
-        int    $NewMonthlyRent,
-        float  $ServiceCharge,
-        float  $ParkingFee,
-        float  $OtherCharges,
+        int $NewMonthlyRent,
+        float $ServiceCharge,
+        float $ParkingFee,
+        float $OtherCharges,
         string $Remarks = null,
         string $Status,
-        User   $user,
+        User $user,
         UploadedFile $document = null
-    ): PropertyLeaseRenewal
-    {
+    ): PropertyLeaseRenewal {
         DB::beginTransaction();
+
         try {
             if (PropertyLeaseRenewal::where('LeaseNumber', $leaseId)->exists()) {
                 throw new \Exception('This lease is already renewed.');
@@ -101,28 +101,31 @@ class PropertyLeaseRenewalService
             );
 
             DB::commit();
+
             return $leaseRenewal;
         } catch (\Exception $e) {
             DB::rollBack();
+
             throw $e;
         }
     }
 
     public static function update(
         PropertyLeaseRenewal $leaseRenewal,
-        int    $leaseId,
-        int    $paymentFrequencyId,
+        int $leaseId,
+        int $paymentFrequencyId,
         string $EndDateCurrentLease,
         string $NewStartDate,
         string $NewEndDate,
-        int    $NewMonthlyRent,
-        float  $ServiceCharge,
-        float  $ParkingFee,
-        float  $OtherCharges,
+        int $NewMonthlyRent,
+        float $ServiceCharge,
+        float $ParkingFee,
+        float $OtherCharges,
         string $Remarks,
-        User   $user
+        User $user
     ): void {
         DB::beginTransaction();
+
         try {
             $leaseRenewal->update([
                 'LeaseNumber' => $leaseId,
@@ -172,6 +175,7 @@ class PropertyLeaseRenewalService
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
+
             throw $e;
         }
     }
@@ -179,6 +183,7 @@ class PropertyLeaseRenewalService
     public static function delete(PropertyLeaseRenewal $leaseRenewal, User $user): void
     {
         DB::beginTransaction();
+
         try {
             $leaseId = $leaseRenewal->LeaseNumber;
 
@@ -195,6 +200,7 @@ class PropertyLeaseRenewalService
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
+
             throw $e;
         }
     }

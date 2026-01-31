@@ -30,7 +30,7 @@ class FleetDriverLicenseTrackingRequest extends FormRequest
             'ExpiryDate' => 'required|date|after:IssueDate',
             'RenewalDate' => 'nullable|date|after_or_equal:ExpiryDate',
             'Notes' => 'nullable|string|max:255',
-            //
+
         ];
     }
 }

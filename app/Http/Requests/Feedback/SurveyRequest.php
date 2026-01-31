@@ -28,7 +28,7 @@ class SurveyRequest extends FormRequest
                             'date_format:"Y-m-d"',
                             'before_or_equal:End',
                            ],
-                'End'   => [
+                'End' => [
                             'required',
                             'date_format:"Y-m-d"',
                             'after_or_equal:Start',
@@ -47,7 +47,7 @@ class SurveyRequest extends FormRequest
     public function getEnd(Carbon $start, string $SurveyID = null): Carbon
     {
         $end = Carbon::createFromFormat('Y-m-d', $this->validated('End'));
-        if (!$end instanceof Carbon) {
+        if (! $end instanceof Carbon) {
             throw ValidationException::withMessages(['Start' => 'invalid date format']);
         }
         $end->endOfDay()->subMinutes(10);
@@ -73,7 +73,7 @@ class SurveyRequest extends FormRequest
     public function getStart(string $SurveyID = null): Carbon
     {
         $start = Carbon::createFromFormat('Y-m-d', $this->validated('Start'));
-        if (!$start instanceof Carbon) {
+        if (! $start instanceof Carbon) {
             throw ValidationException::withMessages(['Start' => 'invalid date format']);
         }
         $start->startOfDay();

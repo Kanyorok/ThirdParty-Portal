@@ -15,6 +15,7 @@ class SurveyQuestionsCollection extends ResourceCollection
     public function survey(Survey $survey): static
     {
         $this->survey = $survey;
+
         return $this;
     }
 
@@ -27,14 +28,14 @@ class SurveyQuestionsCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-                'survey'    => (new SurveyResource($this->survey)),
+                'survey' => (new SurveyResource($this->survey)),
                 'questions' => $this->collection->transform(function ($question) {
                     return [
-                            'id'       => $question->SurveyQuestionId,
-                            'type'     => $question->Type->name,
+                            'id' => $question->SurveyQuestionId,
+                            'type' => $question->Type->name,
                             'question' => $question->Question,
-                            'help'     => ($question->Notes) ?? '',
-                            'answers'  => $this->getOptions($question),
+                            'help' => ($question->Notes) ?? '',
+                            'answers' => $this->getOptions($question),
                            ];
                 }),
                ];
@@ -47,12 +48,13 @@ class SurveyQuestionsCollection extends ResourceCollection
             $ops = $question->answers()->get();
             foreach ($ops as $op) {
                 $data->add([
-                            'id'     => $op->Id,
+                            'id' => $op->Id,
                             'option' => $op->Answer,
-                            'help'   => ($op->Notes) ?? '',
+                            'help' => ($op->Notes) ?? '',
                            ]);
             }
         }
+
         return $data->toArray();
     }
 }

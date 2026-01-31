@@ -27,7 +27,7 @@ class ThirdPartiesBankController extends Controller
                 ->with(['businessType:Id,Description', 'country:Id,Name,Flag', 'types:TypeId,Code,Description', 'status:Id,Description']);
 
             return DataTables::of($query)->editColumn('types', function (ThirdParties $thirdParties) {
-                return $thirdParties->types->pluck('Description')->map(fn($type) => "<span class='badge bg-primary'>{$type}</span>")->implode(' ');
+                return $thirdParties->types->pluck('Description')->map(fn ($type) => "<span class='badge bg-primary'>{$type}</span>")->implode(' ');
             })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
                 'dbl_click_url' => function (ThirdParties $thirdParties) {
                     return route('thirdparty.parties.show', $thirdParties->Id);
@@ -35,6 +35,7 @@ class ThirdPartiesBankController extends Controller
             ])->addIndexColumn()->rawColumns(['types'])->make();
         } catch (\Throwable $e) {
             Log::error('Failed to load third parties: ' . $e->getMessage());
+
             return $this->errored('unexpected error occurred while loading the data. please try again later.');
         }
     }
@@ -44,7 +45,6 @@ class ThirdPartiesBankController extends Controller
      */
     public function create()
     {
-        //
     }
 
     /**
@@ -52,7 +52,6 @@ class ThirdPartiesBankController extends Controller
      */
     public function store(Request $request)
     {
-        //
     }
 
     /**
@@ -60,7 +59,6 @@ class ThirdPartiesBankController extends Controller
      */
     public function show(ThirdPartiesBankDetails $thirdPartiesBankDetails)
     {
-        //
     }
 
     /**
@@ -68,7 +66,6 @@ class ThirdPartiesBankController extends Controller
      */
     public function edit(ThirdPartiesBankDetails $thirdPartiesBankDetails)
     {
-        //
     }
 
     /**
@@ -76,7 +73,6 @@ class ThirdPartiesBankController extends Controller
      */
     public function update(Request $request, ThirdPartiesBankDetails $thirdPartiesBankDetails)
     {
-        //
     }
 
     /**
@@ -84,6 +80,5 @@ class ThirdPartiesBankController extends Controller
      */
     public function destroy(ThirdPartiesBankDetails $thirdPartiesBankDetails)
     {
-        //
     }
 }

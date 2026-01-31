@@ -1,0 +1,209 @@
+name: PHP Code Quality
+
+on:
+  pull_request:
+    paths:
+      - '**.php'
+      - 'composer.json'
+      - 'composer.lock'
+      - '.php-cs-fixer.dist.php'
+      - 'phpcs.xml'
+      - 'phpstan.neon'
+  push:
+    branches:
+      - dev
+      - main
+    paths:
+      - '**.php'
+
+env:
+  FORCE_COLOR: 1
+
+jobs:
+  php-syntax:
+    name: PHP Syntax Check
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      
+      - name: Check PHP Syntax
+        run: |
+          find app/ config/ database/seeders/ database/factories/ routes/ -name "*.php" -print0 | xargs -0 -n1 php -l
+  
+  debug-logs:
+    name: Debug Log Detection
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      
+      - name: Check for Development Debug Logs
+        run: |
+          echo "🔍 Scanning for development debug log statements..."
+          php scripts/detect-debug-logs.php
+      
+      - name: Check for Specific Debug Patterns
+        run: |
+          echo "Checking for debug patterns in code..."
+          DEBUG_COUNT=$(grep -rn "Log::\(info\|debug\|warning\)" app/ --include="*.php" | grep -E "(BEFORE|AFTER|SKIPPED|TODO|TEST|DEBUG|DUMP)" | wc -l || echo "0")
+          if [ "$DEBUG_COUNT" -gt 0 ]; then
+            echo "❌ Found $DEBUG_COUNT development log statement(s)"
+            grep -rn "Log::\(info\|debug\|warning\)" app/ --include="*.php" | grep -E "(BEFORE|AFTER|SKIPPED|TODO|TEST|DEBUG|DUMP)" | head -10
+            exit 1
+          else
+            echo "✅ No development log statements found"
+          fi
+  
+  php-cs-fixer:
+    name: PHP CS Fixer (PSR-12)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, json, bcmath
+          coverage: none
+      
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      
+      - name: Cache Composer Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      
+      - name: Install Composer Dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
+      
+      - name: Run PHP CS Fixer
+        run: |
+          vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php --dry-run --diff --allow-risky=yes --format=checkstyle | tee php-cs-fixer-report.xml
+      
+      - name: Annotate Code with PHP CS Fixer Results
+        if: failure()
+        run: |
+          if [ -f php-cs-fixer-report.xml ]; then
+            echo "::warning::PHP CS Fixer found formatting issues. Run 'composer lint-fix' locally to fix."
+          fi
+  
+  phpcs:
+    name: PHP_CodeSniffer (PSR-12)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, json, bcmath
+          coverage: none
+      
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      
+      - name: Cache Composer Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      
+      - name: Install Composer Dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
+      
+      - name: Run PHP_CodeSniffer
+        run: |
+          vendor/bin/phpcs --standard=phpcs.xml --report=summary --report-checkstyle=phpcs-report.xml
+        continue-on-error: true  # Non-blocking: many legacy warnings
+      
+      - name: Show Detailed Errors on Failure
+        if: always()
+        run: |
+          echo "::warning::PHPCS found coding standard violations. Run 'composer phpcbf' locally to auto-fix."
+          vendor/bin/phpcs --standard=phpcs.xml --report=source || true
+  
+  phpstan:
+    name: PHPStan (Level 5)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, json, bcmath
+          coverage: none
+      
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      
+      - name: Cache Composer Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      
+      - name: Install Composer Dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
+      
+      - name: Run PHPStan
+        run: |
+          vendor/bin/phpstan analyse --memory-limit=2G --error-format=github
+        continue-on-error: true  # Don't fail the build on PHPStan errors (warnings only)
+      
+      - name: PHPStan Summary
+        if: always()
+        run: |
+          echo "::notice::PHPStan analysis complete. Errors are informational and don't block merging."
+  
+  summary:
+    name: PHP Quality Summary
+    runs-on: ubuntu-22.04
+    needs: [php-syntax, debug-logs, php-cs-fixer, phpcs]
+    if: always()
+    steps:
+      - name: Check Results
+        run: |
+          echo "## PHP Code Quality Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| PHP Syntax | ${{ needs.php-syntax.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Debug Logs | ${{ needs.debug-logs.result == 'success' && '✅ No debug logs' || '⚠️ Debug logs found' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| PHP CS Fixer | ${{ needs.php-cs-fixer.result == 'success' && '✅ Clean' || '⚠️ Needs formatting' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| PHP_CodeSniffer | ${{ needs.phpcs.result == 'success' && '✅ Clean' || '⚠️ Has violations' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.php-syntax.result }}" != "success" ] || [ "${{ needs.debug-logs.result }}" != "success" ]; then
+            echo "### ❌ Critical Issues Found" >> $GITHUB_STEP_SUMMARY
+            echo "Please fix syntax errors and remove debug logs before merging." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          elif [ "${{ needs.php-cs-fixer.result }}" != "success" ] || [ "${{ needs.phpcs.result }}" != "success" ]; then
+            echo "### ⚠️ Code Quality Issues" >> $GITHUB_STEP_SUMMARY
+            echo "Run \`composer lint-fix\` locally to fix formatting issues." >> $GITHUB_STEP_SUMMARY
+            echo "Run \`composer phpcbf\` to auto-fix PHPCS violations." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ✅ All PHP Quality Checks Passed!" >> $GITHUB_STEP_SUMMARY
+          fi

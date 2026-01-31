@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -45,7 +44,7 @@ class FinanceTransactionTypesSeeder extends Seeder
         foreach ($transactionTypes as $type) {
             $exists = DB::table('t_FinanceTransactionTypes')->where('Code', $type['Code'])->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('t_FinanceTransactionTypes')->insert([
                     'Code' => $type['Code'],
                     'Name' => $type['Name'],
@@ -56,7 +55,7 @@ class FinanceTransactionTypesSeeder extends Seeder
                     'ModifiedBy' => 1,
                     'ModifiedOn' => $now,
                     'DeletedBy' => null,
-                    'DeletedOn' => null
+                    'DeletedOn' => null,
                 ]);
             }
         }

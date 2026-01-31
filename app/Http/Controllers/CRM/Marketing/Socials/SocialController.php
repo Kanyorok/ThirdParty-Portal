@@ -41,7 +41,7 @@ class SocialController extends Controller
                 $query->whereNotNull('Published_at');
             }
 
-            return Datatables::of($query->lock('WITH(NOLOCK)')->with(['creator', 'images' => fn($query) => $query->where('t_Images.MIMEType', 'like', 'image/%')])->select('*'))->addIndexColumn()
+            return Datatables::of($query->lock('WITH(NOLOCK)')->with(['creator', 'images' => fn ($query) => $query->where('t_Images.MIMEType', 'like', 'image/%')])->select('*'))->addIndexColumn()
                 ->addColumn('image', function (Social $social) {
                     $image = $social->images->first();
                     $attr = 'class="img-thumbnail" style="width: 70px;"';
@@ -51,6 +51,7 @@ class SocialController extends Controller
                             return $service->preview($attr);
                         }
                     }
+
                     return '-';
                 })->editColumn('Response', function ($social) {
                     return '';
@@ -104,6 +105,7 @@ class SocialController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error scheduling post : ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -123,7 +125,6 @@ class SocialController extends Controller
      */
     public function update(Request $request, Social $social)
     {
-        //
     }
 
     /**
@@ -142,6 +143,5 @@ class SocialController extends Controller
      */
     public function destroy(Social $social)
     {
-        //
     }
 }

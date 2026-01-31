@@ -3,7 +3,6 @@
 namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\Inventory\StockConsumption;
 use App\Models\Auth\User;
 
 class StockConsumptionPolicy
@@ -13,7 +12,7 @@ class StockConsumptionPolicy
         return $user->can(PermissionEnum::StockConsumptionView->value);
     }
 
-    public function view(User $user, StockConsumption $model): bool
+    public function view(User $user): bool
     {
         return $user->can(PermissionEnum::StockConsumptionView->value);
     }
@@ -23,13 +22,13 @@ class StockConsumptionPolicy
         return $user->can(PermissionEnum::StockConsumptionCreate->value);
     }
 
-    public function update(User $user, StockConsumption $model): bool
+    public function update(User $user): bool
     {
         return $user->can(PermissionEnum::StockConsumptionUpdate->value);
     }
 
-    public function delete(User $user, StockConsumption $model): bool
+    public function delete(User $user): bool
     {
-        return $user->can(PermissionEnum::StockConsumptionDestroy->value);
+        return $user->can(PermissionEnum::StockConsumptionDelete->value);
     }
 }

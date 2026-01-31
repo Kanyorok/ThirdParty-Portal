@@ -47,7 +47,7 @@
         </div>
 
         <div class="col-md-6">
-            <label class="form-label fw-semibold">Date Needed</label>
+            <label class="form-label fw-semibold">Expected Delivery Date</label>
             <div class="form-control-plaintext border rounded bg-light px-3 py-2">
                 {{ Carbon::parse($need->RequestedDate)->format('d/m/Y') }}
             </div>
@@ -67,7 +67,7 @@
         </div>
 
         <div class="col-12">
-            <label class="form-label fw-semibold">Submitted By</label>
+            <label class="form-label fw-semibold">Requested By</label>
             <div class="form-control-plaintext border rounded bg-light px-3 py-2">
                 {{ $need->creator->Name ?? 'N/A' }}
             </div>

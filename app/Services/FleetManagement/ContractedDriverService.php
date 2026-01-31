@@ -2,20 +2,18 @@
 
 namespace App\Services\FleetManagement;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Fleet\ContractedDriver;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
+use App\Models\Fleet\ContractedDriver;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ContractedDriverService
 {
     /**
      * Create a new Inspection
      */
-
     public function create(array $data, UploadedFile $document = null): ContractedDriver
     {
         return DB::transaction(function () use ($data, $document) {
@@ -55,7 +53,7 @@ class ContractedDriverService
     {
         $latestDriver = ContractedDriver::withTrashed()->latest('CreatedOn')->first();
 
-        if (!$latestDriver || !$latestDriver->DriverNo) {
+        if (! $latestDriver || ! $latestDriver->DriverNo) {
             return 'DRV-0001';
         }
 
@@ -64,7 +62,6 @@ class ContractedDriverService
 
         return 'DRV-' . str_pad($newId, 4, '0', STR_PAD_LEFT);
     }
-
 
     /**
      * Update Inspection

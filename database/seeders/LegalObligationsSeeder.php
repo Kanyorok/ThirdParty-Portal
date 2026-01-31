@@ -51,7 +51,7 @@ class LegalObligationsSeeder extends Seeder
                 ->where('SourceType', $obligation['SourceType'])
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('t_LegalObligations')->insert([
                     'Title' => $obligation['Title'],
                     'SourceType' => $obligation['SourceType'],
@@ -66,7 +66,7 @@ class LegalObligationsSeeder extends Seeder
                     'ModifiedOn' => $now,
                     'DeletedBy' => null,
                     'DeletedOn' => null,
-                    'IsActive' => 1
+                    'IsActive' => 1,
                 ]);
             }
         }

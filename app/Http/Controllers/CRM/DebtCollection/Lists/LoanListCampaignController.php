@@ -37,13 +37,13 @@ class LoanListCampaignController extends Controller
         return $this->getCampaigns(Campaign::query()->where('t_Campaigns.MarketingListId', $list->MarketingListID), $request->user(), list: $list);
     }
 
-
     /**
      * Store a newly created resource in storage.
      */
     public function store(LoanCampaignRequest $request, MarketingList $list): JsonResponse
     {
         $actor = $request->user();
+
         try {
             $campaign = DB::transaction(static function () use ($actor, $request, $list) {
                 return CampaignService::create($list, $request->string('Label', 'Non Labeled Loan Campaign')->toString(), $actor, CampaignTypeEnum::SMS, $request->string('Notes', '')->toString(), true)->campaign;
@@ -53,6 +53,7 @@ class LoanListCampaignController extends Controller
         } catch (\Throwable | \Exception $e) {
             Log::error('Error loan list campaign auto: ');
             Log::error($e);
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -69,11 +70,11 @@ class LoanListCampaignController extends Controller
         }
         $data = [
                  'labels' => [],
-                 'data'   => [],
-                 'rate'   => 0,
+                 'data' => [],
+                 'rate' => 0,
                 ];
 
-        if (!$campaign->Processing) {
+        if (! $campaign->Processing) {
             $failed = $campaign->contacts()->where('t_CampaignParties.Status', EmailStatusEnum::Failed->value)->count();
             $success = $campaign->contacts()->where('t_CampaignParties.Status', EmailStatusEnum::Sent->value)->count();
             data_set($data, 'labels', [EmailStatusEnum::Failed->name, EmailStatusEnum::Sent->name]);
@@ -93,7 +94,7 @@ class LoanListCampaignController extends Controller
         $total = 100;
         $done = 0;
         $description = '';
-        if (!$campaign->Processing) {
+        if (! $campaign->Processing) {
             $total = 0;
             $done = 0;
             $description = 'Processing Complete';
@@ -115,9 +116,9 @@ class LoanListCampaignController extends Controller
         }
 
         return $this->succeeded('ok', data: [
-                                             'progress'    => (int) ($total > 0) ? (($done / $total) * 100) : 100,
-                                             'done'        => (int) $done,
-                                             'total'       => (int) $total,
+                                             'progress' => (int) ($total > 0) ? (($done / $total) * 100) : 100,
+                                             'done' => (int) $done,
+                                             'total' => (int) $total,
                                              'description' => $description . ' (' . number_format($done) . ' of ' . number_format($total) . ')',
                                             ]);
     }

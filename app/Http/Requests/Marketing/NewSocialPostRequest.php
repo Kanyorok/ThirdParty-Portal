@@ -26,17 +26,17 @@ class NewSocialPostRequest extends FormRequest
                                   'array',
                                   'min:1',
                                  ],
-                'Publish_On'  => [
+                'Publish_On' => [
                                   'required',
                                   'date_format:"Y-m-d H:i"',
                                  ],
-                'Content'     => [
+                'Content' => [
                                   'required',
                                   'string',
                                   'max:300',
                                   'min:2',
                                  ],
-                'image'       => [
+                'image' => [
                                   'required',
                                   Rule::imageFile()->max(5000),
                                  ],
@@ -54,16 +54,19 @@ class NewSocialPostRequest extends FormRequest
                 $dest = IntegrationsEnum::fromValue($type);
                 if ($dest->isSocial()) {
                     $types->push($dest);
+
                     continue;
                 }
             } catch (ErroredException) {
             }
+
             throw ValidationException::withMessages(['Destination' => 'some of the selected options are invalid.']);
         }
 
         if ($types->isEmpty()) {
             throw ValidationException::withMessages(['Destination' => 'some of the selected options are invalid.']);
         }
+
         return $types;
     }
 
@@ -77,8 +80,10 @@ class NewSocialPostRequest extends FormRequest
             if ($start->lessThan(Carbon::now()->subMinutes(10))) {
                 throw ValidationException::withMessages(['Publish_On' => 'scheduled the future or now.']);
             }
+
             return $start;
         }
+
         throw ValidationException::withMessages(['Publish_On' => 'invalid date format']);
     }
 }

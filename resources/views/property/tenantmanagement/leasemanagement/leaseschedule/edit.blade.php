@@ -106,7 +106,7 @@
                 </div>
 
                 <!-- Actions -->
-                <div class="text-end">
+                <div class="d-flex justify-content-between">
                     <a href="{{ route('schedulelease.index') }}" class="btn btn-secondary">Cancel</a>
                     <button type="submit" class="btn btn-success">Update Lease Schedule</button>
                 </div>

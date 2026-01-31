@@ -4,7 +4,6 @@ namespace App\Models\Legal;
 
 use App\Models\Auth\User;
 use App\Models\Core\Module;
-use App\Models\DMS\Document;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -12,11 +11,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LegalDocument extends Model
 {
-    use SoftDeletes, UserActorTrait, DocumentsTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_LegalDocuments';
     protected $primaryKey = 'Id';
@@ -48,7 +49,6 @@ class LegalDocument extends Model
     {
         return 'LegalDocumentId';
     }
-
 
     public function createdBy()
     {

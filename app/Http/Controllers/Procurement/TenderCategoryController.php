@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Enums\Core\PermissionEnum;
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Enums\TenderCategoryEnum;
+use App\Http\Controllers\Controller;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderCategory;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TenderCategoryController extends Controller
 {
@@ -18,6 +18,7 @@ class TenderCategoryController extends Controller
         //Check if user has permission to view tender categories
         $this->authorize(PermissionEnum::TenderRead, Tender::class);
         $tenderCategories = TenderCategory::orderBy('Id')->get();
+
         return view('procurement.tendering.tendersetup.tendercategory.index', compact('tenderCategories'));
     }
 
@@ -25,7 +26,14 @@ class TenderCategoryController extends Controller
     {
         //Check if user has permission to create tender categories
         $this->authorize(PermissionEnum::TenderWrite, Tender::class);
-        $tenderCatOptions = TenderCategoryEnum::cases();
+
+        // Fetch tender category types from CodeDetail table
+        $tenderCatOptions = DB::table('t_CodeDetails')
+            ->where('CodeID', 'TenderCategory')
+            ->where('IsActive', 1)
+            ->whereNull('DeletedOn')
+            ->orderBy('DisplayOrder')
+            ->get(['Value', 'Description']);
 
         return view('procurement.tendering.tendersetup.tendercategory.create', [
             'tenderCatOptions' => $tenderCatOptions,
@@ -39,11 +47,11 @@ class TenderCategoryController extends Controller
     {
         $categoryType = $request->input('category_type');
 
-        if (!$categoryType) {
+        if (! $categoryType) {
             return response()->json([
                 'ok' => false,
                 'code' => null,
-                'message' => 'Category type is required'
+                'message' => 'Category type is required',
             ], 400);
         }
 
@@ -63,23 +71,23 @@ class TenderCategoryController extends Controller
             Log::info('Category code generated', [
                 'category_type' => $categoryType,
                 'code' => $newCatCode,
-                'attempts' => $attempts
+                'attempts' => $attempts,
             ]);
 
             return response()->json([
                 'ok' => true,
-                'code' => $newCatCode
+                'code' => $newCatCode,
             ]);
         } catch (\Throwable $th) {
             Log::error('Error generating category code: ' . $th->getMessage(), [
                 'category_type' => $categoryType,
-                'trace' => $th->getTraceAsString()
+                'trace' => $th->getTraceAsString(),
             ]);
 
             return response()->json([
                 'ok' => false,
                 'code' => null,
-                'message' => 'Failed to generate category code'
+                'message' => 'Failed to generate category code',
             ], 500);
         }
     }
@@ -96,7 +104,6 @@ class TenderCategoryController extends Controller
         ]);
 
         try {
-
             $enum = TenderCategoryEnum::from($validated['TenderCategory']);
             // Create the category
             $category = TenderCategory::create([
@@ -111,7 +118,7 @@ class TenderCategoryController extends Controller
                 'category_id' => $category->Id,
                 'category_code' => $category->CategoryCode,
                 'category_type' => $category->TenderCategory,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return redirect()->route('tendercategory.index')
@@ -120,7 +127,7 @@ class TenderCategoryController extends Controller
             // Log the error for debugging
             Log::error('Error creating tender category: ' . $th->getMessage(), [
                 'trace' => $th->getTraceAsString(),
-                'input' => $request->all()
+                'input' => $request->all(),
             ]);
 
             return redirect()->back()
@@ -138,7 +145,7 @@ class TenderCategoryController extends Controller
 
         return view('procurement.tendering.tendersetup.tendercategory.edit', [
             'tenderCategory' => $tenderCategory,
-            'tenderCatOptions' => $tenderCatOptions
+            'tenderCatOptions' => $tenderCatOptions,
         ]);
     }
 
@@ -162,7 +169,7 @@ class TenderCategoryController extends Controller
 
             Log::info('Tender category updated', [
                 'category_id' => $id,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return redirect()->route('tendercategory.index')
@@ -170,6 +177,7 @@ class TenderCategoryController extends Controller
         } catch (\Throwable $th) {
             // Log the error for debugging
             Log::error('Error updating tender category: ' . $th->getMessage());
+
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to update Tender Category. Please try again.'])
                 ->withInput();
@@ -180,6 +188,7 @@ class TenderCategoryController extends Controller
     {
         //Check if user has permission to delete tender categories
         $this->authorize(PermissionEnum::TenderDelete, Tender::class);
+
         try {
             $tenderCategory = TenderCategory::findOrFail($id);
             $tenderCategory->delete();
@@ -189,49 +198,50 @@ class TenderCategoryController extends Controller
         } catch (\Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting tender category: ' . $th->getMessage());
+
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to delete Tender Category. Please try again.']);
         }
     }
 
-   public function itemTypes($id)
-{
-    //Check if user has permission to edit tender categories
-    $this->authorize(PermissionEnum::TenderWrite, Tender::class);
+    public function itemTypes($id)
+    {
+        //Check if user has permission to edit tender categories
+        $this->authorize(PermissionEnum::TenderWrite, Tender::class);
 
-    $category = TenderCategory::findOrFail($id);
+        $category = TenderCategory::findOrFail($id);
 
-    // Use the ItemType model with its relationship - eager load the type relationship
-    $allTypes = \App\Models\Inventory\ItemType::with('type')
-        ->where('Active', 1)
-        ->get()
-        ->map(function($item) {
-            return (object)[
-                'Id' => $item->Id,
-                'TypeName' => $item->type ? $item->type->Description : "Type {$item->TypeName}",
-                'StockTracked' => $item->StockTracked,
-                'RequiresTagging' => $item->RequiresTagging,
-                'Active' => $item->Active,
-            ];
-        })
-        ->sortBy('TypeName')
-        ->values();
+        // Use the ItemType model with its relationship - eager load the type relationship
+        $allTypes = \App\Models\Inventory\ItemType::with('type')
+            ->where('Active', 1)
+            ->get()
+            ->map(function ($item) {
+                return (object)[
+                    'Id' => $item->Id,
+                    'TypeName' => $item->type ? $item->type->Description : "Type {$item->TypeName}",
+                    'StockTracked' => $item->StockTracked,
+                    'RequiresTagging' => $item->RequiresTagging,
+                    'Active' => $item->Active,
+                ];
+            })
+            ->sortBy('TypeName')
+            ->values();
 
-    // Debug logging
-    Log::info('ItemTypes Query Results', [
-        'count' => $allTypes->count(),
-        'sample' => $allTypes->take(3)->toArray()
-    ]);
+        // Debug logging
+        Log::info('ItemTypes Query Results', [
+            'count' => $allTypes->count(),
+            'sample' => $allTypes->take(3)->toArray(),
+        ]);
 
-    // Ensure selected IDs are integers
-    $selected = DB::table('t_TenderCategoryItemTypes')
-        ->where('TenderCategoryId', $id)
-        ->pluck('ItemTypeId')
-        ->map(fn($id) => (int)$id)
-        ->toArray();
+        // Ensure selected IDs are integers
+        $selected = DB::table('t_TenderCategoryItemTypes')
+            ->where('TenderCategoryId', $id)
+            ->pluck('ItemTypeId')
+            ->map(fn ($id) => (int)$id)
+            ->toArray();
 
-    return view('procurement.tendering.tendersetup.tendercategory.map_itemtypes', compact('category', 'allTypes', 'selected'));
-}
+        return view('procurement.tendering.tendersetup.tendercategory.map_itemtypes', compact('category', 'allTypes', 'selected'));
+    }
 
     // Update mapping: replace rows with submitted set
     public function updateItemTypes(Request $request, $id)
@@ -245,7 +255,7 @@ class TenderCategoryController extends Controller
         ]);
 
         $ids = collect($validated['item_type_ids'] ?? [])
-            ->map(fn($v) => (int)$v)
+            ->map(fn ($v) => (int)$v)
             ->filter()
             ->unique()
             ->values();
@@ -275,11 +285,10 @@ class TenderCategoryController extends Controller
 
             return redirect()->route('tendercategory.itemtypes', $id)
                 ->with('success', 'Item type mappings updated successfully.');
-
         } catch (\Throwable $th) {
             Log::error('Error updating tender category item types: ' . $th->getMessage(), [
                 'tender_category_id' => $id,
-                'trace' => $th->getTraceAsString()
+                'trace' => $th->getTraceAsString(),
             ]);
 
             return redirect()->back()

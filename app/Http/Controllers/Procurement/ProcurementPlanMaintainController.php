@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 
 class ProcurementPlanMaintainController extends Controller
 {
-    //
     public function index()
     {
         $this->authorize('viewAny', ConsolidatedProcurementPlan::class);
@@ -36,31 +35,33 @@ class ProcurementPlanMaintainController extends Controller
         $userId = $request->CreatedBy;
         $user = User::find($userId);
 
-    $plan = ConsolidatedProcurementPlan::create([
-        'Title'           => $request->Title,
-        'ReferenceNumber' => 'PLAN/' . $request->FiscalYear . '/' . rand(100, 999),
-        'FiscalYear'      => $request->FiscalYear,
-        'Status' => ProcurementPlanStatusEnum::Draft,
-        'CreatedBy'       => $userId,
-        'SubmittedBy' => $userId,
-        'CreatedDate'     => now(),
-        'SubmittedDate'   => now(),
-        'CreatedOn' => now(),
-        'ModifiedOn'      => now(),
-        'CurrentApprLevel'=> 0,
-        'ModifiedBy' => $userId,
-    ]);
+        $plan = ConsolidatedProcurementPlan::create([
+            'Title' => $request->Title,
+            'ReferenceNumber' => 'PLAN/' . $request->FiscalYear . '/' . rand(100, 999),
+            'FiscalYear' => $request->FiscalYear,
+            'Status' => ProcurementPlanStatusEnum::Draft,
+            'CreatedBy' => $userId,
+            'SubmittedBy' => $userId,
+            'CreatedDate' => now(),
+            'SubmittedDate' => now(),
+            'CreatedOn' => now(),
+            'ModifiedOn' => now(),
+            'CurrentApprLevel' => 0,
+            'ModifiedBy' => $userId,
+        ]);
 
         activity()->causedBy($user)->performedOn($plan)->event('create')->log('created plan ' . $plan->Id);
+
         // Redirect to manual entry page with the new plan ID
         return redirect()->route('procurementplanmaintain.index')
             ->with('success', 'Plan created successfully. You may now proceed to add line items.');
-
     }
-    public function create(){
-        $this->authorize('create', ConsolidatedProcurementPlan::class);
-        return view('procurement.procurementplan.procurementplanmaintenance.create');
 
+    public function create()
+    {
+        $this->authorize('create', ConsolidatedProcurementPlan::class);
+
+        return view('procurement.procurementplan.procurementplanmaintenance.create');
     }
 
     public function editDraft($plan_id)
@@ -78,10 +79,9 @@ class ProcurementPlanMaintainController extends Controller
 
     public function show($id)
     {
-        $this->authorize('view', ConsolidatedProcurementPlan::class);
         $plan = ConsolidatedProcurementPlan::with(['lineItems.departmentNeed', 'lineItems.item', 'lineItems.budgetLine', 'lineItems.procurementMode', 'createdBy'])->findOrFail($id);
+        $this->authorize('view', $plan);
 
         return view('procurement.procurementplan.procurementplanmaintenance.show', compact('plan'));
     }
-
 }

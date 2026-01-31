@@ -17,16 +17,18 @@ class OperatorService
 
     private function setClient(): void
     {
-        if (!isset($this->client)) {
+        if (! isset($this->client)) {
             $user = BRUser::query()->where('OperatorID', $this->OperatorID)->first();
             if ($user instanceof BRUser) {
                 $this->operator = $user;
                 $client = $user->client;
                 if ($client instanceof Client) {
                     $this->client = $client;
+
                     return;
                 }
                 $this->client = null;
+
                 return;
             }
             $this->client = null;
@@ -49,6 +51,7 @@ class OperatorService
         if ($this->client instanceof Client) {
             return $this->client->getImage($attr, $placeholder);
         }
+
         return ($placeholder)
             ? '<img src="https://placehold.co/200x200?font=roboto&text=No+Image" ' . $attr . '/>'
             : '';

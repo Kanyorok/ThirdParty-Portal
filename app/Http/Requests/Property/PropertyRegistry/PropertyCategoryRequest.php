@@ -32,8 +32,7 @@ class PropertyCategoryRequest extends FormRequest
                     }
                 },
             ],
-            'Description' => ['nullable', 'string'],
+            'Description' => ['required', 'string'],
         ];
     }
-
 }

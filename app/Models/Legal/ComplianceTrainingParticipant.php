@@ -14,8 +14,6 @@ class ComplianceTrainingParticipant extends Model
 
     public function training()
     {
-        return $this->belongsTo(ComplianceTrainingSession::class,'TrainingID');
+        return $this->belongsTo(ComplianceTrainingSession::class, 'TrainingID');
     }
-
-    
 }

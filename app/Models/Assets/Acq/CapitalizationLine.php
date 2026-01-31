@@ -1,9 +1,13 @@
 <?php
+
 // app/Models/Assets/Acq/CapitalizationLine.php
+
 namespace App\Models\Assets\Acq;
+
 use Illuminate\Database\Eloquent\Model;
 
-class CapitalizationLine extends Model {
+class CapitalizationLine extends Model
+{
     protected $table = 't_CapitalizationLines';
     protected $primaryKey = 'Id';
     public $timestamps = false;

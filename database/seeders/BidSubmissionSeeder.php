@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\Auth\User;
 use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\Tender;
 use App\Models\ThirdParies\Supplier;
-use App\Models\Auth\User;
 use Faker\Factory as Faker;
+use Illuminate\Database\Seeder;
 
 class BidSubmissionSeeder extends Seeder
 {
@@ -22,6 +22,7 @@ class BidSubmissionSeeder extends Seeder
 
         if ($tenders->isEmpty() || $suppliers->isEmpty() || $users->isEmpty()) {
             $this->command->info('⚠️  Missing required data. Please ensure you have tenders, suppliers, and users in the database.');
+
             return;
         }
 
@@ -37,7 +38,7 @@ class BidSubmissionSeeder extends Seeder
                     ['status' => 'submitted', 'amount' => 520000, 'responsive' => true, 'source' => 'portal'],
                     ['status' => 'submitted', 'amount' => 380000, 'responsive' => false, 'source' => 'manual'],
                     ['status' => 'draft', 'amount' => 475000, 'responsive' => null, 'source' => 'portal'],
-                ]
+                ],
             ],
 
             // Scenario 2: Tender with opened bids ready for evaluation
@@ -48,7 +49,7 @@ class BidSubmissionSeeder extends Seeder
                     ['status' => 'responsive', 'amount' => 750000, 'responsive' => true, 'source' => 'portal', 'opened' => true],
                     ['status' => 'responsive', 'amount' => 820000, 'responsive' => true, 'source' => 'manual', 'opened' => true],
                     ['status' => 'non-responsive', 'amount' => 650000, 'responsive' => false, 'source' => 'portal', 'opened' => true],
-                ]
+                ],
             ],
 
             // Scenario 3: Tender with evaluated bids
@@ -59,7 +60,7 @@ class BidSubmissionSeeder extends Seeder
                     ['status' => 'evaluated', 'amount' => 280000, 'responsive' => true, 'source' => 'portal', 'opened' => true, 'tech_score' => 85, 'fin_score' => 90],
                     ['status' => 'evaluated', 'amount' => 320000, 'responsive' => true, 'source' => 'manual', 'opened' => true, 'tech_score' => 92, 'fin_score' => 78],
                     ['status' => 'evaluated', 'amount' => 295000, 'responsive' => true, 'source' => 'portal', 'opened' => true, 'tech_score' => 88, 'fin_score' => 85],
-                ]
+                ],
             ],
 
             // Scenario 4: Single tender with awarded bid
@@ -70,8 +71,8 @@ class BidSubmissionSeeder extends Seeder
                     ['status' => 'awarded', 'amount' => 1250000, 'responsive' => true, 'source' => 'portal', 'opened' => true, 'tech_score' => 95, 'fin_score' => 88],
                     ['status' => 'evaluated', 'amount' => 1380000, 'responsive' => true, 'source' => 'manual', 'opened' => true, 'tech_score' => 82, 'fin_score' => 85],
                     ['status' => 'rejected', 'amount' => 1150000, 'responsive' => false, 'source' => 'portal', 'opened' => true],
-                ]
-            ]
+                ],
+            ],
         ];
 
         foreach ($submissionScenarios as $scenario) {
@@ -157,7 +158,7 @@ class BidSubmissionSeeder extends Seeder
             'Hand delivered to procurement office',
             'Submitted via email with password protection',
             'Delivered by courier service',
-            'Submitted through tender box'
+            'Submitted through tender box',
         ];
 
         return $faker->randomElement($remarks);
@@ -170,7 +171,7 @@ class BidSubmissionSeeder extends Seeder
             '45 days from invoice date',
             '60 days from completion',
             '15 days from acceptance',
-            '30% advance, 70% on completion'
+            '30% advance, 70% on completion',
         ];
 
         return $faker->randomElement($terms);
@@ -191,7 +192,7 @@ class BidSubmissionSeeder extends Seeder
             'Bid validity period insufficient',
             'Technical specifications not met',
             'Financial documents incomplete',
-            'Late submission after deadline'
+            'Late submission after deadline',
         ];
 
         return $faker->randomElement($issues);
@@ -204,7 +205,7 @@ class BidSubmissionSeeder extends Seeder
             'Competitive pricing with good technical merit',
             'Meets all requirements with standard approach',
             'Excellent track record and references provided',
-            'Good value proposition with reasonable timeline'
+            'Good value proposition with reasonable timeline',
         ];
 
         return $faker->randomElement($notes);
@@ -223,15 +224,14 @@ class BidSubmissionSeeder extends Seeder
                     'financial_proposal.pdf',
                     'company_profile.pdf',
                     'tax_certificate.pdf',
-                    'references.pdf'
+                    'references.pdf',
                 ]),
                 'encrypted_path' => 'encrypted-bids/' . date('Y/m/d') . '/' . $faker->uuid . '.enc',
                 'file_size' => $faker->numberBetween(100000, 5000000),
-                'uploaded_at' => now()->toISOString()
+                'uploaded_at' => now()->toISOString(),
             ];
         }
 
         return json_encode($docs);
     }
-
 }

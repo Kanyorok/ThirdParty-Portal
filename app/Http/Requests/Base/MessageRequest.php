@@ -21,7 +21,7 @@ class MessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'message_to'      => [
+                'message_to' => [
                                       'required',
                                       'min:9',
                                       'max:50',
@@ -34,12 +34,10 @@ class MessageRequest extends FormRequest
                ];
     }
 
-
     public function messages(): array
     {
         return ['message_content.min' => 'Write something about it.'];
     }
-
 
     /**
      * @throws ValidationException

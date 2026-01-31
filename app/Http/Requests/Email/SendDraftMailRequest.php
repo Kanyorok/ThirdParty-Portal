@@ -16,7 +16,7 @@ class SendDraftMailRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'mail_cc'      => [
+                'mail_cc' => [
                                    'nullable',
                                    'array',
                                    'max:20',
@@ -34,11 +34,10 @@ class SendDraftMailRequest extends FormRequest
         return ['mail_content.min' => 'Write something about it.'];
     }
 
-
     public function getCarbonCopyEmails(): array
     {
         $cc = $this->validated('mail_cc');
-        if (!is_array($cc)) {
+        if (! is_array($cc)) {
             return [];
         }
         $valid = [];
@@ -52,6 +51,7 @@ class SendDraftMailRequest extends FormRequest
                 $valid[] = $user->Email;
             }
         }
+
         return $valid;
     }
 }

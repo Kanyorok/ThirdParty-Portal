@@ -37,19 +37,20 @@
     @if($newleases->count())
         <div class="card shadow-sm">
             <div class="card-body">
-                <table id="leaseagreement"
-                       class="table table-bordered table-striped table-hover align-middle mb-0">
+                <div class="table-responsive">
+                    <table id="leaseagreement"
+                           class="table table-bordered table-striped table-hover align-middle mb-0" style="min-width: 1200px;">
                     <thead class="table-light">
                     <tr>
                         <th style="width: 5%">#</th>
-                        <th>Lease No.</th>
+                        <th style="width: 10%">Lease No.</th>
                         <th>Tenant</th>
                         <th>Property</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Frequency</th>
-                        <th>Due Date</th>
-                        <th style="width: 25%">Actions</th>
+                        <th style="width: 5%">Start Date</th>
+                        <th style="width: 5%">End Date</th>
+                        <th style="width: 5%">Frequency</th>
+                        <th style="width: 5%">Due Date</th>
+                        <th style="width: 10%">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -108,6 +109,7 @@
                     @endforeach
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     @else

@@ -2,67 +2,169 @@
 @section('title', 'Claims Assessment')
 
 @section('content')
-<div class="container mt-5" style="max-width: 800px;">
+
+{{-- ================= STYLES ================= --}}
+<style>
+    .section-title {
+        color: #000;
+        font-weight: 600;
+        font-size: .9rem;
+        padding-bottom: .35rem;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="container mt-4" style="max-width: 850px;">
     <div class="card shadow-lg border-0 rounded-4">
-        <div class="card-header bg-primary text-white rounded-top-4">
-            <p class="mb-0"><b>Claims Assessment</b></p>
+
+        {{-- Header --}}
+        <div class="card-header bg-primary border-bottom rounded-top-4">
+            <h5 class="mb-0 fw-bold">
+                <i class="bi bi-clipboard-check me-2"></i>
+                Claims Assessment
+            </h5>
+            <small class="text-muted">
+                Policy No: <span class="">#{{ $claim->policy->PolicyNumber }}</span>
+            </small>
         </div>
 
+        {{-- Body --}}
         <div class="card-body p-4">
-            <h5 class="mb-4 text-primary">Assess Claim – <span class="fw-bold">#{{ $claim->policy->PolicyNumber }}</span></h5>
-
-            <form method="POST" action="{{ route('bancassurance.claims.assess', $claim->Id) }}">
+            <form method="POST"
+                  action="{{ route('bancassurance.claims.assess', $claim->Id) }}"
+                  enctype="multipart/form-data">
                 @csrf
 
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Claim Type</label>
-                        <input type="text" class="form-control" value="{{ $claim->claimtype->Description }}" readonly>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Claim Amount</label>
-                        <input type="text" class="form-control" value="{{ number_format($claim->ClaimAmount, 2) }}" readonly>
-                    </div>
-                </div>
+                {{-- ================= CLAIM INFORMATION ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Claim Information</h6>
 
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Claim Reason</label>
-                    <textarea class="form-control" rows="2" readonly>{{ $claim->ClaimReason }}</textarea>
-                </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small ">Claim Type</label>
+                            <input type="text"
+                                   class="form-control form-control-sm bg-light"
+                                   value="{{ $claim->claimtype->Description }}"
+                                   readonly>
+                        </div>
 
-                <hr class="my-4">
-
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Assessed Amount <span class="text-danger">*</span></label>
-                        <input type="number" name="AssessmentAmount" class="form-control" step="0.01" min="0" placeholder="Enter assessed amount" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Decision <span class="text-danger">*</span></label>
-                        <select name="Decision" class="form-select" required>
-                            <option value="">-- Select Decision --</option>
-                            @foreach($decisions as $type)
-                                <option value="{{ $type->ID }}">{{ $type->Description }}</option>
-                            @endforeach
-                        </select>
+                        <div class="col-md-6">
+                            <label class="form-label small ">Claim Amount</label>
+                            <input type="text"
+                                   class="form-control form-control-sm bg-light text-end"
+                                   value="{{ $claim->currency->SymbolNative }} {{ number_format($claim->ClaimAmount, 2) }}"
+                                   readonly>
+                        </div>
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Assessment Comments <span class="text-danger">*</span></label>
-                    <textarea name="AssessmentComments" class="form-control" rows="3" placeholder="Enter your assessment comments..." required></textarea>
+                {{-- ================= SUPPORTING DOCUMENTS ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Submitted Documents</h6>
+
+                    <div class="p-3 border rounded-3 bg-light">
+                        @forelse($claim->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                            {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                        @empty
+                            <span class="text-muted small">No documents attached.</span>
+                        @endforelse
+                    </div>
                 </div>
 
-                <div class="d-flex justify-content-end mt-4">
-                    <a href="{{ route('bancassurance.claims.index') }}" class="btn btn-outline-secondary me-2 px-4">
-                        <i class="bi bi-arrow-left-circle me-1"></i> Back
+                {{-- ================= CLAIM REASON ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Claim Reason</h6>
+
+                    <textarea class="form-control form-control-sm bg-light"
+                              rows="3"
+                              readonly>{{ $claim->ClaimReason }}</textarea>
+                </div>
+
+                {{-- ================= ASSESSMENT ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Assessment Details</h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small ">
+                                Assessed Amount <span class="text-danger">*</span>
+                            </label>
+                            <input type="number"
+                                   name="AssessmentAmount"
+                                   class="form-control form-control-sm text-end"
+                                   step="0.01"
+                                   min="0"
+                                   placeholder="0.00"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small ">
+                                Decision <span class="text-danger">*</span>
+                            </label>
+                            <select name="Decision"
+                                    class="form-select form-select-sm"
+                                    required>
+                                <option value="">-- Select Decision --</option>
+                                @foreach($decisions as $type)
+                                    <option value="{{ $type->ID }}">
+                                        {{ $type->Description }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ================= ASSESSMENT DOCUMENTS ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Assessment Documents</h6>
+
+                    <div class="col-md-8">
+                        <label class="form-label small ">
+                            Upload File
+                        </label>
+                        <small class="text-muted d-block mb-1">
+                            PDF, JPG, PNG, DOCX, XLSX · Max 25MB
+                        </small>
+                        <input type="file"
+                               name="file[]"
+                               class="form-control form-control-sm"
+                               accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx">
+                    </div>
+                </div>
+
+                {{-- ================= COMMENTS ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Assessment Comments <span class="text-danger">*</span></h6>
+
+                    <textarea name="AssessmentComments"
+                              class="form-control form-control-sm"
+                              rows="3"
+                              placeholder="Provide justification or notes for this assessment..."
+                              required></textarea>
+                </div>
+
+                {{-- ================= ACTIONS ================= --}}
+                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                    <a href="{{ route('bancassurance.claims.index') }}"
+                       class="btn btn-sm btn-outline-secondary px-4">
+                        Back
                     </a>
-                    <button type="submit" class="btn btn-primary px-4">
+                    <button type="submit"
+                            class="btn btn-sm btn-primary px-4">
                         <i class="bi bi-check2-circle me-1"></i> Submit Assessment
                     </button>
                 </div>
+
             </form>
         </div>
     </div>
 </div>
+
+@endsection
+
+@section('scripts')
+    @include('snippets.actions.preview-files')
 @endsection

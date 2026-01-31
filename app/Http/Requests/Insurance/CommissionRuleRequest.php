@@ -33,7 +33,8 @@ class CommissionRuleRequest extends FormRequest
                 'string',
                 Rule::unique(BancassuranceCommissionRule::class, 'RuleName')
                     ->ignore($this->route('Id'), 'Id')
-                    ->where(fn($query) => $query
+                    ->where(
+                        fn ($query) => $query
                         ->where('ProductId', $this->ProductId)
                         ->where('PolicyTypeId', $this->PolicyTypeId)
                     ),
@@ -42,6 +43,7 @@ class CommissionRuleRequest extends FormRequest
             'PolicyTypeId' => 'nullable|exists:t_CodeDetails,ID',
             'CommissionRate' => 'required|numeric',
             'FixedAmount' => 'required|numeric',
+            'CurrencyId' => 'required|exists:t_Currencies,Id',
             'AppliesTo' => 'nullable|exists:t_CodeDetails,ID',
             'IsActive' => 'nullable|boolean',
         ];

@@ -109,8 +109,10 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary mt-3">Update</button>
-        <a href="{{ route('propertyrateandpricing.index') }}" class="btn btn-secondary mt-3">Back</a>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+            <a href="{{ route('propertyrateandpricing.index') }}" class="btn btn-outline-secondary">Back</a>
+            <button type="submit" class="btn btn-primary">Update</button>
+        </div>
     </form>
 </div>
 

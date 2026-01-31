@@ -11,11 +11,11 @@
             Fund: {{ $medical_fund->FundName ?? '-' }}
         </h4>
         <div class="d-flex gap-2">
-            <a href="{{ route('bancassurance.medicalfunds.edit', $medical_fund) }}" class="btn btn-primary">
-                <i class="bi bi-pencil-square me-1"></i> Edit
-            </a>
             <a href="{{ route('bancassurance.medicalfunds.index') }}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+            <a href="{{ route('bancassurance.medicalfunds.edit', $medical_fund) }}" class="btn btn-primary">
+                <i class="bi bi-pencil-square me-1"></i> Edit
             </a>
         </div>
     </div>
@@ -184,3 +184,15 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+    .form-control,
+    .form-select,
+    .input-group-text {
+        background-color: #fff;
+        border: 1px solid #111;
+        color: #212529;
+    }
+</style>
+@endpush

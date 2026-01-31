@@ -31,12 +31,14 @@ class EmailConversationUserController extends Controller
     public function index(Request $request, EmailConversation $conversation): JsonResponse
     {
         $this->authorize('view', $conversation);
+
         return Datatables::of($conversation->watchers()->with('party')->whereNull(['t_EmailConversationUsers.DeletedOn', 't_EmailConversationUsers.DeletedBy'])->select('*'))->addIndexColumn()
             ->addColumn('action', function (EmailConversationUser $user) use ($conversation, $request) {
                 if ($request->user()->can('delete', $conversation)) {
                     return '<button type="button" data-click_url="' . route('conversation-watchers.destroy', [$conversation->Id, $user->Id]) . '" data-info="' . (new PartyService($user->party))->getName() . '"
                         class="btn btn-danger btn-sm conversation-watchers-trash"><i class="fas fa-trash"></i></button>';
                 }
+
                 return '...';
             })->editColumn('party', function (EmailConversationUser $user) {
                 return (new PartyService($user->party))->getDTRow();
@@ -47,7 +49,6 @@ class EmailConversationUserController extends Controller
             })->rawColumns(['action', 'party'])->make();
     }
 
-
     /**
      * Store a newly created resource in storage.
      */
@@ -57,6 +58,7 @@ class EmailConversationUserController extends Controller
         $assignee = $request->getParty();
         $role = $request->getRole();
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($actor, $conversation, $assignee, $role) {
                 (new EmailConversationService($conversation))->addWatcher($assignee, $role, $actor);
@@ -65,8 +67,10 @@ class EmailConversationUserController extends Controller
             return $e->toJson();
         } catch (Throwable | Exception $e) {
             Log::error('Error add conversation watcher failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
+
         return $this->succeeded('shared successfully');
     }
 
@@ -88,6 +92,7 @@ class EmailConversationUserController extends Controller
                 return $e->toJson();
             } catch (Throwable | Exception $e) {
                 Log::error('Error remove conversation watcher failed: ' . $e->getMessage());
+
                 return $this->errored('unexpected error, try again later');
             }
         }

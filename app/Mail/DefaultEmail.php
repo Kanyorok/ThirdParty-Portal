@@ -10,8 +10,6 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-//use Illuminate\Contracts\Queue\ShouldQueue;
-
 class DefaultEmail extends Mailable
 {
     use Queueable;
@@ -32,7 +30,7 @@ class DefaultEmail extends Mailable
      */
     public function envelope(): Envelope
     {
-        $to = collect($this->crmEmail->To)->flatten()->filter(fn($email) => filter_var($email, FILTER_VALIDATE_EMAIL))->values()->toArray();
+        $to = collect($this->crmEmail->To)->flatten()->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL))->values()->toArray();
         $cc = collect($this->crmEmail->CC)->flatten()->toArray();
         $bcc = collect($this->crmEmail->BCC)->flatten()->toArray();
 
@@ -66,9 +64,10 @@ class DefaultEmail extends Mailable
     {
         $data = collect();
         foreach ($this->crmEmail->attachments()->get() as $attachment) {
-            $data->add(Attachment::fromData(static fn() => base64_decode($attachment->Image), $attachment->Name)
+            $data->add(Attachment::fromData(static fn () => base64_decode($attachment->Image), $attachment->Name)
                 ->withMime($attachment->MIMEType));
         }
+
         return $data->toArray();
     }
 }

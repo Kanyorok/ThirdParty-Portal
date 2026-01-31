@@ -2,37 +2,39 @@
 
 namespace App\Models\ThirdParty;
 
+use App\Enums\EmailPriorityEnum;
+use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
-use App\Notifications\ThirdParty\VerifyThirdPartyEmail;
+use App\Services\CRMEmailService;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Auth\MustVerifyEmail;
+use Illuminate\Auth\Passwords\CanResetPassword;
+use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use App\Traits\Model\UserActorTrait;
-use App\Services\CRMEmailService;
-use App\Models\Auth\User;
-use App\Enums\EmailPriorityEnum;
 
-use Illuminate\Auth\Passwords\CanResetPassword;
-use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
-
-class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract, CanResetPasswordContract
+class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
 {
-    // use HasApiTokens, Notifiable, SoftDeletes, MustVerifyEmail;
-    use HasApiTokens, Notifiable, SoftDeletes, MustVerifyEmail, UserActorTrait, CanResetPassword;
+    use HasApiTokens;
+    use Notifiable;
+    use SoftDeletes;
+    use MustVerifyEmail;
+    use UserActorTrait;
+    use CanResetPassword;
 
     public static $snakeAttributes = false;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const string CREATED_AT = 'CreatedOn';
+    public const string UPDATED_AT = 'ModifiedOn';
+    public const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_ThirdPartyUsers';
     protected $primaryKey = 'Id';
@@ -69,7 +71,7 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
         'ModifiedBy' => 'integer',
         'DeletedBy' => 'integer',
         'IsActive' => 'boolean',
-        'Password' => 'hashed',
+        // 'Password' => 'hashed', // using this conflicts with BREncryption SHA-256!
         // 'Gender' => GenderEnum::class,
     ];
 
@@ -89,6 +91,7 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
         do {
             $id = strtoupper(Str::random(8));
         } while (static::where('UserID', $id)->exists());
+
         return $id;
     }
 
@@ -114,17 +117,49 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
 
     public function hasVerifiedEmail(): bool
     {
-        return !is_null($this->EmailVerifiedOn);
+        return ! is_null($this->EmailVerifiedOn);
     }
+
+    public ?string $verificationBaseUrl = null;
 
     public function markEmailAsVerified(): bool
     {
-        return $this->forceFill(['EmailVerifiedOn' => $this->freshTimestamp()])->save();
+        return $this->forceFill([
+            'EmailVerifiedOn' => $this->freshTimestamp(),
+            'IsActive' => true, // Activate user upon verification
+        ])->save();
     }
 
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new VerifyThirdPartyEmail);
+        // 1. Generate the Signed Backend URL (which verifies the signature)
+        $backendSignedUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'verification.verify',
+            \Illuminate\Support\Carbon::now()->addMinutes(config('auth.verification.expire', 60)),
+            [
+                'id' => $this->getKey(),
+                'hash' => sha1($this->getEmailForVerification()),
+            ]
+        );
+
+        // 2. Construct the Frontend URL
+        // Use FRONTEND_URL from .env as source of truth, fallback to app.url
+        $frontendUrl = $this->verificationBaseUrl ?? config('app.frontend_url') ?? config('app.url');
+        $frontendUrl = rtrim($frontendUrl, '/');
+
+        $url = $frontendUrl . '/verify-email?verify_url=' . urlencode($backendSignedUrl);
+
+        $body = '<p>Please click the button below to verify your email address.</p>';
+        $body .= '<p><a href="' . $url . '" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email Address</a></p>';
+        $body .= '<p style="font-size: small; color: #666; margin-top: 20px;">If the button above does not work, copy and paste the following link into your browser:<br>' . $url . '</p>';
+        $body .= '<p>If you did not create an account, no further action is required.</p>';
+
+        \App\Services\CRMEmailService::createRaw(
+            \App\Helpers\SystemHelper::user(),
+            'Verify Email Address - ' . config('app.name'),
+            $body,
+            [['Name' => $this->fullName, 'Email' => $this->Email]]
+        )->send(true);
     }
 
     public function country(): BelongsTo
@@ -139,19 +174,17 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
 
     public function fullName(): Attribute
     {
-        return Attribute::get((fn() => trim("{$this->FirstName} {$this->LastName}")));
+        return Attribute::get((fn () => trim("{$this->FirstName} {$this->LastName}")));
     }
 
     public function isActive(): bool
     {
-        return $this->IsActive === true;
+        return (bool)$this->IsActive && ! is_null($this->EmailVerifiedOn);
     }
 
     public function isApproved(): bool
     {
-        // Treat null as false, 1/true as true
-        // return (bool) $this->IsApproved;
-        return true;
+        return (bool) ($this->IsApproved ?? false);
     }
 
     public function isSupplier(): bool
@@ -171,12 +204,12 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
 
     public function hasProfile(): bool
     {
-        return !is_null($this->ThirdPartyId);
+        return ! is_null($this->ThirdPartyId);
     }
 
     public function canBeDeleted(): bool
     {
-        return !$this->isActive();
+        return ! $this->isActive();
     }
 
     public function scopeActive(Builder $query): Builder
@@ -226,8 +259,9 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
 
     public function sendPasswordResetNotification($token): void
     {
-        $baseUrl = config('app.nextauth_url') ?? config('app.frontend_url') ?? config('app.url');
-        $url = $baseUrl . '/reset-password?token=' . $token . '&email=' . urlencode($this->Email);
+        // Use FRONTEND_URL from .env as the source of truth
+        $baseUrl = config('app.frontend_url') ?? config('app.url');
+        $url = rtrim($baseUrl, '/') . '/reset-password?token=' . $token . '&email=' . urlencode($this->Email);
 
         $subject = 'Reset Password Notification';
         $body = "
@@ -239,11 +273,10 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
             <p><small>If you're having trouble clicking the \"Reset Password\" button, copy and paste the URL below into your web browser: <a href='{$url}'>{$url}</a></small></p>
         ";
 
-        // Admin user acts as sender
-        $actor = User::find(1);
+        $actor = \App\Models\Auth\User::where('Id', 1)->first() ?? \App\Models\Auth\User::first();
 
         if ($actor) {
-            CRMEmailService::createRaw(
+            \App\Services\CRMEmailService::createRaw(
                 $actor,
                 $subject,
                 $body,
@@ -252,11 +285,24 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract,
                 (string)$this->Id,
                 [], // cc
                 [], // bcc
-                EmailPriorityEnum::Important
+                \App\Enums\EmailPriorityEnum::Important
             )->send(true); // Send immediately
         } else {
             // Fallback to default notification if admin user not found (or log error)
             $this->notify(new \Illuminate\Auth\Notifications\ResetPassword($token));
         }
+    }
+
+    public function getEmailAttribute($val){
+        return $this->attributes['Email'] ?? $val;
+    }
+
+    public function setAttribute($key, $val)
+    {
+        if ($key === 'email') {
+            $this->attributes['Email'] = $val;
+            return $this;
+        }
+        return parent::setAttribute($key, $val);
     }
 }

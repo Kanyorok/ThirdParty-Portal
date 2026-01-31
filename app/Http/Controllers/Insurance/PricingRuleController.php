@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Insurance;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\DB;
-use App\Models\Insurance\InsurancePricingRule;
 use App\Enums\Core\PermissionEnum;
-use App\Models\Insurance\InsuranceProvider;
-use App\Models\Insurance\InsuranceProduct;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\ProviderAndProducts\InsurancePricingRuleRequest;
+use App\Models\Core\Currency;
+use App\Models\Insurance\InsurancePricingRule;
+use App\Models\Insurance\InsuranceProduct;
+use App\Models\Insurance\InsuranceProvider;
 use App\Services\Insurance\ProviderAndProducts\InsurancePricingRuleService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PricingRuleController extends Controller
@@ -18,6 +19,7 @@ class PricingRuleController extends Controller
     public function index()
     {
         $rules = InsurancePricingRule::all();
+
         return view('bancassurance.pricing.index', compact('rules'));
     }
 
@@ -26,9 +28,10 @@ class PricingRuleController extends Controller
         $this->authorize(PermissionEnum::InsurancePricingRuleView, InsurancePricingRule::class);
         $providers = InsuranceProvider::all();
         $products = InsuranceProduct::all();
+        $currencies = Currency::all();
 
 
-        return view('bancassurance.pricing.create', compact('providers', 'products'));
+        return view('bancassurance.pricing.create', compact('providers', 'products', 'currencies'));
     }
 
     public function store(InsurancePricingRuleRequest $request)
@@ -38,6 +41,7 @@ class PricingRuleController extends Controller
 
         $InsuranceProviderId = InsuranceProvider::findOrFail($validated['InsuranceProviderId']);
         $Product = InsuranceProduct::findOrFail($validated['Product']);
+        $CurrencyId = Currency::findOrFail($validated['CurrencyId']);
 
         $providers = InsurancePricingRuleService::create(
             $InsuranceProviderId,
@@ -46,6 +50,7 @@ class PricingRuleController extends Controller
             $validated['CoverageAmountMax'],
             $validated['CoverageAmountMin'],
             $validated['PremiumRate'],
+            $CurrencyId,
             $validated['AgeMin'],
             $validated['AgeMax'],
             $validated['TenureMin'],
@@ -60,6 +65,7 @@ class PricingRuleController extends Controller
     public function getProductByProvider($providerId)
     {
         $products = InsuranceProduct::where('InsuranceProviderID', $providerId)->get();
+
         return response()->json($products);
     }
 
@@ -69,8 +75,9 @@ class PricingRuleController extends Controller
 
         $rule = InsurancePricingRule::findOrFail($Id);
         $providers = InsuranceProvider::all();
+        $currencies = Currency::all();
 
-        return view('bancassurance.pricing.edit', compact('rule', 'providers'));
+        return view('bancassurance.pricing.edit', compact('rule', 'providers', 'currencies'));
     }
 
     // Update product
@@ -83,6 +90,7 @@ class PricingRuleController extends Controller
 
         try {
             $rule = InsurancePricingRule::findOrFail($id);
+            $CurrencyId = Currency::findOrFail($validated['CurrencyId']);
 
             $rule->update([
                 'InsuranceProviderId' => $validated['InsuranceProviderId'],
@@ -91,6 +99,7 @@ class PricingRuleController extends Controller
                 'CoverageAmountMax' => $validated['CoverageAmountMax'],
                 'CoverageAmountMin' => $validated['CoverageAmountMin'],
                 'PremiumRate' => $validated['PremiumRate'],
+                'CurrencyId' => $CurrencyId->Id,
                 'AgeMin' => $validated['AgeMin'],
                 'AgeMax' => $validated['AgeMax'],
                 'TenureMin' => $validated['TenureMin'],
@@ -118,6 +127,7 @@ class PricingRuleController extends Controller
     public function destroy($Id)
     {
         $this->authorize(PermissionEnum::InsurancePricingRuleDelete, InsurancePricingRule::class);
+
         try {
             $rule = InsurancePricingRule::findOrFail($Id);
             $rule->delete();
@@ -127,10 +137,10 @@ class PricingRuleController extends Controller
         } catch (\Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting Rule: ' . $th->getMessage());
+
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to delete Rule. Please try again.'])
                 ->withInput();
         }
     }
 }
-

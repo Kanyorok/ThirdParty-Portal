@@ -38,6 +38,7 @@ class StartMeetingRequest extends FormRequest
             'meeting_initiated_location.required' => 'Meeting location is required.',
         ];
     }
+
     /**
      * @throws ValidationException
      */
@@ -66,6 +67,7 @@ class StartMeetingRequest extends FormRequest
                 return $room;
             }
         }
+
         return $location;
     }
 
@@ -75,7 +77,7 @@ class StartMeetingRequest extends FormRequest
     public function getStart(): Carbon
     {
         $current_start = Carbon::createFromFormat('H:i', $this->validated('meeting_initiated'));
-        if (!$current_start instanceof Carbon) {
+        if (! $current_start instanceof Carbon) {
             throw ValidationException::withMessages(['meeting_initiated' => 'invalid date format']);
         }
         if ($current_start->greaterThan(now())) {

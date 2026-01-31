@@ -37,6 +37,15 @@ return [
         'Submitted for Approval' => \App\Enums\Inventory\InterBranchRequisitionEnum::Pending->value,  // 'P'
     ],
 
+    // Procurement Requisitions (different from Inter-Branch Requisitions above)
+    'RequisitionID' => [
+        'Approved' => 'AP',  // DocStatus column is only 2 chars
+        'Rejected' => 'RE',  // DocStatus column is only 2 chars
+        'Pending' => 'PE',
+        'Submitted for Approval' => 'SU',
+        'Draft' => 'DR',
+    ],
+
     'TransferId' => [
         'Approved' => \App\Enums\Inventory\Transfers::Approved->value,  // 'Ap'
         'Rejected' => \App\Enums\Inventory\Transfers::Rejected->value,  // 'Re'
@@ -75,10 +84,17 @@ return [
         'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,  // 'S'
     ],
 
+    'FinanceJournalEntryId' => [
+        'Approved' => 'posted',
+        'Rejected' => 'rejected',
+        'Pending' => 'draft',
+        'Submitted for Approval' => 'draft',
+    ],
+
     'tender' => [
         'Approved' => \App\Enums\TenderApprovalStatusEnum::APPROVED->value, // Will now be 'Ap'
         'Rejected' => \App\Enums\TenderApprovalStatusEnum::REJECTED->value, // Will now be 'R'
-        'Pending'  => \App\Enums\TenderApprovalStatusEnum::PENDING->value,  // Will now be 'P'
+        'Pending' => \App\Enums\TenderApprovalStatusEnum::PENDING->value,  // Will now be 'P'
     ],
     'LeaseTerminationId' => [
         'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'a'
@@ -138,6 +154,17 @@ return [
         'Pending' => \App\Enums\Core\ApprovalEnum::Pending->value,
         'Submitted for Approval' => \App\Enums\Core\ApprovalEnum::Submitted->value,
     ],
+
+    'TenderAwardStatus' => [
+        'Approved' => 'Approved',
+        'Rejected' => 'Rejected',
+        'Pending' => 'Under Review',
+        'Submitted for Approval' => 'Under Review',
+        'Draft' => 'Draft',
+    ],
+
+
+
 
 
 

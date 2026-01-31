@@ -12,7 +12,7 @@ class ComplianceFiling extends Model
 
     protected $fillable = [
         'TemplateID', 'SubmissionDate', 'FileName', 'MimeType', 'FilePath',
-        'Status', 'Notes', 'SubmittedBy', 'CreatedOn'
+        'Status', 'Notes', 'SubmittedBy', 'CreatedOn',
     ];
 
     public function template()

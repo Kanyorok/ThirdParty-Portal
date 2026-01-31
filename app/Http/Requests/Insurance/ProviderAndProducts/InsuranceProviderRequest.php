@@ -29,7 +29,7 @@ class InsuranceProviderRequest extends FormRequest
                 'string',
                 'max:100',
                 Rule::unique(InsuranceProvider::class, 'Name')
-                    ->where(fn($query) => $query->where('Country', $this->Country)),
+                    ->where(fn ($query) => $query->where('Country', $this->Country)),
             ],
             'Country' => 'required|string|max:50',
             'ContactPerson' => 'required|string|max:100',

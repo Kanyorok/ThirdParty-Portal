@@ -21,7 +21,7 @@ class LeadSelectController extends Controller
     {
         $data = [];
         $search = $request->getSearchString();
-        if (is_string($search) && !empty($search)) {
+        if (is_string($search) && ! empty($search)) {
             $leads = Lead::query()
                 ->where(function ($query) use ($search) {
                     $query->where('Name', 'LIKE', "%$search%")
@@ -32,7 +32,7 @@ class LeadSelectController extends Controller
             $data = $leads->map(function ($lead) {
                 return [
                         'LeadID' => $lead->LeadID,
-                        'Name'   => $lead->Name . ' ' . $lead->OtherNames,
+                        'Name' => $lead->Name . ' ' . $lead->OtherNames,
                        ];
             });
         }

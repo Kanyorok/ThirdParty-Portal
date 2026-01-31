@@ -11,7 +11,7 @@ class ImageOCR extends FileExtraction
 {
     public function processContent(): bool
     {
-        if (!$this->extension->isImage()) {
+        if (! $this->extension->isImage()) {
             return false;
         }
         $name = $this->createTempFile();
@@ -20,6 +20,7 @@ class ImageOCR extends FileExtraction
         if ($content !== '') {
             return $this->handleContent($content);
         }
+
         return $this->handleContent();
     }
 
@@ -30,8 +31,8 @@ class ImageOCR extends FileExtraction
         }
 
         try {
-            return (new TesseractOCR ($filePath))->run();
-        } catch (Exception|TesseractOcrException $e) {
+            return (new TesseractOCR($filePath))->run();
+        } catch (Exception | TesseractOcrException $e) {
         }
 
         return '';

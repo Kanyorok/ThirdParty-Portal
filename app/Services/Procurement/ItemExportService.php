@@ -2,10 +2,10 @@
 
 namespace App\Services\Procurement;
 
+use App\Exports\ItemsExport;
 use App\Models\Procurement\Item;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF;
-use App\Exports\ItemsExport;
 
 class ItemExportService
 {
@@ -13,11 +13,11 @@ class ItemExportService
     {
         $query = Item::with('category');
 
-        if (!empty($filters['category_id'])) {
+        if (! empty($filters['category_id'])) {
             $query->where('CategoryId', $filters['category_id']);
         }
 
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $query->where('Type', $filters['type']);
         }
 
@@ -25,6 +25,7 @@ class ItemExportService
 
         if ($format === 'pdf') {
             $pdf = PDF::loadView('procurement.items.export_pdf', compact('items'));
+
             return $pdf->download('items_filtered.pdf');
         }
 

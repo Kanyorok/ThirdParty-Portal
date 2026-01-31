@@ -27,12 +27,12 @@ class WorkflowHistory3 extends Model
         'ModifiedBy',
         'ModifiedOn',
         'DeletedBy',
-        'DeletedOn'
+        'DeletedOn',
     ];
 
-   protected $casts = [
-    'CreatedOn' => 'datetime',
-    'ModifiedOn' => 'datetime',
-    'DeletedOn' => 'datetime',
-    ];
+    protected $casts = [
+     'CreatedOn' => 'datetime',
+     'ModifiedOn' => 'datetime',
+     'DeletedOn' => 'datetime',
+     ];
 }

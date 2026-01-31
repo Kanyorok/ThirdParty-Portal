@@ -44,7 +44,7 @@ class CallActionController extends Controller
         ]);
 
         $start = Carbon::createFromFormat('Y-m-d H:i', $request->input('schedule_start'));
-        if (!$start instanceof Carbon) {
+        if (! $start instanceof Carbon) {
             throw ValidationException::withMessages(['schedule_start' => 'invalid date format']);
         }
 
@@ -53,7 +53,7 @@ class CallActionController extends Controller
         }
 
         $current_start = Carbon::createFromFormat('H:i', $request->input('reschedule_start'));
-        if (!$current_start instanceof Carbon) {
+        if (! $current_start instanceof Carbon) {
             throw ValidationException::withMessages(['reschedule_start' => 'invalid date format']);
         }
 
@@ -127,6 +127,7 @@ class CallActionController extends Controller
             });
         } catch (Exception $e) {
             Log::error('Error rescheduling call ' . $e->getMessage());
+
             return $this->errored('unexpected error rescheduling, try again later');
         }
 
@@ -145,7 +146,7 @@ class CallActionController extends Controller
         ]);
 
         $start = Carbon::createFromFormat('H:i', $request->input('unreachable_start'));
-        if (!$start instanceof Carbon) {
+        if (! $start instanceof Carbon) {
             throw ValidationException::withMessages(['unreachable_start' => 'invalid time format']);
         }
 
@@ -184,6 +185,7 @@ class CallActionController extends Controller
             });
         } catch (Exception $e) {
             Log::error('Error unreachable call ' . $e->getMessage());
+
             return $this->errored('unexpected error marking unreachable, try again later');
         }
 
@@ -199,7 +201,7 @@ class CallActionController extends Controller
             $combo = DB::transaction(static function () use ($current_start, $request, $actor) {
                 $contact = Contact::where('Phone', $request->validated('Phone'))->first();
 
-                if (!$contact instanceof Contact) {
+                if (! $contact instanceof Contact) {
                     $contact = Contact::create([
                         'Label' => $request->validated('Name'),
                         'Phone' => $request->validated('Phone'),
@@ -219,6 +221,7 @@ class CallActionController extends Controller
             });
         } catch (Exception $e) {
             Log::error('Error starting call ' . $e->getMessage());
+
             return $this->errored('unexpected error starting call, try again later');
         }
 

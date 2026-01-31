@@ -25,10 +25,12 @@ class BancassuranceCommissionPayoutRequest extends FormRequest
             'PolicyId' => 'required|exists:t_BancassurancePolicies,Id',
             'PayoutReference' => 'nullable|string|max:255',
             'PaidAmount' => 'required|numeric',
+            'CurrencyId' => 'required|exists:t_Currencies,Id',
+            'CommissionRuleId' => 'nullable|exists:t_BancassuranceCommissionRules,Id',
             'PaymentDate' => 'required|date',
             'PaymentMode' => 'required|exists:t_CodeDetails,ID',
             'Remarks' => 'nullable|string|max:255',
-            'PaidBy' => 'required|exists:t_Users,Id',
+            'PaidTo' => 'required|exists:t_Users,Id',
         ];
     }
 }

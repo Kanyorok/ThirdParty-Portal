@@ -18,6 +18,5 @@ class BoardMeetingCanceledEvent
      */
     public function __construct(public Meeting $meeting)
     {
-        //
     }
 }

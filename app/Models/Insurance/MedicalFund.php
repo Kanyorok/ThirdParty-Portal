@@ -9,19 +9,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MedicalFund extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     protected $table = 't_MedicalFunds';
     protected $primaryKey = 'Id';
 
     public $timestamps = true;
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'FundName','ProviderId','CoverageType','CoverageLimit','Description','IsActive',
-        'CreatedBy','ModifiedBy','DeletedBy'
+        'CreatedBy','ModifiedBy','DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
@@ -51,19 +52,18 @@ class MedicalFund extends Model
         return $this->hasMany(MedicalFundDisbursement::class, 'FundId', 'Id');
     }
 
-    public function contributors() 
-    { 
-        return $this->hasMany(MedicalFundContributor::class, 'FundId', 'Id'); 
+    public function contributors()
+    {
+        return $this->hasMany(MedicalFundContributor::class, 'FundId', 'Id');
     }
 
-    public function packages() 
-    { 
-        return $this->hasMany(MedicalFundPackage::class,'FundId','Id');
+    public function packages()
+    {
+        return $this->hasMany(MedicalFundPackage::class, 'FundId', 'Id');
     }
 
     public function coverages()
     {
         return $this->belongsTo(CodeDetail::class, 'CoverageType', 'ID');
     }
-    
 }

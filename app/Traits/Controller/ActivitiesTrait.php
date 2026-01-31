@@ -14,9 +14,10 @@ trait ActivitiesTrait
 {
     public function activities(Builder|MorphMany $query, array $with = []): JsonResponse
     {
-        if (!empty($with)) {
+        if (! empty($with)) {
             $query->with($with);
         }
+
         try {
             return Datatables::of($query->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
                 ->editColumn('created_at', function (Activity $activity) {
@@ -25,6 +26,7 @@ trait ActivitiesTrait
                     if (in_array('causer', $with, true)) {
                         return (new PartyService($activity->causer))->getDTRow();
                     }
+
                     return '';
                 })->rawColumns(['causer.Name'])->make();
         } catch (Exception $e) {

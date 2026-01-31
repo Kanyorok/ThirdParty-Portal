@@ -12,12 +12,14 @@ class PettyCashFloatController extends Controller
     public function index()
     {
         $rows = PettyCashFloat::with('currency')->orderByDesc('FloatID')->paginate(25);
+
         return view('finance.pettycash.floats.index', compact('rows'));
     }
 
     public function create()
     {
         $currencies = Currency::orderBy('Name')->get(['Id', 'Code', 'Name']);
+
         return view('finance.pettycash.floats.create', compact('currencies'));
     }
 
@@ -35,6 +37,7 @@ class PettyCashFloatController extends Controller
         ]);
 
         PettyCashFloat::create($data + ['IsActive' => (int)($data['IsActive'] ?? 1)]);
+
         return redirect()->route('finance.pettyfloats.index')->with('success', 'Petty cash float created.');
     }
 
@@ -42,6 +45,7 @@ class PettyCashFloatController extends Controller
     {
         $row = PettyCashFloat::findOrFail($id);
         $currencies = Currency::orderBy('Name')->get(['Id', 'Code', 'Name']);
+
         return view('finance.pettycash.floats.edit', compact('row', 'currencies'));
     }
 
@@ -57,6 +61,7 @@ class PettyCashFloatController extends Controller
             'IsActive' => 'nullable|boolean',
         ]);
         $row->fill($data + ['IsActive' => (int)($data['IsActive'] ?? $row->IsActive)])->save();
+
         return redirect()->route('finance.pettyfloats.index')->with('success', 'Petty cash float updated.');
     }
 
@@ -64,6 +69,7 @@ class PettyCashFloatController extends Controller
     {
         $row = PettyCashFloat::findOrFail($id);
         $row->delete();
+
         return redirect()->route('finance.pettyfloats.index')->with('success', 'Petty cash float deleted.');
     }
 }

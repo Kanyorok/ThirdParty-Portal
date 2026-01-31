@@ -69,7 +69,7 @@ class TagController extends Controller
     {
         return view('dms.tags.show', [
             'tag' => $dMSTags,
-            'documents_count' => DocumentTags::where('TagId', $dMSTags->Id)->count()
+            'documents_count' => DocumentTags::where('TagId', $dMSTags->Id)->count(),
         ]);
     }
 
@@ -80,6 +80,7 @@ class TagController extends Controller
     {
         $actor = $request->user();
         $visibility = $request->getVisibility();
+
         try {
             return DB::transaction(function () use ($request, $dMSTags, $actor, $visibility) {
                 $dMSTags->update([
@@ -90,11 +91,13 @@ class TagController extends Controller
                 ]);
 
                 activity()->causedBy($actor)->performedOn($dMSTags)->event('update')->log('updated ' . $dMSTags->Name . ' document tag.');
+
                 return $this->succeeded('tag updated successfully', route('file-tags.show', [$dMSTags->TagID]));
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error updating Document Tag: ');
             Log::error($e);
+
             return $this->errored('updating tag failed, try again later');
         }
     }
@@ -105,6 +108,7 @@ class TagController extends Controller
     public function destroy(Request $request, DMSTags $dMSTags): JsonResponse
     {
         $actor = $request->user();
+
         try {
             return DB::transaction(function () use ($dMSTags, $actor) {
                 $dMSTags->forceFill([
@@ -113,11 +117,13 @@ class TagController extends Controller
                 ])->save();
 
                 activity()->causedBy($actor)->performedOn($dMSTags)->event('delete')->log('deleted document tag: ' . $dMSTags->Name . '.');
+
                 return $this->succeeded('tag deleted successfully', route('file-tags.index'));
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error updating Document Tag: ');
             Log::error($e);
+
             return $this->errored('deleting tag failed, try again later');
         }
     }

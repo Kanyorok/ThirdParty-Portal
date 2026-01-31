@@ -87,6 +87,7 @@
                                 <td>{{ $row['award_date'] ?? '--' }}</td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
+
                                         @if($row['type'] === 'tender' && !empty($row['tender_id']))
                                             <a href="{{ route('awards.tender', $row['tender_id']) }}"
                                                class="btn btn-sm btn-outline-info" title="View Award Details">
@@ -101,34 +102,86 @@
                                             <span class="btn btn-sm btn-outline-secondary disabled" title="Missing reference id">View</span>
                                         @endif
 
-                                        @if($row['status'] === 'Pending')
-                                            <button type="button" class="btn btn-sm btn-success"
-                                                    onclick="approveAward('{{ $row['type'] }}', {{ $row['type']==='rfq' ? ($row['rfq_id'] ?? $row['id']) : ($row['award_id'] ?? $row['id']) }})" title="Approve Award">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            @if($row['type'] === 'tender')
-                                                <button type="button" class="btn btn-sm btn-danger"
-                                                        onclick="rejectAward({{ $row['award_id'] ?? $row['id'] }})" title="Reject Award">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
+                                        {{-- Workflow Action Buttons --}}
+                                        @if($row['type'] === 'tender' && !empty($row['award_id']))
+                                            @if(in_array($row['status'], ['Draft', 'Pending']))
+                                                {{-- Submit for Approval Button --}}
+                                                <form action="{{ route('awards.submit-approval', $row['award_id']) }}" method="POST" style="display:inline;">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-primary" title="Submit for Approval">
+                                                        <i class="fas fa-paper-plane"></i>
+                                                    </button>
+                                                </form>
+                                            @elseif(in_array($row['status'], ['Submitted for Approval', 'Under Review']))
+                                                {{-- Approve/Reject Buttons (only if user can approve) --}}
+                                                @if($row['can_approve'] ?? false)
+                                                    <button type="button" class="btn btn-sm btn-success"
+                                                            onclick="approveAward('tender', {{ $row['award_id'] }})" title="Approve Award">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-danger"
+                                                            onclick="rejectAward({{ $row['award_id'] }})" title="Reject Award">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                @else
+                                                    <span class="badge bg-info text-white">Awaiting Approval</span>
+                                                @endif
+                                            @elseif($row['status'] === 'Approved')
+                                                @php
+                                                    $award = \App\Models\Procurement\TenderAward::find($row['award_id']);
+                                                    $hasContract = $award && $award->hasContract();
+                                                @endphp
+                                                @if($hasContract)
+                                                    <a href="{{ route('contracts.show', $row['award_id']) }}"
+                                                       class="btn btn-sm btn-info" title="View Contract">
+                                                        <i class="fas fa-file-contract"></i> Contract
+                                                    </a>
+                                                @else
+                                                    <a href="{{ route('contracts.createFromAward', $row['award_id']) }}"
+                                                       class="btn btn-sm btn-primary" title="Create Contract">
+                                                        <i class="fas fa-file-contract"></i> Create Contract
+                                                    </a>
+                                                @endif
+                                            @elseif($row['status'] === 'Rejected')
+                                                <span class="badge bg-danger">Rejected</span>
                                             @endif
-                                        @elseif($row['status'] === 'Approved')
-                                            @php
-                                                $award = \App\Models\Procurement\TenderAward::find($row['award_id'] ?? $row['id']);
-                                                $hasContract = $award && $award->hasContract();
-                                            @endphp
-                                            @if($hasContract)
-                                                <a href="{{ route('contracts.show', $row['award_id'] ?? $row['id']) }}"
-                                                   class="btn btn-sm btn-info" title="View Contract">
-                                                    <i class="fas fa-eye"></i> View Contract
-                                                </a>
-                                            @else
-                                                <a href="{{ route('contracts.createFromAward', $row['award_id'] ?? $row['id']) }}"
-                                                   class="btn btn-sm btn-primary" title="Create Contract">
-                                                    <i class="fas fa-file-contract"></i> Create Contract
-                                                </a>
+                                        @elseif($row['type'] === 'rfq')
+                                            {{-- RFQ awards - full workflow support --}}
+                                            @if(in_array($row['status'], ['Pending', 'Submitted for Approval', 'Under Review']))
+                                                {{-- Approve/Reject Buttons for pending RFQ awards --}}
+                                                @if($row['can_approve'] ?? false)
+                                                    <button type="button" class="btn btn-sm btn-success"
+                                                            onclick="approveRfqAward({{ $row['award_id'] ?? $row['id'] }})" title="Approve Award">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-danger"
+                                                            onclick="rejectRfqAward({{ $row['award_id'] ?? $row['id'] }})" title="Reject Award">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                @else
+                                                    <span class="badge bg-info text-white">Awaiting Approval</span>
+                                                @endif
+                                            @elseif($row['status'] === 'Approved')
+                                                @php
+                                                    $rfqAward = \App\Models\Procurement\RFQAward::find($row['award_id'] ?? $row['id']);
+                                                    $hasContract = $rfqAward && $rfqAward->hasContract();
+                                                @endphp
+                                                @if($hasContract)
+                                                    <a href="{{ route('contracts.show', $row['award_id'] ?? $row['id']) }}"
+                                                       class="btn btn-sm btn-info" title="View Contract">
+                                                        <i class="fas fa-file-contract"></i> Contract
+                                                    </a>
+                                                @else
+                                                    <a href="{{ route('contracts.createFromAward', $row['award_id'] ?? $row['id']) }}"
+                                                       class="btn btn-sm btn-primary" title="Create Contract">
+                                                        <i class="fas fa-file-contract"></i> Create Contract
+                                                    </a>
+                                                @endif
+                                            @elseif($row['status'] === 'Rejected')
+                                                <span class="badge bg-danger">Rejected</span>
                                             @endif
                                         @endif
+
                                     </div>
                                 </td>
                             </tr>
@@ -152,15 +205,16 @@
             <div class="modal-content">
                 <form id="approveForm" method="POST">
                     @csrf
+                    <input type="hidden" name="award_id" id="approvalAwardId" value="">
                     <div class="modal-header">
                         <h5 class="modal-title">Approve Award</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Approval Remarks (Optional)</label>
-                            <textarea name="approval_remarks" class="form-control" rows="3"
-                                      placeholder="Enter any additional remarks for this approval..."></textarea>
+                            <label class="form-label">Approval Remarks <span class="text-danger">*</span></label>
+                            <textarea name="remarks" class="form-control" rows="3" required
+                                      placeholder="Enter remarks for this approval..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -178,6 +232,7 @@
             <div class="modal-content">
                 <form id="rejectForm" method="POST">
                     @csrf
+                    <input type="hidden" name="award_id" id="rejectionAwardId" value="">
                     <div class="modal-header">
                         <h5 class="modal-title">Reject Award</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -185,7 +240,7 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Rejection Reason <span class="text-danger">*</span></label>
-                            <textarea name="rejection_reason" class="form-control" rows="3" required
+                            <textarea name="reason" class="form-control" rows="3" required
                                       placeholder="Please provide a reason for rejecting this award..."></textarea>
                         </div>
                     </div>
@@ -201,16 +256,48 @@
     <script>
         function approveAward(type, id) {
             const form = document.getElementById('approveForm');
-            if (type === 'rfq') {
-                form.action = `{{ route('awards.rfq.approve', ':id') }}`.replace(':id', id);
-            } else {
-                form.action = `{{ route('awards.approve', ':id') }}`.replace(':id', id);
-            }
+            const awardIdInput = document.getElementById('approvalAwardId');
+            
+            // Set the award_id in the hidden field
+            awardIdInput.value = id;
+            
+            // Unified route with type param
+            form.action = `{{ route('awards.approve', ':id') }}`.replace(':id', id) + `?type=${type}`;
             new bootstrap.Modal(document.getElementById('approveModal')).show();
         }
         function rejectAward(awardId) {
             const form = document.getElementById('rejectForm');
+            const awardIdInput = document.getElementById('rejectionAwardId');
+            
+            // Set the award_id in the hidden field
+            awardIdInput.value = awardId;
+            
             form.action = `{{ route('awards.reject', ':id') }}`.replace(':id', awardId);
+            new bootstrap.Modal(document.getElementById('rejectModal')).show();
+        }
+        
+        // RFQ Award workflow functions
+        function approveRfqAward(awardId) {
+            const form = document.getElementById('approveForm');
+            const awardIdInput = document.getElementById('approvalAwardId');
+            
+            // Set the award_id in the hidden field
+            awardIdInput.value = awardId;
+            
+            // Use the unified route with type param
+            form.action = `{{ route('awards.approve', ':id') }}`.replace(':id', awardId) + '?type=rfq';
+            new bootstrap.Modal(document.getElementById('approveModal')).show();
+        }
+        
+        function rejectRfqAward(awardId) {
+            const form = document.getElementById('rejectForm');
+            const awardIdInput = document.getElementById('rejectionAwardId');
+            
+            // Set the award_id in the hidden field
+            awardIdInput.value = awardId;
+            
+            // Use the unified route with type param
+            form.action = `{{ route('awards.reject', ':id') }}`.replace(':id', awardId) + '?type=rfq';
             new bootstrap.Modal(document.getElementById('rejectModal')).show();
         }
     </script>

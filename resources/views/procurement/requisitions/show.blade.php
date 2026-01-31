@@ -197,17 +197,17 @@
             <div class="modal-body">
                 <form action="{{ route('requisitionItem.store') }}" method="post" id="createRequisitionItemForm">
                     @csrf
-                    <input type="hidden" name="RequisitionID" id="RequisitionID" value="{{ $id ?? '' }}">
-
-                    <div class="mb-3">
-                        <label class="form-label" for="Type">Item Type <span class="text-danger">*</span></label>
-                        <select class="form-control" name="Type" id="Type" required>
-                            <option selected disabled value="">Select type</option>
-                            @foreach ($types as $type)
-                            <option value="{{ $type->Id }}">{{ $type->TypeName }}</option>
-                            @endforeach
-                        </select>
-                        <p id="Type_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                    <div class="modal-body">
+                        <p>Are you sure you want to submit this requisition for approval?</p>
+                        <div class="mb-3">
+                            <label for="submitRemarks" class="form-label">Remarks <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="submitRemarks" name="remarks" rows="3" 
+                                      placeholder="Add any additional comments..." required></textarea>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> 
+                            Once submitted, this requisition will be sent to the approval workflow and you will not be able to add more items.
+                        </div>
                     </div>
 
                     <div class="mb-3">

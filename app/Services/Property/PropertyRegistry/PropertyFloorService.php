@@ -18,12 +18,11 @@ class PropertyFloorService
 
     public static function create(
         PropertyRegistry $propertyId,
-        PropertyBlock    $blockId,
-        string           $floorLabel,
-        string           $floorNotes = null,
-        User             $user
-    ): self
-    {
+        PropertyBlock $blockId,
+        string $floorLabel,
+        string $floorNotes = null,
+        User $user
+    ): self {
         $propertyFloor = PropertyFloor::create([
             'PropertyID' => $propertyId->Id,
             'BlockID' => $blockId->Id,
@@ -34,7 +33,7 @@ class PropertyFloorService
         ]);
 
         activity()->causedBy($user->Id)->performedOn($propertyFloor)->event('create')->log("Added Property Floor {$propertyFloor->Id}.");
+
         return new self($propertyFloor);
     }
-
 }

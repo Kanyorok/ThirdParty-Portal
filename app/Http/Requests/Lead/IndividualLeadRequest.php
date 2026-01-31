@@ -18,29 +18,29 @@ class IndividualLeadRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'first_name'   => [
+                'first_name' => [
                                    'required',
                                    'string',
                                    'max:250',
                                   ],
-                'surname'      => [
+                'surname' => [
                                    'required',
                                    'string',
                                    'max:150',
                                   ],
-                'phone'        => [
+                'phone' => [
                                    'required',
                                    'string',
                                    'max:15',
                     'unique:App\Models\CRM\Lead,Phone',
                                   ],
-                'email'        => [
+                'email' => [
                                    'nullable',
                                    'email:rfc,dns',
                                    'max:250',
                     'unique:App\Models\CRM\Lead,Email',
                                   ],
-                'job_title'    => [
+                'job_title' => [
                                    'nullable',
                                    'string',
                                    'max:200',
@@ -50,7 +50,7 @@ class IndividualLeadRequest extends FormRequest
                                    'date_format:"Y-m-d H:i"',
                                    'before:now',
                                   ],
-                'notes'        => [
+                'notes' => [
                                    'nullable',
                                    'string',
                                    'max:5000',
@@ -70,6 +70,7 @@ class IndividualLeadRequest extends FormRequest
                 throw ValidationException::withMessages(['last_contact' => 'invalid date format provided.']);
             }
         }
+
         return null;
     }
 }

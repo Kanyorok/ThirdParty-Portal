@@ -12,6 +12,7 @@ class ApiCurrencyController extends Controller
     public function list(): AnonymousResourceCollection
     {
         $currencies = Currency::all();
+
         return CurrencyResource::collection($currencies);
     }
 }

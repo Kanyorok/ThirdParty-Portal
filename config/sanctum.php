@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'stateful'     => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
+    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
         '%s%s',
         'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
         Sanctum::currentApplicationUrlWithPort()
@@ -31,9 +31,25 @@ return [
     | are able to authenticate the request, Sanctum will use the bearer
     | token that's present on an incoming request for authentication.
     |
+    | NOTE: Do not add guards that themselves use 'sanctum' driver to avoid
+    | infinite recursion. Sanctum will automatically check personal access
+    | tokens from all models that use HasApiTokens trait.
+    |
     */
 
-    'guard'        => ['web', 'thirdparty'],
+    'guard' => ['web'],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Multiple User Models
+    |--------------------------------------------------------------------------
+    |
+    | If you have multiple user models (e.g., User and ThirdPartyUser), ensure
+    | both models use the HasApiTokens trait. Sanctum will automatically detect
+    | and authenticate tokens from both models based on tokenable_type in the
+    | personal_access_tokens table.
+    |
+    */
 
     /*
     |--------------------------------------------------------------------------
@@ -72,10 +88,10 @@ return [
     |
     */
 
-    'middleware'   => [
+    'middleware' => [
         'authenticate_session' => Laravel\Sanctum\Http\Middleware\AuthenticateSession::class,
-        'encrypt_cookies'      => Illuminate\Cookie\Middleware\EncryptCookies::class,
-        'validate_csrf_token'  => Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+        'encrypt_cookies' => Illuminate\Cookie\Middleware\EncryptCookies::class,
+        'validate_csrf_token' => Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
     ],
 
 ];

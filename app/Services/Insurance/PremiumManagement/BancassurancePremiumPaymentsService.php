@@ -2,9 +2,10 @@
 
 namespace App\Services\Insurance\PremiumManagement;
 
-use App\Models\Insurance\BancassurancePolicy;
-use App\Models\Core\Approval\CodeDetail;
 use App\Models\Auth\User;
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Currency;
+use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancassurancePremiumPayments;
 use DateTime;
 
@@ -19,17 +20,17 @@ class BancassurancePremiumPaymentsService
 
     public static function create(
         BancassurancePolicy $PolicyID,
-        string              $CustomerID,
-        string              $PaymentFrequency,
-        DateTime            $PaymentDate,
-        DateTime            $NextPaymentDate,
-        string              $Amount,
-        CodeDetail          $PaymentMode,
-        string              $ReferenceNumber,
-        ?string              $Notes = null,
-        User                $user
-    ): self
-    {
+        string $CustomerID,
+        string $PaymentFrequency,
+        DateTime $PaymentDate,
+        DateTime $NextPaymentDate,
+        string $Amount,
+        Currency $CurrencyId,
+        CodeDetail $PaymentMode,
+        string $ReferenceNumber,
+        ?string $Notes = null,
+        User $user
+    ): self {
         $payment = BancassurancePremiumPayments::create([
             'PolicyID' => $PolicyID->Id,
             'CustomerID' => $CustomerID,
@@ -37,6 +38,7 @@ class BancassurancePremiumPaymentsService
             'PaymentDate' => $PaymentDate,
             'NextPaymentDate' => $NextPaymentDate,
             'Amount' => $Amount,
+            'CurrencyId' => $CurrencyId->Id,
             'PaymentMode' => $PaymentMode->ID,
             'ReferenceNumber' => $ReferenceNumber,
             'Notes' => $Notes ?? null,
@@ -46,8 +48,7 @@ class BancassurancePremiumPaymentsService
         ]);
 
         activity()->causedBy($user->Id)->performedOn($payment)->event('create')->log("Added Premium Payments {$payment->Id}.");
+
         return new self($payment);
-
-
     }
 }

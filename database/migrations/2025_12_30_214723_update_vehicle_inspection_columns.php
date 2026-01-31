@@ -23,9 +23,9 @@ return new class extends Migration {
     {
         Schema::table('t_FleetVehicleInspections', function (Blueprint $table) {
 
-            $table->dropForeign('Fuel');
-            $table->dropForeign('EngineOil');
-            $table->dropForeign('Coolant');
+            $table->dropForeign(['Fuel']);
+            $table->dropForeign(['EngineOil']);
+            $table->dropForeign(['Coolant']);
 
             $table->dropColumn('Fuel');
             $table->dropColumn('EngineOil');

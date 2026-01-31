@@ -31,15 +31,17 @@ class PropertyUnitRequest extends FormRequest
                 'required',
                 'string',
                 'max:50',
-                Rule::unique((new PropertyUnit)->getTable())
-                    ->where(fn($query) => $query
+                'min:1',
+                Rule::unique((new PropertyUnit())->getTable())
+                    ->where(
+                        fn ($query) => $query
                         ->where('PropertyID', $this->PropertyID)
                         ->where('BlockID', $this->BlockID)
                         ->where('FloorID', $this->FloorID)
                     )
                     ->ignore($this->route('id'), 'Id'),
             ],
-            'UnitSize' => 'required|integer',
+            'UnitSize' => 'required|integer|min:1',
             'IsRentable' => 'required|boolean',
             'CurrentStatus' => 'required|boolean',
             'Remarks' => 'nullable|string|max:50',

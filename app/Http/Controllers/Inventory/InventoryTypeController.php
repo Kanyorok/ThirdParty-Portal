@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
-use App\Models\Inventory\InventoryType;
 use App\Http\Requests\Inventory\InventoryTypeRequest;
-use App\Services\Inventory\InventoryTypeService;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Inventory\InventoryType;
+use App\Services\Inventory\InventoryTypeService;
 
 class InventoryTypeController extends Controller
 {
@@ -30,7 +30,7 @@ class InventoryTypeController extends Controller
         $this->authorize('create', InventoryType::class);
         $types = InventoryType::with('type')->get();
         $inventoryTypes = CodeDetail::where('CodeID', 'InventoryTypeStatus')
-            ->whereNotIn('ID', InventoryType::pluck('Type'))
+            ->whereNotIn('ID', InventoryType::whereNull('DeletedOn')->pluck('Type'))
             ->get();
 
         return view('inventory.itemmaster.inventorytype.create', compact('inventoryTypes'));
@@ -49,9 +49,10 @@ class InventoryTypeController extends Controller
     {
         $type = InventoryType::with('type')->findOrFail($id);
         $inventoryTypes = CodeDetail::where('CodeID', 'InventoryTypeStatus')
-            ->whereNotIn('ID', InventoryType::pluck('Type'))
+            ->whereNotIn('ID', InventoryType::whereNull('DeletedOn')->pluck('Type'))
             ->get();
         $this->authorize('update', $type);
+
         return view('inventory.itemmaster.inventorytype.edit', compact('type', 'inventoryTypes'));
     }
 

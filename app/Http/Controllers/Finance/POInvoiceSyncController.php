@@ -11,6 +11,7 @@ class POInvoiceSyncController extends Controller
     public function index()
     {
         $syncRules = DB::table('t_POInvoiceSyncSettings')->orderBy('POType')->get();
+
         return view('finance.integration.po_invoice_sync.index', compact('syncRules'));
     }
 

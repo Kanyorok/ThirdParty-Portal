@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\Tender;
-use App\Enums\Core\PermissionEnum;
 use App\Services\Procurement\EncryptedBidDocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,7 +27,6 @@ class BidOpeningCeremonyController extends Controller
     public function index(Request $request)
     {
         $this->authorize(\App\Enums\Core\PermissionEnum::BidOpeningRead->value);
-        //$this->authorize(PermissionEnum::BidSubmissionRead);
 
         // Get tenders ready for opening (past submission deadline with submitted bids)
         $tenders = Tender::whereHas('submissions', function ($query) {
@@ -70,7 +69,7 @@ class BidOpeningCeremonyController extends Controller
 
         $request->validate([
             'tender_ref' => 'required|exists:t_Tenders,TenderNo',
-            'opening_notes' => 'nullable|string|max:1000'
+            'opening_notes' => 'nullable|string|max:1000',
         ]);
 
         $tender = Tender::where('TenderNo', $request->tender_ref)->firstOrFail();
@@ -105,13 +104,13 @@ class BidOpeningCeremonyController extends Controller
                     ->withProperties([
                         'action' => 'bid_opened',
                         'tender_ref' => $request->tender_ref,
-                        'ceremony_notes' => $request->opening_notes
+                        'ceremony_notes' => $request->opening_notes,
                     ])
                     ->log("Bid opened during ceremony: {$bid->SupplierName}");
             }
 
             // Update tender opening status if needed
-            if (!$tender->OpeningDate || $tender->OpeningDate > now()) {
+            if (! $tender->OpeningDate || $tender->OpeningDate > now()) {
                 $tender->update(['OpeningDate' => now()]);
             }
 
@@ -122,7 +121,7 @@ class BidOpeningCeremonyController extends Controller
                 ->withProperties([
                     'action' => 'ceremony_started',
                     'bids_opened' => $openedCount,
-                    'notes' => $request->opening_notes
+                    'notes' => $request->opening_notes,
                 ])
                 ->log("Bid opening ceremony started for tender {$tender->TenderNo}");
 
@@ -135,6 +134,7 @@ class BidOpeningCeremonyController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to start bid opening ceremony: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to start ceremony: ' . $e->getMessage());
         }
     }
@@ -149,7 +149,7 @@ class BidOpeningCeremonyController extends Controller
         $submission = BidSubmission::with(['supplier.thirdParty', 'tender'])->findOrFail($submissionId);
 
         // Check if documents can be accessed
-        if (!$submission->canAccessDocuments()) {
+        if (! $submission->canAccessDocuments()) {
             return redirect()->back()->with('error', 'Documents are sealed and cannot be accessed before bid opening ceremony.');
         }
 
@@ -159,13 +159,13 @@ class BidOpeningCeremonyController extends Controller
 
             // Gather DMS document IDs and fetch metadata in bulk
             $docIds = collect($encryptedDocs)
-                ->map(fn($d) => $d['document_id'] ?? null)
+                ->map(fn ($d) => $d['document_id'] ?? null)
                 ->filter()
                 ->values()
                 ->all();
 
             $dmsDocs = [];
-            if (!empty($docIds)) {
+            if (! empty($docIds)) {
                 $dmsDocs = \App\Models\DMS\Document::whereIn('DocumentId', $docIds)
                     ->with('current')
                     ->get()
@@ -188,7 +188,7 @@ class BidOpeningCeremonyController extends Controller
                     'name' => $name,
                     'size' => $sizeBytes !== null ? $this->formatFileSize($sizeBytes) : 'N/A',
                     'uploaded_at' => $uploadedAt,
-                    'can_download' => true
+                    'can_download' => true,
                 ];
             }
 
@@ -198,7 +198,7 @@ class BidOpeningCeremonyController extends Controller
                 ->causedBy(Auth::user())
                 ->withProperties([
                     'action' => 'documents_accessed',
-                    'document_count' => count($accessibleDocs)
+                    'document_count' => count($accessibleDocs),
                 ])
                 ->log("Documents accessed for bid: {$submission->SupplierName}");
 
@@ -208,6 +208,7 @@ class BidOpeningCeremonyController extends Controller
             );
         } catch (\Exception $e) {
             Log::error('Failed to access bid documents: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to access documents: ' . $e->getMessage());
         }
     }
@@ -221,7 +222,7 @@ class BidOpeningCeremonyController extends Controller
 
         $submission = BidSubmission::findOrFail($submissionId);
 
-        if (!$submission->canAccessDocuments()) {
+        if (! $submission->canAccessDocuments()) {
             abort(403, 'Documents are sealed and cannot be accessed.');
         }
 
@@ -229,7 +230,7 @@ class BidOpeningCeremonyController extends Controller
             // In a real implementation, this would decrypt and serve the actual file
             $encryptedDocs = json_decode($submission->EncryptedDocuments, true) ?? [];
 
-            if (!isset($encryptedDocs[$documentIndex])) {
+            if (! isset($encryptedDocs[$documentIndex])) {
                 abort(404, 'Document not found.');
             }
 
@@ -242,7 +243,7 @@ class BidOpeningCeremonyController extends Controller
                 ->withProperties([
                     'action' => 'document_downloaded',
                     'document_name' => $doc['original_filename'] ?? 'unknown',
-                    'document_id' => $doc['id'] ?? 'unknown'
+                    'document_id' => $doc['id'] ?? 'unknown',
                 ])
                 ->log("Document downloaded: {$doc['original_filename']} for {$submission->SupplierName}");
 
@@ -251,10 +252,11 @@ class BidOpeningCeremonyController extends Controller
                 'message' => 'Document download would start here',
                 'document' => $doc['original_filename'] ?? 'unknown',
                 'supplier' => $submission->SupplierName,
-                'note' => 'In production, this would decrypt and serve the actual file'
+                'note' => 'In production, this would decrypt and serve the actual file',
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to download document: ' . $e->getMessage());
+
             return response()->json(['error' => 'Failed to download document'], 500);
         }
     }
@@ -277,13 +279,13 @@ class BidOpeningCeremonyController extends Controller
                 'tender_no' => $tender->TenderNo,
                 'title' => $tender->Title,
                 'opening_date' => $tender->OpeningDate,
-                'submission_deadline' => $tender->SubmissionDeadline
+                'submission_deadline' => $tender->SubmissionDeadline,
             ],
             'ceremony_details' => [
                 'total_submissions' => $submissions->count(),
                 'opened_submissions' => $submissions->where('OpenedAt', '!=', null)->count(),
                 'ceremony_started' => $submissions->where('OpenedAt', '!=', null)->isNotEmpty(),
-                'ceremony_date' => $submissions->where('OpenedAt', '!=', null)->first()?->OpenedAt
+                'ceremony_date' => $submissions->where('OpenedAt', '!=', null)->first()?->OpenedAt,
             ],
             'bid_summary' => $submissions->map(function ($bid) {
                 return [
@@ -296,14 +298,14 @@ class BidOpeningCeremonyController extends Controller
                     'opened_at' => $bid->OpenedAt,
                     'opened_by' => $bid->openedByUser?->name,
                     'status' => $bid->BidStatus,
-                    'documents_accessible' => $bid->DocumentsAccessible
+                    'documents_accessible' => $bid->DocumentsAccessible,
                 ];
             }),
             'lowest_bid' => $submissions->where('BidAmount', '>', 0)->min('BidAmount'),
             'highest_bid' => $submissions->max('BidAmount'),
             'average_bid' => $submissions->where('BidAmount', '>', 0)->avg('BidAmount'),
             'generated_at' => now(),
-            'generated_by' => Auth::user()->name
+            'generated_by' => Auth::user()->name,
         ];
 
         return response()->json($summary);
@@ -322,7 +324,7 @@ class BidOpeningCeremonyController extends Controller
             return [
                 'status' => 'completed',
                 'message' => 'All bids have been processed',
-                'can_start' => false
+                'can_start' => false,
             ];
         }
 
@@ -330,7 +332,7 @@ class BidOpeningCeremonyController extends Controller
             return [
                 'status' => 'ready',
                 'message' => "{$submittedCount} bids ready for opening",
-                'can_start' => true
+                'can_start' => true,
             ];
         }
 
@@ -338,14 +340,14 @@ class BidOpeningCeremonyController extends Controller
             return [
                 'status' => 'partial',
                 'message' => "{$openedCount} of {$totalCount} bids opened",
-                'can_start' => false
+                'can_start' => false,
             ];
         }
 
         return [
             'status' => 'completed',
             'message' => 'All bids have been opened',
-            'can_start' => false
+            'can_start' => false,
         ];
     }
 

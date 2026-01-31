@@ -2,12 +2,28 @@
 @section('title', 'Initiate Claim Payment')
 
 @section('content')
-<div class="container mt-5" style="max-width: 900px;">
+
+{{-- ================= STYLES ================= --}}
+<style>
+    .section-title {
+        color: #000;
+        font-weight: 600;
+        font-size: .9rem;
+        padding-bottom: .35rem;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="container mt-4" style="max-width: 900px;">
     <div class="card shadow-lg border-0 rounded-4">
 
         {{-- Header --}}
-        <div class="card-header bg-primary text-white rounded-top-4 d-flex justify-content-between">
-            <p class="mb-0"><b>Payment Information</b></p>
+        <div class="card-header bg-primary border-bottom rounded-top-4">
+            <h5 class="mb-0 fw-bold">
+                <i class="bi bi-cash-stack me-2"></i>
+                Claim Payment
+            </h5>
         </div>
 
         {{-- Body --}}
@@ -15,89 +31,170 @@
             <form action="{{ route('bancassurance.claims.payments.store') }}" method="POST">
                 @csrf
 
-                {{-- Claim Selection --}}
+                {{-- ================= CLAIM SELECTION ================= --}}
                 <div class="mb-4">
-                    <label class="form-label fw-semibold">Select Claim <span class="text-danger">*</span></label>
-                    <select name="ClaimId" id="ClaimId" class="form-select" required onchange="populateClaimDetails(this)">
+                    <h6 class="section-title">Claim Selection</h6>
+
+                    <label class="form-label small ">
+                        Select Claim <span class="text-danger">*</span>
+                    </label>
+                    <select name="ClaimId"
+                            id="ClaimId"
+                            class="form-select form-select-sm"
+                            required
+                            onchange="populateClaimDetails(this)">
                         <option value="">-- Choose Unpaid Claim --</option>
                         @foreach($unpaidClaims as $claim)
-                            <option 
+                            <option
                                 value="{{ $claim->ClaimId }}"
                                 data-customer="{{ $claim->claim->policy->customer->ThirdParty->ThirdPartyName ?? '-' }}"
                                 data-policy="{{ $claim->claim->policy->PolicyNumber ?? '-' }}"
-                                data-amount="{{ number_format($claim->AssessmentAmount ?? 0, 2, '.', ',') }}"
-                            >
+                                data-amount="{{ number_format($claim->AssessmentAmount ?? 0, 2, '.', ',') }}">
                                 {{ $claim->claim->policy->PolicyNumber ?? '-' }}
                             </option>
                         @endforeach
                     </select>
                 </div>
 
-                {{-- Claim Details --}}
-                <div class="row mb-4">
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Policy Number</label>
-                        <input type="text" id="PolicyNumber" class="form-control bg-light" readonly>
-                    </div>
-                    <div class="col-md-5">
-                        <label class="form-label fw-semibold">Customer Name</label>
-                        <input type="text" id="CustomerName" class="form-control bg-light" readonly>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">Claim Amount</label>
-                        <input type="text" id="ClaimAmount" class="form-control bg-light text-end" readonly>
+                {{-- ================= CLAIM DETAILS ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Claim Details</h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label small ">Policy Number</label>
+                            <input type="text"
+                                   id="PolicyNumber"
+                                   class="form-control form-control-sm bg-light"
+                                   readonly>
+                        </div>
+
+                        <div class="col-md-5">
+                            <label class="form-label small ">Customer Name</label>
+                            <input type="text"
+                                   id="CustomerName"
+                                   class="form-control form-control-sm bg-light"
+                                   readonly>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label small ">Claim Amount</label>
+                            <input type="text"
+                                   id="ClaimAmount"
+                                   class="form-control form-control-sm bg-light text-end"
+                                   readonly>
+                        </div>
                     </div>
                 </div>
 
-                {{-- Payment Info --}}
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Amount to Pay <span class="text-danger">*</span></label>
-                        <input type="text" id="PaymentAmountDisplay" class="form-control text-end" required>
-                        <input type="hidden" name="PaymentAmount" id="PaymentAmount" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Payment Date <span class="text-danger">*</span></label>
-                        <input type="date" name="PaymentDate" class="form-control" required>
+                {{-- ================= PAYMENT DETAILS ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Payment Details</h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small ">
+                                Amount to Pay <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   id="PaymentAmountDisplay"
+                                   class="form-control form-control-sm text-end"
+                                   required>
+                            <input type="hidden"
+                                   name="PaymentAmount"
+                                   id="PaymentAmount"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small ">
+                                Payment Date <span class="text-danger">*</span>
+                            </label>
+                            <input type="date"
+                                   name="PaymentDate"
+                                   class="form-control form-control-sm"
+                                   required>
+                        </div>
                     </div>
                 </div>
 
-                {{-- Method & Reference --}}
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Payment Method <span class="text-danger">*</span></label>
-                        <select name="PaymentMethod" class="form-select" required>
-                            <option value="">-- Select Payment Method --</option>
-                            @foreach ($payments as $payment)
-                                <option value="{{ $payment->ID }}">{{ $payment->Description ?? '-' }}</option>
+                {{-- ================= PAYMENT METHOD ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Payment Method</h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small ">
+                                Payment Method <span class="text-danger">*</span>
+                            </label>
+                            <select name="PaymentMethod"
+                                    class="form-select form-select-sm"
+                                    required>
+                                <option value="">-- Select Payment Method --</option>
+                                @foreach ($payments as $payment)
+                                    <option value="{{ $payment->ID }}">
+                                        {{ $payment->Description ?? '-' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small ">
+                                Payment Reference <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   name="PaymentReference"
+                                   class="form-control form-control-sm"
+                                   required>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ================= PAYEE & NOTES ================= --}}
+                <div class="mb-4">
+                    <h6 class="section-title">Payee Information</h6>
+
+                    {{-- <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small ">
+                                Paid To <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   name="PaidBy"
+                                   class="form-control form-control-sm"
+                                   required>
+                        </div>
+                    </div> --}}
+                {{-- ================= Paid To ================= --}}
+                <div class="mb-3">
+                        <label class="form-label small ">Paid To <span class="text-danger">*</span></label>
+                        <select name="PaidTo" class="form-select form-select-sm" required>
+                            <option value="">-- Select User --</option>
+                            @foreach ($Users as $user)
+                                <option value="{{ $user->Id }}">
+                                    {{ $user->Name ?? '-'}}
+                                </option>
                             @endforeach
                         </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Payment Reference <span class="text-danger">*</span></label>
-                        <input type="text" name="PaymentReference" id="PaymentReference" class="form-control" required>
-                    </div>
-                </div>
-
-                {{-- Paid By & Note --}}
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Paid By <span class="text-danger">*</span></label>
-                        <input type="text" name="PaidBy" id="PaidBy" class="form-control" required>
-                    </div>
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label fw-semibold">Note</label>
-                    <textarea class="form-control" name="Note" id="Note" rows="2" placeholder="Optional additional details..."></textarea>
+                    <label class="form-label small ">Notes</label>
+                    <textarea name="Note"
+                              class="form-control form-control-sm"
+                              rows="2"
+                              placeholder="Optional additional details..."></textarea>
                 </div>
 
-                {{-- Submit --}}
-                <div class="d-flex justify-content-end gap-3 mt-4">
-                    <a href="{{ route('bancassurance.claims.index') }}" class="btn btn-secondary px-4">
-                        <i class="bi bi-arrow-left-circle me-1"></i> Back
+                {{-- ================= ACTIONS ================= --}}
+                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                    <a href="{{ route('bancassurance.claims.index') }}"
+                       class="btn btn-sm btn-outline-secondary px-4">
+                        Back
                     </a>
-                    <button type="submit" class="btn btn-success px-4">
+                    <button type="submit"
+                            class="btn btn-sm btn-success px-4">
                         <i class="bi bi-check-circle me-1"></i> Process Payment
                     </button>
                 </div>
@@ -105,43 +202,41 @@
         </div>
 
         {{-- Footer --}}
-        <div class="card-footer bg-light text-muted text-center rounded-bottom-4 py-2 small">
+        <div class="card-footer bg-light text-muted small text-center rounded-bottom-4 py-2">
             <i class="bi bi-person-circle me-1"></i>
-            Created by: <strong>{{ auth()->user()->name ?? 'System' }}</strong> |
-            Modified by: <strong>{{ auth()->user()->name ?? 'System' }}</strong>
+            Created by <strong>{{ auth()->user()->name ?? 'System' }}</strong> ·
+            Modified by <strong>{{ auth()->user()->name ?? 'System' }}</strong>
         </div>
+
     </div>
 </div>
 
-{{-- JS --}}
+{{-- ================= JS ================= --}}
 <script>
-    // Format numbers with commas
-    function formatWithCommas(num) {
-        if (!num) return '';
-        num = num.toString().replace(/,/g, '');
-        const parts = num.split('.');
-        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-        return parts.join('.');
-    }
+function formatWithCommas(num) {
+    if (!num) return '';
+    num = num.toString().replace(/,/g, '');
+    const parts = num.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.join('.');
+}
 
-    // Populate Claim Details
-    function populateClaimDetails(select) {
-        const selected = select.options[select.selectedIndex];
-        const amount = selected.getAttribute('data-amount')?.replace(/,/g, '') || 0;
+function populateClaimDetails(select) {
+    const selected = select.options[select.selectedIndex];
+    const amount = selected.getAttribute('data-amount')?.replace(/,/g, '') || 0;
 
-        document.getElementById('CustomerName').value = selected.getAttribute('data-customer') || '';
-        document.getElementById('PolicyNumber').value = selected.getAttribute('data-policy') || '';
-        document.getElementById('ClaimAmount').value = formatWithCommas(parseFloat(amount).toFixed(2));
-        document.getElementById('PaymentAmountDisplay').value = formatWithCommas(parseFloat(amount).toFixed(2));
-        document.getElementById('PaymentAmount').value = parseFloat(amount).toFixed(2);
-    }
+    document.getElementById('CustomerName').value = selected.dataset.customer || '';
+    document.getElementById('PolicyNumber').value = selected.dataset.policy || '';
+    document.getElementById('ClaimAmount').value = formatWithCommas(parseFloat(amount).toFixed(2));
+    document.getElementById('PaymentAmountDisplay').value = formatWithCommas(parseFloat(amount).toFixed(2));
+    document.getElementById('PaymentAmount').value = parseFloat(amount).toFixed(2);
+}
 
-    // Keep PaymentAmount numeric while displaying commas
-    document.getElementById('PaymentAmountDisplay').addEventListener('input', function(e) {
-        const raw = e.target.value.replace(/,/g, '');
-        const num = parseFloat(raw);
-        document.getElementById('PaymentAmount').value = isNaN(num) ? '' : num.toFixed(2);
-        e.target.value = formatWithCommas(raw);
-    });
+document.getElementById('PaymentAmountDisplay').addEventListener('input', function(e) {
+    const raw = e.target.value.replace(/,/g, '');
+    const num = parseFloat(raw);
+    document.getElementById('PaymentAmount').value = isNaN(num) ? '' : num.toFixed(2);
+    e.target.value = formatWithCommas(raw);
+});
 </script>
 @endsection

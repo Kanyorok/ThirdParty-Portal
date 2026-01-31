@@ -61,4 +61,53 @@
         <button type="submit" class="btn btn-primary">Submit Response</button>
     </form>
 </div>
+@section('styles')
+    <link rel="stylesheet" href="{{ asset('assets/css/select2.min.css') }}">
+@endsection
+
+@section('scripts')
+<script src="{{ asset('assets/js/select2.min.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Select2
+        $('#supplierSelect').select2({
+            placeholder: '-- Select Supplier --',
+            allowClear: true,
+            width: '100%' // Ensure it takes full width
+        });
+
+        // Use jQuery for event binding as Select2 uses it
+        $('#tenderSelect').on('change', function() {
+            const tenderId = $(this).val();
+            const supplierSelect = $('#supplierSelect');
+
+            // Clear existing options
+             supplierSelect.empty().append('<option selected disabled>Loading...</option>');
+             supplierSelect.trigger('change');
+
+            fetch(`{{ url('procurement/tenderresponse/invited-suppliers') }}/${tenderId}`)
+                .then(response => response.json())
+                .then(data => {
+                    supplierSelect.empty();
+                    supplierSelect.append('<option selected disabled>-- Select Supplier --</option>');
+                    
+                    if (data.length === 0) {
+                        supplierSelect.append('<option disabled>No invited suppliers found</option>');
+                    } else {
+                        data.forEach(supplier => {
+                            // Create new option: new Option(text, value, defaultSelected, selected)
+                            const option = new Option(supplier.SupplierName, supplier.Id, false, false);
+                            supplierSelect.append(option);
+                        });
+                    }
+                    supplierSelect.trigger('change');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    supplierSelect.empty().append('<option selected disabled>Error fetching suppliers</option>');
+                });
+        });
+    });
+</script>
+@endsection
 @endsection

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 
 class DeliveryController extends Controller
 {
-    //
     public function index()
     {
         return view('procurement.deliverynotes.index');

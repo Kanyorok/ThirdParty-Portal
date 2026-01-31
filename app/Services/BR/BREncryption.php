@@ -11,7 +11,7 @@ class BREncryption
     {
         $cmd = config('app.br.crypto');
 
-        if (!file_exists($cmd) || !is_executable($cmd)) {
+        if (! file_exists($cmd) || ! is_executable($cmd)) {
             return null;
         }
 
@@ -34,11 +34,12 @@ class BREncryption
         return self::isValid($user->UserID . $password, $user->Password);
     }
 
-    public static function hashUser(User $user, #[\SensitiveParameter] string $password): string
+    public static function hashUser(\App\Models\Auth\User|\App\Models\ThirdParty\ThirdPartyUser $user, #[\SensitiveParameter] string $password): string
     {
-        return self::_encryptText($user->UserID . $password);
+        $identifier = ($user instanceof \App\Models\Auth\User) ? $user->UserID : $user->Email;
+        
+        return self::_encryptText($identifier . $password);
     }
-
 
     private static function _encryptText(string $strInputText): string
     {

@@ -19,7 +19,7 @@ class LoanService
 
     public static function getAssignUser(string $AccountID = null): ?User
     {
-        if (!is_null($AccountID)) {//this part is used to reassign a previously assigned email to this guy.
+        if (! is_null($AccountID)) {//this part is used to reassign a previously assigned email to this guy.
             $loanAssignment = LoanAssignment::where('t_LoanAssignments.AccountID', $AccountID)->latest('Id')->first();
             if ($loanAssignment instanceof LoanAssignment) {
                 $user = $loanAssignment->user;
@@ -32,7 +32,7 @@ class LoanService
         $user = User::query()->lock('WITH(NOLOCK)')->hasPermission(PermissionEnum::DebtCollectionAssignment->value)
             ->withCount([
                          'loansAssigned' => function (Builder $builder) {
-                                    $builder->whereNull('t_LoanAssignments.EndOn');
+                             $builder->whereNull('t_LoanAssignments.EndOn');
                          },
                         ])->orderBy("loans_assigned_count", 'asc')->first();
 
@@ -49,15 +49,15 @@ class LoanService
         }
 
         $this->loan->assignment()->whereNull('EndOn')->update([
-                                                               'EndOn'      => Carbon::now(),
+                                                               'EndOn' => Carbon::now(),
                                                                'ModifiedBy' => $actor->Id,
-                                                               'Notes'      => 'REASSIGNED',
+                                                               'Notes' => 'REASSIGNED',
                                                               ]);
 
         $this->loan->assignment()->create([
-                                           'StartOn'    => Carbon::now(),
-                                           'UserId'     => $assignee->Id,
-                                           'CreatedBy'  => $actor->Id,
+                                           'StartOn' => Carbon::now(),
+                                           'UserId' => $assignee->Id,
+                                           'CreatedBy' => $actor->Id,
                                            'ModifiedBy' => $actor->Id,
                                           ]);
 

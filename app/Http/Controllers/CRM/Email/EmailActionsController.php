@@ -31,7 +31,7 @@ class EmailActionsController extends Controller
         //todo check permissions
         $crmEmail = Email::query()->where('EmailID', $email_id)
             ->where('Status', EmailStatusEnum::Draft->value)->where('CreatedBy', $request->user()->Id)->first();
-        if (!$crmEmail instanceof Email) {
+        if (! $crmEmail instanceof Email) {
             return $this->errored('could not load email');
         }
 
@@ -39,12 +39,14 @@ class EmailActionsController extends Controller
             $document = DB::transaction(static function () use ($crmEmail, $request) {
                 $service = ImageService::createUpload($request->file('file'), Email::getPrimaryKey(), $crmEmail->EmailID, $request->user());
                 (new CRMEmailService($crmEmail))->addAttachment($service->image);
+
                 return $service->image;
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error upload email attachment : ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -53,29 +55,30 @@ class EmailActionsController extends Controller
                                                           ]);
     }
 
-
     public function send(SendDraftMailRequest $request, string $email_id): JsonResponse
     {
         $crmEmail = Email::query()->where('EmailID', $email_id)
             ->where('Status', EmailStatusEnum::Draft->value)->where('CreatedBy', $request->user()->Id)->first();
-        if (!$crmEmail instanceof Email) {
+        if (! $crmEmail instanceof Email) {
             return $this->errored('could not load email');
         }
 
         $cc = $request->getCarbonCopyEmails();
+
         try {
             DB::transaction(static function () use ($cc, $crmEmail, $request) {
                 $crmEmail->update([
                                    'Body' => $request->validated('mail_content'),
-                                   'CC'   => $cc,
+                                   'CC' => $cc,
                                   ]);
                 (new CRMEmailService($crmEmail))->send();
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error($e);
             Log::error('Error send draft email : ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

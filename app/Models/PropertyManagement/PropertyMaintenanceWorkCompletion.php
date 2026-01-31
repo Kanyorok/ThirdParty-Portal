@@ -11,8 +11,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyMaintenanceWorkCompletion extends Model
 {
-    use SoftDeletes, UserActorTrait, DocumentsTrait;
-    //
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
+
     protected $table = 't_WorkCompletion';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
@@ -28,17 +30,20 @@ class PropertyMaintenanceWorkCompletion extends Model
         'FinalStatus',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
+
     public static function getPrimaryKey(): string
     {
         return 'WorkCompletionId';
     }
+
     public function request()
     {
         return $this->belongsTo(PropertyMaintenanceAssign::class, 'RequestNumber', 'Id');
     }
-        public function finalstatus()
+
+    public function finalstatus()
     {
         return $this->belongsTo(CodeDetail::class, 'FinalStatus', 'ID');
     }

@@ -111,91 +111,116 @@
             </div>
         </div>
 
-        <!-- Tender Selection -->
-        <div class="row mb-4 source-tender d-none">
-            <div class="col-md-4">
-                <label>Tender No <span class="text-danger">*</span></label>
-                <select class="form-control" id="tenderNo">
-                    <option selected disabled>Select Tender</option>
-                    @foreach(($awardedTenders ?? []) as $t)
-                    @php
-                    $tenderNo = trim((string)($t->TenderNo ?? ''));
-                    $isConvertedTenderId = in_array($t->Id, ($convertedTenderIds ?? []));
-                    $isUsedTenderRef = in_array($tenderNo, $usedReferenceNumbers ?? []);
-                    @endphp
-                    {{-- Skip Tenders already converted by id or whose TenderNo appears in ExtOrdNum --}}
-                    @if($isConvertedTenderId || $isUsedTenderRef)
-                    @continue
-                    @endif
-                    <option value="{{ $t->TenderNo }}"
-                        data-tender-id="{{ $t->Id }}"
-                        data-supplier-id="{{ $t->SupplierId }}"
-                        data-thirdparty-id="{{ $t->ThirdPartyId ?? 0 }}"
-                        data-supplier-name="{{ $t->SupplierName ?? '' }}"
-                        data-address="{{ $t->Address ?? '' }}">{{ $t->TenderNo }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label>LPO Number <span class="text-danger">*</span></label>
-                <input type="text" name="LPONo" class="form-control" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required />
-            </div>
-            <div class="col-md-4">
-                <label>Date <span class="text-danger">*</span></label>
-                <input type="date" class="form-control poDate" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required />
-            </div>
-        </div>
+            <!-- Consolidated Document & Supplier Row -->
+            <div class="row mb-4 supplier-row">
+                <div class="col-md-6">
+                    <!-- RFQ Selection -->
+                    <div class="source-rfq d-none mb-3">
+                        <label>Reference Number (RFQ) <span class="text-danger">*</span></label>
+                        <select class="form-control refNo @error('refNo') is-invalid @enderror" name="refNo" id="refNo">
+                            <option selected disabled>Select RFQ</option>
+                            @foreach($awardedRfqs as $ar)
+                                @php
+                                    $rfqNumber = trim((string)($ar->RFQNumber ?? ''));
+                                    $isConvertedId = in_array($ar->Id, $convertedRFQIds ?? []);
+                                    $isUsedRef = in_array($rfqNumber, $usedReferenceNumbers ?? []);
+                                @endphp
+                                @if($isConvertedId || $isUsedRef)
+                                    @continue
+                                @endif
+                                <option value="{{ $ar->RFQNumber }}"
+                                        data-rfq-id="{{ $ar->Id }}"
+                                        data-supplier-id="{{ $ar->ThirdPartyId ?? $ar->SupplierId }}"
+                                        data-thirdparty-id="{{ $ar->ThirdPartyId ?? 0 }}"
+                                        data-supplier-legacy-id="{{ $ar->SupplierId }}"
+                                        data-supplier-name="{{ $ar->SupplierName ?? '' }}"
+                                        data-address="{{ $ar->Address ?? '' }}">{{ $ar->RFQNumber }}</option>
+                            @endforeach
+                        </select>
+                        @error('refNo')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-        <!-- Contract Selection -->
-        <div class="row mb-4 source-contract d-none">
-            <div class="col-md-4">
-                <label>Contract Ref <span class="text-danger">*</span></label>
-                <select class="form-control" id="contractRef">
-                    <option selected disabled>Select Active Contract</option>
-                    @foreach(($contracts ?? []) as $c)
-                    <option value="{{ $c->ContractRef }}"
-                        data-contract-id="{{ $c->Id }}"
-                        data-award-type="{{ $c->AwardType ?? 'tender' }}"
-                        data-supplier-id="{{ $c->SupplierId }}"
-                        data-supplier-name="{{ $c->SupplierName ?? '' }}"
-                        data-address="{{ $c->Address }}">
-                        {{ $c->ContractRef }} - {{ $c->SupplierName }} [{{ $c->ContractStatus }}]
-                    </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label>LPO Number <span class="text-danger">*</span></label>
-                <input type="text" name="LPONo" class="form-control" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required />
-            </div>
-            <div class="col-md-4">
-                <label>Date <span class="text-danger">*</span></label>
-                <input type="date" class="form-control poDate" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required />
-            </div>
-        </div>
+                    <!-- Tender Selection -->
+                    <div class="source-tender d-none mb-3">
+                        <label>Tender No <span class="text-danger">*</span></label>
+                        <select class="form-control" id="tenderNo">
+                            <option selected disabled>Select Tender</option>
+                            @foreach(($awardedTenders ?? []) as $t)
+                                @php
+                                    $tenderNo = trim((string)($t->TenderNo ?? ''));
+                                    $isConvertedTenderId = in_array($t->Id, ($convertedTenderIds ?? []));
+                                    $isUsedTenderRef = in_array($tenderNo, $usedReferenceNumbers ?? []);
+                                @endphp
+                                @if($isConvertedTenderId || $isUsedTenderRef)
+                                    @continue
+                                @endif
+                                <option value="{{ $t->TenderNo }}"
+                                        data-tender-id="{{ $t->Id }}"
+                                        data-supplier-id="{{ $t->SupplierId }}"
+                                        data-thirdparty-id="{{ $t->ThirdPartyId ?? 0 }}"
+                                        data-supplier-name="{{ $t->SupplierName ?? '' }}"
+                                        data-address="{{ $t->Address ?? '' }}">{{ $t->TenderNo }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-        <!-- Supplier & Details -->
-        <div class="row mb-4 supplier-row">
-            <div class="col-md-6">
-                <!-- Host for supplier driver (non-direct) and plan driver (direct) -->
-                <div id="supplierDriverHost"></div>
-                <div id="planDriver" class="plan-driver d-none">
-                    <label>Approved Procurement Plan (Direct) <span class="text-danger">*</span></label>
-                    <select id="directPlanSelect" class="form-control">
-                        <option value="" selected>Select Approved Plan</option>
-                    </select>
-                    <small class="text-muted">These are approved plans whose method is Direct Purchase.</small>
+                    <!-- Contract Selection -->
+                    <div class="source-contract d-none mb-3">
+                        <label>Contract Ref <span class="text-danger">*</span></label>
+                        <select class="form-control" id="contractRef">
+                            <option selected disabled>Select Active Contract</option>
+                            @foreach(($contracts ?? []) as $c)
+                                <option value="{{ $c->ContractRef }}"
+                                        data-contract-id="{{ $c->Id }}"
+                                        data-award-type="{{ $c->AwardType ?? 'tender' }}"
+                                        data-supplier-id="{{ $c->SupplierId }}"
+                                        data-supplier-name="{{ $c->SupplierName ?? '' }}"
+                                        data-address="{{ $c->Address }}">
+                                    {{ $c->ContractRef }} - {{ $c->SupplierName }} [{{ $c->ContractStatus }}]
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Plan Selection (Direct) -->
+                    <div id="planDriver" class="plan-driver d-none">
+                        <label>Approved Procurement Plan (Direct) <span class="text-danger">*</span></label>
+                        <select id="directPlanSelect" class="form-control">
+                            <option value="" selected>Select Approved Plan</option>
+                        </select>
+                        <small class="text-muted">These are approved plans whose method is Direct Purchase.</small>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label>Address</label>
+                    <input type="text" class="form-control" name="address" placeholder="Supplier address" readonly/>
                 </div>
             </div>
-            <div class="col-md-6">
-                <label>Address</label>
-                <input type="text" class="form-control" name="address" placeholder="Supplier address" readonly />
+
+            <!-- Common LPO and Date -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label>LPO Number <span class="text-danger">*</span></label>
+                    <input type="text" name="LPONo" class="form-control @error('LPONo') is-invalid @enderror" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
+                    @error('LPONo')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-6">
+                    <label>Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control poDate @error('pODate') is-invalid @enderror" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required/>
+                    @error('pODate')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
             </div>
-        </div>
 
-        <!-- Visible supplier field removed; we'll use prequalified supplier (Direct) or hidden supplier input (other modes). -->
+            <!-- Visible supplier field removed; we'll use prequalified supplier (Direct) or hidden supplier input (other modes). -->
 
-        <!-- Direct mode helpers (will receive supplier select when Direct) -->
+            <!-- Direct mode helpers (will receive supplier select when Direct) -->
         <div class="row mb-3 direct-only d-none">
             <div class="col-md-6">
                 <label>Item Category <span class="text-danger">*</span></label>
@@ -256,7 +281,7 @@
                         <th style="width: 20%; min-width: 200px;">Item Name</th>
                         <th style="width: 5%; min-width: 80px;">Quantity <span class="text-danger">*</span></th>
                         <th style="width: 10%; min-width: 100px;">Unit Price <span class="text-danger">*</span></th>
-                        <th style="width: 5%; min-width: 80px;">Tax %</th>
+                        <th style="width: 10%; min-width: 150px;">Tax %</th>
                         <th style="width: 5%; min-width: 80px;">Discount %</th>
                         <th style="width: 15%; min-width: 150px;">Line Total</th>
                     </tr>
@@ -276,9 +301,17 @@
                         <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity"
                                 name="quantity[]" id="Quantity" step="any" required></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
-                                name="unitPrice[]" id="Price" step="any" required></td>
-                        <td class="text-start"><input type="number" class="form-control form-control-sm tax"
-                                name="tax[]" id="Tax" step="any"></td>
+                                                      name="unitPrice[]" id="Price" step="any" required></td>
+                        <td class="text-start">
+                             <select class="form-control form-control-sm tax" name="tax[]" id="Tax">
+                                <option value="" data-rate="0" selected>None</option>
+                                @foreach($taxRules as $rule)
+                                    <option value="{{ $rule->Id }}" data-rate="{{ $rule->Rate }}">
+                                        {{ $rule->TaxTypeName }} ({{ $rule->Rate }}%)
+                                    </option>
+                                @endforeach
+                            </select>
+                        </td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm discount"
                                 name="discount[]" id="Discount" step="any"></td>
                         <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
@@ -336,20 +369,35 @@
     // Load all items for dropdowns
     const allItems = @json($allItems);
 
-    // Build item options HTML
-    let itemOptions = '<option value="" disabled selected>Select Item</option>';
-    let currentAvailableItems = allItems; // Keep reference to current available items
+        // Initialize with all items
+        const taxRules = @json($taxRules);
+        
+        function buildTaxOptions(selectedId) {
+             let options = '<option value="" data-rate="0">None</option>';
+             taxRules.forEach(rule => {
+                 const isSel = (rule.Id == selectedId) ? 'selected' : '';
+                 options += `<option value="${rule.Id}" data-rate="${rule.Rate}" ${isSel}>${rule.TaxTypeName} (${rule.Rate}%)</option>`;
+             });
+             return options;
+        }
 
-    function buildItemOptions(items) {
-        let options = '<option value="" disabled selected>Select Item</option>';
-        items.forEach(item => {
-            options += `<option value="${item.itemCode}"
+        // Build item options HTML
+        let itemOptions = '<option value="" disabled selected>Select Item</option>';
+        let currentAvailableItems = allItems; // Keep reference to current available items
+
+        function buildItemOptions(items) {
+            let options = '<option value="" disabled selected>Select Item</option>';
+            items.forEach(item => {
+                const max = (item.quantity !== undefined && item.quantity !== null) ? item.quantity : '';
+                const label = item.itemName + (max !== '' ? ` (Avail: ${max})` : '');
+                options += `<option value="${item.itemCode}"
                                    data-name="${item.itemName}"
                                    data-description="${item.description || item.itemName}"
                                    data-price="${item.unitPrice || 0}"
                                    data-type="${item.itemType || ''}"
-                                   data-category="${item.categoryName || ''}">
-                               ${item.itemName}
+                                   data-category="${item.categoryName || ''}"
+                                   data-max="${max}">
+                               ${label}
                            </option>`;
         });
         return options;
@@ -438,15 +486,88 @@
         $tr.find('.line-total').val(discounted.toFixed(2));
     }
 
-    function updateTotals() {
-        let exclusive = 0;
-        let taxTotal = 0;
-        $('#item-rows tr').each(function() {
-            const $tr = $(this);
-            const lt = parseNumber($tr.find('.line-total').val());
-            const taxPct = parseNumber($tr.find('.tax').val());
-            exclusive += lt;
-            taxTotal += lt * (taxPct / 100);
+                // Create item dropdown with currently available items (contract-specific or all items)
+                const $itemTd = $('<td class="text-start"/>' );
+                const $inputItem = $('<input type="text" class="form-control form-control-sm itemCode" name="itemCode[]" placeholder="Item (code/name)" required/>' );
+                if (it.itemCode) { $inputItem.val(it.itemCode); }
+                $itemTd.append($inputItem);
+                $tr.append($itemTd);
+
+                // Item description
+                const itemDescription = it.itemName || it.description || '';
+                $tr.append(`<td class="text-start"><textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="5" readonly style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0;resize:none;">${itemDescription}</textarea></td>`);
+
+                // Other fields
+                const maxQty = it.quantity || 0;
+                $tr.append(`<td class="text-start">
+                    <input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" step="any" required value="${maxQty}" max="${maxQty}">
+                    <small class="text-muted d-block" style="font-size: 0.75rem;">Available: ${maxQty}</small>
+                </td>`);
+                $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" required value="${it.unitPrice ?? ''}"></td>`);
+                // Tax Dropdown
+                const taxOptions = buildTaxOptions(it.tax || ''); // passing existing tax ID if any
+                $tr.append(`<td class="text-start"><select class="form-control form-control-sm tax" name="tax[]">${taxOptions}</select></td>`);
+                $tr.append('<td class="text-start"><input type="number" class="form-control form-control-sm discount" name="discount[]" step="any"></td>');
+
+                const lineTotal = (+it.quantity || 0) * (+it.unitPrice || 0);
+                $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm line-total" name="lineTotal[]" step="any" readonly value="${lineTotal.toFixed(2)}"></td>`);
+                $tr.append('<td class="text-center align-middle"><button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i class="fa fa-trash"></i> Remove</button></td>');
+                $tbody.append($tr);
+            };
+
+            (items || []).forEach((it, idx) => addRow(idx, it));
+            if ((items || []).length === 0) {
+                // keep one blank row with current available items
+                addRow(0, { itemCode: '', itemName: '', quantity: '', unitPrice: '' });
+            }
+            updateTotals();
+        }
+
+        function parseNumber(val) {
+            const n = parseFloat(val);
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        function recalcRow($tr) {
+            const qty = parseNumber($tr.find('.quantity').val());
+            const price = parseNumber($tr.find('.unit-price').val());
+            const discountPct = parseNumber($tr.find('.discount').val());
+            const base = qty * price;
+            const discounted = base * (discountPct ? (1 - (discountPct / 100)) : 1);
+            $tr.find('.line-total').val(discounted.toFixed(2));
+        }
+
+        function updateTotals() {
+            let exclusive = 0;
+            let taxTotal = 0;
+            $('#item-rows tr').each(function () {
+                const $tr = $(this);
+                const lt = parseNumber($tr.find('.line-total').val());
+                
+                // Get tax rate from selected option data-rate
+                const $taxSelect = $tr.find('.tax');
+                let taxRate = 0;
+                if ($taxSelect.is('select')) {
+                     const selected = $taxSelect.find('option:selected');
+                     taxRate = parseFloat(selected.data('rate')) || 0;
+                } else {
+                     // Fallback if still input (shouldn't happen but safe)
+                     taxRate = parseNumber($taxSelect.val());
+                }
+
+                exclusive += lt;
+                taxTotal += lt * (taxRate / 100);
+            });
+            const inclusive = exclusive + taxTotal;
+            $('.exclusiveTotal').val(exclusive.toFixed(2));
+            $('.taxAmount').val(taxTotal.toFixed(2));
+            $('.inclusiveTotal').val(inclusive.toFixed(2));
+        }
+
+        $(document).on('input change', '.quantity, .unit-price, .tax, .discount', function () {
+            const $tr = $(this).closest('tr');
+            recalcRow($tr);
+            updateTotals();
         });
         const inclusive = exclusive + taxTotal;
         $('.exclusiveTotal').val(exclusive.toFixed(2));
@@ -475,70 +596,70 @@
     });
 
     // Source mode toggling
-    function applySourceMode() {
-        const mode = $('input[name="SourceType"]:checked').val();
-        const $planDriver = $('#planDriver');
-        if (mode === 'RFQ') {
-            $('.source-rfq').removeClass('d-none');
-            $('.source-tender').addClass('d-none');
-            $('.source-contract').addClass('d-none');
-            $('.direct-only').addClass('d-none');
-            // Show supplier driver
-            $planDriver.addClass('d-none');
-            // Live refresh of awarded RFQs from t_RFQAward
-            const $ref = $('#refNo');
-            $ref.empty().append('<option selected disabled>Loading awarded RFQs...</option>');
-            fetch('/procurement/purchase-order/awarded-rfqs')
-                .then(r => r.json())
-                .then(({
-                    success,
-                    data
-                }) => {
-                    $ref.empty().append('<option selected disabled>Select RFQ</option>');
-                    if (!success) return;
-                    const converted = (window.convertedRFQIds || []);
-                    (data || []).forEach(ar => {
-                        const dis = converted.includes(ar.Id) ? 'disabled' : '';
-                        const thirdPartyId = ar.ThirdPartyId || 0;
-                        const supplierLegacyId = ar.SupplierId || '';
-                        const supplierName = ar.SupplierName || '';
-                        const address = ar.Address || '';
-                        $ref.append(`<option value="${ar.RFQNumber}"
+        function applySourceMode() {
+            const mode = $('input[name="SourceType"]:checked').val();
+            const $planDriver = $('#planDriver');
+            if (mode === 'RFQ') {
+                $('.source-rfq').removeClass('d-none');
+                $('.source-tender').addClass('d-none');
+                $('.source-contract').addClass('d-none');
+                $('.direct-only').addClass('d-none');
+                // Show supplier driver
+                $planDriver.addClass('d-none');
+                // Live refresh of awarded RFQs from t_RFQAward
+                const $ref = $('#refNo');
+                $ref.empty().append('<option selected disabled>Loading awarded RFQs...</option>');
+                fetch('/procurement/purchase-order/awarded-rfqs')
+                    .then(r => r.json())
+                    .then(({success, data}) => {
+                        $ref.empty().append('<option selected disabled>Select Approved RFQ</option>');
+                        if (!success) return;
+                        // Removed converted filter to allow partial POs
+                        // const converted = (window.convertedRFQIds || []);
+                        
+                        (data || []).forEach(ar => {
+                            // Unique ID for value to prevent duplicates
+                            // ar.SupplierId is Legacy ID (s.Id), ThirdPartyId is tp.Id
+                            const thirdPartyId = ar.ThirdPartyId || 0;
+                            const supplierLegacyId = ar.SupplierId || '';
+                            const supplierName = ar.SupplierName || 'Unknown Supplier';
+                            const address = ar.Address || '';
+                            const uniqueVal = `${ar.RFQNumber}-${thirdPartyId}`; 
+
+                            $ref.append(`<option value="${uniqueVal}"
+                                            data-rfq-no="${ar.RFQNumber}"
                                             data-rfq-id="${ar.Id}"
                                             data-supplier-legacy-id="${supplierLegacyId}"
                                             data-thirdparty-id="${thirdPartyId}"
                                             data-supplier-name="${supplierName}"
                                             data-address="${address}"
-                                            ${dis}>${ar.RFQNumber}</option>`);
-                    });
-                })
-                .catch(() => {});
-            // Reset to all items for RFQ mode
-            updateItemOptionsForContract(allItems);
-        } else if (mode === 'TENDER') {
-            $('.source-rfq').addClass('d-none');
-            $('.source-tender').removeClass('d-none');
-            $('.source-contract').addClass('d-none');
-            $('.direct-only').addClass('d-none');
-            $planDriver.addClass('d-none');
-
-            // Dynamically load awarded tenders
-            const $tenderSelect = $('#tenderNo');
-            $tenderSelect.empty().append('<option selected disabled>Loading awarded tenders...</option>');
-            fetch('/procurement/purchase-order/awarded-tenders')
-                .then(r => r.json())
-                .then(({
-                    success,
-                    data
-                }) => {
-                    $tenderSelect.empty().append('<option selected disabled>Select Tender</option>');
-                    if (!success) return;
-                    (data || []).forEach(tender => {
-                        const supplierId = tender.SupplierId || '';
-                        const thirdPartyId = tender.ThirdPartyId || 0;
-                        const supplierName = tender.SupplierName || '';
-                        const address = tender.Address || '';
-                        $tenderSelect.append(`<option value="${tender.TenderNo}"
+                                            >${ar.RFQNumber} - ${supplierName}</option>`);
+                        });
+                    })
+                    .catch(() => {});
+                // Reset to all items for RFQ mode
+                updateItemOptionsForContract(allItems);
+            } else if (mode === 'TENDER') {
+                $('.source-rfq').addClass('d-none');
+                $('.source-tender').removeClass('d-none');
+                $('.source-contract').addClass('d-none');
+                $('.direct-only').addClass('d-none');
+                $planDriver.addClass('d-none');
+                
+                // Dynamically load awarded tenders
+                const $tenderSelect = $('#tenderNo');
+                $tenderSelect.empty().append('<option selected disabled>Loading awarded tenders...</option>');
+                fetch('/procurement/purchase-order/awarded-tenders')
+                    .then(r => r.json())
+                    .then(({success, data}) => {
+                        $tenderSelect.empty().append('<option selected disabled>Select Tender</option>');
+                        if (!success) return;
+                        (data || []).forEach(tender => {
+                            const supplierId = tender.SupplierId || '';
+                            const thirdPartyId = tender.ThirdPartyId || 0;
+                            const supplierName = tender.SupplierName || '';
+                            const address = tender.Address || '';
+                            $tenderSelect.append(`<option value="${tender.TenderNo}"
                                                     data-tender-id="${tender.Id}"
                                                     data-supplier-id="${supplierId}"
                                                     data-thirdparty-id="${thirdPartyId}"
@@ -642,13 +763,21 @@
     });
 
     // RFQ selection: auto-fill hidden supplier and items
-    $(document).on('change', '#refNo', function() {
-        const selectedRFQNo = $(this).val();
-        const rfqOption = $(this).find('option:selected');
-        const rfqId = parseInt(rfqOption.data('rfq-id'));
-        const supplierLegacyId = parseInt(rfqOption.data('supplier-legacy-id')); // t_Suppliers.Id for posting
-        const awardedThirdPartyId = parseInt(rfqOption.data('thirdparty-id')); // t_ThirdParties.Id for lookups/items
-        const matchThirdPartyId = Number.isFinite(awardedThirdPartyId) ? awardedThirdPartyId : NaN;
+        $(document).on('change', '#refNo', function () {
+            const rfqOption = $(this).find('option:selected');
+            const selectedRFQNo = rfqOption.data('rfq-no'); // Use data attribute, not val() which is composite
+            const rfqId = parseInt(rfqOption.data('rfq-id'));
+            const supplierLegacyId = parseInt(rfqOption.data('supplier-legacy-id')); // t_Suppliers.Id for posting
+            const awardedThirdPartyId = parseInt(rfqOption.data('thirdparty-id')); // t_ThirdParties.Id for lookups/items
+            const matchThirdPartyId = Number.isFinite(awardedThirdPartyId) ? awardedThirdPartyId : NaN;
+            
+            console.log('RFQ Selected:', {selectedRFQNo, rfqId, supplierLegacyId, awardedThirdPartyId, matchThirdPartyId});
+            
+            if (!isNaN(rfqId)) {
+                $('#SourceId').val(rfqId);
+                        } else {
+                $('#SourceId').val('');
+            }
 
         console.log('RFQ Selected:', {
             selectedRFQNo,
@@ -1142,6 +1271,44 @@
         if ($tbody.find('tr').length > 1) {
             $(this).closest('tr').remove();
             updateRowNumbers();
+        });
+
+        // Item Selection Change Handler
+        $(document).on('change', '.itemCode', function() {
+            if (this.tagName !== 'SELECT') return;
+            const $row = $(this).closest('tr');
+            const $option = $(this).find('option:selected');
+            const itemName = $option.data('name') || $option.text();
+            const itemDescription = $option.data('description') || itemName;
+            const unitPrice = $option.data('price') || 0;
+            const max = $option.data('max');
+
+            // Update description and price
+            $row.find('.itemDescription').val(itemDescription);
+            $row.find('.unit-price').val(unitPrice);
+            
+            // Update Quantity max and availability text
+            const $qtyInput = $row.find('.quantity');
+            const $availText = $qtyInput.siblings('small');
+            
+            if (max !== undefined && max !== '' && max !== null) {
+                $qtyInput.attr('max', max);
+                $qtyInput.val(max); // Default to max available
+                if ($availText.length) {
+                    $availText.text(`Available: ${max}`);
+                } else {
+                    $qtyInput.after(`<small class="text-muted d-block" style="font-size: 0.75rem;">Available: ${max}</small>`);
+                }
+            } else {
+                $qtyInput.removeAttr('max');
+                $qtyInput.val(''); 
+                if ($availText.length) {
+                    $availText.remove();
+                }
+            }
+
+            // Recalculate totals
+            recalcRow($row);
             updateTotals();
         } else {
             alert('At least one item row is required.');

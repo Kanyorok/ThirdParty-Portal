@@ -5,8 +5,8 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureSingleActiveSession
@@ -22,7 +22,7 @@ class EnsureSingleActiveSession
             return $next($request);
         }
 
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return $next($request);
         }
 
@@ -43,7 +43,7 @@ class EnsureSingleActiveSession
             $sessionToken = (string)$request->session()->get('session_token', '');
 
             if ($cacheToken) {
-                if (empty($sessionToken) || !hash_equals((string)$cacheToken, (string)$sessionToken)) {
+                if (empty($sessionToken) || ! hash_equals((string)$cacheToken, (string)$sessionToken)) {
                     Auth::guard('web')->logout();
                     $request->session()->invalidate();
                     $request->session()->regenerateToken();
@@ -51,15 +51,16 @@ class EnsureSingleActiveSession
                     if ($request->headers->has('HX-Request')) {
                         return redirect()->to($loginUrl)->withHeaders(['HX-Redirect' => $loginUrl]);
                     }
+
                     return redirect()->guest($loginUrl);
                 }
-            } elseif (!empty($sessionToken)) {
+            } elseif (! empty($sessionToken)) {
                 // Seed cache if missing
                 Cache::put($cacheKey, $sessionToken, now()->addMinutes(((int)config('session.lifetime', 20)) + 5));
             }
 
-            // If the user's current_session_id is set and doesn't match this one, kill this session immediately
-            if (!empty($user->current_session_id) && $user->current_session_id !== $currentSessionId) {
+            // If the user's CurrentSessionId is set and doesn't match this one, kill this session immediately
+            if (! empty($user->CurrentSessionId) && $user->CurrentSessionId !== $currentSessionId) {
                 Auth::guard('web')->logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
@@ -67,7 +68,20 @@ class EnsureSingleActiveSession
                 if ($request->headers->has('HX-Request')) {
                     return redirect()->to($loginUrl)->withHeaders(['HX-Redirect' => $loginUrl]);
                 }
+
                 return redirect()->guest($loginUrl);
+            }
+
+            // Update CurrentSessionId if it's not set or different (handling the "login" or "first access" case here if not handled elsewhere)
+            // ideally this should be in LoginController, but to be robust:
+            if ($user->CurrentSessionId !== $currentSessionId) {
+                // We only update it if we are sure this is the "valid" session.
+                // But the logic above kills if mismatch. So if we are here, either it was empty, or it matched.
+                // If it was empty, we claim it.
+                if (empty($user->CurrentSessionId)) {
+                    $user->CurrentSessionId = $currentSessionId;
+                    $user->saveQuietly();
+                }
             }
 
             // Delete all other sessions for this user
@@ -83,5 +97,3 @@ class EnsureSingleActiveSession
         return $next($request);
     }
 }
-
-

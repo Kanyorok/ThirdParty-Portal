@@ -122,7 +122,7 @@
                             <form id="trashUserForm" method="post"
                                   action="{{ route('users.destroy',$user->UserID) }}"> @csrf
                                 <button class="btn btn-danger w-25 my-3" id="trashUserBtn"
-                                        type="submit"><i class="fas fa-trash"></i> trash
+                                        type="submit"><i class="fas fa-trash"></i> Delete User Account
                                 </button>@method('DELETE')
                             </form>
                         </div>

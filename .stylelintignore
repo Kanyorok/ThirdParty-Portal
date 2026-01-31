@@ -1,0 +1,15 @@
+# Vendor files
+vendor/**/*.css
+vendor/**/*.scss
+
+# Generated files
+public/build/**/*.css
+public/build/**/*.scss
+
+# Third-party minified files
+**/*.min.css
+public/assets/**/*.css
+
+# Storage
+storage/**/*.css
+storage/**/*.scss

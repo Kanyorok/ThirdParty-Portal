@@ -26,11 +26,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Lead extends Model
 {
-    use ImageTrait, SoftDeletes, UserActorTrait;
+    use ImageTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const string CREATED_AT = 'CreatedOn';
+    public const string UPDATED_AT = 'ModifiedOn';
+    public const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Leads';
     protected $primaryKey = 'LeadID';
@@ -146,7 +148,6 @@ class Lead extends Model
     {
         return $this->hasMany(LeadProduct::class, 'LeadId', 'LeadID');
     }
-
 
     public function marketingLists(): BelongsToMany
     {

@@ -4,7 +4,6 @@ namespace App\Http\Requests\FleetManagement;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Models\Fleet\FuelType;
 
 class FuelTypRequest extends FormRequest
 {
@@ -20,39 +19,39 @@ class FuelTypRequest extends FormRequest
      * Get the validation rules that apply to the request.
      */
     public function rules(): array
-        {
-            $fuelTypeId = $this->route('Id') ?? $this->route('id') ?? $this->route('fueltype') ?? null;
+    {
+        $fuelTypeId = $this->route('Id') ?? $this->route('id') ?? $this->route('fueltype') ?? null;
 
-            $rules = [
-                'Description' => 'nullable|string|max:255',
-                'IsActive'    => 'boolean',
+        $rules = [
+            'Description' => 'nullable|string|max:255',
+            'IsActive' => 'boolean',
+        ];
+
+        if (! $fuelTypeId) {
+            $rules['FuelName'] = [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('t_FuelTypes', 'FuelName')->where(function ($query) {
+                    return $query->whereNull('DeletedOn');
+                }),
             ];
-
-            if (!$fuelTypeId) {
-                $rules['FuelName'] = [
-                    'required',
-                    'string',
-                    'max:100',
-                    Rule::unique('t_FuelTypes', 'FuelName')->where(function ($query) {
+        } else {
+            $rules['FuelName'] = [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('t_FuelTypes', 'FuelName')
+                    ->where(function ($query) {
                         return $query->whereNull('DeletedOn');
-                    }),
-                ];
-            }
-            else {
-                $rules['FuelName'] = [
-                    'required',
-                    'string',
-                    'max:100',
-                    Rule::unique('t_FuelTypes', 'FuelName')
-                        ->where(function ($query) {
-                            return $query->whereNull('DeletedOn');
-                        })
-                        ->ignore($fuelTypeId, 'Id'),
-                ];
-            }
-
-            return $rules;
+                    })
+                    ->ignore($fuelTypeId, 'Id'),
+            ];
         }
+
+        return $rules;
+    }
+
     /**
      * Custom validation messages.
      */
@@ -60,9 +59,9 @@ class FuelTypRequest extends FormRequest
     {
         return [
             'FuelName.required' => '⛽ Please enter a fuel name.',
-            'FuelName.unique'   => '⚠️ This fuel name is already in use.',
-            'FuelName.max'      => '📝 The fuel name may not exceed 100 characters.',
-            'IsActive.boolean'  => '✅ The "Is Active" field must be true or false.',
+            'FuelName.unique' => '⚠️ This fuel name is already in use.',
+            'FuelName.max' => '📝 The fuel name may not exceed 100 characters.',
+            'IsActive.boolean' => '✅ The "Is Active" field must be true or false.',
         ];
     }
 }

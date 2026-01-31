@@ -2,12 +2,12 @@
 
 namespace App\Support;
 
-use App\Services\Licensing\LicensingService;
 use App\Models\Licensing\LicenseAudit;
+use App\Services\Licensing\LicensingService;
 
 /**
  * Feature class for checking licensed modules and features
- * 
+ *
  * Provides a clean API for checking licensing in application code.
  */
 class Feature
@@ -31,7 +31,7 @@ class Feature
      */
     public static function requires(string $moduleKey): void
     {
-        if (!self::hasModule($moduleKey)) {
+        if (! self::hasModule($moduleKey)) {
             LicenseAudit::logModuleDenied($moduleKey);
             abort(403, "Module '{$moduleKey}' is not licensed");
         }
@@ -84,6 +84,7 @@ class Feature
     public static function hasFeature(string $featureKey): bool
     {
         $license = self::getLicensingService()->current();
+
         return $license->hasFeature($featureKey);
     }
 
@@ -92,7 +93,7 @@ class Feature
      */
     public static function requiresFeature(string $featureKey): void
     {
-        if (!self::hasFeature($featureKey)) {
+        if (! self::hasFeature($featureKey)) {
             LicenseAudit::logEvent(
                 LicenseAudit::EVENT_MODULE_DENIED,
                 "Feature access denied: {$featureKey}"
@@ -155,7 +156,7 @@ class Feature
     public static function isUnderLimit(string $limitType, int $currentUsage): bool
     {
         $limit = self::getLimit($limitType);
-        
+
         if ($limit === null) {
             return true; // No limit set
         }
@@ -168,7 +169,7 @@ class Feature
      */
     public static function enforceLimit(string $limitType, int $currentUsage): void
     {
-        if (!self::isUnderLimit($limitType, $currentUsage)) {
+        if (! self::isUnderLimit($limitType, $currentUsage)) {
             $limit = self::getLimit($limitType);
             abort(403, "Usage limit exceeded for {$limitType}. Current: {$currentUsage}, Limit: {$limit}");
         }

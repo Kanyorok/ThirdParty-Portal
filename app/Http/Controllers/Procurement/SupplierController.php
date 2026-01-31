@@ -4,19 +4,22 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\ThirdParty\SupplierMaster;
-use App\Models\ThirdParty\ThirdParties;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Yajra\DataTables\Facades\DataTables;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\StoreSupplierRequest;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\UpdateSupplierRequest;
+use App\Models\ThirdParty\SupplierMaster;
+use App\Models\ThirdParty\ThirdParties;
 use App\Services\ThirdParties\SupplierWorkflowService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Yajra\DataTables\Facades\DataTables;
 
 class SupplierController extends Controller
 {
-    public function __construct(protected SupplierWorkflowService $workflowService) {}
+    public function __construct(protected SupplierWorkflowService $workflowService)
+    {
+    }
 
     public function index(Request $request)
     {
@@ -48,11 +51,23 @@ class SupplierController extends Controller
                 ->filter(function ($query) use ($request) {
                     if ($request->filled('search.value')) {
                         $searchValue = $request->input('search.value');
-                        $query->whereHas('party', function ($q) use ($searchValue) {
-                            $q->where(function ($subQ) use ($searchValue) {
-                                $subQ->where('ThirdPartyName', 'like', "%{$searchValue}%")
+                        $query->where(function ($q) use ($searchValue) {
+                            // Search in Party details (Name, Trading Name, Email) and Associated Users (Contacts)
+                            $q->whereHas('party', function ($pq) use ($searchValue) {
+                                $pq->where('ThirdPartyName', 'like', "%{$searchValue}%")
                                     ->orWhere('TradingName', 'like', "%{$searchValue}%")
-                                    ->orWhere('Email', 'like', "%{$searchValue}%");
+                                    ->orWhere('Email', 'like', "%{$searchValue}%")
+                                    ->orWhereHas('users', function ($uq) use ($searchValue) {
+                                        $uq->where('FirstName', 'like', "%{$searchValue}%")
+                                            ->orWhere('LastName', 'like', "%{$searchValue}%")
+                                            ->orWhere('Email', 'like', "%{$searchValue}%")
+                                            ->orWhere(DB::raw("CONCAT(FirstName, ' ', LastName)"), 'like', "%{$searchValue}%");
+                                    });
+                            })
+                            // Search in Assigned Categories
+                            ->orWhereHas('suppliers.category', function ($cq) use ($searchValue) {
+                                $cq->where('CategoryName', 'like', "%{$searchValue}%")
+                                   ->orWhere('Description', 'like', "%{$searchValue}%");
                             });
                         });
                     }
@@ -70,13 +85,13 @@ class SupplierController extends Controller
                     return $supplier->IsPrequalified ? 'Yes' : 'No';
                 })
                 ->addColumn('category_names', function (SupplierMaster $supplier) {
-                    if (!$supplier->IsPrequalified) {
+                    if (! $supplier->IsPrequalified) {
                         return '<span class="text-muted">Not prequalified</span>';
                     }
                     // Categories via active t_Suppliers entries (Prequalified)
                     $categories = $supplier->suppliers
                         ->where('Active_Status', true)
-                        ->map(fn($s) => $s->category)
+                        ->map(fn ($s) => $s->category)
                         ->filter()
                         ->unique('SupplierCategoryID');
 
@@ -93,10 +108,12 @@ class SupplierController extends Controller
                         $itemList = $count > 0 ? e($itemCats->pluck('Name')->filter()->unique()->implode(', ')) : 'No specific items';
                         $html .= "<dt class=\"fw-semibold\">{$catName}{$badge}</dt><dd class=\"mb-1\">{$itemList}</dd>";
                     }
+
                     return $html . '</dl>';
                 })
                 ->addColumn('PrimaryContact', function (SupplierMaster $supplier) {
                     $full = trim(($supplier->PrimaryFirstName ?? '') . ' ' . ($supplier->PrimaryLastName ?? ''));
+
                     return $full !== '' ? $full : 'N/A';
                 })
                 ->addColumn('PrimaryEmail', function (SupplierMaster $supplier) {
@@ -114,6 +131,40 @@ class SupplierController extends Controller
         }
 
         return view('procurement.suppliers.index');
+    }
+
+    public function search(Request $request)
+    {
+        $term = $request->get('q');
+
+        $query = SupplierMaster::query()
+            ->with('party')
+            ->where('IsPrequalified', true)
+            ->where('ApprovalStatus', \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved);
+
+        if (! empty($term)) {
+            $query->whereHas('party', function ($q) use ($term) {
+                $q->where('ThirdPartyName', 'like', "%{$term}%")
+                  ->orWhere('TradingName', 'like', "%{$term}%")
+                  ->orWhere('RegistrationNumber', 'like', "%{$term}%");
+            });
+        }
+
+        \Illuminate\Support\Facades\Log::info('Supplier Search Term: ' . $term);
+
+        $suppliers = $query->limit(20)->get()->map(function ($supplier) {
+            return [
+                'id' => $supplier->Id,
+                'text' => $supplier->party->ThirdPartyName ?? 'Unknown', // Select2 expects 'text' field
+                'company_name' => $supplier->party->ThirdPartyName ?? 'Unknown',
+                'registration_number' => $supplier->party->RegistrationNumber ?? 'N/A',
+                // Add status for clarity in UI if needed, but Select2 text is simple
+            ];
+        })->values();
+
+        \Illuminate\Support\Facades\Log::info('Supplier Search Result Count: ' . $suppliers->count());
+
+        return response()->json($suppliers);
     }
 
     public function create()
@@ -160,6 +211,7 @@ class SupplierController extends Controller
     public function show(ThirdParties $supplier)
     {
         $supplier->load('categories', 'types');
+
         return view('procurement.suppliers.show', compact('supplier'));
     }
 
@@ -189,7 +241,7 @@ class SupplierController extends Controller
             'PhysicalAddress',
             'Email',
             'Phone',
-            'Website'
+            'Website',
         ])->toArray();
 
         $partyData['ModifiedBy'] = $userId;
@@ -215,9 +267,15 @@ class SupplierController extends Controller
             // Handle Suspended Toggle Logic
             if ($request->boolean('Suspended')) {
                 $masterData['ApprovalStatus'] = ThirdPartyApprovalStatusEnum::Suspended;
+                // Also deactivate associated ThirdPartyUsers when suspended
+                \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyId', $supplier->Id)
+                    ->update(['IsActive' => false]);
             } elseif ($request->input('ApprovalStatus') === ThirdPartyApprovalStatusEnum::Suspended->value) {
                 // If switch was turned off, default back to Approved or Pending (A or P)
                 $masterData['ApprovalStatus'] = ThirdPartyApprovalStatusEnum::Approved;
+                // Reactivate associated ThirdPartyUsers when unsuspended
+                \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyId', $supplier->Id)
+                    ->update(['IsActive' => true]);
             }
 
             $masterData['ModifiedBy'] = $userId;
@@ -240,14 +298,17 @@ class SupplierController extends Controller
     public function destroy(ThirdParties $supplier)
     {
         $supplier->delete();
+
         return redirect()->route('suppliers.index')->with('success', 'Supplier deleted successfully.');
     }
 
     public function submit($id)
     {
         $supplier = SupplierMaster::where('ThirdPartyId', $id)->firstOrFail();
+
         try {
             $this->workflowService->submit($supplier, Auth::user());
+
             return redirect()->back()->with('success', 'Supplier submitted for approval.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Submission failed: ' . $e->getMessage());
@@ -272,6 +333,7 @@ class SupplierController extends Controller
                 return redirect()->back()->with('success', 'Supplier approved successfully.');
             } else {
                 $msg = $this->workflowService->getApprovalDetailsMessage(SupplierMaster::getPrimaryKey(), $supplier->SupplierID);
+
                 return redirect()->back()->with('error', "You are not authorized to approve. " . $msg);
             }
         } catch (\Exception $e) {
@@ -282,10 +344,12 @@ class SupplierController extends Controller
     public function reject($id)
     {
         $supplier = SupplierMaster::where('ThirdPartyId', $id)->firstOrFail();
+
         try {
             if ($this->workflowService->canApproveSupplier($supplier, Auth::user())) {
                 // Logic to capture reject reason? For now, generic.
                 $this->workflowService->reject($supplier, Auth::user(), 'Rejected from List');
+
                 return redirect()->back()->with('success', 'Supplier rejected.');
             } else {
                 return redirect()->back()->with('error', 'Authentication failed');
@@ -310,15 +374,15 @@ class SupplierController extends Controller
 
         $buttons = '';
 
-        if (auth()->user()->can('view', SupplierMaster::class)) {
+        if (auth()->user()->can('view', $supplier)) {
             $buttons .= '<a href="' . $viewUrl . '" class="btn btn-sm btn-info">View</a>';
         }
 
-        if (auth()->user()->can('update', SupplierMaster::class)) {
+        if (auth()->user()->can('update', $supplier)) {
             $buttons .= '<a href="' . $editUrl . '" class="btn btn-sm btn-warning">Edit</a>';
         }
 
-        if (auth()->user()->can('delete', SupplierMaster::class)) {
+        if (auth()->user()->can('delete', $supplier)) {
             $buttons .= '
                 <form action="' . $deleteUrl . '" method="POST" class="inline-block">
                     ' . csrf_field() . '
@@ -349,7 +413,7 @@ class SupplierController extends Controller
         }
 
         // Submit Button: If not approved, not submitted, and no active workflow (redundant if checking submitted)
-        if (!$isApproved && !$isSubmitted && !$hasWorkflow) {
+        if (! $isApproved && ! $isSubmitted && ! $hasWorkflow) {
             $buttons .= '
                 <form action="' . $submitUrl . '" method="POST" class="inline-block ms-1">
                     ' . csrf_field() . '
@@ -357,7 +421,7 @@ class SupplierController extends Controller
                 </form>';
         }
 
-        if (!$isApproved && $canApprove) {
+        if (! $isApproved && $canApprove) {
             $buttons .= '
                 <form action="' . $activateUrl . '" method="POST" class="inline-block ms-1">
                     ' . csrf_field() . '

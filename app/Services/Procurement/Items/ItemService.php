@@ -11,7 +11,6 @@ class ItemService
      */
     public function __construct()
     {
-        //
     }
 
     public static function getItemByType($type, $requisitionId = null)
@@ -87,7 +86,7 @@ class ItemService
                     DB::raw('i.EstimatedUnitCost AS UnitPrice'),
                     'c.Name AS CategoryName',
                     'i.LineItemID AS LineItemID',
-                    DB::raw('ISNULL(i.OriginalQty, 0) AS OriginalQty')
+                    DB::raw('ISNULL(i.OriginalQty, 0) AS OriginalQty'),
                 ])
                 ->first();
 
@@ -119,12 +118,13 @@ class ItemService
                 DB::raw('p.EstimatedPrice AS UnitPrice'),
                 'c.Name AS CategoryName',
                 DB::raw('NULL AS LineItemID'),
-                DB::raw('0 AS OriginalQty')
+                DB::raw('0 AS OriginalQty'),
             ])
             ->first();
 
         if ($fallbackItem) {
             $fallbackItem->RemainingQty = 0;
+
             return collect([$fallbackItem]);
         }
 

@@ -81,7 +81,7 @@
                          title="View Details">
                         <i class="bi bi-eye"></i>
                       </a>
-                      <a href="{{ route('workcompletion.edit', $workCompletion->Id) }}"
+                      {{-- <a href="{{ route('workcompletion.edit', $workCompletion->Id) }}"
                          class="btn btn-sm btn-warning"
                          title="Edit Record">
                         <i class="bi bi-pencil-square"></i>
@@ -95,7 +95,7 @@
                         <button type="submit" class="btn btn-sm btn-danger" title="Delete Record">
                           <i class="bi bi-trash"></i>
                         </button>
-                      </form>
+                      </form> --}}
                     </div>
                   </td>
                 </tr>

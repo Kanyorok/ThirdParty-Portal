@@ -40,7 +40,7 @@
             <th>Est. Unit Cost</th>
             <th>Est. Cost</th>
             <th>Status</th>
-            <th>Submitted By</th>
+            <th>Requested By</th>
             <th>Action</th>
         </tr>
         </thead>

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\ThirdParty\ThirdPartyCategory;
+use Illuminate\Database\Seeder;
 
 class ThirdPartyCategorySeeder extends Seeder
 {

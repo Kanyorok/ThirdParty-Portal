@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Auth\User;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\ThirdParties\SupplierService;
@@ -15,34 +16,12 @@ class RegistrationService
     {
         return DB::transaction(function () use ($userData) {
             $systemUser = User::where('UserID', 'ERPSYS')->first();
-            $systemUserId = $systemUser?->Id;
+            $systemUserId = $systemUser?->Id ?? 1;
 
-            // Fetch default Gender (required by DB) - Keep this as Step 1 still doesn't ask for Gender?
-            // User form (frontend) DOES NOT have Gender field? 
-            // Step 1 only has: Name, Email, Password, Phone.
-            // So we still need a default Gender for the User record.
-            $defaultGender = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'Gender')->where('Value', 'M')->first();
-            if (!$defaultGender) {
-                // Fallback or create? Best to just get any gender
-                $defaultGender = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'Gender')->first();
-                // If still null, create one?
-                if (!$defaultGender) {
-                    // Risk of failure if table constrained. Assuming at least one exists or we create.
-                    // For now, if null, we might still fail. Let's create dummy if desperately needed.
-                    try {
-                        $defaultGender = \App\Models\Core\Approval\CodeDetail::create([
-                            'CodeID' => 'Gender',
-                            'Value' => 'M',
-                            'Description' => 'Male',
-                            'DisplayOrder' => 1,
-                            'IsActive' => 1,
-                            'CreatedBy' => $systemUserId ?? 1,
-                            'ModifiedBy' => $systemUserId ?? 1,
-                        ]);
-                    } catch (\Throwable $e) {
-                    }
-                }
-            }
+            $defaultGender = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'Gender')
+                ->where('Value', 'M')
+                ->first()
+                ?? \App\Models\Core\Approval\CodeDetail::where('CodeID', 'Gender')->first();
 
             $user = ThirdPartyUser::create([
                 'FirstName' => $userData['FirstName'],
@@ -50,85 +29,101 @@ class RegistrationService
                 'Email' => $userData['Email'],
                 'Phone' => $userData['Phone'],
                 'Password' => $userData['Password'],
-                'Gender' => $defaultGender?->ID ?? 153, // Hard fallback to 153 from debug if all else fails
+                'Gender' => $defaultGender?->ID ?? 153,
                 'IsActive' => false,
-                'CreatedBy' => $systemUserId ?? 1,
-                'ModifiedBy' => $systemUserId ?? 1,
+                'CreatedBy' => $systemUserId,
+                'ModifiedBy' => $systemUserId,
             ]);
 
-            if (!empty($userData['verification_base_url'])) {
+            if (! empty($userData['verification_base_url'])) {
                 $user->verificationBaseUrl = $userData['verification_base_url'];
             }
 
-            event(new Registered($user));
+            $this->sendThirdPartyVerificationEmail($user);
 
             return $user;
         });
+    }
+
+    public function sendThirdPartyVerificationEmail(ThirdPartyUser $user): void
+    {
+        $expiresTs = now()->addMinutes(config('auth.verification.expire', 60))->timestamp;
+        $hash = sha1($user->getEmailForVerification());
+
+        $baseUrl = route(
+            'portal.auth.email.verify',
+            ['id' => $user->getKey(), 'hash' => $hash],
+            false
+        );
+
+        $signature = hash_hmac(
+            'sha256',
+            $baseUrl . '?expires=' . $expiresTs,
+            config('app.key')
+        );
+
+        $backendVerifyUrl = $baseUrl . '?expires=' . $expiresTs . '&signature=' . $signature;
+
+        $frontendBase = $user->verificationBaseUrl
+            ?? config('app.frontend_url')
+            ?? config('app.url');
+
+        $frontendVerifyUrl = rtrim($frontendBase, '/') . '/verify-email?verify_url=' . urlencode($backendVerifyUrl);
+
+        $body = '<p>Please click the button below to verify your email address.</p>'
+            . '<p><a href="' . $frontendVerifyUrl . '" style="background-color:#2563eb;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;display:inline-block;">Verify Email Address</a></p>'
+            . '<p style="font-size:small;color:#666;margin-top:20px;">If the button above does not work, copy and paste the following link into your browser:<br>'
+            . $frontendVerifyUrl . '</p>'
+            . '<p>If you did not create an account, no further action is required.</p>';
+
+        $actor = User::where('UserID', 'ERPSYS')->first() ?? User::first();
+
+        \App\Services\CRMEmailService::createRaw(
+            $actor,
+            'Verify Email Address - ' . config('app.name'),
+            $body,
+            [['Name' => $user->fullName, 'Email' => $user->Email]],
+            'EMAIL_VERIFICATION',
+            (string) $user->getKey()
+        )->send(true);
     }
 
     public function createThirdPartyForUser(ThirdPartyUser $user, array $thirdPartyData): ThirdParties
     {
         return DB::transaction(function () use ($user, $thirdPartyData) {
             $systemUser = User::where('UserID', 'ERPSYS')->first();
-            $systemUserId = $systemUser?->Id;
+            $systemUserId = $systemUser?->Id ?? 1;
 
             $initialName = $thirdPartyData['ThirdPartyName']
                 ?? ($thirdPartyData['FirstName'] . ' ' . $thirdPartyData['LastName'])
                 ?? $thirdPartyData['Email'];
 
-            // Fetch default BusinessType (e.g. Individual or first available)
-            $businessTypeId = $thirdPartyData['BusinessType'] ?? null;
-            if (!$businessTypeId) {
-                $bt = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'BusinessType')
-                    ->where('Value', 'I') // Try Individual first
-                    ->first();
-                if (!$bt) {
-                    $bt = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'BusinessType')->first();
-                }
+            $businessTypeId = $thirdPartyData['BusinessType']
+                ?? \App\Models\Core\Approval\CodeDetail::where('CodeID', 'BusinessType')
+                    ->where('Value', 'I')
+                    ->value('ID')
+                ?? \App\Models\Core\Approval\CodeDetail::where('CodeID', 'BusinessType')->value('ID')
+                ?? 47;
 
-                if (!$bt) {
-                    try {
-                        $bt = \App\Models\Core\Approval\CodeDetail::create([
-                            'CodeID' => 'BusinessType',
-                            'Value' => 'I',
-                            'Description' => 'Individual',
-                            'DisplayOrder' => 1,
-                            'IsActive' => 1,
-                            'CreatedBy' => $systemUserId ?? 1,
-                            'ModifiedBy' => $systemUserId ?? 1,
-                        ]);
-                    } catch (\Throwable $e) {
-                    }
-                }
-                $businessTypeId = $bt?->ID ?? 47; // Hard fallback from debug
-            }
-
-            // Fetch default Country
-            $countryId = $thirdPartyData['CountryId'] ?? null;
-            if (!$countryId) {
-                // Default to Kenya (KE) or first
-                $ct = \App\Models\Core\Country::where('CountryCode', 'KE')->first();
-                if (!$ct) $ct = \App\Models\Core\Country::first();
-                $countryId = $ct?->Id ?? 1; // Hard fallback
-            }
-
+            $countryId = $thirdPartyData['CountryId']
+                ?? \App\Models\Core\Country::where('CountryCode', 'KE')->value('Id')
+                ?? \App\Models\Core\Country::value('Id')
+                ?? 1;
 
             $thirdParty = ThirdParties::create([
                 'ThirdPartyName' => $initialName,
                 'TradingName' => $thirdPartyData['TradingName'] ?? $initialName,
-                'BusinessType' => $businessTypeId, // Now likely not null
+                'BusinessType' => $businessTypeId,
                 'RegistrationNumber' => $thirdPartyData['RegistrationNumber'] ?? 'PENDING',
                 'TaxPIN' => $thirdPartyData['TaxPIN'] ?? '',
                 'VATNumber' => $thirdPartyData['VATNumber'] ?? '',
-                'CountryId' => $countryId, // Now likely not null
+                'CountryId' => $countryId,
                 'PhysicalAddress' => $thirdPartyData['PhysicalAddress'] ?? 'Pending Address',
                 'Email' => $thirdPartyData['Email'] ?? null,
                 'Phone' => $thirdPartyData['Phone'] ?? null,
                 'Website' => $thirdPartyData['Website'] ?? null,
-
                 'IsActive' => false,
                 'ApprovalStatus' => 'P',
-
                 'CreatedBy' => $systemUserId,
                 'ModifiedBy' => $systemUserId,
             ]);
@@ -136,7 +131,7 @@ class RegistrationService
             $accountType = $thirdPartyData['accountType'] ?? 'supplier';
             $this->attachAccountType($thirdParty, $accountType, $user, $thirdPartyData);
 
-            if (!empty($thirdPartyData['ThirdPartyType'])) {
+            if (! empty($thirdPartyData['ThirdPartyType'])) {
                 DB::table('t_ThirdPartyType_ThirdParties')->insert([
                     'TypeId' => $thirdPartyData['ThirdPartyType'],
                     'ThirdPartyId' => $thirdParty->Id,
@@ -153,42 +148,21 @@ class RegistrationService
 
     protected function attachAccountType(ThirdParties $thirdParty, string $accountType, ThirdPartyUser $user, array $data): void
     {
-        switch ($accountType) {
-            case 'supplier':
-                SupplierService::createFromParty($thirdParty, $user);
-
-                if (!empty($data['supplierCategories'])) {
-                    $thirdParty->categories()->sync($data['supplierCategories']);
-                }
-                break;
-
-            case 'tenant':
-                TenantService::createFromParty($thirdParty, $user);
-
-                if (!empty($data['tenantRemarks'])) {
-                    $thirdParty->tenantProfile()->updateOrCreate(
-                        ['ThirdPartyId' => $thirdParty->Id],
-                        [
-                            'Remarks' => $data['tenantRemarks'],
-                            'ModifiedBy' => $user->Id,
-                        ]
-                    );
-                }
-                break;
-
-            case 'customer':
-                $this->attachCustomerType($thirdParty, $user, $data);
-                break;
-        }
+        match ($accountType) {
+            'supplier' => SupplierService::createFromParty($thirdParty, $user),
+            'tenant' => TenantService::createFromParty($thirdParty, $user),
+            'customer' => $this->attachCustomerType($thirdParty, $user, $data),
+            default => null,
+        };
     }
 
     protected function attachCustomerType(ThirdParties $thirdParty, ThirdPartyUser $user, array $data): void
     {
         $thirdParty->types()->syncWithoutDetaching([6 => [
             'PartyType' => 'ThirdPartyId',
-            'PartyID'   => $thirdParty->Id,
+            'PartyID' => $thirdParty->Id,
             'CreatedBy' => $user->Id,
-            'CreatedOn' => now()
+            'CreatedOn' => now(),
         ]]);
 
         $thirdParty->customerProfile()->updateOrCreate(

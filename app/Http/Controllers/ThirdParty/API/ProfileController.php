@@ -4,14 +4,16 @@ namespace App\Http\Controllers\ThirdParty\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdParty\Api\{
-    UpdateThirdPartyProfileRequest,
-    UpdateSupplierProfileRequest
+    UpdateCustomerProfileRequest,
+    UpdateSupplierProfileRequest,
+    UpdateTenantProfileRequest,
+    UpdateThirdPartyProfileRequest
 };
 use App\Http\Resources\ThirdParty\Api\{
-    ThirdPartyUserResource,
+    CustomerProfileResource,
     SupplierProfileResource,
     TenantProfileResource,
-    CustomerProfileResource
+    ThirdPartyUserResource
 };
 use Illuminate\Http\{JsonResponse, Request};
 use Illuminate\Support\Facades\{DB};
@@ -25,7 +27,7 @@ class ProfileController extends Controller
         return response()->json([
             'success' => true,
             'data' => new ThirdPartyUserResource($user),
-            'message' => 'Profile retrieved successfully'
+            'message' => 'Profile retrieved successfully',
         ]);
     }
 
@@ -34,16 +36,16 @@ class ProfileController extends Controller
         $user = $request->user();
         $thirdParty = $user->thirdParty;
 
-        if (!$thirdParty) {
+        if (! $thirdParty) {
             return response()->json(['success' => false, 'message' => 'Context not found'], 404);
         }
 
-        DB::transaction(fn() => $thirdParty->update($request->validated()));
+        DB::transaction(fn () => $thirdParty->update($request->validated()));
 
         return response()->json([
             'success' => true,
             'data' => new ThirdPartyUserResource($user->refresh()->load(['thirdParty.businessType', 'thirdParty.country'])),
-            'message' => 'Profile updated successfully'
+            'message' => 'Profile updated successfully',
         ]);
     }
 
@@ -52,7 +54,7 @@ class ProfileController extends Controller
         $user = $request->user()->load([
             'thirdParty.supplierMaster',
             'thirdParty.tenantProfile',
-            'thirdParty.customerProfile'
+            'thirdParty.customerProfile',
         ]);
 
         $tp = $user->thirdParty;
@@ -61,22 +63,22 @@ class ProfileController extends Controller
             [
                 'type' => 'base',
                 'label' => 'General Profile',
-                'hasProfile' => true
+                'hasProfile' => true,
             ],
             [
                 'type' => 'supplier',
                 'label' => 'Supplier Profile',
-                'hasProfile' => $tp ? (bool)$tp->supplierMaster : false
+                'hasProfile' => $tp ? (bool)$tp->supplierMaster : false,
             ],
             [
                 'type' => 'tenant',
                 'label' => 'Tenant Profile',
-                'hasProfile' => $tp ? (bool)$tp->tenantProfile : false
+                'hasProfile' => $tp ? (bool)$tp->tenantProfile : false,
             ],
             [
                 'type' => 'customer',
                 'label' => 'Customer Profile',
-                'hasProfile' => $tp ? (bool)$tp->customerProfile : false
+                'hasProfile' => $tp ? (bool)$tp->customerProfile : false,
             ],
         ]);
 
@@ -84,8 +86,8 @@ class ProfileController extends Controller
             'success' => true,
             'data' => [
                 'availableProfiles' => $profiles,
-                'totalActive' => $profiles->where('hasProfile', true)->count()
-            ]
+                'totalActive' => $profiles->where('hasProfile', true)->count(),
+            ],
         ]);
     }
 
@@ -94,13 +96,13 @@ class ProfileController extends Controller
         $user = $request->user()->load('thirdParty.supplierMaster', 'thirdParty.categories');
         $supplier = $user->thirdParty->supplierMaster;
 
-        if (!$supplier) {
+        if (! $supplier) {
             return response()->json(['success' => false, 'message' => 'Profile not found'], 404);
         }
 
         return response()->json([
             'success' => true,
-            'data' => new SupplierProfileResource($supplier)
+            'data' => new SupplierProfileResource($supplier),
         ]);
     }
 
@@ -109,13 +111,13 @@ class ProfileController extends Controller
         $user = $request->user()->load('thirdParty.tenantProfile.type');
         $tenant = $user->thirdParty->tenantProfile;
 
-        if (!$tenant) {
+        if (! $tenant) {
             return response()->json(['success' => false, 'message' => 'Profile not found'], 404);
         }
 
         return response()->json([
             'success' => true,
-            'data' => new TenantProfileResource($tenant)
+            'data' => new TenantProfileResource($tenant),
         ]);
     }
 
@@ -124,13 +126,13 @@ class ProfileController extends Controller
         $user = $request->user()->load('thirdParty.customerProfile.genders', 'thirdParty.customerProfile.maritalstatus');
         $customer = $user->thirdParty->customerProfile;
 
-        if (!$customer) {
+        if (! $customer) {
             return response()->json(['success' => false, 'message' => 'Profile not found'], 404);
         }
 
         return response()->json([
             'success' => true,
-            'data' => new CustomerProfileResource($customer)
+            'data' => new CustomerProfileResource($customer),
         ]);
     }
 
@@ -145,7 +147,7 @@ class ProfileController extends Controller
                 $user->thirdParty->categories()->sync($validated['category_ids']);
                 unset($validated['category_ids']);
             }
-            if (!empty($validated)) {
+            if (! empty($validated)) {
                 $supplier->update($validated);
             }
         });
@@ -153,7 +155,43 @@ class ProfileController extends Controller
         return response()->json([
             'success' => true,
             'data' => new SupplierProfileResource($supplier->refresh()),
-            'message' => 'Supplier profile updated'
+            'message' => 'Supplier profile updated',
+        ]);
+    }
+
+    public function updateTenantProfile(UpdateTenantProfileRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $tenant = $user->thirdParty->tenantProfile;
+
+        if (! $tenant) {
+            return response()->json(['success' => false, 'message' => 'Tenant profile not found'], 404);
+        }
+
+        DB::transaction(fn () => $tenant->update($request->validated()));
+
+        return response()->json([
+            'success' => true,
+            'data' => new TenantProfileResource($tenant->refresh()),
+            'message' => 'Tenant profile updated',
+        ]);
+    }
+
+    public function updateCustomerProfile(UpdateCustomerProfileRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $customer = $user->thirdParty->customerProfile;
+
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'Customer profile not found'], 404);
+        }
+
+        DB::transaction(fn () => $customer->update($request->validated()));
+
+        return response()->json([
+            'success' => true,
+            'data' => new CustomerProfileResource($customer->refresh()),
+            'message' => 'Customer profile updated',
         ]);
     }
 }

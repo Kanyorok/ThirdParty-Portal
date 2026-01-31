@@ -36,11 +36,14 @@ class UserService
 {
     public const MODULE = 'USERS';
 
-    public function __construct(public User $user) {}
+    public function __construct(public User $user)
+    {
+    }
 
     public static function ceos(bool $query = false): Builder|Collection
     {
         $q = User::query()->hasPermission(PermissionEnum::Ceo->value)->lock('WITH(NOLOCK)');
+
         return ($query) ? $q : $q->get();
     }
 
@@ -59,6 +62,7 @@ class UserService
                     'DeletedBy' => null,
                 ])->save();
             }
+
             return new self($user);
         }
         $user = User::create([
@@ -96,29 +100,34 @@ class UserService
      */
     public static function dt(Builder|BelongsToMany $query, array $with = [], array $extra = []): JsonResponse
     {
-        if (!empty($with)) {
+        if (! empty($with)) {
             $query->with($with);
         }
+
         return Datatables::of($query->where('t_Users.UserID', '!=', SystemHelper::ID)->lock('WITH(NOLOCK)')->select('*'))
             ->addColumn('action', function (User $user) use ($extra) {
                 if (array_key_exists('action_team', $extra)) {
                     return '<button type="button"  data-action="' . route('team-users.destroy', [$extra['action_team'], $user->UserID]) . '" data-name="' . $user->Name . '" class="btn btn-danger btn-sm modal-trash-team-users"><i class="fas fa-trash"></i></button>';
                 }
+
                 return '
                     <a href="' . route('users.show', [$user->UserID]) . '" class="btn btn-info btn-sm me-1">
                         <i class="fas fa-eye"></i> Details
                     </a>';
             })->editColumn('pivot', function (User $user) use ($extra) {
-                if (!in_array('pivot_date', $extra, true)) {
+                if (! in_array('pivot_date', $extra, true)) {
                     return '';
                 }
+
                 try {
                     return Carbon::parse($user->pivot->CreatedOn)->format('M d, Y h:i A');
                 } catch (Exception) {
                 }
+
                 return $user->pivot->CreatedOn;
             })->editColumn('Name', function (User $user) {
                 $str = ($user->Linked) ? '(one account)' : '';
+
                 return $user->Name . $str;
             })->editColumn('photo', function (User $user) use ($with) {
                 return (in_array('photo', $with, true)) ?
@@ -151,7 +160,7 @@ class UserService
         if (is_null($branch)) {
             return false;
         }
-        if (!(new BranchService($branch))->isHQ()) {
+        if (! (new BranchService($branch))->isHQ()) {
             return false;
         }
 
@@ -161,6 +170,7 @@ class UserService
     public static function marketingManagers(bool $query = false): Builder|Collection
     {
         $q = User::query()->hasPermission(PermissionEnum::MarketingManager->value)->lock('WITH(NOLOCK)');
+
         return ($query) ? $q : $q->get();
     }
 
@@ -168,6 +178,7 @@ class UserService
     {
         // Assign system-level role using Spatie (optional if you're not using permission checks globally)
         $this->user->syncRolesWithBranch([$role->name], $branch->Id, $actor->Id);
+
         // Flush Spatie permission cache to ensure immediate effect
         try {
             app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
@@ -198,7 +209,7 @@ class UserService
 
         if ($pullImages) {
             $str = (new CBSService())->getClientImage($this->user->ClientID);
-            if (!empty($str)) {
+            if (! empty($str)) {
                 $this->user->setFromContent(base64_decode($str), SystemHelper::user(), ExtensionsEnum::Jpeg->getMimeType(), $this->user->ClientID . '.' . ExtensionsEnum::Jpeg->value, 'ImageId');
             }
         }
@@ -209,6 +220,7 @@ class UserService
     protected function brUser(): ?BRUser
     {
         $user = BRUser::where('OperatorID', $this->user->UserID)->first();
+
         return ($user instanceof BRUser) ? $user : null;
     }
 
@@ -246,13 +258,14 @@ class UserService
             }
         }
 
-        if (!is_null($email_change)) {
+        if (! is_null($email_change)) {
             $this->sendEmail(
                 'Email Changed in Crm',
                 '<div><p>Hello ' . $this->user->Name . ' </p><p>Your email has been changed from <b>' . $email_change . '</b> to <b>' . $this->user->Email . '</b> </p><p>if this was a mistake, contact support</p></div>',
                 [[$Name => $email_change]]
             );
         }
+
         return $this;
     }
 
@@ -281,6 +294,7 @@ class UserService
         $body .= '</div>';
 
         $this->sendEmail('New account created in ' . config('app.name'), $body, priorityEnum: EmailPriorityEnum::Important);
+
         return $this;
     }
 
@@ -297,6 +311,7 @@ class UserService
         if ($this->isManager()) {
             return $query;
         }
+
         return $query->where(function ($query) use ($ClientID) {
             $query->whereNotIn($ClientID, User::whereNotNull('ClientID')->where('ClientID', '!=', $this->user->ClientID)->select('t_Users.ClientID'))
                 ->whereNotIn($ClientID, Board::query()->select('t_BoardMembers.ClientID'));
@@ -315,6 +330,7 @@ class UserService
             '<p>You are receiving this email because we received a password reset request for your account.</p><a  href="' . $this->createResetURL() . '">Reset Password</a>
                     <p>This password reset link will expire in 60 minutes. <br> If you did not request a password reset, no further action is required.</p>'
         );
+
         return $this;
     }
 
@@ -336,6 +352,7 @@ class UserService
             });
         } catch (Throwable | ErroredException $e) {
             Log::error('Error delete user ' . $e->getMessage());
+
             throw new ErroredException();
         }
     }

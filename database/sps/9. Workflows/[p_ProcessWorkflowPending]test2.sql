@@ -1,0 +1,479 @@
+
+CREATE or ALTER   PROCEDURE [dbo].[p_ProcessWorkflowPending]
+    @Source NVARCHAR(255) = NULL,
+    @SourceID NVARCHAR(100) = NULL,
+    @StageID BIGINT = NULL,
+    @Amount DECIMAL(20,4) = NULL  -- OPTIONAL - Only for AMT workflows
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE
+        @Now DATETIME = GETDATE(),
+        @SystemUserId BIGINT,
+        @SubmittedStatusId BIGINT,
+        @ApprovedStatusId BIGINT,
+        @RejectedStatusId BIGINT,
+        @ProcessedCount INT = 0,
+        @ErrorCount INT = 0;
+
+    -- Get system user
+    SELECT TOP 1 @SystemUserId = Id
+    FROM t_Users WHERE UserID = 'ERPSYS' AND DeletedOn IS NULL;
+
+    IF @SystemUserId IS NULL
+    BEGIN
+        SELECT 'ERROR' AS Status, 'System user not found.' AS Message;
+        RETURN;
+    END
+
+    -- Get workflow status IDs
+    SELECT @SubmittedStatusId = id FROM t_codeDetails WHERE [Description] = 'Submitted for Approval';
+    SELECT @ApprovedStatusId  = id FROM t_codeDetails WHERE [Description] = 'Approved';
+    SELECT @RejectedStatusId  = id FROM t_codeDetails WHERE [Description] = 'Rejected';
+
+    -- ========================================
+    -- PROCESS SPECIFIC RECORD
+    -- ========================================
+    IF @Source IS NOT NULL AND @SourceID IS NOT NULL AND @StageID IS NOT NULL
+    BEGIN
+        PRINT '========================================';
+        PRINT '=== WORKFLOW PROCESSING ===';
+        PRINT '========================================';
+        PRINT 'Source Table: ' + @Source;
+        PRINT 'Source ID: ' + @SourceID;
+        PRINT 'Stage ID: ' + CAST(@StageID AS NVARCHAR(50));
+        PRINT 'Amount: ' + ISNULL(CAST(@Amount AS NVARCHAR(30)), 'NOT PROVIDED (non-AMT workflow)');
+        
+        DECLARE 
+            @PermissionId BIGINT, 
+            @WorkflowType NVARCHAR(50), 
+            @CountRequired INT, 
+            @MakerId BIGINT, 
+            @WorkFlowID BIGINT, 
+            @StageName NVARCHAR(255),
+            @EffectivePermissionId BIGINT,
+            @LimitType NVARCHAR(20) = 'DEFAULT',
+            @TierMaxAmount DECIMAL(20,4) = NULL;
+
+        -- Get stage details
+        SELECT 
+            @PermissionId = s.PermissionId,
+            @WorkflowType = wt.TypeId,
+            @CountRequired = ISNULL(s.[Count], 1),
+            @WorkFlowID = s.WorkFlowId,
+            @StageName = s.StageName
+        FROM t_WorkFlowStages s
+        LEFT JOIN t_WorkFlowTypes wt ON s.WorkFlowTypeId = wt.Id
+        WHERE s.Id = @StageID AND s.DeletedOn IS NULL;
+
+        IF @PermissionId IS NULL
+        BEGIN
+            SELECT 'ERROR' AS Status, 
+                   'Stage not found for StageID: ' + CAST(@StageID AS NVARCHAR(50)) AS Message;
+            RETURN;
+        END
+
+        PRINT 'Workflow Type: ' + ISNULL(@WorkflowType, 'NULL');
+        PRINT 'Stage Name: ' + ISNULL(@StageName, 'N/A');
+
+        -- Get submitter for maker-checker rule
+        SELECT TOP 1 @MakerId = CreatedBy
+        FROM t_WorkFlowHistory
+        WHERE Source = @Source AND SourceID = @SourceID AND DeletedOn IS NULL
+        ORDER BY CreatedOn ASC;
+
+        PRINT 'Maker ID: ' + ISNULL(CAST(@MakerId AS NVARCHAR(20)), 'N/A');
+
+        -- ========================================
+        -- TIER SELECTION LOGIC
+        -- ========================================
+        SET @EffectivePermissionId = @PermissionId; -- Default fallback
+
+        -- Only apply AMT logic if:
+        -- 1. Workflow type is AMT
+        -- 2. Amount is provided (not NULL)
+        -- 3. Amount is greater than 0
+        -- 4. Tiers are configured for this stage
+        IF @WorkflowType = 'AMT' AND @Amount IS NOT NULL AND @Amount > 0
+        BEGIN
+            -- Check if tiers exist for this stage
+            IF EXISTS (
+                SELECT 1 FROM t_WorkFlowLimits 
+                WHERE WorkFlowStageId = @StageID AND DeletedOn IS NULL
+            )
+            BEGIN
+                PRINT '';
+                PRINT '--- AMT WORKFLOW WITH TIERS DETECTED ---';
+                PRINT 'Selecting tier for amount: ' + CAST(@Amount AS NVARCHAR(30));
+                
+                -- Use the function to get the right permission tier
+                SELECT TOP 1 
+                    @EffectivePermissionId = PermissionId,
+                    @TierMaxAmount = MaxAmount,
+                    @LimitType = LimitType
+                FROM dbo.f_getPermissionForAmount(@StageID, @Amount);
+
+                IF @EffectivePermissionId IS NOT NULL
+                BEGIN
+                    DECLARE @PermName NVARCHAR(200);
+                    SELECT @PermName = name FROM t_Permissions WHERE id = @EffectivePermissionId;
+                    
+                    PRINT 'Tier Selection Result:';
+                    PRINT '  Permission ID: ' + CAST(@EffectivePermissionId AS NVARCHAR(20));
+                    PRINT '  Permission Name: ' + ISNULL(@PermName, 'Unknown');
+                    PRINT '  Tier Max Amount: ' + ISNULL(CAST(@TierMaxAmount AS NVARCHAR(30)), 'N/A');
+                    PRINT '  Selection Type: ' + @LimitType;
+                END
+                ELSE
+                BEGIN
+                    PRINT 'WARNING: No tier found, using stage default permission';
+                    SET @EffectivePermissionId = @PermissionId;
+                END
+            END
+            ELSE
+            BEGIN
+                PRINT '';
+                PRINT 'AMT workflow type but NO TIERS configured - using default stage permission';
+            END
+        END
+        ELSE
+        BEGIN
+            PRINT '';
+            IF @WorkflowType = 'AMT' AND @Amount IS NULL
+            BEGIN
+                PRINT 'AMT workflow but NO AMOUNT provided - using default stage permission';
+                PRINT 'NOTE: If this table should have amounts, update PHP to pass @Amount parameter';
+            END
+            ELSE IF @WorkflowType = 'AMT' AND @Amount = 0
+            BEGIN
+                PRINT 'AMT workflow but amount is ZERO - using default stage permission';
+            END
+            ELSE
+            BEGIN
+                PRINT 'Standard workflow (not AMT) - using default stage permission';
+            END
+        END
+
+        PRINT '';
+        PRINT 'Final Effective Permission ID: ' + CAST(@EffectivePermissionId AS NVARCHAR(20));
+
+        -- ========================================
+        -- GET ELIGIBLE USERS
+        -- ========================================
+        DECLARE @EligibleUsers TABLE (
+            Id BIGINT PRIMARY KEY, 
+            Name NVARCHAR(255), 
+            Email NVARCHAR(255)
+        );
+        
+        INSERT INTO @EligibleUsers (Id, Name, Email)
+        SELECT DISTINCT u.Id, u.Name, u.Email
+        FROM t_Users u
+        WHERE u.DeletedOn IS NULL
+          AND EXISTS (
+              SELECT 1 FROM dbo.f_getUserWithPermission(@EffectivePermissionId) perm 
+              WHERE perm.Id = u.Id
+          )
+          AND u.Id <> ISNULL(@MakerId, 0)  -- Maker-checker rule
+          AND NOT EXISTS (
+              -- Exclude users who already approved/rejected
+              SELECT 1 FROM dbo.t_WorkFlowHistory h
+              WHERE h.Source = @Source 
+                AND h.SourceID = @SourceID 
+                AND h.Stage = CAST(@StageID AS NVARCHAR(50))
+                AND h.CreatedBy = u.Id
+                AND h.StatusId IN (@ApprovedStatusId, @RejectedStatusId)
+                AND h.DeletedOn IS NULL
+          );
+
+        DECLARE @EligibleCount INT = (SELECT COUNT(*) FROM @EligibleUsers);
+        PRINT '';
+        PRINT 'Eligible Approvers Found: ' + CAST(@EligibleCount AS NVARCHAR(10));
+
+        IF @EligibleCount = 0
+        BEGIN
+            PRINT '';
+            PRINT '*** ERROR: NO ELIGIBLE APPROVERS FOUND ***';
+            PRINT 'Effective Permission ID: ' + CAST(@EffectivePermissionId AS NVARCHAR(50));
+            PRINT 'Amount: ' + ISNULL(CAST(@Amount AS NVARCHAR(30)), 'N/A');
+            PRINT 'Workflow Type: ' + ISNULL(@WorkflowType, 'NULL');
+            
+            SELECT 'ERROR' AS Status,
+                   'No eligible approvers found for Permission ID: ' + 
+                   CAST(@EffectivePermissionId AS NVARCHAR(50)) + 
+                   CASE 
+                       WHEN @Amount IS NOT NULL THEN ' (Amount: ' + CAST(@Amount AS NVARCHAR(30)) + ')'
+                       ELSE ' (no amount - standard workflow)'
+                   END AS Message;
+            RETURN;
+        END
+
+        -- Display eligible users
+        PRINT 'Eligible users:';
+        DECLARE @UserList NVARCHAR(MAX) = '';
+        SELECT @UserList = @UserList + '  - ' + Name + ' (ID: ' + CAST(Id AS NVARCHAR(20)) + ')' + CHAR(13) + CHAR(10)
+        FROM @EligibleUsers;
+        PRINT @UserList;
+
+        -- ========================================
+        -- CREATE PENDING APPROVALS
+        -- ========================================
+        -- Clean up existing pending for this stage
+        DELETE FROM dbo.t_WorkFlowPending
+        WHERE Source = @Source 
+          AND SourceID = @SourceID 
+          AND Stage = CAST(@StageID AS NVARCHAR(50));
+
+        -- Insert pending approvals for ALL eligible users
+        INSERT INTO t_WorkFlowPending (
+            Source, SourceID, Stage, UserId, 
+            CreatedBy, CreatedOn, ModifiedBy, ModifiedOn
+        )
+        SELECT 
+            @Source, 
+            @SourceID, 
+            CAST(@StageID AS NVARCHAR(50)), 
+            e.Id,
+            @SystemUserId, 
+            @Now, 
+            @SystemUserId, 
+            @Now
+        FROM @EligibleUsers e;
+
+        SET @ProcessedCount = @@ROWCOUNT;
+        PRINT '';
+        PRINT '✓ Created ' + CAST(@ProcessedCount AS NVARCHAR(10)) + ' pending approvals';
+
+        -- Mark history as processed
+        UPDATE t_WorkFlowHistory
+        SET isApproved = 0, ModifiedBy = @SystemUserId, ModifiedOn = @Now
+        WHERE Source = @Source 
+          AND SourceID = @SourceID 
+          AND Stage = CAST(@StageID AS NVARCHAR(50))
+          AND StatusId = @SubmittedStatusId
+          AND DeletedOn IS NULL
+          AND isApproved IS NULL;
+
+        -- ========================================
+        -- SEND NOTIFICATIONS
+        -- ========================================
+        DECLARE @NotifyUserId BIGINT, @NotifyEmail NVARCHAR(255), @NotifyName NVARCHAR(255);
+        DECLARE notify_cursor CURSOR LOCAL FAST_FORWARD FOR 
+            SELECT Id, Email, Name FROM @EligibleUsers;
+        
+        OPEN notify_cursor;
+        FETCH NEXT FROM notify_cursor INTO @NotifyUserId, @NotifyEmail, @NotifyName;
+        
+        WHILE @@FETCH_STATUS = 0
+        BEGIN
+            BEGIN TRY
+                DECLARE @NotificationMsg NVARCHAR(MAX) = 
+                    'You have been assigned to approve a workflow item.' + CHAR(13) + CHAR(10) + CHAR(13) + CHAR(10) +
+                    'Source: ' + @Source + CHAR(13) + CHAR(10) +
+                    'Record ID: ' + @SourceID + CHAR(13) + CHAR(10) +
+                    'Stage: ' + ISNULL(@StageName, CAST(@StageID AS NVARCHAR(50))) + CHAR(13) + CHAR(10);
+                
+                -- Add amount info ONLY if amount was provided
+                IF @Amount IS NOT NULL AND @Amount > 0
+                BEGIN
+                    SET @NotificationMsg = @NotificationMsg +
+                        'Amount: ' + CAST(@Amount AS NVARCHAR(30)) + CHAR(13) + CHAR(10);
+                    
+                    IF @WorkflowType = 'AMT' AND @PermName IS NOT NULL
+                    BEGIN
+                        SET @NotificationMsg = @NotificationMsg +
+                            'Your Approval Tier: ' + @PermName + CHAR(13) + CHAR(10);
+                    END
+                END
+                
+                SET @NotificationMsg = @NotificationMsg + CHAR(13) + CHAR(10) + 
+                    'Please review and take action on this approval request.';
+                
+                EXEC p_sendNotificationEmail 
+                    @UserID = @NotifyUserId, 
+                    @Subject = 'New Workflow Approval Required', 
+                    @Message = @NotificationMsg, 
+                    @SenderId = @SystemUserId, 
+                    @Source = @Source, 
+                    @SourceID = @SourceID;
+                
+                PRINT '  ✓ Notified: ' + @NotifyName;
+            END TRY
+            BEGIN CATCH
+                PRINT '  ✗ Failed to notify: ' + @NotifyName + ' - ' + ERROR_MESSAGE();
+            END CATCH
+            
+            FETCH NEXT FROM notify_cursor INTO @NotifyUserId, @NotifyEmail, @NotifyName;
+        END
+        
+        CLOSE notify_cursor;
+        DEALLOCATE notify_cursor;
+
+        PRINT '';
+        PRINT '========================================';
+        PRINT '=== PROCESSING COMPLETE ===';
+        PRINT '========================================';
+        
+        SELECT 
+            'SUCCESS' AS Status, 
+            @ProcessedCount AS InsertedPendingCount, 
+            @CountRequired AS ApprovalsRequired,
+            @EffectivePermissionId AS EffectivePermissionId,
+            @Amount AS Amount,
+            @LimitType AS LimitType,
+            ISNULL(@TierMaxAmount, 0) AS TierMaxAmount,
+            @WorkflowType AS WorkflowType,
+            0 AS Errors;
+        RETURN;
+    END
+
+    -- ========================================
+    -- BATCH PROCESSING (backward compatibility)
+    -- ========================================
+    PRINT '========================================';
+    PRINT 'BATCH PROCESSING MODE';
+    PRINT '========================================';
+    PRINT 'Note: Batch mode uses default stage permissions (no AMT tier logic)';
+    
+    IF OBJECT_ID('tempdb..#WorkSet') IS NOT NULL DROP TABLE #WorkSet;
+    CREATE TABLE #WorkSet (
+        HistoryId BIGINT, 
+        Source NVARCHAR(255), 
+        SourceID NVARCHAR(100),
+        StageId BIGINT, 
+        PermissionId BIGINT, 
+        WorkflowType NVARCHAR(20),
+        CountRequired INT, 
+        MakerId BIGINT, 
+        StageName NVARCHAR(255)
+    );
+
+    ;WITH LatestPending AS (
+        SELECT h.Id, h.Source, h.SourceID, h.Stage, h.CreatedBy,
+               ROW_NUMBER() OVER (PARTITION BY h.Source, h.SourceID ORDER BY h.CreatedOn DESC) as rn
+        FROM t_WorkFlowHistory h
+        WHERE h.DeletedOn IS NULL 
+          AND h.isApproved IS NULL 
+          AND h.StatusId = @SubmittedStatusId
+    )
+    INSERT INTO #WorkSet
+    SELECT lp.Id, lp.Source, lp.SourceID, CAST(lp.Stage AS BIGINT),
+           s.PermissionId, wt.TypeId, ISNULL(s.[Count], 1), lp.CreatedBy, s.StageName
+    FROM LatestPending lp
+    JOIN t_WorkFlowStages s ON s.Id = CAST(lp.Stage AS BIGINT) AND s.DeletedOn IS NULL
+    LEFT JOIN t_WorkFlowTypes wt ON s.WorkFlowTypeId = wt.Id
+    WHERE lp.rn = 1
+      AND NOT EXISTS (
+          SELECT 1 FROM t_WorkFlowPending p 
+          WHERE p.Source = lp.Source 
+            AND p.SourceID = lp.SourceID 
+            AND p.Stage = lp.Stage 
+            AND p.DeletedOn IS NULL
+      );
+
+    DECLARE @BatchCount INT = (SELECT COUNT(*) FROM #WorkSet);
+    PRINT 'Records to process: ' + CAST(@BatchCount AS NVARCHAR(10));
+
+    DECLARE @HistoryId BIGINT, @SourceLocal NVARCHAR(255), @SourceIDLocal NVARCHAR(100),
+            @StageIdLocal BIGINT, @PermIdLocal BIGINT, @WFType NVARCHAR(20), 
+            @CountReq INT, @MakerLocal BIGINT, @StageNameLocal NVARCHAR(255);
+
+    DECLARE ws_cursor CURSOR LOCAL FAST_FORWARD FOR
+        SELECT HistoryId, Source, SourceID, StageId, PermissionId, WorkflowType, CountRequired, MakerId, StageName 
+        FROM #WorkSet;
+
+    OPEN ws_cursor;
+    FETCH NEXT FROM ws_cursor INTO @HistoryId, @SourceLocal, @SourceIDLocal, @StageIdLocal, 
+                                     @PermIdLocal, @WFType, @CountReq, @MakerLocal, @StageNameLocal;
+
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        BEGIN TRY
+            DECLARE @EffPermBatch BIGINT;
+            SET @EffPermBatch = @PermIdLocal;
+
+            IF @PermIdLocal IS NULL
+            BEGIN
+                SET @ErrorCount += 1;
+                GOTO NextBatchRow;
+            END
+
+            -- For batch mode, always use default stage permission (no AMT logic)
+            -- Get eligible users
+            DECLARE @EligibleBatch TABLE (Id BIGINT PRIMARY KEY);
+            DELETE FROM @EligibleBatch;
+            
+            INSERT INTO @EligibleBatch (Id)
+            SELECT DISTINCT u.Id
+            FROM t_Users u
+            WHERE u.DeletedOn IS NULL
+              AND EXISTS (
+                  SELECT 1 FROM dbo.f_getUserWithPermission(@EffPermBatch) 
+                  WHERE Id = u.Id
+              )
+              AND u.Id <> ISNULL(@MakerLocal, 0)
+              AND NOT EXISTS (
+                  SELECT 1 FROM dbo.t_WorkFlowHistory h
+                  WHERE h.Source = @SourceLocal 
+                    AND h.SourceID = @SourceIDLocal 
+                    AND h.Stage = CAST(@StageIdLocal AS NVARCHAR(50))
+                    AND h.CreatedBy = u.Id
+                    AND h.StatusId IN (@ApprovedStatusId, @RejectedStatusId)
+                    AND h.DeletedOn IS NULL
+              );
+
+            DECLARE @EligBatchCnt INT = (SELECT COUNT(*) FROM @EligibleBatch);
+            
+            IF @EligBatchCnt = 0
+            BEGIN
+                SET @ErrorCount += 1;
+                GOTO NextBatchRow;
+            END
+
+            -- Clean and insert pending
+            DELETE FROM dbo.t_WorkFlowPending
+            WHERE Source = @SourceLocal 
+              AND SourceID = @SourceIDLocal 
+              AND Stage = CAST(@StageIdLocal AS NVARCHAR(50));
+
+            INSERT INTO t_WorkFlowPending (
+                Source, SourceID, Stage, UserId, 
+                CreatedBy, CreatedOn, ModifiedBy, ModifiedOn
+            )
+            SELECT 
+                @SourceLocal, 
+                @SourceIDLocal, 
+                CAST(@StageIdLocal AS NVARCHAR(50)), 
+                e.Id,
+                @SystemUserId, 
+                @Now, 
+                @SystemUserId, 
+                @Now
+            FROM @EligibleBatch e;
+
+            SET @ProcessedCount += @@ROWCOUNT;
+
+            IF @HistoryId IS NOT NULL
+                UPDATE t_WorkFlowHistory 
+                SET isApproved = 0, ModifiedBy = @SystemUserId, ModifiedOn = @Now 
+                WHERE Id = @HistoryId;
+
+        END TRY
+        BEGIN CATCH
+            SET @ErrorCount += 1;
+            PRINT 'Error: ' + @SourceLocal + ' ' + @SourceIDLocal + ' - ' + ERROR_MESSAGE();
+        END CATCH
+
+NextBatchRow:
+        FETCH NEXT FROM ws_cursor INTO @HistoryId, @SourceLocal, @SourceIDLocal, @StageIdLocal, 
+                                         @PermIdLocal, @WFType, @CountReq, @MakerLocal, @StageNameLocal;
+    END
+
+    CLOSE ws_cursor;
+    DEALLOCATE ws_cursor;
+    DROP TABLE IF EXISTS #WorkSet;
+
+    PRINT 'Batch complete: Processed=' + CAST(@ProcessedCount AS NVARCHAR(20)) + ', Errors=' + CAST(@ErrorCount AS NVARCHAR(20));
+    SELECT 'SUCCESS' AS Status, @ProcessedCount AS InsertedPendingCount, @ErrorCount AS Errors;
+END;

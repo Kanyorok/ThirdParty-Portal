@@ -20,7 +20,9 @@ use Illuminate\Support\Facades\Hash;
 
 abstract class ThirdPartiesService
 {
-    public function __construct(public ThirdParties $party) {}
+    public function __construct(public ThirdParties $party)
+    {
+    }
 
     abstract public static function getType(): ThirdPartyType;
 
@@ -34,13 +36,13 @@ abstract class ThirdPartiesService
         if ($partyTypes->isEmpty()) {
             throw new ErroredException('Invalid | no types provided');
         }
+
         return $partyTypes;
     }
 
     public function addUser(string $firstName, string $lastName, string $email, string $phone, CodeDetail $gender, User|ThirdPartyUser $actor, ?string $password = null, bool $sendVerification = true): static
     {
-        $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
-
+        // Use standard Laravel Hash for Laravel 11
         $user = ThirdPartyUser::create([
             'FirstName' => $firstName,
             'LastName' => $lastName,
@@ -48,10 +50,10 @@ abstract class ThirdPartiesService
             'Phone' => $phone,
             'Gender' => $gender->getAttribute('ID') ?? $gender->ID,
             'ThirdPartyId' => $this->party->Id,
-            'Password' => $password ? Hash::make($password) : 'NOT SET',
+            'Password' => $password ? Hash::make($password) : 'NON SET',
             'IsActive' => (bool)$password,
-            'CreatedBy' => $auditId,
-            'ModifiedBy' => $auditId,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
         ]);
 
         if ($password && $sendVerification) {
@@ -68,9 +70,9 @@ abstract class ThirdPartiesService
     }
 
     public static function create(
-        string  $name,
+        string $name,
         ?string $tradingName,
-        CodeDetail $businessType,
+        ?CodeDetail $businessType, // Changed to nullable to match Request logic
         string $registrationNumber,
         string $taxPIN,
         ?string $vatNumber,
@@ -89,7 +91,7 @@ abstract class ThirdPartiesService
         $party = ThirdParties::create([
             'ThirdPartyName' => $name,
             'TradingName' => $tradingName,
-            'BusinessType' => $businessType->getKey(),
+            'BusinessType' => $businessType?->getKey(), // Use null-safe operator
             'RegistrationNumber' => $registrationNumber,
             'TaxPIN' => $taxPIN,
             'VATNumber' => $vatNumber,
@@ -127,22 +129,25 @@ abstract class ThirdPartiesService
 
         if ($create) {
             $actor = SystemHelper::user();
+
             return CodeDetail::create([
                 'CodeID' => 'ThirdPartyStatus',
                 'Value' => $status->value,
                 'Description' => $status->label(),
                 'DisplayOrder' => CodeDetail::query()->where('CodeID', 'ThirdPartyStatus')->count() + 1,
                 'IsActive' => true,
-                'CreatedBy' => $actor->Id,
-                'ModifiedBy' => $actor->Id,
+                'CreatedBy' => $actor->Id ?? 1, // Fallback if no user
+                'ModifiedBy' => $actor->Id ?? 1,
             ]);
         }
+
         throw new ErroredException('Invalid Status, not set and could not create');
     }
 
     public function setLogo(\Illuminate\Http\UploadedFile $image, User|ThirdPartyUser $actor): self
     {
         $this->party->setImage($image, $actor, 'ImageId');
+
         return $this;
     }
 
@@ -171,15 +176,13 @@ abstract class ThirdPartiesService
 
     final protected function addType(ThirdPartyType $type, string $partyType, string|int $partyId, User|ThirdPartyUser $actor): static
     {
-        $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
-
         ThirdPartyTypeTypes::create([
             'TypeId' => $type->TypeId,
             'ThirdPartyId' => $this->party->Id,
             'PartyType' => $partyType,
             'PartyID' => $partyId,
-            'CreatedBy' => $auditId,
-            'ModifiedBy' => $auditId,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
         ]);
 
         return $this;

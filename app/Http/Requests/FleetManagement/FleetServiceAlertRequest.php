@@ -39,6 +39,4 @@ class FleetServiceAlertRequest extends FormRequest
             'DeletedOn' => 'nullable|date',
         ];
     }
-
-
 }

@@ -26,3 +26,11 @@ yarn-error.log
 /storage/debugbar/
 
 !/storage/fonts/
+
+# Test Routes
+/testroutes.php
+/SupplierRFQTestController.php'6666666
+# PHP Linting Tools Cache
+.php-cs-fixer.cache
+.phpcs-cache
+phpstan.neon.cache

@@ -2,13 +2,12 @@
 
 namespace App\Services\Workflow;
 
-use App\Enums\Procurement\DepartmentNeedsEnum;  
 use App\Exceptions\ErroredException;
 use App\Models\Auth\User;
-use App\Models\Procurement\DepartmentNeed;  
+use App\Models\Procurement\DepartmentNeed;
 use App\Services\Core\ApprovalWorkflowService;
-use Illuminate\Database\Eloquent\Collection;
 use BackedEnum;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 
 class ApprovalWorkflow extends ApprovalWorkflowService
@@ -18,8 +17,8 @@ class ApprovalWorkflow extends ApprovalWorkflowService
 
     /**
      * Constructor to configure the workflow for a specific module.
-     * 
-     * @param string $codeId The CodeID for the module 
+     *
+     * @param string $codeId The CodeID for the module
      * @param string $statusColumn The dynamic status column to be passed
      */
     public function __construct(string $codeId, string $statusColumn = 'Status')
@@ -30,7 +29,7 @@ class ApprovalWorkflow extends ApprovalWorkflowService
 
     /**
      * Submit a model for approval (generic version).
-     * 
+     *
      * @param mixed $model The model instance (e.g., DepartmentNeed, Tender).
      * @param User $actor The user submitting.
      * @param BackedEnum $pendingStatus The pending status enum value.
@@ -49,7 +48,7 @@ class ApprovalWorkflow extends ApprovalWorkflowService
             $result = $this->submittedAction(
                 $actor,
                 $status,
-                $model, // model instance 
+                $model, // model instance
                 $model::getPrimaryKey() ?? $model->getMorphClass(), // Source alias
                 $model->getKey(), // sourceID
                 $remarks
@@ -63,15 +62,16 @@ class ApprovalWorkflow extends ApprovalWorkflowService
                 'model_class' => get_class($model),
                 'model_id' => $model->getKey(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             throw $e;
         }
     }
 
     /**
-     * Approve a model 
-     * 
+     * Approve a model
+     *
      * @param mixed $model The model instance.
      * @param User $actor The user approving.
      * @param BackedEnum $approvedStatus The approved status enum value.
@@ -112,15 +112,16 @@ class ApprovalWorkflow extends ApprovalWorkflowService
                 'model_class' => get_class($model),
                 'model_id' => $model->getKey(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             throw $e;
         }
     }
 
     /**
      * Extract success value from either boolean or array result
-     * 
+     *
      * @param bool|array $result The result from approveAction/rejectAction
      * @return bool
      */
@@ -140,7 +141,7 @@ class ApprovalWorkflow extends ApprovalWorkflowService
 
     /**
      * Reject a model (generic version).
-     * 
+     *
      * @param mixed $model The model instance.
      * @param User $actor The user rejecting.
      * @param BackedEnum $rejectedStatus The rejected status enum value.
@@ -179,15 +180,16 @@ class ApprovalWorkflow extends ApprovalWorkflowService
                 'model_class' => get_class($model),
                 'model_id' => $model->getKey(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             throw $e;
         }
     }
 
     /**
      * Get workflow history for a module.
-     * 
+     *
      * @param string $morphAlias The morph alias for the model.
      * @param int $limit
      * @return Collection
@@ -200,7 +202,7 @@ class ApprovalWorkflow extends ApprovalWorkflowService
 
     /**
      * Get workflow history for a specific model instance.
-     * 
+     *
      * @param mixed $model The model instance (must have a workflowHistory() relationship).
      * @return Collection
      */
@@ -216,7 +218,7 @@ class ApprovalWorkflow extends ApprovalWorkflowService
 
     /**
      * Check if a user can approve a specific model.
-     * 
+     *
      * @param mixed $model The model instance.
      * @param User $user The user to check.
      * @return bool
@@ -224,8 +226,10 @@ class ApprovalWorkflow extends ApprovalWorkflowService
     public function canApproveModel($model, User $user): bool
     {
         try {
+            $source = method_exists($model, 'getMorphClass') ? $model->getMorphClass() : get_class($model);
+
             $canApprove = parent::canApprove(
-                get_class($model),
+                $source,
                 $model->getKey(),
                 $user
             );
@@ -238,8 +242,9 @@ class ApprovalWorkflow extends ApprovalWorkflowService
                 'model_class' => get_class($model),
                 'model_id' => $model->getKey(),
                 'user_id' => $user->Id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -250,15 +255,14 @@ class ApprovalWorkflow extends ApprovalWorkflowService
     public function cancel($model, User $actor, string $reason = 'Cancelled'): bool
     {
         try {
-
-
             return $this->cancelWorkflow($actor, $model::getPrimaryKey(), $model->getKey(), $reason);
         } catch (\Exception $e) {
             Log::error("Failed to cancel workflow", [
                 'model_class' => get_class($model),
                 'model_id' => $model->getKey(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }

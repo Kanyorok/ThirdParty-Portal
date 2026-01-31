@@ -13,7 +13,7 @@ class ComplianceFilingTemplate extends Model
     protected $fillable = [
         'Name', 'FilingTypeID', 'RegulatorID', 'FormatID',
         'Frequency', 'DueDay', 'PortalURL', 'Description', 'IsActive',
-        'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn'
+        'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn',
     ];
 
     public function regulator()

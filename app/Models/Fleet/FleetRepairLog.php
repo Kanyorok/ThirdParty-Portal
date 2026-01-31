@@ -2,25 +2,20 @@
 
 namespace App\Models\Fleet;
 
-use Illuminate\Database\Eloquent\Model;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\FleetMaintenanceSchedule;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\SupplierMaster;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FleetRepairLog extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_FleetRepairLogs';
     protected $primaryKey = 'Id';
@@ -41,9 +36,7 @@ class FleetRepairLog extends Model
     public static function getPrimaryKey(): string
     {
         return 'RepairId';
-
     }
-
 
     public function vehicle()
     {

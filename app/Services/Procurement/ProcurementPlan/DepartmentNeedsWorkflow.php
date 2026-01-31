@@ -16,7 +16,7 @@ class DepartmentNeedsWorkflow extends ApprovalWorkflowService
 
     /**
      * Submit a Department Need for approval
-     * 
+     *
      * @param DepartmentNeed $need
      * @param User $actor
      * @param string $remarks
@@ -27,21 +27,21 @@ class DepartmentNeedsWorkflow extends ApprovalWorkflowService
     {
         // On submit, DepartmentNeeds use Pending status code
         $status = self::codeDetail(DepartmentNeedsEnum::Pending, self::CODE_ID);
-        
+
         // Use the morph map alias for consistency across the system
         return $this->submittedAction(
-            $actor, 
-            $status, 
+            $actor,
+            $status,
             $need,
             DepartmentNeed::getPrimaryKey(), // Use the morph map alias
-            $need->getKey(), 
+            $need->getKey(),
             $remarks
         );
     }
 
     /**
      * Approve a Department Need
-     * 
+     *
      * @param DepartmentNeed $need
      * @param User $actor
      * @param string $remarks
@@ -52,21 +52,21 @@ class DepartmentNeedsWorkflow extends ApprovalWorkflowService
     public function approve(DepartmentNeed $need, User $actor, string $remarks = 'Approved', string $statusColumn = 'Status'): bool
     {
         $status = self::codeDetail(DepartmentNeedsEnum::Approved, self::CODE_ID);
-        
+
         // Use the morph map alias instead of table name
         return $this->approveAction(
-            $actor, 
-            $status, 
+            $actor,
+            $status,
             DepartmentNeed::getPrimaryKey(), // Consistent with submit()
-            $need->getKey(), 
-            $remarks, 
+            $need->getKey(),
+            $remarks,
             $statusColumn
         );
     }
 
     /**
      * Reject a Department Need
-     * 
+     *
      * @param DepartmentNeed $need
      * @param User $actor
      * @param string $remarks
@@ -77,21 +77,21 @@ class DepartmentNeedsWorkflow extends ApprovalWorkflowService
     public function reject(DepartmentNeed $need, User $actor, string $remarks = 'Rejected', string $statusColumn = 'Status'): bool
     {
         $status = self::codeDetail(DepartmentNeedsEnum::Rejected, self::CODE_ID);
-        
+
         // Use the morph map alias instead of table name
         return $this->rejectAction(
-            $actor, 
-            $status, 
+            $actor,
+            $status,
             DepartmentNeed::getPrimaryKey(), // Consistent with submit()
-            $need->getKey(), 
-            $remarks, 
+            $need->getKey(),
+            $remarks,
             $statusColumn
         );
     }
 
     /**
      * Get workflow history for Department Needs
-     * 
+     *
      * @param int $limit
      * @return Collection
      * @throws ErroredException
@@ -103,7 +103,7 @@ class DepartmentNeedsWorkflow extends ApprovalWorkflowService
 
     /**
      * Get workflow history for a specific Department Need
-     * 
+     *
      * @param DepartmentNeed $need
      * @return Collection
      */
@@ -116,18 +116,17 @@ class DepartmentNeedsWorkflow extends ApprovalWorkflowService
 
     /**
      * Check if a user can approve a specific Department Need (public wrapper for maker-checker)
-     * 
+     *
      * @param DepartmentNeed $need
      * @param User $user
      * @return bool
      */
     public function canApproveNeed(DepartmentNeed $need, User $user): bool
     {
-               return parent::canApprove(
+        return parent::canApprove(
             DepartmentNeed::getPrimaryKey(), // Morph alias (e.g., 'department_needs')
-            $need->getKey(), 
+            $need->getKey(),
             $user
         );
-
     }
 }

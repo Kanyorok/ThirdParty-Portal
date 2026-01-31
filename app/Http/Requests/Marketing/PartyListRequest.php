@@ -17,7 +17,7 @@ class PartyListRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'MarketingList'   => [
+                'MarketingList' => [
                                       'nullable',
                                       'array',
                                      ],

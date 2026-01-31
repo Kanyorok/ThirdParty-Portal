@@ -3,9 +3,8 @@
 namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Auth\User;
-use Illuminate\Auth\Access\Response;
+use App\Models\Inventory\UnitOfMeasure;
 
 class UnitOfMeasurePolicy
 {
@@ -56,5 +55,4 @@ class UnitOfMeasurePolicy
     {
         return $user->can(PermissionEnum::UOMRestore->value);
     }
-
 }

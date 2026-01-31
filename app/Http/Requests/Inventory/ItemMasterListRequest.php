@@ -33,7 +33,7 @@ class ItemMasterListRequest extends FormRequest
         ];
 
         // If no item ID present => Creating mode
-        if (!$itemId) {
+        if (! $itemId) {
             $rules['BarCode'] = [
                 'nullable',
                 'regex:/^[A-Za-z0-9]+$/',
@@ -47,8 +47,7 @@ class ItemMasterListRequest extends FormRequest
                 'max:255',
                 Rule::unique('t_Items', 'ItemName')->whereNull('DeletedOn'), // <- exclude soft-deleted
             ];
-        }
-        else {
+        } else {
             // Update mode (ignore the current record)
             $rules['BarCode'] = [
                 'nullable',

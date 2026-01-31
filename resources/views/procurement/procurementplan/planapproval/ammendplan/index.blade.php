@@ -95,11 +95,11 @@
                                     >
                             </td>
             <td>
-                <input type="number" class="form-control form-control-sm" name="unitCost_{{ $item->LineItemID }}"
-                       value="{{ $item->EstimatedUnitCost }}" min="0" step="0.01">
+                <input type="number" class="form-control form-control-sm bg-light" name="unitCost_{{ $item->LineItemID }}"
+                       value="{{ $item->EstimatedUnitCost }}" min="0" step="0.01" readonly>
             </td>
             <td>
-                <span class="text-muted">{{ number_format($item->MergedQty * $item->EstimatedUnitCost) }}</span>
+                <span class="text-muted">{{ number_format($item->MergedQty * $item->EstimatedUnitCost, 2) }}</span>
             </td>
               <td class="d-none">
                 <textarea name="remarks_{{ $item->LineItemID }}" class="form-control form-control-sm"

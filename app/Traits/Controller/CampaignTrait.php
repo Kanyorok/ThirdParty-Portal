@@ -16,7 +16,7 @@ trait CampaignTrait
 {
     public function getCampaigns(Builder $query, User $actor, array $with = [], MarketingList $list = null): JsonResponse
     {
-        if (!empty($with)) {
+        if (! empty($with)) {
             $query->with($with);
         }
         $status = collect([CampaignStatusEnum::Sent, CampaignStatusEnum::Sending, CampaignStatusEnum::Failed]);
@@ -34,10 +34,12 @@ trait CampaignTrait
                     ->where('t_Campaigns.Status', CampaignStatusEnum::Draft);
             });
         });
+
         try {
             return Datatables::of($query->lock('WITH(NOLOCK)')->select('*')->withCount('contacts'))->addIndexColumn()
                 ->addColumn('action', function (Campaign $campaign) use ($list) {
                     $route = ($list instanceof MarketingList) ? route('loans-campaigns.show', [$list->MarketingListID, $campaign->CampaignID]) : route('campaigns.show', [$campaign->CampaignID]);
+
                     return '<a href="' . $route . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</button>';
                 })->editColumn('Status', function (Campaign $campaign) {
                     return $campaign->Status->name;
@@ -49,7 +51,7 @@ trait CampaignTrait
                     return Str::limit($campaign->Notes);
                 })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
                                                                                                        'dbl_click_url' => function (Campaign $campaign) use ($list) {
-                                                                                                        return ($list instanceof MarketingList) ? route('loans-campaigns.show', [$list->MarketingListID, $campaign->CampaignID]) : route('campaigns.show', [$campaign->CampaignID]);
+                                                                                                           return ($list instanceof MarketingList) ? route('loans-campaigns.show', [$list->MarketingListID, $campaign->CampaignID]) : route('campaigns.show', [$campaign->CampaignID]);
                                                                                                        },
                                                                                                       ])->rawColumns(['action'])->make();
         } catch (\Exception $e) {

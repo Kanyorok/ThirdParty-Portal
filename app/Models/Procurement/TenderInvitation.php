@@ -4,19 +4,21 @@ namespace App\Models\Procurement;
 
 use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class TenderInvitation extends Model
+class TenderInvitation extends Pivot
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_TenderInvitations';
     protected $primaryKey = 'InvitationID';
+    public $incrementing = true;
 
     public static function getPrimaryKey(): string
     {
@@ -60,6 +62,4 @@ class TenderInvitation extends Model
     {
         return $this->belongsTo(Supplier::class, 'SupplierId', 'Id');
     }
-
-
 }

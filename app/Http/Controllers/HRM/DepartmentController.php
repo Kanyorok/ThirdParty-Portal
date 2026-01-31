@@ -24,7 +24,6 @@ class DepartmentController extends Controller
         $this->authorizeResource(Department::class);
     }
 
-
     /**
      * Display a listing of the resource.
      */
@@ -44,6 +43,7 @@ class DepartmentController extends Controller
                     })->rawColumns(['action',])->make();
             } catch (Exception $e) {
             }
+
             return $this->errored('cannot retrieve department list.');
         }
 
@@ -58,16 +58,18 @@ class DepartmentController extends Controller
         try {
             return DB::transaction(function () use ($request) {
                 $dpt = DepartmentService::create(
-                    name: $request->string('Name')->trim()->toString(), actor: $request->user(),
+                    name: $request->string('Name')->trim()->toString(),
+                    actor: $request->user(),
                     description: $request->string('Description')->trim()->toString()
                 )->department;
 
                 return $this->succeeded($dpt->DepartmentID . ' created successfully.');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error("--- CREATE DEPARTMENT ERROR --- " . $e->getMessage());
             Log::error($e);
         }
+
         return $this->errored('create department failed.');
     }
 
@@ -104,10 +106,11 @@ class DepartmentController extends Controller
 
                 return $this->succeeded($department->DepartmentID . ' updated successfully.');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error("--- UPDATE   DEPARTMENT ERROR --- " . $e->getMessage());
             Log::error($e);
         }
+
         return $this->errored('update department failed.');
     }
 
@@ -124,12 +127,14 @@ class DepartmentController extends Controller
                 ])->save();
 
                 activity()->causedBy($request->user())->performedOn($department)->event('delete')->log('deleted department ' . $department->DepartmentID);
+
                 return $this->succeeded($department->DepartmentID . ' deleted successfully.');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error("--- DELETE   DEPARTMENT ERROR --- " . $e->getMessage());
             Log::error($e);
         }
+
         return $this->errored('update department failed.');
     }
 }

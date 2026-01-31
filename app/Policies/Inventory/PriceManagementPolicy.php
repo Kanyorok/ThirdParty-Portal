@@ -2,14 +2,12 @@
 
 namespace App\Policies\Inventory;
 
-use App\Models\Auth\User;
 use App\Enums\Core\PermissionEnum;
+use App\Models\Auth\User;
 use App\Models\Inventory\PriceManagement;
-use Illuminate\Auth\Access\Response;
 
 class PriceManagementPolicy
 {
-
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::PriceManagementView->value);
@@ -54,8 +52,4 @@ class PriceManagementPolicy
     {
         return $user->can(PermissionEnum::PriceManagementRestore->value);
     }
-
 }
-
-
-

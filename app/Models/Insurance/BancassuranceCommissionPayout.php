@@ -2,34 +2,37 @@
 
 namespace App\Models\Insurance;
 
-use App\Enums\Insurance\InsurancePolicyStatus;
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Currency;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Core\Approval\CodeDetail;
-use App\Traits\Model\UserActorTrait;
 
 class BancassuranceCommissionPayout extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    //
+
     protected $table = 't_BancassuranceCommissionPayouts';
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
         'PolicyId',
         'PayoutReference',
         'PaidAmount',
+        'CurrencyId',
+        'CommissionRuleId',
         'PaymentDate',
         'PaymentMode',
         'Remarks',
-        'PaidBy',
+        'PaidTo',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
@@ -47,4 +50,8 @@ class BancassuranceCommissionPayout extends Model
         return $this->belongsTo(CodeDetail::class, 'PaymentMode', 'ID');
     }
 
+    public function currencies()
+    {
+        return $this->belongsTo(Currency::class, 'CurrencyId', 'Id');
+    }
 }

@@ -3,19 +3,27 @@
 use App\Http\Controllers\Finance\AgingReportARController;
 use App\Http\Controllers\Finance\AgingReportController;
 use App\Http\Controllers\Finance\BalanceSheetController;
+use App\Http\Controllers\Finance\BankAccountSetupController;
+use App\Http\Controllers\Finance\BankBranchController;
+use App\Http\Controllers\Finance\BankController;
 use App\Http\Controllers\Finance\BankReconciliationController;
+use App\Http\Controllers\Finance\BankTransactionController;
+use App\Http\Controllers\Finance\BankTransferController;
+use App\Http\Controllers\Finance\CashBookController;
 use App\Http\Controllers\Finance\CashFlowStatementController;
 use App\Http\Controllers\Finance\CashManagementController;
 use App\Http\Controllers\Finance\ChartOfAccountsController;
+use App\Http\Controllers\Finance\ChequeBookController;
+use App\Http\Controllers\Finance\ChequeController;
 use App\Http\Controllers\Finance\ChequeManagementController;
 use App\Http\Controllers\Finance\COASegmentController;
 use App\Http\Controllers\Finance\ConsolidationReportsController;
-use App\Http\Controllers\Finance\CreditManagementController;
 use App\Http\Controllers\Finance\CreditAdjustmentController;
+use App\Http\Controllers\Finance\CreditManagementController;
 use App\Http\Controllers\Finance\CreditNoteController;
-use App\Http\Controllers\Finance\DebitNoteController;
 use App\Http\Controllers\Finance\CustomerMasterController;
 use App\Http\Controllers\Finance\CustomerStatementController;
+use App\Http\Controllers\Finance\DebitNoteController;
 use App\Http\Controllers\Finance\FinanceTaxTypeController;
 use App\Http\Controllers\Finance\GLDynamicController;
 use App\Http\Controllers\Finance\GLMappingController;
@@ -33,11 +41,14 @@ use App\Http\Controllers\Finance\PaymentAndReceiptsController;
 use App\Http\Controllers\Finance\PaymentProcessingController;
 use App\Http\Controllers\Finance\PaymentVoucherController;
 use App\Http\Controllers\Finance\PeriodManagementController;
+use App\Http\Controllers\Finance\PettyCashController;
+use App\Http\Controllers\Finance\PettyCashFloatController;
 use App\Http\Controllers\Finance\POInvoiceSyncController;
 use App\Http\Controllers\Finance\ReceiptsPostingController;
 use App\Http\Controllers\Finance\ReconDashboardController;
 use App\Http\Controllers\Finance\ReconUploadController;
 use App\Http\Controllers\Finance\RecurrentJournalController;
+use App\Http\Controllers\Finance\ReportsController;
 use App\Http\Controllers\Finance\ReversingJournalController;
 use App\Http\Controllers\Finance\SalaryJournalTemplateController;
 use App\Http\Controllers\Finance\TaxEfillingController;
@@ -48,33 +59,13 @@ use App\Http\Controllers\Finance\TaxRuleController;
 use App\Http\Controllers\Finance\TaxSummaryReportController;
 use App\Http\Controllers\Finance\TransactionTypesController;
 use App\Http\Controllers\Finance\TrialBalanceController;
-use App\Http\Controllers\Finance\ReportsController;
 use App\Http\Controllers\Finance\VendorMasterController;
-
-
-use App\Http\Controllers\Finance\BankController;
-use App\Http\Controllers\Finance\BankBranchController;
-use App\Http\Controllers\Finance\BankAccountSetupController;
-use App\Http\Controllers\Finance\CashBookController;
-use App\Http\Controllers\Finance\BankTransferController;
-use App\Http\Controllers\Finance\BankTransactionController;
-use App\Http\Controllers\Finance\ChequeBookController;
-use App\Http\Controllers\Finance\ChequeController;
-use App\Http\Controllers\Finance\PettyCashFloatController;
-use App\Http\Controllers\Finance\PettyCashController;
-
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Support\Facades\Route;
 
 // Newly added
 
 Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
-
-    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('finance-reports.export');
-    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
-        'index' => 'finance-reports.index',
-        'show' => 'finance-reports.show'
-    ]);
-
     Route::resource('journalbatch', JournalBatchController::class);
     Route::resource('ledgeraccounts', LedgerAccountsController::class);
     Route::resource('transactiontypes', TransactionTypesController::class);
@@ -82,7 +73,6 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     Route::resource('periodmanagement', PeriodManagementController::class);
     Route::resource('vendormaster', VendorMasterController::class);
     // Original invoice entry (kept for compatibility)
-    // Route::resource('invoiceentry', InvoiceEntryController::class);
 
     // New simplified invoice entry approach
     Route::resource('invoiceentry', InvoiceEntryV2Controller::class)->names([
@@ -113,12 +103,12 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     Route::get('creditadjustment/create/{id}', [CreditAdjustmentController::class, 'createWithId'])->name('creditadjustment.createWithId');
     Route::post('creditadjustment/{id}/approve', [CreditAdjustmentController::class, 'approve'])->name('creditadjustment.approve');
 
-// Invoice generation with credit integration
+    // Invoice generation with credit integration
     Route::resource('invoicegeneration', InvoiceGenerationController::class);
     Route::post('invoicegeneration/check-credit', [InvoiceGenerationController::class, 'checkCredit'])->name('invoicegeneration.check-credit');
     Route::post('invoicegeneration/{id}/apply-credit', [InvoiceGenerationController::class, 'applyCredit'])->name('invoicegeneration.apply-credit');
 
-// Debug route to check credit utilization
+    // Debug route to check credit utilization
     Route::get('debug/credit-utilization/{creditId}', function ($creditId) {
         $credit = \App\Models\Finance\FinanceCreditManagement::with('customer')->findOrFail($creditId);
 
@@ -149,11 +139,11 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
                 'total_invoices_by_name' => $invoicesByName->count(),
                 'draft_with_credit_by_id' => $allInvoices->where('ApprovalStatus', 'draft')->where('UseCredit', true)->count(),
                 'draft_with_credit_by_name' => $invoicesByName->where('ApprovalStatus', 'draft')->where('UseCredit', true)->count(),
-            ]
+            ],
         ], 200, [], JSON_PRETTY_PRINT);
     });
 
-// Debug route to check invoices with credit applied
+    // Debug route to check invoices with credit applied
     Route::get('debug/invoices-with-credit', function () {
         $invoicesWithCredit = \App\Models\Finance\FinanceInvoice::with('customer')
             ->where('UseCredit', true)
@@ -162,19 +152,19 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
         return response()->json([
             'total_invoices_with_credit' => $invoicesWithCredit->count(),
             'total_amount' => $invoicesWithCredit->sum('TotalAmount'),
-            'invoices' => $invoicesWithCredit->toArray()
+            'invoices' => $invoicesWithCredit->toArray(),
         ], 200, [], JSON_PRETTY_PRINT);
     });
 
 
     Route::get('agingreportar/customers/search', [AgingReportARController::class, 'customerLookup'])->name('agingreportar.customers.lookup');
     Route::resource('agingreportar', AgingReportARController::class);
-    
+
     // Customer Statement Select2 API and custom routes
     Route::get('api/thirdparties/select2', [CustomerStatementController::class, 'select2ThirdParties'])->name('thirdparties.select2');
     Route::get('customerstatement/{thirdPartyId}', [CustomerStatementController::class, 'statement'])->name('customerstatement.statement');
     Route::resource('customerstatement', CustomerStatementController::class)->only(['index']);
-    
+
     Route::resource('paymentvoucher', PaymentVoucherController::class);
     Route::resource('cashmanagement', CashManagementController::class);
     Route::resource('chequemanagement', ChequeManagementController::class);
@@ -256,27 +246,19 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     Route::post('/glAccountTypeSegmentValue/save', [COASegmentController::class, 'saveGLAccountTypeSegment'])->name('glAccountTypeSegmentValue.save');
     Route::post('/glSubAccountTypeSegmentValue/save', [COASegmentController::class, 'saveSubGLAccountTypeSegment'])->name('glSubAccountTypeSegmentValue.save');
 
-    // Route for getting Order
     Route::get('/finance/pos/{selectedVendor}', [InvoiceEntryController::class, 'getOrders'])->name('finance.orders');
-    // Route for getting GRNS
     Route::get('/finance/grns/{selectedPO}', [InvoiceEntryController::class, 'getGRNs'])->name('finance.grns');
-    // Route for viewingPOModal
     Route::get('/finance/viewpo/{selectedPO}', [InvoiceEntryController::class, 'viewPOModal'])->name('finance.viewPOModal');
     Route::get('/finance/viewgrn/{grnId}', [InvoiceEntryController::class, 'viewGRNModal'])->name('finance.viewGRNModal');
-    // Route for sAVING INVOICE
     Route::post('/finance/invoice/save', [InvoiceEntryController::class, 'saveInvoice'])->name('invoiceentry.save');
-    //Route for gettng suppliers from invoices
     Route::get('/finance/supplier/{selectedInvoice}', [PaymentVoucherController::class, 'getSuppliers'])->name('finance.getSuppliers');
-    //Route for getting Transaction Types
     Route::get('/finance/transactions/{selectedModule}', [GLMappingController::class, 'fetchTransactionTypes'])->name('glpostingmap.fetchTransactionTypes');
-    //Route for getting GLAccounts
     Route::get('/glaccounts/list', [GLMappingController::class, 'list'])->name('glpostingmap.list');
 
     Route::post('/paymentvoucher/{id}/approve', [PaymentVoucherController::class, 'approve'])->name('paymentvoucher.approve');
     Route::post('/paymentvoucher/{id}/reject', [PaymentVoucherController::class, 'reject'])->name('paymentvoucher.reject');
 
     //Approval Routes For simulations
-    //Route::patch('/journalentry/{id}/action', [FinanceJournalEntryController::class, 'action'])->name('journalentry.action');
 
     //////// Posting Routes ///////////
     Route::post('/journalApproval/{id}', [\App\Http\Controllers\Finance\PostingController::class, 'journalApproval'])->name('journalApproval');
@@ -292,11 +274,10 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     Route::post('/finance/ar/invoices/{id}/reject', [InvoiceGenerationController::class, 'reject'])->name('ar.invoice.reject');
 
 
-    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('finance-reports.export');
-    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
-        'index' => 'finance-reports.index',
-        'show' => 'finance-reports.show'
-    ]);
+    Route::withoutMiddleware(TrimStrings::class)->name('finance-')->group(function () {
+        Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('reports.export');
+        Route::resource('reports', ReportsController::class)->only(['index', 'show']);
+    });
 });
 
 // Receipts Posting routes
@@ -353,6 +334,8 @@ Route::prefix('finance')->middleware(['auth','module:1100000'])->group(function 
     Route::get('cashbook/create/payment', [CashBookController::class, 'createPayment'])->name('cashbook.create.payment');
     Route::post('cashbook/{id}/post', [CashBookController::class, 'post'])->name('cashbook.post');
     Route::post('cashbook/{id}/void', [CashBookController::class, 'void'])->name('cashbook.void');
+    Route::get('cashbook/party/vendors', [CashBookController::class, 'partyVendors'])->name('cashbook.party.vendors');
+    Route::get('cashbook/party/tenants', [CashBookController::class, 'partyTenants'])->name('cashbook.party.tenants');
 
     // NEW: mapping preview for auto-GL
     Route::get('cashbook/txntype/{id}/mapping', [CashBookController::class, 'txnTypeMapping'])
@@ -396,7 +379,7 @@ Route::prefix('finance')->name('finance.')->middleware('auth')->group(function (
     // Helper to compute next start/end based on last book for a bank account
     Route::get('chequebooks/next-range/{bankAccountId}', [ChequeBookController::class, 'nextRange'])
         ->name('chequebooks.next-range');
-    
+
     // Get available leaves for a cheque book
     Route::get('chequebooks/{id}/leaves', [ChequeBookController::class, 'getAvailableLeaves'])
         ->name('chequebooks.leaves');
@@ -437,10 +420,13 @@ Route::prefix('finance')->name('finance.')->middleware('auth')->group(function (
     // Optional: spoil a specific unused leaf (mark as not usable)
     Route::post('chequebooks/{book}/leaves/{leaf}/spoil', function ($book, $leaf) {
         $l = \App\Models\Finance\ChequeLeaf::where('ChequeBookID', $book)->findOrFail($leaf);
-        if ($l->Status !== 'Unused') return back()->with('error', 'Only Unused leaves can be spoiled.');
+        if ($l->Status !== 'Unused') {
+            return back()->with('error', 'Only Unused leaves can be spoiled.');
+        }
         $l->Status = 'Spoiled';
         $l->Notes = 'Manually spoiled';
         $l->save();
+
         return back()->with('success', 'Leaf spoiled.');
     })->name('chequebooks.leaves.spoil');
 });

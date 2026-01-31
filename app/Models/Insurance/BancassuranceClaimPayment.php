@@ -9,18 +9,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BancassuranceClaimPayment extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $table = 't_BancassuranceClaimPayments';
     protected $primaryKey = 'Id';
 
 
     protected $fillable = [
         'ClaimId', 'PaymentDate', 'PaymentAmount', 'PaymentReference', 'Note',
-        'PaidBy', 'PaymentMethod', 'CreatedBy', 'ModifiedBy', 'DeletedBy'
+        'PaidTo', 'PaymentMethod', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string

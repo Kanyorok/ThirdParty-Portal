@@ -19,7 +19,9 @@ use stdClass;
 
 class iTrackService
 {
-    private string $_baseUrl, $_password, $_username;
+    private string $_baseUrl;
+    private string $_password;
+    private string $_username;
 
     /**
      * @throws ErroredException
@@ -27,16 +29,16 @@ class iTrackService
     public function __construct()
     {
         $iTrack = APICredential::query()->where('Integration', IntegrationsEnum::iTrack->value)->latest('Id')->first();
-        if (!$iTrack instanceof APICredential) {
+        if (! $iTrack instanceof APICredential) {
             throw new ErroredException('there are no iTrack configuration.');
         }
 
         $config = $iTrack?->Configuration;
-        if (!$config instanceof stdClass) {
+        if (! $config instanceof stdClass) {
             throw new ErroredException('invalid iTrack configuration.');
         }
 
-        if (!property_exists($config, 'password') || !property_exists($config, 'username') || !property_exists($config, 'host')) {
+        if (! property_exists($config, 'password') || ! property_exists($config, 'username') || ! property_exists($config, 'host')) {
             throw new ErroredException('invalid iTrack configuration.');
         }
 
@@ -73,12 +75,13 @@ class iTrackService
                 'query' => [
                     'time' => $timestamp,
                     'account' => $username,
-                    'signature' => $signature
-                ]
+                    'signature' => $signature,
+                ],
             ]);
             $data = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
         } catch (GuzzleException $e) {
             Log::error('iTrack Get Token failed !' . $e->getMessage());
+
             throw new ErroredException('Get Token failed !');
         } catch (JsonException $e) {
             throw new ErroredException('Decode token json failed !');
@@ -88,6 +91,7 @@ class iTrackService
             return $data['record']['access_token'];
         }
         Log::error('iTrack Get Token failed !' . implode(',', $data));
+
         throw new ErroredException('Get Token failed !');
     }
 
@@ -95,9 +99,11 @@ class iTrackService
     {
         try {
             $this->findTrack($imei);
+
             return true;
         } catch (ErroredException) {
         }
+
         return false;
     }
 
@@ -119,12 +125,13 @@ class iTrackService
         $client = new Client([
             'base_uri' => $this->_baseUrl,
         ]);
+
         try {
             $response = $client->get('/api/track', [
                 'query' => [
                     'access_token' => $token,
-                    'imeis' => implode(',', $imeis)
-                ]
+                    'imeis' => implode(',', $imeis),
+                ],
             ]);
             $data = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
             /*[
@@ -136,9 +143,11 @@ class iTrackService
             ]*/
         } catch (GuzzleException $e) {
             \Log::error('iTrack Track api failed ! ' . $e->getMessage());
+
             throw new ErroredException('Track api failed !');
         } catch (JsonException $e) {
             \Log::error('iTrack Decode track json failed ! ' . $e->getMessage());
+
             throw new ErroredException('Decode track json failed !');
         }
 
@@ -147,9 +156,9 @@ class iTrackService
         }
 
         Log::error('iTrack Track failed !' . implode(',', $data));
+
         throw new ErroredException('Track failed !');
     }
-
 
     /**
      * @throws ErroredException
@@ -157,6 +166,7 @@ class iTrackService
     public function findMultipleTrack(array|string $imeis): Collection
     {
         $devices = is_array($imeis) ? $imeis : explode(',', $imeis);
+
         return collect($this->_findTrack($devices));
     }
 
@@ -183,15 +193,17 @@ class iTrackService
                     'access_token' => $token,
                     'imei' => $imei,
                     'begintime' => $start,
-                    'endtime' => $end
-                ]
+                    'endtime' => $end,
+                ],
             ]);
             $data = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
         } catch (GuzzleException $e) {
             Log::error('iTrack Playback api failed ! ' . $e->getMessage());
+
             throw new ErroredException('Playback api failed !');
         } catch (JsonException $e) {
             Log::error('iTrack Decode playback json failed ! ' . $e->getMessage());
+
             throw new ErroredException('Decode playback json failed !');
         }
 
@@ -200,6 +212,7 @@ class iTrackService
         }
 
         Log::error('iTrack Playback failed !' . implode(',', $data));
+
         throw new ErroredException('Playback failed !');
     }
 }

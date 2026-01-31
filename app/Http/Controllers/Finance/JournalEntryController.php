@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Finance;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceJournalEntry;
@@ -14,13 +15,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 
 class JournalEntryController extends Controller
 {
     protected $workflowService;
-    //
+
     public function __construct(ApprovalWorkflow $workflowService)
     {
         $this->workflowService = $workflowService;
@@ -32,7 +31,7 @@ class JournalEntryController extends Controller
 
         // Build query with filters
         $query = FinanceJournalEntry::with('journalLines:Id,JournalEntryId,Debit,Credit,Amount,IsDebit,Narration')
-            ->select('Id', 'RefNo', 'Date', 'Description', 'ApprovalStatus', 'Type', 'SourceModule', 'IsReversed')
+            ->select('Id', 'RefNo', 'Date', 'Description', 'ApprovalStatus', 'Status', 'Type', 'SourceModule', 'IsReversed')
             ->where('Type', 'normal');
 
         // Apply filters if provided
@@ -85,9 +84,9 @@ class JournalEntryController extends Controller
         $gls = FinanceGLAccounts::select('Id', 'GLName', 'GLCode')->get();
         $branches = Branch::select('Id', 'Name')->get();
         $departments = Department::select('Id', 'Name')->get();
+
         return view('finance.generalledger.journalentry.create', compact('gls', 'branches', 'departments'));
     }
-
 
     public function store(Request $request)
     {
@@ -102,7 +101,7 @@ class JournalEntryController extends Controller
                 'debit' => $request->DRCR[$index] === 'DR' ? $request->Amount[$index] : 0,
                 'credit' => $request->DRCR[$index] === 'CR' ? $request->Amount[$index] : 0,
                 'is_debit' => $request->DRCR[$index] === 'DR' ? true : false,
-                'amount'=> $request->Amount[$index],
+                'amount' => $request->Amount[$index],
                 'narration' => $request->Narration[$index] ?? null,
             ];
         }
@@ -131,47 +130,47 @@ class JournalEntryController extends Controller
         }
 
         DB::beginTransaction();
-        try{
+
+        try {
             // Save the master entry in the JournalEntry Table
             $journalEntry = FinanceJournalEntry::create([
                 'Date' => $request->JournalDate,
                 'Description' => $request->Description,
                 'CreatedBy' => Auth::id(),
-                'ModifiedBy'=> Auth::Id(),
+                'ModifiedBy' => Auth::Id(),
             ]);
 
             // SAVE to the JournalLines table
             foreach ($request->entries as $entry) {
                 FinanceJournalLines::create([
                     'JournalEntryId' => $journalEntry->Id,
-                    'GLAccountID'    => $entry['gl_id'],
-                    'BranchID'       => $entry['branch_id'],
-                    'DepartmentID'   => $entry['department_id'],
-                    'IsDebit'        => $entry['is_debit'],
+                    'GLAccountID' => $entry['gl_id'],
+                    'BranchID' => $entry['branch_id'],
+                    'DepartmentID' => $entry['department_id'],
+                    'IsDebit' => $entry['is_debit'],
                     'Amount' => $entry['is_debit'] ? $entry['amount'] * -1 : $entry['amount'],
                     'Debit' => ($entry['debit'] * -1) ?? 0,
-                    'Credit'         => $entry['credit'] ?? 0,
-                    'Narration'      => $entry['narration'] ?? null,
+                    'Credit' => $entry['credit'] ?? 0,
+                    'Narration' => $entry['narration'] ?? null,
                     'CreatedBy' => Auth::id(),
-                    'ModifiedBy'=> Auth::Id(),
+                    'ModifiedBy' => Auth::Id(),
                 ]);
             }
             activity('Journal Entry Creation')
                 ->performedOn(new FinanceJournalEntry())
                 ->causedBy(Auth::id())
-                ->withProperties(['Create' =>$journalEntry])
+                ->withProperties(['Create' => $journalEntry])
                 ->log('Created Journal Entry');
             DB::commit();
+
             return back()->with('success', "Journal Entry ($journalEntry->RefNo) created successfully.");
-            //return redirect()->route('journalentry.index')->with('success', 'Journal Entry created successfully.');
-        }catch (\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
-            //return $th->getMessage();
-            Log::error('Failed to create Journal Entry'.$th->getMessage());
+            Log::error('Failed to create Journal Entry' . $th->getMessage());
+
             return back()->with('error', 'Failed to create Journal Entry');
         }
     }
-
 
     public function show($id)
     {
@@ -181,24 +180,185 @@ class JournalEntryController extends Controller
             'sourceModule',
             'createdBy:Id,Name',
             'modifiedBy:Id,Name',
-            'reversalsAsOriginal' => function($query) {
+            'reversalsAsOriginal' => function ($query) {
                 $query->with('journalEntry.createdBy:Id,Name');
-            }
+            },
         ])->findOrFail($id);
-            // Check if user can approve
-            try {
-                $canApprove = $this->workflowService->canApproveModel($journalEntry, Auth::user());
-                Log::info("Can approve check completed", ['journal_entry_id' => $id, 'can_approve' => $canApprove]);
-            } catch (\Exception $e) {
-                Log::warning("Failed to check approval permission", [
-                    'journal_entry_id' => $id,
-                    'error' => $e->getMessage()
-                ]);
-                $canApprove = false;
+
+        // Check if user can approve (pending row + stage permission + maker-checker)
+        try {
+            $canApprove = $this->workflowService->canApproveModel($journalEntry, Auth::user());
+            Log::info("Can approve check completed", ['journal_entry_id' => $id, 'can_approve' => $canApprove]);
+        } catch (\Exception $e) {
+            Log::warning("Failed to check approval permission", [
+                'journal_entry_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+            $canApprove = false;
+        }
+
+        $workflowSources = array_values(array_unique(array_filter([
+            $journalEntry->getTable(),
+            $journalEntry->getMorphClass(),
+            $journalEntry::getPrimaryKey(),
+        ])));
+
+        $hasPendingApprovals = DB::table('t_WorkFlowPending')
+            ->whereIn('Source', $workflowSources)
+            ->where('SourceID', (string)$journalEntry->getKey())
+            ->whereNull('DeletedOn')
+            ->exists();
+
+        $cantApproveReason = null;
+        if ($hasPendingApprovals && ! $canApprove) {
+            $cantApproveReason = $this->getCantApproveReason(
+                $workflowSources,
+                $journalEntry->getKey(),
+                Auth::user()
+            );
+        }
+
+        $permissionTable = config('permission.table_names.permissions', 't_Permissions');
+        $rolesTable = config('permission.table_names.roles', 't_Roles');
+        $modelRolesTable = config('permission.table_names.model_has_roles', 't_ModelRoles');
+        $rolePivotKey = config('permission.column_names.role_pivot_key') ?? 'role_id';
+        $modelMorphKey = config('permission.column_names.model_morph_key', 'model_id');
+
+        $workflowHistory = DB::table('t_WorkFlowHistory as h')
+            ->leftJoin('t_Users as u', 'h.CreatedBy', '=', 'u.Id')
+            ->leftJoin('t_CodeDetails as cd', 'h.StatusId', '=', 'cd.ID')
+            ->leftJoin('t_WorkFlowStages as ws', 'h.Stage', '=', 'ws.Id')
+            ->leftJoin($permissionTable . ' as perm', 'ws.PermissionId', '=', 'perm.id')
+            ->whereIn('h.Source', $workflowSources)
+            ->where('h.SourceID', (string)$journalEntry->getKey())
+            ->whereNull('h.DeletedOn')
+            ->orderBy('h.CreatedOn')
+            ->get([
+                'h.CreatedOn',
+                'h.Notes',
+                'u.Name as UserName',
+                'cd.Description as StatusDescription',
+                'ws.StageName',
+                'perm.name as PermissionName',
+            ]);
+
+        $pendingApprovers = DB::table('t_WorkFlowPending as p')
+            ->join('t_Users as u', 'p.UserId', '=', 'u.Id')
+            ->leftJoin('t_WorkFlowStages as ws', 'p.Stage', '=', 'ws.Id')
+            ->leftJoin($permissionTable . ' as perm', 'ws.PermissionId', '=', 'perm.id')
+            ->whereIn('p.Source', $workflowSources)
+            ->where('p.SourceID', (string)$journalEntry->getKey())
+            ->whereNull('p.DeletedOn')
+            ->orderBy('ws.Order')
+            ->get([
+                'u.Id as UserId',
+                'u.Name as UserName',
+                'ws.StageName',
+                'ws.Order as StageOrder',
+                'perm.name as PermissionName',
+            ]);
+
+        $roleNamesByUser = collect();
+        $pendingUserIds = $pendingApprovers->pluck('UserId')->unique()->values();
+        if ($pendingUserIds->isNotEmpty()) {
+            $roleRows = DB::table($modelRolesTable . ' as mr')
+                ->join($rolesTable . ' as r', 'mr.' . $rolePivotKey, '=', 'r.id')
+                ->whereIn('mr.' . $modelMorphKey, $pendingUserIds)
+                ->whereIn('mr.model_type', [User::class, (new User())->getMorphClass()])
+                ->select('mr.' . $modelMorphKey . ' as UserId', 'r.name')
+                ->get();
+
+            $roleNamesByUser = $roleRows
+                ->groupBy('UserId')
+                ->map(fn ($rows) => $rows->pluck('name')->unique()->implode(', '));
+        }
+
+        $pendingApprovers = $pendingApprovers->map(function ($row) use ($roleNamesByUser) {
+            $row->RoleNames = $roleNamesByUser[$row->UserId] ?? '-';
+
+            return $row;
+        });
+
+        $isPosted = strtolower($journalEntry->ApprovalStatus ?? '') === 'posted'
+            || strtolower($journalEntry->Status ?? '') === 'posted';
+
+        $postedBy = null;
+        if ($isPosted) {
+            $postedBy = [
+                'name' => $journalEntry->modifiedBy->Name ?? $journalEntry->createdBy->Name ?? 'System',
+                'time' => $journalEntry->ModifiedOn ?? $journalEntry->CreatedOn,
+            ];
+        }
+
+        return view('finance.generalledger.journalentry.show', compact(
+            'journalEntry',
+            'canApprove',
+            'hasPendingApprovals',
+            'cantApproveReason',
+            'workflowHistory',
+            'pendingApprovers',
+            'postedBy'
+        ));
+    }
+
+    private function getCantApproveReason(array $sources, string|int $sourceId, $user): ?string
+    {
+        $pendingRow = DB::table('t_WorkFlowPending')
+            ->whereIn('Source', $sources)
+            ->where('SourceID', (string)$sourceId)
+            ->whereNull('DeletedOn')
+            ->orderBy('CreatedOn', 'desc')
+            ->first(['Stage', 'UserId']);
+
+        if (! $pendingRow) {
+            return 'No pending approvals found for this entry.';
+        }
+
+        if ((int)$pendingRow->UserId !== (int)$user->Id) {
+            return 'You are not assigned to approve at the current stage.';
+        }
+
+        $makerId = DB::table('t_WorkFlowHistory')
+            ->whereIn('Source', $sources)
+            ->where('SourceID', (string)$sourceId)
+            ->whereNull('DeletedOn')
+            ->orderBy('CreatedOn', 'asc')
+            ->value('CreatedBy');
+
+        if ($makerId && (int)$makerId === (int)$user->Id) {
+            return 'You cannot approve your own entry (Maker-Checker policy).';
+        }
+
+        if (! empty($pendingRow->Stage)) {
+            $stageRow = DB::table('t_WorkFlowStages')
+                ->select('PermissionId', 'StageName')
+                ->where('Id', (int)$pendingRow->Stage)
+                ->first();
+
+            if (! $stageRow) {
+                return 'Approval stage not found. Contact an administrator.';
             }
 
+            if ($stageRow->PermissionId) {
+                $permissionName = DB::table('t_Permissions')
+                    ->where('id', (int)$stageRow->PermissionId)
+                    ->value('name');
 
-        return view('finance.generalledger.journalentry.show', compact('journalEntry', 'canApprove'));
+                if (! $permissionName) {
+                    $permissionName = 'workflowstage_' . str_replace(' ', '', (string)$stageRow->StageName);
+                    $exists = DB::table('t_Permissions')->where('name', $permissionName)->exists();
+                    if (! $exists) {
+                        return 'Approval stage permission is not configured.';
+                    }
+                }
+
+                if (! $user->hasPermissionTo($permissionName)) {
+                    return 'You do not have permission for stage: ' . $stageRow->StageName . '.';
+                }
+            }
+        }
+
+        return null;
     }
 
     public function edit($id)
@@ -258,19 +418,20 @@ class JournalEntryController extends Controller
         }
 
         // Guard: ensure provided line_ids (if any) belong to this journal entry
-        $existingIds = $journalEntry->journalLines->pluck('Id')->map(fn($v) => (int)$v)->all();
+        $existingIds = $journalEntry->journalLines->pluck('Id')->map(fn ($v) => (int)$v)->all();
         $incomingIds = collect($validated['entries'])
             ->pluck('line_id')
             ->filter()
-            ->map(fn($v) => (int)$v)
+            ->map(fn ($v) => (int)$v)
             ->all();
         foreach ($incomingIds as $lid) {
-            if (!in_array($lid, $existingIds, true)) {
+            if (! in_array($lid, $existingIds, true)) {
                 return back()->withErrors(['Invalid line submitted' => 'One or more lines do not belong to this journal entry.'])->withInput();
             }
         }
 
         DB::beginTransaction();
+
         try {
             // Update header
             $journalEntry->Date = $request->JournalDate;
@@ -280,7 +441,7 @@ class JournalEntryController extends Controller
 
             // Delete removed lines
             $toDelete = array_diff($existingIds, $incomingIds);
-            if (!empty($toDelete)) {
+            if (! empty($toDelete)) {
                 FinanceJournalLines::where('JournalEntryId', $journalEntry->Id)
                     ->whereIn('Id', $toDelete)
                     ->delete();
@@ -300,7 +461,7 @@ class JournalEntryController extends Controller
                     'ModifiedBy' => Auth::id(),
                 ];
 
-                if (!empty($entry['line_id'])) {
+                if (! empty($entry['line_id'])) {
                     // Update existing
                     FinanceJournalLines::where('JournalEntryId', $journalEntry->Id)
                         ->where('Id', (int)$entry['line_id'])
@@ -320,11 +481,14 @@ class JournalEntryController extends Controller
                 ->log('Updated Journal Entry');
 
             DB::commit();
+
             return redirect()->route('journalentry.show', $journalEntry->Id)->with('success', 'Journal Entry updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return $th->getMessage();
             Log::error('Failed to update Journal Entry ' . $th->getMessage());
+
             return back()->with('error', 'Failed to update Journal Entry')->withInput();
         }
     }
@@ -358,6 +522,4 @@ class JournalEntryController extends Controller
 
         return redirect()->route('journalentry.index')->with('status', 'Journal entry ' . $request->action_type . 'd successfully.');
     }
-
-
 }

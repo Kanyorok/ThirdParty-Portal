@@ -15,6 +15,7 @@ class RelationController extends Controller
     {
         $this->middleware('ajax');
     }
+
     /**
      * Handle the incoming request.
      * @throws \Exception
@@ -23,13 +24,13 @@ class RelationController extends Controller
     {
         return Datatables::of($client->relations()->with(['type', 'status', 'relation'])->lock('WITH(NOLOCK)')->select('*'))/*->addIndexColumn()*/
         ->editColumn('Mobile', function (Client $client) {
-            if (!empty($client->Mobile)) {
+            if (! empty($client->Mobile)) {
                 return $client->Mobile;
             }
-            if (!empty($client->Phone1)) {
+            if (! empty($client->Phone1)) {
                 return $client->Phone1;
             }
-            if (!empty($client->Phone2)) {
+            if (! empty($client->Phone2)) {
                 return $client->Phone2;
             }
 
@@ -42,7 +43,7 @@ class RelationController extends Controller
             return '<a href="' . route('clients.show', $client->ClientID) . '">' . $client->ClientID . '</a>';
         })->setRowClass('mouse_pointer user-select-none client-row-data')->setRowData([
                                                                                        'data-url' => function (Client $client) {
-                                                                                        return route('clients.show', $client->ClientID);
+                                                                                           return route('clients.show', $client->ClientID);
                                                                                        },
                                                                                       ])->rawColumns(['action', 'ClientID'])->make();
     }

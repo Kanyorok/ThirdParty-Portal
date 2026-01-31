@@ -6,6 +6,7 @@ use App\Enums\BusinessTypeEnum;
 use App\Enums\CampaignStatusEnum;
 use App\Enums\Core\ApprovalEnum;
 use App\Enums\DMS\DocumentCheckOutStatusEnum;
+use App\Enums\Inventory\InterBranchRequisitionEnum;
 use App\Enums\LeadStatusEnum;
 use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Enums\Procurement\PrequalificationApplicationEnum;
@@ -15,11 +16,12 @@ use App\Enums\Procurement\SchedulePlanEnum;
 use App\Enums\Property\PropertyInvoiceEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Enums\Property\TenantClearanceEnum;
+use App\Enums\RFQAwardStatusEnum;
 use App\Enums\TenderApprovalStatusEnum;
+use App\Enums\TenderCategoryEnum;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyTypeEnum;
-use App\Enums\Inventory\InterBranchRequisitionEnum;
 use App\Enums\TicketStatusEnum;
 use App\Helpers\SystemHelper;
 use App\Services\StaticListsService;
@@ -149,6 +151,35 @@ class CodeDetailSeeder extends Seeder
             ]);
         }
 
+        foreach (TenderCategoryEnum::cases() as $index => $tenderCategoryEnum) {
+            $entries->push([
+                'CodeID' => 'TenderCategory',
+                'Value' => $tenderCategoryEnum->value,
+                'Description' => $tenderCategoryEnum->displayName(),
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (\App\Enums\TenderAwardStatusEnum::cases() as $index => $tenderAwardStatusEnum) {
+            $entries->push([
+                'CodeID' => 'TenderAwardStatus',
+                'Value' => $tenderAwardStatusEnum->value,
+                'Description' => $tenderAwardStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+                'IsActive' => 1,
+            ]);
+        }
+
+        foreach (RFQAwardStatusEnum::cases() as $index => $rfqAwardStatusEnum) {
+            $entries->push([
+                'CodeID' => 'rfq_award',
+                'Value' => $rfqAwardStatusEnum->value,
+                'Description' => $rfqAwardStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+                'IsActive' => 1,
+            ]);
+        }
+
         foreach (BusinessTypeEnum::cases() as $index => $businessTypeEnum) {
             $entries->push([
                 'CodeID' => 'BusinessType',
@@ -229,7 +260,6 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'GLAccountType', 'Description' => 'Liabilities', 'Value' => 'L', 'DisplayOrder' => 0],
             ['CodeID' => 'GLAccountType', 'Description' => 'Income', 'Value' => 'I', 'DisplayOrder' => 0],
             ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E', 'DisplayOrder' => 0],
-            //['CodeID' => 'GLAccountType', 'Description' => 'Share Capital', 'Value' => 'S', 'DisplayOrder' => 0],
 
             // Tenant Types
             ['CodeID' => 'TenantType', 'Description' => 'Individual', 'Value' => 'I'],
@@ -279,7 +309,6 @@ class CodeDetailSeeder extends Seeder
             // Payment Type
             ['CodeID' => 'PaymentType', 'Description' => 'Full', 'Value' => 'F'],
             ['CodeID' => 'PaymentType', 'Description' => 'Partial', 'Value' => 'P'],
-            //['CodeID' => 'PaymentType', 'Description' => 'Scheduled', 'Value' => 'S'],
 
             // Termination Reason
             // Tender Status codes
@@ -298,8 +327,6 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ', 'Value' => 'R'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Direct Purchase', 'Value' => 'D'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender', 'Value' => 'T'],
-            ['CodeID' => 'ProcurementMethod', 'Description' => 'Prequalification', 'Value' => 'P'],
-            ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
 
             // Approval WorkFlow Documents
             ['CodeID' => 'ApprovalWorkFlowDocument', 'Value' => 'PR', 'Description' => 'Requisition'],
@@ -398,13 +425,6 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'Decision', 'Description' => 'Approved', 'Value' => 'A'],
             ['CodeID' => 'Decision', 'Description' => 'Decline', 'Value' => 'D'],
             ['CodeID' => 'Decision', 'Description' => 'More Information Needed', 'Value' => 'M'],
-
-            //Insurance Claim type
-            ['CodeID' => 'ClaimType', 'Description' => 'Death', 'Value' => 'D'],
-            ['CodeID' => 'ClaimType', 'Description' => 'Accident', 'Value' => 'A'],
-            ['CodeID' => 'ClaimType', 'Description' => 'Loss', 'Value' => 'L'],
-            ['CodeID' => 'ClaimType', 'Description' => 'Medical', 'Value' => 'M'],
-            ['CodeID' => 'ClaimType', 'Description' => 'Other', 'Value' => 'O'],
 
             //Insurance Cover Type
             ['CodeID' => 'CoverType', 'Description' => 'Comprehensive', 'Value' => 'C'],
@@ -736,6 +756,11 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'JournalEntryStatus', 'Description' => 'Posting', 'Value' => 'ps', 'DisplayOrder' => 4],
             ['CodeID' => 'JournalEntryStatus', 'Description' => 'Reject', 'Value' => 'r', 'DisplayOrder' => 5],
 
+            //tender Approval Status
+            ['CodeID' => 'TenderStatus', 'Description' => 'Pending', 'Value' => 'P','DisplayOrder' => 53],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Approved', 'Value' => 'A','DisplayOrder' => 54],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Rejected', 'Value' => 'R','DisplayOrder' => 55],
+
 
 
         ];
@@ -747,7 +772,7 @@ class CodeDetailSeeder extends Seeder
 
         foreach ($entries as $entry) {
             $exists = DB::table('t_CodeDetails')->where('CodeID', $entry['CodeID'])->where('Description', $entry['Description'])->exists();
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('t_CodeDetails')->insert([
                     'CodeID' => $entry['CodeID'],
                     'Value' => $entry['Value'] ?? null,

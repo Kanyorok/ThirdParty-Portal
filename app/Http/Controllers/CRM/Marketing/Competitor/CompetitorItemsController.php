@@ -28,9 +28,10 @@ class CompetitorItemsController extends Controller
     public function index(Request $request, Competitor $competitor): JsonResponse
     {
         $this->authorize('view', $competitor);
-        if (!in_array($request->_type, ItemTypeEnum::keys(), true)) {
+        if (! in_array($request->_type, ItemTypeEnum::keys(), true)) {
             throw new RuntimeException('Unknown item type');
         }
+
         return Datatables::of($competitor->items()->where('ItemType', ItemTypeEnum::valueFromName($request->_type)->value)->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
             ->addColumn('action', function (DescriptionItem $item) {
                 return '<button type="button" class="btn btn-danger btn-sm trash-item-modal" data-info="' . $item->Id . '~' . $item->ItemType->name . '"><i class="fas fa-trash"></i> trash</button>';
@@ -43,7 +44,7 @@ class CompetitorItemsController extends Controller
     public function store(Request $request, Competitor $competitor): JsonResponse
     {
         $this->authorize('view', $competitor);
-        if (!in_array($request->_type, ItemTypeEnum::keys(), true)) {
+        if (! in_array($request->_type, ItemTypeEnum::keys(), true)) {
             throw new RuntimeException('Unknown item type');
         }
 
@@ -56,13 +57,13 @@ class CompetitorItemsController extends Controller
 
         try {
             DescriptionItem::create([
-                                     "Item"        => Competitor::getPrimaryKey(),
-                                     "ItemID"      => $competitor->CompetitorID,
+                                     "Item" => Competitor::getPrimaryKey(),
+                                     "ItemID" => $competitor->CompetitorID,
                                      "Description" => $request->ItemDescription,
-                                     "ItemType"    => ItemTypeEnum::valueFromName($request->_type)->value,
-                                     "Tonality"    => TonalityEnum::Neutral->value,
-                                     'CreatedBy'   => $request->user()->Id,
-                                     'ModifiedBy'  => $request->user()->Id,
+                                     "ItemType" => ItemTypeEnum::valueFromName($request->_type)->value,
+                                     "Tonality" => TonalityEnum::Neutral->value,
+                                     'CreatedBy' => $request->user()->Id,
+                                     'ModifiedBy' => $request->user()->Id,
                                     ]);
         } catch (ErrorException) {
             return $this->errored('could not save try again latter');
@@ -70,7 +71,6 @@ class CompetitorItemsController extends Controller
 
         return $this->succeeded('added successfully', data: ['list' => $request->_type]);
     }
-
 
     /**
      * Remove the specified resource from storage.

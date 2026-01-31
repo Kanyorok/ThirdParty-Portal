@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 
 class LedgerReportController extends Controller
 {
-    //
     public function index(Request $request)
     {
         // Dropdown data
@@ -20,10 +19,8 @@ class LedgerReportController extends Controller
         $departments = Department::select('Id', 'Name')->get();
 
         // // If dates must be required, keep this
-        // $request->validate([
         //     'FromDate' => 'required|date',
         //     'ToDate'   => 'required|date|after_or_equal:FromDate',
-        // ]);
 
         $query = FinanceTransaction::with(
             'glAccounts:Id,GLName,GLCode',
@@ -48,7 +45,7 @@ class LedgerReportController extends Controller
 
         if ($request->filled('Branch') && $request->Branch !== 'All') {
             $query->where('BranchID', $request->Branch);
-    }
+        }
 
         if ($request->filled('Department') && $request->Department !== 'All') {
             $query->where('DepartmentID', $request->Department);
@@ -61,7 +58,6 @@ class LedgerReportController extends Controller
             compact('reports', 'glAccount', 'branches', 'departments')
         );
     }
-
 
     public function create()
     {

@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\Insurance;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Insurance\ProviderAndProducts\InsuranceProductRiderRequest;
+use App\Models\Core\Currency;
 use App\Models\Insurance\InsuranceProduct;
 use App\Models\Insurance\InsuranceProductRider;
 use App\Models\Insurance\InsuranceProvider;
 use App\Services\Insurance\ProviderAndProducts\InsuranceProductRiderService;
-use App\Enums\Core\PermissionEnum;
-use App\Http\Requests\Insurance\ProviderAndProducts\InsuranceProductRiderRequest;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
 
 class InsuranceProductRiderController extends Controller
 {
@@ -27,13 +27,15 @@ class InsuranceProductRiderController extends Controller
     {
         $this->authorize(PermissionEnum::InsuranceProductRiderView, InsuranceProductRider::class);
         $providers = InsuranceProvider::all();
+        $currencies = Currency::all();
 
-        return view('bancassurance.riders.create', compact('providers'));
+        return view('bancassurance.riders.create', compact('providers', 'currencies'));
     }
 
     public function getProductByProvider($providerId)
     {
         $products = InsuranceProduct::where('InsuranceProviderID', $providerId)->get();
+
         return response()->json($products);
     }
 
@@ -45,6 +47,7 @@ class InsuranceProductRiderController extends Controller
 
         $InsuranceProviderId = InsuranceProvider::findOrFail($validated['InsuranceProviderId']);
         $Product = InsuranceProduct::findOrFail($validated['Product']);
+        $CurrencyId = Currency::findOrFail($validated['CurrencyId']);
 
         $providers = InsuranceProductRiderService::create(
             $InsuranceProviderId,
@@ -52,6 +55,7 @@ class InsuranceProductRiderController extends Controller
             $validated['RiderName'],
             $validated['Description'] ?? '',
             $validated['AdditionalPremium'],
+            $CurrencyId,
             $validated['IsOptional'] ?? null,
             $validated['IsActive'] ?? null,
             Auth::user(),
@@ -65,8 +69,10 @@ class InsuranceProductRiderController extends Controller
         $this->authorize(PermissionEnum::InsuranceProductRiderView, InsuranceProductRider::class);
         $rider = InsuranceProductRider::findOrFail($Id);
         $providers = InsuranceProvider::all();
+        $currencies = Currency::all();
         $products = InsuranceProduct::where('InsuranceProviderID', $rider->InsuranceProviderId)->get();
-        return view('bancassurance.riders.edit', compact('rider', 'providers', 'products'));
+
+        return view('bancassurance.riders.edit', compact('rider', 'providers', 'products', 'currencies'));
     }
 
     // Update product
@@ -79,6 +85,7 @@ class InsuranceProductRiderController extends Controller
 
         try {
             $rider = InsuranceProductRider::findOrFail($id);
+            $CurrencyId = Currency::findOrFail($validated['CurrencyId']);
 
             $rider->update([
                 'InsuranceProviderId' => $validated['InsuranceProviderId'],
@@ -86,6 +93,7 @@ class InsuranceProductRiderController extends Controller
                 'RiderName' => $validated['RiderName'],
                 'Description' => $validated['Description'] ?? '',
                 'AdditionalPremium' => $validated['AdditionalPremium'],
+                'CurrencyId' => $CurrencyId->Id,
                 'IsOptional' => $validated['IsOptional'] ?? '',
                 'IsActive' => $validated['IsActive'] ?? '',
                 'ModifiedBy' => Auth::Id(),
@@ -110,6 +118,7 @@ class InsuranceProductRiderController extends Controller
     public function destroy($Id)
     {
         $this->authorize(PermissionEnum::InsuranceProductRiderDelete, InsuranceProductRider::class);
+
         try {
             $rider = InsuranceProductRider::findOrFail($Id);
             $rider->delete();
@@ -119,6 +128,7 @@ class InsuranceProductRiderController extends Controller
         } catch (\Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting Rider: ' . $th->getMessage());
+
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to delete Rider. Please try again.'])
                 ->withInput();

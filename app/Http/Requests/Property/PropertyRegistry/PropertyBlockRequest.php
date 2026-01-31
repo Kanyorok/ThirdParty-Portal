@@ -30,10 +30,9 @@ class PropertyBlockRequest extends FormRequest
                 'string',
                 'max:50',
                 Rule::unique(PropertyBlock::class, 'BlockName')
-                    ->where(fn($query) => $query->where('PropertyID', $this->PropertyID)),
+                    ->where(fn ($query) => $query->where('PropertyID', $this->PropertyID)),
             ],
             'Description' => 'nullable|string|max:100',
         ];
     }
-
 }

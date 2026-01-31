@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FleetManagement\FleetMaintenanceScheduleRequest;
-use App\Models\Fleet\FleetVehicle;
 use App\Models\Core\Approval\CodeDetail;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetMaintenanceSchedule;
-use App\Services\FleetManagement\FleetMaintenanceScheduleService;
+use App\Models\Fleet\FleetVehicle;
 use App\Models\ThirdParty\SupplierMaster;
+use App\Services\FleetManagement\FleetMaintenanceScheduleService;
+use Illuminate\Support\Facades\Auth;
 
 class FleetMaintenanceScheduleController extends Controller
 {
@@ -24,7 +24,7 @@ class FleetMaintenanceScheduleController extends Controller
     public function index()
     {
         $this->authorize('viewAny', FleetMaintenanceSchedule::class);
-        $schedules = FleetMaintenanceSchedule::with('vehicle', 'maintenanceStatus','vendor.party')
+        $schedules = FleetMaintenanceSchedule::with('vehicle', 'maintenanceStatus', 'vendor.party')
             ->orderByDesc('ScheduleID', 'desc')
             ->get();
 
@@ -41,7 +41,7 @@ class FleetMaintenanceScheduleController extends Controller
             ->get();
         $vendors = SupplierMaster::with('party')
             ->where('IsPrequalified', true)
-            ->get();    
+            ->get();
 
         return view('fleet.maintenance.schedule.create', compact('vehicles', 'maintenanceType', 'vendors'));
     }
@@ -51,7 +51,7 @@ class FleetMaintenanceScheduleController extends Controller
     {
         $this->authorize('create', FleetMaintenanceSchedule::class);
         $data = $request->validated();
-        $this->scheduleService->create($data);
+        $test = $this->scheduleService->create($data);
 
         return redirect()
             ->route('fleet.maintenance_schedule.index')
@@ -81,7 +81,7 @@ class FleetMaintenanceScheduleController extends Controller
         $data = $request->validated();
 
         // Only handle mileage update & completion
-        if (!empty($data['ScheduledMileage'])) {
+        if (! empty($data['ScheduledMileage'])) {
             $this->scheduleService->updateMileage($id, $data['ScheduledMileage']);
         }
 
@@ -89,7 +89,6 @@ class FleetMaintenanceScheduleController extends Controller
             ->route('fleet.maintenance_schedule.index')
             ->with('success', 'Maintenance schedule updated successfully.');
     }
-
 
     // Complete a maintenance schedule
     public function complete($id)
@@ -106,6 +105,7 @@ class FleetMaintenanceScheduleController extends Controller
     public function show($id)
     {
         $this->authorize('view', FleetMaintenanceSchedule::class);
+
         $schedule = FleetMaintenanceSchedule::with(['vehicle', 'maintenanceType', 'alert', 'vendor.party'])
             ->findOrFail($id);
 
@@ -131,7 +131,6 @@ class FleetMaintenanceScheduleController extends Controller
 
         return redirect()->back()->with('success', 'Schedule cancelled (deactivated) successfully.');
     }
-
 
     // Soft delete a schedule
     public function destroy($id)

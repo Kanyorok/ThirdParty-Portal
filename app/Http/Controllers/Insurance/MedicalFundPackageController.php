@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Insurance\MedicalFundPackageRequest;
 use App\Models\Insurance\MedicalFund;
 use App\Models\Insurance\MedicalFundPackage;
-use App\Http\Requests\Insurance\MedicalFundPackageRequest;
 
 class MedicalFundPackageController extends Controller
 {
@@ -17,6 +17,7 @@ class MedicalFundPackageController extends Controller
     public function index(MedicalFund $medical_fund)
     {
         $packages = $medical_fund->packages()->orderBy('Name')->paginate(20);
+
         return view('bancassurance.medical_fund_packages.index', compact('medical_fund', 'packages'));
     }
 
@@ -45,12 +46,14 @@ class MedicalFundPackageController extends Controller
     public function edit(MedicalFundPackage $package)
     {
         $medical_fund = $package->fund;
+
         return view('bancassurance.medical_fund_packages.edit', compact('package', 'medical_fund'));
     }
 
     public function show(MedicalFundPackage $package)
     {
         $package->load(['fund', 'coverages']);
+
         return view('bancassurance.medical_fund_packages.show', compact('package'));
     }
 
@@ -63,13 +66,13 @@ class MedicalFundPackageController extends Controller
         $this->syncCoverages($package, $request);
 
         return redirect()
-            ->route('bancassurance.medicalfunds.packages.index', ['medical_fund' => $package->FundID])
+            ->route('bancassurance.medicalfunds.packages.index', ['medical_fund' => $package->FundId])
             ->with('success', 'Package updated successfully.');
     }
 
     public function destroy(MedicalFundPackage $package)
     {
-        $fundId = $package->FundID;
+        $fundId = $package->FundId;
         $package->delete();
 
         return redirect()
@@ -84,17 +87,17 @@ class MedicalFundPackageController extends Controller
     {
         $sync = [];
         $ids = collect($request->input('coverage_ids', []))
-            ->map(fn($v) => (int) $v)
+            ->map(fn ($v) => (int) $v)
             ->filter()
             ->unique();
 
         foreach ($ids as $cid) {
             $sync[$cid] = [
-                'AnnualLimit'       => data_get($request, "coverage.AnnualLimit.$cid"),
-                'PerVisitLimit'     => data_get($request, "coverage.PerVisitLimit.$cid"),
+                'AnnualLimit' => data_get($request, "coverage.AnnualLimit.$cid"),
+                'PerVisitLimit' => data_get($request, "coverage.PerVisitLimit.$cid"),
                 'WaitingPeriodDays' => data_get($request, "coverage.WaitingPeriod.$cid"),
-                'Scope'             => data_get($request, "coverage.Scope.$cid") ?: 'PerBeneficiary',
-                'IsActive'          => 1,
+                'Scope' => data_get($request, "coverage.Scope.$cid") ?: 'PerBeneficiary',
+                'IsActive' => 1,
             ];
         }
 

@@ -3,21 +3,23 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Inventory\ItemSubCategories;
 use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\ItemSubCategories;
+use Illuminate\Http\Request;
 
 class ItemSubCategoryController extends Controller
 {
     public function index()
     {
-        $items = ItemSubCategories::with('parentCategory')->get(); 
+        $items = ItemSubCategories::with('parentCategory')->get();
+
         return view('inventory.itemmaster.itemsubcategory.index', compact('items'));
     }
 
     public function create()
     {
         $categories = ItemCategories::all(); // list of all parent categories
+
         return view('inventory.itemmaster.itemsubcategory.create', compact('categories'));
     }
 
@@ -26,9 +28,9 @@ class ItemSubCategoryController extends Controller
         $validatedData = $request->validate([
             'SubCategoryCode' => 'required|string|max:50',
             'SubCategoryName' => 'required|string|max:255',
-            'ParentCategory'  => 'required|exists:t_ItemCategories,id',
-            'Description'     => 'nullable|string',
-            'Status'          => 'nullable|boolean',
+            'ParentCategory' => 'required|exists:t_ItemCategories,id',
+            'Description' => 'nullable|string',
+            'Status' => 'nullable|boolean',
         ]);
 
         ItemSubCategories::create($validatedData);
@@ -39,6 +41,7 @@ class ItemSubCategoryController extends Controller
     public function show($Id)
     {
         $item = ItemSubCategories::with('parentCategory')->findOrFail($Id);
+
         return view('inventory.itemmaster.itemsubcategory.show', compact('item'));
     }
 
@@ -46,6 +49,7 @@ class ItemSubCategoryController extends Controller
     {
         $item = ItemSubCategories::findOrFail($Id);
         $categories = ItemCategories::all(); // for dropdown
+
         return view('inventory.itemmaster.itemsubcategory.edit', compact('item', 'categories'));
     }
 
@@ -56,16 +60,15 @@ class ItemSubCategoryController extends Controller
         $validatedData = $request->validate([
             'SubCategoryCode' => 'required|string|max:50',
             'SubCategoryName' => 'required|string|max:255',
-            'ParentCategory'  => 'required|exists:t_ItemCategories,id',
-            'Description'     => 'nullable|string',
-            'Status'          => 'nullable|boolean',
+            'ParentCategory' => 'required|exists:t_ItemCategories,id',
+            'Description' => 'nullable|string',
+            'Status' => 'nullable|boolean',
         ]);
 
         $item->update($validatedData);
 
         return redirect()->route('itemsubcategory.index')->with('success', '✅ Subcategory updated successfully!');
     }
-
 
     public function destroy($Id)
     {

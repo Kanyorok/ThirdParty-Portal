@@ -4,6 +4,7 @@ namespace App\Services\ThirdParty;
 
 use App\Enums\Core\IntegrationsEnum;
 use App\Exceptions\ErroredException;
+use App\Models\Auth\User;
 use App\Models\Settings\APICredential;
 use DOMDocument;
 use DOMXPath;
@@ -25,6 +26,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SSRSService
 {
+    public const string UserParameter = 'LoginUser';
+
     protected PendingRequest $_query;
 
     protected string $_serverAPIUrl;
@@ -43,16 +46,16 @@ class SSRSService
     public function __construct()
     {
         $ssrs = APICredential::query()->where('Integration', IntegrationsEnum::ReportService->value)->latest('Id')->first();
-        if (!$ssrs instanceof APICredential) {
+        if (! $ssrs instanceof APICredential) {
             throw new ErroredException('there are no report service configuration');
         }
 
         $ssrsConfig = $ssrs?->Configuration;
-        if (!$ssrsConfig instanceof stdClass) {
+        if (! $ssrsConfig instanceof stdClass) {
             throw new ErroredException('invalid report service configuration');
         }
 
-        if (!property_exists($ssrsConfig, 'password') || !property_exists($ssrsConfig, 'virtual_directory') || !property_exists($ssrsConfig, 'username') || !property_exists($ssrsConfig, 'host') || !property_exists($ssrsConfig, 'path')) {
+        if (! property_exists($ssrsConfig, 'password') || ! property_exists($ssrsConfig, 'virtual_directory') || ! property_exists($ssrsConfig, 'username') || ! property_exists($ssrsConfig, 'host') || ! property_exists($ssrsConfig, 'path')) {
             throw new ErroredException('invalid report service configuration');
         }
 
@@ -94,6 +97,7 @@ class SSRSService
         $response = $client->get($path);
 
         $cookieJar->save($this->_getPath());
+
         return $response;
     }
 
@@ -115,6 +119,7 @@ class SSRSService
     private function _getPath(): string
     {
         $this->_cookiePath = storage_path('app/cookies/ntlm_cookies.json');
+
         return $this->_cookiePath;
     }
 
@@ -131,28 +136,33 @@ class SSRSService
         try {
             $query = Http::withBasicAuth($username, $password)->withOptions(['auth' => [$username, $password, 'ntlm']])
                 ->get(Str::of($Host)->trim()->rtrim('/') . "/{$Path}/api/v2.0/ME");
-            //->get(Str::of($Host)->trim()->rtrim('/') . "/reports/api/v2.0/ME");
         } catch (ConnectionException | Exception) {
             return null;
         }
         if ($query->successful() && array_key_exists('DisplayName', $query->json())) {
             return $query->json()['DisplayName'];
         }
+
         return null;
     }
 
-    public static function queryParams(array $parameters): string
+    public static function queryParams(array $parameters, bool $encode = true): string
     {
         $params = '';
         foreach ($parameters as $index => $value) {
             if (is_array($value)) {
                 foreach ($value as $val) {
-                    $params .= "&$index=$val";
+                    if ($encode) {
+                        $params .= "&{$index}[]=$val";
+                    } else {
+                        $params .= "&$index=$val";
+                    }
                 }
             } else {
                 $params .= "&$index=$value";
             }
         }
+
         return Str::of($params)->trim()->toString();
     }
 
@@ -162,9 +172,9 @@ class SSRSService
     public function exportReport(string $path, array $parameters = [], string $format = 'XML', bool $content = false): StreamedResponse|string
     {
         $response = $this->_query
-            ->get(Str::rtrim($this->serverURL, '/') . "/{$this->virtual_directory}?" . $path . "&rs:Format=$format" . self::queryParams($parameters));
+            ->get(Str::rtrim($this->serverURL, '/') . "/{$this->virtual_directory}?" . $path . "&rs:Format=$format" . self::queryParams($parameters, false));
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new ConnectionException(
                 "Failed to export report. Status: {$response->status()}"
             );
@@ -177,7 +187,11 @@ class SSRSService
         $contentType = $this->getContentType($format);
         $extension = $this->getFileExtension($format);
 
+
         return response()->streamDownload(function () use ($response) {
+            if (ob_get_length()) {
+                ob_end_clean();
+            }
             echo $response->body();
         }, basename($path) . $extension, [
             'Content-Type' => $contentType,
@@ -185,86 +199,230 @@ class SSRSService
         ]);
     }
 
-
     /**
+     * Parse SSRS XML report output into a standardized format.
+     * Handles flat tables, parent-child, and grandparent-parent-child hierarchies.
+     *
      * @throws ErroredException
      */
     public function parseReportXml(string $xmlString): Collection
     {
-        // Suppress XML errors and warnings
         libxml_use_internal_errors(true);
 
         try {
-            // Create a new DOM document
-            $dom = new DOMDocument('1.0', 'UTF-8');
-
-            // Load the XML string
+            $dom = new DOMDocument();
             $dom->loadXML($xmlString);
-
-            // Create a new XPath object
             $xpath = new DOMXPath($dom);
 
-            // Register the namespaces
-            $xpath->registerNamespace('xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-
-            // The default namespace is trickier - we need to give it a prefix
-            // Find default namespace from the document root
+            // 1. Extract Header Data (Root Attributes)
+            $header = [];
             $root = $dom->documentElement;
-            if ($root && $root->hasAttribute('xmlns')) {
-                $defaultNs = $root->getAttribute('xmlns');
-                $xpath->registerNamespace('ns', $defaultNs);
-            }
-
-            // Create a new collection to hold our results
-            $collection = collect();
-
-            // Try different patterns for detail elements
-            $detailsPatterns = [
-                '//ns:Details',      // Standard Details with namespace
-                '//ns:Details1',     // Details1 with namespace
-                '//Details',         // Standard Details without namespace
-                '//Details1',        // Details1 without namespace
-                '//*[starts-with(local-name(), "Details")]' // Any element starting with "Details"
-            ];
-
-            $detailsNodes = null;
-            foreach ($detailsPatterns as $pattern) {
-                $detailsNodes = $xpath->query($pattern);
-                if ($detailsNodes && $detailsNodes->length > 0) {
-                    break;
-                }
-            }
-
-            // Process each Details node
-            if ($detailsNodes && $detailsNodes->length > 0) {
-                foreach ($detailsNodes as $node) {
-                    $item = [];
-
-                    // Get all attributes
-                    if ($node->hasAttributes()) {
-                        foreach ($node->attributes as $attr) {
-                            $item[$attr->nodeName] = $attr->nodeValue;
-                        }
-                    }
-
-                    // Add item to collection if it has any attributes
-                    if (!empty($item)) {
-                        $collection->push($item);
+            if ($root->hasAttributes()) {
+                foreach ($root->attributes as $attr) {
+                    if (! str_starts_with($attr->nodeName, 'xsi:')) {
+                        $header[$attr->nodeName] = $attr->nodeValue;
                     }
                 }
             }
 
-            // Clear XML errors
+            // 2. Find all Details elements (the leaf nodes with actual data)
+            $allDetailsNodes = $xpath->query('//node()[starts-with(local-name(), "Details") and local-name() != "Details_Collection"]');
+
+            if ($allDetailsNodes->length === 0) {
+                libxml_clear_errors();
+
+                return collect([
+                    'error' => null,
+                    'header' => $header,
+                    'data' => [],
+                    'columns' => [],
+                    'groupLevels' => [],
+                    'hierarchyDepth' => 0,
+                ]);
+            }
+
+            // 3. Determine hierarchy depth by analyzing the path from Details to the tablix container
+            $hierarchyInfo = $this->detectHierarchy($xpath, $allDetailsNodes->item(0));
+            $groupLevels = $hierarchyInfo['groupLevels'];
+            $hierarchyDepth = count($groupLevels);
+
+            // 4. Extract columns from the first Details element
+            $columns = [];
+            $firstDetail = $allDetailsNodes->item(0);
+            if ($firstDetail !== null && $firstDetail->hasAttributes()) {
+                foreach ($firstDetail->attributes as $attr) {
+                    $columns[] = $attr->nodeName;
+                }
+            }
+
+            // 5. Build the data structure based on hierarchy depth
+            $data = $this->extractHierarchicalData($xpath, $groupLevels, $columns);
+
             libxml_clear_errors();
 
-            return $collection;
+            return collect([
+                'error' => null,
+                'header' => $header,
+                'data' => $data,
+                'columns' => $columns,
+                'groupLevels' => $groupLevels,
+                'hierarchyDepth' => $hierarchyDepth,
+            ]);
         } catch (Exception $e) {
-            // Log::error('XML Parsing Error: ' . $e->getMessage());
             libxml_clear_errors();
-            throw new ErroredException('Failed to parse report ');
+
+            return collect([
+                'error' => $e->getMessage(),
+                'header' => [],
+                'data' => [],
+                'columns' => [],
+                'groupLevels' => [],
+                'hierarchyDepth' => 0,
+            ]);
         }
     }
 
+    /**
+     * Detect the hierarchy structure by traversing from Details element up to the tablix.
+     */
+    private function detectHierarchy(DOMXPath $xpath, \DOMNode $detailNode): array
+    {
+        $groupLevels = [];
+        $current = $detailNode->parentNode; // Start from Details_Collection
+
+        while ($current && $current->nodeName !== 'Report') {
+            $nodeName = $current->nodeName;
+
+            // Skip collection nodes and tablix containers
+            if (str_ends_with($nodeName, '_Collection') || str_starts_with($nodeName, 'Tablix') || str_starts_with($nodeName, 'Textbox')) {
+                $current = $current->parentNode;
+
+                continue;
+            }
+
+            // This is a grouping element - extract its key attribute (first attribute)
+            if ($current->hasAttributes() && $current->attributes->length > 0) {
+                $firstAttr = $current->attributes->item(0);
+                if ($firstAttr !== null) {
+                    $groupLevels[] = [
+                        'element' => $nodeName,
+                        'attribute' => $firstAttr->nodeName,
+                    ];
+                }
+            }
+
+            $current = $current->parentNode;
+        }
+
+        // Reverse to get from outermost to innermost grouping
+        return [
+            'groupLevels' => array_reverse($groupLevels),
+        ];
+    }
+
+    /**
+     * Extract data with hierarchical grouping information.
+     * Returns a flat array of rows, each row containing group context and detail data.
+     */
+    private function extractHierarchicalData(DOMXPath $xpath, array $groupLevels, array $columns): array
+    {
+        $data = [];
+        $hierarchyDepth = count($groupLevels);
+
+        if ($hierarchyDepth === 0) {
+            // Flat table - no grouping
+            $detailsNodes = $xpath->query('//node()[starts-with(local-name(), "Details") and local-name() != "Details_Collection"]');
+            foreach ($detailsNodes as $detailNode) {
+                $row = ['_groups' => [], '_depth' => 0];
+                if ($detailNode->hasAttributes()) {
+                    foreach ($detailNode->attributes as $attr) {
+                        $row[$attr->nodeName] = $attr->nodeValue;
+                    }
+                }
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+
+        // Build XPath query for the outermost grouping element
+        $outermostGroup = $groupLevels[0];
+        $groupQuery = "//*[local-name()='{$outermostGroup['element']}']";
+        $outerGroupNodes = $xpath->query($groupQuery);
+
+        foreach ($outerGroupNodes as $outerGroupNode) {
+            $this->extractGroupData($xpath, $outerGroupNode, $groupLevels, 0, [], $data);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Recursively extract grouped data.
+     */
+    private function extractGroupData(DOMXPath $xpath, \DOMNode $groupNode, array $groupLevels, int $currentLevel, array $parentGroups, array &$data): void
+    {
+        $currentGroup = $groupLevels[$currentLevel] ?? null;
+
+        if (! $currentGroup) {
+            return;
+        }
+
+        // Extract the group key value
+        $groupValue = '';
+        if ($groupNode->hasAttributes()) {
+            foreach ($groupNode->attributes as $attr) {
+                if ($attr->nodeName === $currentGroup['attribute']) {
+                    $groupValue = $attr->nodeValue;
+
+                    break;
+                }
+            }
+            // If specific attribute not found, use the first attribute
+            if (empty($groupValue) && $groupNode->attributes->length > 0) {
+                $groupValue = $groupNode->attributes->item(0)->nodeValue;
+            }
+        }
+
+        $currentGroups = array_merge($parentGroups, [
+            [
+                'level' => $currentLevel,
+                'name' => $currentGroup['element'],
+                'attribute' => $currentGroup['attribute'],
+                'value' => $groupValue,
+            ],
+        ]);
+
+        $nextLevel = $currentLevel + 1;
+
+        // Check if there are more grouping levels
+        if ($nextLevel < count($groupLevels)) {
+            $nextGroup = $groupLevels[$nextLevel];
+            $childGroupNodes = $xpath->query(".//*[local-name()='{$nextGroup['element']}']", $groupNode);
+
+            foreach ($childGroupNodes as $childGroupNode) {
+                $this->extractGroupData($xpath, $childGroupNode, $groupLevels, $nextLevel, $currentGroups, $data);
+            }
+        } else {
+            // We're at the deepest grouping level, now extract Details
+            $detailsNodes = $xpath->query(".//node()[starts-with(local-name(), 'Details') and local-name() != 'Details_Collection']", $groupNode);
+
+            foreach ($detailsNodes as $detailNode) {
+                $row = [
+                    '_groups' => $currentGroups,
+                    '_depth' => count($currentGroups),
+                ];
+
+                if ($detailNode->hasAttributes()) {
+                    foreach ($detailNode->attributes as $attr) {
+                        $row[$attr->nodeName] = $attr->nodeValue;
+                    }
+                }
+
+                $data[] = $row;
+            }
+        }
+    }
 
     /**
      * Get content type based on export format
@@ -286,7 +444,7 @@ class SSRSService
     // Example usage with device info
 
     /**
-     * Get file extension based on export format
+     * Get file extension based on the export format
      */
     protected function getFileExtension(string $format): string
     {
@@ -315,7 +473,7 @@ class SSRSService
     {
         // Build parameters string
         $paramString = '';
-        if (!empty($parameters)) {
+        if (! empty($parameters)) {
             $params = [];
             foreach ($parameters as $key => $value) {
                 $params[] = "$key=$value";
@@ -326,10 +484,10 @@ class SSRSService
         $response = $this->_query
             ->get($this->_serverAPIUrl . "Reports(Path='$path')/Model.Export", [
                 'format' => $format,
-                'parameters' => $paramString
+                'parameters' => $paramString,
             ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new ConnectionException(
                 "Failed to fetch report data. Status: {$response->status()}"
             );
@@ -344,11 +502,12 @@ class SSRSService
     public function getReportParameters(string $id): array
     {
         $response = $this->_query->get(Str::rtrim($this->_serverAPIUrl, '/') . "/Reports($id)/ParameterDefinitions");
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new ConnectionException(
                 "Failed to fetch report parameters. Status: {$response->status()}"
             );
         }
+
         return $response->json()['value'] ?? [];
     }
 
@@ -356,76 +515,88 @@ class SSRSService
      * @throws ConnectionException
      * @throws ErroredException
      */
-    public function getReportParametersValidated(string $id, array $requestParameters): Collection
+    public function getReportParametersValidated(string $id, array $requestParameters, ?User $actor): Collection
     {
         $finalParameters = collect();
         $parameters = $this->getReportParameters($id);
 
         foreach ($parameters as $parameter) {
+            if ($parameter['Name'] === self::UserParameter && $actor instanceof User) {
+                $finalParameters->put($parameter['Name'], $actor->UserID);
+
+                continue;
+            }
+
             if (isset($requestParameters[$parameter['Name']])) {
                 $value = $requestParameters[$parameter['Name']];
                 if ($parameter['ParameterType'] === 'DateTime') {
-
                     if (strtotime($value)) {
                         $finalParameters->put($parameter['Name'], $value);
+
                         continue;
                     }
+
                     throw new ErroredException("Parameter {$parameter['Name']} must be a valid date.");
                 }
 
                 if ($parameter['ParameterType'] === 'Boolean') {
                     if (in_array(strtolower($value), ['true', 'false', '1', '0'], true)) {
                         $finalParameters->put($parameter['Name'], in_array(strtolower($value), ['true', '1'], true) ? 'true' : 'false');
+
                         continue;
                     }
+
                     throw new ErroredException("Parameter {$parameter['Name']} must be a valid boolean value.");
                 }
 
                 if ($parameter['ParameterType'] === 'String') {
-                    if (!$parameter['ValidValuesIsNull'] && count($parameter['ValidValues']) > 0) {
+                    if (! $parameter['ValidValuesIsNull'] && count($parameter['ValidValues']) > 0) {
                         $validValues = collect($parameter['ValidValues'])->pluck('Value')->toArray();
 
                         if (is_array($value)) {
                             foreach ($value as $singleValue) {
-                                if (!in_array($singleValue, $validValues, true)) {
+                                if (! in_array($singleValue, $validValues, true)) {
                                     throw new ErroredException("Parameter {$parameter['Name']} must contain only allowed values.");
                                 }
                             }
-                        } elseif (!in_array($value, $validValues, true)) {
+                        } elseif (! in_array($value, $validValues, true)) {
                             throw new ErroredException("Parameter {$parameter['Name']} must be one of the allowed values.");
                         }
 
                         $finalParameters->put($parameter['Name'], $value);
+
                         continue;
                     }
 
                     if (is_string($value) && $value !== '') {
                         $finalParameters->put($parameter['Name'], $value);
+
                         continue;
                     }
+
                     throw new ErroredException("Parameter {$parameter['Name']} must be available.");
                 }
 
                 if ($parameter['ParameterType'] === 'Integer') {
-                    if (!is_numeric($value) || !ctype_digit((string)$value)) {
+                    if (! is_numeric($value) || ! ctype_digit((string)$value)) {
                         throw new ErroredException("Parameter {$parameter['Name']} must be a valid integer.");
                     }
                     $finalParameters->put($parameter['Name'], (int)$value);
+
                     continue;
                 }
 
                 if ($parameter['ParameterType'] === 'Float') {
-                    if (!is_numeric($value)) {
+                    if (! is_numeric($value)) {
                         throw new ErroredException("Parameter {$parameter['Name']} must be a valid number.");
                     }
                     $finalParameters->put($parameter['Name'], (float)$value);
+
                     continue;
                 }
 
                 // todo Add more parameter type validations here as needed
-
-
-            } elseif (!$parameter['Nullable'] && !$parameter['AllowBlank']) {
+            } elseif (! $parameter['Nullable'] && ! $parameter['AllowBlank']) {
                 throw new ErroredException("Parameter {$parameter['Name']} is required.");
             }
         }
@@ -451,14 +622,14 @@ class SSRSService
         foreach ($parameters as $key => $value) {
             $payload['parameters'][] = [
                 'Name' => $key,
-                'Value' => $value
+                'Value' => $value,
             ];
         }
 
         $response = $this->_query
             ->post($this->_serverAPIUrl . "Reports(Path='$path')/Model.Execute", $payload);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new ConnectionException(
                 "Failed to execute report. Status: {$response->status()}"
             );
@@ -482,7 +653,7 @@ class SSRSService
             throw new ErroredException("Could not reach to SSRS Server. Please check your connection.");
         }
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             if ($response->notFound()) {
                 throw new ErroredException("Report not found");
             }
@@ -500,7 +671,7 @@ class SSRSService
     }
 
     private function _getRoute(string $path): string
-    { //reports/report/BRERP/Admin/Permissions?rs:embed=true
+    {
         return $this->serverURL . "{$this->path}/report/" . Str::of($path)->trim()->ltrim('/')->rtrim('/') . '?rs:embed=true';
     }
 
@@ -516,7 +687,7 @@ class SSRSService
     {
         // Build parameters string if any parameters are provided
         $paramString = '';
-        if (!empty($parameters)) {
+        if (! empty($parameters)) {
             $params = [];
             foreach ($parameters as $key => $value) {
                 $params[] = "$key=$value";
@@ -527,7 +698,7 @@ class SSRSService
         $response = $this->_query
             ->get($this->_serverAPIUrl . "Reports(Path='$path')/Export?format=PDF{$paramString}");
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new ConnectionException(
                 "Failed to download PDF report. Status: {$response->status()}"
             );
@@ -551,13 +722,12 @@ class SSRSService
     {
         $response = $this->_query->get($this->_serverAPIUrl . 'Me');
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new ConnectionException(
                 "Failed to fetch SSRS reports. Status: {$response->status()}"
             );
         }
 
-        //dd($response->json());
         return collect($response->json()['value'] ?? []);
     }
 
@@ -573,7 +743,7 @@ class SSRSService
         $select = implode(',', $properties);
         $response = $this->_query->get($this->_serverAPIUrl . "Reports?\$select={$select}");
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new ConnectionException(
                 "Failed to fetch SSRS reports. Status: {$response->status()}"
             );
