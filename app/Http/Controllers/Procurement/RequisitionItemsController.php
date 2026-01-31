@@ -103,6 +103,7 @@ class RequisitionItemsController extends Controller
             'type' => gettype($items),
             'first_item' => $items ? (is_array($items) || $items instanceof \Illuminate\Support\Collection ? $items[0] ?? null : $items) : null
         ]);
+    }
 
     public function getItemDetails(Request $request, $item): JsonResponse
     {
@@ -282,7 +283,6 @@ class RequisitionItemsController extends Controller
                 'plan_id' => $planId,
             ]);
 
-            // Get RFQ Procurement Method ID
             $rfqMethodId = DB::table('t_CodeDetails')
                 ->where('CodeID', 'ProcurementMethod')
                 ->where('Value', 'R')
@@ -290,7 +290,6 @@ class RequisitionItemsController extends Controller
 
             Log::info('RFQ Method ID lookup', ['id' => $rfqMethodId]);
 
-            // Get all plan line items - filter availability in PHP
             $query = DB::table('t_PlanLineItem as pli')
                 ->join('t_Items as itm', 'pli.ItemID', '=', 'itm.Id')
                 ->leftJoin('t_ItemTypes as it', 'itm.ItemType', '=', 'it.Id')
@@ -317,24 +316,20 @@ class RequisitionItemsController extends Controller
                 DB::raw('ISNULL(pli.MergedQty, ISNULL(pli.OriginalQTY, 0)) as PlanQuantity'),
                 DB::raw('CASE WHEN pli.AdjustedCost > 0 THEN pli.AdjustedCost ELSE ISNULL(pli.EstimatedUnitCost, 0) END as UnitPrice'),
                 'pli.UnitOfMeasure as UOM'
-            )
-                ->get();
+            )->get();
 
+            $availableItems = $items->map(function ($item) {
                 $usedQty = DB::table('t_RequisitionLines')
                     ->where('PlanLineRef', $item->LineItemID)
                     ->sum('Quantity') ?? 0;
 
-                $availableQty = $item->PlanQuantity - $usedQty;
-
-                // Add calculated fields
                 $item->UsedQuantity = $usedQty;
-                $item->AvailableQuantity = $availableQty;
+                $item->AvailableQuantity = $item->PlanQuantity - $usedQty;
 
                 return $item;
             })->filter(function ($item) {
-                // Only return items with available quantity
                 return $item->AvailableQuantity > 0;
-            })->values(); // Reset array keys
+            })->values();
 
             Log::info('Plan items query executed', [
                 'plan_id' => $planId,
@@ -632,7 +627,6 @@ class RequisitionItemsController extends Controller
             ], 500);
         }
     }
-}
 
     public function destroy($lineId)
     {
