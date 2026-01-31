@@ -34,8 +34,8 @@ class PropertyTenantClearanceController extends Controller
             ->with('lease.tenant.thirdParty', 'code')
             ->get()
             ->filter(function ($termination) {
-                return $termination->lease 
-                    && $termination->lease->tenant 
+                return $termination->lease
+                    && $termination->lease->tenant
                     && $termination->lease->tenant->thirdParty;
             });
         $codedetails = CodeDetail::where('CodeID', 'DepositRefunded')->get();
