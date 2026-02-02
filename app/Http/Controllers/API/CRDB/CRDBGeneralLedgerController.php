@@ -94,4 +94,11 @@ class CRDBGeneralLedgerController extends Controller
         }
     }
 
+
+
+    //Sync for EOD Balances 
+    public function syncEOD(Request $request){
+        return 'Endpoint for ERP EOD';
+    }
+
 }
