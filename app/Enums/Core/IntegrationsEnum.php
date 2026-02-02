@@ -21,7 +21,7 @@ enum IntegrationsEnum: string
     case Facebook = 'sfb';
     case Twitter = 'xtw';
     case Website = 'web';
-    case CRDB = 'crdb';
+    case CRDB = 'cru';
     // Organization branding (name, motto, logo)
     case Organization = 'org';
     case LLM = 'llm';

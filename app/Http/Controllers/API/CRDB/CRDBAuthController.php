@@ -30,7 +30,7 @@ class CRDBAuthController extends Controller
                 'password' => 'required|string',
             ]);
 
-            // First, try to authenticate using APICredential configuration
+            # First, try to authenticate using APICredential configuration
             $apiCred = APICredential::query()
                 ->where('Integration', IntegrationsEnum::CRDB->value)
                 ->latest('Id')
@@ -39,24 +39,24 @@ class CRDBAuthController extends Controller
             if ($apiCred) {
                 $config = (array) $apiCred->Configuration;
 
-                // Check if username/password are stored in configuration
+                # Check if username/password are stored in configuration
                 if (isset($config['username']) && isset($config['password'])) {
                     $storedUsername = $config['username'];
                     $storedPassword = $config['password'];
 
-                    // Support both plain text and hashed passwords
+                    # Support both plain text and hashed passwords
                     $passwordValid = false;
                     if (Hash::needsRehash($storedPassword)) {
-                        // Plain text comparison (for initial setup)
+                        # Plain text comparison (for initial setup)
                         $passwordValid = ($validated['password'] === $storedPassword);
                     } else {
-                        // Hashed password
+                        # Hashed password
                         $passwordValid = Hash::check($validated['password'], $storedPassword);
                     }
 
                     if ($validated['username'] === $storedUsername && $passwordValid) {
-                        // For security, API keys cannot be retrieved from the database
-                        // Users must use the API key that was shown when it was generated
+                        # For security, API keys cannot be retrieved from the database
+                        # Users must use the API key that was shown when it was generated
                         return response()->json([
                             'success' => false,
                             'message' => 'API key cannot be retrieved for security reasons. Please use the API key that was displayed when it was generated, or generate a new one from the Integration settings page.',
@@ -65,29 +65,29 @@ class CRDBAuthController extends Controller
                 }
             }
 
-            // Fallback: Try to authenticate against User model
+            # Fallback: Try to authenticate against User model
             $user = \App\Models\Auth\User::where('Email', $validated['username'])
                 ->orWhere('UserID', $validated['username'])
                 ->first();
 
             if ($user && Hash::check($validated['password'], $user->Password)) {
-                // Check if user is active
-                if (isset($user->IsActive) && ! $user->IsActive) {
+                # Check if user is active
+                if (isset($user->IsActive) && !$user->IsActive) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Account is inactive',
                     ], 403);
                 }
 
-                // For security, API keys cannot be retrieved from the database
-                // Users must use the API key that was shown when it was generated
+                # For security, API keys cannot be retrieved from the database
+                # Users must use the API key that was shown when it was generated
                 return response()->json([
                     'success' => false,
                     'message' => 'API key cannot be retrieved for security reasons. Please use the API key that was displayed when it was generated, or generate a new one from the Integration settings page.',
                 ], 400);
             }
 
-            // Authentication failed
+            # Authentication failed
             throw ValidationException::withMessages([
                 'username' => ['Invalid credentials provided.'],
             ]);
@@ -122,13 +122,13 @@ class CRDBAuthController extends Controller
     {
         $config = (array) $apiCred->Configuration;
 
-        // Check if API key configuration exists
-        if (! isset($config['Key'])) {
+        # Check if API key configuration exists
+        if (!isset($config['Key'])) {
             throw new \Exception('API key not configured. Please generate an API key via the Integration settings page.');
         }
 
-        // For security, we cannot return the full key as it's not stored
-        // The user must use the key that was shown when it was generated
+        # For security, we cannot return the full key as it's not stored
+        # The user must use the key that was shown when it was generated
         throw new \Exception('API key cannot be retrieved for security reasons. Please generate a new key if you have lost it.');
     }
 
@@ -141,7 +141,7 @@ class CRDBAuthController extends Controller
             return $this->getApiKey($apiCred);
         }
 
-        // If no API credential exists, indicate it needs to be set up
+        # If no API credential exists, indicate it needs to be set up
         throw new \Exception('CRDB API credentials not configured. Please configure the integration first.');
     }
 
@@ -150,7 +150,7 @@ class CRDBAuthController extends Controller
      */
     public function validateToken(Request $request): JsonResponse
     {
-        // This would be handled by the middleware, but we can provide a simple endpoint
+        # This would be handled by the middleware, but we can provide a simple endpoint
         return response()->json([
             'success' => true,
             'message' => 'Token is valid',
