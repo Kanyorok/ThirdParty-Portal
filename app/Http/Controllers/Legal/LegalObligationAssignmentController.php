@@ -15,6 +15,7 @@ class LegalObligationAssignmentController extends Controller
     {
         $obligation = LegalObligation::findOrFail($obligationId);
         $assignments = $obligation->assignments()->with('obligation')->get();
+
         return view('legal.obligations.assignments.index', compact('obligation', 'assignments'));
     }
 
@@ -22,6 +23,7 @@ class LegalObligationAssignmentController extends Controller
     {
         $obligation = LegalObligation::findOrFail($obligationId);
         $users = User::where('IsActive', 1)->get(); // Can filter by department or legal role
+
         return view('legal.obligations.assignments.create', compact('obligation', 'users'));
     }
 
@@ -46,6 +48,7 @@ class LegalObligationAssignmentController extends Controller
     {
         $assignment = LegalObligationAssignment::findOrFail($id);
         $users = User::where('IsActive', 1)->get();
+
         return view('legal.obligations.assignments.edit', compact('assignment', 'users'));
     }
 

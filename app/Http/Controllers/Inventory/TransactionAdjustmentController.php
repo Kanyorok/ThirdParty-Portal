@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StockAdjustmentRequest;
 use App\Models\Auth\User;
-use App\Models\Core\Branch;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Branch;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockItem;
 use App\Services\Inventory\StockAdjustmentService;
-use Illuminate\Http\Request;  
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -27,7 +27,7 @@ class TransactionAdjustmentController extends Controller
     {
         $this->authorize('viewAny', StockAdjustment::class);
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -50,8 +50,8 @@ class TransactionAdjustmentController extends Controller
         $branch = Branch::findOrFail($branchId);
 
         $users = User::whereHas('employee', function ($q) use ($branchId) {
-                $q->where('BranchId', $branchId);
-            })
+            $q->where('BranchId', $branchId);
+        })
             ->get();
 
         $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
@@ -95,6 +95,8 @@ class TransactionAdjustmentController extends Controller
 
         return redirect()->back()->with('success', 'Stock adjustment approved.');
     }
+        return redirect()->back()->with('success', 'Stock adjustment approved.');
+    }
 
     public function edit(StockAdjustment $stockAdjustment)
     {
@@ -107,7 +109,7 @@ class TransactionAdjustmentController extends Controller
         $currentStocksInBranch = StockItem::where('Branch', $adjustment->Branch)
             ->whereIn('ItemID', $itemIdsInAdjustment)
             ->pluck('CurrentQty', 'ItemID');
-        
+
         $adjustment->items->each(function ($adjItem) use ($currentStocksInBranch) {
             $adjItem->current_stock_qty = $currentStocksInBranch->get($adjItem->Item, 0);
         });
@@ -115,7 +117,7 @@ class TransactionAdjustmentController extends Controller
         $branches = Branch::all();
         $users = User::all();
         $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
-        
+
         return view('inventory.transactions.adjustments.edit', compact('adjustment', 'branches', 'users', 'reasons'));
     }
 
@@ -123,7 +125,7 @@ class TransactionAdjustmentController extends Controller
     {
         $validated = $request->validated();
         $this->service->update($stockAdjustment, $validated);
-        
+
         return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment updated successfully.');
     }
 

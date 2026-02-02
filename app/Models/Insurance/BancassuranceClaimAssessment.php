@@ -4,18 +4,20 @@ namespace App\Models\Insurance;
 
 use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
-use App\Traits\Model\UserActorTrait;
 use App\Traits\Model\DocumentsTrait;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BancassuranceClaimAssessment extends Model
 {
-    use SoftDeletes, UserActorTrait, DocumentsTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $table = 't_BancassuranceClaimAssessments';
     protected $primaryKey = 'Id';
 
@@ -43,9 +45,9 @@ class BancassuranceClaimAssessment extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'Decision', 'ID');
     }
+
     public function claimpaiyments()
     {
         return $this->hasMany(BancassuranceClaimPayment::class, 'ClaimId', 'ClaimId');
     }
-
 }

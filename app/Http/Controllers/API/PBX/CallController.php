@@ -110,28 +110,28 @@ class CallController extends Controller
             }
 
 
-            //if($contact->PartyID == 0){//Unattached call
             $call = $query->where('t_Calls.PartyID', $contact->ContactID)->where('t_Calls.Party', Contact::getPrimaryKey())->first();
             $service = ($call instanceof Call)
                 ? (new CallService($call))
                 : CallService::createContact($contact, $request->getCallStatus(), $request->getCallType(), $start, $actor);
 
             $service->end($end, $request->getCallStatus(), $actor, true)->setResponse($request->all());
+
             return $this->succeeded('ok');
         }
 
         //Create contact and attach contact directly
         $contact = Contact::create([
-                                    'Label'      => "Unattached Caller",
-                                    'Phone'      => $phone,
-                                    'Party'      => Contact::getPrimaryKey(),
-                                    'PartyID'    => 0,
-                                    'CreatedBy'  => $actor->Id,
+                                    'Label' => "Unattached Caller",
+                                    'Phone' => $phone,
+                                    'Party' => Contact::getPrimaryKey(),
+                                    'PartyID' => 0,
+                                    'CreatedBy' => $actor->Id,
                                     'ModifiedBy' => $actor->Id,
                                    ]);
 
-         CallService::createContact($contact, $request->getCallStatus(), $request->getCallType(), $start, $actor)
-            ->end($end, $request->getCallStatus(), $actor, true)->setResponse($request->all());
+        CallService::createContact($contact, $request->getCallStatus(), $request->getCallType(), $start, $actor)
+           ->end($end, $request->getCallStatus(), $actor, true)->setResponse($request->all());
 
         return $this->succeeded('ok');
     }
@@ -143,6 +143,7 @@ class CallController extends Controller
     {
         Log::warning('3cx log: missed call');
         Log::info(json_encode($request->all()));
+
         return $this->succeeded('ok');
     }
 
@@ -153,6 +154,7 @@ class CallController extends Controller
     {
         Log::warning('3cx log: agent called customer');
         Log::info(json_encode($request->all()));
+
         return $this->succeeded('ok');
     }
 
@@ -163,6 +165,7 @@ class CallController extends Controller
     {
         Log::warning('3cx log: agent called customer but customer did not pick ');
         Log::info(json_encode($request->all()));
+
         return $this->succeeded('ok');
     }
 }

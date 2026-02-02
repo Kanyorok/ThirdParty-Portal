@@ -25,6 +25,7 @@ class SurveyPolicy
         if ($survey->Status->value === SurveyStatusEnum::Draft->value) {
             return ($user->Id === $survey->CreatedBy);
         }
+
         return $user->can(PermissionEnum::SurveyRead->value);
     }
 

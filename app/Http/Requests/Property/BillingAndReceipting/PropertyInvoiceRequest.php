@@ -44,5 +44,4 @@ class PropertyInvoiceRequest extends FormRequest
             'InvoiceNotes' => ['nullable', 'string', 'max:500'],
         ];
     }
-
 }

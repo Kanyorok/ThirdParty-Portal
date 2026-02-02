@@ -2,47 +2,51 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use App\Enums\TenderTypeEnum;
 use App\Enums\TenderStatusEnum;
+use App\Enums\TenderTypeEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Procurement\ModeTimeline;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderItems;
 use App\Models\Procurement\TenderStage;
 use App\Models\Procurement\TenderSupplier;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\Enum;
 use Throwable;
-
 
 class TenderApiController extends Controller
 {
+    private const VISIBLE_STATUSES = [
+        TenderStatusEnum::Published->value,
+        TenderStatusEnum::OpeningInProgress->value,
+    ];
+
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = Tender::with(['procurementMode', 'currency', 'tenderCategoryRelation', 'itemCategoryRelation', 'documents']);
+            $query = Tender::query()->with([
+                'procurementMode',
+                'currency',
+                'tenderCategoryRelation',
+                'itemCategoryRelation',
+                'documents',
+            ]);
 
-            // Enforce invites unless explicitly disabled (default: enabled to protect restricted tenders)
-            $enforceInvites = filter_var($request->query('enforce_invites', true), FILTER_VALIDATE_BOOLEAN);
-            $thirdPartyId = $request->query('third_party_id');
-            $user = Auth::guard('sanctum')->user();
+            $thirdPartyId = $this->resolveThirdPartyId($request);
+            $supplierIds = $this->resolveSupplierIds($thirdPartyId);
 
             // Fallback to Auth user context if available
-            if (!$thirdPartyId && $user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
+            if (! $thirdPartyId && $user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
                 $thirdPartyId = $user->ThirdPartyId;
             }
 
             if ($enforceInvites) {
                 // Resolve supplierId(s) for the current thirdParty (DISTINCT across multiple supplier rows)
                 $supplierIds = [];
-                if (!empty($thirdPartyId)) {
+                if (! empty($thirdPartyId)) {
                     $supplierIds = DB::table('t_Suppliers')
                         ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
                         ->where('t_SupplierMaster.ThirdPartyId', (int)$thirdPartyId)
@@ -78,7 +82,7 @@ class TenderApiController extends Controller
                                 TenderStatusEnum::OpeningInProgress->value,
                             ]);
                     });
-                    if (!empty($supplierIds)) {
+                    if (! empty($supplierIds)) {
                         $vis->orWhere(function ($restricted) use ($supplierIds) {
                             $restricted->where('TenderType', TenderTypeEnum::Restricted->value)
                                 ->whereIn('Status', [
@@ -116,12 +120,23 @@ class TenderApiController extends Controller
 
             // Optional filters
             $statusParam = $request->query('status');
-            if (!empty($statusParam)) {
-                $query->where('Status', $statusParam);
+            if (! empty($statusParam)) {
+                // Map user-friendly status names to database codes
+                $statusMap = [
+                    'Published' => TenderStatusEnum::Published->value,  // 'pb'
+                    'Draft' => TenderStatusEnum::Draft->value,          // 'dr'
+                    'Awarded' => TenderStatusEnum::Awarded->value,      // 'aw'
+                    'Closed' => TenderStatusEnum::Closed->value,        // 'cl'
+                    'OpeningInProgress' => TenderStatusEnum::OpeningInProgress->value, // 'opening_in_progress'
+                ];
+
+                // Check if it's a friendly name or already a code
+                $statusCode = $statusMap[$statusParam] ?? $statusParam;
+                $query->where('Status', $statusCode);
             }
 
             $typeParam = $request->query('tenderType');
-            if (!empty($typeParam)) {
+            if (! empty($typeParam)) {
                 $query->where('TenderType', $typeParam);
             }
 
@@ -146,82 +161,143 @@ class TenderApiController extends Controller
             }
             $activity->withProperties(['action' => 'viewed'])
                 ->log('Viewed tenders list');
+
             return response()->json([
+                'success' => true,
                 'message' => 'Tenders retrieved successfully.',
-                'data' => $tenders
+                'data' => $tenders,
             ], 200);
         } catch (Exception $e) {
             return response()->json(['message' => 'Failed to retrieve tenders. Please try again.'], 500);
         }
     }
-    public function index22(Request $request): JsonResponse
+
+    public function show(Request $request, int $id): JsonResponse
     {
         try {
-            \Log::info('Tender API called with params: ', $request->all());
+            // Get authenticated user for invitation checking
+            $user = Auth::guard('sanctum')->user();
+            $thirdPartyId = null;
 
-            $query = Tender::query();
+            if ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
+                $thirdPartyId = $user->ThirdPartyId;
+            }
 
-            // Test basic query first
-            $count = $query->count();
-            \Log::info("Total tenders in database: {$count}");
+            $tender = Tender::with([
+                'procurementMode',
+                'currency',
+                'tenderCategoryRelation',
+                'itemCategoryRelation',
+                'documents',
+                'items.item.price',
+            ])->find($id);
 
-            // Add relationships one by one
-            $query->with(['procurementMode', 'currency']);
+            if (! $tender) {
+                return response()->json([
+                    'message' => 'Tender not found.',
+                ], 404);
+            }
 
-            $tenders = $query->limit(10)->get();
+            // Check if user has access to this tender
+            $hasAccess = false;
+            $invitationStatus = null;
+
+            // Open tenders are accessible to all authenticated users if published
+            if (
+                $tender->TenderType === TenderTypeEnum::Open->value &&
+                in_array($tender->Status, [TenderStatusEnum::Published->value, 'opening_in_progress'])
+            ) {
+                $hasAccess = true;
+            }
+
+            // For restricted tenders or to get invitation status, check invitations
+            if ($thirdPartyId) {
+                // Get supplier IDs for this third party
+                $supplierIds = DB::table('t_Suppliers')
+                    ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
+                    ->where('t_SupplierMaster.ThirdPartyId', (int)$thirdPartyId)
+                    ->whereNull('t_Suppliers.DeletedOn')
+                    ->pluck('t_Suppliers.Id')
+                    ->toArray();
+
+                if (! empty($supplierIds)) {
+                    // Check if supplier is invited
+                    $invitation = DB::table('t_TenderInvitations')
+                        ->whereIn('SupplierId', $supplierIds)
+                        ->where('TenderId', $id)
+                        ->whereNull('DeletedOn')
+                        ->first();
+
+                    if ($invitation) {
+                        $hasAccess = true;
+                        $invitationStatus = strtolower($invitation->ResponseStatus ?? 'pending');
+                    }
+                }
+            }
+
+            // If user doesn't have access and tender is restricted, return 403
+            if (! $hasAccess && $tender->TenderType === TenderTypeEnum::Restricted->value) {
+                return response()->json([
+                    'message' => 'You do not have access to this tender. This is a restricted tender and you have not been invited.',
+                ], 403);
+            }
+
+            $invitationStatus = $this->resolveInvitationStatus($tender->Id, $supplierIds);
 
             return response()->json([
-                'message' => 'Tenders retrieved successfully.',
-                'data' => $tenders,
-                'debug' => [
-                    'total_count' => $count,
-                    'returned' => $tenders->count()
-                ]
+                'success' => true,
+                'message' => 'Tender details retrieved successfully.',
+                'data' => $tenderData,
             ], 200);
-        } catch (\Exception $e) {
-            \Log::error('TENDER API ERROR: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
-
-            return response()->json([
-                'message' => 'Failed to retrieve tenders.',
+        } catch (Exception $e) {
+            Log::error('Error fetching tender details', [
+                'tender_id' => $id,
                 'error' => $e->getMessage(),
-                'trace' => config('app.debug') ? $e->getTraceAsString() : null
+                'trace' => $e->getTraceAsString(),
+            ]);
+        } catch (Throwable $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve tender details. Please try again.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
 
-    public function store(Request $request): JsonResponse
+    private function applyVisibilityScope(Builder $query, array $supplierIds): void
     {
-        try {
-            $validated = $request->validate([
-                'title' => 'required|string|max:255',
-                'tender_type' => ['required', new Enum(TenderTypeEnum::class)],
-                'tender_category_id' => 'required|exists:t_TenderCategories,Id',
-                'item_category_id' => 'required|exists:item_categories,Id',
-                'procurement_mode_id' => 'required|exists:t_ProcurementModes,Id',
-                'currency_id' => 'required|exists:t_Currencies,Id',
-                'scope_of_work' => 'required|string',
-                'instructions' => 'required|string',
-                'submission_deadline' => 'required|date|after_or_equal:today',
-                'opening_date' => 'required|date|after_or_equal:submission_deadline',
-                'plan_items' => 'nullable|array',
-                'plan_items.*.item_id' => 'nullable|integer|exists:t_ItemMasterLists,Id',
-                'plan_items.*.qty' => 'required_with:plan_items.*.item_id|integer|min:1',
-                'plan_items.*.pr_ref' => 'nullable|string|max:255',
-                'manual_items' => 'nullable|array',
-                'manual_items.*.item_id' => 'nullable|integer|exists:t_ItemMasterLists,Id',
-                'manual_items.*.qty' => 'required_with:manual_items.*.item_id,manual_items.*.manual_item_description|integer|min:1',
-                'manual_items.*.pr_ref' => 'nullable|string|max:255',
-                'manual_items.*.manual_item_description' => 'required_without:manual_items.*.item_id|nullable|string|max:255',
-                'suppliers' => 'nullable|array',
-                'suppliers.*' => 'integer|exists:t_Suppliers,Id',
-                'documents.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:2048',
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
-            ], 422);
+        $query->where(function (Builder $q) use ($supplierIds) {
+            $q->where(function (Builder $open) {
+                $open->where('TenderType', TenderTypeEnum::Open->value)
+                    ->whereIn('Status', self::VISIBLE_STATUSES);
+            });
+
+            if (! empty($supplierIds)) {
+                $q->orWhere(function (Builder $restricted) use ($supplierIds) {
+                    $restricted->where('TenderType', TenderTypeEnum::Restricted->value)
+                        ->whereIn('Status', self::VISIBLE_STATUSES)
+                        ->whereExists(function ($sub) use ($supplierIds) {
+                            $sub->selectRaw(1)
+                                ->from('t_TenderInvitations as ti')
+                                ->whereColumn('ti.TenderId', 't_Tenders.Id')
+                                ->whereIn('ti.SupplierId', $supplierIds)
+                                ->whereNull('ti.DeletedOn');
+                        });
+                });
+            }
+        });
+    }
+
+    private function applyFilters(Builder $query, Request $request): void
+    {
+        if ($status = $request->query('status')) {
+            $query->where('Status', $status);
+        }
+    }
+
+    private function canAccessTender(Tender $tender, array $supplierIds): bool
+    {
+        if ($tender->TenderType === TenderTypeEnum::Open->value) {
+            return in_array($tender->Status, self::VISIBLE_STATUSES, true);
         }
 
         DB::beginTransaction();
@@ -249,7 +325,7 @@ class TenderApiController extends Controller
 
             $tenderId = $tender->Id;
 
-            if (!empty($validated['plan_items'])) {
+            if (! empty($validated['plan_items'])) {
                 foreach ($validated['plan_items'] as $compositeKey => $item) {
                     $split = explode('-', $compositeKey);
                     $planItemId = (int)end($split);
@@ -269,7 +345,7 @@ class TenderApiController extends Controller
                 }
             }
 
-            if (!empty($validated['manual_items'])) {
+            if (! empty($validated['manual_items'])) {
                 foreach ($validated['manual_items'] as $manualItem) {
                     if (empty($manualItem['item_id']) && empty($manualItem['manual_item_description'])) {
                         continue;
@@ -290,7 +366,7 @@ class TenderApiController extends Controller
                 }
             }
 
-            if (!empty($validated['suppliers'])) {
+            if (! empty($validated['suppliers'])) {
                 foreach ($validated['suppliers'] as $supplierId) {
                     TenderSupplier::create([
                         'TenderID' => $tenderId,
@@ -316,38 +392,30 @@ class TenderApiController extends Controller
 
             return response()->json([
                 'message' => 'Tender created successfully.',
-                'tender_id' => $tenderId
+                'tender_id' => $tenderId,
             ], 201);
         } catch (Exception $e) {
             DB::rollBack();
             Log::error("--- CREATE TENDER ERROR --- " . $e->getMessage());
             Log::error($e);
+
             return response()->json(['message' => 'Failed to create tender. Please try again.'], 500);
         }
+
+        return false;
     }
 
-    public function update(Request $request, string $id): JsonResponse
+    private function resolveInvitationStatus(int $tenderId, array $supplierIds): ?string
     {
-        try {
-            $validated = $request->validate([
-                'title' => 'required|string|max:255',
-                'tender_category_id' => 'required|exists:t_TenderCategories,Id',
-                'currency_id' => 'required|exists:t_Currencies,Id',
-                'scope_of_work' => 'required|string',
-                'instructions' => 'required|string',
-                'submission_deadline' => 'required|date|after_or_equal:today',
-                'opening_date' => 'required|date|after_or_equal:submission_deadline',
-                'procurement_mode_id' => 'required|exists:t_ProcurementModes,Id',
-                'item_category_id' => 'required|exists:item_categories,Id',
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
-            ], 422);
+        if (empty($supplierIds)) {
+            return null;
         }
 
-        DB::beginTransaction();
+        $invitation = DB::table('t_TenderInvitations')
+            ->where('TenderId', $tenderId)
+            ->whereIn('SupplierId', $supplierIds)
+            ->whereNull('DeletedOn')
+            ->first();
 
         try {
             $tender = Tender::findOrFail($id);
@@ -379,27 +447,19 @@ class TenderApiController extends Controller
             DB::rollBack();
             Log::error('--- UPDATE TENDER ERROR --- ' . $e->getMessage());
             Log::error($e);
+
             return response()->json(['message' => 'Failed to update tender. Please try again.'], 500);
         }
     }
 
-    public function addItem(Request $request, string $tenderId): JsonResponse
+    private function resolveThirdPartyId(Request $request): ?int
     {
-        try {
-            $validated = $request->validate([
-                'item_id' => 'nullable|integer|exists:t_ItemMasterLists,Id',
-                'qty_to_tender' => 'required_without:manual_item_description|integer|min:1',
-                'pr_ref' => 'nullable|string|max:255',
-                'manual_item_description' => 'required_without:item_id|nullable|string|max:255',
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
-            ], 422);
+        if ($id = $request->query('third_party_id')) {
+            return (int) $id;
         }
 
         DB::beginTransaction();
+
         try {
             $tender = Tender::findOrFail($tenderId);
 
@@ -433,11 +493,12 @@ class TenderApiController extends Controller
             DB::rollBack();
             Log::error("--- ADD TENDER ITEM ERROR --- " . $e->getMessage());
             Log::error($e);
+
             return response()->json(['message' => 'Failed to add tender item. Please try again.'], 500);
         }
     }
 
-    public function deleteItem(string $tenderId, string $itemId): JsonResponse
+    private function resolveSupplierIds(?int $thirdPartyId): array
     {
         try {
             DB::beginTransaction();
@@ -460,6 +521,7 @@ class TenderApiController extends Controller
             DB::rollBack();
             Log::error("--- DELETE TENDER ITEM ERROR --- " . $e->getMessage());
             Log::error($e);
+
             return response()->json(['message' => 'Failed to delete tender item. Please try again.'], 500);
         }
     }
@@ -478,6 +540,7 @@ class TenderApiController extends Controller
         }
 
         DB::beginTransaction();
+
         try {
             $tender = Tender::findOrFail($tenderId);
 
@@ -504,6 +567,7 @@ class TenderApiController extends Controller
             DB::rollBack();
             Log::error("--- ADD TENDER SUPPLIER ERROR --- " . $e->getMessage());
             Log::error($e);
+
             return response()->json(['message' => 'Failed to add tender supplier. Please try again.'], 500);
         }
     }
@@ -531,6 +595,7 @@ class TenderApiController extends Controller
             DB::rollBack();
             Log::error("--- DELETE TENDER SUPPLIER ERROR --- " . $e->getMessage());
             Log::error($e);
+
             return response()->json(['message' => 'Failed to delete tender supplier. Please try again.'], 500);
         }
     }
@@ -548,10 +613,12 @@ class TenderApiController extends Controller
             }
             $activity->withProperties(['action' => 'delete'])
                 ->log('Tender deleted successfully with ID: ' . $id);
+
             return response()->json(['message' => 'Tender deleted successfully.'], 200);
         } catch (Throwable $th) {
             Log::error("--- DELETE TENDER ERROR --- " . $th->getMessage());
             Log::error($th);
+
             return response()->json(['message' => 'Failed to delete tender. Please try again.'], 500);
         }
     }

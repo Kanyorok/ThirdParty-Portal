@@ -31,7 +31,6 @@ class BudgetDriversSetupController extends Controller
      */
     public function create()
     {
-        //
     }
 
     /**
@@ -54,7 +53,7 @@ class BudgetDriversSetupController extends Controller
                 'IsActive' => $request->has('IsActive') ? 1 : 0,
 
                 'CreatedBy' => Auth::id(),
-                'ModifiedBy' => Auth::id()
+                'ModifiedBy' => Auth::id(),
 
             ]);
 
@@ -68,17 +67,16 @@ class BudgetDriversSetupController extends Controller
                 ->log('Create a Budget Driver');
 
             return back()->with('success', 'Budget driver created successfully.');
-
         } catch (\Throwable $th) {
             DB::rollBack();
 
             Log::error('Failed to store budget line mapping.', [
                 'error' => $th->getMessage(),
-                'stack' => $th->getTraceAsString()
+                'stack' => $th->getTraceAsString(),
             ]);
+
             return back()->with('error', 'An Error Occurred. Please try again');
         }
-
     }
 
     /**
@@ -86,7 +84,6 @@ class BudgetDriversSetupController extends Controller
      */
     public function show(string $id)
     {
-        //
     }
 
     /**
@@ -94,7 +91,6 @@ class BudgetDriversSetupController extends Controller
      */
     public function edit(string $id)
     {
-        //
     }
 
     /**
@@ -126,13 +122,13 @@ class BudgetDriversSetupController extends Controller
                 ->log('Updated a Budget Driver');
 
             return back()->with('success', 'Budget driver Updated successfully.');
-
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to store budget driver.', [
                 'error' => $th->getMessage(),
-                'stack' => $th->getTraceAsString()
+                'stack' => $th->getTraceAsString(),
             ]);
+
             return back()->with('error', 'An Error Occurred. Please try again');
         }
     }
@@ -155,13 +151,15 @@ class BudgetDriversSetupController extends Controller
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'delete'])
                 ->log('Deleted a Budget Driver');
+
             return back()->with('success', 'Driver deleted Successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to delete budget line mapping.', [
                 'error' => $th->getMessage(),
-                'stack' => $th->getTraceAsString()
+                'stack' => $th->getTraceAsString(),
             ]);
+
             return back()->with('error', 'An Error Occurred. Please try again');
         }
     }

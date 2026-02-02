@@ -41,6 +41,7 @@ class RepositoryController extends Controller
         if ($request->ajax()) {
             return new RepositoryCollection($repository->repositories()->user($request->user())->withCount('documents')->paginate(20));
         }
+
         return view('dms.repo.show')
             ->with('repository', $repository)->with('service', new RepositoryService($repository));
     }
@@ -52,19 +53,21 @@ class RepositoryController extends Controller
     {
         $repository = $request->getParentRepo();
         $this->authorize('update', $repository);
+
         try {
             return DB::transaction(function () use ($request, $repository) {
                 return $this->succeeded('repository created successfully', data: [
                     'data' => new RepositoryResource(
                         RepositoryService::create($repository, $request->string('repository_name')->trim()->toString(), $request->user(), $request->string('repository_description', '')->trim()->toString())->repo
-                    )
+                    ),
                 ]);
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error DMS repository create : ');
             Log::error($e);
+
             return $this->errored('unexpected error, try again later');
         }
     }
@@ -84,6 +87,7 @@ class RepositoryController extends Controller
     public function destroy(Request $request, Repository $repository): JsonResponse
     {
         $actor = $request->user();
+
         try {
             return DB::transaction(function () use ($repository, $actor, $request) {
                 $repository->forceFill([
@@ -104,11 +108,12 @@ class RepositoryController extends Controller
                 activity()->causedBy($actor)->performedOn($repository)->event('delete')->log('trashed repository  ' . $repository->Name . '.');
 
                 return $this->succeeded('repository trashed', data: [
-                    'data' => new RepositoryResource($repository)
+                    'data' => new RepositoryResource($repository),
                 ]);
             });
         } catch (Throwable $e) {
             Log::error('trash board member : ' . $e);
+
             return $this->errored('an unexpected error occurred');
         }
     }
@@ -123,13 +128,14 @@ class RepositoryController extends Controller
                 'data' => new RepositoryResource(
                     (new RepositoryService($repository))->update($request->string('repository_name')->trim()->toString(), $request->user(), $request->string('repository_description', '')->trim()->toString())
                         ->repo->loadCount('documents')
-                )
+                ),
             ]);
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error DMS repository update : ');
             Log::error($e);
+
             return $this->errored('unexpected error, try again later');
         }
     }

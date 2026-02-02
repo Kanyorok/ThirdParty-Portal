@@ -2,16 +2,16 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\ItemCategories;
-use App\Models\Core\Approval\CodeDetail;
-use App\Models\DMS\Image;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\DMS\Image;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\ItemMasterList;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Carbon;
-use Illuminate\Http\UploadedFile;
 
 class ItemMasterListService
 {
@@ -137,7 +137,7 @@ class ItemMasterListService
             $item->Status = $inactiveId;
             $item->DeletedBy = Auth::id();
             $item->DeletedOn = Carbon::now();
-            
+
             $item->save();
 
             if ($item->ImageId) {

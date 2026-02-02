@@ -32,6 +32,7 @@ class MarketingPlanActionController extends Controller
     public function workflow(MarketingPlanner $planner): JsonResponse
     {
         $this->authorize('view', $planner);
+
         return $this->workflows($planner->workflows());
     }
 
@@ -43,7 +44,7 @@ class MarketingPlanActionController extends Controller
         $actor = $request->user();
         $planner = MarketingPlanner::query()->where('PlannerID', $planner_id)->where('OwnerId', $actor->Id)
             ->where('Status', PlannerStatus::Draft->value)->first();
-        if (!$planner instanceof MarketingPlanner) {
+        if (! $planner instanceof MarketingPlanner) {
             return $this->errored('Cannot submit,  plan already submitted');
         }
         $this->authorize('view', $planner);
@@ -55,7 +56,7 @@ class MarketingPlanActionController extends Controller
         $branch = $planner->branch;
 
 
-        if ((!$branch?->manager instanceof User && !$branch?->operation instanceof User)) {
+        if ((! $branch?->manager instanceof User && ! $branch?->operation instanceof User)) {
             return $this->errored('No Branch or Operation Manager in Branch.');
         }
 
@@ -65,8 +66,9 @@ class MarketingPlanActionController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error submitting planner failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

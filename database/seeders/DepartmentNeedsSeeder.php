@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\Procurement\DepartmentNeed;
-use Illuminate\Database\Seeder;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
 use App\Models\Inventory\ItemMasterList;
+use App\Models\Procurement\DepartmentNeed;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
 class DepartmentNeedsSeeder extends Seeder
@@ -23,6 +23,7 @@ class DepartmentNeedsSeeder extends Seeder
 
         if (empty($branchIds) || empty($departmentIds) || empty($itemIds)) {
             $this->command->warn('Branches, Departments, or Items missing. Seed those first.');
+
             return;
         }
 

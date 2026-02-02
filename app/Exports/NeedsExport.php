@@ -3,11 +3,9 @@
 namespace App\Exports;
 
 use App\Models\Procurement\DepartmentNeed;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Procurement\ConsolidatedDashboardController;
-use App\Enums\Procurement\DepartmentNeedsEnum;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
 class NeedsExport implements FromQuery, WithHeadings, WithMapping
@@ -46,7 +44,7 @@ class NeedsExport implements FromQuery, WithHeadings, WithMapping
             'Department',
             'Requested Qty',
             'Estimated Cost',
-            'Date Needed',
+            'Expected Delivery Date',
             'Status',
         ];
     }
@@ -66,4 +64,3 @@ class NeedsExport implements FromQuery, WithHeadings, WithMapping
         ];
     }
 }
-

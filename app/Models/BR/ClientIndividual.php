@@ -9,8 +9,6 @@ class ClientIndividual extends Model
     public $incrementing = false;
     public $timestamps = false;
     protected $primaryKey = 'ClientID';
-    // protected $table = 't_ClientIndividual';
-    //protected $connection = 'brcbs';
     protected $table = 'syn_t_ClientIndividual';
     protected $connection = 'sqlsrv';
 

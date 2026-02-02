@@ -16,7 +16,7 @@ return [
     | Needs to implement the RoachPHP\Scheduling\RequestScheduler interface.
     |
     */
-        'request_queue'            => ArrayRequestScheduler::class,
+        'request_queue' => ArrayRequestScheduler::class,
 
     /*
     |--------------------------------------------------------------------------
@@ -29,7 +29,7 @@ return [
     | Needs to implement the RoachPHP\Http\ClientInterface interface.
     |
     */
-        'client'                   => Client::class,
+        'client' => Client::class,
 
     /*
     |--------------------------------------------------------------------------

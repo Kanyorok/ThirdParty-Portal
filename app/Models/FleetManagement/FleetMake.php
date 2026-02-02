@@ -2,20 +2,20 @@
 
 namespace App\Models\FleetManagement;
 
-use Illuminate\Database\Eloquent\Model;
-use App\Traits\Model\UserActorTrait;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Auth\User;
-use App\Models\Core\Approval\CodeDetail;
 use App\Models\Fleet\FleetVehicle;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FleetMake extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
 
     protected $table = 't_FleetBrands';
@@ -27,9 +27,8 @@ class FleetMake extends Model
         'BrandName',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
-
 
     public static function getPrimaryKey(): string
     {

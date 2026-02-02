@@ -44,6 +44,7 @@ class ReviewController extends Controller
             $party = $review->party;
         }
         activity()->causedBy($request->user())->performedOn($review)->event('view')->log('Viewed review details');
+
         return view('crm.feedback.reviews.show', compact('review', 'party'));
     }
 }

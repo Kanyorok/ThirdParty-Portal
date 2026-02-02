@@ -142,10 +142,12 @@ class MarketingPlannerController extends Controller
             $planner = DB::transaction(static function () use ($request, $branch, $mode, $actor) {
                 $planner = PlannerService::create($branch, $mode, $request->validated('Name'), ($request->validated('Notes')) ?? "", $actor)->planner;
                 activity()->causedBy($request->user())->performedOn($planner)->event('create')->log('created  marketing plan ' . $planner->PlannerID);
+
                 return $planner;
             });
         } catch (Throwable | Exception $e) {
             Log::error('Error creating planner failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -174,7 +176,7 @@ class MarketingPlannerController extends Controller
         $this->authorize('create', MarketingPlanner::class);
         $planner = MarketingPlanner::query()->where('PlannerID', $planner_id)->where('OwnerId', $request->user()->Id)
             ->where('Type', PlannerTypeEnum::BranchPlanner->value)->where('BranchId', $request->user()->BranchId)->where('Status', PlannerStatus::Draft->value)->first();
-        if (!$planner instanceof MarketingPlanner) {
+        if (! $planner instanceof MarketingPlanner) {
             return redirect()->route('marketing-planner.index')->with('fail', 'Cannot edit a plan already submitted');
         }
 
@@ -194,7 +196,7 @@ class MarketingPlannerController extends Controller
         $this->authorize('create', MarketingPlanner::class);
         $planner = MarketingPlanner::query()->where('PlannerID', $planner_id)->where('OwnerId', $request->user()->Id)
             ->where('Type', PlannerTypeEnum::BranchPlanner->value)->where('BranchId', $request->user()->BranchId)->where('Status', PlannerStatus::Draft->value)->first();
-        if (!$planner instanceof MarketingPlanner) {
+        if (! $planner instanceof MarketingPlanner) {
             return $this->errored('Cannot edit a plan already submitted');
         }
         $mode = $request->getMode();
@@ -207,6 +209,7 @@ class MarketingPlannerController extends Controller
             });
         } catch (Exception | Throwable $e) {
             Log::error('Error updating planner failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -223,7 +226,7 @@ class MarketingPlannerController extends Controller
         $actor = $request->user();
         $planner = MarketingPlanner::query()->where('PlannerID', $planner_id)->where('OwnerId', $request->user()->Id)
             ->where('Type', PlannerTypeEnum::BranchPlanner->value)->where('BranchId', $request->user()->BranchId)->where('Status', PlannerStatus::Draft->value)->first();
-        if (!$planner instanceof MarketingPlanner) {
+        if (! $planner instanceof MarketingPlanner) {
             return $this->errored('cannot find that planner');
         }
 
@@ -235,6 +238,7 @@ class MarketingPlannerController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error removing  planner failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

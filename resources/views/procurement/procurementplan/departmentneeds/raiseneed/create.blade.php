@@ -82,7 +82,7 @@
         </div>
 
         <div class="mb-3">
-            <label for="RequestedDate" class="form-label">Date Needed</label>
+            <label for="RequestedDate" class="form-label">Expected Delivery Date</label>
             <input type="date" name="RequestedDate" id="RequestedDate" value="{{ old('RequestedDate') }}"
                    min="{{ now()->toDateString() }}"
                    class="form-control @error('RequestedDate') is-invalid @enderror" required>

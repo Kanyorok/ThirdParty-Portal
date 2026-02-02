@@ -39,5 +39,4 @@ class TransactionReceiptRequest extends FormRequest
 
         ];
     }
-
 }

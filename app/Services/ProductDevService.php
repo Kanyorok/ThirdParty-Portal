@@ -21,7 +21,7 @@ class ProductDevService
 
     public function commenting(): bool
     {
-        return (!is_null($this->product->CommentStart) && is_null($this->product->CommentEnd));
+        return (! is_null($this->product->CommentStart) && is_null($this->product->CommentEnd));
     }
 
     /**
@@ -32,19 +32,19 @@ class ProductDevService
         $stages = StaticListsService::getList(StaticListsService::ProductDevelopmentStages);
         $stage = $stages->sortByDesc('DisplayOrder')->first();
         //todo fix this
-        if (!$stage instanceof CodeDetail) {
+        if (! $stage instanceof CodeDetail) {
             throw new ErroredException('system does not have product development stages');
         }
 
         $product = ProductDevelopment::create([
-                                               'ProductID'   => self::_ID(),
-                                               'Name'        => $Name,
+                                               'ProductID' => self::_ID(),
+                                               'Name' => $Name,
                                                'TargetGroup' => $TargetGroup,
-                                               'User_ID'     => $actor->Id,
-                                               'Notes'       => $Notes,
-                                               'StageId'     => $stage->ID,
-                                               'CreatedBy'   => $actor->Id,
-                                               'ModifiedBy'  => $actor->Id,
+                                               'User_ID' => $actor->Id,
+                                               'Notes' => $Notes,
+                                               'StageId' => $stage->ID,
+                                               'CreatedBy' => $actor->Id,
+                                               'ModifiedBy' => $actor->Id,
                                               ]);
 
         activity()->causedBy($actor)->performedOn($product)->event('create')->log('created product (' . Str::upper($product->ProductID) . ') for development.');
@@ -67,16 +67,17 @@ class ProductDevService
     {
         $document = ImageService::createUpload($file, ProductDevelopment::getPrimaryKey(), $this->product->Id, $actor)->image;
         activity()->causedBy($actor)->performedOn($this->product)->event('document')->log('added a document  ' . $document->Name . ' to Product Development ' . Str::upper($this->product->ProductID) . '.');
+
         return $document;
     }
 
     public function addFeature(string $title, string $description, User $actor): ProductDevelopmentFeature
     {
         $feature = $this->product->features()->create([
-                                                       'Feature'     => $title,
+                                                       'Feature' => $title,
                                                        'Description' => $description,
-                                                       'CreatedBy'   => $actor->Id,
-                                                       'ModifiedBy'  => $actor->Id,
+                                                       'CreatedBy' => $actor->Id,
+                                                       'ModifiedBy' => $actor->Id,
                                                       ]);
         activity()->causedBy($actor)->performedOn($this->product)->event('feature')->log('added a feature  ' . $title . ' to Product Development ' . Str::upper($this->product->ProductID) . '.');
 
@@ -86,14 +87,13 @@ class ProductDevService
     public function updateFeature(ProductDevelopmentFeature $feature, string $title, string $description, User $actor): ProductDevelopmentFeature
     {
         $feature->fill([
-                        'Feature'     => $title,
+                        'Feature' => $title,
                         'Description' => $description,
-                        'ModifiedBy'  => $actor->Id,
+                        'ModifiedBy' => $actor->Id,
                        ])->save();
 
         return $feature;
     }
-
 
     public function comment(string $description, User $actor, Comment $comment = null): Comment
     {

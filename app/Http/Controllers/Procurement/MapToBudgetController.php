@@ -10,10 +10,8 @@ use App\Models\Procurement\PlanLineItems;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-
 class MapToBudgetController extends Controller
 {
-
     public function index()
     {
         $draftItems = PlanLineItems::whereHas('consolidatedProcurementPlan', static function ($query) {
@@ -24,17 +22,20 @@ class MapToBudgetController extends Controller
 
         return view('procurement.procurementplan.planneditemsandactivities.linktobudget.index', compact('draftItems', 'budgetLines'));
     }
+
     public function store(Request $request)
     {
         $userId = $request->user()->id;
 
         foreach ($request->lineItemIds as $lineItemId) {
             $budgetLineId = $request->input("budgetLine_$lineItemId");
-//todo validate this data
+            //todo validate this data
             if ($budgetLineId) {
                 // Fetch item to calculate amount
                 $item = PlanLineItems::find($lineItemId);
-                if (!$item) continue;
+                if (! $item) {
+                    continue;
+                }
 
                 $amount = $item->MergedQty * $item->EstimatedUnitCost;
                 BudgetLineLink::create([
@@ -56,5 +57,4 @@ class MapToBudgetController extends Controller
     {
         return view('procurement.procurementplan.planneditemsandactivities.linktobudget.create');
     }
-
 }

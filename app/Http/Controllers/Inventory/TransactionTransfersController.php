@@ -8,19 +8,15 @@ use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\StockItem;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Procurement\GoodsReceipt;
 use App\Services\Inventory\TransactionTransferService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-
 use Throwable;
 
 class TransactionTransfersController extends Controller
 {
-
     protected TransactionTransferService $service;
 
     public function __construct(TransactionTransferService $service)
@@ -32,7 +28,7 @@ class TransactionTransfersController extends Controller
     {
         $this->authorize('viewAny', TransactionTransfer::class);
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -69,7 +65,7 @@ class TransactionTransfersController extends Controller
     public function create(Request $request)
     {
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -106,10 +102,9 @@ class TransactionTransfersController extends Controller
             return redirect()
                 ->route('transactionstransfers.index')
                 ->with('success', $message);
-                
         } catch (Throwable $e) {
             DB::rollBack();
-            
+
             $errorMessage = 'Error creating transfer: ' . $e->getMessage();
 
             return redirect()
@@ -117,7 +112,13 @@ class TransactionTransfersController extends Controller
                 ->withInput()
                 ->with('error', $errorMessage);
         }
+
+        return redirect()
+            ->back()
+            ->withInput()
+            ->with('error', $errorMessage);
     }
+
     public function show($Id)
     {
         $this->authorize('view', TransactionTransfer::class);
@@ -126,7 +127,7 @@ class TransactionTransfersController extends Controller
             'toBranch',
             'creator',
             'items.item',
-            'transferredBy'
+            'transferredBy',
         ])->findOrFail($Id);
 
         return view('inventory.transactions.transfers.show', compact('transferitem'));
@@ -150,7 +151,7 @@ class TransactionTransfersController extends Controller
             'toBranch',
             'creator',
             'items.item',
-            'requisition'
+            'requisition',
         ])->findOrFail($Id);
 
         return view('inventory.transactions.transfers.edit', compact('transferitem', 'branches', 'itemsMasterList', 'users'));
@@ -178,17 +179,17 @@ class TransactionTransfersController extends Controller
 
             $itemId = $request->input('item_id');
             $branchId = $request->input('branch_id');
-            
+
             $batches = $this->service->getAvailableGRNBatches($itemId, $branchId);
 
             return response()->json([
                 'success' => true,
-                'batches' => $batches
+                'batches' => $batches,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to load GRN batches: ' . $e->getMessage()
+                'message' => 'Failed to load GRN batches: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -206,11 +207,10 @@ class TransactionTransfersController extends Controller
         return redirect()->route('transactionstransfers.index')->with('success', 'Transfer deleted.');
     }
 
-
     public function getRequisitionsByType($type, Request $request)
     {
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -253,7 +253,7 @@ class TransactionTransfersController extends Controller
                     'fromBranch',
                     'toBranch',
                     'items.item.price',
-                    'items.item.uom'
+                    'items.item.uom',
                 ])->findOrFail($id);
 
                 $items = $requisition->items->map(function ($item) {

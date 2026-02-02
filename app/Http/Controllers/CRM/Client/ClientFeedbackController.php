@@ -25,6 +25,7 @@ class ClientFeedbackController extends Controller
     public function __invoke(Client $client): JsonResponse
     {
         $this->authorize('viewAny', Review::class);
+
         return $this->reviews($client->reviews());
     }
 }

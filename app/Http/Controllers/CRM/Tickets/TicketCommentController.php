@@ -33,9 +33,9 @@ class TicketCommentController extends Controller
     public function index(Ticket $ticket): CommentCollection
     {
         $this->authorize('view', $ticket);
+
         return new CommentCollection($ticket->comments()->with('creator')->latest('t_Comments.Id')->paginate(10));
     }
-
 
     /**
      * Store a newly created resource in storage.
@@ -44,7 +44,7 @@ class TicketCommentController extends Controller
     public function store(Request $request, Ticket $ticket): JsonResponse|CommentResource
     {
         $this->authorize('view', $ticket);
-        if (!in_array($ticket->Status->value, [TicketStatusEnum::Active->value, TicketStatusEnum::Approval->value], true)) {
+        if (! in_array($ticket->Status->value, [TicketStatusEnum::Active->value, TicketStatusEnum::Approval->value], true)) {
             return $this->errored('ticket is not open.');
         }
         $request->validate([
@@ -62,12 +62,12 @@ class TicketCommentController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error create ticket comment ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
         return $this->succeeded('comment added', data: ['data' => new CommentResource($comment)]);
     }
-
 
     /**
      * Remove the specified resource from storage.
@@ -76,7 +76,7 @@ class TicketCommentController extends Controller
     {
         $comment = $ticket->comments()->where('CreatedBy', $request->user()->Id)->where('t_Comments.Id', $comment_id)->first();
 
-        if (!$comment instanceof Comment) {
+        if (! $comment instanceof Comment) {
             return $this->errored('comment not found');
         }
 

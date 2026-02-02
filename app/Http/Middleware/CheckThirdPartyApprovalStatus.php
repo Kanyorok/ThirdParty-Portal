@@ -15,15 +15,15 @@ class CheckThirdPartyApprovalStatus
     {
         $user = Auth::guard('sanctum')->user();
 
-        if (!$user instanceof ThirdPartyUser) {
+        if (! $user instanceof ThirdPartyUser) {
             return response()->json([
-                'message' => __('auth.unauthenticated')
+                'message' => __('auth.unauthenticated'),
             ], 401);
         }
 
-        if (!$user->thirdParty || $user->thirdParty->ApprovalStatus !== ThirdPartyApprovalStatusEnum::Approved) {
+        if (! $user->thirdParty || $user->thirdParty->ApprovalStatus !== ThirdPartyApprovalStatusEnum::Approved) {
             return response()->json([
-                'message' => __('auth.acc_not_approved')
+                'message' => __('auth.acc_not_approved'),
             ], 403);
         }
 

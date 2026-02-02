@@ -36,18 +36,9 @@
         background-color: #dc3545;
     }
 
-    .card {
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
-
-    .table td,
-    .table th {
-        padding: 0.75rem;
-    }
-
-    .table-striped>tbody>tr:nth-of-type(odd)>* {
-        background-color: #f8f9fa;
+    .status-pill.info {
+        background-color: #0dcaf0;
+        color: #212529;
     }
 </style>
 @endsection
@@ -102,10 +93,11 @@
                             $statusClass = $approvalStatus?->getBadgeClass() ?? 'pending';
                             $statusLabel = $approvalStatus?->label() ?? 'Pending';
                             $statusIcon = match($statusLabel) {
-                            'Approved' => 'fas fa-check-circle',
-                            'Pending' => 'fas fa-clock',
-                            'Rejected' => 'fas fa-times-circle',
-                            default => ''
+                                'Approved' => 'fas fa-check-circle',
+                                'Pending' => 'fas fa-clock',
+                                'Rejected', 'Suspended' => 'fas fa-times-circle',
+                                'Submitted' => 'fas fa-paper-plane',
+                                default => 'fas fa-info-circle'
                             };
                             @endphp
                             <span class="status-pill {{ $statusClass }}">
@@ -156,9 +148,10 @@
                             <div class="d-flex flex-column gap-2">
                                 @foreach($prequalifiedCats as $supplierRow)
                                 @php $category = $supplierRow->category; @endphp
+                                @if($category)
                                 <div class="border rounded p-2">
                                     <div class="fw-bold text-primary">{{ $category->CategoryName ?? $category->Description ?? 'Category' }}</div>
-                                    @if($category->itemCategories->isNotEmpty())
+                                    @if($category->itemCategories && $category->itemCategories->isNotEmpty())
                                     <div class="small text-muted mt-1">
                                         Items: {{ $category->itemCategories->pluck('Name')->join(', ') }}
                                     </div>
@@ -166,6 +159,7 @@
                                     <div class="small text-muted mt-1 fst-italic">No specific items listed</div>
                                     @endif
                                 </div>
+                                @endif
                                 @endforeach
                             </div>
                             @else

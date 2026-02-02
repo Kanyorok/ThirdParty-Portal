@@ -6,30 +6,29 @@ use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Auth;
 
 class MedicalFundContribution extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     protected $table = 't_MedicalFundContributions';
     protected $primaryKey = 'Id';
 
     public $timestamps = true;
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'FundId','ContributorType','ContributorId','Amount','ContributionDate','Notes',
-        'CreatedBy','ModifiedBy','DeletedBy'
+        'CreatedBy','ModifiedBy','DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
     {
         return 'MedicalFundContributionId';
     }
-
 
     public function fund()
     {
@@ -38,9 +37,9 @@ class MedicalFundContribution extends Model
     }
 
     public function contributor()
-    { 
+    {
         // contributions table uses ContributorId (matching other models)
-        return $this->belongsTo(MedicalFundContributor::class, 'ContributorId','Id'); 
+        return $this->belongsTo(MedicalFundContributor::class, 'ContributorId', 'Id');
     }
 
     /**

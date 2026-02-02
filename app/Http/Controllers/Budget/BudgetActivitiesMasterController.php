@@ -20,11 +20,14 @@ class BudgetActivitiesMasterController extends Controller
         // Authorize the user to view budget activities
         $activities = BudgetActivityMaster::orderBy('Id', 'asc')->paginate(10);
         $lines = BudgetActivityMaster::with('budgetLine')->get();
+
         return view('budgetandanalytics.settings.activitymaster.index', compact('activities', 'lines'));
     }
+
     public function create()
     {
         $lines = BudgetLine::all();
+
         // Logic to show form for creating a new budget activity
         return view('budgetandanalytics.settings.activitymaster.create', compact('lines'));
     }
@@ -33,19 +36,22 @@ class BudgetActivitiesMasterController extends Controller
     {
         // Authorize the user to create a budget activity
         $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetActivityMaster::class);
-        $validated = $request->validate([
+        $validated = $request->validate(
+            [
             'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
             //'ActivityCode' => 'required|string|max:20|unique:t_BudgetActivityMaster',
             'ActivityName' => 'required|string|max:255',
             'Description' => 'nullable|string',
 
-        ],
+            ],
             [
                 'BudgetLineID.required' => 'Budget Line is required.',
                 'ActivityName.required' => 'Activity Name is required.',
                 'Description.required' => 'Description is required.',
-        ]);
+            ]
+        );
         DB::beginTransaction();
+
         try {
             $activity = BudgetActivityMaster::create([
                 'BudgetLineID' => $validated['BudgetLineID'],
@@ -68,6 +74,7 @@ class BudgetActivitiesMasterController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to create budget activity: ' . $e->getMessage());
+
             return redirect()->back()->withErrors(['error' => 'Failed to create budget activity: ' . $e->getMessage()]);
         }
     }
@@ -78,6 +85,7 @@ class BudgetActivitiesMasterController extends Controller
 
         $activity = BudgetActivityMaster::findOrFail($id);
         $lines = BudgetLine::all();
+
         return view('budgetandanalytics.settings.activitymaster.edit', compact('activity', 'lines'));
     }
 
@@ -95,6 +103,7 @@ class BudgetActivitiesMasterController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $activity = BudgetActivityMaster::findOrFail($id);
             $activity->update([
@@ -117,6 +126,7 @@ class BudgetActivitiesMasterController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to update budget activity: ' . $e->getMessage());
+
             return redirect()->back()->withErrors(['error' => 'Failed to update budget activity: ' . $e->getMessage()]);
         }
     }
@@ -126,6 +136,7 @@ class BudgetActivitiesMasterController extends Controller
 
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetActivityMaster::class);
         DB::beginTransaction();
+
         try {
             $activity = BudgetActivityMaster::findOrFail($id);
             $activity->DeletedBy = Auth::id();
@@ -137,10 +148,12 @@ class BudgetActivitiesMasterController extends Controller
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'delete'])
                 ->log('Deleted budget activity: ' . $activity->ActivityName);
+
             return redirect()->route('activitymaster.index')->with('success', 'Budget activity deleted successfully.');
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to delete budget activity: ' . $e->getMessage());
+
             return redirect()->back()->withErrors(['error' => 'Failed to delete budget activity: ' . $e->getMessage()]);
         }
     }

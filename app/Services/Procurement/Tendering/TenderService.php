@@ -2,10 +2,10 @@
 
 namespace App\Services\Procurement\Tendering;
 
-
 use App\Models\Procurement\Tender;
 
-class TenderService {
+class TenderService
+{
     public static function ID(): string
     {
         $number = Tender::query()->withTrashed()->count();

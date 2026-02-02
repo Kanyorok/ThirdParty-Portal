@@ -19,6 +19,7 @@ class ChequeBookController extends Controller
     {
         $this->validationService = $validationService;
     }
+
     public function index(Request $request)
     {
         $query = ChequeBook::with('bankAccount.bank')->orderByDesc('ChequeBookID');
@@ -29,12 +30,16 @@ class ChequeBookController extends Controller
         }
         if ($request->filled('status')) {
             $status = $request->status;
-            if ($status === 'active') $query->where('IsActive', 1);
-            if ($status === 'inactive') $query->where('IsActive', 0);
+            if ($status === 'active') {
+                $query->where('IsActive', 1);
+            }
+            if ($status === 'inactive') {
+                $query->where('IsActive', 0);
+            }
         }
         if ($request->filled('search')) {
             $s = $request->search;
-            $query->where(function($q) use ($s) {
+            $query->where(function ($q) use ($s) {
                 $q->where('BookName', 'like', "%$s%")
                   ->orWhere('Prefix', 'like', "%$s%")
                   ->orWhere('ChequeBookID', $s);
@@ -43,7 +48,7 @@ class ChequeBookController extends Controller
 
         $rows = $query->paginate($request->get('per_page', 25))->withQueryString();
         $bankAccounts = BankAccount::with('bank')->orderBy('AccountNumber')->get();
-        
+
         // Fetch CodeDetails
         $chequeBookStatuses = CodeDetail::where('CodeID', 'ChequeBookStatus')
             ->where('IsActive', 1)
@@ -58,13 +63,13 @@ class ChequeBookController extends Controller
         $bankAccounts = BankAccount::with('bank')->orderBy('AccountNumber')->get();
         // Optional: pick first account to show an initial preview on the form
         $firstId = optional($bankAccounts->first())->AccountID;
-        
+
         // Fetch CodeDetails
         $chequeBookSizes = CodeDetail::where('CodeID', 'ChequeBookSizes')
             ->where('IsActive', 1)
             ->orderBy('DisplayOrder')
             ->get();
-        
+
         return view('finance.cheques.books.create', compact('bankAccounts', 'firstId', 'chequeBookSizes'));
     }
 
@@ -75,7 +80,9 @@ class ChequeBookController extends Controller
     public function nextRange(Request $request, int $bankAccountId)
     {
         $size = (int)$request->query('size', 50);
-        if ($size <= 0) $size = 50;
+        if ($size <= 0) {
+            $size = 50;
+        }
 
         $lastEnd = (int)ChequeBook::where('BankAccountID', $bankAccountId)->max('EndNumber');
         $start = $lastEnd > 0 ? $lastEnd + 1 : 1;
@@ -95,7 +102,7 @@ class ChequeBookController extends Controller
     public function getAvailableLeaves($id)
     {
         $book = ChequeBook::findOrFail($id);
-        
+
         // Fetch available/unused leaves for this book
         $leaves = ChequeLeaf::where('ChequeBookID', $book->ChequeBookID)
             ->where('Status', 'Unused')
@@ -110,7 +117,7 @@ class ChequeBookController extends Controller
                 'suffix' => $book->Suffix,
                 'next_leaf' => $book->NextLeafNumber,
             ],
-            'leaves' => $leaves
+            'leaves' => $leaves,
         ]);
     }
 
@@ -164,7 +171,9 @@ class ChequeBookController extends Controller
                     $batch = [];
                 }
             }
-            if ($batch) DB::table('t_ChequeLeaves')->insert($batch);
+            if ($batch) {
+                DB::table('t_ChequeLeaves')->insert($batch);
+            }
 
             return redirect()
                 ->route('finance.chequebooks.show', $book->ChequeBookID)
@@ -177,7 +186,9 @@ class ChequeBookController extends Controller
         $row = ChequeBook::with('bankAccount.bank')->findOrFail($id);
 
         $leavesQuery = ChequeLeaf::where('ChequeBookID', $row->ChequeBookID);
-        if ($request->filled('status')) $leavesQuery->where('Status', $request->status);
+        if ($request->filled('status')) {
+            $leavesQuery->where('Status', $request->status);
+        }
         if ($request->filled('q')) {
             $q = $request->q;
             $leavesQuery->where(function ($qq) use ($q) {
@@ -194,18 +205,18 @@ class ChequeBookController extends Controller
     {
         $row = ChequeBook::findOrFail($id);
         $bankAccounts = BankAccount::with('bank')->orderBy('AccountNumber')->get();
-        
+
         // Fetch CodeDetails
         $chequeBookSizes = CodeDetail::where('CodeID', 'ChequeBookSizes')
             ->where('IsActive', 1)
             ->orderBy('DisplayOrder')
             ->get();
-            
+
         $chequeBookStatuses = CodeDetail::where('CodeID', 'ChequeBookStatus')
             ->where('IsActive', 1)
             ->orderBy('DisplayOrder')
             ->get();
-        
+
         return view('finance.cheques.books.edit', compact('row', 'bankAccounts', 'chequeBookSizes', 'chequeBookStatuses'));
     }
 
@@ -224,12 +235,14 @@ class ChequeBookController extends Controller
         ]);
 
         // Business Rule: Check for numbering overlaps, excluding the current book
-        if ($this->validationService->hasNumberingOverlap(
-            $data['BankAccountID'],
-            $data['StartNumber'],
-            $data['EndNumber'],
-            $row->ChequeBookID // Exclude current book from overlap check
-        )) {
+        if (
+            $this->validationService->hasNumberingOverlap(
+                $data['BankAccountID'],
+                $data['StartNumber'],
+                $data['EndNumber'],
+                $row->ChequeBookID // Exclude current book from overlap check
+            )
+        ) {
             return back()->withInput()->with('error', 'Cheque number range overlaps with an existing book for this bank account.');
         }
 
@@ -255,8 +268,8 @@ class ChequeBookController extends Controller
 
         // Business Rule: Cannot delete if any leaf has been used
         $validation = $this->validationService->canDeleteBook($row);
-        
-        if (!$validation['canDelete']) {
+
+        if (! $validation['canDelete']) {
             return back()->with('error', $validation['reason']);
         }
 
@@ -264,6 +277,7 @@ class ChequeBookController extends Controller
             // Delete all leaves first
             DB::table('t_ChequeLeaves')->where('ChequeBookID', $row->ChequeBookID)->delete();
             $row->delete();
+
             return redirect()->route('finance.chequebooks.index')
                 ->with('success', 'Cheque book deleted successfully.');
         });

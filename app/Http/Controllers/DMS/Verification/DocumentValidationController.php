@@ -32,6 +32,7 @@ class DocumentValidationController extends Controller
                 $query->whereNull('ApprovedBy')
                     ->orWhereNull('DocumentId');
             });
+
             try {
                 return Datatables::of($query->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
                     ->addColumn('action', function (DocumentValidation $documentValidation) {
@@ -46,12 +47,14 @@ class DocumentValidationController extends Controller
                         if (is_null($documentValidation->ApprovedBy)) {
                             return '<span class="badge rounded-pill bg-warning">Pending</span>';
                         }
+
                         return '<span class="badge rounded-pill bg--success">Approved</span>';
                     })->rawColumns(['action', 'Stage'])->make();
             } catch (Exception $e) {
                 return $this->errored('failed loading document validation.');
             }
         }
+
         return view('dms.validation.index');
     }
 
@@ -61,12 +64,12 @@ class DocumentValidationController extends Controller
     public function show($documentValidationId)
     {
         $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->with(['attributes', 'creator'])->first();
-        if (!$documentValidation instanceof DocumentValidation) {
+        if (! $documentValidation instanceof DocumentValidation) {
             return redirect()->back()->with('error', 'Invalid validation provided');
         }
 
         $document = $documentValidation->document;
-        if (!$document instanceof Document) {
+        if (! $document instanceof Document) {
             $document = null;
         }
 
@@ -79,7 +82,7 @@ class DocumentValidationController extends Controller
     public function approve(Request $request, $documentValidationId): JsonResponse
     {
         $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->whereNull('ApprovedBy')->first();
-        if (!$documentValidation instanceof DocumentValidation) {
+        if (! $documentValidation instanceof DocumentValidation) {
             return $this->errored('Invalid validation provided');
         }
 
@@ -87,17 +90,17 @@ class DocumentValidationController extends Controller
 
         try {
             $ApiCred = APICredential::query()->where('Integration', IntegrationsEnum::DMSCoreBanking->value)->latest('Id')->first();
-            if (!$ApiCred instanceof APICredential) {
+            if (! $ApiCred instanceof APICredential) {
                 return $this->errored('confirmation to cbs failed.');
             }
             $URL = $ApiCred->Configuration?->url;
             $TOKEN = $ApiCred->Configuration?->token;
 
-            if (!filter_var($URL, FILTER_VALIDATE_URL)) {
+            if (! filter_var($URL, FILTER_VALIDATE_URL)) {
                 return $this->errored('confirmation to cbs failed.');
             }
 
-            if (!is_string($TOKEN) || empty($TOKEN)) {
+            if (! is_string($TOKEN) || empty($TOKEN)) {
                 return $this->errored('confirmation to cbs failed.');
             }
 
@@ -107,7 +110,7 @@ class DocumentValidationController extends Controller
                 $response = $client->post($URL . '/Client/EDMSMemberDocumentsVerification', [
                     'headers' => [
                         'token' => $TOKEN,
-                        'Content-Type' => 'application/json'
+                        'Content-Type' => 'application/json',
                     ],
                     'json' => [
                         'application_id' => $documentValidation->ValidationId,
@@ -118,8 +121,8 @@ class DocumentValidationController extends Controller
                         'document_id' => $documentValidation->Id,
                         'document_type' => $documentValidation->Type->value,
                         'status' => 'APPROVED',
-                        'date' => now()->format('Y-m-d H:i:s')
-                    ]
+                        'date' => now()->format('Y-m-d H:i:s'),
+                    ],
                 ]);
 
                 if ($response->getStatusCode() !== 200) {
@@ -138,11 +141,11 @@ class DocumentValidationController extends Controller
 
                 return $this->succeeded('Document validated successfully', route('dms.validation.show', $documentValidation->ValidationId));
             });
-
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error validating document: ' . $e->getMessage());
+
             return $this->errored('Unexpected error, try again later');
         }
     }
@@ -154,17 +157,18 @@ class DocumentValidationController extends Controller
     {
 
         $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->whereNull('DocumentId')->first();
-        if (!$documentValidation instanceof DocumentValidation) {
+        if (! $documentValidation instanceof DocumentValidation) {
             return $this->errored('Invalid validation provided');
         }
 
         $actor = $request->user();
+
         try {
             return DB::transaction(function () use ($documentValidation, $request, $actor) {
                 $document = DocumentService::createUpload(RepositoryService::validation($documentValidation->Type), $request->file('file'), $actor)->document;
                 $documentValidation->update([
                     'DocumentId' => $document->Id,
-                    'ModifiedBy' => $actor->Id
+                    'ModifiedBy' => $actor->Id,
                     /* 'ApprovedBy' => $request->user()->Id,
                      'ApprovedOn' => now(),*/
                 ]);
@@ -175,8 +179,9 @@ class DocumentValidationController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error upload ticket document : ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
     }
@@ -186,6 +191,5 @@ class DocumentValidationController extends Controller
      */
     public function destroy(DocumentValidation $documentValidation)
     {
-        //
     }
 }

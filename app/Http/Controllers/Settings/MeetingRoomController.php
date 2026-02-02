@@ -37,10 +37,11 @@ class MeetingRoomController extends Controller
                 if ($branch instanceof Branch) {
                     return $branch->BranchName;
                 }
+
                 return '. . .';
             })->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')->setRowData([
                                                                                                   'dbl_click_url' => function (MeetingRoom $MeetingRoom) {
-                                                                                                    return route('meeting-room.show', [$MeetingRoom->RoomID]);
+                                                                                                      return route('meeting-room.show', [$MeetingRoom->RoomID]);
                                                                                                   },
                                                                                                   'summary_title' => "Meeting Room Details",
                                                                                                  ])->rawColumns(['action'])->make();
@@ -53,15 +54,16 @@ class MeetingRoomController extends Controller
     {
         $branch = $request->getBranch();
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($branch, $actor, $request) {
                 $MeetingRoom = MeetingRoom::create([
-                                                    'Name'       => $request->validated('RooMName'),
-                                                    'Capacity'   => $request->validated('RooMCapacity'),
-                                                    'BranchId'   => $branch,
-                                                    'Notes'      => $request->validated('RooMNotes'),
-                                                    'RoomID'     => $request->generateID(),
-                                                    'CreatedBy'  => $actor->Id,
+                                                    'Name' => $request->validated('RooMName'),
+                                                    'Capacity' => $request->validated('RooMCapacity'),
+                                                    'BranchId' => $branch,
+                                                    'Notes' => $request->validated('RooMNotes'),
+                                                    'RoomID' => $request->generateID(),
+                                                    'CreatedBy' => $actor->Id,
                                                     'ModifiedBy' => $actor->Id,
                                                    ]);
                 activity()->causedBy($actor)->performedOn($MeetingRoom)->event('create')->log('Created Meeting Room  ' . $MeetingRoom->RoomID . '.');
@@ -69,8 +71,10 @@ class MeetingRoomController extends Controller
         } catch (Exception $e) {
             Log::error('creating Meeting Room .');
             Log::error($e);
+
             return $this->errored('an unexpected error occurred');
         }
+
         return $this->succeeded('Meeting Room added successfully');
     }
 
@@ -98,13 +102,14 @@ class MeetingRoomController extends Controller
     {
         $branch = $request->getBranch();
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($branch, $MeetingRoom, $actor, $request) {
                 $MeetingRoom->update([
-                                      'Name'       => $request->validated('RooMName'),
-                                      'Capacity'   => $request->validated('RooMCapacity'),
-                                      'BranchId'   => $branch,
-                                      'Notes'      => $request->validated('RooMNotes'),
+                                      'Name' => $request->validated('RooMName'),
+                                      'Capacity' => $request->validated('RooMCapacity'),
+                                      'BranchId' => $branch,
+                                      'Notes' => $request->validated('RooMNotes'),
                                       'ModifiedBy' => $actor->Id,
                                      ]);
                 activity()->causedBy($actor)->performedOn($MeetingRoom)->event('update')->log('Updated Meeting Room ' . $MeetingRoom->RoomID . '.');
@@ -112,8 +117,10 @@ class MeetingRoomController extends Controller
         } catch (Exception $e) {
             Log::error('update Meeting Room.');
             Log::error($e);
+
             return $this->errored('an unexpected error occurred');
         }
+
         return $this->succeeded('Room updated successfully');
     }
 
@@ -123,6 +130,7 @@ class MeetingRoomController extends Controller
     public function destroy(Request $request, MeetingRoom $MeetingRoom): JsonResponse
     {
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($MeetingRoom, $actor, $request) {
                 $MeetingRoom->forceFill([
@@ -134,8 +142,10 @@ class MeetingRoomController extends Controller
         } catch (Exception $e) {
             Log::error('trash Meeting Room.');
             Log::error($e);
+
             return $this->errored('an unexpected error occurred');
         }
+
         return $this->succeeded('Meeting Room trashed successfully');
     }
 }

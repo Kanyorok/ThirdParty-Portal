@@ -33,6 +33,6 @@ class WorkflowType extends Model
     // Optional: Soft delete-style check
     public function isDeleted(): bool
     {
-        return !is_null($this->DeletedOn);
+        return ! is_null($this->DeletedOn);
     }
 }

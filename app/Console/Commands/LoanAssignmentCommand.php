@@ -42,8 +42,9 @@ class LoanAssignmentCommand extends Command
             $dated = null;
         }
 
-        if (!$dated instanceof Carbon) {
+        if (! $dated instanceof Carbon) {
             Log::error('Loan Assignment Error: No Debt Products found Date ISSUE');
+
             return;
         }
 
@@ -54,7 +55,7 @@ class LoanAssignmentCommand extends Command
 
         foreach ($loans as $loan) {
             $user = LoanService::getAssignUser($loan->AccountID);
-            if (!$user instanceof User) {
+            if (! $user instanceof User) {
                 break;
             }
 
@@ -72,10 +73,10 @@ class LoanAssignmentCommand extends Command
     public function notifyUsers(): void
     {
         $usersWithLoansToday = User::query()->whereHas('loansAssigned', function (Builder $query) {
-                $query->whereBetween('t_LoanAssignments.StartOn', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
+            $query->whereBetween('t_LoanAssignments.StartOn', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
         })->withCount([
                        'loansAssigned' => function ($builder) {
-                                $builder->whereBetween('t_LoanAssignments.StartOn', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
+                           $builder->whereBetween('t_LoanAssignments.StartOn', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
                        },
                       ])->get();
         foreach ($usersWithLoansToday as $user) {

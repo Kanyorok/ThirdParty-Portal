@@ -22,12 +22,12 @@ class MedicalFundRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'FundName'      => 'required|string',
-            'ProviderId'    => 'required|exists:t_InsuranceProviders,Id',
-            'CoverageType'  => 'nullable|exists:t_CodeDetails,ID',
+            'FundName' => 'required|string',
+            'ProviderId' => 'required|exists:t_InsuranceProviders,Id',
+            'CoverageType' => 'nullable|exists:t_CodeDetails,ID',
             'CoverageLimit' => 'required|numeric',
-            'Description'   => 'nullable|string',
-            'IsActive'      => 'required|boolean',
+            'Description' => 'nullable|string',
+            'IsActive' => 'required|boolean',
         ];
     }
 }

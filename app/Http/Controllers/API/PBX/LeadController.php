@@ -16,6 +16,7 @@ class LeadController extends Controller
     {
         Log::warning('Lead Create');
         Log::info(json_encode($request->all()));
+
         return $this->succeeded('ok');
     }
 }

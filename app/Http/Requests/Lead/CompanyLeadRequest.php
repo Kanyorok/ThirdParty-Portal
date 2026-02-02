@@ -18,25 +18,25 @@ class CompanyLeadRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'name'         => [
+                'name' => [
                                    'required',
                                    'string',
                                    'max:250',
                                   ],
-                'website'      => [
+                'website' => [
                                    'required',
                                    'string',
                                    'url:http,https',
                                    'active_url',
                                    'max:250',
                                   ],
-                'phone'        => [
+                'phone' => [
                                    'required',
                                    'string',
                                    'max:15',
                     'unique:App\Models\CRM\Lead,Phone',
                                   ],
-                'email'        => [
+                'email' => [
                                    'nullable',
                                    'email:rfc,dns',
                                    'max:250',
@@ -47,7 +47,7 @@ class CompanyLeadRequest extends FormRequest
                                    'date_format:"Y-m-d H:i"',
                                    'before:now',
                                   ],
-                'notes'        => [
+                'notes' => [
                                    'nullable',
                                    'string',
                                    'max:5000',
@@ -67,6 +67,7 @@ class CompanyLeadRequest extends FormRequest
                 throw ValidationException::withMessages(['last_contact' => 'invalid date format provided.']);
             }
         }
+
         return null;
     }
 }

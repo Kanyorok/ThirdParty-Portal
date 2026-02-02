@@ -58,11 +58,21 @@
                         <div class="col-md-12">
                             <label class="fw-bold">Documents:</label>
                             <div class="text-muted">
-                                @if ($submission->Documents && Storage::exists($submission->Documents))
+                                @if ($submission->EncryptedDocuments && count(json_decode($submission->EncryptedDocuments, true) ?? []) > 0)
+                                    <div class="d-flex flex-column gap-1">
+                                        @foreach(json_decode($submission->EncryptedDocuments, true) as $doc)
+                                            <div class="d-flex align-items-center">
+                                                <i class="fa fa-lock text-secondary me-2"></i>
+                                                <span>{{ $doc['original_name'] ?? 'Unknown File' }}</span>
+                                                <span class="badge bg-light text-dark ms-2 border">Sealed</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @elseif ($submission->Documents && Storage::exists($submission->Documents))
                                 <a href="{{ Storage::url($submission->Documents) }}" class="btn btn-sm btn-link"
                                     download>Download</a>
                                 @else
-                                N/A
+                                <span class="text-muted">No Doc</span>
                                 @endif
                             </div>
                         </div>

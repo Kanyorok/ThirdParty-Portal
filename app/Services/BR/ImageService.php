@@ -14,13 +14,13 @@ class ImageService
     public function get_image(string $attributes = '', bool $placeholder = true): string
     {
         $str = $this->get_url_string();
-        if (!empty($str)) {
+        if (! empty($str)) {
             return '<img src="data:image/png;base64,' . $str . '" ' . $attributes . '>';
         }
 
         //API
         $str = (new CBSService())->getClientImage($this->image->ClientID, $this->image->ImageTypeID);
-        if (!empty($str)) {
+        if (! empty($str)) {
             return '<img src="data:image/png;base64,' . str_replace('"', '', $str) . '" ' . $attributes . '>';
         }
 
@@ -36,6 +36,7 @@ class ImageService
         } catch (Exception $e) {
             //Log::critical($e);
         }
+
         return '';
     }
 

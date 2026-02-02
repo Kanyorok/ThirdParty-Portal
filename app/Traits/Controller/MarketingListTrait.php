@@ -29,10 +29,12 @@ trait MarketingListTrait
                         ->where('CreatedBy', $actor->Id);
                 });
         });
+
         try {
             return Datatables::of($query->lock('WITH(NOLOCK)')->select('*')->withCount('parties'))->addIndexColumn()
                 ->addColumn('action', function (MarketingList $list) {
                     $url = ($list->Source === DebtProduct::getPrimaryKey()) ? route('loans-list.show', $list->slug) : route('marketing-list.show', $list->slug);
+
                     return '<a href="' . $url . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</button>';
                 })->editColumn('Label', function (MarketingList $list) {
                     $url = ($list->Source === DebtProduct::getPrimaryKey()) ? route('loans-list.show', $list->slug) : route('marketing-list.show', $list->slug);
@@ -40,6 +42,7 @@ trait MarketingListTrait
                     if ($list->Type->value === MarketingListEnum::Dynamic->value) {
                         $prepend .= '&nbsp;<i class="fas fa-magic-wand-sparkles" title="Dynamic List"></i>';
                     }
+
                     return $prepend . '&nbsp;<a href="' . $url . '">' . $list->Label . ' </a>';
                 })->editColumn('Source', function (MarketingList $list) {
                     return (new ListService($list))->source();
@@ -49,6 +52,7 @@ trait MarketingListTrait
                     if ($list->Type->value === MarketingListEnum::Dynamic->value) {
                         return number_format((new ListService($list))->contacts());
                     }
+
                     return number_format($list->parties_count);
                 })->editColumn('Notes', function (MarketingList $list) {
                     return Str::limit($list->Notes);
@@ -74,8 +78,9 @@ trait MarketingListTrait
             });
         } catch (ErroredException $e) {
             throw new ErroredException($e->getMessage());
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error create list :  ' . $e->getMessage());
+
             throw new ErroredException('unexpected error, try again later');
         }
     }
@@ -96,8 +101,9 @@ trait MarketingListTrait
             });
         } catch (ErroredException $e) {
             throw new ErroredException($e->getMessage());
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error update list :  ' . $e->getMessage());
+
             throw new ErroredException('unexpected error, try again later');
         }
     }
@@ -123,8 +129,9 @@ trait MarketingListTrait
             });
         } catch (ErroredException $e) {
             throw new ErroredException($e->getMessage());
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error delete list :  ' . $e->getMessage());
+
             throw new ErroredException('unexpected error, try again later');
         }
     }

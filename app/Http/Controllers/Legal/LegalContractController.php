@@ -3,12 +3,10 @@
 namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
-use App\Enums\Core\ApprovalEnum;
 use App\Models\Legal\LegalDocument;
 use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class LegalContractController extends Controller
 {
@@ -25,7 +23,7 @@ class LegalContractController extends Controller
         // Check if user can approve contracts generally or specific ones
         // This logic depends on how canApproveModel is implemented, usually it checks permissions
         // We can pass a flag to the view if needed
-        
+
         return view('legal.contracts.index', compact('contracts'));
     }
 
@@ -43,9 +41,6 @@ class LegalContractController extends Controller
     public function store(Request $request)
     {
         // Placeholder implementation - ensure Initial Status is set
-        // $contract = LegalDocument::create($request->all());
-        // $contract->ReviewStatus = ApprovalEnum::Pending->value;
-        // $contract->save();
 
         return redirect()->route('legal.contracts.index')
             ->with('success', 'Contract created successfully');
@@ -58,7 +53,7 @@ class LegalContractController extends Controller
     {
         $contract = LegalDocument::findOrFail($id);
         $canApprove = $this->workflow->canApproveModel($contract);
-        
+
         return view('legal.contracts.show', compact('contract', 'canApprove'));
     }
 
@@ -68,6 +63,7 @@ class LegalContractController extends Controller
     public function edit(string $id)
     {
         $contract = LegalDocument::findOrFail($id);
+
         return view('legal.contracts.edit', compact('contract'));
     }
 
@@ -88,7 +84,7 @@ class LegalContractController extends Controller
     {
         $contract = LegalDocument::findOrFail($id);
         $contract->delete();
-        
+
         return redirect()->route('legal.contracts.index')
             ->with('success', 'Contract deleted successfully');
     }
@@ -99,6 +95,7 @@ class LegalContractController extends Controller
     public function submitForApproval(Request $request, int $id): JsonResponse
     {
         $document = LegalDocument::findOrFail($id);
+
         return $this->workflow->submit($document, $request->user());
     }
 
@@ -108,6 +105,7 @@ class LegalContractController extends Controller
     public function approve(Request $request, int $id): JsonResponse
     {
         $document = LegalDocument::findOrFail($id);
+
         return $this->workflow->approve($document, $request->user(), $request->input('comments'));
     }
 
@@ -117,6 +115,7 @@ class LegalContractController extends Controller
     public function reject(Request $request, int $id): JsonResponse
     {
         $document = LegalDocument::findOrFail($id);
+
         return $this->workflow->reject($document, $request->user(), $request->input('comments'));
     }
 }

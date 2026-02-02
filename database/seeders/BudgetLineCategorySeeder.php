@@ -19,6 +19,7 @@ class BudgetLineCategorySeeder extends Seeder
         $userIds = User::pluck('Id')->toArray();
         if (empty($userIds)) {
             echo "❌ No users found in t_Users. Please seed users first.\n";
+
             return;
         }
 

@@ -2,14 +2,11 @@
 
 namespace App\Policies\FleetManagement;
 
-use App\Models\Auth\User;
 use App\Enums\Core\PermissionEnum;
-use App\Models\Fleet\FleetRoutePlan;
-use Illuminate\Auth\Access\Response;
+use App\Models\Auth\User;
 
 class FleetRoutePlanPolicy
 {
-
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::FleetRoutePlanView->value);
@@ -55,8 +52,4 @@ class FleetRoutePlanPolicy
     {
         return $user->can(PermissionEnum::FleetRoutePlanUpdate->value);
     }
-
 }
-
-
-

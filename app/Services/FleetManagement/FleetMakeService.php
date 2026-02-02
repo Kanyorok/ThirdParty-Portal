@@ -2,19 +2,12 @@
 
 namespace App\Services\FleetManagement;
 
-
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Models\FleetManagement\FleetMake;
-use App\Models\Auth\User;
-use App\Http\Requests\FleetManagement\FleetMakeRequest;
-use App\Traits\Model\UserActorTrait;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class FleetMakeService
 {
-
     public function create(array $data): FleetMake
     {
         return DB::transaction(function () use ($data) {
@@ -32,6 +25,7 @@ class FleetMakeService
             if ($existing) {
                 if ($existing->trashed()) {
                     $existing->restore();
+
                     return $existing;
                 }
 
@@ -51,7 +45,7 @@ class FleetMakeService
     {
         $latestMake = FleetMake::withTrashed()->latest('CreatedOn')->first();
 
-        if (!$latestMake || !$latestMake->BrandID) {
+        if (! $latestMake || ! $latestMake->BrandID) {
             return 'BRAND-0001';
         }
 
@@ -61,7 +55,6 @@ class FleetMakeService
         return 'BRAND-' . str_pad($newId, 4, '0', STR_PAD_LEFT);
     }
 
-
     public function update(FleetMake $make, array $data): FleetMake
     {
         return DB::transaction(function () use ($make, $data) {
@@ -70,6 +63,7 @@ class FleetMakeService
             $make->ModifiedBy = Auth::id();
             $make->ModifiedOn = now();
             $make->save();
+
             return $make;
         });
         activity()
@@ -98,5 +92,3 @@ class FleetMakeService
         });
     }
 }
-
-

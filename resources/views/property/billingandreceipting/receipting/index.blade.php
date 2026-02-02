@@ -8,58 +8,56 @@
     {{-- Page Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h3 class="mb-1 fw-bold text-dark">
-                <i class="bi bi-receipt-cutoff me-2"></i>Rent Invoice Receipts
-            </h3>
-            <p class="text-muted mb-0">View and manage all rent invoice receipts</p>
+            <small class="text-muted mb-0">View and manage all rent invoice receipts</small>
         </div>
         <button type="button" onclick="printPage()" class="btn btn-outline-primary">
             <i class="bi bi-printer me-2"></i>Print All
         </button>
     </div>
 
-    {{-- ================= FILTERS ================= --}}
-    <form method="GET" class="card shadow-sm mb-4 border-0">
-        <div class="card-body p-4">
-            <div class="row g-3">
+{{-- ================= FILTERS ================= --}}
+<form method="GET" class="card shadow-sm mb-4 border-0">
+    <div class="card-body p-4">
+        <div class="row g-3 align-items-end">
 
-                <div class="col-12 col-md-6 col-lg-5">
-                    <label class="form-label fw-semibold text-secondary mb-2">
-                        <i class="bi bi-file-earmark-text me-1"></i>Invoice Number
-                    </label>
-                    <input type="text"
-                           name="invoice_number"
-                           value="{{ request('invoice_number') }}"
-                           class="form-control"
-                           placeholder="Enter invoice number...">
-                </div>
-
-                <div class="col-12 col-md-6 col-lg-5">
-                    <label class="form-label fw-semibold text-secondary mb-2">
-                        <i class="bi bi-building me-1"></i>Lease
-                    </label>
-                    <input type="text"
-                           name="lease"
-                           value="{{ request('lease') }}"
-                           class="form-control"
-                           placeholder="Enter lease reference...">
-                </div>
-
-                <div class="col-12 col-lg-2 d-flex flex-column flex-sm-row gap-2 align-items-end">
-                    <button type="submit" class="btn btn-primary w-100 w-sm-auto flex-sm-fill">
-                        <i class="bi bi-funnel me-1"></i><span class="d-none d-sm-inline">Filter</span><span class="d-sm-none">Apply Filters</span>
-                    </button>
-
-                    <a href="{{ route(request()->route()->getName()) }}"
-                       class="btn btn-outline-secondary w-100 w-sm-auto"
-                       title="Reset filters">
-                        <i class="bi bi-arrow-clockwise me-1 d-sm-none"></i><span class="d-sm-none">Reset</span><i class="bi bi-arrow-clockwise d-none d-sm-inline"></i>
-                    </a>
-                </div>
-
+            <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label fw-semibold text-secondary mb-2">
+                    <i class="bi bi-file-earmark-text me-1"></i> Invoice Number
+                </label>
+                <input type="text"
+                       name="invoice_number"
+                       value="{{ request('invoice_number') }}"
+                       class="form-control"
+                       placeholder="Enter invoice number...">
             </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label fw-semibold text-secondary mb-2">
+                    <i class="bi bi-building me-1"></i> Lease
+                </label>
+                <input type="text"
+                       name="lease"
+                       value="{{ request('lease') }}"
+                       class="form-control"
+                       placeholder="Enter lease reference...">
+            </div>
+
+            <div class="col-12 col-lg-4 d-flex gap-2">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-funnel me-1"></i> Filter
+                </button>
+
+                <a href="{{ route(request()->route()->getName()) }}"
+                   class="btn btn-outline-secondary w-100"
+                   title="Reset filters">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Reset
+                </a>
+            </div>
+
         </div>
-    </form>
+    </div>
+</form>
+
 
     {{-- ================= TABLE ================= --}}
     <div class="card shadow-sm border-0">
@@ -100,9 +98,9 @@
                     @foreach ($groupedReceipts as $invoiceNumber => $items)
 
                         @php
-                            $invoiceAmount  = $items->first()->InvoiceAmount ?? 0;
+                            $TotalAmount  = $items->first()->TotalAmount ?? 0;
                             $totalReceived = $items->sum('AmountReceived');
-                            $balance       = $invoiceAmount - $totalReceived;
+                            $balance       = $TotalAmount - $totalReceived;
                             $collapseId    = 'inv_' . md5($invoiceNumber);
                             $isPaid        = $balance <= 0;
                         @endphp
@@ -132,7 +130,7 @@
                             </td>
 
                             <td class="text-end fw-semibold">
-                                <span class="text-muted">KES</span> {{ number_format($invoiceAmount, 2) }}
+                                <span class="text-muted">KES</span> {{ number_format($TotalAmount, 2) }}
                             </td>
 
                             <td class="text-end">

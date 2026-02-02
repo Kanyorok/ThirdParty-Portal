@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
-use App\Models\Inventory\StockTransaction;
-use App\Models\Inventory\ItemMasterList;
 use App\Models\Core\Branch;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\StockTransaction;
 use App\Models\Inventory\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +17,7 @@ class StockMovementController extends Controller
     public function index(Request $request)
     {
         $currentBranch = Auth::user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -34,7 +34,7 @@ class StockMovementController extends Controller
 
         $baseQuery = StockTransaction::whereNull('t_StockTransactions.DeletedOn');
 
-        if (!$isHeadOffice) {
+        if (! $isHeadOffice) {
             $baseQuery->where('BranchID', $branchId);
         }
 
@@ -66,7 +66,7 @@ class StockMovementController extends Controller
                 DB::raw('MAX(BalanceQty) as closing_qty'),
                 DB::raw('SUM(CASE WHEN QuantityIn > 0 THEN TotalCost ELSE 0 END) as total_in_value'), // Only sum positive costs for IN
                 DB::raw('SUM(CASE WHEN QuantityOut > 0 THEN TotalCost ELSE 0 END) as total_out_value'), // Only sum positive costs for OUT
-                DB::raw('AVG(UnitCost) as avg_unit_cost') // Get average unit cost from transactions
+                DB::raw('AVG(UnitCost) as avg_unit_cost'), // Get average unit cost from transactions
             ])
             ->groupBy('ItemID')
             ->get();
@@ -119,21 +119,21 @@ class StockMovementController extends Controller
                     (float) $openingQty,
                     (float) $tx->total_in_qty,
                     (float) $tx->total_out_qty,
-                    (float) $closingQty
+                    (float) $closingQty,
                 ],
                 'value' => [
                     (float) $openingValue,
                     (float) $inValue,
                     (float) $outValue,
-                    (float) $closingValue
-                ]
+                    (float) $closingValue,
+                ],
             ];
             
             $totalOpening += $openingQty;
             $totalIn += $tx->total_in_qty;
             $totalOut += $tx->total_out_qty;
             $totalClosing += $closingQty;
-            
+
             $totalValueOpening += $openingValue;
             $totalValueIn += $inValue;
             $totalValueOut += $outValue;
@@ -147,11 +147,24 @@ class StockMovementController extends Controller
         $netMovement = $totalIn - $totalOut;
 
         return view('inventory.inventorydashboard.stockmovement.index', compact(
-            'branches', 'stores', 'items', 'movementData',
-            'dailyMovement', 'branchMovement', 'topItems',
-            'isHeadOffice', 'currentBranch', 'totalIn', 'totalOut', 'netMovement',
-            'totalOpening', 'totalClosing', 'totalValueOpening', 'totalValueClosing',
-            'totalValueIn', 'totalValueOut' // Added these
+            'branches',
+            'stores',
+            'items',
+            'movementData',
+            'dailyMovement',
+            'branchMovement',
+            'topItems',
+            'isHeadOffice',
+            'currentBranch',
+            'totalIn',
+            'totalOut',
+            'netMovement',
+            'totalOpening',
+            'totalClosing',
+            'totalValueOpening',
+            'totalValueClosing',
+            'totalValueIn',
+            'totalValueOut' // Added these
         ));
     }
 
@@ -164,7 +177,7 @@ class StockMovementController extends Controller
         
         $totalQty = $transaction->total_in_qty + $transaction->total_out_qty;
         $totalValue = $transaction->total_in_value + $transaction->total_out_value;
-        
+
         if ($totalQty > 0 && $totalValue > 0) {
             return $totalValue / $totalQty;
         }
@@ -185,7 +198,7 @@ class StockMovementController extends Controller
                 DB::raw('SUM(QuantityOut) as out_qty'),
                 DB::raw('SUM(CASE WHEN QuantityIn > 0 THEN TotalCost ELSE 0 END) as in_value'),
                 DB::raw('SUM(CASE WHEN QuantityOut > 0 THEN TotalCost ELSE 0 END) as out_value'),
-                DB::raw('AVG(UnitCost) as avg_unit_cost')
+                DB::raw('AVG(UnitCost) as avg_unit_cost'),
             ])
             ->groupBy(DB::raw('CAST(TransactionDate AS date)'))
             ->orderBy('date')
@@ -194,7 +207,7 @@ class StockMovementController extends Controller
         $dailyData = [];
         $previousClosingQty = 0;
         $previousClosingValue = 0;
-        
+
         foreach ($dailyAggregates as $index => $day) {
             $unitCost = $day->avg_unit_cost > 0 ? $day->avg_unit_cost : 100;
             
@@ -206,7 +219,7 @@ class StockMovementController extends Controller
             $inValue = $day->in_value > 0 ? $day->in_value : ($day->in_qty * $unitCost);
             $outValue = $day->out_value > 0 ? $day->out_value : ($day->out_qty * $unitCost);
             $closingValue = $closingQty * $unitCost;
-            
+
             $dailyData[$day->date] = [
                 'date' => $day->date,
                 'in_qty' => (float) $day->in_qty,
@@ -218,17 +231,17 @@ class StockMovementController extends Controller
                 'opening_value' => (float) $openingValue,
                 'closing_value' => (float) $closingValue,
             ];
-            
+
             $previousClosingQty = $closingQty;
             $previousClosingValue = $closingValue;
         }
-        
+
         return collect($dailyData)->values();
     }
 
     private function getBranchMovementData($baseQuery, $isHeadOffice)
     {
-        if (!$isHeadOffice) {
+        if (! $isHeadOffice) {
             return collect();
         }
 
@@ -242,13 +255,13 @@ class StockMovementController extends Controller
                 DB::raw('SUM(QuantityOut) as total_out_qty'),
                 DB::raw('SUM(CASE WHEN QuantityIn > 0 THEN TotalCost ELSE 0 END) as total_in_value'),
                 DB::raw('SUM(CASE WHEN QuantityOut > 0 THEN TotalCost ELSE 0 END) as total_out_value'),
-                DB::raw('AVG(UnitCost) as avg_unit_cost')
+                DB::raw('AVG(UnitCost) as avg_unit_cost'),
             ])
             ->groupBy('t_Branches.Id', 't_Branches.Name')
             ->get()
             ->map(function ($item) {
                 $unitCost = $item->avg_unit_cost > 0 ? $item->avg_unit_cost : 100;
-                
+
                 return [
                     'branch_name' => $item->branch_name,
                     'net_movement' => (float) $item->net_movement,
@@ -256,7 +269,7 @@ class StockMovementController extends Controller
                     'total_out' => (float) $item->total_out_qty,
                     'total_value_in' => (float) ($item->total_in_value > 0 ? $item->total_in_value : ($item->total_in_qty * $unitCost)),
                     'total_value_out' => (float) ($item->total_out_value > 0 ? $item->total_out_value : ($item->total_out_qty * $unitCost)),
-                    'total_value' => (float) ($item->total_in_value + $item->total_out_value)
+                    'total_value' => (float) ($item->total_in_value + $item->total_out_value),
                 ];
             });
     }
@@ -274,7 +287,7 @@ class StockMovementController extends Controller
                 DB::raw('SUM(QuantityOut) as total_out_qty'),
                 DB::raw('SUM(CASE WHEN QuantityIn > 0 THEN TotalCost ELSE 0 END) as total_in_value'),
                 DB::raw('SUM(CASE WHEN QuantityOut > 0 THEN TotalCost ELSE 0 END) as total_out_value'),
-                DB::raw('AVG(UnitCost) as avg_unit_cost')
+                DB::raw('AVG(UnitCost) as avg_unit_cost'),
             ])
             ->groupBy('t_StockTransactions.ItemID', 't_Items.ItemName')
             ->orderByDesc('total_movement')
@@ -282,7 +295,7 @@ class StockMovementController extends Controller
             ->get()
             ->map(function ($item) {
                 $unitCost = $item->avg_unit_cost > 0 ? $item->avg_unit_cost : 100;
-                
+
                 return [
                     'item_name' => $item->item_name,
                     'total_movement' => (float) $item->total_movement,
@@ -290,7 +303,7 @@ class StockMovementController extends Controller
                     'total_out' => (float) $item->total_out_qty,
                     'total_value_in' => (float) ($item->total_in_value > 0 ? $item->total_in_value : ($item->total_in_qty * $unitCost)),
                     'total_value_out' => (float) ($item->total_out_value > 0 ? $item->total_out_value : ($item->total_out_qty * $unitCost)),
-                    'total_value' => (float) ($item->total_in_value + $item->total_out_value)
+                    'total_value' => (float) ($item->total_in_value + $item->total_out_value),
                 ];
             });
     }

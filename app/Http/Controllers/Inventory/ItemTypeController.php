@@ -3,16 +3,13 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
-use App\Models\Inventory\ItemType;
 use App\Http\Requests\Inventory\ItemTypeRequest;
-use App\Services\Inventory\ItemTypeService;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Core\Approval\CodeDetail;
-use App\Policies\Inventory\ItemTypePolicy;
+use App\Models\Inventory\ItemType;
+use App\Services\Inventory\ItemTypeService;
 
 class ItemTypeController extends Controller
 {
-
     protected ItemTypeService $service;
 
     public function __construct(ItemTypeService $service)
@@ -25,6 +22,7 @@ class ItemTypeController extends Controller
         $this->authorize('viewAny', ItemType::class);
         $itemTypes = ItemType::with('type')->get();
         $itmTypes = CodeDetail::where('CodeID', 'ItemTypeStatus')->get();
+
         return view('inventory.itemmaster.itemtype.index', compact('itemTypes', 'itmTypes'));
     }
 
@@ -35,6 +33,7 @@ class ItemTypeController extends Controller
         $itmTypes = CodeDetail::where('CodeID', 'ItemTypeStatus')
             ->whereNotIn('ID', ItemType::whereNull('DeletedOn')->pluck('TypeName'))
             ->get();
+
         return view('inventory.itemmaster.itemtype.create', compact('itmTypes'));
     }
 
@@ -82,5 +81,4 @@ class ItemTypeController extends Controller
 
         return redirect()->route('itemtype.index')->with('success', 'Item Type deleted successfully.');
     }
-
 }

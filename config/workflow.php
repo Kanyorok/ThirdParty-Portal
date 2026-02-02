@@ -1,5 +1,7 @@
 <?php
+
 use App\Enums\WorkflowStatus;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -35,13 +37,22 @@ return [
         'Submitted for Approval' => \App\Enums\Inventory\InterBranchRequisitionEnum::Pending->value,  // 'P'
     ],
 
+    // Procurement Requisitions (different from Inter-Branch Requisitions above)
+    'RequisitionID' => [
+        'Approved' => 'AP',  // DocStatus column is only 2 chars
+        'Rejected' => 'RE',  // DocStatus column is only 2 chars
+        'Pending' => 'PE',
+        'Submitted for Approval' => 'SU',
+        'Draft' => 'DR',
+    ],
+
     'TransferId' => [
         'Approved' => \App\Enums\Inventory\Transfers::Approved->value,  // 'Ap'
         'Rejected' => \App\Enums\Inventory\Transfers::Rejected->value,  // 'Re'
         'Pending' => \App\Enums\Inventory\Transfers::Pending->value,  // 'P'
         'In Transit' => \App\Enums\Inventory\Transfers::InTransit->value,  // 'it'
-        'Delivered'=> \App\Enums\Inventory\Transfers::Delivered->value,  // 'de'
-        'Returned'=> \App\Enums\Inventory\Transfers::Returned->value,  // 'rt'
+        'Delivered' => \App\Enums\Inventory\Transfers::Delivered->value,  // 'de'
+        'Returned' => \App\Enums\Inventory\Transfers::Returned->value,  // 'rt'
 
 
     ],
@@ -83,7 +94,7 @@ return [
     'tender' => [
         'Approved' => \App\Enums\TenderApprovalStatusEnum::APPROVED->value, // Will now be 'Ap'
         'Rejected' => \App\Enums\TenderApprovalStatusEnum::REJECTED->value, // Will now be 'R'
-        'Pending'  => \App\Enums\TenderApprovalStatusEnum::PENDING->value,  // Will now be 'P'
+        'Pending' => \App\Enums\TenderApprovalStatusEnum::PENDING->value,  // Will now be 'P'
     ],
     'LeaseTerminationId' => [
         'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'a'
@@ -100,7 +111,7 @@ return [
     ],
 
 
-     'RFQId' => [
+    'RFQId' => [
         'Approved' => WorkflowStatus::Approved->value,  // 'A'
         'Rejected' => WorkflowStatus::Rejected->value,  // 'R'
         'Pending' => WorkflowStatus::Pending->value,    // 'P'
@@ -172,7 +183,7 @@ return [
         'procurement_plan' => 'Status',
         'consolidated_procurement_plan' => 'Status',
         'LegalDocumentId' => 'ReviewStatus',
-        
+
         // Add more as needed
     ],
 

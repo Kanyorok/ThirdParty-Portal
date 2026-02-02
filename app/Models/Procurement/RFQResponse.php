@@ -5,9 +5,12 @@ namespace App\Models\Procurement;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RFQResponse extends Model
 {
+    use SoftDeletes;
+
     protected $table = 't_RFQResponse';
     protected $primaryKey = 'Id';
     public const CREATED_AT = 'CreatedOn';
@@ -23,14 +26,17 @@ class RFQResponse extends Model
         'TotalPayable',
         'Currency',
         'DurationDays',
+        'Status',
+        'SubmittedOn',
         'RequisitionItems',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
 
     protected $casts = [
         'ResponseDetails' => 'array', // Assuming ResponseDetails is a JSON field
+        'SubmittedOn' => 'datetime',
     ];
 
     public function rfq()
@@ -52,6 +58,4 @@ class RFQResponse extends Model
     {
         return $this->belongsTo(UnitOfMeasure::class, 'UOMId', 'Id');
     }
-
-
 }

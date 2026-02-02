@@ -14,6 +14,7 @@ class CampaignPolicy
     {
         return $user->can(PermissionEnum::DebtNotificationSend->value);
     }
+
     /**
      * Determine whether the user can view any models.
      */
@@ -90,6 +91,7 @@ class CampaignPolicy
         if ($campaign->Status->value === CampaignStatusEnum::Draft->value) {
             return ($campaign->CreatedBy === $user->Id);
         }
+
         return $user->can(PermissionEnum::CampaignDelete->value);
     }
 

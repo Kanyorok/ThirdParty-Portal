@@ -23,6 +23,7 @@ enum TenderTypeEnum: string
     {
         return TenderTypeEnum::tryFrom($this->TenderType);
     }
+
     public function badgeClass(): string
     {
         return match ($this) {

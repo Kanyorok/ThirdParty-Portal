@@ -5,23 +5,23 @@ namespace App\Models\Finance;
 use App\Models\Auth\User;
 use App\Models\Core\Currency;
 use App\Models\Core\Module;
-use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\ThirdParty\ThirdParties;
 use App\Traits\Model\UserActorTrait;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class FinanceInvoice extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     protected $table = 't_FinanceInvoices';
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $primaryKey = 'Id';
 
@@ -72,8 +72,8 @@ class FinanceInvoice extends Model
 
     protected $casts = [
         'InvoiceDate' => 'date',
-        'DueDate'     => 'date',
-        'IsPaid'      => 'boolean',
+        'DueDate' => 'date',
+        'IsPaid' => 'boolean',
         'IsGenerated' => 'boolean',
         'TaxAmount' => 'float',
         'InvoiceAmount' => 'float',
@@ -89,6 +89,7 @@ class FinanceInvoice extends Model
     {
         $date = Carbon::now()->format('Ymd');
         $rand = strtoupper(Str::random(6));
+
         return "{$prefix}-{$date}-{$rand}";
     }
 
@@ -100,9 +101,10 @@ class FinanceInvoice extends Model
     {
         // Normalize and hash to a fixed-length token (64 hex chars).
         $payload = json_encode(array_map(
-            fn($v) => is_string($v) ? trim(mb_strtoupper($v)) : $v,
+            fn ($v) => is_string($v) ? trim(mb_strtoupper($v)) : $v,
             $parts
         ));
+
         return hash('sha256', $payload);
     }
 
@@ -125,10 +127,10 @@ class FinanceInvoice extends Model
             // If you added IdempotencyKey column and it’s empty, compute one
             if (empty($model->IdempotencyKey)) {
                 $model->IdempotencyKey = self::makeIdempotencyKey([
-                    'SourceTable'  => $model->SourceTable,
-                    'InvoiceID'    => $model->InvoiceID,     // external ref if any
-                    'CustomerID'   => $model->CustomerID,
-                    'InvoiceDate'  => optional($model->InvoiceDate)->format('Y-m-d'),
+                    'SourceTable' => $model->SourceTable,
+                    'InvoiceID' => $model->InvoiceID,     // external ref if any
+                    'CustomerID' => $model->CustomerID,
+                    'InvoiceDate' => optional($model->InvoiceDate)->format('Y-m-d'),
                     'InvoiceTitle' => $model->InvoiceTitle,
                     // add other fields if your sources need them
                 ]);
@@ -139,10 +141,10 @@ class FinanceInvoice extends Model
             // Keep IdempotencyKey stable once set; only set if it’s empty.
             if (empty($model->IdempotencyKey)) {
                 $model->IdempotencyKey = self::makeIdempotencyKey([
-                    'SourceTable'  => $model->SourceTable,
-                    'InvoiceID'    => $model->InvoiceID,
-                    'CustomerID'   => $model->CustomerID,
-                    'InvoiceDate'  => optional($model->InvoiceDate)->format('Y-m-d'),
+                    'SourceTable' => $model->SourceTable,
+                    'InvoiceID' => $model->InvoiceID,
+                    'CustomerID' => $model->CustomerID,
+                    'InvoiceDate' => optional($model->InvoiceDate)->format('Y-m-d'),
                     'InvoiceTitle' => $model->InvoiceTitle,
                 ]);
             }
@@ -155,24 +157,29 @@ class FinanceInvoice extends Model
         return $this->hasMany(FinanceInvoiceLine::class, 'InvoiceID', 'Id');
     }
 
-    public function customer(){
+    public function customer()
+    {
         return $this->belongsTo(ThirdParties::class, 'CustomerID', 'Id');
     }
 
-    public function source(){
-        return $this->belongsTo(Module::class,'ModuleID','ModuleID');
+    public function source()
+    {
+        return $this->belongsTo(Module::class, 'ModuleID', 'ModuleID');
     }
 
-    public function createdBy(){
-        return $this->belongsTo(User::class,'CreatedBy','Id');
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
 
-    public function modifiedBy(){
-        return $this->belongsTo(User::class,'ModifiedBy','Id');
+    public function modifiedBy()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
     }
 
-    public function currency(){
-        return $this->belongsTo(Currency::class,'CurrencyID','Id');
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'CurrencyID', 'Id');
     }
 
     public function taxRule()
@@ -241,5 +248,4 @@ class FinanceInvoice extends Model
             'ReceiptID'
         );
     }
-
 }

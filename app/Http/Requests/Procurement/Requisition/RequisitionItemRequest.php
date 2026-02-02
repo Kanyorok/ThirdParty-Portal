@@ -41,12 +41,12 @@ class RequisitionItemRequest extends FormRequest
             if ($requisitionId && $itemId && $requestedQty) {
                 // Fetch PlanRef from requisition
                 $planId = DB::table('t_Requisitions')->where('Id', $requisitionId)->value('PlanRef');
-                
+
                 \Illuminate\Support\Facades\Log::info('RequisitionItemRequest Validation', [
                     'requisitionId' => $requisitionId,
                     'itemId' => $itemId,
                     'requestedQty' => $requestedQty,
-                    'planId' => $planId
+                    'planId' => $planId,
                 ]);
 
                 if ($planId) {
@@ -70,12 +70,12 @@ class RequisitionItemRequest extends FormRequest
                             ->sum('Quantity');
 
                         $remainingQty = $totalPlanQty - $alreadyUsedQty;
-                        
+
                         \Illuminate\Support\Facades\Log::info('Quantity Calculation', [
                             'totalPlanQty' => $totalPlanQty,
                             'alreadyUsedQty' => $alreadyUsedQty,
                             'remainingQty' => $remainingQty,
-                            'requestedQty' => $requestedQty
+                            'requestedQty' => $requestedQty,
                         ]);
 
                         if ($requestedQty > $remainingQty) {

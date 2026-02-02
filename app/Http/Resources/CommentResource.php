@@ -17,20 +17,20 @@ class CommentResource extends JsonResource
     public function toArray(Request $request): array
     {
         $s = $this->resource;
-        if (!$s instanceof Comment) {
+        if (! $s instanceof Comment) {
             $s = $s->resource;
         }
         $service = new CommentService($s);
 
         return [
-                'id'         => $this->Id,
-                'msg'        => $this->Notes,
-                'dated'      => [
+                'id' => $this->Id,
+                'msg' => $this->Notes,
+                'dated' => [
                                  'datetime' => $this->CreatedOn?->format('M d, Y h:i a'),
-                                 'sting'    => $this->CreatedOn?->diffForHumans(),
+                                 'sting' => $this->CreatedOn?->diffForHumans(),
                                 ],
-                'actor'      => $service->commenter(),
-                'extra'      => $service->extras(),
+                'actor' => $service->commenter(),
+                'extra' => $service->extras(),
                 'permission' => [
                                  'cancelable' => $service->trashable(auth()->user()),
                                 ],

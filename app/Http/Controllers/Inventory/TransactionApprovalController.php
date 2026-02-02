@@ -4,18 +4,17 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Enums\Inventory\Transfers;
 use App\Http\Controllers\Controller;
+use App\Models\Core\Branch;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\TransactionTransfer;
 use App\Services\Inventory\StockAdjustmentService;
 use App\Services\Inventory\TransactionTransferService;
 use App\Services\Workflow\ApprovalWorkflow;
+use Exception;
 use Illuminate\Http\Request;
-use App\Models\Core\Branch;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use App\Exceptions\ErroredException;
-use Exception;
 
 class TransactionApprovalController extends Controller
 {
@@ -24,16 +23,15 @@ class TransactionApprovalController extends Controller
     protected ApprovalWorkflow $workflow;
 
     public function __construct(
-        TransactionTransferService $transferService, 
+        TransactionTransferService $transferService,
         StockAdjustmentService $adjustmentService,
         ApprovalWorkflow $workflow
     ) {
         $this->transferService = $transferService;
         $this->adjustmentService = $adjustmentService;
-        $this->workflow = new ApprovalWorkflow('TransferStatus','Status');
-
+        $this->workflow = new ApprovalWorkflow('TransferStatus', 'Status');
     }
-  
+
     public function index(Request $request)
     {
 
@@ -42,7 +40,7 @@ class TransactionApprovalController extends Controller
         $toDate = $request->get('to_date');
 
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -62,7 +60,6 @@ class TransactionApprovalController extends Controller
             }
 
             $records = $query->orderByDesc('CreatedOn')->get();
-
         } elseif ($transactionType === 'Stock Adjustment') {
             $query = StockAdjustment::with(['branch', 'creator','adjustedBy'])
                 ->where('Status', Transfers::Pending->value)
@@ -85,6 +82,7 @@ class TransactionApprovalController extends Controller
         $user = Auth::user();
         $records = $records->map(function ($record) use ($user) {
             $record->canApprove = $this->workflow->canApproveModel($record, $user);
+
             return $record;
         });
 
@@ -103,9 +101,9 @@ class TransactionApprovalController extends Controller
 
         if ($transactionType === 'Stock Transfer') {
             $record = TransactionTransfer::with([
-                'fromBranch', 'toBranch', 'creator', 'items.item'
+                'fromBranch', 'toBranch', 'creator', 'items.item',
             ])->findOrFail($id);
-            
+
             $this->authorize('view', $record);
 
             $currentBranch = Auth::user()->branch;
@@ -120,9 +118,9 @@ class TransactionApprovalController extends Controller
                         
         } elseif ($transactionType === 'Stock Adjustment') {
             $record = StockAdjustment::with([
-                'branch', 'creator', 'items.item'
+                'branch', 'creator', 'items.item',
             ])->findOrFail($id);
-            
+
             $this->authorize('view', $record);
 
             $currentBranch = Auth::user()->branch;
@@ -138,7 +136,7 @@ class TransactionApprovalController extends Controller
             
         } else {
             $record = TransactionTransfer::with([
-                'fromBranch', 'toBranch', 'creator', 'items.item'
+                'fromBranch', 'toBranch', 'creator', 'items.item',
             ])->find($id);
 
             if ($record) {
@@ -148,7 +146,7 @@ class TransactionApprovalController extends Controller
                 $canApprove = $this->workflow->canApproveModel($record, $user);
             } else {
                 $record = StockAdjustment::with([
-                    'branch', 'creator', 'items.item'
+                    'branch', 'creator', 'items.item',
                 ])->find($id);
 
                 if ($record) {
@@ -187,23 +185,25 @@ class TransactionApprovalController extends Controller
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
-                            'error' => $message
+                            'error' => $message,
                         ], 403);
                     }
+
                     return redirect()->back()->withErrors(['error' => $message]);
                 }
 
                 $user = Auth::user();
 
-                if (!$this->workflow->canApproveModel($record, $user)) {
+                if (! $this->workflow->canApproveModel($record, $user)) {
                     $message = 'You are not authorized to approve this transfer.';
                     
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
-                            'error' => $message
+                            'error' => $message,
                         ], 403);
                     }
+
                     return redirect()->back()->withErrors(['error' => $message]);
                 }
 
@@ -213,9 +213,10 @@ class TransactionApprovalController extends Controller
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
-                            'error' => $message
+                            'error' => $message,
                         ], 409);
                     }
+
                     return redirect()->back()->with('error', $message);
                 }
 
@@ -226,7 +227,7 @@ class TransactionApprovalController extends Controller
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => true,
-                            'message' => 'Stock Transfer approved successfully.'
+                            'message' => 'Stock Transfer approved successfully.',
                         ]);
                     }
 
@@ -238,14 +239,14 @@ class TransactionApprovalController extends Controller
             } catch (Exception $e) {
                 
                 $errorMessage = $this->getErrorMessage($e);
-                
+
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json([
                         'success' => false,
-                        'error' => $errorMessage
+                        'error' => $errorMessage,
                     ], 400);
                 }
-                
+
                 return redirect()->back()->with('error', $errorMessage);
             }
         }
@@ -262,23 +263,25 @@ class TransactionApprovalController extends Controller
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
-                            'error' => $message
+                            'error' => $message,
                         ], 403);
                     }
+
                     return redirect()->back()->withErrors(['error' => $message]);
                 }
 
                 $user = Auth::user();
 
-                if (!$this->workflow->canApproveModel($record, $user)) {
+                if (! $this->workflow->canApproveModel($record, $user)) {
                     $message = 'You are not authorized to approve this adjustment.';
                     
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
-                            'error' => $message
+                            'error' => $message,
                         ], 403);
                     }
+
                     return redirect()->back()->withErrors(['error' => $message]);
                 }
 
@@ -288,9 +291,10 @@ class TransactionApprovalController extends Controller
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
-                            'error' => $message
+                            'error' => $message,
                         ], 409);
                     }
+
                     return redirect()->back()->with('error', $message);
                 }
 
@@ -300,7 +304,7 @@ class TransactionApprovalController extends Controller
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => true,
-                            'message' => 'Stock Adjustment approved successfully.'
+                            'message' => 'Stock Adjustment approved successfully.',
                         ]);
                     }
 
@@ -312,14 +316,14 @@ class TransactionApprovalController extends Controller
             } catch (Exception $e) {
                 
                 $errorMessage = $this->getErrorMessage($e);
-                
+
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json([
                         'success' => false,
-                        'error' => $errorMessage
+                        'error' => $errorMessage,
                     ], 400);
                 }
-                
+
                 return redirect()->back()->with('error', $errorMessage);
             }
         }
@@ -328,9 +332,10 @@ class TransactionApprovalController extends Controller
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => false,
-                'error' => $message
+                'error' => $message,
             ], 400);
         }
+
         return redirect()->back()->with('error', $message);
     }
 
@@ -351,23 +356,25 @@ class TransactionApprovalController extends Controller
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
-                            'error' => $message
+                            'error' => $message,
                         ], 403);
                     }
+
                     return redirect()->back()->withErrors(['error' => $message]);
                 }
 
                 $user = Auth::user();
 
-                if (!$this->workflow->canApproveModel($record, $user)) {
+                if (! $this->workflow->canApproveModel($record, $user)) {
                     $message = 'You are not authorized to reject this transfer.';
                     
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
-                            'error' => $message
+                            'error' => $message,
                         ], 403);
                     }
+
                     return redirect()->back()->withErrors(['error' => $message]);
                 }
 
@@ -377,9 +384,10 @@ class TransactionApprovalController extends Controller
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
-                            'error' => $message
+                            'error' => $message,
                         ], 409);
                     }
+
                     return redirect()->back()->with('error', $message);
                 }
 
@@ -389,7 +397,7 @@ class TransactionApprovalController extends Controller
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => true,
-                            'message' => 'Stock Transfer rejected successfully.'
+                            'message' => 'Stock Transfer rejected successfully.',
                         ]);
                     }
 
@@ -401,14 +409,14 @@ class TransactionApprovalController extends Controller
             } catch (Exception $e) {
                 
                 $errorMessage = $this->getErrorMessage($e);
-                
+
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json([
                         'success' => false,
-                        'error' => $errorMessage
+                        'error' => $errorMessage,
                     ], 400);
                 }
-                
+
                 return redirect()->back()->with('error', $errorMessage);
             }
         }
@@ -425,23 +433,25 @@ class TransactionApprovalController extends Controller
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
-                            'error' => $message
+                            'error' => $message,
                         ], 403);
                     }
+
                     return redirect()->back()->withErrors(['error' => $message]);
                 }
 
                 $user = Auth::user();
 
-                if (!$this->workflow->canApproveModel($record, $user)) {
+                if (! $this->workflow->canApproveModel($record, $user)) {
                     $message = 'You are not authorized to reject this adjustment.';
                     
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
-                            'error' => $message
+                            'error' => $message,
                         ], 403);
                     }
+
                     return redirect()->back()->withErrors(['error' => $message]);
                 }
 
@@ -451,9 +461,10 @@ class TransactionApprovalController extends Controller
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
-                            'error' => $message
+                            'error' => $message,
                         ], 409);
                     }
+
                     return redirect()->back()->with('error', $message);
                 }
 
@@ -463,7 +474,7 @@ class TransactionApprovalController extends Controller
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => true,
-                            'message' => 'Stock Adjustment rejected successfully.'
+                            'message' => 'Stock Adjustment rejected successfully.',
                         ]);
                     }
 
@@ -475,14 +486,14 @@ class TransactionApprovalController extends Controller
             } catch (Exception $e) {
                 
                 $errorMessage = $this->getErrorMessage($e);
-                
+
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json([
                         'success' => false,
-                        'error' => $errorMessage
+                        'error' => $errorMessage,
                     ], 400);
                 }
-                
+
                 return redirect()->back()->with('error', $errorMessage);
             }
         }
@@ -491,26 +502,33 @@ class TransactionApprovalController extends Controller
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => false,
-                'error' => $message
+                'error' => $message,
             ], 400);
         }
+
         return redirect()->back()->with('error', $message);
     }
 
     private function getErrorMessage(Exception $e): string
     {
         $errorLower = strtolower($e->getMessage());
-        
-        if (str_contains($errorLower, 'cannot approve your own submission') || 
-            str_contains($errorLower, 'maker-checker')) {
+
+        if (
+            str_contains($errorLower, 'cannot approve your own submission') ||
+            str_contains($errorLower, 'maker-checker')
+        ) {
             return 'You cannot approve your own submission. Please have another user approve this transaction.';
-        } elseif (str_contains($errorLower, 'already approved') || 
+        } elseif (
+            str_contains($errorLower, 'already approved') ||
                  str_contains($errorLower, 'already rejected') ||
-                 str_contains($errorLower, 'already actioned')) {
+                 str_contains($errorLower, 'already actioned')
+        ) {
             return 'This transaction has already been processed.';
-        } elseif (str_contains($errorLower, 'not in approvable status') ||
+        } elseif (
+            str_contains($errorLower, 'not in approvable status') ||
                  str_contains($errorLower, 'not in rejectable status') ||
-                 str_contains($errorLower, 'no pending approval found')) {
+                 str_contains($errorLower, 'no pending approval found')
+        ) {
             return 'This transaction cannot be processed in its current status or no pending approval found for your user.';
         } elseif (str_contains($errorLower, 'insufficient stock')) {
             return 'Insufficient stock available for one or more items.';

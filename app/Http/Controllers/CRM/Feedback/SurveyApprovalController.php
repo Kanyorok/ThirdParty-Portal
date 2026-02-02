@@ -36,8 +36,9 @@ class SurveyApprovalController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error approve survey failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -69,6 +70,7 @@ class SurveyApprovalController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error reject survey failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

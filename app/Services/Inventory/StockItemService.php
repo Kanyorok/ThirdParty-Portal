@@ -3,8 +3,8 @@
 namespace App\Services\Inventory;
 
 use App\Models\Inventory\StockItem;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 
 class StockItemService
 {
@@ -21,7 +21,7 @@ class StockItemService
                         'UnitCost' => $data['UnitCost'] ?? null,
                         'UOM' => $data['UOM'],
                         'Branch' => $data['Branch'],
-                        'Store' => $data['Store'] ?? null, 
+                        'Store' => $data['Store'] ?? null,
                         'CurrentQty' => $data['CurrentQty'],
                         'Status' => $data['Status'],
                         'Batch' => $data['Batch'] ?? false,
@@ -80,7 +80,6 @@ class StockItemService
         });
     }
 
-
     public function destroy(StockItem $item): void
     {
               
@@ -95,8 +94,6 @@ class StockItemService
             ->event('delete')
             ->log('Deleted Stock Item with SKUCode ' . $item->Id);
     }
- 
-
 
     protected function generateSKUCode(int $Id, int $branchId, ?int $storeId): string
     {

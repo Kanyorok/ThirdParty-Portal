@@ -28,7 +28,7 @@ class BancassuranceClaimPaymentRequest extends FormRequest
             'PaymentReference' => 'required|string',
             'Note' => 'nullable|string',
             'PaidTo' => 'required|exists:t_Users,Id',
-            'PaymentMethod' => 'required|exists:t_CodeDetails,ID'
+            'PaymentMethod' => 'required|exists:t_CodeDetails,ID',
         ];
     }
 }

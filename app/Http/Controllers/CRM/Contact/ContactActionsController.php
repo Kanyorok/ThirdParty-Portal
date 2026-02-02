@@ -28,22 +28,22 @@ class ContactActionsController extends Controller
         try {
             DB::transaction(static function () use ($lead, $contact, $request) {
                 $contact->crmmails()->update([
-                                              'Party'   => Lead::getPrimaryKey(),
+                                              'Party' => Lead::getPrimaryKey(),
                                               'PartyID' => $lead->LeadID,
                                              ]);
 
                 $contact->crmsms()->update([
-                                            'Party'   => Lead::getPrimaryKey(),
+                                            'Party' => Lead::getPrimaryKey(),
                                             'PartyID' => $lead->LeadID,
                                            ]);
 
                 $contact->calls()->update([
-                                           'Party'   => Lead::getPrimaryKey(),
+                                           'Party' => Lead::getPrimaryKey(),
                                            'PartyID' => $lead->LeadID,
                                           ]);
 
                 $contact->update([
-                                  'Party'   => Lead::getPrimaryKey(),
+                                  'Party' => Lead::getPrimaryKey(),
                                   'PartyID' => $lead->LeadID,
                                  ]);
 
@@ -51,6 +51,7 @@ class ContactActionsController extends Controller
             });
         } catch (\Throwable | \Exception $e) {
             Log::error('Error attaching   Contact to Lead. e: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -67,22 +68,22 @@ class ContactActionsController extends Controller
         try {
             DB::transaction(static function () use ($client, $contact, $request) {
                 $contact->crmmails()->update([
-                                              'Party'   => Client::getPrimaryKey(),
+                                              'Party' => Client::getPrimaryKey(),
                                               'PartyID' => $client->ClientID,
                                              ]);
 
                 $contact->crmsms()->update([
-                                            'Party'   => Client::getPrimaryKey(),
+                                            'Party' => Client::getPrimaryKey(),
                                             'PartyID' => $client->ClientID,
                                            ]);
 
                 $contact->calls()->update([
-                                           'Party'   => Client::getPrimaryKey(),
+                                           'Party' => Client::getPrimaryKey(),
                                            'PartyID' => $client->ClientID,
                                           ]);
 
                 $contact->update([
-                                  'Party'   => Client::getPrimaryKey(),
+                                  'Party' => Client::getPrimaryKey(),
                                   'PartyID' => $client->ClientID,
                                  ]);
 
@@ -90,6 +91,7 @@ class ContactActionsController extends Controller
             });
         } catch (\Throwable | \Exception $e) {
             Log::error('Error attaching Contact to Client. e: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

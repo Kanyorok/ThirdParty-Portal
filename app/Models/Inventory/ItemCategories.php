@@ -3,18 +3,19 @@
 namespace App\Models\Inventory;
 
 use App\Models\Auth\User;
+use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ItemCategories extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $connection = 'sqlsrv';
     protected $table = 't_ItemCategories';
@@ -40,17 +41,17 @@ class ItemCategories extends Model
     ];
 
     protected $casts = [
-        'CategoryCode'  => 'string',
-        'Name'  => 'string',
-        'Description'   => 'string',
-        'ParentId'      => 'integer',
+        'CategoryCode' => 'string',
+        'Name' => 'string',
+        'Description' => 'string',
+        'ParentId' => 'integer',
         'Status' => 'integer',
         'ItemTypeId' => 'integer',
-        'CreatedBy'     => 'integer',
-        'ModifiedBy'    => 'integer',
-        'DeletedBy'     => 'integer',
-        'CreatedOn'     => 'datetime',
-        'ModifiedOn'    => 'datetime',
+        'CreatedBy' => 'integer',
+        'ModifiedBy' => 'integer',
+        'DeletedBy' => 'integer',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
     ];
 
     public function itemType()
@@ -78,7 +79,6 @@ class ItemCategories extends Model
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
 
-
     public function parent()
     {
         return $this->belongsTo(ItemCategories::class, 'ParentId');
@@ -103,7 +103,6 @@ class ItemCategories extends Model
     {
         return $this->items()->exists();
     }
-
 
     protected static function booted()
     {

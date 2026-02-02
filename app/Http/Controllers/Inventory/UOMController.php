@@ -3,14 +3,12 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
-use App\Models\Inventory\UnitOfMeasure;
 use App\Http\Requests\Inventory\UnitOfMeasureRequest;
+use App\Models\Inventory\UnitOfMeasure;
 use App\Services\Inventory\UnitOfMeasureService;
-use Illuminate\Support\Facades\Auth;
 
 class UOMController extends Controller
 {
-
     protected $service;
 
     public function __construct(UnitOfMeasureService $service)
@@ -21,6 +19,7 @@ class UOMController extends Controller
     public function index()
     {
         $units = UnitOfMeasure::all();
+
         return view('inventory.itemmaster.unitofmeasure.index', compact('units'));
     }
 
@@ -28,6 +27,7 @@ class UOMController extends Controller
     {
 
         $this->authorize('create', UnitOfMeasure::class);
+
         return view('inventory.itemmaster.unitofmeasure.create');
     }
 
@@ -42,6 +42,7 @@ class UOMController extends Controller
     public function show($Id)
     {
         $unit = UnitOfMeasure::findOrFail($Id);
+
         return response()->json($unit);
     }
 
@@ -49,6 +50,7 @@ class UOMController extends Controller
     {
         $unit = UnitOfMeasure::findOrFail($Id);
         $this->authorize('update', UnitOfMeasure::class);
+
         return response()->json($unit);
     }
 
@@ -69,5 +71,4 @@ class UOMController extends Controller
 
         return redirect()->route('unitofmeasure.index')->with('success', 'Unit of Measure deleted successfully.');
     }
-
 }

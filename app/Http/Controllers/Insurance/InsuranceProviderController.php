@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers\Insurance;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Insurance\ProviderAndProducts\InsuranceProviderRequest;
 use App\Models\Core\Country;
 use App\Models\Insurance\InsuranceProduct;
+use App\Models\Insurance\InsuranceProvider;
+use App\Services\Insurance\ProviderAndProducts\InsuranceProviderService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Enums\Core\PermissionEnum;
-use App\Models\Insurance\InsuranceProvider;
-use App\Services\Insurance\ProviderAndProducts\InsuranceProviderService;
-use App\Http\Requests\Insurance\ProviderAndProducts\InsuranceProviderRequest;
-
 
 class InsuranceProviderController extends Controller
 {
@@ -47,6 +46,7 @@ class InsuranceProviderController extends Controller
             $validated['IsActive'] ?? null,
             Auth::user(),
         );
+
         return redirect()->route('bancassurance.insurers.index')->with('success', 'Insurance Provider registered.');
     }
 
@@ -66,7 +66,6 @@ class InsuranceProviderController extends Controller
 
         return view('bancassurance.insurers.products', compact('provider', 'products'));
     }
-
 
     public function update(InsuranceProviderRequest $request, $id)
     {
@@ -107,6 +106,7 @@ class InsuranceProviderController extends Controller
     public function destroy($Id)
     {
         $this->authorize(PermissionEnum::InsuranceProviderDelete, InsuranceProvider::class);
+
         try {
             $provider = InsuranceProvider::findOrFail($Id);
 
@@ -121,10 +121,10 @@ class InsuranceProviderController extends Controller
         } catch (\Throwable $th) {
             // Log the error for debugging
             Log::error('Error deleting Insurance Provider: ' . $th->getMessage());
+
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to delete Insurance Provider. Please try again.'])
                 ->withInput();
         }
     }
-
 }

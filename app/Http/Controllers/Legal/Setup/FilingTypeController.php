@@ -11,6 +11,7 @@ class FilingTypeController extends Controller
     public function index()
     {
         $filings = FilingType::orderBy('Name')->get();
+
         return view('legal.setup.filing_types.index', compact('filings'));
     }
 
@@ -27,6 +28,7 @@ class FilingTypeController extends Controller
         ]);
 
         FilingType::create($validated + ['IsActive' => 1]);
+
         return redirect()->route('legal.setup.filing_types.index')
             ->with('success', 'Filing Type added successfully.');
     }
@@ -34,6 +36,7 @@ class FilingTypeController extends Controller
     public function edit($id)
     {
         $filing = FilingType::findOrFail($id);
+
         return view('legal.setup.filing_types.edit', compact('filing'));
     }
 
@@ -47,6 +50,7 @@ class FilingTypeController extends Controller
         ]);
 
         $filing->update($validated);
+
         return redirect()->route('legal.setup.filing_types.index')
             ->with('success', 'Filing Type updated successfully.');
     }
@@ -55,6 +59,7 @@ class FilingTypeController extends Controller
     {
         $filing = FilingType::findOrFail($id);
         $filing->delete();
+
         return back()->with('success', 'Filing Type deleted.');
     }
 }

@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Facade;
 
 /**
  * License Facade
- * 
+ *
  * Provides easy access to licensing functionality throughout the application.
- * 
+ *
  * @method static bool hasModule(string $moduleKey) Check if a module is licensed
  * @method static bool hasModuleId(int $moduleId) Check if a module ID is licensed (resolves parent)
  * @method static array hasModuleIds(array $moduleIds) Check multiple module IDs
@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static array getStatus() Get license status information
  * @method static bool isValid() Check if current license is valid
  * @method static void invalidateCache() Clear license cache
- * 
+ *
  * @example
  *   License::hasModule('PROCUREMENT') // Check if procurement is licensed
  *   License::hasModuleId(301000) // Check if procurement sub-module is licensed

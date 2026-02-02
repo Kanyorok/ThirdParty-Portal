@@ -3,7 +3,6 @@
 namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\Inventory\StockConsumption;
 use App\Models\Auth\User;
 
 class StockConsumptionPolicy

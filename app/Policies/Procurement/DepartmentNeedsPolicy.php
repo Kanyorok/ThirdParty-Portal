@@ -39,7 +39,6 @@ class DepartmentNeedsPolicy
 
     public function approve(User $user, DepartmentNeed $departmentNeeds): bool
     {
-        //dd($departmentNeeds);
         if ($departmentNeeds->Status->value === DepartmentNeedsEnum::Approved->value) {
             return false;
         }
@@ -51,4 +50,3 @@ class DepartmentNeedsPolicy
         return $user->can(PermissionEnum::DepartmentNeedsApproval->value);
     }
 }
-

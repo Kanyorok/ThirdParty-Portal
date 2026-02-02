@@ -31,6 +31,7 @@ class LicensingService
 
         $result = $this->verifyAndLoad();
         $cache->put(self::CACHE_KEY, $result, $ttlSeconds);
+
         return $result;
     }
 
@@ -46,8 +47,9 @@ class LicensingService
             ->orderByDesc('Id')
             ->first();
 
-        if (!$record) {
+        if (! $record) {
             $this->audit('missing', 'No active license record');
+
             return LicenseResult::invalid('missing');
         }
 
@@ -55,6 +57,7 @@ class LicensingService
         $signature = base64_decode($record->SignatureBase64, true);
         if ($signature === false) {
             $this->audit('bad_signature', 'Signature not base64');
+
             return LicenseResult::invalid('bad_signature');
         }
 
@@ -62,35 +65,41 @@ class LicensingService
         $configuredKeyId = (string)config('licensing.public_key_id', '');
         if ($configuredKeyId !== '' && strcasecmp($configuredKeyId, (string)$record->PublicKeyId) !== 0) {
             $this->audit('kid_mismatch', 'PublicKeyId mismatch');
+
             return LicenseResult::invalid('kid_mismatch');
         }
 
         $publicKeyBase64 = (string)config('licensing.public_key_base64', '');
         if ($publicKeyBase64 === '') {
             Log::warning('Licensing public key missing in configuration');
+
             return LicenseResult::invalid('server_misconfigured');
         }
 
         $publicKey = base64_decode($publicKeyBase64, true);
         if ($publicKey === false) {
             $this->audit('bad_key', 'Public key not base64');
+
             return LicenseResult::invalid('server_misconfigured');
         }
 
-        if (!function_exists('sodium_crypto_sign_verify_detached')) {
+        if (! function_exists('sodium_crypto_sign_verify_detached')) {
             $this->audit('crypto_missing', 'libsodium not available');
+
             return LicenseResult::invalid('server_misconfigured');
         }
 
         $ok = sodium_crypto_sign_verify_detached($signature, $payload, $publicKey);
-        if (!$ok) {
+        if (! $ok) {
             $this->audit('bad_signature', 'Signature verification failed');
+
             return LicenseResult::invalid('bad_signature');
         }
 
         $data = json_decode($payload, true);
-        if (!is_array($data)) {
+        if (! is_array($data)) {
             $this->audit('bad_payload', 'JSON decode failed');
+
             return LicenseResult::invalid('bad_payload');
         }
 
@@ -109,32 +118,37 @@ class LicensingService
                 }
             }
         }
-        if (!$expiresAt) {
+        if (! $expiresAt) {
             $this->audit('bad_payload', 'Missing expires_at');
+
             return LicenseResult::invalid('bad_payload');
         }
 
         $graceSeconds = (int)config('licensing.grace_period_seconds', 0);
         if ($now->greaterThan($expiresAt->addSeconds($graceSeconds))) {
             $this->audit('expired', 'License expired');
+
             return LicenseResult::invalid('expired');
         }
 
         $instance = Instance::query()->orderBy('Id')->first();
-        if (!$instance) {
+        if (! $instance) {
             $this->audit('instance_missing', 't_Instance row missing');
+
             return LicenseResult::invalid('server_misconfigured');
         }
 
         $payloadDbGuid = (string)($data['instance']['db_guid'] ?? '');
         if ($payloadDbGuid === '' || strcasecmp($payloadDbGuid, (string)$instance->DbGuid) !== 0) {
             $this->audit('wrong_instance', 'DbGuid mismatch');
+
             return LicenseResult::invalid('wrong_instance');
         }
 
         $nonce = (int)($data['nonce'] ?? 0);
         if ($nonce < (int)$instance->MaxSeenNonce) {
             $this->audit('replay', 'Nonce lower than MaxSeenNonce');
+
             return LicenseResult::invalid('replay_or_downgrade');
         }
 
@@ -144,13 +158,14 @@ class LicensingService
         }
 
         $allowedModules = collect($data['modules'] ?? [])
-            ->map(static fn($v) => (int)$v)
+            ->map(static fn ($v) => (int)$v)
             ->unique()->values()->all();
 
         $record->LastValidatedOn = $now->toDateTimeString();
         $record->save();
 
         $this->audit('validated', 'License valid');
+
         return LicenseResult::ok($data, $allowedModules, $expiresAt->toIso8601String());
     }
 
@@ -167,6 +182,7 @@ class LicensingService
 
         // Auto-bypass for local and development environments
         $env = app()->environment();
+
         return in_array($env, ['local', 'development', 'dev', 'testing'], true);
     }
 
@@ -203,7 +219,7 @@ class LicensingService
             'limits' => [],
             'modules' => $allowedModules,
             'instance' => [
-                'db_guid' => 'dev-bypass'
+                'db_guid' => 'dev-bypass',
             ],
             'nonce' => 0,
         ];
@@ -236,7 +252,8 @@ final class LicenseResult
         public readonly array $allowedModules,
         public readonly ?string $reason,
         public readonly ?string $expiresAt
-    ) {}
+    ) {
+    }
 
     public static function invalid(string $reason): self
     {

@@ -22,8 +22,8 @@ class Supplier extends Model
     protected $table = 't_Suppliers';
     protected $primaryKey = 'Id';
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
+    public const string CREATED_AT = 'CreatedOn';
+    public const string UPDATED_AT = 'ModifiedOn';
     protected $fillable = [
         'RoundID',
         'SupplierMasterId',
@@ -43,7 +43,7 @@ class Supplier extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'SupplierCategoriesId';
+        return 'SupplierCategoriesId'; // You kiding,right?
     }
 
     /**
@@ -96,10 +96,9 @@ class Supplier extends Model
     {
         // Treat Active_Status true as approved/active supplier row for the round/category
         return $query
-            ->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'))
+            ->whereHas('types', fn ($q) => $q->where('Code', 'like', 'SU-%'))
             ->where('Active_Status', 1);
     }
-
 
     /**
      * Relationship to SupplierCategory via SupplierCategoryID
@@ -140,6 +139,6 @@ class Supplier extends Model
 
     public function scopeOnlySuppliers($query)
     {
-        return $query->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'));
+        return $query->whereHas('types', fn ($q) => $q->where('Code', 'like', 'SU-%'));
     }
 }

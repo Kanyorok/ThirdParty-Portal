@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Http\Controllers\Controller;
+use App\Models\Core\Country;
+use App\Models\Core\Locality;
 use App\Models\Finance\Bank;
 use App\Models\Finance\BankBranch;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use App\Models\Core\Locality;
-use App\Models\Core\Country;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class BankBranchController extends Controller
 {
@@ -17,6 +17,7 @@ class BankBranchController extends Controller
     {
         $bank = Bank::findOrFail($bankId);
         $branches = $bank->branches;
+
         return view('finance.bankbranch.index', compact('bank', 'branches'));
     }
 
@@ -27,6 +28,7 @@ class BankBranchController extends Controller
         if ($request->filled('bankId')) {
             $bank = \App\Models\Finance\Bank::with(['country'])->find($request->query('bankId'));
         }
+
         return view('finance.bankbranch.create', compact('bank'));
     }
 
@@ -49,7 +51,7 @@ class BankBranchController extends Controller
 
         $branch = new \App\Models\Finance\BankBranch($request->only([
             'BankID', 'BranchCode', 'BranchName', 'Address1', 'Address2',
-            'CityID', 'CountryID', 'ZipCode', 'Phone', 'EmailID'
+            'CityID', 'CountryID', 'ZipCode', 'Phone', 'EmailID',
         ]));
         // Default Active on create
         $branch->IsActive = 1;
@@ -63,6 +65,7 @@ class BankBranchController extends Controller
     public function show($id)
     {
         $branch = BankBranch::findOrFail($id);
+
         return view('finance.bankbranch.show', compact('branch'));
     }
 
@@ -71,9 +74,9 @@ class BankBranchController extends Controller
     {
         $branch = \App\Models\Finance\BankBranch::findOrFail($id);
         $bank = \App\Models\Finance\Bank::find($branch->BankID);
+
         return view('finance.bankbranch.edit', compact('branch', 'bank'));
     }
-
 
     // Update the specified branch
     public function update(Request $request, $id)
@@ -94,7 +97,7 @@ class BankBranchController extends Controller
         $branch = \App\Models\Finance\BankBranch::findOrFail($id);
         $branch->fill($request->only([
             'BranchCode', 'BranchName', 'Address1', 'Address2',
-            'CityID', 'CountryID', 'ZipCode', 'Phone', 'EmailID'
+            'CityID', 'CountryID', 'ZipCode', 'Phone', 'EmailID',
         ]));
         $branch->save();
 
@@ -108,6 +111,7 @@ class BankBranchController extends Controller
         $branch = BankBranch::findOrFail($id);
         $bankId = $branch->BankID;
         $branch->delete();
+
         // Prefer going back to list by bank if available
         return redirect()->route('finance.bankbranch.bybank', $bankId)
             ->with('success', 'Branch deleted.');
@@ -117,6 +121,7 @@ class BankBranchController extends Controller
     public function listAll()
     {
         $branches = BankBranch::with('bank')->orderBy('BranchName')->paginate(20);
+
         return view('finance.bankbranch.index_all', compact('branches'));
     }
 

@@ -13,7 +13,6 @@ class StringHelper
         return str_replace([PHP_EOL, "\r", "\t", "\n"], '', strip_tags(html_entity_decode($htmlContent)));
     }// str_replace(PHP_EOL, '', $str);[, "\n", ]
 
-
     public static function removeScripts(string $htmlContent): string
     {
         return preg_replace(
@@ -57,7 +56,7 @@ class StringHelper
 
     public static function isInteger(mixed $value): bool
     {
-        return (!is_int($value) ? (ctype_digit($value)) : true);
+        return (! is_int($value) ? (ctype_digit($value)) : true);
     }
 
     public static function getDomain(string $url): string
@@ -66,6 +65,7 @@ class StringHelper
             $topLevelDomains = TopLevelDomains::fromPath(storage_path('app/data/tlds-alpha-by-domain.txt'));
             $domain = Domain::fromIDNA2008(parse_url($url, PHP_URL_HOST));
             $result = $topLevelDomains->resolve($domain);
+
             return $result->registrableDomain()->toString();
         } catch (\Exception $exception) {
         }

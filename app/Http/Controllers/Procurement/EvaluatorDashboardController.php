@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers\Procurement;
 
-use App\Http\Controllers\Controller;
-use App\Models\Procurement\TenderCommitteeMember;
-use App\Models\Procurement\TenderSupplier;
-use App\Models\Procurement\BidSubmission;
-use App\Models\Procurement\Tender;
-use App\Models\Procurement\TenderSection;
-use App\Models\Procurement\TenderCommittee;
 use App\Enums\Core\PermissionEnum;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Models\Procurement\Tender;
+use App\Models\Procurement\TenderCommittee;
+use App\Models\Procurement\TenderCommitteeMember;
+use App\Models\Procurement\TenderSection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -19,7 +16,7 @@ class EvaluatorDashboardController extends Controller
     /**
      * Show evaluator dashboard with responsive bids ready for evaluation
      */
-     public function index()
+    public function index()
     {
         $this->authorize(PermissionEnum::BidSubmissionRead);
 
@@ -27,8 +24,8 @@ class EvaluatorDashboardController extends Controller
         $currentUserId = Auth::id();
 
         // Determine if global setup is missing: committees or criteria
-        $needsCommitteeSetup = !TenderCommittee::where('IsActive', 1)->exists();
-        $needsCriteriaSetup = !TenderSection::where('IsActive', 1)->exists();
+        $needsCommitteeSetup = ! TenderCommittee::where('IsActive', 1)->exists();
+        $needsCriteriaSetup = ! TenderSection::where('IsActive', 1)->exists();
 
         // Get tenders where user is a committee member and has accepted (support dual mapping)
         $tenderIds = TenderCommitteeMember::where(function ($q) use ($currentUserId) {
@@ -47,7 +44,7 @@ class EvaluatorDashboardController extends Controller
                 'userRole' => 'No committee assignments',
                 'message' => 'You are not assigned to any evaluation committees or have not accepted any appointments.',
                 'needsCommitteeSetup' => $needsCommitteeSetup,
-                'needsCriteriaSetup' => $needsCriteriaSetup
+                'needsCriteriaSetup' => $needsCriteriaSetup,
             ]);
         }
 
@@ -107,7 +104,7 @@ class EvaluatorDashboardController extends Controller
                     'evaluation_notes' => $bid->EvaluationNotes,
                     'can_evaluate' => $sectionsConfigured &&
                         ($weightValidation ? $weightValidation['is_valid'] : false) &&
-                        $evaluationStatus['status'] !== 'non-responsive'
+                        $evaluationStatus['status'] !== 'non-responsive',
                 ]);
             }
         }
@@ -118,7 +115,7 @@ class EvaluatorDashboardController extends Controller
             'tenderCount' => $tenders->count(),
             'bidsCount' => $evaluationData->count(),
             'needsCommitteeSetup' => $needsCommitteeSetup,
-            'needsCriteriaSetup' => $needsCriteriaSetup
+            'needsCriteriaSetup' => $needsCriteriaSetup,
         ]);
     }
 
@@ -148,7 +145,7 @@ class EvaluatorDashboardController extends Controller
             ->select('m.Id')
             ->first();
 
-        if (!$membership) {
+        if (! $membership) {
             return redirect()->route('evaluationdashboard.index')
                 ->with('error', 'You are not authorized to evaluate this tender.');
         }
@@ -166,7 +163,7 @@ class EvaluatorDashboardController extends Controller
 
         // Get evaluation readiness
         $readiness = $tender->getEvaluationReadiness();
-        if (!$readiness['ready']) {
+        if (! $readiness['ready']) {
             return redirect()->route('evaluationdashboard.index')
                 ->with('error', $readiness['message']);
         }
@@ -183,11 +180,12 @@ class EvaluatorDashboardController extends Controller
             'sections' => $tender->tenderSections, // TenderSection pivot models with weights
             'responsiveBids' => $responsiveBids,
             'committeeMember' => $committeeMember,
-            'userRole' => $committeeMember->Role ?? 'Member'
+            'userRole' => $committeeMember->Role ?? 'Member',
         ]);
     }
 
-    public function create(){
+    public function create()
+    {
         return view('procurement.tendering.bidopeningandevaluation.evaluationdashboard.create');
     }
 }

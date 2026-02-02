@@ -79,7 +79,29 @@
                 </div>
             </div>
 
-            <div class="mt-4">
+            <hr>
+
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <div class="card bg-light border-success">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Amount</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h3 class="text-success mb-0">
+                                        {{ number_format($pricing->Rent + $pricing->ParkingFee + $pricing->ServiceCharge + $pricing->OtherCharges + $pricing->DepositAmount, 2) }}
+                                    </h3>
+                                    <small class="text-muted">(Rent + Parking + Service + Other + Deposit)</small>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <p class="mb-1"><strong>Monthly Charges:</strong> {{ number_format($pricing->Rent + $pricing->ParkingFee + $pricing->ServiceCharge + $pricing->OtherCharges, 2) }}</p>
+                                    <p class="mb-0"><strong>Deposit:</strong> {{ number_format($pricing->DepositAmount, 2) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
                 <a href="{{ route('propertyrateandpricing.edit', $pricing->Id) }}" class="btn btn-primary">
                     Edit
                 </a>

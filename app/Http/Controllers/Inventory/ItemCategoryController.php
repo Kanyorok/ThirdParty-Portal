@@ -2,18 +2,13 @@
 
 namespace App\Http\Controllers\Inventory;
 
-
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreItemCategoryRequest;
 use App\Http\Requests\Inventory\UpdateItemCategoryRequest;
-use App\Models\Inventory\ItemCategories;
 use App\Models\Core\Approval\CodeDetail;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use App\Services\Inventory\ItemCategoryService;
-
+use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemType;
+use App\Services\Inventory\ItemCategoryService;
 
 class ItemCategoryController extends Controller
 {
@@ -31,13 +26,13 @@ class ItemCategoryController extends Controller
 
         if ($requested !== null) {
             $perPage = intval($requested);
-            if (!in_array($perPage, $allowed)) {
+            if (! in_array($perPage, $allowed)) {
                 $perPage = 20;
             }
             session(['itemcategory.perPage' => $perPage]);
         } else {
             $perPage = session('itemcategory.perPage', 20);
-            if (!in_array($perPage, $allowed)) {
+            if (! in_array($perPage, $allowed)) {
                 $perPage = 20;
             }
         }
@@ -88,6 +83,7 @@ class ItemCategoryController extends Controller
     {
         $category = ItemCategories::with('parent', 'children', 'itemType.type')->findOrFail($id);
         $this->authorize('view', $category);
+
         return view('inventory.itemmaster.itemcategory.show', compact('category'));
     }
 
@@ -115,13 +111,12 @@ class ItemCategoryController extends Controller
             ->with('success', 'Category updated successfully.');
     }
 
-
-
     public function destroy($id)
     {
         $category = ItemCategories::findOrFail($id);
         $this->authorize('destroy', $category);
         $this->service->destroy($category);
+
         return redirect()->route('itemcategory.index')->with('success', 'Category deleted successfully.');
     }
 }

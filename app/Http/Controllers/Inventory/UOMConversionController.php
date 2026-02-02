@@ -3,21 +3,11 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
-
-use App\Models\Inventory\UOMConversion;
-use App\Models\Inventory\UnitOfMeasure;
 use App\Http\Requests\Inventory\UOMConversionRequest;
-use App\Http\Controllers\Inventory\ItemMasterListController;
-use App\Services\Inventory\UOMConversionService;
-use App\Policies\Inventory\UOMConversionPolicy;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Models\Inventory\ItemMasterList;
-use App\Models\Core\User;
-
-
-use Illuminate\Http\Request;
+use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Inventory\UOMConversion;
+use App\Services\Inventory\UOMConversionService;
 
 class UOMConversionController extends Controller
 {
@@ -33,6 +23,7 @@ class UOMConversionController extends Controller
         $this->authorize('viewAny', UOMConversion::class);
         $uomConversions = UOMConversion::all();
         $items = ItemMasterList::with('uom')->get();
+
         return view('inventory.uomconversion.index', compact('uomConversions', 'items'));
     }
 
@@ -73,6 +64,7 @@ class UOMConversionController extends Controller
         $this->authorize('update', UOMConversion::class);
         $uomConversion = UOMConversion::findOrFail($id);
         $this->service->update($uomConversion, $request->validated());
+
         return redirect()
             ->route('uomconversion.index')
             ->with('success', 'UOM Conversion updated successfully.');
@@ -82,6 +74,7 @@ class UOMConversionController extends Controller
     {
         $this->authorize('view', UOMConversion::class);
         $uomConversion = UOMConversion::findOrFail($id);
+
         return view('inventory.uomconversion.show', compact('uomConversion'));
     }
 
@@ -94,6 +87,4 @@ class UOMConversionController extends Controller
 
         return redirect()->route('uomconversion.index')->with('success', 'UOM Conversion deleted successfully.');
     }
-
-
 }

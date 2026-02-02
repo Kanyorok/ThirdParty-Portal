@@ -11,11 +11,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Tasks';
     protected $primaryKey = 'TaskID';
@@ -43,11 +44,11 @@ class Task extends Model
                           ];
 
     protected $casts = [
-                        'Dated'       => 'datetime',
+                        'Dated' => 'datetime',
                         'CompletedOn' => 'datetime',
-                        'UserID'      => 'integer',
-                        'CreatedBy'   => 'integer',
-                        'ModifiedBy'  => 'integer',
+                        'UserID' => 'integer',
+                        'CreatedBy' => 'integer',
+                        'ModifiedBy' => 'integer',
                        ];
 
     public function party(): MorphTo

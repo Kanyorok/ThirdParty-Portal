@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
-
 class LeadEmailController extends Controller
 {
     public function __construct()
@@ -51,30 +50,27 @@ class LeadEmailController extends Controller
 
                 $activity = $service->addActivity(now());
                 $service->send();
+
                 return $activity;
             });
-        } catch (Exception|\Throwable $e) {
+        } catch (Exception | \Throwable $e) {
             Log::error('Error sending email to lead: ' . $e->getMessage());
+
             return $this->errored('Unexpected error, try again later.');
         }
 
         return $this->succeeded('Email sent successfully', data: ['activity' => $activity]);
     }
 
-
     public function show(Lead $lead, Email $leadMail)
     {
-        if (!$lead->crmmails()->where('EmailID', $leadMail->EmailID)->exists()) {
+        if (! $lead->crmmails()->where('EmailID', $leadMail->EmailID)->exists()) {
             return $this->errored('invalid email');
         }
 
         return view('crm.emails.summary', [
             'party' => $lead,
-            'crmEmail' => $leadMail
+            'crmEmail' => $leadMail,
         ]);
-
     }
-
-
-
 }

@@ -3,21 +3,23 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Fleet\TelematicsDevice;
 use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\TelematicsDevice;
+use Illuminate\Http\Request;
 
 class FleetTelematicsDeviceController extends Controller
 {
     public function index()
     {
         $devices = TelematicsDevice::with('vehicle')->get();
+
         return view('fleet.gps.telematics.index', compact('devices'));
     }
 
     public function create()
     {
         $vehicles = FleetVehicle::where('IsActive', 1)->get();
+
         return view('fleet.gps.telematics.create', compact('vehicles'));
     }
 
@@ -36,6 +38,7 @@ class FleetTelematicsDeviceController extends Controller
         ]);
 
         TelematicsDevice::create($request->all());
+
         return redirect()->route('fleet.telematics.index')->with('success', 'Device added successfully.');
     }
 }

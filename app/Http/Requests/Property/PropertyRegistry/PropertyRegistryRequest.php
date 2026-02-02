@@ -23,7 +23,8 @@ class PropertyRegistryRequest extends FormRequest
                 'max:255',
                 Rule::unique(PropertyRegistry::class, 'PropertyName')
                     ->ignore($this->route('Id'), 'Id')
-                    ->where(fn($query) => $query
+                    ->where(
+                        fn ($query) => $query
                         ->where('PropertyType', $this->PropertyType)
                         ->where('Category', $this->Category)
                     ),
@@ -57,13 +58,13 @@ class PropertyRegistryRequest extends FormRequest
         $validator->after(function ($validator) {
             // Only run if updating an existing property
             $propertyId = $this->route('Id');
-            if (!$propertyId) {
+            if (! $propertyId) {
                 return;
             }
 
             $property = PropertyRegistry::find($propertyId);
 
-            if (!$property) {
+            if (! $property) {
                 return;
             }
 

@@ -3,31 +3,27 @@
 namespace App\Models\Inventory;
 
 use App\Models\Auth\User;
-use App\Models\Core\Branch;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Branch;
+use App\Models\HRM\Department;
+use App\Models\HRM\Employee;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-use App\Models\Inventory\StockItem;
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\UnitOfMeasure;
-use App\Traits\Model\UserActorTrait;
-use App\Models\HRM\Department;
-use App\Models\HRM\Employee;
-
-
 class StockConsumption extends Model
 {
-    use UserActorTrait, SoftDeletes;
-    
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    use UserActorTrait;
+    use SoftDeletes;
+
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_StockConsumptions';
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
-    
+
     protected $fillable = [
         'ConsumptionNo',
         'ItemID',
@@ -45,7 +41,7 @@ class StockConsumption extends Model
         'ModifiedBy',
         'ModifiedOn',
         'DeletedBy',
-        'DeletedOn'
+        'DeletedOn',
     ];
 
     public function getItemNameAttribute()
@@ -53,12 +49,11 @@ class StockConsumption extends Model
         return $this->item?->ItemName ?? 'N/A';
     }
 
-
     public static function getPrimaryKey(): string
     {
-        return 'ConsId'; 
+        return 'ConsId';
     }
-    
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');

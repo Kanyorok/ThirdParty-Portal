@@ -24,7 +24,7 @@ class ProductDevelopmentFeatureController extends Controller
     public function store(ProductDevelopmentFeatureRequest $request, string $product_id): JsonResponse
     {
         $product = ProductDevelopment::where('ProductID', $product_id)->first();
-        if (!$product instanceof ProductDevelopment) {
+        if (! $product instanceof ProductDevelopment) {
             return $this->errored('product could be invalid', status: 404);
         }
         $this->authorize('update', $product);
@@ -42,13 +42,13 @@ class ProductDevelopmentFeatureController extends Controller
     public function update(ProductDevelopmentFeatureRequest $request, string $product_id, string $feature_id): JsonResponse
     {
         $product = ProductDevelopment::where('ProductID', $product_id)->first();
-        if (!$product instanceof ProductDevelopment) {
+        if (! $product instanceof ProductDevelopment) {
             return $this->errored('product could be invalid', status: 404);
         }
         $this->authorize('update', $product);
 
         $feature = $product->features()->where('Id', $feature_id)->first();
-        if (!$feature instanceof ProductDevelopmentFeature) {
+        if (! $feature instanceof ProductDevelopmentFeature) {
             return $this->errored('product feature could be invalid', status: 404);
         }
 
@@ -65,13 +65,13 @@ class ProductDevelopmentFeatureController extends Controller
     public function destroy(Request $request, string $product_id, string $feature_id): JsonResponse
     {
         $product = ProductDevelopment::where('ProductID', $product_id)->first();
-        if (!$product instanceof ProductDevelopment) {
+        if (! $product instanceof ProductDevelopment) {
             return $this->errored('product could be invalid', status: 404);
         }
 
         $this->authorize('update', $product);
         $feature = $product->features()->where('Id', $feature_id)->first();
-        if (!$feature instanceof ProductDevelopmentFeature) {
+        if (! $feature instanceof ProductDevelopmentFeature) {
             return $this->errored('product feature could be invalid', status: 404);
         }
 

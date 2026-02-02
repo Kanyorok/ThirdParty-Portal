@@ -3,15 +3,14 @@
 namespace App\Services\Inventory;
 
 use App\Enums\Inventory\InterBranchRequisitionEnum;
-use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Workflow;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InterBranchRequisitionItem;
+use App\Models\Inventory\StockItem;
+use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Inventory\StockItem;
 use Illuminate\Validation\ValidationException;
-use App\Services\Workflow\ApprovalWorkflow;
 
 class InterBranchRequisitionService
 {
@@ -25,6 +24,7 @@ class InterBranchRequisitionService
     protected function generateReqNo(InterBranchRequisition $requisition): string
     {
         $year = now()->format('Y');
+
         return 'REQ-' . $year . '-' . str_pad($requisition->Id, 4, '0', STR_PAD_LEFT);
     }
 
@@ -38,7 +38,7 @@ class InterBranchRequisitionService
                 ->where('Branch', $fromBranch)
                 ->first();
 
-            if (!$stock || $stock->CurrentQty < $item['RequestedQty']) {
+            if (! $stock || $stock->CurrentQty < $item['RequestedQty']) {
                 throw ValidationException::withMessages([
                     "items.$index.RequestedQty" => "Insufficient stock for Item ID {$item['Item']} in Branch {$fromBranch}. Requested {$item['RequestedQty']}, available " . ($stock->CurrentQty ?? 0) . ".",
                 ]);
@@ -107,7 +107,7 @@ class InterBranchRequisitionService
         $itemsToKeepIds = [];
 
         foreach ($submittedItemsData as $itemData) {
-            if (isset($itemData['Id']) && !empty($itemData['Id'])) {
+            if (isset($itemData['Id']) && ! empty($itemData['Id'])) {
                 $itemsToKeepIds[] = $itemData['Id'];
                 $existingItem = InterBranchRequisitionItem::find($itemData['Id']);
 
@@ -135,7 +135,7 @@ class InterBranchRequisitionService
         }
 
         $itemsToDelete = array_diff($existingItemIds, $itemsToKeepIds);
-        if (!empty($itemsToDelete)) {
+        if (! empty($itemsToDelete)) {
             InterBranchRequisitionItem::whereIn('Id', $itemsToDelete)->delete();
         }
 
@@ -164,16 +164,15 @@ class InterBranchRequisitionService
         return true;
     }
 
-        public function submitDecision(
-            InterBranchRequisition $requisition,
-            string                 $action,
-            string                 $comments,
-            array                  $approvedQty = [],
-            array                  $itemRemarks = [],
-            $user = null
-        ): void
-        {
-            $user = $user ?: Auth::user();
+    public function submitDecision(
+        InterBranchRequisition $requisition,
+        string $action,
+        string $comments,
+        array $approvedQty = [],
+        array $itemRemarks = [],
+        $user = null
+    ): void {
+        $user = $user ?: Auth::user();
 
             if (!empty($approvedQty)) {
                 foreach ($approvedQty as $itemId => $qty) {
@@ -188,13 +187,13 @@ class InterBranchRequisitionService
                 }
             }
 
-            $workflow = new ApprovalWorkflow('InterBranchRequisitionStatus', 'Status');
-            
-            if ($action === 'APPROVED') {
-                $workflow->approve($requisition, $user, InterBranchRequisitionEnum::Approved, $comments, 'Status');
-            } elseif ($action === 'REJECTED') {
-                $workflow->reject($requisition, $user, InterBranchRequisitionEnum::Rejected, $comments, 'Status');
-            }
+        $workflow = new ApprovalWorkflow('InterBranchRequisitionStatus', 'Status');
+
+        if ($action === 'APPROVED') {
+            $workflow->approve($requisition, $user, InterBranchRequisitionEnum::Approved, $comments, 'Status');
+        } elseif ($action === 'REJECTED') {
+            $workflow->reject($requisition, $user, InterBranchRequisitionEnum::Rejected, $comments, 'Status');
+        }
 
             activity()
                 ->causedBy($user)

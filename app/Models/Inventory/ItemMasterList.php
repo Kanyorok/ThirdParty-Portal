@@ -2,25 +2,22 @@
 
 namespace App\Models\Inventory;
 
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\DMS\Image;
+use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Inventory\ItemCategories;
-use App\Models\Inventory\InventoryType;
-use App\Models\Inventory\ItemType;
-use App\Models\Inventory\UnitOfMeasure;
-use App\Models\Inventory\PriceManagement;
-use App\Traits\Model\DocumentsTrait;
-use App\Models\Core\Approval\CodeDetail;
 
 class ItemMasterList extends Model
 {
-    use UserActorTrait, SoftDeletes, DocumentsTrait;
+    use UserActorTrait;
+    use SoftDeletes;
+    use DocumentsTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $connection = 'sqlsrv';
     protected $table = 't_Items';
@@ -70,15 +67,13 @@ class ItemMasterList extends Model
     ];
 
 
-
-public function inUse(): bool
-{
-    return $this->stockItems()->exists()
-        || $this->transferItems()->exists()
-        || $this->receiptItems()->exists()
-        || $this->requisitionItems()->exists();
-}
-
+    public function inUse(): bool
+    {
+        return $this->stockItems()->exists()
+            || $this->transferItems()->exists()
+            || $this->receiptItems()->exists()
+            || $this->requisitionItems()->exists();
+    }
 
     public function category()
     {
@@ -109,7 +104,7 @@ public function inUse(): bool
     {
         return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
     }
-    
+
     public function price()
     {
         return $this->belongsTo(PriceManagement::class, 'ItemPrice', 'Id');
@@ -139,5 +134,4 @@ public function inUse(): bool
     {
         return $this->hasMany(InterBranchRequisitionItem::class, 'Item', 'Id');
     }
-
 }

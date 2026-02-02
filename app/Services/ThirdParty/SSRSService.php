@@ -46,16 +46,16 @@ class SSRSService
     public function __construct()
     {
         $ssrs = APICredential::query()->where('Integration', IntegrationsEnum::ReportService->value)->latest('Id')->first();
-        if (!$ssrs instanceof APICredential) {
+        if (! $ssrs instanceof APICredential) {
             throw new ErroredException('there are no report service configuration');
         }
 
         $ssrsConfig = $ssrs?->Configuration;
-        if (!$ssrsConfig instanceof stdClass) {
+        if (! $ssrsConfig instanceof stdClass) {
             throw new ErroredException('invalid report service configuration');
         }
 
-        if (!property_exists($ssrsConfig, 'password') || !property_exists($ssrsConfig, 'virtual_directory') || !property_exists($ssrsConfig, 'username') || !property_exists($ssrsConfig, 'host') || !property_exists($ssrsConfig, 'path')) {
+        if (! property_exists($ssrsConfig, 'password') || ! property_exists($ssrsConfig, 'virtual_directory') || ! property_exists($ssrsConfig, 'username') || ! property_exists($ssrsConfig, 'host') || ! property_exists($ssrsConfig, 'path')) {
             throw new ErroredException('invalid report service configuration');
         }
 
@@ -97,6 +97,7 @@ class SSRSService
         $response = $client->get($path);
 
         $cookieJar->save($this->_getPath());
+
         return $response;
     }
 
@@ -118,6 +119,7 @@ class SSRSService
     private function _getPath(): string
     {
         $this->_cookiePath = storage_path('app/cookies/ntlm_cookies.json');
+
         return $this->_cookiePath;
     }
 
@@ -134,13 +136,13 @@ class SSRSService
         try {
             $query = Http::withBasicAuth($username, $password)->withOptions(['auth' => [$username, $password, 'ntlm']])
                 ->get(Str::of($Host)->trim()->rtrim('/') . "/{$Path}/api/v2.0/ME");
-            //->get(Str::of($Host)->trim()->rtrim('/') . "/reports/api/v2.0/ME");
         } catch (ConnectionException | Exception) {
             return null;
         }
         if ($query->successful() && array_key_exists('DisplayName', $query->json())) {
             return $query->json()['DisplayName'];
         }
+
         return null;
     }
 
@@ -155,12 +157,12 @@ class SSRSService
                     } else {
                         $params .= "&$index=$val";
                     }
-
                 }
             } else {
                 $params .= "&$index=$value";
             }
         }
+
         return Str::of($params)->trim()->toString();
     }
 
@@ -172,7 +174,7 @@ class SSRSService
         $response = $this->_query
             ->get(Str::rtrim($this->serverURL, '/') . "/{$this->virtual_directory}?" . $path . "&rs:Format=$format" . self::queryParams($parameters, false));
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new ConnectionException(
                 "Failed to export report. Status: {$response->status()}"
             );
@@ -197,7 +199,6 @@ class SSRSService
         ]);
     }
 
-
     /**
      * Parse SSRS XML report output into a standardized format.
      * Handles flat tables, parent-child, and grandparent-parent-child hierarchies.
@@ -218,7 +219,7 @@ class SSRSService
             $root = $dom->documentElement;
             if ($root->hasAttributes()) {
                 foreach ($root->attributes as $attr) {
-                    if (!str_starts_with($attr->nodeName, 'xsi:')) {
+                    if (! str_starts_with($attr->nodeName, 'xsi:')) {
                         $header[$attr->nodeName] = $attr->nodeValue;
                     }
                 }
@@ -229,6 +230,7 @@ class SSRSService
 
             if ($allDetailsNodes->length === 0) {
                 libxml_clear_errors();
+
                 return collect([
                     'error' => null,
                     'header' => $header,
@@ -266,9 +268,9 @@ class SSRSService
                 'groupLevels' => $groupLevels,
                 'hierarchyDepth' => $hierarchyDepth,
             ]);
-
         } catch (Exception $e) {
             libxml_clear_errors();
+
             return collect([
                 'error' => $e->getMessage(),
                 'header' => [],
@@ -294,6 +296,7 @@ class SSRSService
             // Skip collection nodes and tablix containers
             if (str_ends_with($nodeName, '_Collection') || str_starts_with($nodeName, 'Tablix') || str_starts_with($nodeName, 'Textbox')) {
                 $current = $current->parentNode;
+
                 continue;
             }
 
@@ -338,6 +341,7 @@ class SSRSService
                 }
                 $data[] = $row;
             }
+
             return $data;
         }
 
@@ -360,7 +364,7 @@ class SSRSService
     {
         $currentGroup = $groupLevels[$currentLevel] ?? null;
 
-        if (!$currentGroup) {
+        if (! $currentGroup) {
             return;
         }
 
@@ -370,6 +374,7 @@ class SSRSService
             foreach ($groupNode->attributes as $attr) {
                 if ($attr->nodeName === $currentGroup['attribute']) {
                     $groupValue = $attr->nodeValue;
+
                     break;
                 }
             }
@@ -385,7 +390,7 @@ class SSRSService
                 'name' => $currentGroup['element'],
                 'attribute' => $currentGroup['attribute'],
                 'value' => $groupValue,
-            ]
+            ],
         ]);
 
         $nextLevel = $currentLevel + 1;
@@ -468,7 +473,7 @@ class SSRSService
     {
         // Build parameters string
         $paramString = '';
-        if (!empty($parameters)) {
+        if (! empty($parameters)) {
             $params = [];
             foreach ($parameters as $key => $value) {
                 $params[] = "$key=$value";
@@ -479,10 +484,10 @@ class SSRSService
         $response = $this->_query
             ->get($this->_serverAPIUrl . "Reports(Path='$path')/Model.Export", [
                 'format' => $format,
-                'parameters' => $paramString
+                'parameters' => $paramString,
             ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new ConnectionException(
                 "Failed to fetch report data. Status: {$response->status()}"
             );
@@ -497,11 +502,12 @@ class SSRSService
     public function getReportParameters(string $id): array
     {
         $response = $this->_query->get(Str::rtrim($this->_serverAPIUrl, '/') . "/Reports($id)/ParameterDefinitions");
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new ConnectionException(
                 "Failed to fetch report parameters. Status: {$response->status()}"
             );
         }
+
         return $response->json()['value'] ?? [];
     }
 
@@ -517,39 +523,43 @@ class SSRSService
         foreach ($parameters as $parameter) {
             if ($parameter['Name'] === self::UserParameter && $actor instanceof User) {
                 $finalParameters->put($parameter['Name'], $actor->UserID);
+
                 continue;
             }
 
             if (isset($requestParameters[$parameter['Name']])) {
                 $value = $requestParameters[$parameter['Name']];
                 if ($parameter['ParameterType'] === 'DateTime') {
-
                     if (strtotime($value)) {
                         $finalParameters->put($parameter['Name'], $value);
+
                         continue;
                     }
+
                     throw new ErroredException("Parameter {$parameter['Name']} must be a valid date.");
                 }
 
                 if ($parameter['ParameterType'] === 'Boolean') {
                     if (in_array(strtolower($value), ['true', 'false', '1', '0'], true)) {
                         $finalParameters->put($parameter['Name'], in_array(strtolower($value), ['true', '1'], true) ? 'true' : 'false');
+
                         continue;
                     }
+
                     throw new ErroredException("Parameter {$parameter['Name']} must be a valid boolean value.");
                 }
 
                 if ($parameter['ParameterType'] === 'String') {
-                    if (!$parameter['ValidValuesIsNull'] && count($parameter['ValidValues']) > 0) {
+                    if (! $parameter['ValidValuesIsNull'] && count($parameter['ValidValues']) > 0) {
                         $validValues = collect($parameter['ValidValues'])->pluck('Value')->toArray();
 
                         if (is_array($value)) {
                             foreach ($value as $singleValue) {
-                                if (!in_array($singleValue, $validValues, true)) {
+                                if (! in_array($singleValue, $validValues, true)) {
                                     throw new ErroredException("Parameter {$parameter['Name']} must contain only allowed values.");
                                 }
                             }
-                        } elseif (!in_array($value, $validValues, true)) {
+                        } elseif (! in_array($value, $validValues, true)) {
                             throw new ErroredException("Parameter {$parameter['Name']} must be one of the allowed values.");
                         }
 
@@ -560,31 +570,33 @@ class SSRSService
 
                     if (is_string($value) && $value !== '') {
                         $finalParameters->put($parameter['Name'], $value);
+
                         continue;
                     }
+
                     throw new ErroredException("Parameter {$parameter['Name']} must be available.");
                 }
 
                 if ($parameter['ParameterType'] === 'Integer') {
-                    if (!is_numeric($value) || !ctype_digit((string)$value)) {
+                    if (! is_numeric($value) || ! ctype_digit((string)$value)) {
                         throw new ErroredException("Parameter {$parameter['Name']} must be a valid integer.");
                     }
                     $finalParameters->put($parameter['Name'], (int)$value);
+
                     continue;
                 }
 
                 if ($parameter['ParameterType'] === 'Float') {
-                    if (!is_numeric($value)) {
+                    if (! is_numeric($value)) {
                         throw new ErroredException("Parameter {$parameter['Name']} must be a valid number.");
                     }
                     $finalParameters->put($parameter['Name'], (float)$value);
+
                     continue;
                 }
 
                 // todo Add more parameter type validations here as needed
-
-
-            } elseif (!$parameter['Nullable'] && !$parameter['AllowBlank']) {
+            } elseif (! $parameter['Nullable'] && ! $parameter['AllowBlank']) {
                 throw new ErroredException("Parameter {$parameter['Name']} is required.");
             }
         }
@@ -610,14 +622,14 @@ class SSRSService
         foreach ($parameters as $key => $value) {
             $payload['parameters'][] = [
                 'Name' => $key,
-                'Value' => $value
+                'Value' => $value,
             ];
         }
 
         $response = $this->_query
             ->post($this->_serverAPIUrl . "Reports(Path='$path')/Model.Execute", $payload);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new ConnectionException(
                 "Failed to execute report. Status: {$response->status()}"
             );
@@ -641,7 +653,7 @@ class SSRSService
             throw new ErroredException("Could not reach to SSRS Server. Please check your connection.");
         }
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             if ($response->notFound()) {
                 throw new ErroredException("Report not found");
             }
@@ -675,7 +687,7 @@ class SSRSService
     {
         // Build parameters string if any parameters are provided
         $paramString = '';
-        if (!empty($parameters)) {
+        if (! empty($parameters)) {
             $params = [];
             foreach ($parameters as $key => $value) {
                 $params[] = "$key=$value";
@@ -686,7 +698,7 @@ class SSRSService
         $response = $this->_query
             ->get($this->_serverAPIUrl . "Reports(Path='$path')/Export?format=PDF{$paramString}");
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new ConnectionException(
                 "Failed to download PDF report. Status: {$response->status()}"
             );
@@ -710,13 +722,12 @@ class SSRSService
     {
         $response = $this->_query->get($this->_serverAPIUrl . 'Me');
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new ConnectionException(
                 "Failed to fetch SSRS reports. Status: {$response->status()}"
             );
         }
 
-        //dd($response->json());
         return collect($response->json()['value'] ?? []);
     }
 
@@ -732,7 +743,7 @@ class SSRSService
         $select = implode(',', $properties);
         $response = $this->_query->get($this->_serverAPIUrl . "Reports?\$select={$select}");
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new ConnectionException(
                 "Failed to fetch SSRS reports. Status: {$response->status()}"
             );

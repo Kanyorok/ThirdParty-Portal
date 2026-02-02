@@ -12,7 +12,7 @@ class ComplianceFilingAcknowledgment extends Model
 
     protected $fillable = [
         'FilingID', 'AckFileName', 'MimeType', 'FilePath',
-        'UploadedBy', 'UploadedOn'
+        'UploadedBy', 'UploadedOn',
     ];
 
     public function filing()

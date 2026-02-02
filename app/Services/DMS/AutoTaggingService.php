@@ -47,7 +47,7 @@ class AutoTaggingService
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
                     'CreatedOn' => $date,
-                    'ModifiedOn' => $date
+                    'ModifiedOn' => $date,
                 ]);
                 $description .= $rule->tag->Name . ', ';
             }
@@ -73,7 +73,7 @@ class AutoTaggingService
             StringComparisonEnum::Exact => $content === $value,
             StringComparisonEnum::NotExact => $content !== $value,
             StringComparisonEnum::Contains => str_contains($content, $value),
-            StringComparisonEnum::NotContains => !str_contains($content, $value),
+            StringComparisonEnum::NotContains => ! str_contains($content, $value),
             StringComparisonEnum::StartsWith => str_starts_with($content, $value),
             StringComparisonEnum::EndsWith => str_ends_with($content, $value),
         };

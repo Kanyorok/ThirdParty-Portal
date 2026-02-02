@@ -35,13 +35,14 @@ class ModuleService
 
     public static function getNavbarCacheKey(User $user = null): string
     {
-        if (!$user) {
+        if (! $user) {
             $user = AuthFacade::user();
         }
-        if (!$user) {
+        if (! $user) {
             return 'guest-navbar-modules';
         }
         $branchId = session('LoginBranchId', 'no-branch');
+
         return $user->UserID . '-' . $branchId . '-navbar_modules';
     }
 
@@ -55,7 +56,7 @@ class ModuleService
         $menu = '';
         foreach (self::getNavbar() as $module) {
             $menu .= '<li class="pc-item';
-            if (!empty($module['children'])) {
+            if (! empty($module['children'])) {
                 if (request()->is(Str::of($module['name'])->ucfirst()->lower()->toString() . '*')) {
                     $menu .= ' active pc-trigger';
                 }
@@ -70,11 +71,11 @@ class ModuleService
             $menu .= $module['icon'] ?? '<i data-feather="box"></i>';
             $menu .= '</span>';
             $menu .= '<span class="pc-mtext">' . $module['name'] . '</span>';
-            if (!empty($module['children'])) {
+            if (! empty($module['children'])) {
                 $menu .= '<span class="pc-arrow"><i data-feather="chevron-right"></i></span>';
             }
             $menu .= '</a>';
-            if (!empty($module['children'])) {
+            if (! empty($module['children'])) {
                 $menu .= self::_buildSubNavbar($module['children'], $module['id']);
             }
             $menu .= ' </li>';
@@ -89,7 +90,7 @@ class ModuleService
         $menu = '<ul class="pc-submenu">';
         foreach ($children as $child) {
             $menu .= '<li class="pc-item';
-            if (!empty($child['children'])) {
+            if (! empty($child['children'])) {
                 $menu .= ' pc-hasmenu';
             } elseif (is_string($child['route']) && request()->route()?->named($child['route'])) {
                 $menu .= ' active';
@@ -98,12 +99,12 @@ class ModuleService
             $menu .= '" data-item-id="' . $child['id'] . '"' . ($parentId ? ' data-parent-id="' . $parentId . '"' : '') . '>';
             $menu .= '<a href="' . $child['route'] . '" class="pc-link" data-ajax="1" data-route="' . $childPath . '" data-route-id="' . $childPath . '">';
             $menu .= '<span>' . $child['name'] . '</span>';
-            if (!empty($child['children'])) {
+            if (! empty($child['children'])) {
                 $menu .= '<span class="pc-arrow"><i data-feather="chevron-right"></i></span>';
             }
             $menu .= '</a>';
 
-            if (!empty($child['children'])) {
+            if (! empty($child['children'])) {
                 $menu .= self::_buildSubNavbar($child['children'], $child['id']);
             }
             $menu .= '</li>';
@@ -112,7 +113,6 @@ class ModuleService
 
         return $menu;
     }
-
 
     private static function getNavbar(): Collection
     {
@@ -150,6 +150,7 @@ class ModuleService
                     $filtered[] = $filteredItem;
                 }
             }
+
             return collect($filtered);
         }
 
@@ -174,7 +175,7 @@ class ModuleService
                     $uri = method_exists($named, 'uri') ? $named->uri() : '';
                     // Detect required parameters like {param} (without ?)
                     $hasRequiredParams = is_string($uri) && preg_match('/\{[^}\?]+\}/', $uri);
-                    if (!$hasRequiredParams) {
+                    if (! $hasRequiredParams) {
                         $routeUrl = route($module->Route);
                     }
                 }
@@ -191,7 +192,7 @@ class ModuleService
             'route_name' => is_string($module->Route) ? $module->Route : null,
             'description' => $module->Description ?? '',
             'required_permission' => $module->RequiredPermission ?? null,
-            'children' => []
+            'children' => [],
         ];
 
         // Get children of this module
@@ -213,8 +214,8 @@ class ModuleService
     {
         // 1. Strict Requirement Check
         $reqPerm = $item['required_permission'] ?? null;
-        if ($reqPerm && !empty($reqPerm)) {
-            if (!isset($permSet[Str::lower($reqPerm)])) {
+        if ($reqPerm && ! empty($reqPerm)) {
+            if (! isset($permSet[Str::lower($reqPerm)])) {
                 return null;
             }
         }
@@ -232,14 +233,14 @@ class ModuleService
         $item['children'] = $filteredChildren;
 
         // 2. If children are visible, the parent is visible (unless strict check failed above, which implies return null)
-        if (!empty($filteredChildren)) {
+        if (! empty($filteredChildren)) {
             return $item;
         }
 
         // Strict Hiding: If item is a parent (had children) but all are hidden, and it has no actionable route, hide it.
         // This prevents empty menu groups (e.g., Settings, Inventory) from showing up when user has no access to sub-items.
         $hasActionableRoute = isset($item['route']) && $item['route'] !== 'javascript:void(0)' && $item['route'] !== '#';
-        if (!empty($originalChildren) && empty($filteredChildren) && !$hasActionableRoute) {
+        if (! empty($originalChildren) && empty($filteredChildren) && ! $hasActionableRoute) {
             return null;
         }
 
@@ -262,7 +263,7 @@ class ModuleService
             }
             $subKey = $candidate ?: ($parts[0] ?? null);
         }
-        if (!$subKey) {
+        if (! $subKey) {
             $subKey = Str::kebab(Str::lower((string)($item['name'] ?? '')));
         }
         // Visibility rule: visible if we can read the inferred submodule key
@@ -294,9 +295,10 @@ class ModuleService
 
         $routeName = $item['route_name'] ?? null;
         $canAccessAny = $routeName ? self::userCanAccessRoute($user, $permSet, $routeName) : false;
-        if ($canAccessAny || !empty($filteredChildren)) {
+        if ($canAccessAny || ! empty($filteredChildren)) {
             return $item;
         }
+
         return null;
     }
 
@@ -314,6 +316,7 @@ class ModuleService
         ];
         if (isset($overrides[$routeName])) {
             $required = Str::lower($overrides[$routeName]);
+
             return isset($permSet[$required]);
         }
 
@@ -321,9 +324,13 @@ class ModuleService
         $required = self::$routePermissionMap[$routeName] ?? null;
         if (is_string($required) && $required !== '') {
             // Honor explicit permission middleware: if user has it, consider this route visible in the menu
-            if (isset($permSet[$required])) return true;
+            if (isset($permSet[$required])) {
+                return true;
+            }
             // Also accept common read/view suffixes if present
-            if (Str::endsWith($required, ['-read', '-view']) && isset($permSet[$required])) return true;
+            if (Str::endsWith($required, ['-read', '-view']) && isset($permSet[$required])) {
+                return true;
+            }
         }
 
         // Heuristic: try multiple base candidates from dotted route names (e.g., settings.users.index → users)
@@ -337,14 +344,17 @@ class ModuleService
         }
         // Last non-action segment
         for ($i = count($segments) - 1; $i >= 0; $i--) {
-            if (!in_array($segments[$i], $actions, true)) {
+            if (! in_array($segments[$i], $actions, true)) {
                 $candidates[] = $segments[$i];
+
                 break;
             }
         }
         // Add all non-action segments as fallbacks
         foreach ($segments as $seg) {
-            if (!in_array($seg, $actions, true)) $candidates[] = $seg;
+            if (! in_array($seg, $actions, true)) {
+                $candidates[] = $seg;
+            }
         }
         $candidates = array_values(array_unique($candidates));
 
@@ -352,13 +362,20 @@ class ModuleService
             $baseCompressed = preg_replace('/[^a-z0-9]/', '', $base);
             foreach (['read', 'view'] as $suf) {
                 $p1 = $base . '-' . $suf;
-                if (isset($permSet[$p1])) return true;
+                if (isset($permSet[$p1])) {
+                    return true;
+                }
                 $p2 = $baseCompressed . '-' . $suf;
-                if (isset($permSet[$p2])) return true;
+                if (isset($permSet[$p2])) {
+                    return true;
+                }
             }
             // Accept bare permission names (e.g., 'roles', 'users', 'teams', 'branches') commonly used under Settings
-            if (isset($permSet[$base]) || isset($permSet[$baseCompressed])) return true;
+            if (isset($permSet[$base]) || isset($permSet[$baseCompressed])) {
+                return true;
+            }
         }
+
         return false;
     }
 
@@ -371,10 +388,11 @@ class ModuleService
         // Map name to ModulesEnum by description match
         $target = collect(ModulesEnum::cases())->first(function ($m) use ($moduleName) {
             $desc = Str::of($m->description())->lower()->toString();
+
             return Str::contains($desc, $moduleName) || Str::contains($moduleName, Str::lower($desc));
         });
 
-        if (!$target instanceof ModulesEnum) {
+        if (! $target instanceof ModulesEnum) {
             // Fall back: weak heuristics by common names
             $map = [
                 'procurement' => ModulesEnum::Procurement,
@@ -395,12 +413,13 @@ class ModuleService
             foreach ($map as $key => $enum) {
                 if (Str::contains($moduleName, $key)) {
                     $target = $enum;
+
                     break;
                 }
             }
         }
 
-        if (!$target instanceof ModulesEnum) {
+        if (! $target instanceof ModulesEnum) {
             return false;
         }
 
@@ -413,6 +432,7 @@ class ModuleService
                 }
             }
         }
+
         return false;
     }
 
@@ -439,6 +459,7 @@ class ModuleService
         ];
         if (isset($overrides[$routeName])) {
             $required = Str::lower($overrides[$routeName]);
+
             return isset($permSet[$required]);
         }
 
@@ -457,11 +478,16 @@ class ModuleService
         foreach ($suffixes as $suf) {
             // raw style: base(with hyphens/segments)-suffix
             $p1 = $base . '-' . $suf;
-            if (isset($permSet[$p1])) return true;
+            if (isset($permSet[$p1])) {
+                return true;
+            }
             // compressed base-suffix (covers camelCase bases stored without separators)
             $p2 = $baseCompressed . '-' . $suf;
-            if (isset($permSet[$p2])) return true;
+            if (isset($permSet[$p2])) {
+                return true;
+            }
         }
+
         return false;
     }
 
@@ -470,16 +496,22 @@ class ModuleService
      */
     private static function buildRoutePermissionMapOnce(): void
     {
-        if (is_array(self::$routePermissionMap)) return;
+        if (is_array(self::$routePermissionMap)) {
+            return;
+        }
         $map = [];
+
         try {
             foreach (Route::getRoutes() as $route) {
                 $name = $route->getName();
-                if (!$name) continue;
+                if (! $name) {
+                    continue;
+                }
                 $middlewares = method_exists($route, 'gatherMiddleware') ? $route->gatherMiddleware() : ($route->middleware() ?? []);
                 foreach ($middlewares as $mw) {
                     if (is_string($mw) && Str::startsWith($mw, 'permission:')) {
                         $map[$name] = Str::lower((string)Str::after($mw, 'permission:'));
+
                         break;
                     }
                 }
@@ -499,6 +531,7 @@ class ModuleService
         if (array_key_exists($key, self::$permissionSetCache)) {
             return self::$permissionSetCache[$key];
         }
+
         try {
             $perms = $user->getPermissionsViaRoles()->pluck('name')->filter()->values()->all();
         } catch (\Throwable $e) {
@@ -511,6 +544,7 @@ class ModuleService
         }
         // Warm normalized cache sibling
         self::$normalizedPermissionSetCache[$key] = self::normalizePermissionSetKeys(array_keys($set));
+
         return self::$permissionSetCache[$key] = $set;
     }
 
@@ -545,16 +579,25 @@ class ModuleService
         foreach ($suffixes as $suf) {
             // raw variants
             $c1 = $baseLower . '-' . $suf; // e.g., tender-read, tenderinvitation-read
-            if (isset($raw[$c1])) return true;
+            if (isset($raw[$c1])) {
+                return true;
+            }
             $c2 = $baseCompressed . '-' . $suf; // e.g., masterlist-view
-            if (isset($raw[$c2])) return true;
+            if (isset($raw[$c2])) {
+                return true;
+            }
             $c3 = $baseKebab . '-' . $suf; // e.g., master-list-view
-            if (isset($raw[$c3])) return true;
+            if (isset($raw[$c3])) {
+                return true;
+            }
 
             // normalized compressed (no separators)
             $n1 = $baseCompressed . $suf; // e.g., masterlistview
-            if (isset($norm[$n1])) return true;
+            if (isset($norm[$n1])) {
+                return true;
+            }
         }
+
         return false;
     }
 
@@ -567,6 +610,7 @@ class ModuleService
         }
         // Ensure raw cache is warmed
         $raw = self::getUserPermissionSet($user);
+
         return self::$normalizedPermissionSetCache[$key] = self::normalizePermissionSetKeys(array_keys($raw));
     }
 
@@ -577,6 +621,7 @@ class ModuleService
             $norm = preg_replace('/[^a-z0-9]/', '', Str::lower((string)$name));
             $set[$norm] = true;
         }
+
         return $set;
     }
 }

@@ -11,8 +11,8 @@ class Notes extends Model
 {
     use UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
+    public const string CREATED_AT = 'CreatedOn';
+    public const string UPDATED_AT = 'ModifiedOn';
 
     protected $table = 't_Notes';
     protected $primaryKey = 'NoteID';

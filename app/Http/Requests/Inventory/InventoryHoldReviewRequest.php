@@ -35,5 +35,3 @@ class InventoryHoldReviewRequest extends FormRequest
         ];
     }
 }
-
-

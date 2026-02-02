@@ -14,8 +14,7 @@ enum InsuranceReferralStatus: string
 
     case Converted = 'C';
 
-    case  Rejected = 'R';
-
+    case Rejected = 'R';
 
     public function label(): string
     {

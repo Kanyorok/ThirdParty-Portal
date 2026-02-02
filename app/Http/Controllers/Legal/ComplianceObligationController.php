@@ -3,19 +3,19 @@
 namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Legal\ComplianceArea;
 use App\Models\Legal\ComplianceObligation;
 use App\Models\Legal\ComplianceObligationDocument;
 use App\Models\Legal\ComplianceObligationImpact;
 use App\Models\Legal\RegulatoryBody;
-use App\Models\Legal\ComplianceArea;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ComplianceObligationController extends Controller
 {
     public function index()
     {
         $obligations = ComplianceObligation::with(['regulator', 'area'])->orderBy('CreatedOn', 'desc')->get();
+
         return view('legal.compliance.obligations.index', compact('obligations'));
     }
 
@@ -23,6 +23,7 @@ class ComplianceObligationController extends Controller
     {
         $regulators = RegulatoryBody::orderBy('Name')->pluck('Name', 'Id');
         $areas = ComplianceArea::orderBy('Name')->pluck('Name', 'Id');
+
         return view('legal.compliance.obligations.create', compact('regulators', 'areas'));
     }
 
@@ -49,6 +50,7 @@ class ComplianceObligationController extends Controller
     public function show($id)
     {
         $obligation = ComplianceObligation::with(['regulator', 'area', 'documents', 'impacts'])->findOrFail($id);
+
         return view('legal.compliance.obligations.show', compact('obligation'));
     }
 
@@ -57,6 +59,7 @@ class ComplianceObligationController extends Controller
         $obligation = ComplianceObligation::findOrFail($id);
         $regulators = RegulatoryBody::orderBy('Name')->pluck('Name', 'Id');
         $areas = ComplianceArea::orderBy('Name')->pluck('Name', 'Id');
+
         return view('legal.compliance.obligations.edit', compact('obligation', 'regulators', 'areas'));
     }
 
@@ -90,6 +93,7 @@ class ComplianceObligationController extends Controller
             'DeletedBy' => auth()->id() ?? 1,
             'DeletedOn' => now(),
         ]);
+
         return redirect()->route('legal.compliance.obligations.index')
             ->with('success', 'Obligation deactivated.');
     }

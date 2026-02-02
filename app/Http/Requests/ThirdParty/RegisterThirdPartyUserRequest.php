@@ -94,6 +94,7 @@ class RegisterThirdPartyUserRequest extends FormRequest
     {
         $data = parent::validated();
         unset($data['Password_confirmation']);
+
         return $data;
     }
 }

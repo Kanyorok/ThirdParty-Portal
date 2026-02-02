@@ -4,20 +4,17 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StockConsumptionRequest;
-use App\Models\Inventory\StockConsumption;
-use App\Policies\Inventory\StockConsumptionPolicy;
-use App\Models\Core\Branch;
-use App\Models\Inventory\Store;
-use App\Models\Inventory\StockItem;
 use App\Models\Auth\User;
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\UnitOfMeasure;
-use App\Models\HRM\Employee;
-use App\Models\HRM\Department;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Branch;
+use App\Models\HRM\Department;
+use App\Models\HRM\Employee;
+use App\Models\Inventory\StockConsumption;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\Store;
+use App\Models\Inventory\UnitOfMeasure;
 use App\Services\Inventory\StockConsumptionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class StockConsumptionController extends Controller
@@ -34,7 +31,7 @@ class StockConsumptionController extends Controller
         $this->authorize('viewAny', StockConsumption::class);
 
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -50,7 +47,7 @@ class StockConsumptionController extends Controller
     {
         $this->authorize('create', StockConsumption::class);
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -75,11 +72,11 @@ class StockConsumptionController extends Controller
                 return [
                     'id' => $employee->user ? $employee->user->Id : null,
                     'name' => $employee->FirstName . ' ' . $employee->LastName .
-                        ($employee->EmployeeID ? ' (' . $employee->EmployeeID . ')' : '')
+                        ($employee->EmployeeID ? ' (' . $employee->EmployeeID . ')' : ''),
                 ];
             })
             ->filter(function ($item) {
-                return !is_null($item['id']);
+                return ! is_null($item['id']);
             });
 
         $departments = Department::select('Id', 'Name')
@@ -88,7 +85,7 @@ class StockConsumptionController extends Controller
             ->map(function ($department) {
                 return [
                     'id' => $department->Id,
-                    'name' => $department->Name
+                    'name' => $department->Name,
                 ];
             });
 
@@ -113,8 +110,10 @@ class StockConsumptionController extends Controller
     public function store(StockConsumptionRequest $request)
     {
         $this->authorize('create', StockConsumption::class);
+
         try {
             $this->stockConsumptionService->create($request->validated());
+
             return redirect()->route('stockconsumption.index')->with('success', 'Stock consumption recorded successfully.');
         } catch (\Exception $e) {
             return back()->withErrors('Failed to record stock consumption: ' . $e->getMessage())->withInput();
@@ -127,7 +126,7 @@ class StockConsumptionController extends Controller
         $consumption = StockConsumption::with(['item', 'store', 'uom', 'issuedBy', 'branch', 'stockItem'])->findOrFail($id);
 
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -148,12 +147,13 @@ class StockConsumptionController extends Controller
             ->get()
             ->map(function ($user) {
                 $employee = $user->employee;
+
                 return [
                     'Id' => $user->Id,
                     'Name' => $employee
                         ? $employee->FirstName . ' ' . $employee->LastName .
                         ($employee->EmployeeID ? ' (' . $employee->EmployeeID . ')' : '')
-                        : $user->UserName
+                        : $user->UserName,
                 ];
             });
 
@@ -169,11 +169,11 @@ class StockConsumptionController extends Controller
                 return [
                     'id' => $employee->user ? $employee->user->Id : null,
                     'name' => $employee->FirstName . ' ' . $employee->LastName .
-                        ($employee->EmployeeID ? ' (' . $employee->EmployeeID . ')' : '')
+                        ($employee->EmployeeID ? ' (' . $employee->EmployeeID . ')' : ''),
                 ];
             })
             ->filter(function ($item) {
-                return !is_null($item['id']);
+                return ! is_null($item['id']);
             });
 
         $departments = Department::select('Id', 'Name')
@@ -182,7 +182,7 @@ class StockConsumptionController extends Controller
             ->map(function ($department) {
                 return [
                     'id' => $department->Id,
-                    'name' => $department->Name
+                    'name' => $department->Name,
                 ];
             });
 
@@ -242,7 +242,7 @@ class StockConsumptionController extends Controller
             'uom',
             'issuedBy',
             'branch',
-            'stockItem'
+            'stockItem',
         ])->findOrFail($id);
 
         return view('inventory.stockmanagement.stockconsumption.show', compact('consumption'));
@@ -251,19 +251,20 @@ class StockConsumptionController extends Controller
     public function getStores(Request $request)
     {
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return response()->json([], 400);
         }
 
         $branchId = $currentBranch->Id;
         $stores = Store::where('BranchID', $branchId)->get(['Id', 'StoreName']);
+
         return response()->json($stores);
     }
 
     public function getItems(Request $request)
     {
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return response()->json([], 400);
         }
 
@@ -294,7 +295,7 @@ class StockConsumptionController extends Controller
     public function getIssuedToOptions(Request $request)
     {
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return response()->json([], 400);
         }
 
@@ -315,7 +316,7 @@ class StockConsumptionController extends Controller
                         return [
                             'Id' => $employee->user ? $employee->user->Id : $employee->Id,
                             'Name' => $employee->FirstName . ' ' . $employee->LastName .
-                                ($employee->EmployeeID ? ' (' . $employee->EmployeeID . ')' : '')
+                                ($employee->EmployeeID ? ' (' . $employee->EmployeeID . ')' : ''),
                         ];
                     });
 
@@ -328,7 +329,7 @@ class StockConsumptionController extends Controller
                     ->map(function ($department) {
                         return [
                             'Id' => $department->Id,
-                            'Name' => $department->Name
+                            'Name' => $department->Name,
                         ];
                     });
 
@@ -346,6 +347,7 @@ class StockConsumptionController extends Controller
 
         try {
             $this->stockConsumptionService->delete($item);
+
             return redirect()->route('stockconsumption.index')->with('success', '🗑️ Stock consumption deleted successfully!');
         } catch (\Exception $e) {
             return back()->withErrors('Failed to delete stock consumption: ' . $e->getMessage());

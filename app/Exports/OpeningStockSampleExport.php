@@ -16,7 +16,6 @@ class OpeningStockSampleExport implements FromArray, WithHeadings
 
         $data = [];
 
-        // ---- Item Rows ----
         foreach ($items as $item) {
             $stock = $item->stockItems->first();
 
@@ -32,21 +31,18 @@ class OpeningStockSampleExport implements FromArray, WithHeadings
                 $stock?->Reorder ?? 0,
                 $stock?->Max ?? 0,
                 $item->uom->Code ?? '',
-                $item->price->ActualPrice ?? NULL,
+                $item->price->ActualPrice ?? null,
                 $stock?->LastReceived ?? now()->format('d/m/Y'),
                 $stock?->Status ?? 1,
             ];
         }
 
-        // ---- Spacer ----
         $data[] = [];
         $data[] = ['--- "1" Refers to Active or Yes and "0" refers to Inactive or No  ---'];
         $data[] = ['--- Pricing Should Come from the Price Management Module  ---'];
-        // ---- Spacer ----
         $data[] = [];
         $data[] = ['--- Reference: Available Stores & Branches ---'];
 
-        // ---- Stores with Branch Names ----
         $stores = Store::with('branch')->get();
         foreach ($stores as $store) {
             $data[] = [

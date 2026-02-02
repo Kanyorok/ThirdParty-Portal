@@ -6,8 +6,6 @@ use App\Models\Core\CategoryMaster;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
-
-
 class CategoryMasterSeeder extends Seeder
 {
     public function run(): void

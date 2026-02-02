@@ -3,22 +3,22 @@
 namespace App\Services\Inventory;
 
 use App\Enums\Inventory\Transfers;
-use App\Models\Core\Branch;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Branch;
+use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InventoryHold;
-use App\Models\Inventory\StockItem;
 use App\Models\Inventory\StockGRNLedger;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\StockTransaction;
 use App\Models\Inventory\Store;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\TransactionTransferItem;
 use App\Models\Procurement\GoodsReceipt;
+use App\Services\Finance\TransactionService;
+use App\Services\Workflow\ApprovalWorkflow;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Inventory\StockTransaction;
-use App\Services\Workflow\ApprovalWorkflow;
-use App\Models\Inventory\InterBranchRequisition;
-use App\Services\Finance\TransactionService;
 use Throwable;
 
 class TransactionTransferService
@@ -27,25 +27,27 @@ class TransactionTransferService
     protected TransactionService $transactionService;
 
     public function __construct(
-        ApprovalWorkflow $workflow, 
+        ApprovalWorkflow $workflow,
         TransactionService $transactionService
     ) {
-        $this->workflow = new ApprovalWorkflow('TransferStatus','Status');
+        $this->workflow = new ApprovalWorkflow('TransferStatus', 'Status');
         $this->transactionService = $transactionService;
     }
 
     public function getHQBranchId(): int
     {
         $hqBranch = Branch::where('IsHQ', 1)->first();
-        if (!$hqBranch) {
+        if (! $hqBranch) {
             throw new Exception('No HQ branch defined. Please set a branch as HQ.');
         }
+
         return $hqBranch->Id;
     }
-    
+
     protected function generateTransferId(TransactionTransfer $transfer): string
     {
         $year = now()->format('Y');
+
         return 'TRF-' . $year . '-' . str_pad($transfer->Id, 4, '0', STR_PAD_LEFT);
     }
 
@@ -56,7 +58,7 @@ class TransactionTransferService
         if ($data['RequisitionType'] === 'procurement') {
             $requisition = GoodsReceipt::findOrFail($data['RequisitionId']);
             $fromBranch = $this->getHQBranchId();
-            $toBranch = $data['ToBranch']; 
+            $toBranch = $data['ToBranch'];
         } else {
             $requisition = InterBranchRequisition::findOrFail($data['RequisitionId']);
             $fromBranch = $requisition->FromBranch;
@@ -102,7 +104,7 @@ class TransactionTransferService
 
         return $transfer;
     }
-    
+
     public function createTransferItems(TransactionTransfer $transfer, array $items): void
     {
         foreach ($items as $itemData) {
@@ -142,7 +144,7 @@ class TransactionTransferService
     private function branchHasGRNLedger($branchId, $itemId): bool
     {
         $store = $this->getDefaultStoreForBranch($branchId);
-        if (!$store) {
+        if (! $store) {
             return false;
         }
 
@@ -160,7 +162,7 @@ class TransactionTransferService
             $storeId = $store ? $store->Id : null;
         }
 
-        if (!$storeId) {
+        if (! $storeId) {
             throw new Exception("No store found for branch {$branchId}");
         }
 
@@ -202,7 +204,7 @@ class TransactionTransferService
             $isHQ = $user->branch && $user->branch->IsHQ;
 
             foreach ($transfer->items as $item) {
-                if (!$this->branchHasGRNLedger($transfer->FromBranch, $item->Item)) {
+                if (! $this->branchHasGRNLedger($transfer->FromBranch, $item->Item)) {
                     throw new Exception("Item {$item->Item} has no GRN ledger entries in branch {$transfer->FromBranch}. Cannot transfer without GRN tracking.");
                 }
             }
@@ -230,7 +232,7 @@ class TransactionTransferService
                     ->where('Branch', $transfer->FromBranch)
                     ->first();
 
-                if (!$stockFrom) {
+                if (! $stockFrom) {
                     throw new Exception("No stock found for Item {$item->Item} in branch {$transfer->FromBranch}");
                 }
 
@@ -255,22 +257,22 @@ class TransactionTransferService
 
                 if (!empty($item->BatchAllocation) && !$isHQ) {
                     $userAllocations = json_decode($item->BatchAllocation, true);
-                    
+
                     foreach ($userAllocations as $userAlloc) {
                         $batch = StockGRNLedger::where('id', $userAlloc['ledger_id'])
                             ->where('ItemNo', $item->Item)
                             ->where('Store', $sourceStore->Id)
                             ->where('Branch', $transfer->FromBranch)
                             ->first();
-                        
-                        if (!$batch) {
+
+                        if (! $batch) {
                             throw new Exception("Selected GRN batch not found: {$userAlloc['grn_id']}");
                         }
-                        
+
                         if ($batch->RemainingQTY < $userAlloc['quantity']) {
                             throw new Exception("Insufficient quantity in GRN {$userAlloc['grn_id']}. Available: {$batch->RemainingQTY}, Requested: {$userAlloc['quantity']}");
                         }
-                        
+
                         $allocations[] = [
                             'ledger_id' => $batch->id,
                             'grn_id' => $batch->GRNID,
@@ -283,15 +285,17 @@ class TransactionTransferService
                         
                         $batch->RemainingQTY -= $userAlloc['quantity'];
                         $batch->save();
-                        
+
                         $remainingQty -= $userAlloc['quantity'];
                     }
                 } else {
                     foreach ($availableBatches as $batch) {
-                        if ($remainingQty <= 0) break;
-                        
+                        if ($remainingQty <= 0) {
+                            break;
+                        }
+
                         $allocatedQty = min($batch->RemainingQTY, $remainingQty);
-                        
+
                         $allocations[] = [
                             'ledger_id' => $batch->id,
                             'grn_id' => $batch->GRNID,
@@ -304,10 +308,10 @@ class TransactionTransferService
                         
                         $batch->RemainingQTY -= $allocatedQty;
                         $batch->save();
-                        
+
                         $remainingQty -= $allocatedQty;
                     }
-                    
+
                     if ($remainingQty > 0) {
                         throw new Exception("Insufficient GRN batches for Item {$item->Item}. Could only allocate " . ($item->DispatchedQty - $remainingQty) . " out of {$item->DispatchedQty}");
                     }
@@ -363,8 +367,8 @@ class TransactionTransferService
                     'TotalCost' => $itemCost * -1,
                     'TransactionDate' => now(),
                     'ReferenceID' => $transfer->Id,
-                    'Remarks' => 'Transfer to Branch ID ' . $transfer->ToBranch . 
-                                ($isHQ ? ' using FIFO' : ' using selected GRN batches') . 
+                    'Remarks' => 'Transfer to Branch ID ' . $transfer->ToBranch .
+                                ($isHQ ? ' using FIFO' : ' using selected GRN batches') .
                                 ' | Allocations: ' . collect($allocations)->map(function ($a) {
                                     return $a['grn_id'] . ' (' . $a['quantity'] . ')';
                                 })->implode(', '),
@@ -387,7 +391,7 @@ class TransactionTransferService
                     'Source' => $sourceId,
                     'SourceID' => $transfer->Id,
                     'Status' => Transfers::InTransit->value,
-                    'Remarks' => $item->Remarks . ' | Allocations: ' . 
+                    'Remarks' => $item->Remarks . ' | Allocations: ' .
                                 collect($allocations)->map(function ($a) {
                                     return $a['grn_id'] . ' (' . $a['quantity'] . ')';
                                 })->implode(', '),
@@ -400,22 +404,22 @@ class TransactionTransferService
 
             if ($totalCost > 0) {
                 $payload = [
-                    'ModuleID'          => 400000,
+                    'ModuleID' => 400000,
                     'TransactionTypeID' => 5,
-                    'TransactionType'   => 'InterBranch Inventory Transfer',
-                    'ReferenceNumber'   => $transfer->TransferID,
-                    'TransactionDate'   => now()->toDateString(),
-                    'Amount'            => $totalCost,
-                    'TaxAmount'         => 0,
-                    'BranchID'          => $transfer->FromBranch,
-                    'DepartmentID'      => null,
-                    'CurrencyID'        => 56,
-                    'CurrencyCode'      => 'KES',
-                    'ExchangeRate'      => 1,
-                    'Narration'         => 'Transfer of inventory to branch ' . $transfer->ToBranch . 
-                                           ' using ' . ($isHQ ? 'FIFO' : 'selected GRN batches') . 
+                    'TransactionType' => 'InterBranch Inventory Transfer',
+                    'ReferenceNumber' => $transfer->TransferID,
+                    'TransactionDate' => now()->toDateString(),
+                    'Amount' => $totalCost,
+                    'TaxAmount' => 0,
+                    'BranchID' => $transfer->FromBranch,
+                    'DepartmentID' => null,
+                    'CurrencyID' => 56,
+                    'CurrencyCode' => 'KES',
+                    'ExchangeRate' => 1,
+                    'Narration' => 'Transfer of inventory to branch ' . $transfer->ToBranch .
+                                           ' using ' . ($isHQ ? 'FIFO' : 'selected GRN batches') .
                                            '. Transfer ID: ' . $transfer->TransferId,
-                    'SourceTable'       => 't_Transfers',
+                    'SourceTable' => 't_Transfers',
                     'SystemDescription' => 'Inventory Transfer ' . $transfer->TransferId,
                 ];
 
@@ -423,9 +427,9 @@ class TransactionTransferService
             }
 
             DB::commit();
-            
         } catch (Throwable $th) {
             DB::rollBack();
+
             throw $th;
         }
     }
@@ -439,7 +443,7 @@ class TransactionTransferService
             ->where('IsMainStore', true)
             ->first();
 
-        if (!$store) {
+        if (! $store) {
             throw new Exception("No active store found for branch {$branchId}");
         }
 

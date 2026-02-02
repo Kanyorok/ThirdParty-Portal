@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Finance;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Core\Country;
 use App\Models\Core\Currency;
 use App\Models\Finance\TaxJurisdiction;
-use App\Models\Core\Country;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,12 +14,12 @@ use Illuminate\Support\Facades\Log;
 
 class TaxJurisdictionController extends Controller
 {
-    //
     public function index()
     {
         $this->authorize(PermissionEnum::FinanceTaxSettingView, TaxJurisdiction::class);
 
         $taxJurisdictions = TaxJurisdiction::with(['currency:Id,Code'])->get();
+
         return view('finance.taxmanagement.taxjurisdictions.index', compact('taxJurisdictions'));
     }
 
@@ -30,7 +30,7 @@ class TaxJurisdictionController extends Controller
         $currencies = Currency::all();
         $countries = Country::active()->ordered()->get();
 
-        return view('finance.taxmanagement.taxjurisdictions.create', compact('currencies','countries'));
+        return view('finance.taxmanagement.taxjurisdictions.create', compact('currencies', 'countries'));
     }
 
     public function store(Request $request)
@@ -44,10 +44,11 @@ class TaxJurisdictionController extends Controller
             'TaxAuthority' => 'required|string|max:255',
         ]);
         DB::beginTransaction();
+
         try {
             $taxJurisdiction = TaxJurisdiction::create([
                 'JurisdictionName' => $validated['JurisdictionName'],
-                'Currency'=> $validated['Currency'],
+                'Currency' => $validated['Currency'],
                 'CountryID' => $validated['CountryID'] ?? null,
                 'TaxAuthority' => $validated['TaxAuthority'],
                 'CreatedBy' => Auth::Id(),
@@ -59,14 +60,15 @@ class TaxJurisdictionController extends Controller
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'create'])
                 ->log('Created tax jurisdiction: ' . $taxJurisdiction->JurisdictionName);
-                
-            DB::commit();  
+
+            DB::commit();
 
             return redirect()->route('taxjurisdiction.index')->with('success', 'Tax Jurisdiction created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
 
             Log::error('Error creating tax jurisdiction: ' . $e->getMessage());
+
             return redirect()->back()->withErrors(['error' => 'Failed to create tax jurisdiction. ' . $e->getMessage()]);
         }
     }
@@ -79,7 +81,7 @@ class TaxJurisdictionController extends Controller
         $currencies = Currency::all();
         $countries = Country::active()->ordered()->get();
 
-        return view('finance.taxmanagement.taxjurisdictions.edit', compact('taxJurisdiction', 'currencies','countries'));
+        return view('finance.taxmanagement.taxjurisdictions.edit', compact('taxJurisdiction', 'currencies', 'countries'));
     }
 
     public function update(Request $request, $id)
@@ -93,11 +95,12 @@ class TaxJurisdictionController extends Controller
             'TaxAuthority' => 'required|string|max:255',
         ]);
         DB::beginTransaction();
+
         try {
             $taxJurisdiction = TaxJurisdiction::findOrFail($id);
             $taxJurisdiction->update([
                 'JurisdictionName' => $validated['JurisdictionName'],
-                'Currency'=> $validated['Currency'],
+                'Currency' => $validated['Currency'],
                 'CountryID' => $validated['CountryID'] ?? null,
                 'TaxAuthority' => $validated['TaxAuthority'],
                 'Status' => $request->has('Status') ? true : false,
@@ -117,6 +120,7 @@ class TaxJurisdictionController extends Controller
             DB::rollBack();
 
             Log::error('Error updating tax jurisdiction: ' . $e->getMessage());
+
             return redirect()->back()->withErrors(['error' => 'Failed to update tax jurisdiction. ' . $e->getMessage()]);
         }
     }
@@ -126,6 +130,7 @@ class TaxJurisdictionController extends Controller
         $this->authorize(PermissionEnum::FinanceTaxSettingDelete, TaxJurisdiction::class);
         // Delete the tax jurisdiction
         DB::beginTransaction();
+
         try {
             $taxJurisdiction = TaxJurisdiction::findOrFail($id);
             $taxJurisdiction-> DeletedBy = Auth::id();
@@ -148,6 +153,7 @@ class TaxJurisdictionController extends Controller
                 'user_id' => Auth::id(),
                 'request_data' => request()->all(),
             ]);
+
             return redirect()->back()->withErrors(['error' => 'Failed to delete tax jurisdiction. ' . $e->getMessage()]);
         }
     }

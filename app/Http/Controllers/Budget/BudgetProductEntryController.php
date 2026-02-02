@@ -22,7 +22,6 @@ class BudgetProductEntryController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetDriverProjections::class);
-        //$projections = BudgetDriverProjections::with(['scenario', 'product', 'period'])->get();
         $projections = BudgetDriverProjections::with(
             'projections',
             'scenario:Id,scenarioName',
@@ -39,9 +38,9 @@ class BudgetProductEntryController extends Controller
                 return (float)$item->Value;
             });
         }
+
         return view('budgetandanalytics.budgetworkspace.entry.index', compact('projections'));
     }
-
 
     // Show form for new entry
     public function create()
@@ -52,7 +51,10 @@ class BudgetProductEntryController extends Controller
         $periods = BudgetPeriods::all();
 
         return view('budgetandanalytics.budgetworkspace.entry.create', compact(
-            'scenarios', 'currencies', 'products', 'periods'
+            'scenarios',
+            'currencies',
+            'products',
+            'periods'
         ));
     }
 

@@ -28,7 +28,7 @@ class TelematicsDevice extends Model
     ];
 
     // 🛠️ Tell Laravel to use your custom soft delete column
-    const DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $dates = ['InstallDate', 'RenewalDate', 'DeletedOn'];
 

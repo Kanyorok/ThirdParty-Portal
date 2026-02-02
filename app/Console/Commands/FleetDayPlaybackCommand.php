@@ -63,6 +63,7 @@ class FleetDayPlaybackCommand extends Command
             ->map(function ($coordinate) use ($actor, $vehicle) {
                 [$longitude, $latitude, $gpstime, $speed, $course] = explode(',', $coordinate);
                 $date = now()->timestamp($gpstime);
+
                 // longitude,latitude,gpstime,speed,course
                 return [
                     'Source' => $vehicle->getMorphClass(),

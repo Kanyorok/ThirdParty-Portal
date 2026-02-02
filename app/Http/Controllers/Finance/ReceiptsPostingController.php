@@ -2,22 +2,22 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\Finance\CustomerWallet;
 use App\Models\Finance\FinanceInvoice;
 use App\Models\Finance\FinanceReceipt;
 use App\Models\Finance\FinanceReceiptAllocation;
-use App\Models\Finance\CustomerWallet;
-use App\Services\Finance\TransactionService;
 use App\Models\ThirdParty\ThirdParties;
-use App\Models\Core\Approval\CodeDetail;
 use App\Services\Finance\ReceiptPostingService;
+use App\Services\Finance\TransactionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
-use App\Enums\Core\ModulesEnum;
-use App\Enums\Core\PermissionEnum;
 
 class ReceiptsPostingController extends Controller
 {
@@ -29,12 +29,12 @@ class ReceiptsPostingController extends Controller
         $query = FinanceReceipt::with(['customer', 'allocations']);
 
         if ($request->filled('receipt_number')) {
-            $query->where('ReceiptNumber', 'like', '%'.$request->receipt_number.'%');
+            $query->where('ReceiptNumber', 'like', '%' . $request->receipt_number . '%');
         }
         if ($request->filled('customer')) {
             $cust = $request->customer;
-            $query->whereHas('customer', function($q) use ($cust){
-                $q->where('ThirdPartyName', 'like', '%'.$cust.'%');
+            $query->whereHas('customer', function ($q) use ($cust) {
+                $q->where('ThirdPartyName', 'like', '%' . $cust . '%');
             });
         }
         if ($request->filled('status') && $request->status !== 'all') {
@@ -58,15 +58,18 @@ class ReceiptsPostingController extends Controller
         return view('finance.accountsreceivable.receiptsposting.index', compact('receipts'));
     }
 
-    public function create(){
+    public function create()
+    {
         $this->authorize(PermissionEnum::ReceiptPostingCreate, FinanceReceipt::class);
         $paymentMethods = CodeDetail::where('CodeID', 'PaymentMethod')
             ->orderBy('Description')
             ->get(['ID', 'Value', 'Description']);
+
         return view('finance.accountsreceivable.receiptsposting.create', compact('paymentMethods'));
     }
 
-    public function show($id){
+    public function show($id)
+    {
         $this->authorize(PermissionEnum::ReceiptPostingView, FinanceReceipt::class);
         $receipt = FinanceReceipt::with(['customer', 'allocations.invoice', 'documents'])
             ->findOrFail($id);
@@ -80,9 +83,9 @@ class ReceiptsPostingController extends Controller
     public function findCustomer(Request $request)
     {
         try {
-        $request->validate([
-            'id_number' => 'required|string|min:2'
-        ]);
+            $request->validate([
+                'id_number' => 'required|string|min:2',
+            ]);
 
             $q = trim((string)$request->id_number);
             $customer = ThirdParties::query()
@@ -93,14 +96,15 @@ class ReceiptsPostingController extends Controller
                 ->orWhere('ThirdPartyName', 'like', "%{$q}%")
                 ->first();
 
-        if (!$customer) {
-            return response()->json(['error' => 'Customer not found'], 404);
-        }
+            if (! $customer) {
+                return response()->json(['error' => 'Customer not found'], 404);
+            }
         } catch (\Exception $e) {
             Log::error('Error in findCustomer: ' . $e->getMessage(), [
                 'request' => $request->all(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return response()->json(['error' => 'Search failed: ' . $e->getMessage()], 500);
         }
 
@@ -136,13 +140,13 @@ class ReceiptsPostingController extends Controller
                 }
 
                 return [
-                    'id'        => $inv->Id,
-                    'number'    => $inv->InvoiceNumber,
+                    'id' => $inv->Id,
+                    'number' => $inv->InvoiceNumber,
                     'issue_date' => $issueDate,
                     'due_date' => $dueDate,
-                    'currency'  => [
+                    'currency' => [
                         'code' => $inv->currency->Code ?? 'KES',
-                        'symbol' => $inv->currency->Symbol ?? 'KSh'
+                        'symbol' => $inv->currency->Symbol ?? 'KSh',
                     ],
                     'total' => (float)($inv->TotalAmount ?? 0),
                     'paid' => (float)($inv->AmountPaid ?? 0),
@@ -151,6 +155,7 @@ class ReceiptsPostingController extends Controller
 
             // Get customer wallet balance
             $walletBalance = 0;
+
             try {
                 $wallet = CustomerWallet::where('CustomerID', $customer->Id)->where('IsActive', true)->first();
                 $walletBalance = $wallet ? (float)$wallet->Balance : 0;
@@ -167,27 +172,28 @@ class ReceiptsPostingController extends Controller
                 ? $customer->Status->label()
                 : ((string)($customer->Status ?? ''));
 
-        return response()->json([
-            'customer' => [
-                'id'        => $customer->Id,
-                'name' => $customer->ThirdPartyName,
-                'id_number' => $customer->RegistrationNumber ?? $customer->TaxPIN ?? $q,
-                'email' => $customer->Email,
-                'phone' => $customer->Phone,
-                'status' => $status ?: '—',
-                'currency' => [
-                    'code' => $invoices->first()['currency']['code'] ?? 'KES',
-                    'symbol' => $invoices->first()['currency']['symbol'] ?? 'KSh'
+            return response()->json([
+                'customer' => [
+                    'id' => $customer->Id,
+                    'name' => $customer->ThirdPartyName,
+                    'id_number' => $customer->RegistrationNumber ?? $customer->TaxPIN ?? $q,
+                    'email' => $customer->Email,
+                    'phone' => $customer->Phone,
+                    'status' => $status ?: '—',
+                    'currency' => [
+                        'code' => $invoices->first()['currency']['code'] ?? 'KES',
+                        'symbol' => $invoices->first()['currency']['symbol'] ?? 'KSh',
+                    ],
+                    'wallet_balance' => $walletBalance,
                 ],
-                'wallet_balance' => $walletBalance
-            ],
-            'invoices' => $invoices
-        ]);
+                'invoices' => $invoices,
+            ]);
         } catch (\Exception $e) {
             Log::error('Error processing customer data: ' . $e->getMessage(), [
                 'customer_id' => $customer->Id ?? null,
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return response()->json(['error' => 'Failed to process customer data: ' . $e->getMessage()], 500);
         }
     }
@@ -200,7 +206,7 @@ class ReceiptsPostingController extends Controller
         $request->validate([
             'customer_id' => 'required|exists:t_ThirdParties,Id',
             'amount' => 'required|numeric|min:0.01',
-            'use_wallet' => 'boolean'
+            'use_wallet' => 'boolean',
         ]);
 
         $receiptService = app(ReceiptPostingService::class);
@@ -230,7 +236,7 @@ class ReceiptsPostingController extends Controller
             'Attachment' => 'nullable|file|max:10240|mimes:pdf,jpg,jpeg,png',
             'Allocations' => 'required|string',
             'UseWallet' => 'nullable|in:true,false,1,0',
-            'WalletAmount' => 'nullable|numeric|min:0'
+            'WalletAmount' => 'nullable|numeric|min:0',
         ]);
 
         // Convert UseWallet to boolean
@@ -239,22 +245,22 @@ class ReceiptsPostingController extends Controller
 
 
         try {
-
             $allocations = json_decode($validated['Allocations'], true);
 
             if (empty($allocations)) {
                 Log::error('No allocations provided');
+
                 throw ValidationException::withMessages([
-                    'Allocations' => 'At least one invoice allocation is required.'
+                    'Allocations' => 'At least one invoice allocation is required.',
                 ]);
             }
 
             // Validate allocations
             $totalAllocated = 0;
             foreach ($allocations as $allocation) {
-                if (!isset($allocation['invoice_id']) || !isset($allocation['allocate'])) {
+                if (! isset($allocation['invoice_id']) || ! isset($allocation['allocate'])) {
                     throw ValidationException::withMessages([
-                        'Allocations' => 'Invalid allocation format.'
+                        'Allocations' => 'Invalid allocation format.',
                     ]);
                 }
                 $totalAllocated += $allocation['allocate'];
@@ -367,7 +373,7 @@ class ReceiptsPostingController extends Controller
                 $receipt->update([
                     'UnappliedAmount' => 0,
                     'ModifiedBy' => Auth::id(),
-                    'ModifiedOn' => now()
+                    'ModifiedOn' => now(),
                 ]);
             }
 
@@ -381,14 +387,14 @@ class ReceiptsPostingController extends Controller
 
             return redirect()->route('receiptsposting.show', $receipt->Id)
                 ->with('success', "Receipt {$receipt->ReceiptNumber} created successfully.");
-
         } catch (\Throwable $tt) {
             return $tt->getMessage();
         } catch (ValidationException $e) {
             Log::error('Receipt validation failed', [
                 'errors' => $e->errors(),
-                'request_data' => $request->all()
+                'request_data' => $request->all(),
             ]);
+
             throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -397,7 +403,7 @@ class ReceiptsPostingController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'customer_id' => $validated['CustomerId'] ?? null,
                 'amount' => $validated['AmountReceived'] ?? null,
-                'request_data' => $request->all()
+                'request_data' => $request->all(),
             ]);
 
             return back()->withErrors(['error' => 'Receipt creation failed: ' . $e->getMessage()])
@@ -434,7 +440,7 @@ class ReceiptsPostingController extends Controller
                     $this->restoreCreditFromPayment($invoice, $allocation->AmountAllocated);
                     Log::info("Credit restored for invoice {$invoice->InvoiceNumber}", [
                         'amount' => $allocation->AmountAllocated,
-                        'customer_id' => $invoice->CustomerID
+                        'customer_id' => $invoice->CustomerID,
                     ]);
                 }
             }
@@ -450,7 +456,7 @@ class ReceiptsPostingController extends Controller
                 'Status' => 'Posted',
                 'ApprovalReason' => $validated['Reason'],
                 'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now()
+                'ModifiedOn' => now(),
             ]);
 
             DB::commit();
@@ -465,7 +471,7 @@ class ReceiptsPostingController extends Controller
         } catch (\Exception $e) {
             Log::error('Receipt posting failed', [
                 'receipt_id' => $receipt->Id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return back()->with('error', 'Receipt posting failed: ' . $e->getMessage());
@@ -478,14 +484,14 @@ class ReceiptsPostingController extends Controller
     public function getWalletBalance(Request $request)
     {
         $request->validate([
-            'customer_id' => 'required|exists:t_ThirdParties,Id'
+            'customer_id' => 'required|exists:t_ThirdParties,Id',
         ]);
 
         $wallet = CustomerWallet::where('CustomerID', $request->customer_id)->active()->first();
 
         return response()->json([
             'balance' => $wallet ? $wallet->Balance : 0,
-            'has_wallet' => (bool)$wallet
+            'has_wallet' => (bool)$wallet,
         ]);
     }
 
@@ -503,8 +509,9 @@ class ReceiptsPostingController extends Controller
             })
             ->first();
 
-        if (!$creditProfile) {
+        if (! $creditProfile) {
             Log::warning("No active credit profile found for customer {$invoice->CustomerID}");
+
             return;
         }
 
@@ -558,18 +565,17 @@ class ReceiptsPostingController extends Controller
             if ($result['status'] === 'success') {
                 Log::info("Receipt {$receipt->ReceiptNumber} posted to GL successfully", [
                     'batch_number' => $result['batch_number'] ?? null,
-                    'amount' => $receipt->AmountReceived
+                    'amount' => $receipt->AmountReceived,
                 ]);
             } else {
                 throw new \Exception('GL posting failed: ' . ($result['message'] ?? 'Unknown error'));
             }
-
         } catch (\Throwable $e) {
             Log::error('Receipt GL posting failed', [
                 'receipt_id' => $receipt->Id,
                 'receipt_number' => $receipt->ReceiptNumber,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             throw new \Exception("Failed to post receipt to GL: " . $e->getMessage());

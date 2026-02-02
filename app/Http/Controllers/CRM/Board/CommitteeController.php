@@ -20,7 +20,6 @@ class CommitteeController extends Controller
     public function __construct()
     {
         $this->middleware('ajax');
-        // $this->authorizeResource(Board::class);
     }
 
     /**
@@ -30,6 +29,7 @@ class CommitteeController extends Controller
     public function index(): JsonResponse
     {
         $this->authorize('viewAny', Board::class);
+
         return Datatables::of(Committee::query()->withCount('members')->select('*'))->addIndexColumn()
             ->editColumn('members_count', function (Committee $committee) {
                 return number_format($committee->members_count ?? 0);
@@ -48,6 +48,7 @@ class CommitteeController extends Controller
     {
         $this->authorize('viewAny', Board::class);
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($actor, $request) {
                 $committee = Committee::create([
@@ -61,11 +62,13 @@ class CommitteeController extends Controller
 
                 activity()->causedBy($actor)->performedOn($committee)->event('create')->log('created board committee ' . $committee->CommitteeID . '.');
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('creating committee.');
             Log::error($e);
+
             return $this->errored('an unexpected error occurred');
         }
+
         return $this->succeeded('committee added successfully');
     }
 
@@ -75,6 +78,7 @@ class CommitteeController extends Controller
     public function create(): View
     {
         $this->authorize('viewAny', Board::class);
+
         return view('crm.board.committee.create');
     }
 
@@ -84,6 +88,7 @@ class CommitteeController extends Controller
     public function show(Committee $committee): View
     {
         $this->authorize('viewAny', Board::class);
+
         return view('crm.board.committee.show', compact('committee'));
     }
 
@@ -94,6 +99,7 @@ class CommitteeController extends Controller
     {
         $this->authorize('viewAny', Board::class);
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($committee, $actor, $request) {
                 $committee->update([
@@ -104,11 +110,13 @@ class CommitteeController extends Controller
 
                 activity()->causedBy($actor)->performedOn($committee)->event('update')->log('Updated committee ' . $committee->CommitteeID . '.');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('update committee.');
             Log::error($e);
+
             return $this->errored('an unexpected error occurred');
         }
+
         return $this->succeeded('committee updated successfully');
     }
 
@@ -119,6 +127,7 @@ class CommitteeController extends Controller
     {
         $this->authorize('viewAny', Board::class);
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($committee, $actor, $request) {
                 $committee->forceFill([
@@ -127,11 +136,13 @@ class CommitteeController extends Controller
                 ])->save();
                 activity()->causedBy($actor)->performedOn($committee)->event('delete')->log('removed committee ' . $committee->CommitteeID . '.');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('trash committee.');
             Log::error($e);
+
             return $this->errored('an unexpected error occurred');
         }
+
         return $this->succeeded('committee trashed successfully');
     }
 }

@@ -11,9 +11,9 @@ class BudgetLineCategories extends Model
     use SoftDeletes;
     use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $table = 't_BudgetLineCategories';
     protected $primaryKey = 'Id';
     protected $fillable = [

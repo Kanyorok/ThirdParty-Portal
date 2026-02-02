@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers\Fleet;
 
+use App\Enums\Marketing\PlannerStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FleetManagement\FleetTripLogRequest;
-use App\Models\Fleet\FleetTripLog;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\CRM\MarketingPlanner;
+use App\Models\Fleet\FleetTripLog;
 use App\Services\FleetManagement\FleetTripLogService;
 use Illuminate\Http\Request;
-use App\Models\CRM\MarketingPlanner;
-use App\Enums\Marketing\PlannerStatus;
-use App\Enums\Core\ApprovalEnum;
 
 class FleetTripLogController extends Controller
 {
@@ -43,13 +42,17 @@ class FleetTripLogController extends Controller
         }
 
         $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
-        $loadTypes    = CodeDetail::where('CodeID', 'LoadType')->orderBy('Value')->get();
-        $tripTypes    = CodeDetail::where('CodeID', 'TripType')->orderBy('Value')->get();
+        $loadTypes = CodeDetail::where('CodeID', 'LoadType')->orderBy('Value')->get();
+        $tripTypes = CodeDetail::where('CodeID', 'TripType')->orderBy('Value')->get();
 
         $tripLog = null;
 
         return view('fleet.trip_logs.create', compact(
-            'vehicleTypes', 'loadTypes', 'tripTypes', 'parentTrip', 'tripLog'
+            'vehicleTypes',
+            'loadTypes',
+            'tripTypes',
+            'parentTrip',
+            'tripLog'
         ));
     }
 
@@ -61,26 +64,28 @@ class FleetTripLogController extends Controller
         try {
             if (empty($data['ParentTripID'])) {
                 $parentTrip = $this->tripLogService->createParentTrip($data);
+
                 return redirect()
                     ->route('fleet.trip_logs.create', ['parentTripId' => $parentTrip->Id])
                     ->with('success', 'Parent trip created successfully and submitted for approval. You can now add child trips.');
             } else {
                 $parentTrip = FleetTripLog::findOrFail($data['ParentTripID']);
-                
-                if (empty($data['childTrips']) || !is_array($data['childTrips'])) {
+
+                if (empty($data['childTrips']) || ! is_array($data['childTrips'])) {
                     return redirect()
                         ->route('fleet.trip_logs.create', ['parentTripId' => $parentTrip->Id])
                         ->with('warning', 'No child trips data provided.');
                 }
 
                 $this->tripLogService->createChildTrips($parentTrip, $data['childTrips']);
-                
+
                 return redirect()
                     ->route('fleet.trip_logs.index')
                     ->with('success', count($data['childTrips']) . ' child trip(s) added successfully and submitted for approval.');
             }
         } catch (\Exception $e) {
             \Log::error('Error creating trip: ' . $e->getMessage());
+
             return redirect()
                 ->back()
                 ->withInput()
@@ -114,7 +119,7 @@ class FleetTripLogController extends Controller
             'childTrips.parentLoadType',
             'parentTripType',
             'parentVehicleType',
-            'parentLoadType'
+            'parentLoadType',
         ])->findOrFail($id);
 
         $parentTrip = $tripLog->ParentTripID
@@ -124,7 +129,7 @@ class FleetTripLogController extends Controller
                 'childTrips.parentLoadType',
                 'parentTripType',
                 'parentVehicleType',
-                'parentLoadType'
+                'parentLoadType',
             ])->findOrFail($tripLog->ParentTripID)
             : $tripLog;
 
@@ -134,12 +139,12 @@ class FleetTripLogController extends Controller
         $tripsStatus = CodeDetail::where('CodeID', 'TripStatus')->orderBy('Value')->get();
 
         return view('fleet.trip_logs.edit', [
-            'parentTrip'   => $parentTrip,
-            'childTrips'   => $parentTrip->childTrips,
+            'parentTrip' => $parentTrip,
+            'childTrips' => $parentTrip->childTrips,
             'vehicleTypes' => $vehicleTypes,
-            'loadTypes'    => $loadTypes,
-            'tripTypes'    => $tripTypes,
-            'tripStatus'   => $tripsStatus,
+            'loadTypes' => $loadTypes,
+            'tripTypes' => $tripTypes,
+            'tripStatus' => $tripsStatus,
         ]);
     }
 
@@ -148,13 +153,15 @@ class FleetTripLogController extends Controller
         $this->authorize('update', FleetTripLog::class);
         $parentTrip = FleetTripLog::findOrFail($id);
         $data = $request->validated();
-        
+
         try {
             $this->tripLogService->updateTrip($parentTrip, $data);
+
             return redirect()->route('fleet.trip_logs.index')
                 ->with('success', 'Trip updated successfully.');
         } catch (\Exception $e) {
             \Log::error('Error updating trip: ' . $e->getMessage());
+
             return redirect()
                 ->back()
                 ->withInput()
@@ -187,6 +194,7 @@ class FleetTripLogController extends Controller
                 ->with('success', "Trip {$trip->TripNo} and all child trips approved successfully.");
         } catch (\Exception $e) {
             \Log::error('Error approving trip: ' . $e->getMessage());
+
             return redirect()
                 ->route('fleet.trip_logs.show', $id)
                 ->with('error', 'Failed to approve trip: ' . $e->getMessage());
@@ -207,6 +215,7 @@ class FleetTripLogController extends Controller
                 ->with('success', "Trip {$trip->TripNo} and all child trips rejected successfully.");
         } catch (\Exception $e) {
             \Log::error('Error rejecting trip: ' . $e->getMessage());
+
             return redirect()
                 ->route('fleet.trip_logs.show', $id)
                 ->with('error', 'Failed to reject trip: ' . $e->getMessage());
@@ -246,7 +255,7 @@ class FleetTripLogController extends Controller
                 'StartOn' => optional($t->StartOn)->toDateString(),
                 'EndOn' => optional($t->EndOn)->toDateString(),
                 'Status' => $t->Status instanceof \BackedEnum ? $t->Status->name : $t->Status,
-                'Activities' => $t->activities->map(fn($a) => [
+                'Activities' => $t->activities->map(fn ($a) => [
                     'Id' => $a->Id,
                     'Location' => $a->Location,
                     'StartOn' => optional($a->StartOn)->toDateString(),
@@ -262,7 +271,7 @@ class FleetTripLogController extends Controller
     public function getApprovedTrips()
     {
         $trips = $this->tripLogService->getApprovedTrips();
-        
+
         return response()->json($trips->map(function ($t) {
             return [
                 'Id' => $t->Id,

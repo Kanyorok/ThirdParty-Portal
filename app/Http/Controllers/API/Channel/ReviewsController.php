@@ -24,22 +24,22 @@ class ReviewsController extends Controller
     {
         try {
             $data = $request->validate([
-                                        'ratting'     => [
+                                        'ratting' => [
                                                           'required_without:review',
                                                           'integer',
                                                           'between:1,5',
                                                          ],
-                                        'review'      => [
+                                        'review' => [
                                                           'required_without:ratting',
                                                           'string',
                                                           'max:5000',
                                                          ],
-                                        'name'        => [
+                                        'name' => [
                                                           'nullable',
                                                           'string',
                                                           'max:200',
                                                          ],
-                                        'clientID'    => [
+                                        'clientID' => [
                                                           'nullable',
                                                           'string',
                                                          ],
@@ -54,9 +54,9 @@ class ReviewsController extends Controller
 
         $clientID = $request->get('clientID');
         $phoneNo = $request->get('phoneNumber');
-        if (!is_string($clientID) && !is_string($phoneNo)) {
+        if (! is_string($clientID) && ! is_string($phoneNo)) {
             return $this->br_response(422, 'clientID or phoneNumber  is required', [
-                                                                                    'clientID'    => 'clientID is required when phoneNumber is not provided',
+                                                                                    'clientID' => 'clientID is required when phoneNumber is not provided',
                                                                                     'phoneNumber' => 'phoneNumber is required when clientID is not provided',
                                                                                    ]);
         }
@@ -64,20 +64,22 @@ class ReviewsController extends Controller
         $client = Client::query()->where('ClientID', $clientID)->orWhere(function (Builder $query) use ($phoneNo) {
             return ClientService::search($query, $phoneNo);
         })->first();
-        if (!$client instanceof Client) {
+        if (! $client instanceof Client) {
             return $this->br_response(422, 'member id is not found', [
-                                                                      'clientID'    => 'member id is not found',
+                                                                      'clientID' => 'member id is not found',
                                                                       'phoneNumber' => 'phoneNumber is not found',
                                                                      ]);
         }
 
         $actor = SystemHelper::user();
+
         try {
             DB::transaction(static function () use ($client, $data, $actor) {
                 ReviewService::client($client->ClientID, $data['ratting'] ?? 3, $data['review'] ?? '', 'Channels', $actor);
             });
         } catch (Exception $e) {
             Log::error('Error saving review from channel : ' . $e->getMessage());
+
             return $this->br_response(400, 'unexpected error, try again later');
         }
 

@@ -4,18 +4,22 @@ namespace App\Http\Controllers\Property;
 
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
-use App\Models\Core\Country;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Property\PropertyRegistry\PropertyBulkRequest;
 use App\Http\Requests\Property\PropertyRegistry\PropertyRegistryRequest;
 use App\Models\Core\CategoryMaster;
+use App\Models\Core\Country;
 use App\Models\Core\Locality;
-use App\Models\PropertyManagement\PropertyType;
-use App\Services\Property\PropertyRegistry\PropertyRegistryService;
 use App\Models\PropertyManagement\PropertyRegistry;
+use App\Models\PropertyManagement\PropertyType;
+use App\Services\Property\PropertyRegistry\PropertyBulkService;
+use App\Services\Property\PropertyRegistry\PropertyRegistryService;
 use Illuminate\Support\Carbon;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PropertyRegistryController extends Controller
 {
@@ -49,10 +53,10 @@ class PropertyRegistryController extends Controller
         $validated = $request->validated();
 
         $acquisitionDate = Carbon::parse($validated['AcquisitionDate']);
-        $propertyType    = PropertyType::findOrFail($validated['PropertyType']);
-        $category        = CategoryMaster::findOrFail($validated['Category']);
-        $location        = Locality::findOrFail($validated['LocationId']);
-        $country         = Country::findOrFail($validated['CountryId']);
+        $propertyType = PropertyType::findOrFail($validated['PropertyType']);
+        $category = CategoryMaster::findOrFail($validated['Category']);
+        $location = Locality::findOrFail($validated['LocationId']);
+        $country = Country::findOrFail($validated['CountryId']);
 
         $firstFile = $request->file('file')[0] ?? null;
 
@@ -85,7 +89,7 @@ class PropertyRegistryController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Property registry created successfully',
-                'data'    => $service->propertyRegistry,
+                'data' => $service->propertyRegistry,
             ], 201);
         }
 
@@ -94,13 +98,12 @@ class PropertyRegistryController extends Controller
             ->with('success', 'Property registry created successfully');
     }
 
-
     public function show($id)
     {
         $this->authorize(PermissionEnum::PropertyRegistryView, PropertyRegistry::class);
 
         $property = PropertyRegistry::with([
-            'getBlockByProperty.floor.units'
+            'getBlockByProperty.floor.units',
         ])->findOrFail($id);
 
         if (request()->expectsJson()) {
@@ -110,24 +113,22 @@ class PropertyRegistryController extends Controller
         return view('property.propertyregistry.registry.show', compact('property'));
     }
 
-
     public function edit($id)
     {
         $this->authorize(PermissionEnum::PropertyRegistryUpdate, PropertyRegistry::class);
 
-        $property    = PropertyRegistry::findOrFail($id);
-        $types       = PropertyType::where('PropertyCategoryId', $property->Category)->get();
-        $categories  = CategoryMaster::all();
+        $property = PropertyRegistry::findOrFail($id);
+        $types = PropertyType::where('PropertyCategoryId', $property->Category)->get();
+        $categories = CategoryMaster::all();
         $lineentries = CategoryMaster::with('propertytypes')->get();
-        $countries   = Country::all();
-        $localities  = Locality::where('CountryId', $property->CountryId)->get();
+        $countries = Country::all();
+        $localities = Locality::where('CountryId', $property->CountryId)->get();
 
         return view(
             'property.propertyregistry.registry.edit',
             compact('property', 'countries', 'localities', 'lineentries', 'types', 'categories')
         );
     }
-
 
     public function update(PropertyRegistryRequest $request, $id)
     {
@@ -141,10 +142,10 @@ class PropertyRegistryController extends Controller
             $property = PropertyRegistry::findOrFail($id);
 
             $acquisitionDate = Carbon::parse($validated['AcquisitionDate']);
-            $propertyType    = PropertyType::findOrFail($validated['PropertyType']);
-            $category        = CategoryMaster::findOrFail($validated['Category']);
-            $location        = Locality::findOrFail($validated['LocationId']);
-            $country         = Country::findOrFail($validated['CountryId']);
+            $propertyType = PropertyType::findOrFail($validated['PropertyType']);
+            $category = CategoryMaster::findOrFail($validated['Category']);
+            $location = Locality::findOrFail($validated['LocationId']);
+            $country = Country::findOrFail($validated['CountryId']);
 
             PropertyRegistryService::update(
                 $property,
@@ -177,14 +178,13 @@ class PropertyRegistryController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Property updated successfully',
-                    'data'    => $property->refresh(),
+                    'data' => $property->refresh(),
                 ]);
             }
 
             return redirect()
                 ->route('PropertyRegistry.index')
                 ->with('success', 'Property updated successfully');
-
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to update property: ' . $th->getMessage());
@@ -192,7 +192,7 @@ class PropertyRegistryController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Failed to update property',
-                    'error'   => $th->getMessage(),
+                    'error' => $th->getMessage(),
                 ], 500);
             }
 
@@ -225,7 +225,6 @@ class PropertyRegistryController extends Controller
 
             return redirect()->route('PropertyRegistry.index')
                 ->with('success', 'Property Deleted Successfully!');
-
         } catch (\Throwable $th) {
             Log::error('Error deleting property: ' . $th->getMessage());
 
@@ -234,7 +233,6 @@ class PropertyRegistryController extends Controller
                 : back()->withErrors(['error' => 'Failed to delete Property'])->withInput();
         }
     }
-
 
     public function getTypesByCategory($categoryId)
     {
@@ -247,6 +245,92 @@ class PropertyRegistryController extends Controller
     {
         return response()->json(
             Locality::where('CountryId', $countryId)->get()
+        );
+    }
+
+    public function bulkCreate()
+    {
+        $this->authorize(PermissionEnum::PropertyRegistryCreate, PropertyRegistry::class);
+
+        return view('property.propertyregistry.registry.bulk-create');
+    }
+
+    public function bulkStore(PropertyBulkRequest $request)
+    {
+        $this->authorize(PermissionEnum::PropertyRegistryCreate, PropertyRegistry::class);
+
+        try {
+            $file = $request->file('file');
+
+            // Parse CSV/Excel file
+            $data = Excel::toArray([], $file)[0];
+
+            // Get headers from first row
+            $headers = array_shift($data);
+
+            // Map headers to data
+            $mappedData = [];
+            foreach ($data as $row) {
+                $mappedData[] = array_combine($headers, $row);
+            }
+
+            // Process bulk upload
+            $results = PropertyBulkService::processBulkUpload($mappedData, auth()->user());
+
+            if (request()->expectsJson()) {
+                return response()->json($results);
+            }
+
+            // Prepare success/error messages
+            $message = "Bulk upload completed. Successful: {$results['successful']}, Failed: {$results['failed']}";
+
+            if ($results['failed'] > 0) {
+                return redirect()
+                    ->route('PropertyRegistry.index')
+                    ->with('warning', $message)
+                    ->with('errors', $results['errors']);
+            }
+
+            return redirect()
+                ->route('PropertyRegistry.index')
+                ->with('success', $message);
+        } catch (\Exception $e) {
+            Log::error('Bulk property upload failed: ' . $e->getMessage());
+
+            if (request()->expectsJson()) {
+                return response()->json(['message' => 'Bulk upload failed', 'error' => $e->getMessage()], 500);
+            }
+
+            return back()
+                ->withErrors(['error' => 'Failed to process bulk upload: ' . $e->getMessage()])
+                ->withInput();
+        }
+    }
+
+    public function bulkTemplate()
+    {
+        $headers = ['PropertyName', 'PropertyCode', 'PropertyType', 'Category', 'Owner', 'AcquisitionDate', 'CountryId', 'LocationId', 'Address', 'PropertyDescription'];
+        $sampleData = [
+            ['Property A', 'PROP-001', 1, 1, 'Perez', '2024-01-01', 1, 124, '123 Main St', 'Sample property DEscription'],
+        ];
+
+        return Excel::download(
+            new class () implements
+                FromArray,
+                WithHeadings {
+                public function array(): array
+                {
+                    return [
+                        ['Property A', 'PROP-001', 1, 1, 'Perez', '2024-01-01', 1, 124, '123 Main St', 'Sample property DEscription'],
+                    ];
+                }
+
+                public function headings(): array
+                {
+                    return ['PropertyName', 'PropertyCode', 'PropertyType', 'Category', 'Owner', 'AcquisitionDate', 'CountryId', 'LocationId', 'Address', 'PropertyDescription'];
+                }
+            },
+            'property_bulk_template.xlsx'
         );
     }
 }

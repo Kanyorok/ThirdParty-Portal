@@ -3,8 +3,8 @@
 namespace App\Services\Inventory;
 
 use App\Models\Inventory\Store;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class StoreService
 {

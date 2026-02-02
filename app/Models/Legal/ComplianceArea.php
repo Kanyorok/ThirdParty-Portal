@@ -13,6 +13,6 @@ class ComplianceArea extends Model
     protected $fillable = [
         'Name',
         'Description',
-        'IsActive'
+        'IsActive',
     ];
 }

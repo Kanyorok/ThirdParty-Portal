@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class SimplePOTestDataSeeder extends Seeder
 {
@@ -67,7 +66,7 @@ class SimplePOTestDataSeeder extends Seeder
         foreach ($tenders as $tender) {
             $existingAward = DB::table('t_TenderAwards')->where('TenderID', $tender->Id)->exists();
 
-            if (!$existingAward && isset($suppliers[$supplierIndex])) {
+            if (! $existingAward && isset($suppliers[$supplierIndex])) {
                 $supplier = $suppliers[$supplierIndex];
 
                 // Create award with different contract statuses for testing
@@ -172,7 +171,7 @@ class SimplePOTestDataSeeder extends Seeder
                         'ModifiedBy' => 1,
                         'CreatedOn' => now()->subDays(35),
                         'ModifiedOn' => now()->subDays(35),
-                    ]
+                    ],
                 ];
 
                 foreach ($newItems as $item) {

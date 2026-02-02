@@ -14,12 +14,13 @@ class TenderVendor extends Model
     protected $keyType = 'integer';
     public $incrementing = true;
 
-    public function tender(): BelongsTo {
+    public function tender(): BelongsTo
+    {
         return $this->belongsTo(Tender::class, 'TenderID');
     }
 
-    public function supplier(): BelongsTo {
+    public function supplier(): BelongsTo
+    {
         return $this->belongsTo(Supplier::class, 'SupplierID');
     }
-
 }

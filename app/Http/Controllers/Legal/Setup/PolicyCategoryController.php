@@ -11,6 +11,7 @@ class PolicyCategoryController extends Controller
     public function index()
     {
         $categories = PolicyCategory::orderBy('Name')->get();
+
         return view('legal.setup.policy_categories.index', compact('categories'));
     }
 
@@ -27,6 +28,7 @@ class PolicyCategoryController extends Controller
         ]);
 
         PolicyCategory::create($validated + ['IsActive' => 1]);
+
         return redirect()->route('legal.setup.policy_categories.index')
             ->with('success', 'Policy Category added successfully.');
     }
@@ -34,6 +36,7 @@ class PolicyCategoryController extends Controller
     public function edit($id)
     {
         $category = PolicyCategory::findOrFail($id);
+
         return view('legal.setup.policy_categories.edit', compact('category'));
     }
 
@@ -47,6 +50,7 @@ class PolicyCategoryController extends Controller
         ]);
 
         $category->update($validated);
+
         return redirect()->route('legal.setup.policy_categories.index')
             ->with('success', 'Policy Category updated successfully.');
     }
@@ -55,6 +59,7 @@ class PolicyCategoryController extends Controller
     {
         $category = PolicyCategory::findOrFail($id);
         $category->delete();
+
         return back()->with('success', 'Policy Category deleted.');
     }
 }

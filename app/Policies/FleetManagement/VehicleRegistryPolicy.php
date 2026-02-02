@@ -2,14 +2,12 @@
 
 namespace App\Policies\FleetManagement;
 
-use App\Models\Auth\User;
 use App\Enums\Core\PermissionEnum;
+use App\Models\Auth\User;
 use App\Models\FleetManagement\VehicleRegistry;
-use Illuminate\Auth\Access\Response;
 
 class VehicleRegistryPolicy
 {
-
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::VehicleRegistryView->value);
@@ -54,8 +52,4 @@ class VehicleRegistryPolicy
     {
         return $user->can(PermissionEnum::VehicleRegistryUpdate->value);
     }
-
 }
-
-
-

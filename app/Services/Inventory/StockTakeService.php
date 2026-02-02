@@ -9,7 +9,6 @@ use App\Models\Inventory\Store;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class StockTakeService
 {
@@ -23,12 +22,11 @@ class StockTakeService
 
     public static function createWithLines(
         Branch $branch,
-        Store  $store,
+        Store $store,
         string $countedBy,
         Carbon $countDate,
-        array  $lines
-    ): self
-    {
+        array $lines
+    ): self {
         return DB::transaction(function () use ($branch, $store, $countedBy, $countDate, $lines) {
             $service = self::create($branch, $store, $countedBy, $countDate);
 
@@ -50,8 +48,7 @@ class StockTakeService
         Store $store,
         string $countedBy,
         Carbon $countDate
-    ): self
-    {
+    ): self {
         return DB::transaction(function () use ($branch, $store, $countedBy, $countDate) {
             $stockTake = StockTake::create([
                 'BranchId' => $branch->Id,
@@ -74,12 +71,11 @@ class StockTakeService
 
 
     public function addLine(
-        int   $itemId,
+        int $itemId,
         float $actualQuantity,
         float $countedQuantity,
         ?string $remarks = null
-    ): StockTakeLines
-    {
+    ): StockTakeLines {
         return DB::transaction(function () use ($itemId, $actualQuantity, $countedQuantity, $remarks) {
             $line = StockTakeLines::create([
                 'StockTakeId' => $this->stockTake->Id,

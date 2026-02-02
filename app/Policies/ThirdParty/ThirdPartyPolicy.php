@@ -2,10 +2,9 @@
 
 namespace App\Policies\ThirdParty;
 
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\ThirdParty\ThirdParties;
-use App\Enums\Core\PermissionEnum;
-use Illuminate\Auth\Access\Response;
 
 class ThirdPartyPolicy
 {

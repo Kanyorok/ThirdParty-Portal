@@ -2,18 +2,18 @@
 
 namespace App\Services\FleetManagement;
 
-use App\Models\Fleet\FleetVehicleInspection;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\FleetDriver;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use App\Enums\Core\PermissionEnum;
 use App\Enums\Core\ModulesEnum;
-use Illuminate\Http\UploadedFile;
+use App\Enums\Core\PermissionEnum;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Fleet\FleetDriver;
 use App\Models\Fleet\FleetTripLog;
+use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\FleetVehicleAssignment;
+use App\Models\Fleet\FleetVehicleInspection;
 use Exception;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class FleetVehicleInspectionService
 {
@@ -26,7 +26,7 @@ class FleetVehicleInspectionService
         // Always generate a new sequential inspection id (do NOT reuse parent InspectionID)
         $lastInspection = FleetVehicleInspection::withTrashed()->latest('CreatedOn')->first();
 
-        if (!$lastInspection || empty($lastInspection->InspectionID)) {
+        if (! $lastInspection || empty($lastInspection->InspectionID)) {
             return 'INSP-0001';
         }
 
@@ -46,38 +46,38 @@ class FleetVehicleInspectionService
         return DB::transaction(function () use ($data, $document) {
             // Get authenticated user ID BEFORE the transaction
             $userId = Auth::id();
-            if (!$userId) {
+            if (! $userId) {
                 throw new Exception('User not authenticated. Cannot create inspection.');
             }
 
-            $parent = !empty($data['ParentInspectionID'])
+            $parent = ! empty($data['ParentInspectionID'])
                 ? FleetVehicleInspection::find($data['ParentInspectionID'])
                 : null;
 
             $inspection = FleetVehicleInspection::create([
-                'InspectionID'       => $this->generateInspectionNo(),
+                'InspectionID' => $this->generateInspectionNo(),
                 'ParentInspectionID' => $parent?->Id,
-                'InspectionTypeID'   => $data['InspectionTypeID'],
-                'VehicleID'          => $data['VehicleID'],
-                'FuelType'           => $data['FuelType'],
-                'DriverID'           => $data['DriverID'] ?? null,
+                'InspectionTypeID' => $data['InspectionTypeID'],
+                'VehicleID' => $data['VehicleID'],
+                'FuelType' => $data['FuelType'],
+                'DriverID' => $data['DriverID'] ?? null,
                 'ContractedDriverID' => $data['ContractedDriverID'] ?? null,
-                'InspectionDate'     => $data['InspectionDate'] ?? null,
-                'Mileage'            => $data['Mileage'] ?? null,
-                'Fuel'               => $data['Fuel'] ?? null,
-                'EngineOil'          => $data['EngineOil'] ?? null,
-                'Coolant'            => $data['Coolant'] ?? null,
-                'Reflector'          => $data['Reflector'] ?? 0,
-                'FireExtinguisher'   => $data['FireExtinguisher'] ?? 0,
-                'FirstAidKit'        => $data['FirstAidKit'] ?? 0,
-                'SpareTyre'          => $data['SpareTyre'] ?? 0,
-                'Spanner'            => $data['Spanner'] ?? 0,
-                'Jack'               => $data['Jack'] ?? 0,
-                '4XFloorMats'        => $data['4XFloorMats'] ?? 0,
-                'CreatedBy'          => $userId,
-                'CreatedOn'          => now(),
-                'ModifiedBy'         => $userId,
-                'ModifiedOn'         => now(),
+                'InspectionDate' => $data['InspectionDate'] ?? null,
+                'Mileage' => $data['Mileage'] ?? null,
+                'Fuel' => $data['Fuel'] ?? null,
+                'EngineOil' => $data['EngineOil'] ?? null,
+                'Coolant' => $data['Coolant'] ?? null,
+                'Reflector' => $data['Reflector'] ?? 0,
+                'FireExtinguisher' => $data['FireExtinguisher'] ?? 0,
+                'FirstAidKit' => $data['FirstAidKit'] ?? 0,
+                'SpareTyre' => $data['SpareTyre'] ?? 0,
+                'Spanner' => $data['Spanner'] ?? 0,
+                'Jack' => $data['Jack'] ?? 0,
+                '4XFloorMats' => $data['4XFloorMats'] ?? 0,
+                'CreatedBy' => $userId,
+                'CreatedOn' => now(),
+                'ModifiedBy' => $userId,
+                'ModifiedOn' => now(),
             ]);
 
             // If document provided, attach using existing helper
@@ -121,7 +121,7 @@ class FleetVehicleInspectionService
             ->where('Description', 'Completed')
             ->value('ID');
 
-        if (!$completedStatusId) {
+        if (! $completedStatusId) {
             return;
         }
 
@@ -154,12 +154,12 @@ class FleetVehicleInspectionService
         $vehicleAvailableId = CodeDetail::where('CodeID', 'VehicleAvailabilityStatus')
             ->where('Description', 'Available')
             ->value('ID');
-            
+
         $driverAvailableId = CodeDetail::where('CodeID', 'DriverAvailabilityStatus')
             ->where('Description', 'Available')
             ->value('ID');
 
-        if (!$vehicleAvailableId || !$driverAvailableId) {
+        if (! $vehicleAvailableId || ! $driverAvailableId) {
             return;
         }
 
@@ -170,7 +170,7 @@ class FleetVehicleInspectionService
         if ($inspection->DriverID) {
             $this->updateDriverStatus($inspection->DriverID, $driverAvailableId, $tripId, $userId, 'regular');
         }
-        
+
         if ($inspection->ContractedDriverID) {
             $this->updateDriverStatus($inspection->ContractedDriverID, $driverAvailableId, $tripId, $userId, 'contracted');
         }
@@ -182,14 +182,14 @@ class FleetVehicleInspectionService
     private function updateVehicleStatus(int $vehicleId, int $availableStatusId, int $completedTripId, int $userId): void
     {
         $vehicle = FleetVehicle::find($vehicleId);
-        if (!$vehicle) {
+        if (! $vehicle) {
             return;
         }
 
         // Check if vehicle has any other active assignments (excluding the completed trip)
         $activeAssignments = FleetVehicleAssignment::where('VehicleID', $vehicleId)
             ->where('TripNo', '!=', $completedTripId) // Exclude the completed trip
-            ->whereHas('trip', function($query) {
+            ->whereHas('trip', function ($query) {
                 // Get trips that are not completed
                 $completedStatusId = CodeDetail::where('CodeID', 'TripStatus')
                     ->where('Description', 'Completed')
@@ -226,11 +226,11 @@ class FleetVehicleInspectionService
      */
     private function updateDriverStatus(int $driverId, int $availableStatusId, int $completedTripId, int $userId, string $driverType = 'regular'): void
     {
-        $driver = $driverType === 'regular' 
+        $driver = $driverType === 'regular'
             ? FleetDriver::find($driverId)
             : null; // For contracted drivers, you might need a different model
-        
-        if (!$driver && $driverType === 'regular') {
+
+        if (! $driver && $driverType === 'regular') {
             return;
         }
 
@@ -238,7 +238,7 @@ class FleetVehicleInspectionService
         if ($driverType === 'regular') {
             $activeAssignments = FleetVehicleAssignment::where('DriverID', $driverId)
                 ->where('TripNo', '!=', $completedTripId) // Exclude the completed trip
-                ->whereHas('trip', function($query) {
+                ->whereHas('trip', function ($query) {
                     // Get trips that are not completed
                     $completedStatusId = CodeDetail::where('CodeID', 'TripStatus')
                         ->where('Description', 'Completed')
@@ -279,14 +279,14 @@ class FleetVehicleInspectionService
      */
     private function getStatusName(?int $statusId, string $codeId): string
     {
-        if (!$statusId) {
+        if (! $statusId) {
             return 'Unknown';
         }
-        
+
         $status = CodeDetail::where('CodeID', $codeId)
             ->where('ID', $statusId)
             ->first();
-            
+
         return $status ? $status->Description : "Unknown (ID: {$statusId})";
     }
 
@@ -307,7 +307,9 @@ class FleetVehicleInspectionService
 
         if ($ongoingStatusId && $assignment && $assignment->TripNo) {
             $trip = $this->findTripByReference($assignment->TripNo, $ongoingStatusId);
-            if ($trip) return $trip;
+            if ($trip) {
+                return $trip;
+            }
         }
 
         // 2) Fallback: search assignment TripNos for an Ongoing trip
@@ -318,23 +320,25 @@ class FleetVehicleInspectionService
                 ->filter()
                 ->values();
 
-            $numericIds = $tripNos->filter(fn($v) => is_numeric($v))->map(fn($v) => (int)$v)->unique()->values()->all();
-            $stringTripNos = $tripNos->filter(fn($v) => !is_numeric($v))->unique()->values()->all();
+            $numericIds = $tripNos->filter(fn ($v) => is_numeric($v))->map(fn ($v) => (int)$v)->unique()->values()->all();
+            $stringTripNos = $tripNos->filter(fn ($v) => ! is_numeric($v))->unique()->values()->all();
 
             $query = FleetTripLog::query();
             $query->where('Status', $ongoingStatusId);
 
             $query->where(function ($q) use ($numericIds, $stringTripNos) {
-                if (!empty($numericIds)) {
+                if (! empty($numericIds)) {
                     $q->whereIn('Id', $numericIds);
                 }
-                if (!empty($stringTripNos)) {
+                if (! empty($stringTripNos)) {
                     $q->orWhereIn('TripNo', $stringTripNos);
                 }
             });
 
             $trip = $query->orderByDesc('TripStartDate')->first();
-            if ($trip) return $trip;
+            if ($trip) {
+                return $trip;
+            }
         }
 
         // 3) Final fallback: most recent Ongoing trip overall
@@ -342,7 +346,9 @@ class FleetVehicleInspectionService
             $trip = FleetTripLog::where('Status', $ongoingStatusId)
                 ->orderByDesc('TripStartDate')
                 ->first();
-            if ($trip) return $trip;
+            if ($trip) {
+                return $trip;
+            }
         }
 
         // 4) If still not found, fall back to previous logic (any non-completed trip)
@@ -352,7 +358,9 @@ class FleetVehicleInspectionService
             } else {
                 $trip = FleetTripLog::where('TripNo', $assignment->TripNo)->first();
             }
-            if ($trip && $trip->Status != $completedStatusId) return $trip;
+            if ($trip && $trip->Status != $completedStatusId) {
+                return $trip;
+            }
         }
 
         // 5) Fallback: search assignment TripNos for any non-completed trip
@@ -362,23 +370,25 @@ class FleetVehicleInspectionService
             ->filter()
             ->values();
 
-        $numericIds = $tripNos->filter(fn($v) => is_numeric($v))->map(fn($v) => (int)$v)->unique()->values()->all();
-        $stringTripNos = $tripNos->filter(fn($v) => !is_numeric($v))->unique()->values()->all();
+        $numericIds = $tripNos->filter(fn ($v) => is_numeric($v))->map(fn ($v) => (int)$v)->unique()->values()->all();
+        $stringTripNos = $tripNos->filter(fn ($v) => ! is_numeric($v))->unique()->values()->all();
 
         $query = FleetTripLog::query();
         $query->where('Status', '!=', $completedStatusId);
 
         $query->where(function ($q) use ($numericIds, $stringTripNos) {
-            if (!empty($numericIds)) {
+            if (! empty($numericIds)) {
                 $q->whereIn('Id', $numericIds);
             }
-            if (!empty($stringTripNos)) {
+            if (! empty($stringTripNos)) {
                 $q->orWhereIn('TripNo', $stringTripNos);
             }
         });
 
         $trip = $query->orderByDesc('TripStartDate')->first();
-        if ($trip) return $trip;
+        if ($trip) {
+            return $trip;
+        }
 
         // 6) Final fallback: most recent non-completed trip overall
         return FleetTripLog::where('Status', '!=', $completedStatusId)
@@ -392,7 +402,7 @@ class FleetVehicleInspectionService
     private function findTripByReference($reference, int $statusId = null): ?FleetTripLog
     {
         $query = FleetTripLog::query();
-        
+
         if ($statusId) {
             $query->where('Status', $statusId);
         }

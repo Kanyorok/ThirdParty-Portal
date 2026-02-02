@@ -52,6 +52,7 @@ class ContactCallController extends Controller
             });
         } catch (\Throwable | Exception $e) {
             Log::error('Error starting call ' . $e->getMessage());
+
             return $this->errored('unexpected error start call, try again latter');
         }
 
@@ -78,14 +79,14 @@ class ContactCallController extends Controller
                                                   'min:5',
                                                   'max:5000',
                                                  ],
-                            'private_notes'   => [
+                            'private_notes' => [
                                                   'nullable',
                                                   'max:5000',
                                                  ],
                            ]);
 
         $call = $contact->calls()->where('t_Calls.CallID', $callID)->first();
-        if (!$call instanceof Call) {
+        if (! $call instanceof Call) {
             throw ValidationException::withMessages(['call_discussion' => 'call selected could have been deleted.']);
         }
 
@@ -96,6 +97,7 @@ class ContactCallController extends Controller
         } catch (\Throwable | Exception $e) {
             Log::error('Error call ' . $e->getMessage());
             Log::error($e);
+
             return $this->errored('unexpected error saving, try again latter');
         }
 

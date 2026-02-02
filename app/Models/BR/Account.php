@@ -8,8 +8,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Account extends Model
 {
     protected $primaryKey = 'AccountID';
-    //protected $table = 't_AccountCustomer';
-    //protected $connection = 'brcbs';
     protected $table = 'syn_t_AccountCustomer';
     protected $connection = 'sqlsrv';
     public $incrementing = false;
@@ -18,9 +16,9 @@ class Account extends Model
     protected function casts(): array
     {
         return [
-                'ClearBalance'      => 'decimal:4',
+                'ClearBalance' => 'decimal:4',
                 'LastCreditTrxDate' => 'datetime',
-                'LastDebitTrxDate'  => 'datetime',
+                'LastDebitTrxDate' => 'datetime',
                ];
     }
 

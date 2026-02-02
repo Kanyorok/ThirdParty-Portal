@@ -28,7 +28,7 @@ class LegalDocumentController extends Controller
             ->select([
                 'Id', 'DocumentTitle', 'DocumentType', 'SourceModule', 'SourceID',
                 'ReviewStatus', 'ExecutionStatus', 'LinkedDMSDocID', 'DueDate', 'ExpiryDate',
-                'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn'
+                'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn',
             ]);
 
         // Filters
@@ -88,7 +88,7 @@ class LegalDocumentController extends Controller
                 'Id', 'DocumentTitle', 'DocumentType', 'SourceModule', 'SourceID',
                 'LinkedDMSDocID', 'ReviewStatus', 'ExecutionStatus',
                 'DispatchDate', 'SignOffDate', 'Remarks', 'DueDate', 'ExpiryDate',
-                'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'ReviewedBy', 'ReviewedOn'
+                'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'ReviewedBy', 'ReviewedOn',
             ])
             ->findOrFail($id);
 
@@ -117,14 +117,14 @@ class LegalDocumentController extends Controller
     {
         // Determine validation rules based on creation mode
         $mode = $request->input('creation_mode', 'upload');
-        
+
         $rules = [
             'DocumentTitle' => [
                 'required',
                 'string',
                 'max:255',
                 Rule::unique('t_LegalDocuments', 'DocumentTitle')
-                    ->where(fn($q) => $q->whereNull('DeletedOn')), // ignore soft-deleted rows
+                    ->where(fn ($q) => $q->whereNull('DeletedOn')), // ignore soft-deleted rows
             ],
             'DocumentType' => ['required', 'string', 'max:100'],
             'SourceModule' => ['required', 'string', 'max:100'],
@@ -194,23 +194,23 @@ class LegalDocumentController extends Controller
             } else {
                 // Template-based document generation with edited content
                 $template = LegalTemplate::findOrFail($validated['template_id']);
-                
+
                 // Get edited document body
                 $documentBody = $validated['document_body'];
-                
+
                 // Get selected clause IDs
                 $clauseIds = json_decode($validated['selected_clause_ids'] ?? '[]', true);
                 $clauseIds = array_values(array_unique(array_map('intval', array_filter($clauseIds))));
-                
+
                 // Fetch selected clauses
                 $clauses = collect();
-                if (!empty($clauseIds)) {
+                if (! empty($clauseIds)) {
                     $clauses = \App\Models\Legal\LegalClause::query()
                         ->whereIn('Id', $clauseIds)
                         ->get()
                         ->keyBy('Id');
                 }
-                
+
                 // Generate PDF from edited content
                 $pdfHtml = $this->generatePdfFromEditedContent(
                     $validated['DocumentTitle'],
@@ -220,7 +220,7 @@ class LegalDocumentController extends Controller
                     $clauseIds,
                     $clauses
                 );
-                
+
                 $pdf = Pdf::loadHTML($pdfHtml)->setPaper('A4', 'portrait');
                 $pdfBinary = $pdf->output();
 
@@ -254,7 +254,7 @@ class LegalDocumentController extends Controller
             }
 
             // Auto-create Legal Obligation if DueDate is provided
-            if (!empty($validated['DueDate'])) {
+            if (! empty($validated['DueDate'])) {
                 \App\Models\Legal\LegalObligation::create([
                     'Title' => $validated['DocumentTitle'],
                     'SourceType' => $validated['DocumentType'],
@@ -272,14 +272,12 @@ class LegalDocumentController extends Controller
             return redirect()
                 ->route('legal.documents.index')
                 ->with('success', 'Document registered.');
-
         } catch (\Throwable $e) {
             DB::rollBack();
-            //return $e->getMessage();
             // log the actual DB error for debugging
             Log::error('Failed to save legal document', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return back()
@@ -287,12 +285,6 @@ class LegalDocumentController extends Controller
                 ->with('error', 'Could not save document. DB said: ' . $e->getMessage());
         }
     }
-
-//    public function show($id)
-//    {
-//        $document = LegalDocument::findOrFail($id);
-//        return view('legal.documents.show', compact('document'));
-//    }
 
     public function edit(int $id)
     {
@@ -308,7 +300,6 @@ class LegalDocumentController extends Controller
         // Option sets for your selects (same as in create/edit blades)
         $docTypes = CodeDetail::where('CodeID', 'LegalDocumentType')->get();
         $sources = ['Legal', 'Procurement', 'Property', 'HR', 'Insurance'];
-        //$reviewStatuses = ['Draft', 'In Review', 'Approved', 'Rejected'];
         $execStatuses = CodeDetail::where('CodeID', 'LegalExecutionStatusType')->get();
         $moduleIds = FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
         $modules = Module::select('ModuleID', 'Name')->whereIn('ModuleID', $moduleIds)
@@ -322,8 +313,6 @@ class LegalDocumentController extends Controller
             ->get();
 
         // If you want a dropdown for SourceID (FK to t_Modules), uncomment:
-        // $modules = Module::select('ModuleID as id','ModuleName as name')
-        //     ->orderBy('ModuleName')->get();
 
         return view('legal.documents.edit', [
             'doc' => $doc,
@@ -342,10 +331,10 @@ class LegalDocumentController extends Controller
 
         // Determine validation rules based on creation mode
         $mode = $request->input('creation_mode', 'upload');
-        
+
         $rules = [
             'DocumentTitle' => [
-                'required', 'string', 'max:255'
+                'required', 'string', 'max:255',
             ],
             'DocumentType' => ['required', 'string', 'max:100'],
             'SourceModule' => ['required', 'string', 'max:100'],
@@ -409,7 +398,6 @@ class LegalDocumentController extends Controller
                     $doc->LinkedDMSDocID = $uploadedDocument->Id;
                     $doc->save();
 
-                    // (Optional) If you want to keep ONLY the latest link in the pivot:
                     if ($request->boolean('DetachOldPivots', false)) {
                         \App\Models\DMS\DocumentRelation::where('Related', $doc::getPrimaryKey())
                             ->where('RelatedID', $doc->getKey())
@@ -420,23 +408,23 @@ class LegalDocumentController extends Controller
             } else {
                 // Template-based document generation with edited content
                 $template = LegalTemplate::findOrFail($validated['template_id']);
-                
+
                 // Get edited document body
                 $documentBody = $validated['document_body'];
-                
+
                 // Get selected clause IDs
                 $clauseIds = json_decode($validated['selected_clause_ids'] ?? '[]', true);
                 $clauseIds = array_values(array_unique(array_map('intval', array_filter($clauseIds))));
-                
+
                 // Fetch selected clauses
                 $clauses = collect();
-                if (!empty($clauseIds)) {
+                if (! empty($clauseIds)) {
                     $clauses = \App\Models\Legal\LegalClause::query()
                         ->whereIn('Id', $clauseIds)
                         ->get()
                         ->keyBy('Id');
                 }
-                
+
                 // Generate PDF from edited content
                 $pdfHtml = $this->generatePdfFromEditedContent(
                     $validated['DocumentTitle'],
@@ -446,7 +434,7 @@ class LegalDocumentController extends Controller
                     $clauseIds,
                     $clauses
                 );
-                
+
                 $pdf = Pdf::loadHTML($pdfHtml)->setPaper('A4', 'portrait');
                 $pdfBinary = $pdf->output();
 
@@ -481,7 +469,7 @@ class LegalDocumentController extends Controller
             }
 
             // Auto-create Legal Obligation if DueDate was null and is now provided
-            if (empty($previousDueDate) && !empty($validated['DueDate'])) {
+            if (empty($previousDueDate) && ! empty($validated['DueDate'])) {
                 \App\Models\Legal\LegalObligation::create([
                     'Title' => $validated['DocumentTitle'],
                     'SourceType' => $validated['DocumentType'],
@@ -519,18 +507,18 @@ class LegalDocumentController extends Controller
     private function generateDocumentFromTemplate(LegalTemplate $template, string $documentTitle): string
     {
         $templateBody = $template->TemplateBody ?? '';
-        
+
         // Get clauses in order
         $clausesHtml = '';
         if ($template->clauses && $template->clauses->count() > 0) {
             $clausesHtml .= '<hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">';
             $clausesHtml .= '<h2 style="font-size: 16px; font-weight: 700; margin: 0 0 12px 0;">Clauses</h2>';
-            
+
             foreach ($template->clauses as $i => $clause) {
                 $n = $i + 1;
                 $title = $clause->pivot->TitleOverride ?: $clause->Title;
                 $content = $clause->pivot->ContentOverride ?: $clause->Content;
-                
+
                 $clausesHtml .= "
                 <div style=\"margin: 16px 0;\">
                     <div style=\"font-weight: 600; font-size: 13px; margin-bottom: 6px;\">Clause {$n}: " . e($title) . "</div>
@@ -570,7 +558,7 @@ class LegalDocumentController extends Controller
         $clauseMap
     ): string {
         // No longer outputting clauses section - just the edited document body
-        
+
         return '
         <!doctype html>
         <html>
@@ -665,7 +653,7 @@ class LegalDocumentController extends Controller
     public function getTemplateById($id)
     {
         $template = LegalTemplate::with('clauses')->findOrFail($id);
-        
+
         return response()->json([
             'template_body' => $template->TemplateBody,
             'clause_ids' => $template->clauses->pluck('Id')->toArray(),
@@ -678,8 +666,8 @@ class LegalDocumentController extends Controller
     public function getTemplatesByType(Request $request)
     {
         $docType = $request->input('document_type');
-        
-        if (!$docType) {
+
+        if (! $docType) {
             return response()->json(['templates' => []]);
         }
 
@@ -690,7 +678,7 @@ class LegalDocumentController extends Controller
             ->orderBy('Title')
             ->orderByDesc('Version')
             ->get()
-            ->map(function($template) {
+            ->map(function ($template) {
                 return [
                     'id' => $template->Id,
                     'title' => $template->Title,
@@ -707,7 +695,7 @@ class LegalDocumentController extends Controller
 
         LegalDocument::where('ID', $id)->update(['IsActive' => 0, 'DeletedBy' => Auth::id()]);
         LegalDocument::find($id)->delete();
+
         return redirect()->route('legal.documents.index')->with('success', 'Document Deleted.');
     }
 }
-

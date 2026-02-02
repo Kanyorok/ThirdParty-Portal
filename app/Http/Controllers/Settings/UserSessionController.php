@@ -69,7 +69,7 @@ class UserSessionController extends Controller
         if ($row) {
             DB::connection($connection)->table($table)->where('id', $id)->delete();
 
-            if (!empty($row->user_id)) {
+            if (! empty($row->user_id)) {
                 // If the user's current_session_id equals the revoked id, clear it
                 DB::table('t_Users')->where('Id', $row->user_id)->where('current_session_id', $id)->update(['current_session_id' => null]);
             }
@@ -90,7 +90,7 @@ class UserSessionController extends Controller
         $table = config('session.table', 'sessions');
 
         $query = DB::connection($connection)->table($table)->where('user_id', '=', $userId);
-        if (!empty($keepId)) {
+        if (! empty($keepId)) {
             $query->where('id', '!=', $keepId);
         }
         $query->delete();
@@ -103,5 +103,3 @@ class UserSessionController extends Controller
         return back()->with('status', 'User sessions updated.');
     }
 }
-
-

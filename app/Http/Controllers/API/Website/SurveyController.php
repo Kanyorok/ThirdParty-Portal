@@ -39,7 +39,7 @@ class SurveyController extends Controller
         }
 
         $response = $request->get('response');
-        if (!is_array($response)) {
+        if (! is_array($response)) {
             throw ValidationException::withMessages(['response' => 'please enter response']);
         }
 
@@ -70,7 +70,7 @@ class SurveyController extends Controller
                     $txtResponse = $questionResponse;
                 } elseif ($question->Type->value === SurveyQuestionTypeEnum::Closed->value) {
                     $option = $question->answers()->where('Id', $questionResponse)->first();
-                    if (!$option instanceof SurveyQuestionAnswer) {
+                    if (! $option instanceof SurveyQuestionAnswer) {
                         throw ValidationException::withMessages([
                                                                  $question->SurveyQuestionId => $question->SurveyQuestionId . ' does not have valid response.',
                                                                 ]);
@@ -83,15 +83,15 @@ class SurveyController extends Controller
                 }
 
                 $ans->add([
-                           'Party'                  => $respondent,
-                           'Source'                 => 'Website',
-                           'Response'               => $txtResponse,
+                           'Party' => $respondent,
+                           'Source' => 'Website',
+                           'Response' => $txtResponse,
                            'SurveyQuestionAnswerID' => $idResponse,
-                           'SurveyQuestionID'       => $question->Id,
-                           'CreatedOn'              => $date,
-                           'ModifiedOn'             => $date,
-                           'CreatedBy'              => $actor->Id,
-                           'ModifiedBy'             => $actor->Id,
+                           'SurveyQuestionID' => $question->Id,
+                           'CreatedOn' => $date,
+                           'ModifiedOn' => $date,
+                           'CreatedBy' => $actor->Id,
+                           'ModifiedBy' => $actor->Id,
                           ]);
 
                 continue 2;

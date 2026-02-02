@@ -40,13 +40,15 @@ class ImportUsersCommand extends Command
     {
         $file = $this->argument('file');
 
-        if (!file_exists($file)) {
+        if (! file_exists($file)) {
             $this->error("The file $file does not exist.");
+
             return CommandAlias::FAILURE;
         }
 
         if (mime_content_type($file) !== ExtensionsEnum::Csv->getMimeType()) {
             $this->error("The file $file is not a csv file.");
+
             return CommandAlias::FAILURE;
         }
 
@@ -65,13 +67,14 @@ class ImportUsersCommand extends Command
 
         if (array_diff($requiredHeaders, $headers)) {
             $this->error("The provided CSV file is missing some required fields: " . implode(', ', array_diff($requiredHeaders, $headers)));
+
             return 1;
         }
 
         $branch = Branch::first();
         $actor = SystemHelper::user();
         $Role = Role::query()->createOrFirst(['name' => 'Default'], [
-                                                                     'CreatedBy'  => $actor->Id,
+                                                                     'CreatedBy' => $actor->Id,
                                                                      'ModifiedBy' => $actor->Id,
                                                                     ]);
         $success = 0;
@@ -89,15 +92,17 @@ class ImportUsersCommand extends Command
         foreach ($data as $row) {
             $userData = array_combine($headers, $row);
 
-            if (!filter_var($userData['Email Address'], FILTER_VALIDATE_EMAIL)) {
+            if (! filter_var($userData['Email Address'], FILTER_VALIDATE_EMAIL)) {
                 $this->warn('Invalid email address: ' . $userData['Email Address'] . ', Skipping. ' . $userData['Name']);
                 $failed++;
+
                 continue;
             }
             $memberNo = Str::padLeft($userData['Member Number'], 7, '0');
-            if (!Client::query()->where('ClientID', $memberNo)->exists()) {
+            if (! Client::query()->where('ClientID', $memberNo)->exists()) {
                 $this->warn('Invalid member No : ' . $memberNo . ', Skipping. ' . $userData['Name']);
                 $failed++;
+
                 continue;
             }
 
@@ -110,6 +115,7 @@ class ImportUsersCommand extends Command
             if ($user instanceof User) {
                 $this->warn("User with email {$userData['Email Address']} or phone number {$userData['Phone Number']} or username {$userData['USERNAME']} or memberNo $memberNo already exists. Skipping.");
                 $failed++;
+
                 continue;
             }
 
@@ -135,20 +141,20 @@ class ImportUsersCommand extends Command
             $team = Team::firstOrCreate(
                 ['Name' => $userData['Department']],
                 [
-                 'Email'      => Str::lower($userData['Email Address']),
-                 'Notes'      => "{$userData['Department']}",
-                 'CreatedBy'  => $actor->Id,
+                 'Email' => Str::lower($userData['Email Address']),
+                 'Notes' => "{$userData['Department']}",
+                 'CreatedBy' => $actor->Id,
                  'ModifiedBy' => $actor->Id,
                 ]
             );
 
 
             DB::table('t_TeamUser')->insert([
-                                             'TeamId'     => $team->TeamID,
-                                             'UserId'     => $service->user->Id,
-                                             'CreatedBy'  => $actor->Id,
+                                             'TeamId' => $team->TeamID,
+                                             'UserId' => $service->user->Id,
+                                             'CreatedBy' => $actor->Id,
                                              'ModifiedBy' => $actor->Id,
-                                             'CreatedOn'  => now(),
+                                             'CreatedOn' => now(),
                                              'ModifiedOn' => now(),
                                             ]);
             $this->info("User {$userData['Name']} has been successfully imported.");
@@ -159,6 +165,7 @@ class ImportUsersCommand extends Command
         $this->info("Import Process Complete.");
         $this->info("Total Success: " . number_format($success));
         $this->info("Total Failed: " . number_format($failed));
+
         return CommandAlias::SUCCESS;
     }
 }

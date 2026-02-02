@@ -1,0 +1,47 @@
+{
+  "env": {
+    "browser": true,
+    "es6": true,
+    "jest": true,
+    "jquery": true
+  },
+  "globals": {
+    "$": "readonly",
+    "jQuery": "readonly",
+    "htmx": "readonly",
+    "toastr": "readonly",
+    "Swal": "readonly",
+    "axios": "readonly",
+    "Notyf": "readonly",
+    "bootstrap": "readonly"
+  },
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "extends": ["airbnb-base"],
+  "rules": {
+    "no-shadow": "off",
+    "no-param-reassign": "off",
+    "eol-last": "off",
+    "import/extensions": [ 1, {
+      "js": "always", "json": "always"
+    }],
+    "no-use-before-define": ["error", { "functions": false }],
+    "func-names": "off",
+    "no-console": "warn",
+    "no-alert": "warn",
+    "class-methods-use-this": "warn",
+    "no-underscore-dangle": ["error", { "allow": ["__partialInits", "__DEFAULT_ACTIVE_ROUTE__"] }],
+    "import/prefer-default-export": "off",
+    "no-restricted-globals": ["error", "event", "fdescribe"],
+    "no-script-url": "warn",
+    "import/no-extraneous-dependencies": ["error", {"devDependencies": true}],
+    "import/no-unresolved": ["error", { "ignore": ["^laravel-vite-plugin$"] }]
+  },
+  "ignorePatterns": [
+    "dist/",
+    "build/"
+  ]
+}

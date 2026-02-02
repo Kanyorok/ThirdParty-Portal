@@ -37,25 +37,28 @@
     <div class="offcanvas-resize-handle" title="Drag to resize"></div>
     <div class="offcanvas-body" id="offcanvasMainBody"></div>
 </div>
-<script src="{{ asset('assets/js/jquery.min.js') }}"></script>
-<script src="{{ asset('assets/js/plugins/popper.min.js') }}"></script>
+{{-- Core Libraries: Use CDN versions to avoid minification issues --}}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+{{-- Local Scripts --}}
 <script src="{{ asset('assets/js/plugins/simplebar.min.js') }}"></script>
-<script src="{{ asset('assets/js/plugins/bootstrap.min.js') }}"></script>
 <script src="{{ asset('assets/js/plugins/i18next.min.js') }}"></script>
 <script src="{{ asset('assets/js/icon/custom-font.js') }}"></script>
 <script src="{{ asset('assets/js/plugins/feather.min.js') }}"></script>
 <script src="{{ asset('assets/js/script.js') }}"></script>
-<script src="{{ asset('assets/libs/dataTables/dataTables.min.js') }}"></script>
-<script src="{{ asset('assets/libs/dataTables/bootstrap5.min.js') }}"></script>
+<script src="{{ asset('assets/libs/dataTables/jquery.dataTables.min.js') }}"></script>
+<script src="{{ asset('assets/libs/dataTables/dataTables.bootstrap5.min.js') }}"></script>
 <script src="{{ asset('assets/libs/flatpickr/flatpickr.min.js') }}"></script>
-<script src="{{ asset('assets/libs/notyf/notyf.min.js') }}"></script>
+{{-- Use CDN for Notyf to avoid minification issues --}}
+<script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 {{--<script>layout_change('light');</script>
 <script>change_box_container('false');</script>
 <script>layout_caption_change('true');</script>
 <script>layout_rtl_change('false');</script>
 <script>preset_change('preset-1');</script>
 <script>main_layout_change('vertical');</script>--}}
-<script src="{{ asset('assets/js/_pages.js') }}"></script>
+<script src="{{ asset('assets/js/_pages.js') }}?v={{ time() }}"></script>
 @auth
     @yield('script')
     <script>
@@ -73,11 +76,14 @@
                 document.querySelectorAll('.sidebar .active')[0].scrollIntoView({behavior: "smooth", block: "center"});
             }
 
-            window.bsOffcanvas = new bootstrap.Offcanvas(document.getElementById('offcanvasMain'));
-            // Initialize resizable offcanvas width with persisted value
-            try {
-                const oc = document.getElementById('offcanvasMain');
-                const saved = parseInt(localStorage.getItem('offcanvasWidth') || '0', 10);
+            // Initialize offcanvas only if the element exists (not on guest pages)
+            const offcanvasElement = document.getElementById('offcanvasMain');
+            if (offcanvasElement) {
+                window.bsOffcanvas = new bootstrap.Offcanvas(offcanvasElement);
+                // Initialize resizable offcanvas width with persisted value
+                try {
+                    const oc = offcanvasElement;
+                    const saved = parseInt(localStorage.getItem('offcanvasWidth') || '0', 10);
                 if (saved && saved > 320 && saved < window.innerWidth) {
                     oc.style.setProperty('--bs-offcanvas-width', saved + 'px');
                 }
@@ -133,6 +139,8 @@
                 });
             } catch (e) {
             }
+            } // End if (offcanvasElement)
+            
             @if (session('success'))
                 nSuccess('{!! session('success') !!} ');
             @elseif (session('status'))

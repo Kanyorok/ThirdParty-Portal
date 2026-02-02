@@ -3,23 +3,24 @@
 namespace App\Models\Finance;
 
 use App\Models\Core\Approval\CodeDetail;
-use App\Traits\Model\UserActorTrait;
 use App\Traits\Model\DocumentsTrait;
+use App\Traits\Model\UserActorTrait;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class FinanceReceipt extends Model
 {
-    use UserActorTrait, SoftDeletes, DocumentsTrait;
+    use UserActorTrait;
+    use SoftDeletes;
+    use DocumentsTrait;
 
     protected $table = 't_FinanceReceipts';
     protected $primaryKey = 'Id';
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'ReceiptNumber',
@@ -40,7 +41,7 @@ class FinanceReceipt extends Model
         'ModifiedBy',
         'ModifiedOn',
         'DeletedBy',
-        'DeletedOn'
+        'DeletedOn',
     ];
 
     protected $casts = [
@@ -63,6 +64,7 @@ class FinanceReceipt extends Model
     {
         $date = Carbon::now()->format('Ymd');
         $sequence = str_pad(self::whereDate('CreatedOn', Carbon::now())->count() + 1, 4, '0', STR_PAD_LEFT);
+
         return "RCP-{$date}-{$sequence}";
     }
 
@@ -116,6 +118,6 @@ class FinanceReceipt extends Model
 
     public function hasAttachment(): bool
     {
-        return !empty($this->AttachmentPath);
+        return ! empty($this->AttachmentPath);
     }
 }

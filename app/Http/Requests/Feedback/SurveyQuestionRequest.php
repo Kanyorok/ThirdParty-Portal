@@ -18,13 +18,13 @@ class SurveyQuestionRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'QuestionType'   => ['nullable'],
+                'QuestionType' => ['nullable'],
                 'SurveyQuestion' => [
                                      'required',
                                      'min:3',
                                      'max:500',
                                     ],
-                'SurveyHelp'     => [
+                'SurveyHelp' => [
                                      'nullable',
                                      'max:5000',
                                     ],
