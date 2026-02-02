@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class CRDBCustomerController extends Controller
 {
-    //Sync customer info by executing the p_Customers stored procedure EXEC dbo.r_CustomerData  @IsSynced = 0
+    # Sync customer info by executing the p_Customers stored procedure EXEC dbo.r_CustomerData @IsSynced = 0
 
     public function syncCustomers(Request $request)
     {
@@ -17,7 +17,7 @@ class CRDBCustomerController extends Controller
         ]);
 
         try {
-            // 1. Fetch data from SQL
+            # 1. Fetch data from SQL
             $data = DB::select("EXEC dbo.r_CustomerData @IsSynced = 0");
 
             if (empty($data)) {
@@ -29,21 +29,21 @@ class CRDBCustomerController extends Controller
                 ], 404);
             }
 
-            // 2. TRANSFORM THE DATA (Crucial Step)
-            // We iterate through the results and convert the 'typesJson' string
-            // into a real PHP array so Laravel outputs it as a nested JSON object.
+            # 2. TRANSFORM THE DATA (Crucial Step)
+            # We iterate through the results and convert the 'typesJson' string
+            # into a real PHP array so Laravel outputs it as a nested JSON object.
             $formattedData = collect($data)->map(function ($item) {
-                // Check if the field exists and isn't null
-                if (! empty($item->TypesJson)) {
+                # Check if the field exists and isn't null
+                if (!empty($item->TypesJson)) {
                     $item->TypesJson = json_decode($item->TypesJson);
                 } else {
-                    $item->TypesJson = []; // Ensure it's an array if null
+                    $item->TypesJson = []; # Ensure it's an array if null
                 }
 
                 return $item;
             });
 
-            // 3. Return the transformed collection
+            # 3. Return the transformed collection
             return response()->json([
                 'status' => 'ok',
                 'code' => 200,
@@ -61,7 +61,7 @@ class CRDBCustomerController extends Controller
         }
     }
 
-    //Fetch Client Summary Statement
+    # Fetch Client Summary Statement
     public function getClientSummaryStatement(Request $request)
     {
         $request->validate([
