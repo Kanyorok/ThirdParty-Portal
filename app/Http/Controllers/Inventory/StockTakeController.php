@@ -53,7 +53,7 @@ class StockTakeController extends Controller
             ->with('item')
             ->get();
 
-        return response()->json($stocks); // Just return raw data
+        return response()->json($stocks); 
     }
 
     public function store(StockTakeRequest $request)
@@ -65,7 +65,6 @@ class StockTakeController extends Controller
         $countDate = Carbon::parse($request->CountDate);
         $lines = $request->lines;
 
-        // ✅ This is the method that saves both header and lines
         $stockTake = StockTakeService::createWithLines(
             branch: $branch,
             store: $store,
@@ -121,7 +120,6 @@ public function update(Request $request, $id)
     try {
         $stock = StockTake::findOrFail($id);
 
-        // Update the stock take header
         $stock->update([
             'BranchId' => $validated['BranchId'],
             'StoreId' => $validated['StoreId'],
@@ -130,7 +128,6 @@ public function update(Request $request, $id)
             'ModifiedBy' => Auth::id(),
         ]);
 
-        // ✅ Update lines
         if (isset($validated['lines'])) {
             foreach ($validated['lines'] as $lineData) {
                 if (!empty($lineData['Id'])) {
@@ -159,7 +156,6 @@ public function update(Request $request, $id)
         return redirect()->route('stocktake.index')->with('success', 'Stock Take updated successfully');
     } catch (\Throwable $th) {
         DB::rollBack();
-        Log::error('Failed to Update Stock Take: ' . $th->getMessage());
         return back()->withErrors(['error' => 'Failed to update Stock Take'])->withInput();
     }
 }
@@ -167,8 +163,7 @@ public function update(Request $request, $id)
     public function destroy($id)
     {
          $this->authorize(PermissionEnum::StockTakeDestroy, StockTake::class);
-        //Check if user has permission to delete property categories
-        //$this->authorize(PermissionEnum::PropertyTypeDelete , PropertyType::class);
+
         try {
             $stock = StockTake::findOrFail($id);
             $stock->delete();
@@ -176,8 +171,6 @@ public function update(Request $request, $id)
             return redirect()->route('stocktake.index')
                 ->with('success', 'Stock Take Deleted Successfully!');
         } catch (\Throwable $th) {
-            // Log the error for debugging
-            Log::error('Error deleting Stock Take: ' . $th->getMessage());
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to delete Stock Take. Please try again.'])
                 ->withInput();

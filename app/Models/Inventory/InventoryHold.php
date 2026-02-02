@@ -65,11 +65,7 @@ class InventoryHold extends Model
         return $this->belongsTo(Branch::class, 'BranchID');
     }
 
-    /**
-     * For transfer scenarios, this represents the branch the item came from
-     * In most cases, this will be the same as 'branch' unless dealing with transfers
-     * This is added for compatibility with the blade template
-     */
+
     public function fromBranch()
     {
         return $this->belongsTo(Branch::class, 'BranchID');
@@ -85,40 +81,28 @@ class InventoryHold extends Model
         return $this->belongsTo(CodeDetail::class, 'Source');
     }
 
-    /**
-     * Get the source adjustment if source is Stock Adjustment
-     */
     public function sourceAdjustment()
     {
         return $this->belongsTo(StockAdjustment::class, 'SourceID', 'Id');
     }
 
-    /**
-     * Get the source receipt if source is Transfer Receipt or other receipt types
-     */
+
     public function sourceReceipt()
     {
         return $this->belongsTo(TransactionReceipt::class, 'SourceID', 'Id');
     }
 
-    /**
-     * Get the formatted source document ID based on source type
-     * This returns the AdjustmentId or ReceiptId column values
-     */
     public function getSourceDocumentIdAttribute()
     {
         $sourceType = $this->sourceDetail->Description ?? '';
         
-        // For Stock Adjustments, get AdjustmentId from StockAdjustment table
         if (stripos($sourceType, 'adjustment') !== false && $this->sourceAdjustment) {
             return $this->sourceAdjustment->AdjustmentId ?? $this->SourceID;
         } 
-        // For Receipts/Transfers, get ReceiptId from TransactionReceipt table
         elseif ((stripos($sourceType, 'receipt') !== false || stripos($sourceType, 'transfer') !== false) && $this->sourceReceipt) {
             return $this->sourceReceipt->ReceiptId ?? $this->SourceID;
         }
         
-        // Fallback to the generic SourceID if no relationship found
         return $this->SourceID;
     }
 

@@ -51,7 +51,6 @@ class StockTransaction extends Model
         return 'StockTransactionId';
     }
 
-    // Add these scopes for better query handling
     public function scopeActive($query)
     {
         return $query->whereNull('DeletedOn');
@@ -77,7 +76,6 @@ class StockTransaction extends Model
         return $query;
     }
 
-    // Relationships - Fixed names
     public function item()
     {
         return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
@@ -98,7 +96,6 @@ class StockTransaction extends Model
         return $this->belongsTo(UnitOfMeasure::class, 'UOMID', 'Id');
     }
 
-    // Fixed: This should be named 'branch' not 'branchId'
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'BranchID', 'Id');

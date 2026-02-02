@@ -46,7 +46,6 @@ class InterBranchRequisitionApprovalController extends Controller
             ->orderBy('CreatedOn', 'desc')
             ->get();
         
-        // Add approval capability check for each requisition
         $user = Auth::user();
         $pendingRequisitions = $pendingRequisitions->map(function ($requisition) use ($user) {
             $requisition->canApprove = $this->workflow->canApproveModel($requisition, $user);
@@ -64,7 +63,6 @@ class InterBranchRequisitionApprovalController extends Controller
                     ->with('error', 'You can only view requisitions for your branch.');
             }
             
-            // Add approval capability check for selected requisition
             if ($requisition) {
                 $requisition->canApprove = $this->workflow->canApproveModel($requisition, $user);
             }
@@ -96,7 +94,6 @@ class InterBranchRequisitionApprovalController extends Controller
         $user = Auth::user();
         $canApprove = $this->workflow->canApproveModel($requisition, $user);
 
-        Log::info("Can approve requisition {$requisition->Id} for user {$user->Id}: " . ($canApprove ? 'Yes' : 'No'));
 
         return view('inventory.interbranchrequisition.approval.show', [
             'requisition' => $requisition,
@@ -153,11 +150,6 @@ class InterBranchRequisitionApprovalController extends Controller
         DB::transaction(function () use ($requisition, $user) {
             $this->workflow->approve($requisition, $user, InterBranchRequisitionEnum::Approved, 'Approved via UI', 'Status');
         });
-        
-        Log::info('Requisition approved successfully', [
-            'requisition_id' => $requisition->Id,
-            'user_id' => $user->Id
-        ]);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
@@ -177,7 +169,6 @@ class InterBranchRequisitionApprovalController extends Controller
         }
         return redirect()->back()->with('error', $errorMessage);
     } catch (Exception $e) {
-        Log::error('Error approving requisition: ' . $e->getMessage());
         
         $errorMessage = 'Unexpected error, try again later.';
         $errorLower = strtolower($e->getMessage());
@@ -262,11 +253,6 @@ public function reject(Request $request, $Id)
             $this->workflow->reject($requisition, $user, InterBranchRequisitionEnum::Rejected, $reason);
         });
         
-        Log::info('Requisition rejected successfully', [
-            'requisition_id' => $requisition->Id,
-            'user_id' => $user->Id,
-            'reason' => $reason
-        ]);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
@@ -286,7 +272,6 @@ public function reject(Request $request, $Id)
         }
         return redirect()->back()->with('error', $errorMessage);
     } catch (Exception $e) {
-        Log::error('Error rejecting requisition: ' . $e->getMessage());
         
         $errorMessage = 'Unexpected error, try again later.';
         $errorLower = strtolower($e->getMessage());
@@ -366,14 +351,6 @@ public function reject(Request $request, $Id)
             );
         });
 
-        // Log successful action
-        Log::info('Requisition decision submitted successfully', [
-            'requisition_id' => $requisition->Id,
-            'user_id' => $user->Id,
-            'action' => $request->action
-        ]);
-
-        // Success response
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
@@ -385,11 +362,6 @@ public function reject(Request $request, $Id)
             ->with('success', 'Your decision has been recorded.');
 
     } catch (Exception $e) {
-        Log::error('Error processing requisition decision: ' . $e->getMessage(), [
-            'requisition_id' => $requisition->Id,
-            'user_id' => $user->Id,
-            'exception' => $e
-        ]);
         
         $errorMessage = 'Unexpected error: ' . $e->getMessage();
         $errorLower = strtolower($e->getMessage());
@@ -410,7 +382,6 @@ public function reject(Request $request, $Id)
             $errorMessage = 'This requisition cannot be processed in its current status.';
         }
 
-        // Error response
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => false,

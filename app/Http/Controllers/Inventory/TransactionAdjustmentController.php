@@ -72,10 +72,8 @@ class TransactionAdjustmentController extends Controller
             $this->service->create($request->validated());
             return redirect()->route('transactionsadjustment.index')->with('success', 'Stock adjustment recorded.');
         } catch (ValidationException $e) {
-            // Workflow configuration error - return to create page with error
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            // Other errors
             return back()->withErrors(['error' => 'Failed to create stock adjustment: ' . $e->getMessage()])->withInput();
         }
     }
@@ -123,7 +121,6 @@ class TransactionAdjustmentController extends Controller
 
     public function update(StockAdjustmentRequest $request, StockAdjustment $stockAdjustment)
     {
-        Log::info('TransactionAdjustmentController@update: Attempting to update StockAdjustment ID: ' . $stockAdjustment->Id);
         $validated = $request->validated();
         $this->service->update($stockAdjustment, $validated);
         

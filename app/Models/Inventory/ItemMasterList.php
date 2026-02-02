@@ -69,7 +69,6 @@ class ItemMasterList extends Model
         'ModifiedOn' => 'datetime',
     ];
 
-    // Relationships
 
 
 public function inUse(): bool

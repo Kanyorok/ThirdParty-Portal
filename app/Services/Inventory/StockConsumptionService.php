@@ -106,7 +106,6 @@ class StockConsumptionService
     public function update(StockConsumption $stockConsumption, array $data): StockConsumption
 {
     return DB::transaction(function () use ($stockConsumption, $data) {
-        // First, restore the old quantity back to stock
         $oldStockItem = StockItem::where('ItemID', $stockConsumption->ItemID)  
             ->where('Store', $stockConsumption->StoreID)
             ->where('Branch', $stockConsumption->BranchID)
@@ -117,8 +116,7 @@ class StockConsumptionService
             $oldStockItem->save();
         }
 
-        // Then get the new stock item
-        $stockItem = StockItem::where('ItemID', $data['ItemID'])  // ✅ Use ItemID, not Id
+        $stockItem = StockItem::where('ItemID', $data['ItemID'])  
             ->where('Store', $data['StoreID'] ?? null)
             ->where('Branch', $data['BranchID'])
             ->first();
@@ -142,11 +140,9 @@ class StockConsumptionService
             throw new \Exception("Insufficient stock available. Only {$stockItem->CurrentQty} left.");
         }
 
-        // Deduct from new stock
         $stockItem->CurrentQty -= $qty;
         $stockItem->save();
 
-        // Update consumption record
         $stockConsumption->update([
             'ItemID'        => $masterItemId,
             'StoreID'       => $data['StoreID'],
@@ -162,7 +158,6 @@ class StockConsumptionService
             'ModifiedOn'    => now(),
         ]);
 
-        // Update or create stock transaction
         $transaction = StockTransaction::where('ReferenceID', $stockConsumption->Id)
             ->first();
 

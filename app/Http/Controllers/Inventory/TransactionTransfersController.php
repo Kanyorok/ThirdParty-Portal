@@ -39,7 +39,6 @@ class TransactionTransfersController extends Controller
         $branchId = $currentBranch->Id;
         $isHeadOffice = $currentBranch->IsHeadOffice ?? false;
 
-        // Get all transfers involving the current branch
         $allTransfers = TransactionTransfer::with(['items.item', 'fromBranch', 'toBranch', 'transferStatus', 'transferredBy'])
             ->where(function ($q) use ($branchId) {
                 $q->where('FromBranch', $branchId)
@@ -47,17 +46,14 @@ class TransactionTransfersController extends Controller
             })
             ->get();
 
-        // Incoming transfers (to current branch)
         $incomingTransfers = TransactionTransfer::with(['items.item', 'fromBranch', 'toBranch', 'transferStatus', 'transferredBy'])
             ->where('ToBranch', $branchId)
             ->get();
 
-        // Outgoing transfers (from current branch)
         $outgoingTransfers = TransactionTransfer::with(['items.item', 'fromBranch', 'toBranch', 'transferStatus', 'transferredBy'])
             ->where('FromBranch', $branchId)
             ->get();
 
-        // For HQ, get all branches for filter
         $branches = $isHeadOffice ? Branch::all() : collect();
 
         return view('inventory.transactions.transfers.index', compact(
@@ -80,10 +76,8 @@ class TransactionTransfersController extends Controller
         $branchId = $currentBranch->Id;
         $this->authorize('create', TransactionTransfer::class);
 
-        // Get current user
         $currentUser = $request->user();
 
-        // Get other users for dropdown (if needed for override)
         $users = User::whereHas('employee', function ($q) use ($branchId) {
             $q->where('BranchId', $branchId);
         })->get();
@@ -102,7 +96,6 @@ class TransactionTransfersController extends Controller
         DB::beginTransaction();
 
         try {
-            // Create transfer and items
             $transfer = $this->service->createTransfer($validatedData);
             $this->service->createTransferItems($transfer, $items);
 

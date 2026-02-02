@@ -28,7 +28,6 @@ class StoreController extends Controller
 
         $branchId = $currentBranch->Id; 
         
-        // Load stores with stock items count for efficient checking
         $stores = Store::where('BranchID', $branchId)
             ->withCount('stockItems')
             ->get();

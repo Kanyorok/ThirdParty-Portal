@@ -25,7 +25,6 @@ class ItemCategoryService
                     $data['CreatedOn'] = now();
                     $data['ModifiedOn'] = now();
 
-                    // Default to Active if no status provided
                     if (empty($data['Status'])) {
                         $data['Status'] = CodeDetail::where('CodeID', 'CategoryStatus')
                             ->where('Description', 'Active')
@@ -110,7 +109,6 @@ class ItemCategoryService
     {
         $category->loadMissing(['children', 'items']);
 
-        // Cascade to child categories
         foreach ($category->children ?? [] as $child) {
             $child->update([
                 'Status' => $statusId,
@@ -121,7 +119,6 @@ class ItemCategoryService
             $this->cascadeStatus($child, $statusId);
         }
 
-        // Cascade to items under this category
         foreach ($category->items ?? [] as $item) {
             $item->update([
                 'Status' => $statusId,

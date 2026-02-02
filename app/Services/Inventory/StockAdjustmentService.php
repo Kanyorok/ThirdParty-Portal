@@ -60,7 +60,6 @@ class StockAdjustmentService
                 ]);
             }
 
-            // Try to submit workflow
             try {
                 $this->workflow->submit(
                     $adjustment,
@@ -69,10 +68,8 @@ class StockAdjustmentService
                     'Stock Adjustment Submitted for Approval'
                 );
             } catch (\Exception $e) {
-                // Rollback the transaction
                 DB::rollBack();
                 
-                // Throw a validation exception that will be caught by the controller
                 throw ValidationException::withMessages([
                     'workflow' => 'Workflow configuration is missing. Please configure the approval workflow for Stock Adjustments before creating adjustments. Contact your system administrator.'
                 ]);
@@ -85,7 +82,6 @@ class StockAdjustmentService
 
             DB::commit();
         } catch (ValidationException $e) {
-            // Re-throw validation exceptions so controller can catch them
             throw $e;
         } catch (Throwable $th) {
             DB::rollBack();

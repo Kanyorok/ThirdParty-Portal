@@ -171,18 +171,15 @@ class InventoryHoldReviewController extends Controller
         ];
 
         try {
-            // Try to find either an InventoryHoldReview OR fall back to InventoryHold
             $holdReview = InventoryHoldReview::where('Id', $id)
                 ->where('FromBranch', $branchId)
                 ->first();
 
             if (!$holdReview) {
-                // If no review exists, try to find the original hold
                 $inventoryHold = InventoryHold::where('Id', $id)
                     ->where('BranchID', $branchId)
                     ->firstOrFail();
 
-                // Use the hold ID for disposal/return
                 $targetId = $inventoryHold->Id;
             } else {
                 $targetId = $holdReview->Id;
