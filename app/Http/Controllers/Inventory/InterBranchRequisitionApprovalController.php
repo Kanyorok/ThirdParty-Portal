@@ -401,8 +401,4 @@ class InterBranchRequisitionApprovalController extends Controller
             optional($lock)->release();
         }
     }
-
-    public function create()
-    {
-    }
 }

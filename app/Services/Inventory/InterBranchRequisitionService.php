@@ -33,14 +33,16 @@ class InterBranchRequisitionService
         $items = $data['items'] ?? [];
         $fromBranch = $data['FromBranch'];
 
-        foreach ($items as $index => $item) {
-            $stock = StockItem::where('ItemID', $item['Item'])
+       foreach ($items as $index => $item) {
+            $totalStock = StockItem::where('ItemID', $item['Item'])
                 ->where('Branch', $fromBranch)
-                ->first();
+                ->where('Status', '1')
+                ->where('DeletedOn', null)
+                ->sum('CurrentQty');
 
-            if (! $stock || $stock->CurrentQty < $item['RequestedQty']) {
+            if ($totalStock < $item['RequestedQty']) {
                 throw ValidationException::withMessages([
-                    "items.$index.RequestedQty" => "Insufficient stock for Item ID {$item['Item']} in Branch {$fromBranch}. Requested {$item['RequestedQty']}, available " . ($stock->CurrentQty ?? 0) . ".",
+                    "items.$index.RequestedQty" => "Insufficient stock for Item ID {$item['Item']} in Branch {$fromBranch}. Requested {$item['RequestedQty']}, available " . $totalStock . ".",
                 ]);
             }
         }
