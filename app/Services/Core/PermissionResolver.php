@@ -23,17 +23,20 @@ class PermissionResolver
         $cacheKey = 'permres:' . $user->getAuthIdentifier() . ':' . (string)(session('LoginBranchId') ?? 'no-branch');
         // Per-request in-memory cache
         static $reqCache = [];
-        if (isset($reqCache[$cacheKey])) return $reqCache[$cacheKey];
+        if (isset($reqCache[$cacheKey])) {
+            return $reqCache[$cacheKey];
+        }
 
         // Load all submodule keys from DB (t_SubModules.Key or Name)
         $submodules = collect();
+
         try {
             $submodules = collect(DB::table('t_SubModules')->select('Key')->pluck('Key'))->filter()->values();
         } catch (\Throwable $e) {
             // fallback: empty, resolver still works with discovered perms
             $submodules = collect();
         }
-        $subKeys = $submodules->map(fn($k) => Str::lower(trim((string)$k)))->filter()->unique()->values()->all();
+        $subKeys = $submodules->map(fn ($k) => Str::lower(trim((string)$k)))->filter()->unique()->values()->all();
 
         // Load user permissions (Spatie) once
         try {
@@ -46,18 +49,24 @@ class PermissionResolver
         $matrix = [];
         foreach ($userPerms as $name) {
             $name = Str::lower(trim((string)$name));
-            if ($name === '') continue;
+            if ($name === '') {
+                continue;
+            }
             [$sub, $act] = self::splitPermission($name);
-            if (!$sub || !$act) continue;
+            if (! $sub || ! $act) {
+                continue;
+            }
             $matrix[$sub] = $matrix[$sub] ?? self::emptyRow();
-            if (isset($matrix[$sub][$act])) $matrix[$sub][$act] = true;
+            if (isset($matrix[$sub][$act])) {
+                $matrix[$sub][$act] = true;
+            }
         }
 
         // Determine which submodules are configured (protected) vs open
         $configured = self::configuredSubmodules(); // set of submodule keys with any defined perms
         // Initialize open submodules (all true)
         foreach ($subKeys as $sk) {
-            if (!isset($configured[$sk])) {
+            if (! isset($configured[$sk])) {
                 $matrix[$sk] = self::allTrueRow();
             }
         }
@@ -73,9 +82,10 @@ class PermissionResolver
         $map = self::forUser($user);
         // If not present in map, check open-by-absence
         $configured = self::configuredSubmodules();
-        if (!isset($configured[$sub])) {
+        if (! isset($configured[$sub])) {
             return true; // open
         }
+
         return (bool)($map[$sub][$act] ?? false);
     }
 
@@ -89,17 +99,20 @@ class PermissionResolver
         // Prefer dot format: submodule.action
         if (Str::contains($name, '.')) {
             [$sub, $act] = explode('.', $name, 2);
+
             return [trim($sub), self::normalizeAction($act)];
         }
         // Support legacy hyphen style from PermissionEnum: base-action (e.g., role-create, users-read)
-        $actionMap = ['read','view'=>'read','create'=>'write','write'=>'write','update'=>'update','edit'=>'update','delete'=>'delete','destroy'=>'delete','approval'=>'approve','approve'=>'approve'];
+        $actionMap = ['read','view' => 'read','create' => 'write','write' => 'write','update' => 'update','edit' => 'update','delete' => 'delete','destroy' => 'delete','approval' => 'approve','approve' => 'approve'];
         $lastDash = strrpos($name, '-');
         if ($lastDash !== false) {
             $sub = substr($name, 0, $lastDash);
             $act = substr($name, $lastDash + 1);
             $act = $actionMap[$act] ?? $act;
+
             return [trim($sub), self::normalizeAction($act)];
         }
+
         // Bare name implies full access (rare): treat as read for visibility
         return [$name, 'read'];
     }
@@ -107,6 +120,7 @@ class PermissionResolver
     private static function normalizeAction(string $act): string
     {
         $act = Str::lower(trim($act));
+
         return match ($act) {
             'view' => 'read',
             'create','write' => 'write',
@@ -120,27 +134,33 @@ class PermissionResolver
     private static function configuredSubmodules(): array
     {
         static $conf;
-        if (is_array($conf)) return $conf;
+        if (is_array($conf)) {
+            return $conf;
+        }
         $set = [];
+
         try {
             $pairs = DB::table('t_Permissions')->select('SubModuleKey')->pluck('SubModuleKey');
             foreach ($pairs as $k) {
                 $k = Str::lower(trim((string)$k));
-                if ($k !== '') $set[$k] = true;
+                if ($k !== '') {
+                    $set[$k] = true;
+                }
             }
         } catch (\Throwable $e) {
             $set = [];
         }
+
         return $conf = $set;
     }
 
     private static function emptyRow(): array
     {
-        return ['read'=>false,'write'=>false,'update'=>false,'delete'=>false,'approve'=>false];
+        return ['read' => false,'write' => false,'update' => false,'delete' => false,'approve' => false];
     }
 
     private static function allTrueRow(): array
     {
-        return ['read'=>true,'write'=>true,'update'=>true,'delete'=>true,'approve'=>true];
+        return ['read' => true,'write' => true,'update' => true,'delete' => true,'approve' => true];
     }
 }

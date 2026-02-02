@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FinanceTaxRuleConfiguration extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = "t_FinanceTaxRuleConfiguration";
     protected $primaryKey = 'Id';
@@ -30,7 +31,7 @@ class FinanceTaxRuleConfiguration extends Model
         'Status',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
@@ -40,7 +41,7 @@ class FinanceTaxRuleConfiguration extends Model
 
     public function taxType()
     {
-        return $this->belongsTo(FinanceTaxType::class, 'TaxTypeId','Id');
+        return $this->belongsTo(FinanceTaxType::class, 'TaxTypeId', 'Id');
     }
 
     public function jurisdiction()

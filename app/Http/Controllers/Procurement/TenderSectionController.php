@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\Section;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderSection;
-use App\Models\Procurement\Section;
-use App\Enums\Core\PermissionEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -28,8 +28,10 @@ class TenderSectionController extends Controller
 
         $sections = Section::isActive()->with('criteria')->get();
 
-        return view('procurement.tendering.settings.tender-sections',
-            compact('tenders', 'sections'));
+        return view(
+            'procurement.tendering.settings.tender-sections',
+            compact('tenders', 'sections')
+        );
     }
 
     /**
@@ -40,7 +42,7 @@ class TenderSectionController extends Controller
         $this->authorize(PermissionEnum::TenderRead);
 
         $tenderId = $request->get('tender');
-        if (!$tenderId) {
+        if (! $tenderId) {
             return redirect()->back()->with('error', 'Please select a tender to configure sections.');
         }
 
@@ -57,7 +59,11 @@ class TenderSectionController extends Controller
         $totalWeight = $sectionWeights->sum();
 
         return view('procurement.tendering.settings.tender-sections-assign', compact(
-            'tender', 'availableSections', 'assignedSections', 'sectionWeights', 'totalWeight'
+            'tender',
+            'availableSections',
+            'assignedSections',
+            'sectionWeights',
+            'totalWeight'
         ));
     }
 
@@ -80,7 +86,7 @@ class TenderSectionController extends Controller
         $totalWeight = array_sum($request->weights);
         if (abs($totalWeight - 100) > 0.01) { // Allow small floating point differences
             return redirect()->back()->withErrors([
-                'weights' => "Section weights must sum to exactly 100%. Current total: {$totalWeight}%"
+                'weights' => "Section weights must sum to exactly 100%. Current total: {$totalWeight}%",
             ])->withInput();
         }
 
@@ -118,15 +124,16 @@ class TenderSectionController extends Controller
                     'action' => 'assign_evaluation_sections',
                     'sections_count' => count($sections),
                     'total_weight' => $totalWeight,
-                    'sections' => $sections
+                    'sections' => $sections,
                 ])
                 ->log("Evaluation sections assigned to tender ID: {$tenderId}");
 
             DB::commit();
 
-            return redirect()->back()->with('success',
-                'Evaluation sections assigned successfully! Total weight: ' . $totalWeight . '%');
-
+            return redirect()->back()->with(
+                'success',
+                'Evaluation sections assigned successfully! Total weight: ' . $totalWeight . '%'
+            );
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -135,12 +142,14 @@ class TenderSectionController extends Controller
                 ->withProperties([
                     'action' => 'assign_evaluation_sections_failed',
                     'tender_id' => $tenderId,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ])
                 ->log('Failed to assign evaluation sections to tender: ' . $e->getMessage());
 
-            return redirect()->back()->with('error',
-                'Failed to assign sections: ' . $e->getMessage());
+            return redirect()->back()->with(
+                'error',
+                'Failed to assign sections: ' . $e->getMessage()
+            );
         }
     }
 
@@ -156,6 +165,7 @@ class TenderSectionController extends Controller
 
         $sectionsData = $tender->tenderSections->map(function ($tenderSection) {
             $section = $tenderSection->sections;
+
             return [
                 'section_id' => $section->Id,
                 'section_name' => $section->SectionName,
@@ -168,7 +178,7 @@ class TenderSectionController extends Controller
                         'criteria_description' => $criteria->Description,
                         'max_score' => 10, // Standard max score per criteria
                     ];
-                })
+                }),
             ];
         });
 
@@ -177,10 +187,10 @@ class TenderSectionController extends Controller
             'tender' => [
                 'id' => $tender->Id,
                 'tender_no' => $tender->TenderNo,
-                'title' => $tender->Title
+                'title' => $tender->Title,
             ],
             'sections' => $sectionsData,
-            'total_weight' => $sectionsData->sum('weight')
+            'total_weight' => $sectionsData->sum('weight'),
         ]);
     }
 
@@ -204,19 +214,23 @@ class TenderSectionController extends Controller
                 ->causedBy(Auth::user())
                 ->withProperties([
                     'action' => 'remove_evaluation_sections',
-                    'sections_removed' => $sectionsCount
+                    'sections_removed' => $sectionsCount,
                 ])
                 ->log("Removed all evaluation sections from tender ID: {$tenderId}");
 
             DB::commit();
 
-            return redirect()->back()->with('success',
-                'All evaluation sections removed from tender successfully.');
-
+            return redirect()->back()->with(
+                'success',
+                'All evaluation sections removed from tender successfully.'
+            );
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error',
-                'Failed to remove sections: ' . $e->getMessage());
+
+            return redirect()->back()->with(
+                'error',
+                'Failed to remove sections: ' . $e->getMessage()
+            );
         }
     }
 
@@ -234,7 +248,7 @@ class TenderSectionController extends Controller
             'total_weight' => $totalWeight,
             'message' => abs($totalWeight - 100) < 0.01
                 ? 'Section weights are properly configured'
-                : "Section weights sum to {$totalWeight}%, should be 100%"
+                : "Section weights sum to {$totalWeight}%, should be 100%",
         ];
     }
 
@@ -245,7 +259,7 @@ class TenderSectionController extends Controller
     {
         $tender = Tender::with('tenderSections')->find($tenderId);
 
-        if (!$tender) {
+        if (! $tender) {
             return ['ready' => false, 'message' => 'Tender not found'];
         }
 
@@ -254,7 +268,7 @@ class TenderSectionController extends Controller
         }
 
         $weightValidation = self::validateSectionWeights($tenderId);
-        if (!$weightValidation['is_valid']) {
+        if (! $weightValidation['is_valid']) {
             return ['ready' => false, 'message' => $weightValidation['message']];
         }
 
@@ -273,7 +287,7 @@ class TenderSectionController extends Controller
             'message' => "Ready for evaluation: {$responsiveBids} responsive bid(s), " .
                 $tender->tenderSections->count() . " section(s) configured",
             'responsive_bids' => $responsiveBids,
-            'sections_count' => $tender->tenderSections->count()
+            'sections_count' => $tender->tenderSections->count(),
         ];
     }
 }

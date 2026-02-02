@@ -179,7 +179,7 @@
                 <td>
                     @if($item->OpenedAt)
                         <strong>Opened:</strong> {{ $item->OpenedAt->format('d/m/Y H:i') }}<br>
-                        <strong>By:</strong> {{ $item->openedByUser->name ?? 'Unknown' }}<br>
+                        <strong>By:</strong> {{ $item->openedByUser->Name ?? 'Unknown' }}<br>
                         @if($item->CeremonyType)
                             <span class="badge bg-info">{{ ucfirst($item->CeremonyType) }} Opening</span>
                         @endif

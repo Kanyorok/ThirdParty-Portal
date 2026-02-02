@@ -13,14 +13,10 @@ use Illuminate\Http\UploadedFile;
 
 class PropertyMaintenanceWorkCompletionService
 {
-   private $assignment;
+    private $assignment;
 
-    /**
-     * Create a new class instance.
-     */
     public function __construct(PropertyMaintenanceWorkCompletion $propertyMaintenanceWorkCompletion)
     {
-        //
     }
 
     public static function create(
@@ -28,7 +24,7 @@ class PropertyMaintenanceWorkCompletionService
         string $completionDate,
         string $workDoneSummary,
         ?string $partsUsed = null,
-        ?int    $cost = null,
+        ?int $cost = null,
         CodeDetail $finalstatus,
         User $user,
         UploadedFile $document = null
@@ -47,7 +43,9 @@ class PropertyMaintenanceWorkCompletionService
 
         if (strtolower($finalstatus->Description) === 'completed') {
             $requestNumber->update([
-                'Status' => PostingEnum::Completed->value
+                'Status' => PostingEnum::Completed->value,
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => now(),
             ]);
         }
 
@@ -57,8 +55,8 @@ class PropertyMaintenanceWorkCompletionService
                 $document,
                 [PermissionEnum::PropertyMaintenanceAssignView->value],
                 $user
-                );
-            }
+            );
+        }
 
         activity()
             ->causedBy($user)
@@ -70,53 +68,53 @@ class PropertyMaintenanceWorkCompletionService
         return new self($workCompletion);
     }
 
-
-        public static function update(
-        PropertyMaintenanceWorkCompletion $requestNumber,
+    public static function update(
+        PropertyMaintenanceWorkCompletion $workCompletion,
         string $completionDate,
         string $workDoneSummary,
-        ?string $partsUsed = null,
-        ?int    $cost = null,
+        ?string $partsUsed,
+        ?int $cost,
         CodeDetail $finalstatus,
         User $user,
         UploadedFile $document = null
-        ): self {
-        $requestNumber->update([
-            'RequestNumber' => $requestNumber->RequestNumber,
+    ): self {
+
+        $workCompletion->update([
             'CompletionDate' => $completionDate,
             'WorkDoneSummary' => $workDoneSummary,
-            'PartsUsed' => $partsUsed ?? null,
-            'Cost' => $cost ?? null,
+            'PartsUsed' => $partsUsed,
+            'Cost' => $cost,
             'FinalStatus' => $finalstatus->ID,
-            'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
 
+        $assignment = PropertyMaintenanceAssign::find($workCompletion->RequestNumber);
 
-        if (strtolower($finalstatus->Description) === 'completed') {
-            $requestNumber->update([
-                'Status' => PostingEnum::Completed->value
+        if ($assignment) {
+            $assignment->update([
+                'Status' => strtolower($finalstatus->Description) === 'completed'
+                    ? PostingEnum::Completed->value
+                    : PostingEnum::Pending->value,
+                'ModifiedBy' => $user->Id,
+                'ModifiedOn' => now(),
             ]);
         }
 
-
         if ($document) {
-            $requestNumber->newDocument(
+            $workCompletion->newDocument(
                 ModulesEnum::Property,
                 $document,
                 [PermissionEnum::PropertyMaintenanceWorkCompletionView->value],
                 $user
-                );
+            );
         }
 
         activity()
             ->causedBy($user)
-            ->performedOn($requestNumber->withoutRelations())
+            ->performedOn($workCompletion)
             ->event('update')
-            ->log("Updated Work Completion {$requestNumber->Id}");
+            ->log("Updated Work Completion {$workCompletion->Id}");
 
-
-
-        return new self($requestNumber);
+        return new self($workCompletion);
     }
 }

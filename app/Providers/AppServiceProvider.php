@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Http\Controllers\Finance\JournalEntryController;
+use App\Http\Controllers\Finance\PostingController;
+use App\Http\Controllers\Procurement\TenderController;
 use App\Http\Middleware\Authenticate;
 use App\Models\Auth\ModelRole;
 use App\Models\Auth\PersonalAccessToken as CustomPersonalAccessToken;
@@ -34,6 +37,7 @@ use App\Models\Budget\BudgetTopDownData;
 use App\Models\Communication\Call;
 use App\Models\Communication\Comment;
 use App\Models\Communication\Email;
+use App\Models\Core\ApprovalGroup;
 use App\Models\Core\Branch;
 use App\Models\Core\CategoryMaster;
 use App\Models\Core\Report;
@@ -127,11 +131,11 @@ use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\StockAdjustment;
+use App\Models\Inventory\StockConsumption;
 use App\Models\Inventory\StockItem;
-use App\Models\Inventory\Store;
 use App\Models\Inventory\StockTake;
+use App\Models\Inventory\Store;
 use App\Models\Inventory\TransactionReceipt;
-use App\Models\Procurement\Tender;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\UOMConversion;
@@ -146,18 +150,28 @@ use App\Models\Legal\LegalObligation;
 use App\Models\Legal\LegalSearchRequest;
 use App\Models\Legal\LegalTemplate;
 use App\Models\Legal\LoanSecurity;
+use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\ProcurementPlan;
+use App\Models\Procurement\Criteria;
 use App\Models\Procurement\DepartmentNeed;
+use App\Models\Procurement\GoodsReceipt;
 use App\Models\Procurement\Order;
+use App\Models\Procurement\Order as ProcurementOrder;
 use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\ProcurementMethod;
+use App\Models\Procurement\ProcurementMode;
+use App\Models\Procurement\ProcurementPeriod;
+use App\Models\Procurement\ProcurementPlan;
 use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\Requisitions;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQLine;
+use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\SchedulePlan;
 use App\Models\Procurement\Section;
+use App\Models\Procurement\Tender;
+use App\Models\Procurement\TenderAward;
+use App\Models\Procurement\TenderInvitation;
 use App\Models\PropertyManagement\PropertyAttachments;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
@@ -222,23 +236,38 @@ use App\Policies\Inventory\ItemMasterListPolicy;
 use App\Policies\Inventory\ItemTypePolicy;
 use App\Policies\Inventory\PriceManagementPolicy;
 use App\Policies\Inventory\StockAdjustmentPolicy;
-use App\Policies\Inventory\StockTakePolicy;
+use App\Policies\Inventory\StockConsumptionPolicy;
 use App\Policies\Inventory\StockItemPolicy;
+use App\Policies\Inventory\StockTakePolicy;
 use App\Policies\Inventory\StorePolicy;
 use App\Policies\Inventory\TransactionReceiptPolicy;
 use App\Policies\Inventory\TransactionTransferPolicy;
 use App\Policies\Inventory\UnitOfMeasurePolicy;
 use App\Policies\Inventory\UOMConversionPolicy;
-use App\Policies\Procurement\DepartmentNeedsPolicy;
+use App\Policies\Procurement\ApprovalSetupPolicy;
+use App\Policies\Procurement\BidOpeningPolicy;
+use App\Policies\Procurement\ConsolidatedProcurementPlanPolicy;
+use App\Policies\Procurement\ContractPolicy;
+use App\Policies\Procurement\DepartmentNeedPolicy;
+use App\Policies\Procurement\EvaluationCriteriaPolicy;
+use App\Policies\Procurement\GoodsReceiptPolicy;
 use App\Policies\Procurement\OrderPolicy;
+use App\Policies\Procurement\PlanLineItemPolicy;
 use App\Policies\Procurement\PlanManualInputPolicy;
+use App\Policies\Procurement\ProcurementConfigurationPolicy;
 use App\Policies\Procurement\ProcurementMethodPolicy;
-use App\Policies\Procurement\SupplierPolicy;
 use App\Policies\Procurement\ProcurementPlanMaintainPolicy;
+use App\Policies\Procurement\ProcurementPlanPolicy;
+use App\Policies\Procurement\ProcurementSectionPolicy;
+use App\Policies\Procurement\PurchaseOrderPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
 use App\Policies\Procurement\RequisitionPolicy;
 use App\Policies\Procurement\RFQPolicy;
+use App\Policies\Procurement\RFQResponsePolicy;
 use App\Policies\Procurement\SchedulePlanPolicy;
+use App\Policies\Procurement\SupplierPolicy;
+use App\Policies\Procurement\TenderInvitationPolicy;
+use App\Policies\Procurement\TenderSubmissionPolicy;
 use App\Policies\ProductDevelopmentPolicy;
 use App\Policies\PropertyManagement\PropertyAttachmentsPolicy;
 use App\Policies\PropertyManagement\PropertyCategoryPolicy;
@@ -259,50 +288,14 @@ use App\Policies\PropertyManagement\PropertyTenantClearancePolicy;
 use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\PropertyManagement\PropertyUnitPolicy;
 use App\Policies\RolePolicy;
-use App\Policies\Procurement\ProcurementPlanPolicy;
-use App\Policies\Procurement\DepartmentNeedPolicy;
-use App\Policies\Procurement\ConsolidatedProcurementPlanPolicy;
-use App\Policies\Procurement\PlanLineItemPolicy;
-use App\Policies\Procurement\TenderSubmissionPolicy;
-use App\Policies\Procurement\TenderInvitationPolicy;
-use App\Policies\Procurement\BidOpeningPolicy;
-use App\Policies\Procurement\RFQResponsePolicy;
-use App\Policies\Procurement\ContractPolicy;
-use App\Policies\Procurement\PurchaseOrderPolicy;
-use App\Policies\Procurement\GoodsReceiptPolicy;
-use App\Models\Procurement\BidSubmission;
-use App\Models\Procurement\TenderInvitation;
-use App\Models\Procurement\RFQResponse;
-use App\Models\Procurement\TenderAward;
-use App\Models\Procurement\Order as ProcurementOrder;
-use App\Models\Procurement\GoodsReceipt;
-use App\Models\Core\ApprovalGroup;
-use App\Models\Procurement\Criteria;
-use App\Models\Procurement\ProcurementMode;
-use App\Models\Procurement\ProcurementPeriod;
-use App\Policies\Procurement\ApprovalSetupPolicy;
-use App\Policies\Procurement\EvaluationCriteriaPolicy;
-use App\Policies\Procurement\ProcurementSectionPolicy;
-use App\Policies\Procurement\ProcurementConfigurationPolicy;
+use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
-use App\Http\Controllers\Finance\JournalEntryController;
-use App\Http\Controllers\Finance\PostingController;
-use App\Http\Controllers\Procurement\TenderController;
-use App\Http\Controllers\Procurement\RequisitionsController;
-use App\Http\Controllers\Procurement\AwardsController;
-use App\Http\Controllers\Procurement\PurchaseOrderController;
-use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
-
-//use App\Policies\FleetManagement\DriverPolicy;
-
-//use App\Policies\Procurement\PrequalificationPeriodPolicy;
-
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -310,7 +303,6 @@ class AppServiceProvider extends ServiceProvider
      * Register any application services.
      */
     public function register(): void
-
     {
         $this->app->bind(ApprovalWorkflow::class, function ($app) {
             return new ApprovalWorkflow('DepartmentNeedsStatus');  // Pre-configure for Department Needs
@@ -375,27 +367,42 @@ class AppServiceProvider extends ServiceProvider
 
         \Illuminate\Support\Facades\Blade::if('canRead', function (string $submodule) {
             $user = \Illuminate\Support\Facades\Auth::user();
-            if (!$user) return false;
+            if (! $user) {
+                return false;
+            }
+
             return \App\Services\Core\PermissionResolver::can($user, $submodule, 'read');
         });
         \Illuminate\Support\Facades\Blade::if('canWrite', function (string $submodule) {
             $user = \Illuminate\Support\Facades\Auth::user();
-            if (!$user) return false;
+            if (! $user) {
+                return false;
+            }
+
             return \App\Services\Core\PermissionResolver::can($user, $submodule, 'write');
         });
         \Illuminate\Support\Facades\Blade::if('canUpdate', function (string $submodule) {
             $user = \Illuminate\Support\Facades\Auth::user();
-            if (!$user) return false;
+            if (! $user) {
+                return false;
+            }
+
             return \App\Services\Core\PermissionResolver::can($user, $submodule, 'update');
         });
         \Illuminate\Support\Facades\Blade::if('canDelete', function (string $submodule) {
             $user = \Illuminate\Support\Facades\Auth::user();
-            if (!$user) return false;
+            if (! $user) {
+                return false;
+            }
+
             return \App\Services\Core\PermissionResolver::can($user, $submodule, 'delete');
         });
         \Illuminate\Support\Facades\Blade::if('canApprove', function (string $submodule) {
             $user = \Illuminate\Support\Facades\Auth::user();
-            if (!$user) return false;
+            if (! $user) {
+                return false;
+            }
+
             return \App\Services\Core\PermissionResolver::can($user, $submodule, 'approve');
         });
         Relation::morphMap([
@@ -474,7 +481,7 @@ class AppServiceProvider extends ServiceProvider
             InventoryHoldReview::getPrimaryKey() => InventoryHoldReview::class,
             UOMConversion::getPrimaryKey() => UOMConversion::class,
             StockTake::getPrimaryKey() => StockTake::class,
-            \App\Models\Inventory\StockConsumption::getPrimaryKey() => \App\Models\Inventory\StockConsumption::class,
+            StockConsumption::getPrimaryKey() => StockConsumption::class,
 
             ///////// Budget and Analytics /////////
             BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
@@ -619,16 +626,8 @@ class AppServiceProvider extends ServiceProvider
 
         ]);
 
-        // Super-admin bypass: Admin roles can perform any ability
-        Gate::before(function ($user, string $ability = null, $arguments = null) {
-            try {
-                if ($user->hasRole(['admin', 'Admin', 'super-admin', 'Super Admin'])) {
-                    return true;
-                }
-            } catch (\Throwable $e) {
-            }
-            return null;
-        });
+        // Permission checks now go through standard role/permission system
+        // Admin role has all permissions assigned in database, no special bypass needed
 
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Branch::class, CrmBranchPolicy::class);
@@ -726,7 +725,7 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(\App\Models\Procurement\Prequalification\PrequalificationRound::class, \App\Policies\Procurement\Prequalification\PrequalificationRoundPolicy::class);
         Gate::policy(\App\Models\ThirdParty\ThirdParties::class, \App\Policies\ThirdParty\ThirdPartyPolicy::class);
-        Gate::policy(\App\Models\Inventory\StockConsumption::class, \App\Policies\Inventory\StockConsumptionPolicy::class);
+        Gate::policy(StockConsumption::class, StockConsumptionPolicy::class);
         Gate::policy(\App\Models\Settings\WorkFlow::class, \App\Policies\WorkflowPolicy::class);
 
         // Batch 4: Settings & Setup

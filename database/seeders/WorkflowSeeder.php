@@ -41,6 +41,5 @@ class WorkflowSeeder extends Seeder
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
         ]);
-
     }
 }

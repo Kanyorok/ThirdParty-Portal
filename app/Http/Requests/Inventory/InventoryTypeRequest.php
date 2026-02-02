@@ -2,12 +2,8 @@
 
 namespace App\Http\Requests\Inventory;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use App\Models\Inventory\ItemCategories;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class InventoryTypeRequest extends FormRequest
 {
@@ -24,8 +20,6 @@ class InventoryTypeRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-
-
     public function rules()
     {
         return [
@@ -33,7 +27,7 @@ class InventoryTypeRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('t_InventoryTypes', 'Type')->ignore($this->route('Id')),
+                Rule::unique('t_InventoryTypes', 'Type')->ignore($this->route('Id'))->whereNull('DeletedOn'),
             ],
             'Status' => 'required|boolean',
         ];
@@ -45,6 +39,4 @@ class InventoryTypeRequest extends FormRequest
             'Type.unique' => 'The Inventory Type already exists.',
         ];
     }
-
-
 }

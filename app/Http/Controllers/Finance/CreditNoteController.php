@@ -6,13 +6,11 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Finance\FinanceCDNotes;
 use App\Models\Finance\FinanceInvoiceEntry;
-use App\Models\Finance\FinanceTransaction;
 use App\Services\Finance\TransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use PhpOffice\PhpSpreadsheet\Calculation\Financial;
 
 class CreditNoteController extends Controller
 {
@@ -20,20 +18,20 @@ class CreditNoteController extends Controller
     {
         $this->authorize(PermissionEnum::CreditNoteView, FinanceCDNotes::class);
 
-        $invoices = FinanceInvoiceEntry::select('Id','InvoiceNumber')->get();
+        $invoices = FinanceInvoiceEntry::select('Id', 'InvoiceNumber')->get();
 
         $query = FinanceCDNotes::with('invoice:Id,InvoiceNumber')
-            ->select('Id', 'CDNumber', 'NoteType', 'InvoiceRefNo', 'NoteDate', 'NoteAmount', 'Description','ApprovalStatus')
-            ->where('NoteType','credit');
+            ->select('Id', 'CDNumber', 'NoteType', 'InvoiceRefNo', 'NoteDate', 'NoteAmount', 'Description', 'ApprovalStatus')
+            ->where('NoteType', 'credit');
 
         if ($request->filled('cd_number')) {
-            $query->where('CDNumber', 'like', '%'.$request->cd_number.'%');
+            $query->where('CDNumber', 'like', '%' . $request->cd_number . '%');
         }
 
         if ($request->filled('invoice_number')) {
             $invNum = $request->invoice_number;
-            $query->whereHas('invoice', function($q) use ($invNum) {
-                $q->where('InvoiceNumber', 'like', '%'.$invNum.'%');
+            $query->whereHas('invoice', function ($q) use ($invNum) {
+                $q->where('InvoiceNumber', 'like', '%' . $invNum . '%');
             });
         }
 
@@ -59,12 +57,13 @@ class CreditNoteController extends Controller
         $perPage = (int)($request->per_page ?? 10);
         $notes = $query->paginate($perPage)->withQueryString();
 
-        $approvalStatuses = FinanceCDNotes::where('NoteType','credit')->distinct()->pluck('ApprovalStatus')->filter()->unique()->values();
+        $approvalStatuses = FinanceCDNotes::where('NoteType', 'credit')->distinct()->pluck('ApprovalStatus')->filter()->unique()->values();
 
-        return view('finance.accountspayable.creditnote.index', compact('notes','invoices','approvalStatuses'));
+        return view('finance.accountspayable.creditnote.index', compact('notes', 'invoices', 'approvalStatuses'));
     }
 
-    public function create(){
+    public function create()
+    {
         $this->authorize(PermissionEnum::CreditNoteCreate, FinanceCDNotes::class);
 
         $invoices = FinanceInvoiceEntry::select('Id', 'InvoiceNumber')->where('ApprovalStatus', 'posted')
@@ -85,8 +84,8 @@ class CreditNoteController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
-            // $cdNumber = str_pad(rand(0,999999), 6, '0', STR_PAD_LEFT);
 
             if ($request->NoteType == 'Credit') {
                 $notes = FinanceCDNotes::create([
@@ -117,9 +116,11 @@ class CreditNoteController extends Controller
                 ->withProperties(['action' => 'create'])
                 ->log('Created Note Sucessfully:' . $notes->id);
             DB::commit();
+
             return redirect()->route('creditnote.index')->with('success', 'Credit Note created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return back()->with('error', $th->getMessage());
         }
     }
@@ -133,16 +134,14 @@ class CreditNoteController extends Controller
             'invoice.order:Id,OrderNo',
             'invoice.currency:Id,Code',
             'createdBy:Id,Name',
-            'modifiedBy:Id,Name'
+            'modifiedBy:Id,Name',
         ])->findOrFail($id);
 
         return view('finance.accountspayable.creditnote.show', compact('note'));
     }
 
-
     public function approve(Request $request, int $id, TransactionService $svc)
     {
-        // $this->authorize('approve-ap-invoice', FinanceInvoiceEntry::class);
 
         $validated = $request->validate([
             'Reason' => 'required|string|max:255',
@@ -170,7 +169,7 @@ class CreditNoteController extends Controller
                     'invoice.order:Id,OrderNo',
                     'invoice.currency:Id,Code',
                     'createdBy:Id,Name',
-                    'modifiedBy:Id,Name'
+                    'modifiedBy:Id,Name',
                 ])
                     ->lockForUpdate()
                     ->findOrFail($id);
@@ -178,6 +177,7 @@ class CreditNoteController extends Controller
                 // Guard: already posted?
                 if (in_array($invoice->ApprovalStatus, ['posted', 'rejected'], true)) {
                     $apStatus = ucfirst($invoice->ApprovalStatus);
+
                     return back()->with('error', "Note {$invoice->CDNumber} is already {$apStatus}.");
                 }
                 $noteType = FinanceCDNotes::find($id)->NoteType;
@@ -211,10 +211,6 @@ class CreditNoteController extends Controller
                     // 'TaxGLAccountID'    => 2101,
                 ];
                 // Post via mapping; TransactionService handles:
-                // - mapping lookup
-                // - idempotency (no duplicates)
-                // - validation + balancing
-                // - persistence (single DB txn internally)
                 $result = $svc->postFromTypeMapping($payload);
 
                 // Update invoice approval status if posted (or keep as-is if service reported 'exists')
@@ -245,16 +241,17 @@ class CreditNoteController extends Controller
         } catch (\Throwable $e) {
             // Log if you want: Log::error('AP approve error', ['id'=>$id, 'err'=>$e->getMessage()])
             return $e->getMessage();
+
             return back()->with('error', "Approval/Post failed: " . $e->getMessage());
         }
     }
-
 
     public function reject(Request $request, $id)
     {
         $validated = $request->validate([
             'Reason' => 'required|string|max:1000',
         ]);
+
         try {
             return DB::transaction(function () use ($validated, $id) {
                 // Lock the row for update to avoid race conditions
@@ -263,6 +260,7 @@ class CreditNoteController extends Controller
                 // If already processed, prevent duplicate rejection
                 if (in_array($invoice->ApprovalStatus, ['posted', 'rejected'], true)) {
                     $apStatus = ucfirst($invoice->ApprovalStatus);
+
                     return back()->with('error', "Note {$invoice->CDNumber} is already {$apStatus}.");
                 }
                 // Update status & reason
@@ -283,6 +281,7 @@ class CreditNoteController extends Controller
             });
         } catch (\Throwable $e) {
             Log::error('AP reject error', ['id' => $id, 'err' => $e->getMessage()]);
+
             return back()->with('error', "Approval/Post failed: " . $e->getMessage());
         }
     }
@@ -319,12 +318,13 @@ class CreditNoteController extends Controller
         $validated = $request->validate([
             'InvoiceRefNo' => 'required|exists:t_FinanceInvoiceEntry,Id',
 //            'InvoiceRefNo'=> 'required',
-            'NoteDate'=> 'required|date',
-            'NoteAmount'=> 'required|numeric|min:0.00',
-            'Description'=> 'string',
+            'NoteDate' => 'required|date',
+            'NoteAmount' => 'required|numeric|min:0.00',
+            'Description' => 'string',
         ]);
 
         DB::beginTransaction();
+
         try {
             $note->update([
 //                'InvoiceRefNo' => $validated['InvoiceRefNo'],
@@ -341,11 +341,12 @@ class CreditNoteController extends Controller
                 ->log('Updated Note: ' . $note->CDNumber);
 
             DB::commit();
+
             return back()->with('success', 'Note updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return back()->with('error', $th->getMessage());
         }
     }
 }
-

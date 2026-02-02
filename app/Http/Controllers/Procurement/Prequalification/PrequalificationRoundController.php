@@ -3,29 +3,31 @@
 namespace App\Http\Controllers\Procurement\Prequalification;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Procurement\Prequalification\PrequalificationRound;
-use App\Models\Procurement\Prequalification\PrequalificationSection;
-use App\Models\Procurement\Prequalification\PrequalificationCriteria;
-use App\Models\Procurement\Section;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\StorePrequalificationRoundRequest;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\UpdatePrequalificationRoundRequest;
+use App\Models\Procurement\Prequalification\PrequalificationCriteria;
+use App\Models\Procurement\Prequalification\PrequalificationRound;
+use App\Models\Procurement\Prequalification\PrequalificationSection;
+use App\Models\Procurement\Section;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 
 class PrequalificationRoundController extends Controller
 {
     public function __construct()
     {
-        $this->authorizeResource(PrequalificationRound::class, 'prequalificationRound');
+        // Removed authorizeResource() - it runs too early, before LoginBranchId is set in session
+        // Using individual authorize() calls in each method instead (like RequisitionsController)
     }
 
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', PrequalificationRound::class);
         // Allow optionally including soft-deleted (archived) rounds via ?include_deleted=1
         $includeDeleted = (bool) $request->query('include_deleted', false);
 
@@ -35,13 +37,17 @@ class PrequalificationRoundController extends Controller
         }
 
         $prequalificationRounds = $query->paginate(10);
+
         return view('procurement.suppliers.prequalification.prequalification-rounds.index', compact('prequalificationRounds', 'includeDeleted'));
     }
 
     public function create(): View
     {
-        $masterSections = Section::with('criteria')->get();
+        $this->authorize('create', PrequalificationRound::class);
+
+        $masterSections = Section::with('criteria')->isActive()->get();
         $prequalificationRound = new PrequalificationRound();
+
         return view(
             'procurement.suppliers.prequalification.prequalification-rounds.create',
             compact('masterSections', 'prequalificationRound')
@@ -50,37 +56,49 @@ class PrequalificationRoundController extends Controller
 
     public function store(StorePrequalificationRoundRequest $request): RedirectResponse
     {
+        $this->authorize('create', PrequalificationRound::class);
+
         return $this->processRound($request);
     }
 
     public function show(PrequalificationRound $prequalificationRound): View
     {
+        $this->authorize('view', $prequalificationRound);
+
         $prequalificationRound->load([
             'prequalificationSections.masterSection',
             'prequalificationCriteria.masterCriteria',
             'applications.supplier',
         ]);
         $masterSections = Section::with('criteria')->get();
+
         return view('procurement.suppliers.prequalification.prequalification-rounds.show', compact('prequalificationRound', 'masterSections'));
     }
 
     public function edit(PrequalificationRound $prequalificationRound): View
     {
+        $this->authorize('update', $prequalificationRound);
+
         $masterSections = Section::with('criteria')->get();
         $prequalificationRound->load(['prequalificationSections', 'prequalificationCriteria']);
+
         return view('procurement.suppliers.prequalification.prequalification-rounds.edit', [
             'prequalificationRound' => $prequalificationRound,
-            'masterSections' => $masterSections
+            'masterSections' => $masterSections,
         ]);
     }
 
     public function update(UpdatePrequalificationRoundRequest $request, PrequalificationRound $prequalificationRound): RedirectResponse
     {
+        $this->authorize('update', $prequalificationRound);
+
         return $this->processRound($request, $prequalificationRound);
     }
 
     public function destroy(PrequalificationRound $prequalificationRound): RedirectResponse
     {
+        $this->authorize('delete', $prequalificationRound);
+
         DB::transaction(function () use ($prequalificationRound) {
             $prequalificationRound->prequalificationCriteria()->delete();
             $prequalificationRound->prequalificationSections()->delete();
@@ -97,7 +115,7 @@ class PrequalificationRoundController extends Controller
         $saveAsDraft = filter_var($request->input('save_as_draft'), FILTER_VALIDATE_BOOLEAN) || $request->input('save_as_draft') === '1';
 
         // Prevent any modifications to expired rounds
-        if (!$isCreating) {
+        if (! $isCreating) {
             $now = now();
             if ($prequalificationRound->EndDate && $prequalificationRound->EndDate < $now) {
                 return redirect()->route('prequalification.prequalification-rounds.index')
@@ -120,6 +138,7 @@ class PrequalificationRoundController extends Controller
         }
 
         DB::beginTransaction();
+
         try {
             if ($isCreating) {
                 $round = PrequalificationRound::create($validated);
@@ -135,13 +154,16 @@ class PrequalificationRoundController extends Controller
             $message = $saveAsDraft
                 ? ($isCreating ? 'Draft round saved.' : 'Draft changes saved.')
                 : ($isCreating ? 'Prequalification round created successfully.' : 'Prequalification round updated successfully.');
+
             return redirect()->route('prequalification.prequalification-rounds.index')->with('success', $message);
         } catch (ValidationException $e) {
             DB::rollBack();
+
             throw $e;
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error("Failed to process prequalification round: {$e->getMessage()}", ['trace' => $e->getTraceAsString()]);
+
             return back()->withInput()->with('error', 'Failed to process the prequalification round. Please try again.');
         }
     }
@@ -153,18 +175,18 @@ class PrequalificationRoundController extends Controller
 
         // Filter only included sections
         $includedSectionsData = collect($sections)->filter(function ($section) {
-            return !empty($section['included']) && !empty($section['section_id']);
+            return ! empty($section['included']) && ! empty($section['section_id']);
         });
 
         // Prepare criteria data from included sections
         $includedCriteriaData = $includedSectionsData->flatMap(function ($section) use ($round, $userId, $now) {
-            if (!isset($section['criteria']) || !is_array($section['criteria'])) {
+            if (! isset($section['criteria']) || ! is_array($section['criteria'])) {
                 return collect([]);
             }
 
             return collect($section['criteria'])
                 ->filter(function ($criteria) {
-                    return !empty($criteria['included']) && !empty($criteria['criteria_id']);
+                    return ! empty($criteria['included']) && ! empty($criteria['criteria_id']);
                 })
                 ->map(function ($criteria) use ($round, $section, $userId, $now) {
                     return [
@@ -201,7 +223,7 @@ class PrequalificationRoundController extends Controller
 
         try {
             // Upsert sections
-            if (!empty($sectionUpsertData)) {
+            if (! empty($sectionUpsertData)) {
                 PrequalificationSection::upsert(
                     $sectionUpsertData,
                     ['RoundId', 'SectionId'],
@@ -210,7 +232,7 @@ class PrequalificationRoundController extends Controller
             }
 
             // Upsert criteria
-            if (!empty($includedCriteriaData)) {
+            if (! empty($includedCriteriaData)) {
                 PrequalificationCriteria::upsert(
                     $includedCriteriaData,
                     ['RoundId', 'SectionId', 'CriteriaId'],
@@ -241,8 +263,9 @@ class PrequalificationRoundController extends Controller
             Log::error('Error syncing sections and criteria: ' . $e->getMessage(), [
                 'round_id' => $round->RoundID,
                 'sections_data' => $sections,
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             throw $e;
         }
     }

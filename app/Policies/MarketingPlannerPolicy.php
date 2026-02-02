@@ -6,8 +6,6 @@ use App\Enums\Core\PermissionEnum;
 use App\Enums\Marketing\PlannerStatus;
 use App\Models\Auth\User;
 use App\Models\CRM\MarketingPlanner;
-use App\Models\Auth\ModelRole;
-
 
 class MarketingPlannerPolicy
 {
@@ -52,6 +50,7 @@ class MarketingPlannerPolicy
         if ($marketingPlanner->OwnerId === $user->Id) {
             return true;
         }
+
         return $user->can(PermissionEnum::MarketingPlannerUpdate->value);
     }
 
@@ -63,14 +62,13 @@ class MarketingPlannerPolicy
         return $user->can(PermissionEnum::MarketingPlannerDelete->value);
     }
 
-
     /**
      * Determine whether the user can approve the model.
      */
     public function approve(User $user, MarketingPlanner $marketingPlanner): bool
     {
         // Must have the main approval permission
-        if (!$user->can(PermissionEnum::MarketingPlannerApproval->value)) {
+        if (! $user->can(PermissionEnum::MarketingPlannerApproval->value)) {
             return false;
         }
 
@@ -79,8 +77,6 @@ class MarketingPlannerPolicy
 
         return $hasValidRole;
     }
-
-
 
     /**
      * Determine whether the user can restore the model.

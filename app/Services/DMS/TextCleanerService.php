@@ -7,7 +7,6 @@ use Illuminate\Support\Str;
 
 class TextCleanerService
 {
-
     protected string $text;
     protected Collection $tokens;
     protected Collection $keywords;
@@ -34,12 +33,12 @@ class TextCleanerService
             ->__toString();
 
         $this->tokens = collect(preg_split('/\s+/', $normalized, -1, PREG_SPLIT_NO_EMPTY))
-            ->filter(fn($token) => Str::length($token) > 2);
+            ->filter(fn ($token) => Str::length($token) > 2);
 
         $combined = $this->stopwords()->merge($this->customStopWords)->unique();
 
         $this->keywords = $this->tokens->filter(function ($word) use ($combined) {
-            return !$combined->contains($word) && !$this->punctuations()->contains($word);
+            return ! $combined->contains($word) && ! $this->punctuations()->contains($word);
         })->unique()->values();
     }
 
@@ -48,7 +47,8 @@ class TextCleanerService
         $file = storage_path('stopwords.txt');
         if (file_exists($file)) {
             $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            return collect($lines)->map(fn($line) => Str::lower(trim($line)));
+
+            return collect($lines)->map(fn ($line) => Str::lower(trim($line)));
         }
 
         return collect();
@@ -61,14 +61,14 @@ class TextCleanerService
     {
         return collect([
             '.', ',', ';', ':', '!', '?', '(', ')', '[', ']', '{', '}', '-', '—', '–', '_',
-            '"', "'", '“', '”', '‘', '’', '`', '~', '/', '\\', '|', '*', '&', '^', '%', '$', '#', '@', '<', '>', '=', '+'
+            '"', "'", '“', '”', '‘', '’', '`', '~', '/', '\\', '|', '*', '&', '^', '%', '$', '#', '@', '<', '>', '=', '+',
         ]);
     }
 
     public function addCustomWords(array $words): self
     {
         $this->customStopWords = $this->customStopWords->merge(
-            collect($words)->map(fn($w) => Str::lower($w))
+            collect($words)->map(fn ($w) => Str::lower($w))
         );
 
         $this->clean();

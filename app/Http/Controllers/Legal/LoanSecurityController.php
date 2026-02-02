@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Concerns\WithProperties;
 
 class LoanSecurityController extends Controller
 {
@@ -20,6 +19,7 @@ class LoanSecurityController extends Controller
         $this->authorize(PermissionEnum::LoanSecurityView, LoanSecurity::class);
 
         $securities = LoanSecurity::select('Id', 'SecurityType', 'OwnerName', 'LoanAccountNumber', 'Value', 'Institution', 'SecurityStatus')->get();
+
         return view('legal.securities.index', compact('securities'));
     }
 
@@ -33,6 +33,7 @@ class LoanSecurityController extends Controller
         $locations = CodeDetail::select('Value')
             ->where('CodeID', 'LoanSecurityLocations')
             ->get();
+
         return view('legal.securities.create', compact('details', 'locations'));
     }
 
@@ -65,6 +66,7 @@ class LoanSecurityController extends Controller
         if ($duplicate) {
             return back()->with('error', 'Error there is an existing record with the same details');
         }
+
         try {
             DB::beginTransaction();
 
@@ -112,6 +114,7 @@ class LoanSecurityController extends Controller
                 ->log('Error creating loan security');
 
             Log::error('Error creating loan security: ' . $th->getMessage());
+
             return back()->with('error', 'Error creating loan security' . $th->getMessage());
         }
     }
@@ -127,6 +130,7 @@ class LoanSecurityController extends Controller
             ->where('CodeID', 'LoanSecurityLocations')
             ->get();
         $security = LoanSecurity::findOrFail($id);
+
         return view('legal.securities.edit', compact('security', 'details', 'locations'));
     }
 
@@ -178,7 +182,6 @@ class LoanSecurityController extends Controller
 
             DB::commit();
 
-            // dd($security);
             return redirect()->route('legal.securities.index')->with('success', 'Security updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -188,16 +191,17 @@ class LoanSecurityController extends Controller
                 ->withProperties(['action' => 'create'])
                 ->log('Error creating loan security');
             Log::error('Failed to update loan security.');
+
             return back()->with('error', 'An error occurred while updating the loan security. Please try again.');
         }
     }
-
 
     public function show($id)
     {
         $this->authorize(PermissionEnum::LoanSecurityView, LoanSecurity::class);
 
         $security = LoanSecurity::findOrFail($id);
+
         return view('legal.securities.show', compact('security'));
     }
 
@@ -233,9 +237,8 @@ class LoanSecurityController extends Controller
                 ->log('Error deleting loan security');
 
             Log::error('Error deleting loan security.' . $th->getMessage());
+
             return back()->with('error', 'Error deleting loan security.' . $th->getMessage());
         }
-
     }
-
 }

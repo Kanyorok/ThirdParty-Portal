@@ -19,21 +19,19 @@ class BancassuranceClaimService
      */
     public function __construct(public BancassuranceClaim $bancassuranceClaim)
     {
-        //
     }
 
     public static function create(
         BancassurancePolicy $PolicyId,
-        CodeDetail          $ClaimType,
-        string              $ClaimReason,
-        float               $ClaimAmount,
-        Currency            $Currency,
-        Carbon              $ClaimDate,
-        CodeDetail          $Status,
-        User                $user,
-        UploadedFile        $document = null
-    ): self
-    {
+        CodeDetail $ClaimType,
+        string $ClaimReason,
+        float $ClaimAmount,
+        Currency $Currency,
+        Carbon $ClaimDate,
+        CodeDetail $Status,
+        User $user,
+        UploadedFile $document = null
+    ): self {
         $claim = BancassuranceClaim::create([
             'PolicyId' => $PolicyId->Id,
             'ClaimType' => $ClaimType->ID,
@@ -56,6 +54,7 @@ class BancassuranceClaimService
         }
 
         activity()->causedBy($user->Id)->performedOn($claim)->event('create')->log("Added Policy claim {$claim->Id}.");
+
         return new self($claim);
     }
 }

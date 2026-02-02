@@ -27,7 +27,7 @@ class LeadAssignRequest extends FormRequest
     public function getAssignee(): User
     {
         $user = User::query()->where('t_Users.UserID', Str::upper($this->validated('Assignee')))->where('t_Users.UserID', '!=', SystemHelper::ID)->first();
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             throw ValidationException::withMessages(['Assignee' => 'invalid user selected']);
         }
 
@@ -35,7 +35,7 @@ class LeadAssignRequest extends FormRequest
             return $user;
         }
 
-        if (!$user->can('viewAny', Lead::class)) {
+        if (! $user->can('viewAny', Lead::class)) {
             throw ValidationException::withMessages([
                                                      'Assignee' => $user->Name . ' does not have permission to view any lead.',
                                                     ]);

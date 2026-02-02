@@ -7,9 +7,9 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Legal\LegalClause;
+use App\Models\Legal\LegalTemplate;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use App\Models\Legal\LegalTemplate;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -63,6 +63,7 @@ class LegalTemplateController extends Controller
 
         $template = LegalTemplate::with('clauses')->findOrFail($id);
         $clauses = $template->clauses; // already ordered
+
         return view('legal.templates.show', compact('template', 'clauses'));
     }
 
@@ -81,31 +82,24 @@ class LegalTemplateController extends Controller
         return view('legal.templates.create', compact('clauses', 'docTypes'));
     }
 
-//    public function store(Request $request)
-//    {
-//            $request->validate([
-//                'TemplateName' => 'required|string|max:255',
-//                'DocumentType' => 'required|string|max:100',
-//                'Version' => 'required|string|max:20',
-//                'Description' => 'nullable|string',
-//                'Content' => 'nullable|string',
-//            ]);
-//
-//            LegalTemplate::create([
-//                'TemplateName' => $request->TemplateName,
-//                'DocumentType' => $request->DocumentType,
-//                'Version' => $request->Version,
-//                'Description' => $request->Description,
-//                'Content' => $request->Content,
-//                'CreatedBy' => Auth::Id(),
-//                'CreatedOn' => now(),
-//                'IsActive' => 1,
-//            ]);
-//
-//        LegalTemplate::create($request->all());
-//
-//        return redirect()->route('legal.templates.index')->with('success', 'Template created successfully.');
-//    }
+    //                'TemplateName' => 'required|string|max:255',
+    //                'DocumentType' => 'required|string|max:100',
+    //                'Version' => 'required|string|max:20',
+    //                'Description' => 'nullable|string',
+    //                'Content' => 'nullable|string',
+    //
+    //            LegalTemplate::create([
+    //                'TemplateName' => $request->TemplateName,
+    //                'DocumentType' => $request->DocumentType,
+    //                'Version' => $request->Version,
+    //                'Description' => $request->Description,
+    //                'Content' => $request->Content,
+    //                'CreatedBy' => Auth::Id(),
+    //                'CreatedOn' => now(),
+    //                'IsActive' => 1,
+    //
+    //        LegalTemplate::create($request->all());
+    //
 
     public function store(Request $request)
     {
@@ -125,7 +119,8 @@ class LegalTemplateController extends Controller
         $request->validate([
             'TemplateName' => [
                 Rule::unique('t_LegalTemplates', 'Title')
-                    ->where(fn($q) => $q
+                    ->where(
+                        fn ($q) => $q
                         ->where('Version', $request->input('Version', 'v1.0'))
                         ->where('DocumentType', $request->input('DocumentType'))
                     ),
@@ -151,7 +146,7 @@ class LegalTemplateController extends Controller
         $attachedIds = array_values(array_unique(array_map('intval', array_filter($attachedIds))));
 
         // Make sure clauses exist, preserve the given order
-        $existingIds = LegalClause::query()->whereIn('Id', $attachedIds)->pluck('Id')->map(fn($i) => (int)$i)->all();
+        $existingIds = LegalClause::query()->whereIn('Id', $attachedIds)->pluck('Id')->map(fn ($i) => (int)$i)->all();
         $orderedClauseIds = array_values(array_intersect($attachedIds, $existingIds));
 
         // 3) Save everything atomically
@@ -170,7 +165,7 @@ class LegalTemplateController extends Controller
             ]);
 
             // Attach clauses with positions
-            if (!empty($orderedClauseIds)) {
+            if (! empty($orderedClauseIds)) {
                 $pos = 1;
                 foreach ($orderedClauseIds as $cid) {
                     $template->clauses()->attach($cid, [
@@ -186,7 +181,7 @@ class LegalTemplateController extends Controller
 
             // Generate PDF (Template Body + selected clauses as Annex)
             $clauses = collect();
-            if (!empty($orderedClauseIds)) {
+            if (! empty($orderedClauseIds)) {
                 $clauses = LegalClause::query()
                     ->whereIn('Id', $orderedClauseIds)
                     ->get()
@@ -255,11 +250,13 @@ class LegalTemplateController extends Controller
         $body = '<div style="font-size:12px; line-height:1.5;">' . $bodyHtml . '</div>';
 
         $annex = '';
-        if (!empty($orderedClauseIds) && $clauseMap && $clauseMap->count()) {
+        if (! empty($orderedClauseIds) && $clauseMap && $clauseMap->count()) {
             $items = '';
             foreach ($orderedClauseIds as $i => $cid) {
                 $c = $clauseMap->get($cid);
-                if (!$c) continue;
+                if (! $c) {
+                    continue;
+                }
                 $n = $i + 1;
                 $items .= '
                   <div style="margin:12px 0;">

@@ -41,7 +41,6 @@ trait SpecialPermissionTrait
      * @param array $permissions [RoleEnum::Read->value, ...]
      * @return Builder
      */
-
     public function scopeUserRole(Builder $q, User $user, array $permissions): Builder
     {
         return $q->where(function (Builder $query) use ($permissions, $user) {

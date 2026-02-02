@@ -29,9 +29,6 @@
                     <p><strong>Item:</strong> {{ optional($item->item)->ItemName ?? 'N/A' }}</p>
                 </div>
                 <div class="col-md-3">
-                    <p><strong>UOM:</strong> {{ optional($item->uom)->Name ?? 'N/A' }}</p>
-                </div>
-                <div class="col-md-3">
                     <p><strong>Unit Cost:</strong> {{ number_format($item->UnitCost, 2) }}</p>
                 </div>
             </div>
@@ -46,9 +43,6 @@
                 </div>
                 <div class="col-md-3">
                     <p><strong>Reorder Qty:</strong> {{ $item->Reorder }}</p>
-                </div>
-                <div class="col-md-3">
-                    <p><strong>Max Stock Level:</strong> {{ $item->Max ?? 'N/A' }}</p>
                 </div>
             </div>
 

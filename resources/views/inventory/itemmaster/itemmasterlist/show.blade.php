@@ -18,52 +18,53 @@
     <h4>📦 Item Details: {{ $item->ItemName }}</h4>
 
     <div class="row mb-3">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <p><strong>Item Code:</strong> {{ $item->ItemCode }}</p>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <p><strong>Bar Code:</strong> {{ $item->BarCode }}</p>
         </div>
+        <div class="col-md-4">
+            <p><strong>Price:</strong> {{ optional($item->price)->ActualPrice ? number_format(optional($item->price)->ActualPrice, 2) : 'Not set' }}</p>
+        </div>
     </div>
 
     <div class="row mb-3">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <p><strong>Item Type:</strong> {{ $item->itemType?->Description ?? 'N/A' }}</p>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <p><strong>Category:</strong> {{ $item->category?->Name ?? 'N/A' }}</p>
         </div>
-    </div>
-
-    <div class="row mb-3">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <p><strong>Parent Category:</strong> {{ $item->category->parent?->Name ?? 'N/A' }}</p>
         </div>
-        <div class="col-md-6">
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
             <p><strong>Unit of Measure (UOM):</strong> {{ $item->uom?->Code ?? 'N/A' }}</p>
+        </div>
+        <div class="col-md-4">
+            <p><strong>Inventory Type:</strong> {{ $item->inventoryType?->Description ?? 'N/A' }}</p>
+        </div>
+        <div class="col-md-4">
+            <p><strong>Status:</strong> {{ $item->status->Description ?? 'N/A' }}</p>
         </div>
     </div>
 
     <div class="row mb-3">
-        <div class="col-md-6">
-            <p><strong>Inventory Type:</strong> {{ $item->inventoryType?->Description ?? 'N/A' }}</p>
+        <div class="col-md-4">
+            <p><strong>Item Description:</strong> {{ $item->ItemDescription ?? 'N/A' }}</p>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <p><strong>Item Image:</strong></p>
             @if($item->image)
                 <img src="data:{{ $item->image->MIMEType }};base64,{{ $item->image->Image }}" alt="Item Image"
                      style="max-width:200px;">
             @endif
-
         </div>
-    </div>
-
-    <div class="row mb-3">
-
-        <div class="col-md-6">
-            <p><strong>Item Description:</strong> {{ $item->ItemDescription ?? 'N/A' }}</p>
-        </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <h6 class="fw-bold mb-2">📄 Documents</h6>
             @forelse($item->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
                 {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
@@ -71,15 +72,19 @@
                 <p class="text-muted mb-0">No documents uploaded.</p>
             @endforelse
         </div>
-        <div class="col-md-6">
-            <p class="card-text"><strong>Status:</strong> {{ $item->status->Description ?? 'N/A' }}</p>
-        </div>
     </div>
 
     <div class="d-flex gap-2 mt-3">
         <a href="{{ route('itemmaster.index') }}" class="btn btn-secondary">Back</a>
 
-        <a href="{{ route('itemmasterlist.edit', $item->Id) }}" class="btn btn-warning">Edit Item</a>
+        @if ($item->inUse())
+            <button class="btn btn-warning" disabled title="Item is in use and cannot be edited">
+                <i class="bi bi-pencil"></i> Edit Item
+            </button>
+        @else
+            <a href="{{ route('itemmasterlist.edit', $item->Id) }}" class="btn btn-warning">Edit Item</a>
+        @endif
+
         @if ($item->inUse())
             <button class="btn btn-info" disabled title="Item is in use and cannot be deleted">
                 <i class="bi bi-lock"></i> Item In Use

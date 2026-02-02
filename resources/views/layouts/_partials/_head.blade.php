@@ -18,14 +18,15 @@
 <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}" id="main-style-link">
 {{--<script src="{{ asset('assets/js/tech-stack.js') }}"></script> --}}
 <link rel="stylesheet" href="{{ asset('assets/css/style-preset.css') }}">
-<link rel="stylesheet" href="{{ asset('assets/libs/dataTables/bootstrap5.min.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/libs/dataTables/dataTables.bootstrap5.min.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/libs/flatpickr/flatpickr.min.css') }}">
-<link rel="stylesheet" href="{{ asset('assets/libs/notyf/notyf.min.css') }}">
+{{-- Use CDN for Notyf CSS to match CDN JS --}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
 
 {{-- Added as it is used in Property and Insurance beautification --}}
 {{-- Include Bootstrap Icons --}}
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 {{-- Include DataTables CSS --}}
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+{{-- Removed duplicate DataTables CSS, using Bootstrap5 version above --}}
 @yield('styles')
 

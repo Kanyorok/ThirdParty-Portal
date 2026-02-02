@@ -4,18 +4,18 @@ namespace App\Services\Core;
 
 use App\Exceptions\ErroredException;
 use App\Models\Auth\User;
-use App\Models\Core\Approval\WorkflowHistory;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\Core\Approval\WorkflowPending;
 use App\Models\Core\Approval\Workflow;
+use App\Models\Core\Approval\WorkflowHistory;
+use App\Models\Core\Approval\WorkflowPending;
 use App\Models\Core\Approval\WorkflowStage;
 use BackedEnum;
-use Illuminate\Support\Facades\DB;
 use Exception;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 abstract class ApprovalWorkflowService
 {
@@ -30,7 +30,6 @@ abstract class ApprovalWorkflowService
             ->first();
 
         if ($code instanceof CodeDetail) {
-
             return $code;
         }
 
@@ -38,6 +37,7 @@ abstract class ApprovalWorkflowService
             'CodeID' => $CodeID,
             'Value' => $status->value,
         ]);
+
         throw new ErroredException('Invalid Status');
     }
 
@@ -52,8 +52,9 @@ abstract class ApprovalWorkflowService
             ->whereNull('DeletedOn')
             ->first();
 
-        if (!$workflow) {
+        if (! $workflow) {
             Log::error("No workflow found", ['table' => $table]);
+
             return null;
         }
 
@@ -64,21 +65,23 @@ abstract class ApprovalWorkflowService
             ->orderBy('Order', 'asc')
             ->first();
 
-        if (!$stage) {
+        if (! $stage) {
             Log::error("No valid stage found", [
                 'WorkFlowId' => $workflow->Id,
                 'Table' => $table,
             ]);
+
             return null;
         }
 
-        if (!$stage->PermissionId) {
+        if (! $stage->PermissionId) {
             Log::error("CRITICAL: Stage found but PermissionId is NULL", [
                 'WorkFlowId' => $workflow->Id,
                 'StageId' => $stage->Id,
                 'StageName' => $stage->StageName,
                 'Table' => $table,
             ]);
+
             return null;
         }
 
@@ -100,7 +103,6 @@ abstract class ApprovalWorkflowService
             ->value('Stage');
 
         if ($pendingStage && is_numeric($pendingStage)) {
-
             return (int)$pendingStage;
         }
 
@@ -111,14 +113,12 @@ abstract class ApprovalWorkflowService
             ->orderBy('CreatedOn', 'desc')
             ->first();
 
-        if ($history && !empty($history->Stage)) {
-
+        if ($history && ! empty($history->Stage)) {
             return is_numeric($history->Stage) ? (int)$history->Stage : null;
         }
 
         $firstStage = $this->getPermissionFromStage($table);
         if ($firstStage) {
-
             return (int)$firstStage->Id;
         }
 
@@ -126,6 +126,7 @@ abstract class ApprovalWorkflowService
             'table' => $table,
             'sourceId' => $sourceId,
         ]);
+
         return null;
     }
 
@@ -138,7 +139,6 @@ abstract class ApprovalWorkflowService
         $columnMappings = config('workflow.status_columns', []);
 
         if (isset($columnMappings[$morphAlias])) {
-
             return $columnMappings[$morphAlias];
         }
 
@@ -147,7 +147,6 @@ abstract class ApprovalWorkflowService
             ->hasColumn($table, 'ApprovalStatus');
 
         if ($hasApprovalStatus) {
-
             return 'ApprovalStatus';
         }
 
@@ -170,16 +169,16 @@ abstract class ApprovalWorkflowService
     ): WorkflowHistory {
         try {
             $data = [
-                'Source'     => $table,
-                'SourceID'   => (string)$sourceId,
-                'StatusId'   => $statusId,
-                'Stage'      => (string)$stageId,
-                'Amount'     => $amount,
-                'Notes'      => $notes,
+                'Source' => $table,
+                'SourceID' => (string)$sourceId,
+                'StatusId' => $statusId,
+                'Stage' => (string)$stageId,
+                'Amount' => $amount,
+                'Notes' => $notes,
                 'isApproved' => null,
-                'CreatedBy'  => $actorId,
+                'CreatedBy' => $actorId,
                 'ModifiedBy' => $actorId,
-                'CreatedOn'  => now(),
+                'CreatedOn' => now(),
                 'ModifiedOn' => now(),
             ];
 
@@ -187,13 +186,14 @@ abstract class ApprovalWorkflowService
 
             $entry = WorkflowHistory::create($data);
 
-            if (!$entry->exists) {
+            if (! $entry->exists) {
                 Log::error("Failed to insert WorkflowHistory", [
                     'table' => $table,
                     'sourceId' => $sourceId,
                     'stageId' => $stageId,
                     'data' => $data,
                 ]);
+
                 throw new Exception("Failed to create workflow history entry");
             }
 
@@ -205,6 +205,7 @@ abstract class ApprovalWorkflowService
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             throw $e;
         }
     }
@@ -221,12 +222,12 @@ abstract class ApprovalWorkflowService
         string $statusColumn
     ): array {
         $class = Relation::getMorphedModel($source);
-        if (!($class && class_exists($class))) {
+        if (! ($class && class_exists($class))) {
             throw new ErroredException('Invalid Related Entity');
         }
 
         $statusValueToSet = $this->getStatusValueForModule($source, $status);
-        $table = (new $class)->getTable();
+        $table = (new $class())->getTable();
 
 
 
@@ -261,17 +262,18 @@ abstract class ApprovalWorkflowService
                     $remarks,
                     $statusColumn,
                     $status->ID,
-                    $statusValueToSet
+                    $statusValueToSet,
                 ]
             );
 
 
 
-            if (!empty($result) && isset($result[0]->Status)) {
+            if (! empty($result) && isset($result[0]->Status)) {
                 if ($result[0]->Status === 'ERROR') {
                     Log::error("p_ProcessWorkflowAction returned ERROR", [
                         'message' => $result[0]->Message ?? 'Unknown error',
                     ]);
+
                     throw new ErroredException($result[0]->Message ?? 'Workflow action failed');
                 }
             }
@@ -290,8 +292,6 @@ abstract class ApprovalWorkflowService
 
             //  Use the properly defined $currentStageId
             if ($result['stageCompleted']) {
-
-
                 // Always call advanceToNextStage - it handles both moving to next stage AND finalizing if no next stage exists
                 $this->advanceToNextStage($table, $sourceId, $currentStageId, $actor->Id, $statusColumn);
             } else {
@@ -303,6 +303,7 @@ abstract class ApprovalWorkflowService
             Log::error("ErroredException in _executeWorkflowAction", [
                 'message' => $e->getMessage(),
             ]);
+
             throw $e;
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -312,6 +313,7 @@ abstract class ApprovalWorkflowService
                 'sourceId' => $sourceId,
                 'trace' => $e->getTraceAsString(),
             ]);
+
             throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
         }
     }
@@ -423,6 +425,7 @@ abstract class ApprovalWorkflowService
         string $statusColumn = 'Status'
     ): bool {
         $result = $this->_executeWorkflowAction($actor, $status, $source, $sourceId, $remarks, $statusColumn);
+
         return $result['success'] ?? false;
     }
 
@@ -457,7 +460,7 @@ abstract class ApprovalWorkflowService
     {
         if (preg_match('/\[SQL Server\]\s*(.+?)(?:\s*\[|$)/s', $errorMessage, $matches)) {
             $errorMessage = trim($matches[1]);
-        } else if (preg_match('/SQLSTATE\[.*?\]:\s*(.+?)(?:\s*\(|$)/s', $errorMessage, $matches)) {
+        } elseif (preg_match('/SQLSTATE\[.*?\]:\s*(.+?)(?:\s*\(|$)/s', $errorMessage, $matches)) {
             $errorMessage = trim($matches[1]);
         }
 
@@ -466,7 +469,6 @@ abstract class ApprovalWorkflowService
 
         return trim($cleanMessage) ?: 'Database operation failed';
     }
-
 
     /**
      * Submit a record for approval workflow
@@ -480,8 +482,9 @@ abstract class ApprovalWorkflowService
         string $remarks
     ): bool {
         $class = Relation::getMorphedModel($source);
-        if (!($class && class_exists($class))) {
+        if (! ($class && class_exists($class))) {
             Log::error("Invalid morph alias", ['source' => $source]);
+
             throw new ErroredException('Invalid Related Entity');
         }
 
@@ -504,13 +507,15 @@ abstract class ApprovalWorkflowService
 
             if ($existingSubmission) {
                 Log::warning("Already submitted", ['table' => $table, 'sourceId' => $sourceId]);
+
                 throw new ErroredException("This item has already been submitted for approval");
             }
 
             // Get first stage
             $stage = $this->getPermissionFromStage($table);
-            if (!$stage || !$stage->PermissionId) {
+            if (! $stage || ! $stage->PermissionId) {
                 Log::error("No workflow configuration", ['table' => $table]);
+
                 throw new ErroredException("No workflow configuration found for {$table}");
             }
 
@@ -535,14 +540,14 @@ abstract class ApprovalWorkflowService
                 [
                     $table,
                     (string)$sourceId,
-                    (int)$stage->Id
+                    (int)$stage->Id,
                 ]
             );
 
 
 
             // Check for errors returned by SP
-            if (!empty($result) && isset($result[0]->Status)) {
+            if (! empty($result) && isset($result[0]->Status)) {
                 if ($result[0]->Status === 'ERROR') {
                     $message = $result[0]->Message ?? 'Unknown error';
 
@@ -572,6 +577,7 @@ abstract class ApprovalWorkflowService
 
                     if ($permissionId) {
                         $suffix = $permissionName ? " (Permission: {$permissionName})" : '';
+
                         throw new ErroredException($message . $suffix . '. Assign this permission to at least one approver (not the maker) and retry.');
                     }
 
@@ -594,6 +600,7 @@ abstract class ApprovalWorkflowService
                 'table' => $table,
                 'sourceId' => $sourceId,
             ]);
+
             throw $e;
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -603,6 +610,7 @@ abstract class ApprovalWorkflowService
                 'sourceId' => $sourceId,
                 'trace' => $e->getTraceAsString(),
             ]);
+
             throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
         }
     }
@@ -614,7 +622,7 @@ abstract class ApprovalWorkflowService
     {
         $class = Relation::getMorphedModel($source);
         if ($class && class_exists($class)) {
-            $table = (new $class)->getTable();
+            $table = (new $class())->getTable();
         } else {
             throw new ErroredException('Invalid Related Entity');
         }
@@ -638,12 +646,12 @@ abstract class ApprovalWorkflowService
         }
 
         $table = $this->resolveWorkflowTable($source);
-        if (!$table) {
+        if (! $table) {
             return false;
         }
 
         $currentStageId = $this->getCurrentStageId($table, $sourceId);
-        if (!$currentStageId) {
+        if (! $currentStageId) {
             return false;
         }
 
@@ -678,23 +686,24 @@ abstract class ApprovalWorkflowService
                 ->where('Id', (int)$stageId)
                 ->first();
 
-            if (!$stage) {
+            if (! $stage) {
                 Log::warning('Workflow stage not found during approval check', [
                     'stage_id' => $stageId,
                     'source' => $source,
                     'source_id' => $sourceId,
                 ]);
+
                 return false;
             }
 
             $permissionName = null;
-            if (!empty($stage->PermissionId)) {
+            if (! empty($stage->PermissionId)) {
                 $permissionName = DB::table($permissionTable)
                     ->where('id', (int)$stage->PermissionId)
                     ->value('name');
             }
 
-            if (!$permissionName) {
+            if (! $permissionName) {
                 $candidate = 'workflowstage_' . str_replace(' ', '', (string)$stage->StageName);
                 $exists = DB::table($permissionTable)->where('name', $candidate)->exists();
                 if ($exists) {
@@ -702,17 +711,18 @@ abstract class ApprovalWorkflowService
                 }
             }
 
-            if (!$permissionName) {
+            if (! $permissionName) {
                 Log::warning('Workflow stage permission not configured', [
                     'stage_id' => $stageId,
                     'stage_name' => $stage->StageName,
                     'source' => $source,
                     'source_id' => $sourceId,
                 ]);
+
                 return false;
             }
 
-            if (!$user->hasPermissionTo($permissionName)) {
+            if (! $user->hasPermissionTo($permissionName)) {
                 return false;
             }
         }
@@ -725,7 +735,7 @@ abstract class ApprovalWorkflowService
         $sources = [$source];
 
         $class = Relation::getMorphedModel($source);
-        if (!$class && class_exists($source)) {
+        if (! $class && class_exists($source)) {
             $class = $source;
         }
 
@@ -755,22 +765,24 @@ abstract class ApprovalWorkflowService
     private function resolveWorkflowTable(string $source): ?string
     {
         $class = Relation::getMorphedModel($source);
-        if (!$class && class_exists($source)) {
+        if (! $class && class_exists($source)) {
             $class = $source;
         }
 
-        if (!($class && class_exists($class))) {
+        if (! ($class && class_exists($class))) {
             return null;
         }
 
         try {
             $instance = new $class();
+
             return $instance->getTable();
         } catch (\Throwable $e) {
             Log::warning('Unable to resolve workflow table', [
                 'source' => $source,
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -781,14 +793,14 @@ abstract class ApprovalWorkflowService
     public function getWorkflowStatus(string $source, string|int $sourceId): array
     {
         $class = Relation::getMorphedModel($source);
-        if (!($class && class_exists($class))) {
+        if (! ($class && class_exists($class))) {
             throw new ErroredException('Invalid Related Entity');
         }
 
-        $table = (new $class)->getTable();
+        $table = (new $class())->getTable();
         $currentStageId = $this->getCurrentStageId($table, $sourceId);
 
-        if (!$currentStageId) {
+        if (! $currentStageId) {
             return [
                 'hasWorkflow' => false,
                 'currentStage' => null,
@@ -846,7 +858,7 @@ abstract class ApprovalWorkflowService
     private function hasNextStage(string $table, int $currentStageId): bool
     {
         $currentStage = WorkflowStage::find($currentStageId);
-        if (!$currentStage) {
+        if (! $currentStage) {
             return false;
         }
 
@@ -857,7 +869,7 @@ abstract class ApprovalWorkflowService
             ->orderBy('Order', 'asc')
             ->first();
 
-        return !is_null($nextStage);
+        return ! is_null($nextStage);
     }
 
     /**
@@ -870,11 +882,11 @@ abstract class ApprovalWorkflowService
         string $reason = 'Cancelled by submitter'
     ): bool {
         $class = Relation::getMorphedModel($source);
-        if (!($class && class_exists($class))) {
+        if (! ($class && class_exists($class))) {
             throw new ErroredException('Invalid Related Entity');
         }
 
-        $table = (new $class)->getTable();
+        $table = (new $class())->getTable();
 
         $submitterId = DB::table('t_WorkFlowHistory')
             ->where('Source', $table)
@@ -883,7 +895,7 @@ abstract class ApprovalWorkflowService
             ->orderBy('CreatedOn', 'asc')
             ->value('CreatedBy');
 
-        if (!$submitterId || $submitterId != $actor->Id) {
+        if (! $submitterId || $submitterId != $actor->Id) {
             throw new ErroredException("Only the submitter can cancel the workflow");
         }
 
@@ -915,10 +927,12 @@ abstract class ApprovalWorkflowService
 
 
             DB::commit();
+
             return true;
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Error cancelling workflow', ['error' => $e->getMessage()]);
+
             throw new ErroredException("Failed to cancel workflow");
         }
     }
@@ -929,9 +943,10 @@ abstract class ApprovalWorkflowService
         try {
             DB::beginTransaction();
 
-            if (!$currentStageId) {
+            if (! $currentStageId) {
                 Log::warning("Cannot advance: currentStageId is null", ['table' => $table, 'sourceId' => $sourceId]);
                 DB::rollBack();
+
                 return;
             }
 
@@ -940,9 +955,10 @@ abstract class ApprovalWorkflowService
                 ->whereNull('DeletedOn')
                 ->first();
 
-            if (!$currentStage) {
+            if (! $currentStage) {
                 Log::warning("Current stage not found", ['stageId' => $currentStageId]);
                 DB::rollBack();
+
                 return;
             }
 
@@ -957,9 +973,9 @@ abstract class ApprovalWorkflowService
                 ->first();
 
             if ($nextStage) {
-
                 // Retrieve the amount from the history table (mirrors SP logic)
                 $amount = 0;
+
                 try {
                     $historyAmountResult = DB::table('t_WorkFlowHistory')
                         ->where('Source', $table)
@@ -986,7 +1002,7 @@ abstract class ApprovalWorkflowService
                         FROM dbo.f_getPermissionForAmount(?, ?)
                     ", [$nextStage->Id, $amount]);
 
-                        if (!empty($permissionResult)) {
+                        if (! empty($permissionResult)) {
                             $effectivePermissionId = $permissionResult[0]->PermissionId;
                             $limitType = $permissionResult[0]->LimitType;
                         }
@@ -1006,11 +1022,12 @@ abstract class ApprovalWorkflowService
 
 
 
-                    if (!empty($spResult) && isset($spResult[0]->Status)) {
+                    if (! empty($spResult) && isset($spResult[0]->Status)) {
                         if ($spResult[0]->Status === 'ERROR') {
                             Log::error("p_ProcessWorkflowPending returned ERROR during advancement", [
                                 'message' => $spResult[0]->Message ?? 'Unknown error',
                             ]);
+
                             throw new ErroredException($spResult[0]->Message ?? 'Failed to create pending approvals for next stage');
                         }
                     }
@@ -1036,6 +1053,7 @@ abstract class ApprovalWorkflowService
                         'error' => $e->getMessage(),
                         'trace' => $e->getTraceAsString(),
                     ]);
+
                     throw new ErroredException("Failed to advance to next stage: " . $e->getMessage());
                 }
 
@@ -1047,10 +1065,10 @@ abstract class ApprovalWorkflowService
                 try {
                     // Get the morph alias from table name
                     $morphAlias = array_search($table, array_map(function ($class) {
-                        return (new $class)->getTable();
+                        return (new $class())->getTable();
                     }, Relation::morphMap()));
 
-                    if (!$morphAlias) {
+                    if (! $morphAlias) {
                         // Fallback: try to determine from table name
                         $morphAlias = Str::snake(Str::singular(str_replace('t_', '', $table)));
                     }
@@ -1060,10 +1078,11 @@ abstract class ApprovalWorkflowService
 
                     // Dynamically get the primary key column from the model
                     $primaryKeyColumn = 'Id';  // Default fallback
+
                     try {
                         $modelClass = Relation::getMorphedModel($morphAlias);
                         if ($modelClass && class_exists($modelClass)) {
-                            $primaryKeyColumn = (new $modelClass)->getKeyName();  // E.g., 'id', 'PlanID', 'custom_id'
+                            $primaryKeyColumn = (new $modelClass())->getKeyName();  // E.g., 'id', 'PlanID', 'custom_id'
                         }
                     } catch (\Throwable $e) {
                         Log::warning("Could not determine primary key for table {$table}, using default 'Id'", [
@@ -1101,6 +1120,7 @@ abstract class ApprovalWorkflowService
                 'sourceId' => $sourceId,
                 'trace' => $e->getTraceAsString(),
             ]);
+
             throw $e;
         }
     }
@@ -1116,8 +1136,9 @@ abstract class ApprovalWorkflowService
             ->whereNull('DeletedOn')
             ->value('Id');
 
-        if (!$systemUserId) {
+        if (! $systemUserId) {
             Log::error("System user ERPSYS not found for notifications");
+
             return;
         }
 
@@ -1168,16 +1189,16 @@ abstract class ApprovalWorkflowService
             $mappings = config('workflow', []);
 
             // Try to find the mapping for this workflow source
-          if (isset($mappings[$workflowSource]) && isset($mappings[$workflowSource]['Approved'])) {
-            $approvedValue = $mappings[$workflowSource]['Approved'];
-            
-            // If it's an enum, get its value
-            if ($approvedValue instanceof \BackedEnum) {
-                return $approvedValue->value;
+            if (isset($mappings[$workflowSource]) && isset($mappings[$workflowSource]['Approved'])) {
+                $approvedValue = $mappings[$workflowSource]['Approved'];
+
+                // If it's an enum, get its value
+                if ($approvedValue instanceof \BackedEnum) {
+                    return $approvedValue->value;
+                }
+
+                return (string) $approvedValue;
             }
-            
-            return (string) $approvedValue;
-        }
 
             // Look for common status patterns in the table's code details
             $commonApprovedStatuses = ['a', 'approved', 'complete', 'completed', 'done', 'final'];
@@ -1238,7 +1259,7 @@ abstract class ApprovalWorkflowService
             // Load status mapping from config
             $statusMapping = config("workflow.{$morphAlias}", []);
 
-            if (!empty($statusMapping)) {
+            if (! empty($statusMapping)) {
                 // Prefer 'Approved' if defined
                 if (isset($statusMapping['Approved'])) {
                     return $statusMapping['Approved'];

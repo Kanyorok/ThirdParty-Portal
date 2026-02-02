@@ -22,7 +22,7 @@ class DriverManagementRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+
             'DriverName' => 'required|string|max:255',
             'LicenseNumber' => 'required|string|max:50|',
             'LicenseExpiryDate' => 'required|date',

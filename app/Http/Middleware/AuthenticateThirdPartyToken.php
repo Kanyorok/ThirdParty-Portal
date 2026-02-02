@@ -16,18 +16,18 @@ class AuthenticateThirdPartyToken
     {
         $token = $request->bearerToken();
 
-        if (!$token) {
+        if (! $token) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthenticated - No token provided'
+                'message' => 'Unauthenticated - No token provided',
             ], 401);
         }
 
         // Parse token
-        if (!str_contains($token, '|')) {
+        if (! str_contains($token, '|')) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid token format'
+                'message' => 'Invalid token format',
             ], 401);
         }
 
@@ -39,18 +39,18 @@ class AuthenticateThirdPartyToken
         // Find the token
         $accessToken = $modelClass::find($id);
 
-        if (!$accessToken) {
+        if (! $accessToken) {
             return response()->json([
                 'success' => false,
-                'message' => 'Token not found'
+                'message' => 'Token not found',
             ], 401);
         }
 
         // Verify the token hash
-        if (!hash_equals($accessToken->token, hash('sha256', $tokenValue))) {
+        if (! hash_equals($accessToken->token, hash('sha256', $tokenValue))) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid token'
+                'message' => 'Invalid token',
             ], 401);
         }
 
@@ -58,23 +58,23 @@ class AuthenticateThirdPartyToken
         if ($accessToken->expires_at && $accessToken->expires_at->isPast()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Token expired'
+                'message' => 'Token expired',
             ], 401);
         }
 
         // Get the user
         $user = $accessToken->tokenable;
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => 'User not found'
+                'message' => 'User not found',
             ], 401);
         }
 
         // Set the authenticated user
         auth()->setUser($user);
-        $request->setUserResolver(fn() => $user);
+        $request->setUserResolver(fn () => $user);
 
         // Store the access token for logout
         $request->attributes->set('sanctum_token', $accessToken);

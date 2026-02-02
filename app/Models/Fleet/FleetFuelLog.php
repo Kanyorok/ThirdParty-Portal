@@ -13,7 +13,7 @@ class FleetFuelLog extends Model
         'VehicleID', 'TripID', 'LogDate',
         'OdometerStart', 'OdometerEnd',
         'FuelAmount', 'FuelUnit', 'FuelType', 'Vendor',
-        'Efficiency', 'Notes', 'CreatedBy', 'CreatedOn'
+        'Efficiency', 'Notes', 'CreatedBy', 'CreatedOn',
     ];
 
     public function vehicle()

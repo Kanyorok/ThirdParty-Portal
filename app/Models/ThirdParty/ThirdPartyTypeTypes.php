@@ -10,11 +10,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ThirdPartyTypeTypes extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const string CREATED_AT = 'CreatedOn';
+    public const string UPDATED_AT = 'ModifiedOn';
+    public const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_ThirdPartyType_ThirdParties';
     protected $primaryKey = 'Id';
@@ -26,12 +27,12 @@ class ThirdPartyTypeTypes extends Model
         'PartyID',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
     {
-        return 'ThirdPartyTypeTypes';
+        return 'Id';
     }
 
     public function party(): MorphTo

@@ -11,7 +11,9 @@ class TenderCategoryItemTypeSeeder extends Seeder
     {
         // Resolve common ItemType IDs by name
         $types = DB::table('t_ItemTypes')->pluck('Id', 'TypeName');
-        if ($types->isEmpty()) return; // nothing to seed
+        if ($types->isEmpty()) {
+            return;
+        } // nothing to seed
 
         $goodsSet = collect([$types['Stock'] ?? null, $types['Consumable'] ?? null, $types['Asset'] ?? null])
             ->filter()->values();
@@ -20,7 +22,7 @@ class TenderCategoryItemTypeSeeder extends Seeder
         $worksSet = collect([$types['Services'] ?? null])
             ->filter()->values();
 
-        $categories = DB::table('t_TenderCategories')->select('Id','TenderCategory')->get();
+        $categories = DB::table('t_TenderCategories')->select('Id', 'TenderCategory')->get();
         foreach ($categories as $cat) {
             $target = match (strtoupper((string)$cat->TenderCategory)) {
                 'GOODS' => $goodsSet,
@@ -37,4 +39,3 @@ class TenderCategoryItemTypeSeeder extends Seeder
         }
     }
 }
-

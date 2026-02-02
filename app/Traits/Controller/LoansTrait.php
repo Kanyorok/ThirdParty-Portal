@@ -21,11 +21,12 @@ trait LoansTrait
                     return $debtProduct->MaturityDate?->format('d M, Y');
                 })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
                                                                                                        'dbl_click_url' => function (DebtProduct $debtProduct) {
-                                                                                                        return route('debt-collection.show', $debtProduct->AccountID);
+                                                                                                           return route('debt-collection.show', $debtProduct->AccountID);
                                                                                                        },
                                                                                                       ])->rawColumns(['ClientID'])->make();
         } catch (Exception $e) {
         }
+
         return $this->errored('fetching data failed, try again later');
     }
 }

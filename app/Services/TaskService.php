@@ -36,22 +36,21 @@ class TaskService
         return ActivityService::task($this->task, $description, $actor);
     }
 
-
     protected static function _create(string $Party, string $PartyID, Carbon $Due, string $Description, User $actor, string $Source = null, string $SourceID = null): self
     {
-        if (!in_array($Party, [Client::getPrimaryKey(), Lead::getPrimaryKey()], true)) {
+        if (! in_array($Party, [Client::getPrimaryKey(), Lead::getPrimaryKey()], true)) {
             throw new RuntimeException("Invalid party in task service");
         }
         $task = new Task();
         $task->fill([
-                     "Party"      => $Party,
-                     "PartyID"    => $PartyID,
-                     "UserID"     => $actor->Id,
-                     "Dated"      => $Due,
-                     "Notes"      => $Description,
-                     'Source'     => $Source,
-                     'SourceID'   => $SourceID,
-                     'CreatedBy'  => $actor->Id,
+                     "Party" => $Party,
+                     "PartyID" => $PartyID,
+                     "UserID" => $actor->Id,
+                     "Dated" => $Due,
+                     "Notes" => $Description,
+                     'Source' => $Source,
+                     'SourceID' => $SourceID,
+                     'CreatedBy' => $actor->Id,
                      'ModifiedBy' => $actor->Id,
                     ])->save();
 
@@ -63,7 +62,7 @@ class TaskService
     public function setSource(string $Source, string $SourceID): static
     {
         $this->task->update([
-                             'Source'   => $Source,
+                             'Source' => $Source,
                              'SourceID' => $SourceID,
                             ]);
 
@@ -74,7 +73,6 @@ class TaskService
     {
         return $this->task->Dated->lt(now()->startOfDay());
     }
-
 
     public function updateUrl(): ?string
     {
@@ -88,7 +86,6 @@ class TaskService
         return null;
     }
 
-
     public function canClose(User $user): bool
     {
         if ($this->task->UserID === $user->Id) {
@@ -98,7 +95,6 @@ class TaskService
         return ($this->task->CreatedBy === $user->Id);
     }
 
-
     public function source(): string
     {
         $source = $this->task->source;
@@ -106,6 +102,7 @@ class TaskService
             if ($source->campaign instanceof Campaign) {
                 return 'Campaign: <a href="' . route('campaigns.show', [$source->campaign->CampaignID]) . '">' . Str::limit($source->campaign->Label) . '<a>';
             }
+
             return 'Campaign: unknown';
         }
 
@@ -119,7 +116,6 @@ class TaskService
 
         return 'None';
     }
-
 
     public function assign(User $assignee): static
     {

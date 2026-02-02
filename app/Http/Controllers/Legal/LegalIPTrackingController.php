@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Legal\LegalIPTracking;
 use App\Models\Legal\LegalIntellectualProperty;
+use App\Models\Legal\LegalIPTracking;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class LegalIPTrackingController extends Controller
@@ -13,12 +13,14 @@ class LegalIPTrackingController extends Controller
     public function index()
     {
         $trackings = LegalIPTracking::with('ip')->orderByDesc('TrackingDate')->get();
+
         return view('legal.ip_tracking.index', compact('trackings'));
     }
 
     public function create()
     {
         $ips = LegalIntellectualProperty::where('IsActive', 1)->get();
+
         return view('legal.ip_tracking.create', compact('ips'));
     }
 
@@ -44,6 +46,7 @@ class LegalIPTrackingController extends Controller
     {
         $tracking = LegalIPTracking::findOrFail($id);
         $ips = LegalIntellectualProperty::where('IsActive', 1)->get();
+
         return view('legal.ip_tracking.edit', compact('tracking', 'ips'));
     }
 

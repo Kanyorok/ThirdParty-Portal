@@ -14,11 +14,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Survey extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const string CREATED_AT = 'CreatedOn';
+    public const string UPDATED_AT = 'ModifiedOn';
+    public const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Surveys';
     protected $primaryKey = 'Id';
@@ -28,7 +29,7 @@ class Survey extends Model
      */
     protected $fillable = [
         'SurveyID', 'Label', 'Notes', 'StartOn', 'EndOn', 'Status',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     protected $casts = [

@@ -39,6 +39,26 @@
                         <p class="text-muted">{{ $submission->createdByUser->Name ?? 'N/A' }}</p>
                     </div>
                 </div>
+
+                <!-- Financial & Logistics -->
+                <div class="row border-top pt-3 mt-2">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">Bid Amount</label>
+                        <p class="text-muted">{{ $submission->Currency }} {{ number_format($submission->BidAmount, 2) }}</p>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">Validity Period</label>
+                        <p class="text-muted">{{ $submission->ValidityPeriod }} Days</p>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">Delivery Period</label>
+                        <p class="text-muted">{{ $submission->DeliveryPeriod }} Days</p>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">Payment Terms</label>
+                        <p class="text-muted">{{ $submission->PaymentTerms ?? 'N/A' }}</p>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-12 mb-3">
                         <label class="form-label fw-bold">Remarks</label>

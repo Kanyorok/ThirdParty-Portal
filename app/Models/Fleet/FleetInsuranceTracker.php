@@ -2,29 +2,22 @@
 
 namespace App\Models\Fleet;
 
-use Illuminate\Database\Eloquent\Model;
-use App\Models\Fleet\FleetVehicle;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
-use App\Traits\Model\DocumentsTrait;
-use App\Models\Insurance\InsuranceProvider;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\Auth\User;
-
+use App\Models\Insurance\InsuranceProvider;
+use App\Traits\Model\DocumentsTrait;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FleetInsuranceTracker extends Model
 {
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
 
-    use SoftDeletes, UserActorTrait, DocumentsTrait;
-
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_FleetInsuranceTracker';
     protected $primaryKey = 'Id';
@@ -54,12 +47,10 @@ class FleetInsuranceTracker extends Model
         return 'InsuranceId';
     }
 
-
     public function vehicle()
     {
         return $this->belongsTo(FleetVehicle::class, 'VehicleID', 'Id');
     }
-
 
     public function insurance()
     {
@@ -70,5 +61,4 @@ class FleetInsuranceTracker extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'Status', 'ID');
     }
-
 }

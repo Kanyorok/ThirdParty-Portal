@@ -10,7 +10,6 @@ class PropertyStructuralPolicy
     /**
      * Create a new policy instance.
      */
-
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::PropertyStructuralView->value);

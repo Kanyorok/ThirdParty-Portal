@@ -8,11 +8,13 @@ use Illuminate\Foundation\Events\Dispatchable;
 
 class ProfileCreatedEvent
 {
-    use Dispatchable, InteractsWithSockets;
+    use Dispatchable;
+    use InteractsWithSockets;
 
     public function __construct(
         public int $thirdPartyId,
         public int $userId,
         public ThirdPartyTypeEnum $profileType
-    ) {}
+    ) {
+    }
 }

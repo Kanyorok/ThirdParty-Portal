@@ -14,7 +14,7 @@ enum TenderAwardStatusEnum: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => 'Draft',
             self::PENDING => 'Pending Approval',
             self::SUBMITTED => 'Submitted for Approval',
@@ -27,7 +27,7 @@ enum TenderAwardStatusEnum: string
 
     public function badgeClass(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => 'secondary',
             self::PENDING => 'warning',
             self::SUBMITTED => 'info',

@@ -2,10 +2,9 @@
 
 namespace App\Http\Resources\ThirdParty;
 
+use App\Http\Resources\CurrencyResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-
-use App\Http\Resources\CurrencyResource;
 
 class ThirdPartyBankDetailResource extends JsonResource
 {

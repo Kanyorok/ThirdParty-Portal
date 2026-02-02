@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Procurement\Prequalification;
 
 use App\Http\Controllers\Controller;
-use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\Procurement\Prequalification\ApplicationCategoryStatus;
 use App\Models\Procurement\Prequalification\CategoryProgressHistory;
+use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +17,7 @@ class PrequalificationProgressController extends Controller
         $user = Auth::user();
         $supplierId = $user?->ThirdPartyID ?? null; // adapt if different linkage
 
-        if (!$supplierId) {
+        if (! $supplierId) {
             return response()->json(['error' => 'No supplier linked to user'], 422);
         }
 
@@ -26,7 +26,7 @@ class PrequalificationProgressController extends Controller
             ->with(['categoryStatuses.category'])
             ->first();
 
-        if (!$application) {
+        if (! $application) {
             return response()->json([
                 'data' => [
                     'overall_status' => 'NOT_APPLIED',
@@ -87,7 +87,7 @@ class PrequalificationProgressController extends Controller
             'RoundID' => $roundId,
         ])->first();
 
-        if (!$application) {
+        if (! $application) {
             return response()->json(['error' => 'Application not found for supplier/round'], 404);
         }
 
@@ -109,7 +109,7 @@ class PrequalificationProgressController extends Controller
                 'ModifiedBy' => $userId,
                 'ModifiedOn' => now(),
             ]);
-            if (!$row->exists) {
+            if (! $row->exists) {
                 $row->CreatedBy = $userId;
                 $row->CreatedOn = now();
             }
@@ -135,7 +135,7 @@ class PrequalificationProgressController extends Controller
     {
         $user = Auth::user();
         $supplierId = $user?->ThirdPartyID ?? null;
-        if (!$supplierId) {
+        if (! $supplierId) {
             return response()->json(['data' => []]);
         }
         $apps = PrequalificationApplication::where('SupplierID', $supplierId)
@@ -149,7 +149,7 @@ class PrequalificationProgressController extends Controller
                 'application_id' => $app->ApplicationID,
                 'round_id' => $app->RoundID,
                 'status' => $app->Status?->getLabel() ?? 'Submitted',
-                'categories' => $app->categoryStatuses->map(fn($cs) => [
+                'categories' => $app->categoryStatuses->map(fn ($cs) => [
                     'category_id' => $cs->CategoryId,
                     'status' => $cs->Status,
                     'progress_percent' => (float)$cs->ProgressPercent,
@@ -167,6 +167,7 @@ class PrequalificationProgressController extends Controller
         $rejected = $categoryStatuses->where('Status', 'R')->count();
         $pending = $categoryStatuses->whereIn('Status', ['D', 'S', 'U', 'C'])->count();
         $overall = $total > 0 ? ($categoryStatuses->sum('ProgressPercent') / $total) : 0.0;
+
         return [
             'total_categories' => $total,
             'approved_categories' => $approved,

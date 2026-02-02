@@ -25,7 +25,7 @@ class Select2Request extends FormRequest
     public function getSearchString(): ?string
     {
         $q = $this->validated('q');
-        if (!is_string($q)) {
+        if (! is_string($q)) {
             return null;
         }
 

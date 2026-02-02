@@ -43,9 +43,9 @@
                     <th>Quantity</th>
                     <th>Est. Unit Cost</th>
                     <th>Est. Cost</th>
-                    <th>Submitted By</th>
+                    <th>Requested By</th>
                     <th>Submitted On</th>
-                    <th>Date Needed</th>
+                    <th>Expected Delivery Date</th>
                     <th>Actions</th>
                 </tr>
             </thead>

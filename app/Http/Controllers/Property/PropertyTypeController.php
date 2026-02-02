@@ -3,30 +3,31 @@
 namespace App\Http\Controllers\Property;
 
 use App\Enums\Core\PermissionEnum;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\PropertyRegistry\PropertyTypeRequest;
 use App\Models\Core\CategoryMaster;
-use App\Services\Property\PropertyRegistry\PropertyTypeService;
 use App\Models\PropertyManagement\PropertyType;
+use App\Services\Property\PropertyRegistry\PropertyTypeService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PropertyTypeController extends Controller
 {
-
     public function index()
     {
         $this->authorize(PermissionEnum::PropertyTypeView, PropertyType::class);
         $types = PropertyType::with('propertycategory')->get();
-        //dd($properties);
+
         return view('property.propertyregistry.propertytype.index', compact('types'));
     }
 
-    public function create(){
+    public function create()
+    {
         $this->authorize(PermissionEnum::PropertyTypeCreate, PropertyType::class);
         $categories = CategoryMaster::all();
+
         return view('property.propertyregistry.propertytype.create', compact('categories'));
     }
 
@@ -44,7 +45,6 @@ class PropertyTypeController extends Controller
             auth()->user()
         );
 
-        //$this->authorize('store', $propertyType);
 
         return redirect()->route('propertytype.index')->with('success', 'Property type created successfully');
     }
@@ -101,6 +101,7 @@ class PropertyTypeController extends Controller
     public function destroy($id)
     {
         $this->authorize(PermissionEnum::PropertyTypeDelete, PropertyType::class);
+
         try {
             $type = PropertyType::findOrFail($id);
 
@@ -122,5 +123,4 @@ class PropertyTypeController extends Controller
                 ->withInput();
         }
     }
-
 }

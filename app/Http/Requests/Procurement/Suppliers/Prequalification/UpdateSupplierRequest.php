@@ -3,9 +3,7 @@
 namespace App\Http\Requests\Procurement\Suppliers\Prequalification;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Rule;
-use App\Enums\BusinessTypeEnum;
 
 class UpdateSupplierRequest extends FormRequest
 {

@@ -27,7 +27,6 @@ class TicketReopenController extends Controller
      */
     public function update(Request $request, Ticket $ticket): JsonResponse
     {
-        //$this->authorize('approve', $ticket); todo tests
         $actor = $request->user();
 
         try {
@@ -36,8 +35,9 @@ class TicketReopenController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error approve ticket reopen failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -69,6 +69,7 @@ class TicketReopenController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error reject ticket reopen failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

@@ -16,6 +16,7 @@ class AjaxCheckMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         abort_unless($request->ajax(), 404);
+
         return $next($request);
     }
 }

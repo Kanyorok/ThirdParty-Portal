@@ -19,7 +19,7 @@ trait ImageTrait
 
     public function getImage(string $attr = '', bool $placeholder = true, string $ImageRelationFn = 'photo'): string
     {
-        if (!method_exists($this, $ImageRelationFn)) {
+        if (! method_exists($this, $ImageRelationFn)) {
             throw new RuntimeException('Could not find the image');
         }
 
@@ -44,7 +44,7 @@ trait ImageTrait
 
     public function setImage(UploadedFile $file, User $actor, string $field = null): static
     {
-        if (is_string($field) && !in_array($field, $this->fillable, true)) {
+        if (is_string($field) && ! in_array($field, $this->fillable, true)) {
             throw new RuntimeException('Invalid field');
         }
 
@@ -53,13 +53,12 @@ trait ImageTrait
 
     public function setFromContent(string $content, User $actor, string $mimeType, string $fileName, string $field = null): static
     {
-        if (is_string($field) && !in_array($field, $this->fillable, true)) {
+        if (is_string($field) && ! in_array($field, $this->fillable, true)) {
             throw new RuntimeException('Invalid field');
         }
 
         return $this->_setImage(ImageService::createContent($content, $this->primaryKey, $this->{$this->primaryKey}, $mimeType, $fileName, $actor), $field);
     }
-
 
     protected function _setImage(ImageService $service, string $field = null): static
     {
@@ -68,12 +67,13 @@ trait ImageTrait
                 $field => $service->image->ImageID,
             ]);
         }
+
         return $this;
     }
 
     public function setAvatarFromURL(string $url, User $actor, string $field = null): static
     {
-        if (is_string($field) && !in_array($field, $this->fillable, true)) {
+        if (is_string($field) && ! in_array($field, $this->fillable, true)) {
             throw new RuntimeException('Invalid field');
         }
 

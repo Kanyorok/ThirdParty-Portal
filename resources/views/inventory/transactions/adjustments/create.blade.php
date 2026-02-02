@@ -2,8 +2,38 @@
 @section('title', 'Create Stock Adjustment')
 
 @section('content')
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    {{-- Specific Workflow Error --}}
+    @if($errors->has('workflow'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Workflow Configuration Required:</strong>
+            {{ $errors->first('workflow') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
 <div class="container bg-white shadow rounded p-4">
     <h4 class="mb-4">Stock Adjustment Form</h4>
+
+    {{-- Workflow Setup Information --}}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Workflow Configuration Required:</strong>
+        <ul class="mb-0 mt-2">
+            <li><strong>Approval Workflow:</strong> Stock adjustments require a configured approval workflow before they can be submitted.</li>
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 
     <form method="POST" action="{{ route('transactionsadjustment.store') }}">
         @csrf

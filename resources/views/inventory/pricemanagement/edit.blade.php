@@ -58,8 +58,14 @@
 
             <div class="mb-3">
                 <label class="form-label">Currency</label>
-                <input type="text" class="form-control" name="CurrencyCode"
-                       value="{{ old('CurrencyCode', $price->CurrencyCode) ?? 'KES' }}" required>
+                <select class="form-select" name="CurrencyCode" required>
+                    <option disabled>-- Select Currency --</option>
+                    @foreach($currencies ?? [] as $currenc)
+                        <option value="{{ $currenc->Id }}" {{ $currenc->Id == old('CurrencyCode', $price->CurrencyCode) ? 'selected' : '' }}>
+                            {{ $currenc->Code }} - {{ $currenc->Name }}
+                        </option>
+                        @endforeach
+                    </select>
             </div>
 
             {{-- <div class="row">

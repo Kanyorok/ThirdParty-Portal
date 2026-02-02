@@ -23,7 +23,7 @@ class PropertyInvoiceController extends Controller
             'currency',
             'tax',
             'createdByUser',
-            'modifiedByUser'
+            'modifiedByUser',
         ])
         ->whereHas('lease', function ($q) use ($tenantId) {
             $q->where('Tenant', $tenantId);
@@ -37,11 +37,11 @@ class PropertyInvoiceController extends Controller
     public function show(Request $request): PropertyInvoiceResource
     {
         $request->validate([
-            'tenant_id'  => 'required|integer',
+            'tenant_id' => 'required|integer',
             'invoice_id' => 'required|integer',
         ]);
 
-        $tenantId  = $request->query('tenant_id');
+        $tenantId = $request->query('tenant_id');
         $invoiceId = $request->query('invoice_id');
 
         $invoice = PropertyInvoice::with([
@@ -49,7 +49,7 @@ class PropertyInvoiceController extends Controller
             'currency',
             'tax',
             'createdByUser',
-            'modifiedByUser'
+            'modifiedByUser',
         ])
         ->where('Id', $invoiceId)
         ->whereHas('lease', fn ($q) => $q->where('Tenant', $tenantId))

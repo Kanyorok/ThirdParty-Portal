@@ -9,7 +9,7 @@ class TextFileExtraction extends FileExtraction
 {
     public function processContent(): bool
     {
-        if (!$this->extension->isText()) {
+        if (! $this->extension->isText()) {
             return false;
         }
         $name = $this->createTempFile();
@@ -18,14 +18,16 @@ class TextFileExtraction extends FileExtraction
         if ($content !== '') {
             return $this->handleContent($content);
         }
+
         return $this->handleContent();
     }
 
     private function getContent(string $filePath): string
     {
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             return '';
         }
+
         try {
             $content = file_get_contents($filePath);
             if (is_string($content)) {
@@ -33,8 +35,7 @@ class TextFileExtraction extends FileExtraction
             }
         } catch (Exception $e) {
         }
+
         return '';
     }
-
-
 }

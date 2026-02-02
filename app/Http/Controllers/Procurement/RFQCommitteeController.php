@@ -22,6 +22,7 @@ class RFQCommitteeController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $userId = Auth::id();
             $now = Carbon::now();

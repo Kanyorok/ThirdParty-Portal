@@ -52,6 +52,7 @@ class LeadCallController extends Controller
             });
         } catch (\Throwable | Exception $e) {
             Log::error('Error starting call ' . $e->getMessage());
+
             return $this->errored('unexpected error start call, try again latter');
         }
 
@@ -78,14 +79,14 @@ class LeadCallController extends Controller
                                                   'min:5',
                                                   'max:5000',
                                                  ],
-                            'private_notes'   => [
+                            'private_notes' => [
                                                   'nullable',
                                                   'max:5000',
                                                  ],
                            ]);
 
         $call = $lead->calls()->where('t_Calls.CallID', $callID)->first();
-        if (!$call instanceof Call) {
+        if (! $call instanceof Call) {
             throw ValidationException::withMessages(['call_discussion' => 'call selected could have been deleted.']);
         }
 
@@ -95,6 +96,7 @@ class LeadCallController extends Controller
             $this->endCall($call, Carbon::now()->subSeconds(3), $actor, $request->call_discussion, $request->private_notes);
         } catch (\Throwable | Exception $e) {
             Log::error('Error call ' . $e->getMessage());
+
             return $this->errored('unexpected error saving, try again latter');
         }
 

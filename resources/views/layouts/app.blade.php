@@ -210,8 +210,6 @@
             </div>
             @if (View::hasSection('page-alerts'))
                 @yield('page-alerts')
-            @else
-                @include('layouts._partials._alerts')
             @endif
             @yield('content')
         </div>
@@ -224,6 +222,8 @@
                 </div>
                 <div class="col-auto my-1 d-flex align-items-center gap-3">
                     <span id="footer-datetime" class="text-muted small"></span>
+                    <span class="text-muted small">|</span>
+                    <span class="text-muted small">version v1.0.0</span>
                 </div>
             </div>
         </div>
@@ -238,9 +238,6 @@
     @stack('scripts')
 
     <script>
-        window.__DEFAULT_ACTIVE_ROUTE__ = @json(request()->path() ? '/'.request()->path() : '/'); 
-    </script>
-    <script>
         // Refresh Feather icons after partial content loads
         document.addEventListener('partial:loaded', function() {
             if (window.feather && typeof window.feather.replace === 'function') {
@@ -251,7 +248,9 @@
         });
     </script>
     <script type="module">
-        import { SidebarState } from '/js/sidebarState.js';
+        import {
+            SidebarState
+        } from '/js/sidebarState.js';
 
         SidebarState.init({
             rootSelector: 'nav.pc-sidebar',
@@ -313,13 +312,24 @@
 
             async function ajaxNavigate(url, addToHistory = true) {
                 try {
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]');
                     const res = await fetch(url, {
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
-                            'X-Partial': '1'
+                            'X-Partial': '1',
+                            'X-CSRF-TOKEN': csrfToken ? csrfToken.content : ''
                         }
                     });
+                    
+                    // Handle 419 Session Expired error
+                    if (res.status === 419) {
+                        console.warn('Session expired (419), redirecting to login');
+                        window.location.href = '/login?expired=1';
+                        return;
+                    }
+                    
                     if (!res.ok) {
+                        console.warn('AJAX navigate failed with status:', res.status);
                         window.location.href = url;
                         return;
                     }
@@ -339,13 +349,19 @@
                     target.innerHTML = newContent.innerHTML;
                     const newTitle = doc.querySelector('title');
                     if (newTitle) document.title = newTitle.innerText;
-                    if (addToHistory) history.pushState({ url: url }, '', url);
+                    if (addToHistory) history.pushState({
+                        url: url
+                    }, '', url);
                     window.scrollTo(0, 0);
                     runScripts(target);
                     try {
                         sessionStorage.setItem('activeSidebarRoute', new URL(url, location.href).pathname);
                     } catch (e) {}
-                    document.dispatchEvent(new CustomEvent('partial:loaded', { detail: { url } }));
+                    document.dispatchEvent(new CustomEvent('partial:loaded', {
+                        detail: {
+                            url
+                        }
+                    }));
                 } catch (err) {
                     console.error('AJAX navigate failed, falling back', err);
                     window.location.href = url;
@@ -397,18 +413,22 @@
                 if (!sidebar) return;
                 const navRoot = sidebar.querySelector('.pc-navbar') || sidebar;
                 navRoot.querySelectorAll('a.pc-link:not([data-route])').forEach(a => {
-                    try { a.setAttribute('data-route', new URL(a.getAttribute('href'), location.href).pathname); } catch (e) {}
+                    try {
+                        a.setAttribute('data-route', new URL(a.getAttribute('href'), location.href).pathname);
+                    } catch (e) {}
                 });
                 const anchors = Array.from(navRoot.querySelectorAll('a[data-route]'));
                 const current = normalizePath(location.pathname);
                 let match = anchors.find(a => normalizePath(a.dataset.route) === current);
 
                 if (!match) {
-                    let best = null, bestLen = 0;
+                    let best = null,
+                        bestLen = 0;
                     anchors.forEach(a => {
                         const p = normalizePath(a.dataset.route);
                         if (current.startsWith(p) && p.length > bestLen && p !== '/') {
-                            best = a; bestLen = p.length;
+                            best = a;
+                            bestLen = p.length;
                         }
                     });
                     match = best;
@@ -435,7 +455,10 @@
                     const rect = match.getBoundingClientRect();
                     const vpH = window.innerHeight || document.documentElement.clientHeight;
                     if (rect.top < 80 || rect.bottom > vpH - 40) {
-                        match.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        match.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
                     }
                 } catch (e) {}
             }
@@ -450,13 +473,17 @@
                 if (typeof jQuery === 'undefined') return;
                 clearInterval(checkJQuery);
                 var $ = jQuery;
+
                 function setupDataTableObserver() {
                     var sidebarToggleButtons = document.querySelectorAll('#sidebar-hide, #mobile-collapse');
                     if (sidebarToggleButtons.length) {
                         sidebarToggleButtons.forEach(function(btn) {
                             btn.addEventListener('click', function() {
                                 setTimeout(function() {
-                                    if ($.fn.DataTable) $.fn.DataTable.tables({ visible: true, api: true }).columns.adjust();
+                                    if ($.fn.DataTable) $.fn.DataTable.tables({
+                                        visible: true,
+                                        api: true
+                                    }).columns.adjust();
                                 }, 400);
                             });
                         });
@@ -465,7 +492,10 @@
                     $(window).on('resize', function() {
                         clearTimeout(resizeTimer);
                         resizeTimer = setTimeout(function() {
-                            if ($.fn.DataTable) $.fn.DataTable.tables({ visible: true, api: true }).columns.adjust();
+                            if ($.fn.DataTable) $.fn.DataTable.tables({
+                                visible: true,
+                                api: true
+                            }).columns.adjust();
                         }, 250);
                     });
                 }
@@ -473,97 +503,20 @@
                 document.addEventListener('partial:loaded', function() {
                     setTimeout(setupDataTableObserver, 100);
                     setTimeout(function() {
-                        if ($.fn.DataTable) $.fn.DataTable.tables({ visible: true, api: true }).columns.adjust();
+                        if ($.fn.DataTable) $.fn.DataTable.tables({
+                            visible: true,
+                            api: true
+                        }).columns.adjust();
                     }, 500);
                 });
             }, 100);
         })();
     </script>
 
-    <!-- Session Expiry Warning Modal -->
-    <div class="modal fade" id="sessionExpiryModal" tabindex="-1" role="dialog" aria-labelledby="sessionExpiryModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="sessionExpiryModalLabel">Session Expiration Warning</h5>
-                </div>
-                <div class="modal-body">
-                    <p>Your session will expire in <span id="session-countdown" class="fw-bold text-danger">30</span> seconds.</p>
-                    <p class="mb-0">Please click "Stay Logged In" to continue your session, or you will be automatically logged out.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" onclick="window.extendSession()">Stay Logged In</button>
-                    <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="btn btn-secondary">Logout Now</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    @include('partials.session-timeout')
     <script>
         (function() {
-            const sessionLifetimeMinutes = {{ config('session.lifetime') ?: 20 }};
-            const warningSeconds = 30;
-            const sessionLifetimeMs = sessionLifetimeMinutes * 60 * 1000;
-            const warningMs = sessionLifetimeMs - (warningSeconds * 1000);
-            let warningTimer, logoutTimer, countdownInterval;
-            
-            function startSessionTimers() {
-                clearTimeout(warningTimer);
-                clearTimeout(logoutTimer);
-                clearInterval(countdownInterval);
-                const safeWarningMs = warningMs > 0 ? warningMs : 1000;
-                warningTimer = setTimeout(showSessionWarning, safeWarningMs);
-                logoutTimer = setTimeout(forceLogout, sessionLifetimeMs);
-            }
-            
-            function showSessionWarning() {
-                const modalEl = document.getElementById('sessionExpiryModal');
-                if (!modalEl) return;
-                if (typeof bootstrap !== 'undefined') {
-                    const modal = new bootstrap.Modal(modalEl);
-                    modal.show();
-                } else if (typeof $ !== 'undefined') {
-                    $(modalEl).modal('show');
-                }
-                let secondsLeft = warningSeconds;
-                const counterEl = document.getElementById('session-countdown');
-                if (counterEl) counterEl.textContent = secondsLeft;
-                countdownInterval = setInterval(() => {
-                    secondsLeft--;
-                    if (counterEl) counterEl.textContent = secondsLeft;
-                    if (secondsLeft <= 0) clearInterval(countdownInterval);
-                }, 1000);
-            }
-            
-            function forceLogout() {
-                const form = document.getElementById('logout-form');
-                if (form) form.submit();
-                else window.location.href = '/login'; 
-            }
-            
-            window.extendSession = function() {
-                const modalEl = document.getElementById('sessionExpiryModal');
-                fetch("{{ route('auth.heartbeat') }}", { 
-                    method: 'GET',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                .then(res => {
-                    if (res.ok) {
-                        if (typeof bootstrap !== 'undefined') {
-                            const modal = bootstrap.Modal.getInstance(modalEl);
-                            if (modal) modal.hide();
-                        } else if (typeof $ !== 'undefined') {
-                             $(modalEl).modal('hide');
-                        }
-                        startSessionTimers();
-                    } else forceLogout();
-                })
-                .catch(err => {
-                    console.error('Session extension failed', err);
-                    forceLogout();
-                });
-            };
-            startSessionTimers();
+            // Re-init partials logic listener if needed
         })();
     </script>
 </body>

@@ -13,7 +13,6 @@ class ApprovalController extends Controller
      */
     public function index()
     {
-        //
     }
 
     /**
@@ -21,7 +20,6 @@ class ApprovalController extends Controller
      */
     public function create()
     {
-        //
     }
 
     /**
@@ -29,7 +27,6 @@ class ApprovalController extends Controller
      */
     public function store(Request $request)
     {
-        //
     }
 
     /**
@@ -37,7 +34,6 @@ class ApprovalController extends Controller
      */
     public function show(string $id)
     {
-        //
     }
 
     /**
@@ -45,7 +41,6 @@ class ApprovalController extends Controller
      */
     public function edit(string $id)
     {
-        //
     }
 
     /**
@@ -53,7 +48,6 @@ class ApprovalController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
     }
 
     /**
@@ -61,7 +55,6 @@ class ApprovalController extends Controller
      */
     public function destroy(string $id)
     {
-        //
     }
 
     public function approve(Request $request)
@@ -69,11 +62,11 @@ class ApprovalController extends Controller
         $validated = $request->validate([
             'document_type' => 'required|string',
             'document_id' => 'required|integer',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
         ]);
 
         $actor = $request->user();
-        if (!$actor) {
+        if (! $actor) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
@@ -96,7 +89,7 @@ class ApprovalController extends Controller
                     $actor->Id,
                     $actor->Name,
                     $validated['notes'] ?? null,
-                    $this->getStatusColumn($validated['document_type'])
+                    $this->getStatusColumn($validated['document_type']),
                 ]
             );
 
@@ -104,7 +97,6 @@ class ApprovalController extends Controller
             DB::connection('sqlsrv')->commit();
 
             return response()->json($result[0]);
-
         } catch (\Exception $e) {
             // Rollback the transaction on error
             DB::connection('sqlsrv')->rollBack();
@@ -113,12 +105,12 @@ class ApprovalController extends Controller
             \Log::error('Approval failed: ' . $e->getMessage(), [
                 'document_type' => $validated['document_type'],
                 'document_id' => $validated['document_id'],
-                'user_id' => $actor->Id
+                'user_id' => $actor->Id,
             ]);
 
             return response()->json([
                 'Status' => 'ERROR',
-                'Message' => 'Approval process failed. Please try again.'
+                'Message' => 'Approval process failed. Please try again.',
                 // Don't expose raw error messages in production
             ], 500);
         }

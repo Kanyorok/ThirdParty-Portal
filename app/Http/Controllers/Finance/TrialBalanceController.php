@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 
 class TrialBalanceController extends Controller
 {
-    //
     public function index()
     {
         return view('finance.generalledger.glreporting.trialbalance.index');

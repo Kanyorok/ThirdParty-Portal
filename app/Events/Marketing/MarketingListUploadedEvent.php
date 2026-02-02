@@ -19,6 +19,5 @@ class MarketingListUploadedEvent
      */
     public function __construct(public MarketingList $list, public string $Type, public string $file, public User $actor)
     {
-        //
     }
 }

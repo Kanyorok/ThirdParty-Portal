@@ -4,12 +4,11 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StockItemRequest;
-use App\Models\Inventory\StockItem;
+use App\Models\Core\Branch;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\StockItem;
 use App\Models\Inventory\Store;
-use App\Models\Core\Branch;
-use Illuminate\Support\Facades\Auth;
 use App\Services\Inventory\StockItemService;
 use Illuminate\Http\Request;
 
@@ -25,7 +24,7 @@ class SKUController extends Controller
     public function index(Request $request)
     {
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -35,30 +34,32 @@ class SKUController extends Controller
         $items = StockItem::with(['item', 'store', 'uom'])
             ->where('Branch', $branchId)
             ->get();
+
         return view('inventory.itemmaster.sku.index', compact('items'));
     }
 
-   public function create(Request $request)
+    public function create(Request $request)
     {
         $this->authorize('create', StockItem::class);
 
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
-        $branchId = $currentBranch->Id; 
-        $branch = $currentBranch; 
+        $branchId = $currentBranch->Id;
+        $branch = $currentBranch;
 
         $categories = ItemCategories::whereNull('ParentId')
-            ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+            ->whereHas('status', fn ($q) => $q->where('Description', 'Active'))
             ->get();
-        
-        $stores = Store::where('BranchID', $branchId)->get();
+
+        $stores = Store::where('BranchID', $branchId)
+            ->where('Status', 1)
+            ->get();
 
         return view('inventory.itemmaster.sku.create', compact('branch', 'stores', 'categories'));
     }
-
 
     public function store(StockItemRequest $request)
     {
@@ -69,31 +70,31 @@ class SKUController extends Controller
 
         try {
             $skuCode = $this->stockItemService->create($data);
+
             return redirect()->route('sku.index')->with('success', "Stock item added successfully with SKU: $skuCode");
         } catch (\Exception $e) {
             return back()->withErrors('Failed to create stock item: ' . $e->getMessage())->withInput();
         }
     }
 
-
     public function show($id)
     {
         $item = StockItem::with(['item', 'store', 'uom'])->findOrFail($id);
         $categories = ItemCategories::whereNull('ParentId')
-            ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+            ->whereHas('status', fn ($q) => $q->where('Description', 'Active'))
             ->get();
         $this->authorize('view', $item);
 
         return view('inventory.itemmaster.sku.show', compact('item', 'categories'));
     }
 
-   public function edit($id, Request $request)
+    public function edit($id, Request $request)
     {
         $item = StockItem::with('item.category.parent')->findOrFail($id);
         $this->authorize('update', $item);
 
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -101,22 +102,24 @@ class SKUController extends Controller
         $branch = Branch::find($branchId);
 
         $categories = ItemCategories::whereNull('ParentId')
-            ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+            ->whereHas('status', fn ($q) => $q->where('Description', 'Active'))
             ->get();
 
-        $stores = Store::where('BranchID', $branchId)->get();
+        $stores = Store::where('BranchID', $branchId)
+            ->where('Status', 1)
+            ->get();
+
 
         $category = $item->item->category;
         $parentCategoryId = $category->parent ? $category->parent->Id : $category->Id;
         $subcategoryId = $category->parent ? $category->Id : null;
 
         $items = ItemMasterList::where('Category', $subcategoryId ?? $parentCategoryId)
-            ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+            ->whereHas('status', fn ($q) => $q->where('Description', 'Active'))
             ->get();
 
         return view('inventory.itemmaster.sku.edit', compact('item', 'branch', 'stores', 'categories', 'items'));
     }
-
 
     public function update(StockItemRequest $request, $id)
     {
@@ -127,29 +130,34 @@ class SKUController extends Controller
 
         try {
             $this->stockItemService->update($item, $data);
+
             return redirect()->route('sku.index')->with('success', 'Stock item updated successfully!');
         } catch (\Exception $e) {
             return back()->withErrors('Failed to update stock item: ' . $e->getMessage())->withInput();
         }
     }
 
-     public function destroy($id)
+    public function destroy($id)
     {
         $item = StockItem::findOrFail($id);
         $this->authorize('destroy', $item);
         $this->stockItemService->destroy($item);
+
         return redirect()->route('sku.index')->with('success', 'Stock item deleted successfully.');
     }
-
 
     public function getStores(Request $request)
     {
         $branchId = $request->get('BranchID');
-        if (!$branchId) {
+        if (! $branchId) {
             return response()->json([], 400);
         }
 
-        $stores = Store::where('BranchID', $branchId)->get(['Id', 'StoreName']);
+        $stores = Store::where('BranchID', $branchId)
+        ->where('Status', 1)
+        ->get(['Id', 'StoreName']);
+
+
         return response()->json($stores);
     }
 
@@ -159,23 +167,23 @@ class SKUController extends Controller
         $subcategoryId = $request->get('subcategory_id');
 
         $items = ItemMasterList::where('Category', $subcategoryId ?? $categoryId)
-            ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+            ->whereHas('status', fn ($q) => $q->where('Description', 'Active'))
             ->get(['Id', 'ItemName']);
+
         return response()->json($items);
     }
-
 
     public function getItemDetails(Request $request)
     {
         $itemId = $request->get('item_id');
 
-        if (!$itemId) {
+        if (! $itemId) {
             return response()->json(['error' => 'Item ID is required'], 400);
         }
 
         $item = ItemMasterList::with('uom')->find($itemId);
 
-        if (!$item) {
+        if (! $item) {
             return response()->json(['error' => 'Item not found'], 404);
         }
 
@@ -184,8 +192,8 @@ class SKUController extends Controller
             'PriceID' => $item->price?->Id ?? null,
             'UOM' => [
                 'id' => $item->UOM,
-                'name' => $item->uom?->Name ?? 'N/A'
-            ]
+                'name' => $item->uom?->Name ?? 'N/A',
+            ],
         ]);
     }
 }

@@ -34,29 +34,34 @@ class EmailDraftController extends Controller
         if ($lock->get()) {
             $replyTo = Email::query()->where('EmailID', $email_id)
                 ->where('Type', EmailTypeEnum::Incoming->value)->first();
-            if (!$replyTo instanceof Email) {
+            if (! $replyTo instanceof Email) {
                 $lock->release();
+
                 return $this->errored('could not load email');
             }
 
             $subject = $replyTo->Subject;
-            if (!Str::startsWith($subject, 'Re:')) {
+            if (! Str::startsWith($subject, 'Re:')) {
                 $subject = 'Re: ' . $subject;
             }
+
             try {
                 $CrmEmail = DB::transaction(static function () use ($subject, $replyTo, $request) {
                     $CrmEmail = (new CRMEmailService($replyTo))
                         ->createReply($replyTo->From, $subject, "<br><hr>" . $replyTo->Body, $request->user(), $replyTo->CC ?? [])->crmEmail;
                     $CrmEmail->conversation?->increment('Emails');
+
                     return $CrmEmail;
                 });
             } catch (Exception | \Throwable $e) {
                 Log::error('Error saving draft ' . $e->getMessage());
+
                 return $this->errored('error creating draft');
             }
 
             return $this->edit($request, $CrmEmail->EmailID);
         }
+
         return $this->errored('similar email is being edited by another user');
     }
 
@@ -64,7 +69,7 @@ class EmailDraftController extends Controller
     {
         $email = Email::query()->where('EmailID', $email_id)
             ->where('Status', EmailStatusEnum::Draft->value)->where('CreatedBy', $request->user()->Id)->first();
-        if (!$email instanceof Email) {
+        if (! $email instanceof Email) {
             return $this->errored('could not load email');
         }
 

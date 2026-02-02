@@ -28,18 +28,14 @@
                 @forelse ($clarifications as $index => $clarification)
                     <tr>
                         <td>{{ $index + 1 }}</td>
-                        <td>@php
-                                $tenderNo = $clarification->TenderID;
-                                try {
-                                    $t = \App\Models\Procurement\Tender::find($clarification->TenderID);
-                                    if ($t) {
-                                        $tenderNo = $t->TenderNo ?? $clarification->TenderID;
-                                    }
-                                } catch (\Throwable $e) {
-                                    // ignore and fallback to id
-                                }
-                            @endphp
-                            {{ $tenderNo }}</td>
+                        <td>
+                            @if($clarification->tenderID)
+                                <div>{{ $clarification->tenderID->TenderNo }}</div>
+                                <div class="text-muted small">{{ $clarification->tenderID->Title }}</div>
+                            @else
+                                {{ $clarification->TenderID }}
+                            @endif
+                        </td>
                         <td>@php
                                 $vendorName = $clarification->VendorID;
                                 try {

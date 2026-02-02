@@ -6,8 +6,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class RequisitionRequest extends FormRequest
 {
-
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -17,12 +15,12 @@ class RequisitionRequest extends FormRequest
     {
         return [
 
-            'ProcurementPlan' => ['nullable'],
+            'ProcurementPlan' => ['required',  'string'],
             'Branch' => ['required', 'numeric'],
             'Department' => ['required', 'numeric'],
             'Remarks' => ['required', 'string'],
 
-            //
+
                ];
     }
 
@@ -30,9 +28,9 @@ class RequisitionRequest extends FormRequest
     {
         return [
             // 'ProcurementPlan.required' => 'Please select a Procurement Plan.',
-            'Branch.required'          => 'The Branch field is required.',
-            'Department.required'      => 'The Department field is required.',
-            'Remarks.required'         => 'Please provide remarks or a description.',
+            'Branch.required' => 'The Branch field is required.',
+            'Department.required' => 'The Department field is required.',
+            'Remarks.required' => 'Please provide remarks or a description.',
         ];
     }
 }

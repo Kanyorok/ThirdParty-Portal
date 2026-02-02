@@ -4,8 +4,6 @@ namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
-use App\Models\Inventory\Store;
-use Illuminate\Auth\Access\Response;
 
 class TransactionReceiptPolicy
 {
@@ -56,5 +54,4 @@ class TransactionReceiptPolicy
     {
         return $user->can(PermissionEnum::TransactionReceiptRestore->value);
     }
-
 }

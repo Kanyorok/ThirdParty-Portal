@@ -14,7 +14,7 @@ class LoginThirdPartyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email:rfc,dns', 'max:255'],
+            'email' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ];
     }
@@ -22,9 +22,9 @@ class LoginThirdPartyRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.required' => __('auth.email_required'),
-            'email.email' => __('auth.invalid_email_format'),
-            'password.required' => __('auth.password_required'),
+            'email.required' => 'Email is required',
+            'email.email' => 'Bad Email format',
+            'password.required' => 'Password is required',
         ];
     }
 

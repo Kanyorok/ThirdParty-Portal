@@ -15,10 +15,10 @@ class CRDBAuthController extends Controller
 {
     /**
      * Login endpoint for CRDB application
-     * 
+     *
      * This endpoint validates credentials and returns an API token.
      * Credentials can be stored in APICredential configuration or validated against User model.
-     * 
+     *
      * @param Request $request
      * @return JsonResponse
      */
@@ -38,7 +38,7 @@ class CRDBAuthController extends Controller
 
             if ($apiCred) {
                 $config = (array) $apiCred->Configuration;
-                
+
                 // Check if username/password are stored in configuration
                 if (isset($config['username']) && isset($config['password'])) {
                     $storedUsername = $config['username'];
@@ -59,7 +59,7 @@ class CRDBAuthController extends Controller
                         // Users must use the API key that was shown when it was generated
                         return response()->json([
                             'success' => false,
-                            'message' => 'API key cannot be retrieved for security reasons. Please use the API key that was displayed when it was generated, or generate a new one from the Integration settings page.'
+                            'message' => 'API key cannot be retrieved for security reasons. Please use the API key that was displayed when it was generated, or generate a new one from the Integration settings page.',
                         ], 400);
                     }
                 }
@@ -72,10 +72,10 @@ class CRDBAuthController extends Controller
 
             if ($user && Hash::check($validated['password'], $user->Password)) {
                 // Check if user is active
-                if (isset($user->IsActive) && !$user->IsActive) {
+                if (isset($user->IsActive) && ! $user->IsActive) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Account is inactive'
+                        'message' => 'Account is inactive',
                     ], 403);
                 }
 
@@ -83,7 +83,7 @@ class CRDBAuthController extends Controller
                 // Users must use the API key that was shown when it was generated
                 return response()->json([
                     'success' => false,
-                    'message' => 'API key cannot be retrieved for security reasons. Please use the API key that was displayed when it was generated, or generate a new one from the Integration settings page.'
+                    'message' => 'API key cannot be retrieved for security reasons. Please use the API key that was displayed when it was generated, or generate a new one from the Integration settings page.',
                 ], 400);
             }
 
@@ -91,7 +91,6 @@ class CRDBAuthController extends Controller
             throw ValidationException::withMessages([
                 'username' => ['Invalid credentials provided.'],
             ]);
-
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -114,7 +113,7 @@ class CRDBAuthController extends Controller
 
     /**
      * Get API key from APICredential
-     * 
+     *
      * Note: For security reasons, the full API key is not stored in the database.
      * This method cannot retrieve the full key - it can only validate if a key exists.
      * The key must be generated via the Integration settings page and saved securely by the user.
@@ -122,9 +121,9 @@ class CRDBAuthController extends Controller
     private function getApiKey(APICredential $apiCred): string
     {
         $config = (array) $apiCred->Configuration;
-        
+
         // Check if API key configuration exists
-        if (!isset($config['Key'])) {
+        if (! isset($config['Key'])) {
             throw new \Exception('API key not configured. Please generate an API key via the Integration settings page.');
         }
 
@@ -158,4 +157,3 @@ class CRDBAuthController extends Controller
         ]);
     }
 }
-

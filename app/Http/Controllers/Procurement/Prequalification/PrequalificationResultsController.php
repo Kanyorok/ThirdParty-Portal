@@ -7,7 +7,6 @@ use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\Procurement\Prequalification\PrequalificationEvaluation;
 use App\Models\Procurement\Prequalification\PrequalificationResult;
 use App\Services\Procurement\SupplierPrequalificationService;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
@@ -27,8 +26,9 @@ class PrequalificationResultsController extends Controller
         $round = $application->round;
 
         // If round is missing, return empty sections — caller should handle showing a friendly message.
-        if (!$round) {
+        if (! $round) {
             Log::warning('Prequalification application missing round (buildWeightedResults)', ['ApplicationID' => $application->ApplicationID ?? null]);
+
             return ['sections' => [], 'grandTotal' => 0.0];
         }
 
@@ -58,8 +58,12 @@ class PrequalificationResultsController extends Controller
             $sectionTotal = 0.0;
             foreach ($sectionEvaluations as $eval) {
                 $rawScore = (float)($eval->Score ?? 0); // out of 10
-                if ($rawScore < 0) $rawScore = 0;
-                if ($rawScore > 10) $rawScore = 10;
+                if ($rawScore < 0) {
+                    $rawScore = 0;
+                }
+                if ($rawScore > 10) {
+                    $rawScore = 10;
+                }
                 $weighted = ($perCriterionWeight * ($rawScore / 10)); // already a % portion of 100
                 $sectionTotal += $weighted;
                 $criteriaArr[] = [
@@ -83,6 +87,7 @@ class PrequalificationResultsController extends Controller
             ];
         }
         $grandTotal = round($grandTotal, 6);
+
         return ['sections' => $sectionsOut, 'grandTotal' => $grandTotal];
     }
 
@@ -114,7 +119,7 @@ class PrequalificationResultsController extends Controller
      */
     public function generateResults(SupplierPrequalificationService $service, $applicationId): \Illuminate\Http\RedirectResponse
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             abort(403, 'Unauthorized. Only authenticated users can generate results.');
         }
 
@@ -150,7 +155,7 @@ class PrequalificationResultsController extends Controller
         }
 
         // If the application has no configured round, show friendly guidance
-        if (!$application->round) {
+        if (! $application->round) {
             return view('procurement.suppliers.prequalification.prequalification-evaluation.no_round_configured', compact('application'));
         }
 
@@ -162,6 +167,5 @@ class PrequalificationResultsController extends Controller
         $grandTotal = $calc['grandTotal'];
 
         return view('procurement.suppliers.prequalification.prequalification-evaluation.show_results', compact('application', 'sections', 'result', 'grandTotal'));
-
     }
 }

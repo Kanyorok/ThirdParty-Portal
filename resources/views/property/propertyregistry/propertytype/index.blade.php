@@ -42,13 +42,13 @@
                             <td>
                                 <div class="d-flex gap-2">
                                     <a href="{{ route('propertytype.edit', $type->Id) }}"
-                                       class="btn btn-sm btn-warning">
-                                        <i class="bi bi-pencil-square"></i> Edit
+                                       class="btn btn-sm btn-warning" title="edit">
+                                        <i class="bi bi-pencil-square"></i>
                                     </a>
 
                                     @if($type->property()->exists())
-                                        <button class="btn btn-sm btn-secondary" disabled>
-                                            <i class="bi bi-lock"></i> In Use
+                                        <button class="btn btn-sm btn-secondary" title="In Use">
+                                            <i class="bi bi-lock"></i>
                                         </button>
                                     @else
                                         <form action="{{ route('propertytype.destroy', $type->Id) }}"
@@ -56,8 +56,8 @@
                                               onsubmit="return confirm('Are you sure you want to delete this type?');">
                                             @csrf
                                             @method('DELETE')
-                                            <button class="btn btn-sm btn-danger">
-                                                <i class="bi bi-trash"></i> Delete
+                                            <button class="btn btn-sm btn-danger" title="Delete Type">
+                                                <i class="bi bi-trash"></i> 
                                             </button>
                                         </form>
                                     @endif

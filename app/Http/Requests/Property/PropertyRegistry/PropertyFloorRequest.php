@@ -11,7 +11,6 @@ class PropertyFloorRequest extends FormRequest
     /**
      * Determine if the user is authorized to make this request.
      */
-
     public function authorize(): bool
     {
         return true;
@@ -32,7 +31,8 @@ class PropertyFloorRequest extends FormRequest
                 'string',
                 'max:50',
                 Rule::unique(PropertyFloor::class, 'FloorLabel')
-                    ->where(fn($query) => $query
+                    ->where(
+                        fn ($query) => $query
                         ->where('PropertyID', $this->PropertyID)
                         ->where('BlockID', $this->BlockID)
                     ),

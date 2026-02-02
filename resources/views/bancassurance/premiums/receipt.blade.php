@@ -187,7 +187,7 @@
       </div>
 
       <div class="amount-box">
-        <h2>{{ number_format((float)$payment->Amount, 2) }}</h2>
+        <h2>{{ $payment->currency->SymbolNative ?? 'cu' }} {{ number_format((float)$payment->Amount, 2) }}</h2>
         <p>Amount Paid</p>
       </div>
 

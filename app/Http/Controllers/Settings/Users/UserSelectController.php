@@ -24,7 +24,7 @@ class UserSelectController extends Controller
     public function __invoke(Request $request): \Illuminate\Http\JsonResponse
     {
 
-        if (!$request->has('q')) {
+        if (! $request->has('q')) {
             return $this->_response($request, collect());
         }
 
@@ -36,12 +36,14 @@ class UserSelectController extends Controller
         if (Str::startsWith($search, 't:') && $request->has('with_teams')) {
             $search = explode(':', $search);
             array_shift($search);
+
             return $this->_response($request, $this->_searchTeams(implode(':', $search)));
         }
 
         if (Str::startsWith($search, 'u:')) {
             $search = explode(':', $search);
             array_shift($search);
+
             return $this->_response($request, $this->_searchUsers($request, implode(':', $search)));
         }
 
@@ -59,18 +61,19 @@ class UserSelectController extends Controller
         if ($request->has('add_none')) {
             $data->add([
                         'UserID' => SystemHelper::ID,
-                        'Name'   => 'None - Unassigned',
-                        'type'   => 'user',
+                        'Name' => 'None - Unassigned',
+                        'type' => 'user',
                        ]);
         }
 
         if ($request->has('add_all')) {
             $data->add([
                         'UserID' => UserService::MODULE,
-                        'Name'   => 'All Users',
-                        'type'   => 'user',
+                        'Name' => 'All Users',
+                        'type' => 'user',
                        ]);
         }
+
         return response()->json($data->toarray());
     }
 
@@ -81,11 +84,12 @@ class UserSelectController extends Controller
                 ->orWhere('t_Teams.Email', 'LIKE', "%$search%")
                 ->orWhere('t_Teams.Notes', 'LIKE', "%$search%");
         })->select('t_Teams.TeamID', 't_Teams.Name')->lock('WITH(NOLOCK)')->limit(self::LIMIT)->get(['TeamID', 'Name']);
+
         return $teams->map(function ($team) {
             return [
                     'UserID' => 't#' . $team->TeamID,
-                    'Name'   => $team->Name . ' (team)',
-                    'type'   => 'team',
+                    'Name' => $team->Name . ' (team)',
+                    'type' => 'team',
                    ];
         });
     }
@@ -109,11 +113,12 @@ class UserSelectController extends Controller
                 ->orWhere('t_Users.Phone', 'LIKE', "%$search%");
         })->limit(self::LIMIT)->where('UserID', '!=', SystemHelper::ID)->lock('WITH(NOLOCK)')->get(['UserID', 'Name']);
         $append = ($request->has('with_teams')) ? ' (user)' : '';
+
         return $users->map(function ($user) use ($append) {
             return [
                     'UserID' => $user->UserID,
-                    'Name'   => $user->Name . ' - ' . $user->UserID . $append,
-                    'type'   => 'user',
+                    'Name' => $user->Name . ' - ' . $user->UserID . $append,
+                    'type' => 'user',
                    ];
         });
     }

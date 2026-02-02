@@ -35,6 +35,7 @@ class SupplierCategoryItemCategorySeeder extends Seeder
 
         if ($supplierCategories->isEmpty() || $itemCategories->isEmpty()) {
             $this->command->warn('   ⚠️  Need both supplier categories and item categories to create relationships');
+
             return;
         }
 
@@ -43,12 +44,12 @@ class SupplierCategoryItemCategorySeeder extends Seeder
             // Electronics Supplier Category -> Electronics main category
             [
                 'supplier_category_name' => 'Electronics & IT Equipment',
-                'item_categories' => ['Electronics'] // This exists in the database
+                'item_categories' => ['Electronics'], // This exists in the database
             ],
             // Office Supplies Supplier Category -> Office Supplies main category
             [
                 'supplier_category_name' => 'Office Supplies & Stationery',
-                'item_categories' => ['Office Supplies'] // This exists in the database
+                'item_categories' => ['Office Supplies'], // This exists in the database
             ],
         ];
 
@@ -56,10 +57,10 @@ class SupplierCategoryItemCategorySeeder extends Seeder
         $generalSupplierCategory = 'General Supplies';
         $otherMainCategories = $itemCategories->whereNotIn('Name', ['Electronics', 'Office Supplies'])->pluck('Name')->toArray();
 
-        if (!empty($otherMainCategories)) {
+        if (! empty($otherMainCategories)) {
             $relationships[] = [
                 'supplier_category_name' => $generalSupplierCategory,
-                'item_categories' => $otherMainCategories
+                'item_categories' => $otherMainCategories,
             ];
         }
 
@@ -70,7 +71,7 @@ class SupplierCategoryItemCategorySeeder extends Seeder
             // Find supplier category
             $supplierCategory = $supplierCategories->firstWhere('CategoryName', $relationship['supplier_category_name']);
 
-            if (!$supplierCategory) {
+            if (! $supplierCategory) {
                 // Create supplier category if it doesn't exist
                 $supplierCategoryId = DB::table('t_SupplierCategories')->insertGetId([
                     'CategoryName' => $relationship['supplier_category_name'],
@@ -91,8 +92,9 @@ class SupplierCategoryItemCategorySeeder extends Seeder
             foreach ($relationship['item_categories'] as $itemCategoryName) {
                 $itemCategory = $itemCategories->firstWhere('Name', $itemCategoryName);
 
-                if (!$itemCategory) {
+                if (! $itemCategory) {
                     $this->command->warn("   ⚠️  Item category '{$itemCategoryName}' not found in existing main categories. Skipping.");
+
                     continue; // Skip this item category
                 } else {
                     $itemCategoryId = $itemCategory->Id;
@@ -105,7 +107,7 @@ class SupplierCategoryItemCategorySeeder extends Seeder
                     ->whereNull('DeletedOn')
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     DB::table('t_SupplierCategory_ItemCategory')->insert([
                         'SupplierCategoryID' => $supplierCategoryId,
                         'ItemCategoryID' => $itemCategoryId,
@@ -145,6 +147,7 @@ class SupplierCategoryItemCategorySeeder extends Seeder
 
         if ($thirdParties->isEmpty()) {
             $this->command->warn('   ⚠️  No active third parties found');
+
             return;
         }
 
@@ -160,7 +163,7 @@ class SupplierCategoryItemCategorySeeder extends Seeder
                 ->where('supplier_category_id', $supplierCategory->SupplierCategoryID)
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('t_ThirdParty_SupplierCategory')->insert([
                     'third_party_id' => $thirdParty->Id,
                     'supplier_category_id' => $supplierCategory->SupplierCategoryID,

@@ -2,11 +2,11 @@
 
 namespace App\Imports;
 
+use App\Models\Core\Branch;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\Store;
-use App\Models\Core\Branch;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -20,20 +20,22 @@ class OpeningStockImport implements ToModel, WithHeadingRow
         $requiredColumns = [
             'itemcode', 'branchname', 'storename', 'uom',
             'itemprice', 'qty', 'minstocklevel',
-            'reorderqty', 'maxstocklevel'
+            'reorderqty', 'maxstocklevel',
         ];
 
         foreach ($requiredColumns as $col) {
-            if (!array_key_exists($col, $row)) {
+            if (! array_key_exists($col, $row)) {
                 \Log::error("❌ Missing required column: {$col}");
+
                 throw new \Exception("The uploaded file is not a valid Opening Stock Template. Missing column: {$col}");
             }
         }
 
         // ✅ Find Item
         $item = ItemMasterList::where('ItemCode', $row['itemcode'])->first();
-        if (!$item) {
+        if (! $item) {
             \Log::warning("Item not found for ItemCode: {$row['itemcode']}");
+
             return null;
         }
 
@@ -43,19 +45,20 @@ class OpeningStockImport implements ToModel, WithHeadingRow
 
         // ✅ Store
         $store = Store::where('StoreName', $row['storename'])
-            ->when($branchId, fn($q) => $q->where('BranchID', $branchId))
+            ->when($branchId, fn ($q) => $q->where('BranchID', $branchId))
             ->first();
         $storeId = $store?->Id;
 
-        if (!$branchId || !$storeId) {
+        if (! $branchId || ! $storeId) {
             \Log::warning("Invalid Branch/Store for ItemCode: {$row['itemcode']} | Branch: {$row['branchname']} | Store: {$row['storename']}");
+
             return null;
         }
 
         // ✅ UOM (convert from Code to Id)
         $uom = \App\Models\Inventory\UnitOfMeasure::where('Code', $row['uom'])->first();
         $uomId = $uom?->Id;
-        if (!$uomId) {
+        if (! $uomId) {
             \Log::warning("Invalid UOM for ItemCode: {$row['itemcode']} | UOM: {$row['uom']}");
         }
 
@@ -64,7 +67,7 @@ class OpeningStockImport implements ToModel, WithHeadingRow
             ->where('ItemID', $item->Id)
             ->first();
         $priceId = $price?->Id;
-        if (!$priceId) {
+        if (! $priceId) {
             \Log::warning("Invalid Price for ItemCode: {$row['itemcode']} | Price: {$row['itemprice']}");
         }
 
@@ -88,7 +91,7 @@ class OpeningStockImport implements ToModel, WithHeadingRow
             'Max' => $row['maxstocklevel'] ?? 0,
             'UOM' => $uomId,
             'UnitCost' => $priceId,
-            'LastReceived' => !empty($row['lastreceiveddate'])
+            'LastReceived' => ! empty($row['lastreceiveddate'])
                 ? Carbon::createFromFormat('d/m/Y', $row['lastreceiveddate'])
                 : now(),
             'Status' => $row['isactive'] ?? true,

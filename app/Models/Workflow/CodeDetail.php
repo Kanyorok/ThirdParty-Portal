@@ -2,20 +2,21 @@
 
 namespace App\Models\Workflow;
 
+use App\Models\Auth\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\Auth\User;
 use Illuminate\Support\Facades\Auth;
 
 class CodeDetail extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     /**
      * The table associated with the model.
      *
@@ -44,7 +45,7 @@ class CodeDetail extends Model
      */
     protected $keyType = 'int';
 
-     public static function getPrimaryKey(): string
+    public static function getPrimaryKey(): string
     {
         return 'CodeDetailsId';
     }
@@ -64,7 +65,7 @@ class CodeDetail extends Model
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
-        'ModifiedOn'
+        'ModifiedOn',
     ];
 
     /**

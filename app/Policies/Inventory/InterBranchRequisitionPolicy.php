@@ -3,10 +3,9 @@
 namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
-use App\Models\Inventory\InterBranchRequisition;
 use App\Enums\Inventory\InterBranchRequisitionEnum;
 use App\Models\Auth\User;
-use Illuminate\Auth\Access\Response;
+use App\Models\Inventory\InterBranchRequisition;
 
 class InterBranchRequisitionPolicy
 {

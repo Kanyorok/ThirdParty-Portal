@@ -5,6 +5,7 @@ namespace App\Http\Controllers\ThirdParty;
 use App\Enums\BusinessTypeEnum;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdPartyAuth\StoreThirdPartyWithUserRequest;
 use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyRequest;
@@ -22,7 +23,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Yajra\DataTables\DataTables;
-use App\Enums\ThirdParty\ThirdPartyTypeEnum;
 
 class ThirdPartyWebController extends Controller
 {
@@ -85,7 +85,7 @@ class ThirdPartyWebController extends Controller
                 return DataTables::of($query)
                     ->addColumn(
                         'checkbox',
-                        fn(ThirdParties $tp) =>
+                        fn (ThirdParties $tp) =>
                         '<input type="checkbox" name="selected[]" value="' . $tp->Id . '" class="form-check-input select-row">'
                     )
 
@@ -99,18 +99,18 @@ class ThirdPartyWebController extends Controller
                         return ThirdPartyTypeEnum::tryFrom($thirdParty->ThirdPartyType)?->label() ?? 'N/A';
                     })
 
-                    ->addColumn('CountryId', fn($tp) => $tp->country->Name ?? '—')
-                    ->addColumn('BusinessType', fn($row) => $row->BusinessType?->label())
-                    ->addColumn('ApprovalStatus', fn($row) => $row->ApprovalStatus?->label())
-                    ->addColumn('Status', fn($row) => $row->Status?->label())
-                    ->addColumn('IsPrequalified', fn(ThirdParties $tp) => $tp->IsPrequalified ? 'Yes' : 'No')
+                    ->addColumn('CountryId', fn ($tp) => $tp->country->Name ?? '—')
+                    ->addColumn('BusinessType', fn ($row) => $row->BusinessType?->label())
+                    ->addColumn('ApprovalStatus', fn ($row) => $row->ApprovalStatus?->label())
+                    ->addColumn('Status', fn ($row) => $row->Status?->label())
+                    ->addColumn('IsPrequalified', fn (ThirdParties $tp) => $tp->IsPrequalified ? 'Yes' : 'No')
                     ->addColumn(
                         'PrimaryUser',
-                        fn(ThirdParties $tp) =>
+                        fn (ThirdParties $tp) =>
                         trim(($tp->UserFirstName ?? '') . ' ' . ($tp->UserLastName ?? '')) ?: 'N/A'
                     )
-                    ->addColumn('PrimaryEmail', fn(ThirdParties $tp) => $tp->UserEmail ?? 'N/A')
-                    ->addColumn('actions', fn(ThirdParties $tp) => '
+                    ->addColumn('PrimaryEmail', fn (ThirdParties $tp) => $tp->UserEmail ?? 'N/A')
+                    ->addColumn('actions', fn (ThirdParties $tp) => '
                     <div class="actions text-center">
                         <a href="' . route('thirdparty.parties.show', $tp->Id) . '" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-eye"></i>
@@ -133,6 +133,7 @@ class ThirdPartyWebController extends Controller
                 Log::error('DataTables error in ThirdParty index: ' . $e->getMessage(), [
                     'trace' => $e->getTraceAsString(),
                 ]);
+
                 return response()->json([
                     'error' => 'An error occurred while loading the data: ' . $e->getMessage(),
                 ], 500);
@@ -142,7 +143,6 @@ class ThirdPartyWebController extends Controller
         return view('thirdparty.parties.index');
     }
 
-
     public function create(): View
     {
         $businessTypes = BusinessTypeEnum::cases();
@@ -150,6 +150,7 @@ class ThirdPartyWebController extends Controller
         $thirdPartyTypes = ThirdPartyType::orderBy('Code')->get();
         $partyTypes = CodeDetail::where('CodeID', 'PartyType')->get();
         $country = Country::all();
+
         return view('thirdparty.parties.create', compact('businessTypes', 'approvalStatuses', 'thirdPartyTypes', 'partyTypes', 'country'));
     }
 
@@ -167,52 +168,52 @@ class ThirdPartyWebController extends Controller
                 $thirdPartyName = trim($validated['FirstName'] . ' ' . $validated['LastName']);
             }
 
-            $creatorId = DB::table('t_ThirdPartyUsers')->value('Id') ?? NULL;
+            $creatorId = DB::table('t_ThirdPartyUsers')->value('Id') ?? null;
 
             $thirdParty = ThirdParties::create([
-                'ThirdPartyName'     => $thirdPartyName,
-                'TradingName'        => $validated['TradingName'] ?? null,
-                'BusinessType'       => $validated['BusinessType'] ?? null,
-                'CountryId'          => $validated['Country'],
-                'IDNumber'           => $validated['IDNumber'] ?? null,
-                'PassportNo'         => $validated['PassportNo'] ?? null,
-                'PhysicalAddress'    => $validated['PhysicalAddress'],
-                'Email'              => $validated['Email'],
-                'Phone'              => $validated['Phone'],
-                'Website'            => $validated['Website'] ?? null,
-                'ThirdPartyType'     => $validated['PartyType'],
+                'ThirdPartyName' => $thirdPartyName,
+                'TradingName' => $validated['TradingName'] ?? null,
+                'BusinessType' => $validated['BusinessType'] ?? null,
+                'CountryId' => $validated['Country'],
+                'IDNumber' => $validated['IDNumber'] ?? null,
+                'PassportNo' => $validated['PassportNo'] ?? null,
+                'PhysicalAddress' => $validated['PhysicalAddress'],
+                'Email' => $validated['Email'],
+                'Phone' => $validated['Phone'],
+                'Website' => $validated['Website'] ?? null,
+                'ThirdPartyType' => $validated['PartyType'],
                 'RegistrationNumber' => $validated['RegistrationNumber'] ?? null,
-                'TaxPIN'             => $validated['TaxPIN'] ?? null,
-                'VATNumber'          => $validated['VATNumber'] ?? null,
-                'ApprovalStatus'     => $validated['ApprovalStatus'] ?? null,
-                'Status'             => $validated['Status'] ?? null,
-                'CreatedBy'          => $creatorId,
+                'TaxPIN' => $validated['TaxPIN'] ?? null,
+                'VATNumber' => $validated['VATNumber'] ?? null,
+                'ApprovalStatus' => $validated['ApprovalStatus'] ?? null,
+                'Status' => $validated['Status'] ?? null,
+                'CreatedBy' => $creatorId,
             ]);
 
             $user = ThirdPartyUser::create([
-                'UserID'       => strtoupper(Str::random(6)),
-                'FirstName'    => $request->FirstName,
-                'LastName'     => $request->LastName,
-                'Email'        => $request->UserEmail,
-                'Phone'        => $request->UserPhone,
-                'Gender'       => $request->Gender,
-                'Password'     => bcrypt('12345678'), // default password
-                'IsActive'     => 1,
+                'UserID' => strtoupper(Str::random(6)),
+                'FirstName' => $request->FirstName,
+                'LastName' => $request->LastName,
+                'Email' => $request->UserEmail,
+                'Phone' => $request->UserPhone,
+                'Gender' => $request->Gender,
+                'Password' => bcrypt('12345678'), // default password
+                'IsActive' => 1,
                 'EmailVerifiedOn' => now(),
-                'CreatedBy'    => $creatorId,
-                'CreatedOn'    => now(),
+                'CreatedBy' => $creatorId,
+                'CreatedOn' => now(),
                 'ThirdPartyId' => $thirdParty->Id, // link to company
             ]);
 
             if (is_array($request->ThirdPartyType)) {
                 foreach ($request->ThirdPartyType as $typeId) {
                     DB::table('t_ThirdPartyType_ThirdParties')->insert([
-                        'TypeId'       => $typeId,
+                        'TypeId' => $typeId,
                         'ThirdPartyId' => $thirdParty->Id,
-                        'CreatedBy'    => Auth::id() ?? 1,
-                        'ModifiedBy'   => Auth::id() ?? 1,
-                        'CreatedOn'    => now(),
-                        'ModifiedOn'   => now(),
+                        'CreatedBy' => Auth::id() ?? 1,
+                        'ModifiedBy' => Auth::id() ?? 1,
+                        'CreatedOn' => now(),
+                        'ModifiedOn' => now(),
                     ]);
                 }
             }
@@ -226,10 +227,10 @@ class ThirdPartyWebController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
+
             return back()->with('error', 'Failed to create third party: ' . $e->getMessage());
         }
     }
-
 
     public function show(ThirdParties $party): View
     {
@@ -237,6 +238,7 @@ class ThirdPartyWebController extends Controller
         $primaryUser = ThirdPartyUser::where('ThirdPartyId', $party->Id)
             ->orderByDesc('CreatedOn')
             ->first();
+
         return view('thirdparty.parties.show', compact('party', 'primaryUser'));
     }
 
@@ -254,7 +256,7 @@ class ThirdPartyWebController extends Controller
             'businessTypes' => BusinessTypeEnum::cases(),
             'approvalStatuses' => ThirdPartyApprovalStatusEnum::cases(),
             'statuses' => ThirdPartyStatusEnum::cases(),
-            'primaryUser' => $primaryUser
+            'primaryUser' => $primaryUser,
         ]);
     }
 
@@ -318,6 +320,7 @@ class ThirdPartyWebController extends Controller
                 ->with('success', 'Third party deleted successfully.');
         } catch (\Exception $e) {
             Log::error('Failed to delete third party: ' . $e->getMessage(), ['partyId' => $party->Id]);
+
             return redirect()->back()
                 ->with('error', 'Failed to delete third party. Please try again.');
         }
@@ -331,7 +334,7 @@ class ThirdPartyWebController extends Controller
         $request->validate([
             'action' => 'required|in:approve,reject,activate,deactivate',
             'selectedItems' => 'required|array|min:1',
-            'selectedItems.*' => 'required|integer|exists:t_ThirdParties,Id'
+            'selectedItems.*' => 'required|integer|exists:t_ThirdParties,Id',
         ]);
 
         try {
@@ -361,6 +364,7 @@ class ThirdPartyWebController extends Controller
                                     ThirdPartyUser::where('ThirdPartyId', $partyId)
                                         ->update(['IsActive' => 1, 'ModifiedBy' => $userId, 'ModifiedOn' => $now]);
                                 }
+
                                 break;
 
                             case 'reject':
@@ -374,6 +378,7 @@ class ThirdPartyWebController extends Controller
                                     ThirdPartyUser::where('ThirdPartyId', $partyId)
                                         ->update(['IsActive' => 0, 'ModifiedBy' => $userId, 'ModifiedOn' => $now]);
                                 }
+
                                 break;
 
                             case 'activate':
@@ -387,6 +392,7 @@ class ThirdPartyWebController extends Controller
                                     ThirdPartyUser::where('ThirdPartyId', $partyId)
                                         ->update(['IsActive' => 1, 'ModifiedBy' => $userId, 'ModifiedOn' => $now]);
                                 }
+
                                 break;
 
                             case 'deactivate':
@@ -400,6 +406,7 @@ class ThirdPartyWebController extends Controller
                                     ThirdPartyUser::where('ThirdPartyId', $partyId)
                                         ->update(['IsActive' => 0, 'ModifiedBy' => $userId, 'ModifiedOn' => $now]);
                                 }
+
                                 break;
                         }
 
@@ -409,7 +416,7 @@ class ThirdPartyWebController extends Controller
                         $errors[] = "Failed to update party {$partyId}: " . $e->getMessage();
                         Log::error("Bulk action failed for party {$partyId}", [
                             'action' => $action,
-                            'error' => $e->getMessage()
+                            'error' => $e->getMessage(),
                         ]);
                     }
                 }
@@ -425,18 +432,18 @@ class ThirdPartyWebController extends Controller
                 'message' => $message,
                 'successCount' => $successCount,
                 'errorCount' => $errorCount,
-                'errors' => $errors
+                'errors' => $errors,
             ]);
         } catch (\Exception $e) {
             Log::error('Bulk action failed: ' . $e->getMessage(), [
                 'action' => $request->input('action'),
-                'selectedItems' => $request->input('selectedItems')
+                'selectedItems' => $request->input('selectedItems'),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'An error occurred while processing the bulk action. Please try again.',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

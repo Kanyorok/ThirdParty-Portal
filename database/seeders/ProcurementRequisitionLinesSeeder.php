@@ -18,8 +18,7 @@ class ProcurementRequisitionLinesSeeder extends Seeder
         $uomCode = DB::table('t_UOM')->value('Id');
 
 
-        if (!$requisitionId || !$itemId || !$urgencyId || !$statusId || !$userId || !$uomCode) {
-            // dump('Missing required line item dependencies.');
+        if (! $requisitionId || ! $itemId || ! $urgencyId || ! $statusId || ! $userId || ! $uomCode) {
             return;
         }
 

@@ -55,10 +55,22 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
         </div>
         <div class="col-md-3">
             <label for="Status" class="form-label">Status</label>
+            @php
+                // Determine if we're in publish mode (URL has #Status or ?publish=1)
+                $isPublishMode = request()->get('publish') === '1' || ($isEdit && request()->fullUrl() && str_contains(request()->fullUrl(), 'publish=1'));
+            @endphp
             <select name="Status" id="Status" class="form-select @error('Status') is-invalid @enderror" {{ $readOnly ? 'disabled' : '' }}>
-                <option value="D" @selected($currentStatus==='D' )>Draft Round</option>
-                <option value="O" @selected($currentStatus==='O' )>Open for Application</option>
-                <option value="CL" @selected($currentStatus==='CL' )>Closed - Applications not Allowed</option>
+                @if($isPublishMode)
+                    {{-- Publish mode: Only show Open for Application --}}
+                    <option value="O" selected>Open for Application</option>
+                @elseif($isEdit)
+                    {{-- Edit mode: Show Draft and Closed only (NOT Open) --}}
+                    <option value="D" @selected($currentStatus==='D')>Draft Round</option>
+                    <option value="CL" @selected($currentStatus==='CL')>Closed - Applications not Allowed</option>
+                @else
+                    {{-- Create mode: Show Draft only --}}
+                    <option value="D" selected>Draft Round</option>
+                @endif
             </select>
             @if($readOnly)
             <input type="hidden" name="Status" value="{{ $currentStatus }}">

@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Insurance;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\MedicalFundDisbursementRequest;
 use App\Models\Insurance\MedicalFund;
+use App\Models\Insurance\MedicalFundBeneficiary;
 use App\Models\Insurance\MedicalFundContributor;
 use App\Models\Insurance\MedicalFundDisbursement;
-use App\Models\Insurance\MedicalFundBeneficiary;
 use App\Services\Insurance\MedicalFundDisbursementService;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class MedicalFundDisbursementController extends Controller
 {
@@ -49,109 +49,108 @@ class MedicalFundDisbursementController extends Controller
     /**
      * Show form for creating a new disbursement.
      */
-public function create(MedicalFund $medical_fund, Request $request)
-{
-    $contributor   = null;
-    $contributors  = collect();
-    $beneficiaries = collect();
-    $coverages     = collect();
+    public function create(MedicalFund $medical_fund, Request $request)
+    {
+        $contributor = null;
+        $contributors = collect();
+        $beneficiaries = collect();
+        $coverages = collect();
 
-    if ($cid = (int)$request->query('contributor')) {
-        $contributor = MedicalFundContributor::where('FundId', $medical_fund->Id)->find($cid);
+        if ($cid = (int)$request->query('contributor')) {
+            $contributor = MedicalFundContributor::where('FundId', $medical_fund->Id)->find($cid);
 
-        if ($contributor) {
-            // Active beneficiaries
-            $beneficiaries = $contributor->beneficiaries()
-                ->where('IsActive', true)
-                ->get()
-                ->map(fn($b) => [
-                    'Id' => $b->Id,
-                    'FullName' => $b->FullName,
-                ]);
+            if ($contributor) {
+                // Active beneficiaries
+                $beneficiaries = $contributor->beneficiaries()
+                    ->where('IsActive', true)
+                    ->get()
+                    ->map(fn ($b) => [
+                        'Id' => $b->Id,
+                        'FullName' => $b->FullName,
+                    ]);
 
-            // Try Eloquent relationships first (packages -> coverages)
-            $rawCoverages = $contributor->packages()
-                ->with('coverages')
-                ->get()
-                ->flatMap->coverages;
+                // Try Eloquent relationships first (packages -> coverages)
+                $rawCoverages = $contributor->packages()
+                    ->with('coverages')
+                    ->get()
+                    ->flatMap->coverages;
 
-            $coverages = $rawCoverages->map(function ($c) {
-                return (object)[
-                    'Id' => $c->ID ?? $c->Id ?? null,
-                    'Name' => $c->Name ?? ($c->name ?? null),
-                    'pivot' => $c->pivot ?? null,
-                    '_orig' => $c,
-                ];
-            })->filter(fn($c) => !is_null($c->Id))
-              ->unique('Id')
-              ->values();
+                $coverages = $rawCoverages->map(function ($c) {
+                    return (object)[
+                        'Id' => $c->ID ?? $c->Id ?? null,
+                        'Name' => $c->Name ?? ($c->name ?? null),
+                        'pivot' => $c->pivot ?? null,
+                        '_orig' => $c,
+                    ];
+                })->filter(fn ($c) => ! is_null($c->Id))
+                  ->unique('Id')
+                  ->values();
 
-            // Fallback: if Eloquent didn't return coverages (maybe due to pivot column mismatch)
-            if ($coverages->isEmpty()) {
-                // ✅ FIX: fully qualify Id column to avoid "ambiguous column name 'Id'"
-                $packageIds = $contributor->packages()
-                    ->pluck('t_MedicalFundPackages.Id')
-                    ->filter()
-                    ->values();
+                // Fallback: if Eloquent didn't return coverages (maybe due to pivot column mismatch)
+                if ($coverages->isEmpty()) {
+                    // ✅ FIX: fully qualify Id column to avoid "ambiguous column name 'Id'"
+                    $packageIds = $contributor->packages()
+                        ->pluck('t_MedicalFundPackages.Id')
+                        ->filter()
+                        ->values();
 
-                if ($packageIds->isNotEmpty()) {
-                    $pivot = 't_MedicalFundPackageCoverages';
-                    $pkgCols = ['PackageId', 'PackageID'];
-                    $covCols = ['CoverageId', 'CoverageID'];
+                    if ($packageIds->isNotEmpty()) {
+                        $pivot = 't_MedicalFundPackageCoverages';
+                        $pkgCols = ['PackageId', 'PackageID'];
+                        $covCols = ['CoverageId', 'CoverageID'];
 
-                    foreach ($pkgCols as $pkgCol) {
-                        foreach ($covCols as $covCol) {
-                            try {
-                                $rows = \DB::table($pivot . ' as pc')
-                                    ->join('t_Coverages as c', 'pc.' . $covCol, '=', 'c.Id')
-                                    ->whereIn('pc.' . $pkgCol, $packageIds->all())
-                                    ->select(
-                                        'c.Id as Id',
-                                        'c.Name',
-                                        'pc.AnnualLimit',
-                                        'pc.PerVisitLimit',
-                                        'pc.WaitingPeriodDays',
-                                        'pc.Scope'
-                                    )
-                                    ->get();
+                        foreach ($pkgCols as $pkgCol) {
+                            foreach ($covCols as $covCol) {
+                                try {
+                                    $rows = \DB::table($pivot . ' as pc')
+                                        ->join('t_Coverages as c', 'pc.' . $covCol, '=', 'c.Id')
+                                        ->whereIn('pc.' . $pkgCol, $packageIds->all())
+                                        ->select(
+                                            'c.Id as Id',
+                                            'c.Name',
+                                            'pc.AnnualLimit',
+                                            'pc.PerVisitLimit',
+                                            'pc.WaitingPeriodDays',
+                                            'pc.Scope'
+                                        )
+                                        ->get();
 
-                                if ($rows->isNotEmpty()) {
-                                    $coverages = $rows->map(fn($r) => (object)[
-                                        'Id' => $r->Id,
-                                        'Name' => $r->Name,
-                                        'pivot' => (object)[
-                                            'AnnualLimit' => $r->AnnualLimit ?? null,
-                                            'PerVisitLimit' => $r->PerVisitLimit ?? null,
-                                            'WaitingPeriodDays' => $r->WaitingPeriodDays ?? null,
-                                            'Scope' => $r->Scope ?? null,
-                                        ],
-                                        '_orig' => $r,
-                                    ])->values();
+                                    if ($rows->isNotEmpty()) {
+                                        $coverages = $rows->map(fn ($r) => (object)[
+                                            'Id' => $r->Id,
+                                            'Name' => $r->Name,
+                                            'pivot' => (object)[
+                                                'AnnualLimit' => $r->AnnualLimit ?? null,
+                                                'PerVisitLimit' => $r->PerVisitLimit ?? null,
+                                                'WaitingPeriodDays' => $r->WaitingPeriodDays ?? null,
+                                                'Scope' => $r->Scope ?? null,
+                                            ],
+                                            '_orig' => $r,
+                                        ])->values();
 
-                                    break 2; // Stop searching once found
+                                        break 2; // Stop searching once found
+                                    }
+                                } catch (\Throwable $e) {
+                                    // Ignore and continue trying alternative column variants
                                 }
-                            } catch (\Throwable $e) {
-                                // Ignore and continue trying alternative column variants
                             }
                         }
                     }
                 }
             }
+        } else {
+            // If no contributor selected, fetch all contributors under this fund
+            $contributors = MedicalFundContributor::where('FundId', $medical_fund->Id)->get();
         }
-    } else {
-        // If no contributor selected, fetch all contributors under this fund
-        $contributors = MedicalFundContributor::where('FundId', $medical_fund->Id)->get();
+
+        return view('bancassurance.medical_fund_disbursements.create', compact(
+            'medical_fund',
+            'contributor',
+            'contributors',
+            'beneficiaries',
+            'coverages'
+        ));
     }
-
-    return view('bancassurance.medical_fund_disbursements.create', compact(
-        'medical_fund',
-        'contributor',
-        'contributors',
-        'beneficiaries',
-        'coverages'
-    ));
-}
-
 
     /**
      * Store a new medical fund disbursement using the service.
@@ -172,7 +171,11 @@ public function create(MedicalFund $medical_fund, Request $request)
         $contributor->load(['packages.coverages']);
         $package = null;
         foreach ($contributor->packages as $pck) {
-            if ($pck->coverages->firstWhere('Id', (int)$data['CoverageId'])) { $package = $pck; break; }
+            if ($pck->coverages->firstWhere('Id', (int)$data['CoverageId'])) {
+                $package = $pck;
+
+                break;
+            }
         }
 
         // Create disbursement using service
@@ -250,14 +253,14 @@ public function create(MedicalFund $medical_fund, Request $request)
     public function remainingLimit(Request $request, MedicalFundContributor $contributor)
     {
         // unchanged for now (can later move into service helper if needed)
-        $coverageId    = (int)$request->query('coverage_id');
+        $coverageId = (int)$request->query('coverage_id');
         $beneficiaryId = $request->query('beneficiary_id') ? (int)$request->query('beneficiary_id') : null;
-        $onDate        = $request->query('on_date') ? Carbon::parse($request->query('on_date')) : now();
+        $onDate = $request->query('on_date') ? Carbon::parse($request->query('on_date')) : now();
 
         $contributor->load(['packages.coverages']);
-        $allowed = $contributor->packages->flatMap(fn($p) => $p->coverages)->keyBy('Id');
+        $allowed = $contributor->packages->flatMap(fn ($p) => $p->coverages)->keyBy('Id');
 
-        if (!$allowed->has($coverageId)) {
+        if (! $allowed->has($coverageId)) {
             return response()->json(['ok' => false, 'message' => 'Coverage not available for this contributor.'], 422);
         }
 
@@ -266,7 +269,11 @@ public function create(MedicalFund $medical_fund, Request $request)
 
         $pkgWithCoverage = null;
         foreach ($contributor->packages as $pck) {
-            if ($pck->coverages->firstWhere('Id', $coverageId)) { $pkgWithCoverage = $pck; break; }
+            if ($pck->coverages->firstWhere('Id', $coverageId)) {
+                $pkgWithCoverage = $pck;
+
+                break;
+            }
         }
         $subscribedOn = optional($pkgWithCoverage?->pivot)->SubscribedOn ?? $contributor->CreatedOn;
 
@@ -315,11 +322,11 @@ public function create(MedicalFund $medical_fund, Request $request)
      */
     public function options(MedicalFund $medical_fund, MedicalFundContributor $contributor)
     {
-    // ensure contributor belongs to this fund (attribute names are FundId / Id)
-    abort_unless((int)$contributor->FundId === (int)$medical_fund->Id, 404);
+        // ensure contributor belongs to this fund (attribute names are FundId / Id)
+        abort_unless((int)$contributor->FundId === (int)$medical_fund->Id, 404);
 
         $beneficiaries = $contributor->beneficiaries()->where('IsActive', true)->get()
-            ->map(fn($b) => [
+            ->map(fn ($b) => [
                 'ID' => $b->Id,
                 'FullName' => $b->FullName,
             ]);
@@ -328,9 +335,13 @@ public function create(MedicalFund $medical_fund, Request $request)
         $contributor->load(['packages.coverages']);
         $coverages = collect();
 
-        $raw = $contributor->packages->flatMap(function($p){ return $p->coverages ?? collect(); });
+        $raw = $contributor->packages->flatMap(function ($p) {
+            return $p->coverages ?? collect();
+        });
         if ($raw->isNotEmpty()) {
-            $coverages = $raw->unique(function($c){ return $c->ID ?? $c->Id; })->values()->map(function($cov){
+            $coverages = $raw->unique(function ($c) {
+                return $c->ID ?? $c->Id;
+            })->values()->map(function ($cov) {
                 return [
                     'ID' => $cov->ID ?? $cov->Id,
                     'Name' => $cov->Name ?? ($cov->name ?? ''),
@@ -353,7 +364,11 @@ public function create(MedicalFund $medical_fund, Request $request)
                 foreach ($pkgIdCols as $pIdCol) {
                     try {
                         $found = \DB::table($pkgPivot)->where($pc, $contributor->Id)->pluck($pIdCol)->filter()->unique();
-                        if ($found->isNotEmpty()) { $packageIds = $found; break 2; }
+                        if ($found->isNotEmpty()) {
+                            $packageIds = $found;
+
+                            break 2;
+                        }
                     } catch (\Throwable $e) {
                         // try next
                     }
@@ -375,7 +390,7 @@ public function create(MedicalFund $medical_fund, Request $request)
                                 ->get();
 
                             if ($rows->isNotEmpty()) {
-                                $coverages = $rows->map(function($r){
+                                $coverages = $rows->map(function ($r) {
                                     return [
                                         'ID' => $r->ID,
                                         'Name' => $r->Name,

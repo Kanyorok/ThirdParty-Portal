@@ -17,11 +17,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
 {
-    use UserActorTrait, SoftDeletes, ImageTrait, DocumentsTrait;
+    use UserActorTrait;
+    use SoftDeletes;
+    use ImageTrait;
+    use DocumentsTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Employees';
     protected $primaryKey = 'Id';
@@ -54,8 +57,8 @@ class Employee extends Model
 
     public function user(): HasOne
     {
-    // Correct FK mapping: t_Users.EmployeeId -> t_Employees.Id
-    return $this->hasOne(User::class, 'EmployeeId', 'Id')->withTrashed();
+        // Correct FK mapping: t_Users.EmployeeId -> t_Employees.Id
+        return $this->hasOne(User::class, 'EmployeeId', 'Id')->withTrashed();
     }
 
     public static function getPrimaryKey(): string
@@ -79,10 +82,8 @@ class Employee extends Model
             ->withPivot(['CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn']);
     }
 
-
     public function image()
     {
         return $this->belongsTo(Image::class, 'ImageId', 'ImageID');
     }
-
 }

@@ -3,8 +3,8 @@
 namespace App\Models\Fleet;
 
 use App\Models\Auth\User;
-use App\Models\Core\Branch;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Branch;
 use App\Models\Core\GPSCoordinate;
 use App\Models\DMS\Image;
 use App\Models\FleetManagement\FleetMake;
@@ -14,14 +14,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-
 class FleetVehicle extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     public $timestamps = false;
     protected $table = 't_FleetVehicles';
     protected $primaryKey = 'Id';
@@ -49,7 +49,6 @@ class FleetVehicle extends Model
         'ModifiedBy',
     ];
 
-
     public static function getPrimaryKey(): string
     {
         return 'VehicleId';
@@ -59,7 +58,6 @@ class FleetVehicle extends Model
     {
         return $this->belongsTo(Image::class, 'ImageId', 'ImageID');
     }
-
 
     public function vehicleType()
     {
@@ -75,7 +73,6 @@ class FleetVehicle extends Model
     {
         return $this->hasMany(FleetTripLog::class, 'VehicleID', 'Id');
     }
-
 
     public function maintenanceSchedules()
     {
@@ -111,7 +108,6 @@ class FleetVehicle extends Model
     {
         return $this->belongsTo(User::class, 'AssignedToUserID', 'Id');
     }
-
 
     public function status()
     {

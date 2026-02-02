@@ -31,12 +31,14 @@ class DepartmentNeedsController extends Controller
             ->whereNull('DeletedOn')
             ->orderBy('ItemName')
             ->get();
+
         return view('procurement.procurementplan.departmentneeds.raiseneed.create', compact('items'));
     }
 
     public function store(Request $request, DepartmentNeedsService $service)
     {
         $this->authorize('create', DepartmentNeed::class);
+
         try {
             // Basic validation: estimated cost must be present and > 0
             $validated = $request->validate([
@@ -57,7 +59,7 @@ class DepartmentNeedsController extends Controller
                 })
                 ->exists();
 
-            if (!$hasValidPrice) {
+            if (! $hasValidPrice) {
                 return redirect()->back()
                     ->withInput()
                     ->withErrors(['ItemID' => 'Cannot raise a need for an item without a configured estimated cost.']);
@@ -72,6 +74,7 @@ class DepartmentNeedsController extends Controller
                 ->with('success', 'Department need created!');
         } catch (\Exception $e) {
             Log::error("--- CREATE DEPARTMENT NEEDS ERROR --- " . $e->getMessage());
+
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['error' => $e->getMessage()]);
@@ -82,31 +85,33 @@ class DepartmentNeedsController extends Controller
     {
         $this->authorize('viewAny', DepartmentNeed::class);
         $departmentneedviews = DepartmentNeed::with('creator')->where('Status', DepartmentNeedsEnum::Pending)->get();
+
         return view('procurement.procurementplan.departmentneeds.raiseneed.index', compact('departmentneedviews'));
     }
 
-   public function submit(Request $request, $NeedID)
-{
-    $departmentNeed = DepartmentNeed::findOrFail($NeedID);
-    $actor = $request->user();
+    public function submit(Request $request, $NeedID)
+    {
+        $departmentNeed = DepartmentNeed::findOrFail($NeedID);
+        $actor = $request->user();
 
-    try {
-        DB::transaction(function () use ($departmentNeed, $actor) {
-            /** @var ApprovalWorkflow $workflow */
-            $workflow = app(ApprovalWorkflow::class, ['codeId' => 'DepartmentNeeds']);
-            $workflow->submit($departmentNeed, $actor, DepartmentNeedsEnum::Pending, remarks: 'Submitted for approval');
-        });
+        try {
+            DB::transaction(function () use ($departmentNeed, $actor) {
+                /** @var ApprovalWorkflow $workflow */
+                $workflow = app(ApprovalWorkflow::class, ['codeId' => 'DepartmentNeeds']);
+                $workflow->submit($departmentNeed, $actor, DepartmentNeedsEnum::Pending, remarks: 'Submitted for approval');
+            });
 
-        return redirect()
-            ->route('procurementdepartmentalplan.index')
-            ->with('success', 'Department Need submitted for approval successfully.');
-    } catch (\Throwable $e) {
-        Log::error('Department Need submission failed: ' . $e->getMessage());
-        return redirect()
-            ->back()
-            ->with('error', 'Failed to submit for approval. Please try again.');
+            return redirect()
+                ->route('procurementdepartmentalplan.index')
+                ->with('success', 'Department Need submitted for approval successfully.');
+        } catch (\Throwable $e) {
+            Log::error('Department Need submission failed: ' . $e->getMessage());
+
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to submit for approval. Please try again.');
+        }
     }
-}
 
     public function fetchLinesByDPlan($NeedID)
     {
@@ -153,10 +158,10 @@ class DepartmentNeedsController extends Controller
         return redirect()->route('procurementdepartmentalplan.index')->with('success', 'Needs updated successfully.');
     }
 
-
     public function destroy($NeedID)
     {
         $this->authorize('destroy', new DepartmentNeed());
+
         try {
             $needs = DepartmentNeed::where('NeedID', $NeedID)->get();
 
@@ -167,6 +172,7 @@ class DepartmentNeedsController extends Controller
             return redirect()->route('procurementdepartmentalplan.index')->with('success', 'Department need deleted.');
         } catch (Throwable $e) {
             Log::error("--- DELETE DEPARTMENT NEED ERROR --- " . $e->getMessage());
+
             return redirect()->route('procurementdepartmentalplan.index')->withErrors(['error' => 'Failed to delete department need.']);
         }
     }

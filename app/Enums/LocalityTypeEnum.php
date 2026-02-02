@@ -12,7 +12,6 @@ enum LocalityTypeEnum: string
 
     case City = 'ci';
 
-
     public function hasParent(): bool
     {
         return ($this->value === self::City->value);

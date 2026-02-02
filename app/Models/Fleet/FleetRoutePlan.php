@@ -1,11 +1,8 @@
 <?php
 
-
 namespace App\Models\Fleet;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\FleetManagement\FleetMake;
-use App\Models\FleetManagement\FleetModel;
 
 class FleetRoutePlan extends Model
 {
@@ -27,7 +24,6 @@ class FleetRoutePlan extends Model
     public static function getPrimaryKey(): string
     {
         return 'RouteId';
-
     }
 
     public function vehicle()

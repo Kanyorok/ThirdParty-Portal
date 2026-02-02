@@ -30,7 +30,7 @@ class LocalityController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        if (!in_array($request->_code, LocalityTypeEnum::values(), true)) {
+        if (! in_array($request->_code, LocalityTypeEnum::values(), true)) {
             throw new RuntimeException('Invalid list requested');
         }
 
@@ -55,14 +55,15 @@ class LocalityController extends Controller
         $name = $request->getPlaceName();
         $type = $request->getType();
         $located = $request->getLocatedIn();
+
         try {
             DB::transaction(static function () use ($name, $type, $located, $actor) {
                 $locality = Locality::create([
-                                              'Name'         => $name,
+                                              'Name' => $name,
                                               'LocationType' => $type,
-                                              'LocalityID'   => $located,
-                                              'CreatedBy'    => $actor->Id,
-                                              'ModifiedBy'   => $actor->Id,
+                                              'LocalityID' => $located,
+                                              'CreatedBy' => $actor->Id,
+                                              'ModifiedBy' => $actor->Id,
                                              ]);
                 activity()->causedBy($actor)->performedOn($locality->refresh())->event('create')->log('created locality ' . $locality->Name);
             });
@@ -70,6 +71,7 @@ class LocalityController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error create location :  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -86,10 +88,11 @@ class LocalityController extends Controller
         $actor = $request->user();
         $name = $request->getPlaceName();
         $located = $request->getLocatedIn();
+
         try {
             DB::transaction(static function () use ($located, $locality, $actor, $name) {
                 $locality->fill([
-                                 'Name'       => $name,
+                                 'Name' => $name,
                                  'LocalityID' => $located,
                                  'ModifiedBy' => $actor->Id,
                                 ])->save();
@@ -100,6 +103,7 @@ class LocalityController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error update location ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -113,6 +117,7 @@ class LocalityController extends Controller
     public function destroy(Request $request, Locality $locality): JsonResponse
     {
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($locality, $actor) {
                 $locality->forceFill([
@@ -126,6 +131,7 @@ class LocalityController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error delete location ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

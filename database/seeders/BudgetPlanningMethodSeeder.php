@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -18,8 +17,9 @@ class BudgetPlanningMethodSeeder extends Seeder
 
         // Ensure at least one user exists
         $userId = DB::table('t_Users')->value('Id');
-        if (!$userId) {
+        if (! $userId) {
             echo "❌ No users found in t_Users. Please seed users first.\n";
+
             return;
         }
 

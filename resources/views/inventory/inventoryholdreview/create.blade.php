@@ -56,7 +56,9 @@
                                 data-currentbranch="{{ $hold->branch->Name ?? '' }}"
                                 data-sourcetype="{{ $hold->sourceDetail->Description ?? '' }}"
                                 data-store="{{ $hold->store->StoreName ?? '' }}"
-                                data-defect="{{ $hold->defectDetail->Description ?? $hold->Reason }}"
+                                 @foreach($reviews as $review)
+                                data-defect="{{ $review->defectDetail->Description ?? $review->Reason }}"
+                                @endforeach
                                 data-itemname="{{ $hold->item->ItemName ?? '' }}"
                                 {{ old('InventoryHoldID') == $hold->Id ? 'selected' : '' }}>
                             {{ $displayText }}
@@ -90,7 +92,7 @@
                         <input type="text" class="form-control" id="SourceDisplay" disabled>
                     </div>
                     
-                    <div class="col-md-6">
+                    <div class="col-md-6" id="store-col" style="display: none;">
                         <label class="form-label">Store</label>
                         <input type="text" class="form-control" id="Store" disabled>
                     </div>

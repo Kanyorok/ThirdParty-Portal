@@ -17,7 +17,7 @@
     </div>
 @endif
 
-@if(session('success'))
+{{-- @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle me-2"></i>
         {{ session('success') }}
@@ -39,7 +39,7 @@
         {{ session('error') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-@endif
+@endif --}}
 
 @if(session('error_details'))
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -63,12 +63,12 @@
 
         <div class="card-body">
             {{-- Flash Messages --}}
-            @if(session('success'))
+            {{-- @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     {{ session('success') }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-            @endif
+            @endif --}}
             @if(session('error'))
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     {{ session('error') }}
@@ -127,7 +127,7 @@
                                 <td>{{ $item->ItemCode }}</td>
                                 <td>{{ $item->BarCode }}</td>
                                 <td>{{ $item->ItemName }}</td>
-                                <td>{{ optional($item->price)->ActualPrice ?? '—' }}</td>
+                                <td>{{ optional($item->price)->ActualPrice ? number_format(optional($item->price)->ActualPrice, 2) : '—' }}</td>
                                 <td>{{ optional($item->category)->Name ?? 'Uncategorized' }}</td>
                                 <td>{{ optional(optional($item->category)->parent)->Name ?? '—' }}</td>
                                 <td>{{ optional($item->itemType)->type->Description ?? 'N/A' }}</td>

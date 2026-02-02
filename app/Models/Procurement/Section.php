@@ -6,15 +6,15 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Procurement\Criteria;
 
 class Section extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Sections';
     protected $primaryKey = 'Id';
@@ -62,7 +62,7 @@ class Section extends Model
 
     public function criteria(): HasMany
     {
-        return $this->hasMany(Criteria::class, 'SectionID', 'Id');
+        return $this->hasMany(Criteria::class, 'SectionID', 'Id')->where('IsActive', true);
     }
 
     public function sectionable()

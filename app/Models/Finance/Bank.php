@@ -14,8 +14,8 @@ class Bank extends Model
 
     // Tell Eloquent which columns to use for timestamps
     public $timestamps = true;
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
 
     protected $fillable = [
         'BankName', 'ShortName', 'BankCode', 'SwiftCode', 'ClearingCode',

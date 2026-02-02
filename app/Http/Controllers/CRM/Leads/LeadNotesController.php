@@ -18,6 +18,7 @@ class LeadNotesController extends Controller
     {
         $this->middleware('ajax');
     }
+
     /**
      * Display a listing of the resource.
      * @throws Exception
@@ -39,6 +40,7 @@ class LeadNotesController extends Controller
             $activity = $this->save($lead->notes(), $note, $actor);
         } catch (Exception $e) {
             Log::error('Error adding  Lead Note. e: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 

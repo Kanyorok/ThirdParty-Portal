@@ -12,11 +12,11 @@ class ComplianceCertification extends Model
 
     protected $fillable = [
         'UserID','TrainingID','CertificationName','IssueDate','ExpiryDate',
-        'Status','CreatedBy','CreatedOn'
+        'Status','CreatedBy','CreatedOn',
     ];
 
     public function training()
     {
-        return $this->belongsTo(ComplianceTrainingSession::class,'TrainingID');
+        return $this->belongsTo(ComplianceTrainingSession::class, 'TrainingID');
     }
 }

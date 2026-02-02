@@ -61,37 +61,50 @@
         <button type="submit" class="btn btn-primary">Submit Response</button>
     </form>
 </div>
+@section('styles')
+    <link rel="stylesheet" href="{{ asset('assets/css/select2.min.css') }}">
+@endsection
+
 @section('scripts')
+<script src="{{ asset('assets/js/select2.min.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const tenderSelect = document.getElementById('tenderSelect');
-        const supplierSelect = document.getElementById('supplierSelect');
+        // Initialize Select2
+        $('#supplierSelect').select2({
+            placeholder: '-- Select Supplier --',
+            allowClear: true,
+            width: '100%' // Ensure it takes full width
+        });
 
-        tenderSelect.addEventListener('change', function() {
-            const tenderId = this.value;
-            supplierSelect.innerHTML = '<option selected disabled>Loading...</option>';
+        // Use jQuery for event binding as Select2 uses it
+        $('#tenderSelect').on('change', function() {
+            const tenderId = $(this).val();
+            const supplierSelect = $('#supplierSelect');
+
+            // Clear existing options
+             supplierSelect.empty().append('<option selected disabled>Loading...</option>');
+             supplierSelect.trigger('change');
 
             fetch(`{{ url('procurement/tenderresponse/invited-suppliers') }}/${tenderId}`)
                 .then(response => response.json())
                 .then(data => {
-                    supplierSelect.innerHTML = '<option selected disabled>-- Select Supplier --</option>';
+                    supplierSelect.empty();
+                    supplierSelect.append('<option selected disabled>-- Select Supplier --</option>');
+                    
                     if (data.length === 0) {
-                        const option = document.createElement('option');
-                        option.disabled = true;
-                        option.text = 'No invited suppliers found';
-                        supplierSelect.add(option);
+                        supplierSelect.append('<option disabled>No invited suppliers found</option>');
                     } else {
                         data.forEach(supplier => {
-                            const option = document.createElement('option');
-                            option.value = supplier.Id;
-                            option.text = supplier.SupplierName;
-                            supplierSelect.add(option);
+                            // Create new option: new Option(text, value, defaultSelected, selected)
+                            const option = new Option(supplier.SupplierName, supplier.Id, false, false);
+                            supplierSelect.append(option);
                         });
                     }
+                    supplierSelect.trigger('change');
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    supplierSelect.innerHTML = '<option selected disabled>Error fetching suppliers</option>';
+                    supplierSelect.empty().append('<option selected disabled>Error fetching suppliers</option>');
                 });
         });
     });

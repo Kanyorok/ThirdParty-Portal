@@ -26,7 +26,7 @@ class StartCallRequest extends FormRequest
                                      'required',
                                      'date_format:"H:i"',
                                     ],
-                'schedule'       => ['required'],
+                'schedule' => ['required'],
                ];
     }
 
@@ -55,7 +55,7 @@ class StartCallRequest extends FormRequest
     public function getStart(): Carbon
     {
         $current_start = Carbon::createFromFormat('H:i', $this->validated('call_initiated'));
-        if (!$current_start instanceof Carbon) {
+        if (! $current_start instanceof Carbon) {
             throw ValidationException::withMessages(['call_initiated' => 'invalid date format']);
         }
         if ($current_start->greaterThan(now())) {

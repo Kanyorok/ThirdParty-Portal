@@ -16,5 +16,3 @@ Route::middleware(['auth'])
             ->middleware(\App\Http\Middleware\CanAction::class . ':approve,user-sessions')
             ->name('settings.user-sessions.revoke-others');
     });
-
-

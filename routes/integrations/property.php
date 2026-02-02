@@ -1,21 +1,17 @@
 <?php
+
 use App\Http\Controllers\API\Property\PropertyInvoiceController;
 use App\Http\Controllers\API\Property\PropertyLeaseController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\Property\PropertyViewController;
 use App\Http\Controllers\API\Property\PropertyMaintenanceRequestController;
-
-// Route::prefix('property')->middleware(PropertyAuthMiddleware::class)->group(function () {
-//     Route::get('rentable-properties', [PropertyViewController::class, 'rentableProperties']);
-//     // Route::get('property-structure/{id}', [PropertyViewController::class, 'propertyStructure']);
-// });
+use App\Http\Controllers\API\Property\PropertyViewController;
+use Illuminate\Support\Facades\Route;
 
 // Property View Routes
 Route::get('property/rentable-properties', [PropertyViewController::class, 'index']);
 
 // Property Lease Routes
 Route::get('property/leases/tenant', [PropertyLeaseController::class, 'index']);
-Route::get('property/leases/tenant/show',[PropertyLeaseController::class, 'show']);
+Route::get('property/leases/tenant/show', [PropertyLeaseController::class, 'show']);
 
 // Property Invoice Routes
 Route::get('property/invoices/tenant', [PropertyInvoiceController::class, 'index']);

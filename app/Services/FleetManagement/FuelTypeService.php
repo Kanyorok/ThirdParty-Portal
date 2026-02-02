@@ -2,14 +2,9 @@
 
 namespace App\Services\FleetManagement;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FuelType;
-use Illuminate\Support\Facades\Log;
-use App\Models\Auth\User;
-use App\Http\Requests\FleetManagement\FuelTypRequest;
-use App\Traits\Model\UserActorTrait;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class FuelTypeService
 {

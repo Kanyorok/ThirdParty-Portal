@@ -23,6 +23,7 @@ class UserRequest extends FormRequest
     public function rules(): array
     {
         $id = $this->_getuserId();
+
         return [
             'UserID' => ['required', 'string', 'max:100', 'min:3',],
             'Name' => ['required', 'string', 'max:255',],
@@ -57,7 +58,7 @@ class UserRequest extends FormRequest
      */
     public function getBranch(): Branch
     {
-        if (!is_string($this->validated('Branch'))) {
+        if (! is_string($this->validated('Branch'))) {
             throw ValidationException::withMessages(['Branch' => 'Branch is required.']);
         }
 
@@ -65,6 +66,7 @@ class UserRequest extends FormRequest
         if ($branch instanceof Branch) {
             return $branch;
         }
+
         throw ValidationException::withMessages(['Branch' => 'Branch is not found.']);
     }
 
@@ -77,9 +79,9 @@ class UserRequest extends FormRequest
         if ($role instanceof Role) {
             return $role;
         }
+
         throw ValidationException::withMessages(['Role' => 'invalid role defined']);
     }
-
 
     /**
      * @throws ValidationException
@@ -105,7 +107,7 @@ class UserRequest extends FormRequest
     public function getUserPhone($user = null): string
     {
         $Phone = $this->validated('Phone');
-        if (!is_string($Phone)) {
+        if (! is_string($Phone)) {
             return '';
         }
         $query = User::query()->where('Phone', $Phone);
@@ -174,6 +176,7 @@ class UserRequest extends FormRequest
         } catch (ErroredException $e) {
             throw ValidationException::withMessages(['Gender' => 'invalid gender provided']);
         }
+
         return $gender;
     }
 }

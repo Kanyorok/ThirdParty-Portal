@@ -2,29 +2,27 @@
 
 namespace App\Models\Core\Approval;
 
-use App\Enums\WorkflowStatus;
 use App\Models\Auth\User;
-use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WorkflowHistory extends Model
 {
- use SoftDeletes;
+    use SoftDeletes;
 
     protected $table = 't_WorkFlowHistory';
     protected $primaryKey = 'Id';
 
-    
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         "Source", "SourceID", "Stage", "Amount", "Notes", "StatusId",
-        "CreatedBy", "ModifiedBy", "DeletedBy","isApproved" 
+        "CreatedBy", "ModifiedBy", "DeletedBy","isApproved",
     ];
 
     protected $casts = [
@@ -40,19 +38,17 @@ class WorkflowHistory extends Model
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
 
-        public function source(): MorphTo
+    public function source(): MorphTo
     {
         return $this->morphTo('source', 'Source', 'SourceID');
     }
 
-
-   
     public static function getPrimaryKey(): string
     {
         return 'Id';
     }
 
-    public function status(): BelongsTo 
+    public function status(): BelongsTo
     {
         return $this->belongsTo(CodeDetail::class, 'StatusId', 'ID');
     }
@@ -64,7 +60,6 @@ class WorkflowHistory extends Model
 
     public function stage(): BelongsTo
     {
-        return $this->belongsTo(WorkflowStage::class, 'Stage', 'Id');
+        return $this->belongsTo(WorkflowStage::class, 'Stage', 'Order');
     }
-
 }

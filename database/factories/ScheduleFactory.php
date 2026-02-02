@@ -37,16 +37,17 @@ class ScheduleFactory extends Factory
         $client = $this->clients->random();
         $operator = 'CSADM';
         $start = $this->getDate();
+
         return [
-                'ClientID'   => $client->ClientID,
-                'Title'      => 'Call with ' . $client->Name . ' (' . $client->ClientID . ')',
-                'Notes'      => fake()->realTextBetween(70, 500),
+                'ClientID' => $client->ClientID,
+                'Title' => 'Call with ' . $client->Name . ' (' . $client->ClientID . ')',
+                'Notes' => fake()->realTextBetween(70, 500),
                 'OperatorID' => $operator,
                 'AcceptedOn' => $this->today,
-                'StartOn'    => $start,
-                'EndOn'      => $start->copy()->addMinutes($this->_randomMinutes()),
-                'CreatedBy'  => $operator,
-                'CreatedOn'  => $this->today,
+                'StartOn' => $start,
+                'EndOn' => $start->copy()->addMinutes($this->_randomMinutes()),
+                'CreatedBy' => $operator,
+                'CreatedOn' => $this->today,
                 'ModifiedOn' => $this->today,
                 'ModifiedBy' => $operator,
                ];
@@ -55,6 +56,7 @@ class ScheduleFactory extends Factory
     private function getDate(bool $loop = false): Carbon
     {
         $this->dated->addMinutes($this->_randomMinutes(20));
+
         //lottery
         try {
             if (random_int(1, 4) === 3) {
@@ -75,12 +77,14 @@ class ScheduleFactory extends Factory
 
         if ($this->dated->dayOfWeek === 0) {
             $this->dated->addDay()->setTime(8, 10);
+
             return $this->dated;
         }
 
         if ($loop) {
             return $this->dated->setTime(8, 0);
         }
+
         return $this->getDate(true);
     }
 
@@ -91,6 +95,7 @@ class ScheduleFactory extends Factory
         } catch (RandomException) {
             $min = 25;
         }
+
         return $add + $min;
     }
 }

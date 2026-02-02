@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Procurement\ProcurementMode;
+use Illuminate\Http\Request;
 
 class ProcurementModeController extends Controller
 {
@@ -12,12 +12,14 @@ class ProcurementModeController extends Controller
     {
         $this->authorize('viewAny', ProcurementMode::class);
         $modes = ProcurementMode::orderBy('CreatedOn', 'desc')->get();
+
         return view('procurement.procurement_modes.index', compact('modes'));
     }
 
     public function create()
     {
         $this->authorize('create', ProcurementMode::class);
+
         return view('procurement.procurement_modes.create');
     }
 
@@ -55,6 +57,7 @@ class ProcurementModeController extends Controller
     public function show(ProcurementMode $procurement_mode)
     {
         $this->authorize('view', $procurement_mode);
+
         return view('procurement.procurement_modes.show', [
             'procurement_mode' => $procurement_mode->load('timelines'),
         ]);
@@ -63,6 +66,7 @@ class ProcurementModeController extends Controller
     public function edit(ProcurementMode $procurement_mode)
     {
         $this->authorize('update', $procurement_mode);
+
         return view('procurement.procurement_modes.edit', compact('procurement_mode'));
     }
 

@@ -15,18 +15,17 @@ class DebtProduct extends Model
 {
     public $incrementing = false;
     public $timestamps = false;
-    //protected $connection = 'brcbs';
     protected $connection = 'sqlsrv';
     protected $keyType = 'string';
     protected $table = 't_AdvancesReport';//synnym
     protected $primaryKey = 'AccountID';//null;
 
     protected $casts = [
-                        'MaturityDate'       => 'datetime',
-                        'processDate'        => 'datetime',
+                        'MaturityDate' => 'datetime',
+                        'processDate' => 'datetime',
                         'OutstandingBalance' => 'decimal:2',
-                        'ArrearsAmount'      => 'decimal:2',
-                        'ArrearsDays'        => 'integer',
+                        'ArrearsAmount' => 'decimal:2',
+                        'ArrearsDays' => 'integer',
                        ];
 
     public static function getPrimaryKey(): string

@@ -10,14 +10,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetLine extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     protected $table = 't_BudgetLines';
     protected $primaryKey = 'Id';
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     public static function getPrimaryKey(): string
     {

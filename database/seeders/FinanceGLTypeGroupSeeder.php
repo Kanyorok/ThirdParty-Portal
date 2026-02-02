@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class FinanceGLTypeGroupSeeder extends Seeder
 {
@@ -32,7 +32,7 @@ class FinanceGLTypeGroupSeeder extends Seeder
                 ->where('TypeGroupCode', $code)
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('t_FinanceGLTypeGroups')->insert([
                     'TypeGroupCode' => $code,
                     'GLAccountTypeId' => $type,

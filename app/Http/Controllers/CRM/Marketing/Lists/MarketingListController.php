@@ -76,6 +76,7 @@ class MarketingListController extends Controller
         }
 
         $service = $this->service($list);
+
         return view('crm.marketing.lists.show', compact('list'))
             ->with('isProcessing', $service->isProcessing())
             ->with('contacts_count', $service->contacts());

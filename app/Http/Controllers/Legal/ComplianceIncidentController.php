@@ -32,6 +32,7 @@ class ComplianceIncidentController extends Controller
         $obligations = ComplianceObligation::pluck('Title', 'Id');
         $severities = DB::table('t_IncidentSeverityLevels')->pluck('Name', 'Id');
         $owners = DB::table('t_Users')->pluck('Name', 'Id');
+
         return view('legal.compliance.incidents.create', compact('obligations', 'severities', 'owners'));
     }
 
@@ -59,6 +60,7 @@ class ComplianceIncidentController extends Controller
     {
         $incident = ComplianceIncident::with(['obligation', 'severity', 'actions'])->findOrFail($id);
         $owners = DB::table('t_Users')->pluck('Name', 'Id');
+
         return view('legal.compliance.incidents.show', compact('incident', 'owners'));
     }
 
@@ -68,6 +70,7 @@ class ComplianceIncidentController extends Controller
         $obligations = ComplianceObligation::pluck('Title', 'Id');
         $severities = DB::table('t_IncidentSeverityLevels')->pluck('Name', 'Id');
         $owners = DB::table('t_Users')->pluck('Name', 'Id');
+
         return view('legal.compliance.incidents.edit', compact('incident', 'obligations', 'severities', 'owners'));
     }
 
@@ -138,8 +141,12 @@ class ComplianceIncidentController extends Controller
         $escalated = \DB::table('t_ComplianceIncidents')->where('Status', 'Escalated')->count();
 
         return view('legal.compliance.incidents.dashboard', compact(
-            'severityData', 'statusData', 'total', 'open', 'resolved', 'escalated'
+            'severityData',
+            'statusData',
+            'total',
+            'open',
+            'resolved',
+            'escalated'
         ));
     }
-
 }

@@ -40,6 +40,7 @@ class PlannerActivityRequest extends FormRequest
         if ($users->isEmpty()) {
             throw ValidationException::withMessages(['activity_users' => 'kindly select user(s) involved in the activity']);
         }
+
         return $users;
     }
 
@@ -49,7 +50,7 @@ class PlannerActivityRequest extends FormRequest
     public function getEnd(Carbon $start): Carbon
     {
         $end = Carbon::createFromFormat('Y-m-d', $this->validated('activity_end'));
-        if (!$end instanceof Carbon) {
+        if (! $end instanceof Carbon) {
             throw ValidationException::withMessages(['activity_end' => 'invalid date format']);
         }
 
@@ -71,6 +72,7 @@ class PlannerActivityRequest extends FormRequest
         if ($start instanceof Carbon) {
             return $start->startOfDay();
         }
+
         throw ValidationException::withMessages(['activity_start' => 'invalid date format']);
     }
 }

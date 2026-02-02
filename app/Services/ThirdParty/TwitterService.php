@@ -26,32 +26,32 @@ class TwitterService extends SocialService
     {
         if (is_null($consumerKey) || is_null($consumerSecret) || is_null($accessToken) || is_null($accessTokenSecret) || is_null($bearerToken)) {//use db here.
             $cred = APICredential::query()->where('Integration', IntegrationsEnum::Twitter->value)->latest('Id')->first();
-            if (!$cred instanceof APICredential) {
+            if (! $cred instanceof APICredential) {
                 throw new ErroredException('no twitter configuration');
             }
             $Config = $cred?->Configuration;
             $this->account_id = $Config->account_id;
             $this->tw = new TwitterClient([
-                                           'account_id'          => $Config->account_id,
-                                           'access_token'        => $Config->access_token,
+                                           'account_id' => $Config->account_id,
+                                           'access_token' => $Config->access_token,
                                            'access_token_secret' => $Config->access_token_secret,
-                                           'consumer_key'        => $Config->consumer_key,
-                                           'consumer_secret'     => $Config->consumer_secret,
-                                           'bearer_token'        => $Config->bearer_token,
-                                           'free_mode'           => (bool) $Config->is_free, // Optional
-                                           'api_base_uri'        => 'https://api.twitter.com/2/', // Optional
+                                           'consumer_key' => $Config->consumer_key,
+                                           'consumer_secret' => $Config->consumer_secret,
+                                           'bearer_token' => $Config->bearer_token,
+                                           'free_mode' => (bool) $Config->is_free, // Optional
+                                           'api_base_uri' => 'https://api.twitter.com/2/', // Optional
                                           ]);
         } else {
             $this->account_id = explode('-', $accessToken)[0];
             $this->tw = new TwitterClient([
-                                           'account_id'          => $this->account_id,
-                                           'access_token'        => $accessToken,
+                                           'account_id' => $this->account_id,
+                                           'access_token' => $accessToken,
                                            'access_token_secret' => $accessTokenSecret,
-                                           'consumer_key'        => $consumerKey,
-                                           'consumer_secret'     => $consumerSecret,
-                                           'bearer_token'        => $bearerToken,
+                                           'consumer_key' => $consumerKey,
+                                           'consumer_secret' => $consumerSecret,
+                                           'bearer_token' => $bearerToken,
                 //'free_mode' => (bool) $Config->is_free, // Optional
-                                           'api_base_uri'        => 'https://api.twitter.com/2/', // Optional
+                                           'api_base_uri' => 'https://api.twitter.com/2/', // Optional
                                           ]);
         }
     }
@@ -81,10 +81,11 @@ class TwitterService extends SocialService
     {
         try {
             return $this->tw->timeline()->getRecentMentions($this->account_id)->performRequest();
-        } catch (GuzzleException|JsonException|Exception $e) {
+        } catch (GuzzleException | JsonException | Exception $e) {
             Log::error('Get User id:');
             Log::error($e);
         }
+
         throw new ErroredException('could not fetch twitter user details');
     }
 
@@ -95,10 +96,11 @@ class TwitterService extends SocialService
     {
         try {
             return $this->tw->timeline()->getRecentTweets($this->account_id)->performRequest();
-        } catch (GuzzleException|JsonException|Exception $e) {
+        } catch (GuzzleException | JsonException | Exception $e) {
             Log::error('Get User id:');
             Log::error($e);
         }
+
         throw new ErroredException('could not fetch twitter posts');
     }
 
@@ -109,10 +111,11 @@ class TwitterService extends SocialService
     {
         try {
             return $this->tw->tweet()->fetch($post_id)->performRequest();
-        } catch (GuzzleException|JsonException|Exception $e) {
+        } catch (GuzzleException | JsonException | Exception $e) {
             Log::error('Get User id:');
             Log::error($e);
         }
+
         throw new ErroredException('could not fetch twitter user details');
     }
 
@@ -143,13 +146,14 @@ class TwitterService extends SocialService
     {
         try {
             $response = $this->tw->userMeLookup()->performRequest();
-            if (!is_null($response)) {
+            if (! is_null($response)) {
                 return $response;
             }
-        } catch (GuzzleException|JsonException|Exception $e) {
+        } catch (GuzzleException | JsonException | Exception $e) {
             Log::error('Get User id:');
             Log::error($e);
         }
+
         throw new ErroredException('could not fetch twitter user details');
     }
 
@@ -159,25 +163,24 @@ class TwitterService extends SocialService
             return false;
         }
 
-        if (!is_null($social->Published_at)) {
+        if (! is_null($social->Published_at)) {
             return true;
         }
 
         try {
             $Remote = $this->_createPost($social->Content, $social->images);
-        } catch (Exception|ErroredException) {
+        } catch (Exception | ErroredException) {
             return false;
         }
 
         $social->update([
                          'Published_at' => Carbon::now(),
-                         'RemoteId'     => $Remote->data->id,
-                         'Response'     => json_encode($Remote),
+                         'RemoteId' => $Remote->data->id,
+                         'Response' => json_encode($Remote),
                         ]);
 
         return true;
     }
-
 
     /**
      * @return object -> {"data":{"edit_history_tweet_ids":["1874732600935198942"],"id":"1874732600935198942","text":"Who can relate to this. https:\/\/t.co\/g192O6wOAu"}}
@@ -194,10 +197,10 @@ class TwitterService extends SocialService
             try {
                 return $this->tw->tweet()->create()
                     ->performRequest([
-                                      'text'  => $message,
+                                      'text' => $message,
                                       "media" => ["media_ids" => $media_ids],
                                      ]);
-            } catch (GuzzleException|JsonException|Exception $e) {
+            } catch (GuzzleException | JsonException | Exception $e) {
                 Log::error('Twitter images post tweet:');
                 Log::error($e);
             }
@@ -205,7 +208,7 @@ class TwitterService extends SocialService
             try {
                 return $this->tw->tweet()->create()
                     ->performRequest(['text' => $message]);
-            } catch (GuzzleException|JsonException|Exception $e) {
+            } catch (GuzzleException | JsonException | Exception $e) {
                 Log::error('Twitter post tweet:');
                 Log::error($e);
             }
@@ -224,10 +227,11 @@ class TwitterService extends SocialService
             if ($media_info) {
                 return $media_info;
             }
-        } catch (JsonException|Exception $e) {
+        } catch (JsonException | Exception $e) {
             Log::error('Upload Twitter Image');
             Log::error($e);
         }
+
         throw new ErroredException('Uploading Image failed');
     }
 }

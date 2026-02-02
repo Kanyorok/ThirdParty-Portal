@@ -23,20 +23,19 @@ class PropertyRegistryService
     }
 
     public static function create(
-        string         $PropertyName,
-        string         $PropertyCode,
-        PropertyType   $PropertyType,
+        string $PropertyName,
+        string $PropertyCode,
+        PropertyType $PropertyType,
         CategoryMaster $Category,
-        string         $Owner,
-        Carbon         $AcquisitionDate,
-        Country  $CountryId,
+        string $Owner,
+        Carbon $AcquisitionDate,
+        Country $CountryId,
         Locality $LocationId,
-        string   $Address,
-        string         $PropertyDescription = null,
-        User   $user,
+        string $Address,
+        string $PropertyDescription = null,
+        User $user,
         UploadedFile $document = null
-    ): self
-    {
+    ): self {
         $property = PropertyRegistry::create([
             'PropertyName' => $PropertyName,
             'PropertyCode' => $PropertyCode,
@@ -61,57 +60,57 @@ class PropertyRegistryService
         }
 
         activity()->causedBy(auth()->user()->Id)->performedOn($property)->event('create')->log("Added Property {$property->Id}.");
+
         return new self($property);
     }
 
-public static function update(
-    PropertyRegistry $property,
-    string           $PropertyName,
-    string           $PropertyCode,
-    PropertyType     $PropertyType,
-    CategoryMaster   $Category,
-    string           $Owner,
-    Carbon           $AcquisitionDate,
-    Country  $CountryId,
-    Locality $LocationId,
-    string   $Address,
-    ?string  $PropertyDescription = null,
-    User             $user,
-    bool     $IsActive,
-    UploadedFile     $document = null
-): self {
-    $property->update([
-        'PropertyName'        => $PropertyName,
-        'PropertyCode'        => $PropertyCode,
-        'PropertyType'        => $PropertyType->Id,
-        'Category'            => $Category->Id,
-        'Owner'               => $Owner,
-        'AcquisitionDate'     => $AcquisitionDate,
-        'CountryId' => $CountryId->Id,
-        'LocationId' => $LocationId->ID,
-        'Address' => $Address,
-        'PropertyDescription' => $PropertyDescription ?? '',
-        'ModifiedBy'          => $user->Id,
-        'IsActive' => $IsActive,
-        'ModifiedOn'          => now(),
-    ]);
+    public static function update(
+        PropertyRegistry $property,
+        string $PropertyName,
+        string $PropertyCode,
+        PropertyType $PropertyType,
+        CategoryMaster $Category,
+        string $Owner,
+        Carbon $AcquisitionDate,
+        Country $CountryId,
+        Locality $LocationId,
+        string $Address,
+        ?string $PropertyDescription = null,
+        User $user,
+        bool $IsActive,
+        UploadedFile $document = null
+    ): self {
+        $property->update([
+            'PropertyName' => $PropertyName,
+            'PropertyCode' => $PropertyCode,
+            'PropertyType' => $PropertyType->Id,
+            'Category' => $Category->Id,
+            'Owner' => $Owner,
+            'AcquisitionDate' => $AcquisitionDate,
+            'CountryId' => $CountryId->Id,
+            'LocationId' => $LocationId->ID,
+            'Address' => $Address,
+            'PropertyDescription' => $PropertyDescription ?? '',
+            'ModifiedBy' => $user->Id,
+            'IsActive' => $IsActive,
+            'ModifiedOn' => now(),
+        ]);
 
-    if ($document) {
-        $property->newDocument(
-            ModulesEnum::Property,
-            $document,
-            [PermissionEnum::PropertyRegistryView->value],
-            $user
-        );
+        if ($document) {
+            $property->newDocument(
+                ModulesEnum::Property,
+                $document,
+                [PermissionEnum::PropertyRegistryView->value],
+                $user
+            );
+        }
+
+        activity()
+            ->causedBy($user->Id)
+            ->performedOn($property)
+            ->event('update')
+            ->log("Updated Property {$property->Id}.");
+
+        return new self($property);
     }
-
-    activity()
-        ->causedBy($user->Id)
-        ->performedOn($property)
-        ->event('update')
-        ->log("Updated Property {$property->Id}.");
-
-    return new self($property);
-}
-
 }

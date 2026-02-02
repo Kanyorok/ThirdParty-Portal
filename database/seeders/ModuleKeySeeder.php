@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -40,7 +39,7 @@ class ModuleKeySeeder extends Seeder
                 ->where('ModuleID', $moduleId)
                 ->whereNull('ParentID') // Ensure it's a parent module
                 ->update(['ModuleKey' => $moduleKey]);
-            
+
             if ($result > 0) {
                 $updated++;
                 $this->command->info("✅ Updated parent module: {$moduleKey} (ID: {$moduleId})");

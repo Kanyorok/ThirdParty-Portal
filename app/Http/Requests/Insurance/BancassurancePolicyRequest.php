@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests\Insurance;
 
-use App\Enums\Insurance\InsurancePolicyStatus;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Enum;
 
 class BancassurancePolicyRequest extends FormRequest
 {
@@ -37,7 +35,7 @@ class BancassurancePolicyRequest extends FormRequest
             'IssuedDate' => 'nullable|date',
             'ExpiryDate' => 'nullable|date|after_or_equal:IssuedDate',
             'IsActive' => 'boolean',
-            'Document' => 'nullable|file|max:2048'
+            'Document' => 'nullable|file|max:2048',
         ];
     }
 }

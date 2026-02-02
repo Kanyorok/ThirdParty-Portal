@@ -5,11 +5,12 @@ namespace App\Services\Procurement\ProcurementPlan;
 use App\Enums\ProcurementPlanStatusEnum;
 use App\Models\Auth\User;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Services\Procurement\ProcurementPlan\ProcurementPlanWorkflow;
 
 class SubmitPlanService
 {
-    public function __construct(public ConsolidatedProcurementPlan $consolidatedProcurementPlan) {}
+    public function __construct(public ConsolidatedProcurementPlan $consolidatedProcurementPlan)
+    {
+    }
 
     public function submit(User $actor): static
     {
