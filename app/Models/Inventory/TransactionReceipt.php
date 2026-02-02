@@ -5,7 +5,6 @@ namespace App\Models\Inventory;
 use App\Models\Auth\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Auth\User;
 use App\Models\Inventory\TransactionTransfer;
 use App\Enums\Inventory\Transfers;
 
