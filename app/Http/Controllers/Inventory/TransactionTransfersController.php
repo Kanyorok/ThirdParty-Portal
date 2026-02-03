@@ -133,7 +133,7 @@ class TransactionTransfersController extends Controller
         return view('inventory.transactions.transfers.show', compact('transferitem'));
     }
 
-    public function edit($Id)
+    public function edit(Request $request, $Id)
     {
         $currentBranch = $request->user()->branch;
 
@@ -162,7 +162,10 @@ class TransactionTransfersController extends Controller
         $this->authorize('update', TransactionTransfer::class);
         $transactionTransfer = TransactionTransfer::findOrFail($Id);
 
-        $this->service->update($transactionTransfer, $request->validated());
+        // TODO: Implement update logic - service doesn't have update method yet
+        // $this->service->update($transactionTransfer, $request->validated());
+
+        $transactionTransfer->update($request->validated());
 
         return redirect()
             ->route('transactionstransfers.index', $transactionTransfer->Id)

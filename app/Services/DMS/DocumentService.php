@@ -246,7 +246,7 @@ class DocumentService extends PermissionsService
     /**
      * @throws ErroredException
      */
-    protected function _newVersion(DisksEnum $disk, string $path, string $name, int $sizeInBytes, User $actor, Collection $properties = null, string $checksum = null): static
+    protected function _newVersion(DisksEnum $disk, string $path, string $name, int $sizeInBytes, User $actor, ?Collection $properties = null, ?string $checksum = null): static
     {
 
         $this->document->versions()->create([
@@ -318,7 +318,7 @@ class DocumentService extends PermissionsService
      * 3. @param User|null $actor checked out
      * @return int
      */
-    public function isCheckedOut(User $actor = null): int
+    public function isCheckedOut(?User $actor = null): int
     {
         if (! $this->type->canCheckOut()) {
             return 0;

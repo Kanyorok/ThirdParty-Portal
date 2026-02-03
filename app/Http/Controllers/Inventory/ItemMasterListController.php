@@ -220,6 +220,7 @@ class ItemMasterListController extends Controller
 
         if ($request->has('remove_image') && $request->input('remove_image') == '1') {
             if ($item->ImageId) {
+                // @phpstan-ignore-next-line - Image model is deprecated but still functional
                 \App\Models\DMS\Image::destroy($item->ImageId);
                 $item->ImageId = null;
             }
