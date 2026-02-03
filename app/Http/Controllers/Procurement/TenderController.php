@@ -436,7 +436,7 @@ class TenderController extends Controller
             if ($tender->TenderType === TenderTypeEnum::Restricted) {
                 $supplierCount = TenderSupplier::where('TenderID', $tender->Id)->count();
                 if ($supplierCount === 0) {
-                    return redirect()->back()->with('error', 'Restricted tenders must have suppliers.');
+                    return redirect()->back()->with('error', 'Restricted tenders require at least one supplier to be invited. Please edit the tender and add suppliers before submitting for approval.');
                 }
             }
 
