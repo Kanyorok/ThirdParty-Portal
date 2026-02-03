@@ -88,7 +88,6 @@ class TransactionTransferService
         $transfer->save();
 
         try {
-            // Create workflow instance and submit for approval
             $this->workflow->submit(
                 $transfer,
                 Auth::user(),
@@ -117,7 +116,6 @@ class TransactionTransferService
                 ? $this->getHQBranchId()
                 : $transfer->FromBranch;
 
-            // Validate that branch has GRN ledger entries for this item
             if (! $this->branchHasGRNLedger($fromBranch, $itemId)) {
                 throw new Exception("Branch {$fromBranch} has no GRN ledger entries for item {$itemId}. Cannot transfer without GRN tracking.");
             }
@@ -143,7 +141,6 @@ class TransactionTransferService
         }
     }
 
-    // Check if branch has GRN ledger entries for an item
     private function branchHasGRNLedger($branchId, $itemId): bool
     {
         $store = $this->getDefaultStoreForBranch($branchId);
@@ -158,10 +155,8 @@ class TransactionTransferService
             ->exists();
     }
 
-    // Get available GRN batches for an item at a branch
     public function getAvailableGRNBatches($itemId, $branchId, $storeId = null)
     {
-        // If no store specified, get default store for branch
         if (! $storeId) {
             $store = $this->getDefaultStoreForBranch($branchId);
             $storeId = $store ? $store->Id : null;
@@ -208,14 +203,12 @@ class TransactionTransferService
             $user = Auth::user();
             $isHQ = $user->branch && $user->branch->IsHQ;
 
-            // Validate all items have GRN ledger entries at source branch
             foreach ($transfer->items as $item) {
                 if (! $this->branchHasGRNLedger($transfer->FromBranch, $item->Item)) {
                     throw new Exception("Item {$item->Item} has no GRN ledger entries in branch {$transfer->FromBranch}. Cannot transfer without GRN tracking.");
                 }
             }
 
-            // Approve workflow
             $this->workflow->approve(
                 $transfer,
                 $user,
@@ -224,7 +217,6 @@ class TransactionTransferService
                 'Status'
             );
 
-            // Update transfer status to In Transit
             $transfer->Status = Transfers::InTransit->value;
             $transfer->ModifiedBy = $user->Id;
             $transfer->ModifiedOn = now();
@@ -233,10 +225,8 @@ class TransactionTransferService
             $totalCost = 0;
 
             foreach ($transfer->items as $item) {
-                // Get source store
                 $sourceStore = $this->getDefaultStoreForBranch($transfer->FromBranch);
 
-                // Get stock item to check availability
                 $stockFrom = StockItem::where('ItemID', $item->Item)
                     ->where('Store', $sourceStore->Id)
                     ->where('Branch', $transfer->FromBranch)
@@ -250,11 +240,9 @@ class TransactionTransferService
                     throw new Exception("Insufficient stock for Item {$item->Item}. Available: {$stockFrom->CurrentQty}, Required: {$item->DispatchedQty}");
                 }
 
-                // ALLOCATE STOCK FROM GRN LEDGER ENTRIES
                 $allocations = [];
                 $remainingQty = $item->DispatchedQty;
 
-                // Get available GRN batches for this item at source branch
                 $availableBatches = StockGRNLedger::where('ItemNo', $item->Item)
                     ->where('Store', $sourceStore->Id)
                     ->where('Branch', $transfer->FromBranch)
@@ -267,9 +255,7 @@ class TransactionTransferService
                     throw new Exception("No GRN batches available for Item {$item->Item} in branch {$transfer->FromBranch}");
                 }
 
-                // Use user-selected allocations if provided (non-HQ), otherwise use FIFO
                 if (! empty($item->BatchAllocation) && ! $isHQ) {
-                    // Non-HQ: Use user-selected batches
                     $userAllocations = json_decode($item->BatchAllocation, true);
 
                     foreach ($userAllocations as $userAlloc) {
@@ -297,14 +283,12 @@ class TransactionTransferService
                             'source_type' => $batch->SourceType ?? 'procurement',
                         ];
 
-                        // Update ledger
                         $batch->RemainingQTY -= $userAlloc['quantity'];
                         $batch->save();
 
                         $remainingQty -= $userAlloc['quantity'];
                     }
                 } else {
-                    // HQ or no selection: Use FIFO automatically
                     foreach ($availableBatches as $batch) {
                         if ($remainingQty <= 0) {
                             break;
@@ -322,7 +306,6 @@ class TransactionTransferService
                             'source_type' => $batch->SourceType ?? 'procurement',
                         ];
 
-                        // Update ledger
                         $batch->RemainingQTY -= $allocatedQty;
                         $batch->save();
 
@@ -334,25 +317,21 @@ class TransactionTransferService
                     }
                 }
 
-                // Calculate item cost
                 $itemCost = 0;
                 foreach ($allocations as $allocation) {
                     $itemCost += $allocation['unit_price'] * $allocation['quantity'];
                 }
                 $totalCost += $itemCost;
 
-                // Store allocations in transfer item
                 $item->BatchAllocation = json_encode($allocations);
-                $item->UnitCost = $itemCost / max($item->DispatchedQty, 1); // Calculate average unit cost
+                $item->UnitCost = $itemCost / max($item->DispatchedQty, 1);
                 $item->save();
 
-                // Update source stock item
                 $stockFrom->CurrentQty -= $item->DispatchedQty;
                 $stockFrom->ModifiedBy = $user->Id;
                 $stockFrom->ModifiedOn = now();
                 $stockFrom->save();
 
-                // Create StockTransaction for source
                 $latestSKU = StockTransaction::where('SKUID', 'like', 'SKU%')
                     ->orderByDesc('id')
                     ->value('SKUID');
@@ -399,7 +378,6 @@ class TransactionTransferService
                     'ModifiedOn' => now(),
                 ]);
 
-                // Create inventory hold
                 $reasonId = CodeDetail::where('CodeID', 'AdjustmentReason')
                     ->where('Description', 'In Transit')->value('ID');
                 $sourceId = CodeDetail::where('CodeID', 'Source')
@@ -424,7 +402,6 @@ class TransactionTransferService
                 ]);
             }
 
-            // Post financial transaction if total cost > 0
             if ($totalCost > 0) {
                 $payload = [
                     'ModuleID' => 400000,
@@ -457,9 +434,6 @@ class TransactionTransferService
         }
     }
 
-    /**
-     * Get default store for a branch
-     */
     protected function getDefaultStoreForBranch($branchId)
     {
         $store = Store::where('BranchID', $branchId)
@@ -481,10 +455,8 @@ class TransactionTransferService
             $transfer = TransactionTransfer::findOrFail($id);
             $user = Auth::user();
 
-            // Use workflow to reject
             $this->workflow->reject($transfer, $user, Transfers::Rejected, $comments ?? 'Transfer Rejected', 'Status');
 
-            // Update transfer status to Rejected
             $transfer->Status = Transfers::Rejected->value;
             $transfer->ModifiedBy = $user->Id;
             $transfer->ModifiedOn = now();

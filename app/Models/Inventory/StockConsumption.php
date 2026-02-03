@@ -44,7 +44,6 @@ class StockConsumption extends Model
         'DeletedOn',
     ];
 
-    // Add this accessor to get the item name
     public function getItemNameAttribute()
     {
         return $this->item?->ItemName ?? 'N/A';
@@ -80,28 +79,25 @@ class StockConsumption extends Model
         return $this->belongsTo(Branch::class, 'BranchID', 'Id');
     }
 
-    // Master item
     public function item()
     {
         return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
     }
 
-    // Optional: if you still want to know which stock item was used
     public function stockItem()
     {
         return $this->belongsTo(StockItem::class, 'StockItemID', 'Id');
     }
 
-    // Alternative: If you need to get ItemMasterList through StockItem
     public function masterItem()
     {
         return $this->hasOneThrough(
             ItemMasterList::class,
             StockItem::class,
-            'Id', // Foreign key on StockItem table
-            'Id', // Foreign key on ItemMasterList table
-            'ItemID', // Local key on StockConsumption table
-            'ItemID' // Local key on StockItem table
+            'Id',
+            'Id',
+            'ItemID',
+            'ItemID'
         );
     }
 

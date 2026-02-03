@@ -19,12 +19,12 @@
         @csrf
 
         <div class="mb-3">
-            <label for="Name" class="form-label">Category Name:</label>
+            <label for="Name" class="form-label">Category Name:<span class="text-danger">*</span></label>
             <input type="text" class="form-control" name="Name" required>
         </div>
 
         <div class="mb-3">
-            <label for="Description" class="form-label">Description:</label>
+            <label for="Description" class="form-label">Description:<span class="text-danger">*</span></label>
             <textarea class="form-control" name="Description"></textarea>
         </div>
 

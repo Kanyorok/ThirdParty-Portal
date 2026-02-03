@@ -101,7 +101,7 @@ class CashBookController extends Controller
         return DB::transaction(function () use ($request) {
             $hdr = new Cashbook($request->only([
                 'EntryType', 'BankAccountID', 'DocDate', 'CurrencyID', 'ExchangeRate',
-                'PartyType', 'PartyID', 'PartyName', 'Reference', 'Narration', 'Amount'
+                'PartyType', 'PartyID', 'PartyName', 'Reference', 'Narration', 'Amount',
             ]));
 
             // Optional: persist chosen type & flag if your table has these columns
@@ -138,7 +138,7 @@ class CashBookController extends Controller
                     amount: (float)$hdr->Amount,
                     bankAccountId: (int)$hdr->BankAccountID
                 );
-                if (!empty($autoLines)) {
+                if (! empty($autoLines)) {
                     $lines = $autoLines; // override manual if mapping present
                 }
             }
@@ -159,6 +159,7 @@ class CashBookController extends Controller
             $msg = strtoupper((string)$hdr->EntryType) === 'PAYMENT'
                 ? 'Cashbook payment saved as Draft.'
                 : 'Cashbook entry saved as Draft.';
+
             return redirect()->route('cashbook.index')->with('success', $msg);
         });
     }
@@ -166,6 +167,7 @@ class CashBookController extends Controller
     public function show($id)
     {
         $entry = Cashbook::with(['bankAccount', 'currency', 'lines'])->findOrFail($id);
+
         return view('finance.cashbook.show', compact('entry'));
     }
 
@@ -228,7 +230,7 @@ class CashBookController extends Controller
         return DB::transaction(function () use ($request, $entry) {
             $entry->fill($request->only([
                 'BankAccountID', 'DocDate', 'CurrencyID', 'ExchangeRate',
-                'PartyType', 'PartyID', 'PartyName', 'Reference', 'Narration', 'Amount'
+                'PartyType', 'PartyID', 'PartyName', 'Reference', 'Narration', 'Amount',
             ]));
 
             if ($this->columnExists($entry->getTable(), 'TransactionTypeID')) {
@@ -259,7 +261,7 @@ class CashBookController extends Controller
                     amount: (float)$entry->Amount,
                     bankAccountId: (int)$entry->BankAccountID
                 );
-                if (!empty($autoLines)) {
+                if (! empty($autoLines)) {
                     $lines = $autoLines;
                 }
             }
@@ -322,6 +324,7 @@ class CashBookController extends Controller
         $results = $parties->map(function ($party) use ($fallbackLabel) {
             $name = $party->TradingName ?: $party->ThirdPartyName;
             $text = trim($name) !== '' ? $name : 'Unknown ' . $fallbackLabel;
+
             return [
                 'id' => $party->ThirdPartyId,
                 'text' => $text,
@@ -400,7 +403,7 @@ class CashBookController extends Controller
             ->where('IsActive', 1)
             ->first();
 
-        if (!$map || !$entryType || $amount <= 0) {
+        if (! $map || ! $entryType || $amount <= 0) {
             return response()->json(['lines' => []]);
         }
 
@@ -408,7 +411,7 @@ class CashBookController extends Controller
 
         return response()->json([
             'lines' => $lines,
-            'transaction' => $map->transactions?->Name
+            'transaction' => $map->transactions?->Name,
         ]);
     }
 
@@ -424,7 +427,7 @@ class CashBookController extends Controller
             ->where('TransactionTypeID', $txnTypeId)
             ->where('IsActive', 1)
             ->first();
-        if (!$map) {
+        if (! $map) {
             return [];
         }
 
@@ -472,9 +475,10 @@ class CashBookController extends Controller
         static $cache = [];
         $key = $table . '.' . $col;
 
-        if (!array_key_exists($key, $cache)) {
+        if (! array_key_exists($key, $cache)) {
             $cache[$key] = DB::getSchemaBuilder()->hasColumn($table, $col);
         }
+
         return $cache[$key];
     }
 }

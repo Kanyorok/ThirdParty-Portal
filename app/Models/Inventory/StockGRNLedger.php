@@ -73,19 +73,16 @@ class StockGRNLedger extends Model
         return $this->belongsTo(Branch::class, 'Branch', 'Id');
     }
 
-    // Relationship to parent ledger (for tracking transfers)
     public function parentLedger()
     {
         return $this->belongsTo(StockGRNLedger::class, 'ParentLedgerId');
     }
 
-    // Relationship to child ledgers (transferred batches)
     public function childLedgers()
     {
         return $this->hasMany(StockGRNLedger::class, 'ParentLedgerId');
     }
 
-    // Get original GRN ID (traverse up the chain)
     public function getOriginalGrnIdAttribute()
     {
         $current = $this;
@@ -96,7 +93,6 @@ class StockGRNLedger extends Model
         return $current->GRNID;
     }
 
-    // Get original goods receipt
     public function getOriginalGoodsReceiptAttribute()
     {
         $current = $this;

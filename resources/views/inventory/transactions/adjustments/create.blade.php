@@ -39,7 +39,7 @@
         @csrf
         <div class="row mb-3">
             <div class="col-md-6">
-                <label for="adjustmentDate" class="form-label">Adjustment Date</label>
+                <label for="adjustmentDate" class="form-label">Adjustment Date</label><span class="text-danger">*</span>
                 <input type="hidden" id="adjustmentDate" name="AdjustmentDate" value="{{ now()->format('Y-m-d') }}">
                 <input type="text" class="form-control" value="{{ now()->format('m/d/Y') }}" readonly>
                 <small class="text-muted">Current date (non-editable)</small>
@@ -48,7 +48,7 @@
                 @enderror
             </div>
             <div class="col-md-6">
-                <label for="branch" class="form-label">Branch</label>
+                <label for="branch" class="form-label">Branch</label><span class="text-danger">*</span>
                 <input type="hidden" id="branch" name="Branch" value="{{ $branch->Id }}">
                 <input type="text" class="form-control" value="{{ $branch->Name }}" readonly>
                 @error('Branch')
@@ -62,14 +62,14 @@
                 <thead class="table-light">
                 <tr>
                     <th>#</th>
-                    <th>Item Code</th>
-                    <th>Item Name</th>
-                    <th>UOM</th>
+                    <th>Item Code<span class="text-danger">*</span></th>
+                    <th>Item Name<span class="text-danger">*</span></th>
+                    <th>UOM<span class="text-danger">*</span></th>
                     <th>Unit Cost</th>
-                    <th>Current Qty</th>
-                    <th>Adjustment Qty</th>
+                    <th>Current Qty<span class="text-danger">*</span></th>
+                    <th>Adjustment Qty<span class="text-danger">*</span></th>
                     <th>New Qty</th>
-                    <th>Adjustment Reason</th>
+                    <th>Adjustment Reason<span class="text-danger">*</span></th>
                     <th>Remarks</th>
                     <th>Action</th>
                 </tr>
@@ -89,7 +89,7 @@
                                        value="{{ $item['ItemCode'] ?? '' }}">
                             </td>
                             <td>
-                                <input type="text" class="form-control" value="{{ $item['ItemName'] ?? '' }}" readonly>
+                                <input type="text" class="form-control" value="{{ $item['ItemName'] ?? '' }}" readonly><span class="text-danger">*</span>
                             </td>
                             <td>
                                 <input type="text" class="form-control" value="{{ $item['UOMCode'] ?? '' }}" readonly>

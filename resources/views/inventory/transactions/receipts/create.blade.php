@@ -141,6 +141,7 @@
                                         <th>Store</th>
                                         <th>Received Qty <span class="text-danger">*</span></th>
                                         <th>Damaged Qty</th>
+                                        <th>Discrepancy</th>
                                         <th>GRN Allocations</th>
                                         <th>Remarks</th>
                                     </tr>
@@ -218,7 +219,7 @@
         selectedTransferId = transferId;
         
         // Show loading
-        $('#itemsBody').html('<tr><td colspan="7" class="text-center"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading transfer details...</td></tr>');
+        $('#itemsBody').html('<tr><td colspan="8" class="text-center"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading transfer details...</td></tr>');
         
         // Fetch transfer items
         fetch("{{ route('transactionsreceipts.get-transfer-items', '') }}/" + transferId)
@@ -279,8 +280,8 @@
                                        class="form-control received-qty" 
                                        name="items[${index}][received_qty]"
                                        value="${item.DispatchedQty}"
-                                       min="0" 
-                                       max="${item.DispatchedQty}"
+                                       min="0"
+                                       step="0.01"
                                        required
                                        data-index="${index}">
                             </td>
@@ -290,6 +291,16 @@
                                        name="items[${index}][damaged_qty]"
                                        value="0"
                                        min="0"
+                                       step="0.01"
+                                       data-index="${index}">
+                            </td>
+                            <td>
+                                <input type="number" 
+                                       class="form-control discrepancy-qty" 
+                                       name="items[${index}][discrepancy_qty]"
+                                       value="0"
+                                       readonly
+                                       style="background-color: #f8f9fa;"
                                        data-index="${index}">
                             </td>
                             <td>
@@ -380,16 +391,44 @@
         $('#storeInfo').text('');
     }
 
+    // Calculate and update discrepancy
+    function updateDiscrepancy(index) {
+        const $row = $(`input[data-index="${index}"]`).first().closest('tr');
+        const receivedQty = parseFloat($row.find('.received-qty').val()) || 0;
+        const dispatchedQty = parseFloat(transferItems[index]?.DispatchedQty) || 0;
+        
+        const discrepancy = receivedQty - dispatchedQty;
+        
+        // Update discrepancy field
+        const $discrepancyField = $row.find('.discrepancy-qty');
+        $discrepancyField.val(discrepancy.toFixed(2));
+        
+        // Color code the discrepancy field
+        if (discrepancy > 0) {
+            $discrepancyField.css('color', '#28a745'); // Green for surplus
+        } else if (discrepancy < 0) {
+            $discrepancyField.css('color', '#dc3545'); // Red for shortage
+        } else {
+            $discrepancyField.css('color', '#6c757d'); // Gray for exact match
+        }
+    }
+
     // Validate received and damaged quantities
     $(document).on('input', '.received-qty, .damaged-qty', function() {
         const index = $(this).data('index');
-        const receivedQty = parseFloat($(this).closest('tr').find('.received-qty').val()) || 0;
-        const damagedQty = parseFloat($(this).closest('tr').find('.damaged-qty').val()) || 0;
-        const dispatchedQty = parseFloat(transferItems[index]?.DispatchedQty) || 0;
+        const $row = $(this).closest('tr');
+        const receivedQty = parseFloat($row.find('.received-qty').val()) || 0;
+        const damagedQty = parseFloat($row.find('.damaged-qty').val()) || 0;
         
-        if (receivedQty + damagedQty > dispatchedQty) {
-            alert(`Total received + damaged quantity cannot exceed dispatched quantity (${dispatchedQty})`);
-            $(this).val(0);
+        // Update discrepancy when received qty changes
+        if ($(this).hasClass('received-qty')) {
+            updateDiscrepancy(index);
+        }
+        
+        // Validate damaged quantity doesn't exceed received quantity
+        if (damagedQty > receivedQty) {
+            alert(`Damaged quantity (${damagedQty}) cannot exceed received quantity (${receivedQty})`);
+            $row.find('.damaged-qty').val(0);
         }
     });
 
@@ -399,19 +438,45 @@
         
         // Validate all items
         let isValid = true;
+        let hasDiscrepancies = false;
+        let discrepancyDetails = [];
+        
         $('.received-qty').each(function() {
             const index = $(this).data('index');
+            const $row = $(this).closest('tr');
             const receivedQty = parseFloat($(this).val()) || 0;
+            const damagedQty = parseFloat($row.find('.damaged-qty').val()) || 0;
+            const discrepancyQty = parseFloat($row.find('.discrepancy-qty').val()) || 0;
             const dispatchedQty = parseFloat(transferItems[index]?.DispatchedQty) || 0;
+            const itemName = transferItems[index]?.item?.ItemName || '';
             
-            if (receivedQty > dispatchedQty) {
-                alert(`Received quantity cannot exceed dispatched quantity`);
+            // Validate damaged quantity
+            if (damagedQty > receivedQty) {
+                alert(`Damaged quantity cannot exceed received quantity for item: ${itemName}`);
                 isValid = false;
                 return false;
+            }
+            
+            // Track discrepancies
+            if (discrepancyQty !== 0) {
+                hasDiscrepancies = true;
+                const type = discrepancyQty > 0 ? 'Surplus' : 'Shortage';
+                discrepancyDetails.push(`${itemName}: ${type} of ${Math.abs(discrepancyQty)}`);
             }
         });
         
         if (!isValid) return;
+        
+        // Warn about discrepancies
+        if (hasDiscrepancies) {
+            const message = 'The following items have discrepancies:\n\n' + 
+                          discrepancyDetails.join('\n') + 
+                          '\n\nDo you want to proceed?';
+            
+            if (!confirm(message)) {
+                return;
+            }
+        }
         
         // Show loading
         $(this).find('button[type="submit"]').html('<i class="fas fa-spinner fa-spin me-1"></i> Processing...').prop('disabled', true);

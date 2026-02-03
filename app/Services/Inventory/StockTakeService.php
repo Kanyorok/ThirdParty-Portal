@@ -19,9 +19,6 @@ class StockTakeService
         $this->stockTake = $stockTake;
     }
 
-    /**
-     * Creates a StockTake and associated lines in a single transaction
-     */
     public static function createWithLines(
         Branch $branch,
         Store $store,
@@ -45,9 +42,6 @@ class StockTakeService
         });
     }
 
-    /**
-     * Creates StockTake record and returns service instance
-     */
     public static function create(
         Branch $branch,
         Store $store,
@@ -74,9 +68,6 @@ class StockTakeService
         });
     }
 
-    /**
-     * Adds a line to the current StockTake
-     */
     public function addLine(
         int $itemId,
         float $actualQuantity,
