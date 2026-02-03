@@ -166,6 +166,7 @@ class Document extends Model implements SpecialPermissionContract
         }
 
         // Admin can view all
+        // @phpstan-ignore-next-line - hasRole() is added by Spatie\Permission\Traits\HasRoles
         if ($user->hasRole('Super Admin') || $user->hasRole('Administrator')) {
             return true;
         }
@@ -186,6 +187,7 @@ class Document extends Model implements SpecialPermissionContract
 
         // Check permissions
         try {
+            // @phpstan-ignore-next-line - can() is added by Illuminate\Foundation\Auth\Access\Authorizable
             return $user->can('view', $this);
         } catch (\Exception $e) {
             return true; // Fallback to allow viewing
