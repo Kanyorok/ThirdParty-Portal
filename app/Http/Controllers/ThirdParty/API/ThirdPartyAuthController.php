@@ -11,6 +11,7 @@ use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
 use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\BR\BREncryption;
 use App\Services\RegistrationService;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -237,5 +238,83 @@ class ThirdPartyAuthController extends Controller
         return $status === Password::PASSWORD_RESET
             ? response()->json(['success' => true, 'message' => __($status)])
             : response()->json(['success' => false, 'message' => __($status)], 400);
+    }
+
+    public function verifyEmail(string $id, string $hash): JsonResponse
+    {
+        $user = $this->resolveThirdPartyUser($id);
+
+        if (! $user || ! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            return response()->json([
+                'success' => false,
+                'message' => __('auth.invalid_verification_link'),
+            ], 403);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => true,
+                'message' => __('auth.email_already_verified'),
+                'user' => [
+                    'id' => $user->Id,
+                ],
+            ], 200);
+        }
+
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => __('auth.email_verified'),
+            'user' => [
+                'id' => $user->Id,
+            ],
+        ], 200);
+    }
+
+    public function resendVerification(Request $request): JsonResponse
+    {
+        $user = $this->resolveThirdPartyUser($request->user_id);
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'message' => __('auth.unauthenticated'),
+            ], 401);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => false,
+                'message' => __('auth.email_already_verified'),
+            ], 400);
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return response()->json([
+            'success' => true,
+            'message' => __('auth.verification_link_sent'),
+        ]);
+    }
+
+    private function resolveThirdPartyUser(?string $id = null): ?ThirdPartyUser
+    {
+        $user = request()->user();
+        if ($user instanceof ThirdPartyUser) {
+            return $user;
+        }
+
+        if (! $id) {
+            return null;
+        }
+
+        if (is_numeric($id)) {
+            return ThirdPartyUser::find($id);
+        }
+
+        return ThirdPartyUser::where('UserID', $id)->first();
     }
 }

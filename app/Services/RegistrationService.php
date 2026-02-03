@@ -80,7 +80,7 @@ class RegistrationService
 
         $baseUrl = route(
             'portal.auth.email.verify',
-            ['id' => $user->getKey(), 'hash' => $hash],
+            ['user' => $user->getKey(), 'hash' => $hash],
             false
         );
 
