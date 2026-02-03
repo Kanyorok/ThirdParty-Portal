@@ -54,14 +54,12 @@ class StockConsumptionController extends Controller
         $branchId = $currentBranch->Id;
         $branch = Branch::findOrFail($branchId);
 
-        // Get current logged-in user's employee info
         $currentUser = Auth::user();
         $currentEmployee = $currentUser->employee;
         $issuedByDisplay = $currentEmployee
             ? $currentEmployee->FirstName . ' ' . $currentEmployee->LastName . ' (' . ($currentEmployee->EmployeeID ?? $currentUser->UserName) . ')'
             : $currentUser->UserName;
 
-        // Get employees from current branch (excluding current user)
         $employees = Employee::with('user')
             ->where('BranchId', $branchId)
             ->whereHas('user', function ($q) use ($currentUser) {
@@ -81,7 +79,6 @@ class StockConsumptionController extends Controller
                 return ! is_null($item['id']);
             });
 
-        // Get all departments (no branch filtering since departments don't have BranchId)
         $departments = Department::select('Id', 'Name')
             ->orderBy('Name')
             ->get()
@@ -136,15 +133,13 @@ class StockConsumptionController extends Controller
         $branchId = $currentBranch->Id;
         $branch = Branch::findOrFail($branchId);
 
-        // Get current logged-in user's employee info
         $currentUser = Auth::user();
         $currentEmployee = $currentUser->employee;
         $issuedByDisplay = $currentEmployee
             ? $currentEmployee->FirstName . ' ' . $currentEmployee->LastName . ' (' . ($currentEmployee->EmployeeID ?? $currentUser->UserName) . ')'
             : $currentUser->UserName;
 
-        // Get all users for Issued By dropdown
-        // Include current user and other users who can issue stock
+
         $users = User::whereHas('employee', function ($q) use ($branchId) {
             $q->where('BranchId', $branchId);
         })
@@ -162,7 +157,6 @@ class StockConsumptionController extends Controller
                 ];
             });
 
-        // Get employees from current branch (excluding current user) for Issued To dropdown
         $employees = Employee::with('user')
             ->where('BranchId', $branchId)
             ->whereHas('user', function ($q) use ($currentUser) {
@@ -182,7 +176,6 @@ class StockConsumptionController extends Controller
                 return ! is_null($item['id']);
             });
 
-        // Get all departments
         $departments = Department::select('Id', 'Name')
             ->orderBy('Name')
             ->get()
@@ -198,7 +191,6 @@ class StockConsumptionController extends Controller
         $uoms = UnitOfMeasure::all();
         $types = CodeDetail::where('CodeID', 'IssuedToType')->get(['ID', 'Description']);
 
-        // Determine pre-selected value based on consumption type
         $preSelectedValue = '';
         if ($consumption->IssuedToType) {
             $type = CodeDetail::find($consumption->IssuedToType);
@@ -312,7 +304,6 @@ class StockConsumptionController extends Controller
 
         switch ($type) {
             case 'EMPLOYEE':
-                // Get employees from the current branch (excluding current user)
                 $employees = Employee::with('user')
                     ->where('BranchId', $currentBranch->Id)
                     ->whereHas('user', function ($q) {
@@ -332,7 +323,6 @@ class StockConsumptionController extends Controller
                 return response()->json($employees);
 
             case 'DEPARTMENT':
-                // Get all departments (no branch filter)
                 $departments = Department::select('Id', 'Name')
                     ->orderBy('Name')
                     ->get()

@@ -14,7 +14,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class InterBranchRequisitionApprovalController extends Controller
 {
@@ -44,7 +43,6 @@ class InterBranchRequisitionApprovalController extends Controller
             ->orderBy('CreatedOn', 'desc')
             ->get();
 
-        // Add approval capability check for each requisition
         $user = Auth::user();
         $pendingRequisitions = $pendingRequisitions->map(function ($requisition) use ($user) {
             $requisition->canApprove = $this->workflow->canApproveModel($requisition, $user);
@@ -63,7 +61,6 @@ class InterBranchRequisitionApprovalController extends Controller
                     ->with('error', 'You can only view requisitions for your branch.');
             }
 
-            // Add approval capability check for selected requisition
             if ($requisition) {
                 $requisition->canApprove = $this->workflow->canApproveModel($requisition, $user);
             }
@@ -95,7 +92,6 @@ class InterBranchRequisitionApprovalController extends Controller
         $user = Auth::user();
         $canApprove = $this->workflow->canApproveModel($requisition, $user);
 
-        Log::info("Can approve requisition {$requisition->Id} for user {$user->Id}: " . ($canApprove ? 'Yes' : 'No'));
 
         return view('inventory.interbranchrequisition.approval.show', [
             'requisition' => $requisition,
@@ -156,11 +152,6 @@ class InterBranchRequisitionApprovalController extends Controller
                 $this->workflow->approve($requisition, $user, InterBranchRequisitionEnum::Approved, 'Approved via UI', 'Status');
             });
 
-            Log::info('Requisition approved successfully', [
-                'requisition_id' => $requisition->Id,
-                'user_id' => $user->Id,
-            ]);
-
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
@@ -180,25 +171,18 @@ class InterBranchRequisitionApprovalController extends Controller
 
             return redirect()->back()->with('error', $errorMessage);
         } catch (Exception $e) {
-            Log::error('Error approving requisition: ' . $e->getMessage());
 
             $errorMessage = 'Unexpected error, try again later.';
             $errorLower = strtolower($e->getMessage());
 
-            if (
-                str_contains($errorLower, 'cannot approve your own submission') ||
-                str_contains($errorLower, 'maker-checker')
-            ) {
+            if (str_contains($errorLower, 'cannot approve your own submission') ||
+                str_contains($errorLower, 'maker-checker')) {
                 $errorMessage = 'You cannot approve your own submission. Please have another user approve this requisition.';
-            } elseif (
-                str_contains($errorLower, 'already approved') ||
-                     str_contains($errorLower, 'already actioned')
-            ) {
+            } elseif (str_contains($errorLower, 'already approved') ||
+                     str_contains($errorLower, 'already actioned')) {
                 $errorMessage = 'This requisition has already been approved or processed.';
-            } elseif (
-                str_contains($errorLower, 'not in approvable status') ||
-                     str_contains($errorLower, 'no pending approval found')
-            ) {
+            } elseif (str_contains($errorLower, 'not in approvable status') ||
+                     str_contains($errorLower, 'no pending approval found')) {
                 $errorMessage = 'This requisition cannot be approved in its current status or no pending approval found for your user.';
             } elseif (str_contains($errorLower, 'insufficient stock')) {
                 $errorMessage = 'Insufficient stock available for one or more items.';
@@ -274,11 +258,6 @@ class InterBranchRequisitionApprovalController extends Controller
                 $this->workflow->reject($requisition, $user, InterBranchRequisitionEnum::Rejected, $reason);
             });
 
-            Log::info('Requisition rejected successfully', [
-                'requisition_id' => $requisition->Id,
-                'user_id' => $user->Id,
-                'reason' => $reason,
-            ]);
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -299,25 +278,18 @@ class InterBranchRequisitionApprovalController extends Controller
 
             return redirect()->back()->with('error', $errorMessage);
         } catch (Exception $e) {
-            Log::error('Error rejecting requisition: ' . $e->getMessage());
 
             $errorMessage = 'Unexpected error, try again later.';
             $errorLower = strtolower($e->getMessage());
 
-            if (
-                str_contains($errorLower, 'cannot approve your own submission') ||
-                str_contains($errorLower, 'maker-checker')
-            ) {
+            if (str_contains($errorLower, 'cannot approve your own submission') ||
+                str_contains($errorLower, 'maker-checker')) {
                 $errorMessage = 'You cannot reject your own submission. Please have another user review this requisition.';
-            } elseif (
-                str_contains($errorLower, 'already rejected') ||
-                     str_contains($errorLower, 'already actioned')
-            ) {
+            } elseif (str_contains($errorLower, 'already rejected') ||
+                     str_contains($errorLower, 'already actioned')) {
                 $errorMessage = 'This requisition has already been rejected or processed.';
-            } elseif (
-                str_contains($errorLower, 'not in rejectable status') ||
-                     str_contains($errorLower, 'no pending approval found')
-            ) {
+            } elseif (str_contains($errorLower, 'not in rejectable status') ||
+                     str_contains($errorLower, 'no pending approval found')) {
                 $errorMessage = 'This requisition cannot be rejected in its current status or no pending approval found for your user.';
             }
 
@@ -387,14 +359,6 @@ class InterBranchRequisitionApprovalController extends Controller
                 );
             });
 
-            // Log successful action
-            Log::info('Requisition decision submitted successfully', [
-                'requisition_id' => $requisition->Id,
-                'user_id' => $user->Id,
-                'action' => $request->action,
-            ]);
-
-            // Success response
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
@@ -404,25 +368,17 @@ class InterBranchRequisitionApprovalController extends Controller
 
             return redirect()->route('interbranchrequisitionapproval.index')
                 ->with('success', 'Your decision has been recorded.');
+
         } catch (Exception $e) {
-            Log::error('Error processing requisition decision: ' . $e->getMessage(), [
-                'requisition_id' => $requisition->Id,
-                'user_id' => $user->Id,
-                'exception' => $e,
-            ]);
 
             $errorMessage = 'Unexpected error: ' . $e->getMessage();
             $errorLower = strtolower($e->getMessage());
 
-            if (
-                str_contains($errorLower, 'cannot approve your own submission') ||
-                str_contains($errorLower, 'maker-checker')
-            ) {
+            if (str_contains($errorLower, 'cannot approve your own submission') ||
+                str_contains($errorLower, 'maker-checker')) {
                 $errorMessage = 'You cannot approve or reject your own submission. Please have another user review this requisition.';
-            } elseif (
-                str_contains($errorLower, 'no pending approval found') ||
-                     str_contains($errorLower, 'already actioned')
-            ) {
+            } elseif (str_contains($errorLower, 'no pending approval found') ||
+                     str_contains($errorLower, 'already actioned')) {
                 $errorMessage = 'No pending approval found for your user or this requisition has already been processed.';
             } elseif (str_contains($errorLower, 'insufficient stock')) {
                 $errorMessage = 'Insufficient stock available for one or more items.';
@@ -434,7 +390,6 @@ class InterBranchRequisitionApprovalController extends Controller
                 $errorMessage = 'This requisition cannot be processed in its current status.';
             }
 
-            // Error response
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
@@ -446,9 +401,5 @@ class InterBranchRequisitionApprovalController extends Controller
         } finally {
             optional($lock)->release();
         }
-    }
-
-    public function create()
-    {
     }
 }

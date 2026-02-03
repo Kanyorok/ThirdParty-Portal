@@ -23,25 +23,20 @@ class StockMovementController extends Controller
         $branchId = $currentBranch->Id;
         $isHeadOffice = $branchId === 1;
 
-        // Get branches for dropdown
         $branches = $isHeadOffice ? Branch::all() : Branch::where('Id', $branchId)->get();
 
-        // Get stores for dropdown
         $stores = $isHeadOffice
             ? Store::all()
             : Store::where('BranchID', $branchId)->get();
 
-        // Get items for dropdown
         $items = ItemMasterList::all();
 
-        // Build base query
         $baseQuery = StockTransaction::whereNull('t_StockTransactions.DeletedOn');
 
         if (! $isHeadOffice) {
             $baseQuery->where('BranchID', $branchId);
         }
 
-        // Apply filters
         if ($request->branch && $isHeadOffice) {
             $baseQuery->where('BranchID', $request->branch);
         }
@@ -62,7 +57,6 @@ class StockMovementController extends Controller
             $baseQuery->whereDate('TransactionDate', '<=', $request->to_date);
         }
 
-        // FIXED: Get transaction summary WITH TRANSACTION PRICES
         $transactions = $baseQuery->clone()
             ->select([
                 'ItemID',
@@ -76,7 +70,6 @@ class StockMovementController extends Controller
             ->groupBy('ItemID')
             ->get();
 
-        // Calculate movement data
         $movementData = [];
         $totalOpening = 0;
         $totalIn = 0;
@@ -88,23 +81,36 @@ class StockMovementController extends Controller
         $totalValueClosing = 0;
 
         foreach ($transactions as $tx) {
-            // Calculate opening quantity
             $openingQty = $tx->closing_qty - ($tx->total_in_qty - $tx->total_out_qty);
             $closingQty = $tx->closing_qty;
 
-            // Get item info
             $item = ItemMasterList::find($tx->ItemID);
 
-            // CRITICAL FIX: Use transaction prices, not item master prices
             $unitCost = $this->getUnitPriceForItem($tx, $item);
 
-            // Calculate values using transaction prices
             $openingValue = $openingQty * $unitCost;
             $inValue = $tx->total_in_value > 0 ? $tx->total_in_value : ($tx->total_in_qty * $unitCost);
             $outValue = $tx->total_out_value > 0 ? $tx->total_out_value : ($tx->total_out_qty * $unitCost);
             $closingValue = $closingQty * $unitCost;
 
-            // Debug log for first item
+            if (count($movementData) === 0) {
+                \Log::debug('Transaction calculation:', [
+                    'item_id' => $tx->ItemID,
+                    'opening_qty' => $openingQty,
+                    'in_qty' => $tx->total_in_qty,
+                    'out_qty' => $tx->total_out_qty,
+                    'closing_qty' => $closingQty,
+                    'unit_cost' => $unitCost,
+                    'opening_value' => $openingValue,
+                    'in_value' => $inValue,
+                    'out_value' => $outValue,
+                    'closing_value' => $closingValue,
+                    'tx_avg_unit_cost' => $tx->avg_unit_cost,
+                    'tx_total_in_value' => $tx->total_in_value,
+                    'tx_total_out_value' => $tx->total_out_value,
+                    'item_unit_cost' => $item ? $item->UnitCost : 'no item',
+                ]);
+            }
 
             $movementData[$tx->ItemID] = [
                 'label' => $item ? ($item->ItemName ?? $item->Description) : 'Unknown',
@@ -122,7 +128,6 @@ class StockMovementController extends Controller
                 ],
             ];
 
-            // Calculate totals
             $totalOpening += $openingQty;
             $totalIn += $tx->total_in_qty;
             $totalOut += $tx->total_out_qty;
@@ -134,12 +139,10 @@ class StockMovementController extends Controller
             $totalValueClosing += $closingValue;
         }
 
-        // Get additional data using Eloquent
         $dailyMovement = $this->getDailyMovementData($baseQuery);
         $branchMovement = $this->getBranchMovementData($baseQuery, $isHeadOffice);
         $topItems = $this->getTopMovingItems($baseQuery);
 
-        // Calculate totals for KPI cards
         $netMovement = $totalIn - $totalOut;
 
         return view('inventory.inventorydashboard.stockmovement.index', compact(
@@ -164,17 +167,12 @@ class StockMovementController extends Controller
         ));
     }
 
-    /**
-     * Get unit price for item - prioritize transaction prices over item master
-     */
     private function getUnitPriceForItem($transaction, $item = null)
     {
-        // Priority 1: Use transaction's average unit cost if available
         if (isset($transaction->avg_unit_cost) && $transaction->avg_unit_cost > 0) {
             return $transaction->avg_unit_cost;
         }
 
-        // Priority 2: Calculate from transaction values
         $totalQty = $transaction->total_in_qty + $transaction->total_out_qty;
         $totalValue = $transaction->total_in_value + $transaction->total_out_value;
 
@@ -182,18 +180,15 @@ class StockMovementController extends Controller
             return $totalValue / $totalQty;
         }
 
-        // Priority 3: Use item's unit cost if available
         if ($item && isset($item->UnitCost) && $item->UnitCost > 0) {
             return $item->UnitCost;
         }
 
-        // Priority 4: Fallback - use a reasonable default for demonstration
-        return 100; // KES 100 per unit for demo
+        return 100;
     }
 
     private function getDailyMovementData($baseQuery)
     {
-        // Get daily aggregates with value separation
         $dailyAggregates = $baseQuery->clone()
             ->select([
                 DB::raw('CAST(TransactionDate AS date) as date'),
@@ -212,17 +207,13 @@ class StockMovementController extends Controller
         $previousClosingValue = 0;
 
         foreach ($dailyAggregates as $index => $day) {
-            // Get average unit cost for the day
             $unitCost = $day->avg_unit_cost > 0 ? $day->avg_unit_cost : 100;
 
-            // Calculate quantities
             $openingQty = $index === 0 ? 0 : $previousClosingQty;
             $closingQty = $openingQty + $day->in_qty - $day->out_qty;
 
-            // Calculate values
             $openingValue = $openingQty * $unitCost;
 
-            // Use actual transaction values if available, otherwise calculate
             $inValue = $day->in_value > 0 ? $day->in_value : ($day->in_qty * $unitCost);
             $outValue = $day->out_value > 0 ? $day->out_value : ($day->out_qty * $unitCost);
             $closingValue = $closingQty * $unitCost;

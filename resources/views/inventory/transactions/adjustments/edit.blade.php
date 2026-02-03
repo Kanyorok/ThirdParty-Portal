@@ -71,14 +71,14 @@
                     <thead class="table-light">
                     <tr>
                         <th>#</th>
-                        <th>Item Code</th>
-                        <th>Item Name</th>
-                        <th>UOM</th>
+                        <th>Item Code<span class="text-danger">*</span></th>
+                        <th>Item Name<span class="text-danger">*</span></th>
+                        <th>UOM<span class="text-danger">*</span></th>
                         <th>Unit Cost</th>
-                        <th>Current Qty</th>
-                        <th>Adjustment Qty</th>
+                        <th>Current Qty<span class="text-danger">*</span></th>
+                        <th>Adjustment Qty<span class="text-danger">*</span></th>
                         <th>New Qty</th>
-                        <th>Adjustment Reason</th>
+                        <th>Adjustment Reason<span class="text-danger">*</span></th>
                         <th>Remarks</th>
                         <th>Action</th>
                     </tr>

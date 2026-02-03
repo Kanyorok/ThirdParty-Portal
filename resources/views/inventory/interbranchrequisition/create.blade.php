@@ -13,16 +13,6 @@
         </div>
     @endif
 
-    {{-- Specific Workflow Error --}}
-    @if($errors->has('workflow'))
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            <strong>Workflow Configuration Required:</strong>
-            {{ $errors->first('workflow') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     <div class="container mt-4">
 
         {{-- Workflow Setup Information --}}

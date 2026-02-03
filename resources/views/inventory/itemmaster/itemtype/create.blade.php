@@ -17,7 +17,7 @@
     <form action="{{ route('itemtype.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
     <div class="mb-3">
-      <label for="typeName" class="form-label">Type Name</label>
+      <label for="typeName" class="form-label">Type Name<span class="text-danger">*</span></label>
        <select class="form-select @error('TypeName') is-invalid @enderror" id="TypeName" name="TypeName" required>
                         <option value="">Select Item Type</option>
                         @foreach($itmTypes as $itmType)

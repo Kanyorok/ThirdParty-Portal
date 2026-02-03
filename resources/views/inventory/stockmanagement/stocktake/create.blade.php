@@ -43,7 +43,7 @@
             <!-- Header Info -->
             <div class="row mb-3">
                 <div class="col-md-3">
-                    <label class="form-label">📍 Branch</label>
+                    <label class="form-label">📍 Branch<span class="text-danger">*</span></label>
                     <select name="BranchId" id="branch-select" class="form-select @error('BranchId') is-invalid @enderror" required>
                         <option value="">-- Select Branch --</option>
                         @foreach ($branches as $branch)
@@ -59,7 +59,7 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">🏢 Store</label>
+                    <label class="form-label">🏢 Store<span class="text-danger">*</span></label>
                     <select name="StoreId" id="store-select" class="form-select @error('StoreId') is-invalid @enderror" required>
                         <option value="">-- Select Store --</option>
                         @foreach ($stores ?? [] as $store)
@@ -75,7 +75,7 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">🧑‍💼 Counted By</label>
+                    <label class="form-label">🧑‍💼 Counted By<span class="text-danger">*</span></label>
                     <select name="CountedBy" class="form-select select2 @error('CountedBy') is-invalid @enderror" required>
                         <option value="">-- Select User --</option>
                         @foreach ($users as $user)
@@ -91,7 +91,7 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">📅 Count Date</label>
+                    <label class="form-label">📅 Count Date<span class="text-danger">*</span></label>
                     <input type="date" name="CountDate" class="form-control @error('CountDate') is-invalid @enderror" 
                            value="{{ old('CountDate', now()->toDateString()) }}" required>
                     @error('CountDate')
@@ -106,10 +106,10 @@
                     <thead class="table-light">
                     <tr>
                         <th>#</th>
-                        <th>Item Code</th>
-                        <th>Item Name</th>
+                        <th>Item Code<span class="text-danger">*</span></th>
+                        <th>Item Name<span class="text-danger">*</span></th>
                         <th>System Qty</th>
-                        <th>Counted Qty</th>
+                        <th>Counted Qty<span class="text-danger">*</span></th>
                         <th>Variance</th>
                         <th>Remarks <span class="text-danger">*</span></th>
                     </tr>

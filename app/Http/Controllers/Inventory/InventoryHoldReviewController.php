@@ -14,7 +14,7 @@ use Throwable;
 
 class InventoryHoldReviewController extends Controller
 {
-    protected InventoryHoldReviewService $service;
+    protected $service;
 
     public function __construct(InventoryHoldReviewService $service)
     {
@@ -24,8 +24,8 @@ class InventoryHoldReviewController extends Controller
     public function index(Request $request)
     {
         $this->authorize('viewAny', InventoryHoldReview::class);
-        $currentBranch = $request->user()->branch;
 
+        $currentBranch = $request->user()->branch;
         if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
@@ -63,6 +63,7 @@ class InventoryHoldReviewController extends Controller
         }
 
         $branchId = $currentBranch->Id;
+
         $reviews = InventoryHoldReview::with([
             'item.uom',
             'fromBranch',
@@ -80,7 +81,18 @@ class InventoryHoldReviewController extends Controller
             $review->Condition = $review->conditionDetail?->Description ?? null;
             $review->Defect = $review->defectDetail?->Description ?? null;
         });
-        $holds = InventoryHold::whereNull('DeletedOn')
+
+        $holds = InventoryHold::with([
+            'item.uom',
+            'fromBranch',
+            'branch',
+            'store',
+            'sourceDetail',
+            'defectDetail',
+            'sourceAdjustment',
+            'sourceReceipt',
+        ])
+            ->whereNull('DeletedOn')
             ->where('BranchID', $branchId)
             ->whereHas('sourceDetail', function ($q) {
                 $q->where('Description', '!=', 'Transaction Transfer');
@@ -145,8 +157,6 @@ class InventoryHoldReviewController extends Controller
 
     public function resolve(Request $request, $id)
     {
-        $this->authorize('update', InventoryHoldReview::class);
-
         $currentBranch = $request->user()->branch;
         if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
@@ -154,24 +164,23 @@ class InventoryHoldReviewController extends Controller
 
         $branchId = $currentBranch->Id;
         $action = $request->input('Action');
+
         $extras = [
             'Condition' => $request->input('Condition'),
             'Notes' => $request->input('Notes'),
         ];
 
         try {
-            // Try to find either an InventoryHoldReview OR fall back to InventoryHold
             $holdReview = InventoryHoldReview::where('Id', $id)
                 ->where('FromBranch', $branchId)
                 ->first();
 
             if (! $holdReview) {
-                // If no review exists, try to find the original hold
-                $inventoryHold = InventoryHold::where('Id', $id)
+                $inventoryHold = InventoryHold::withTrashed()
+                    ->where('Id', $id)
                     ->where('BranchID', $branchId)
                     ->firstOrFail();
 
-                // Use the hold ID for disposal/return
                 $targetId = $inventoryHold->Id;
             } else {
                 $targetId = $holdReview->Id;
@@ -192,8 +201,6 @@ class InventoryHoldReviewController extends Controller
 
     public function destroy($id, Request $request)
     {
-        $this->authorize('destroy', InventoryHoldReview::class);
-
         $currentBranch = $request->user()->branch;
         if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
@@ -219,7 +226,7 @@ class InventoryHoldReviewController extends Controller
 
         $branchId = $currentBranch->Id;
 
-        $hold = InventoryHold::with(['item', 'branch', 'store'])
+        $hold = InventoryHold::with(['item', 'branch', 'store', 'defectDetail'])
             ->where('BranchID', $branchId)
             ->findOrFail($id);
 
@@ -230,7 +237,7 @@ class InventoryHoldReviewController extends Controller
             'ItemName' => $hold->item->ItemName ?? null,
             'FromBranch' => $hold->branch->Name ?? null,
             'Store' => $hold->store->StoreName ?? null,
-            'Defect' => $hold->Reason,
+            'Defect' => $hold->defectDetail?->Description ?? $hold->Reason,
         ]);
     }
 }

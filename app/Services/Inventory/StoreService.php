@@ -17,7 +17,6 @@ class StoreService
         $store->ModifiedOn = Carbon::now();
         $store->save();
 
-        // Generate StoreID like 'STR-00001'
         $store->StoreID = 'STR-' . str_pad($store->Id, 5, '0', STR_PAD_LEFT);
         $store->save();
 

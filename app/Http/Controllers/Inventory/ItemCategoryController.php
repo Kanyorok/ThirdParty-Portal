@@ -21,7 +21,6 @@ class ItemCategoryController extends Controller
 
     public function index()
     {
-        // Server-side pagination: newest-first; allow per-page to be set via ?perPage= and persist in session
         $allowed = [5, 10, 20, 50];
         $requested = request()->query('perPage');
 
@@ -30,7 +29,6 @@ class ItemCategoryController extends Controller
             if (! in_array($perPage, $allowed)) {
                 $perPage = 20;
             }
-            // persist user choice
             session(['itemcategory.perPage' => $perPage]);
         } else {
             $perPage = session('itemcategory.perPage', 20);
@@ -68,7 +66,6 @@ class ItemCategoryController extends Controller
     {
         $this->authorize('create', ItemCategories::class);
 
-        // Force status to Active
         $activeStatusId = CodeDetail::where('CodeID', 'CategoryStatus')
             ->where('Description', 'Active')
             ->value('Id');
