@@ -70,7 +70,6 @@
 
                 reviewsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the reviews.");
-                    console.log(er);
                 });
             } else {
                 reviewsTable.ajax.reload();

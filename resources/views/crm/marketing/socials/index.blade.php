@@ -122,7 +122,6 @@
 
                 PublishedPostsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading published posts.");
-                    console.log(er);
                 });
             } else {
                 PublishedPostsTable.ajax.reload();
@@ -164,7 +163,6 @@
 
                 ScheduledPostsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading Scheduled posts.");
-                    console.log(er);
                 });
             } else {
                 ScheduledPostsTable.ajax.reload();

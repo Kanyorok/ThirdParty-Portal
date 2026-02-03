@@ -24,9 +24,9 @@ class Document extends Model implements SpecialPermissionContract
     use UserActorTrait;
     use SpecialPermissionTrait;
 
-    public const string CREATED_AT = 'CreatedOn';
-    public const string UPDATED_AT = 'ModifiedOn';
-    public const string DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Documents';
     protected $primaryKey = 'Id';
@@ -166,6 +166,7 @@ class Document extends Model implements SpecialPermissionContract
         }
 
         // Admin can view all
+        // @phpstan-ignore-next-line - hasRole() is added by Spatie\Permission\Traits\HasRoles
         if ($user->hasRole('Super Admin') || $user->hasRole('Administrator')) {
             return true;
         }
@@ -186,6 +187,7 @@ class Document extends Model implements SpecialPermissionContract
 
         // Check permissions
         try {
+            // @phpstan-ignore-next-line - can() is added by Illuminate\Foundation\Auth\Access\Authorizable
             return $user->can('view', $this);
         } catch (\Exception $e) {
             return true; // Fallback to allow viewing

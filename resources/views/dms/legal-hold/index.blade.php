@@ -94,7 +94,6 @@
 
                 LegalHoldsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading Legal Holds.");
-                    console.log(er);
                 });
             } else {
                 LegalHoldsTable.ajax.reload();

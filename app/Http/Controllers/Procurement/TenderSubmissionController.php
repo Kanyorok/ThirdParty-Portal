@@ -181,7 +181,7 @@ class TenderSubmissionController extends Controller
                 $bidSubmission->newDocument(
                     \App\Enums\Core\ModulesEnum::Procurement,
                     $request->file('bid_files'),
-                    [\App\Enums\Core\PermissionEnum::BidSubmissionView->value],
+                    [\App\Enums\Core\PermissionEnum::BidSubmissionRead->value],
                     $request->user()
                 );
             }

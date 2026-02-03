@@ -328,7 +328,6 @@ $(document).ready(function() {
             $('#editor').val(editorData);
             
             // Debug log to verify content
-            console.log('Syncing editor content:', editorData.substring(0, 100) + '...');
         }
         return true; // Allow form to continue submitting
     });

@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Log;
 
 class SystemHelper
 {
-    public const string ID = 'ERPSYS';
-    public const string CountyCode = 'KE';
+    public const ID = 'ERPSYS';
+    public const CountyCode = 'KE';
 
     public static function user(): User
     {

@@ -409,7 +409,6 @@
 
                 branchesTable.on('error', function (er) {
                     nWarning("an issue occurred while loading branchs.");
-                    console.log(er);
                 });
             } else {
                 branchesTable.ajax.reload();

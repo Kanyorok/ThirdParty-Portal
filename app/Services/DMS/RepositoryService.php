@@ -23,9 +23,9 @@ use Throwable;
 
 class RepositoryService extends PermissionsService
 {
-    protected const string ROOT = 'root';
-    protected const string Internal = 'internal';
-    protected const string Validation = 'validation';
+    protected const ROOT = 'root';
+    protected const Internal = 'internal';
+    protected const Validation = 'validation';
 
     public function __construct(public Repository $repo)
     {

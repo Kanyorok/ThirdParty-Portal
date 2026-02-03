@@ -17,9 +17,9 @@ class ThirdPartyType extends Model
     protected $table = 't_ThirdPartyTypes';
     protected $primaryKey = 'TypeId';
 
-    public const string CREATED_AT = 'CreatedOn';
-    public const string UPDATED_AT = 'ModifiedOn';
-    public const string DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'FinanceRole',

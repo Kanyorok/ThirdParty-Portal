@@ -24,8 +24,8 @@ use PhpOffice\PhpWord\IOFactory as WordFactory;
 
 class FileProperties extends FileExtraction
 {
-    public const string TIME_FORMAT = 'H:i:s';
-    public const string DATE_TIME_FORMAT = 'Y-m-d H:i:s T';
+    public const TIME_FORMAT = 'H:i:s';
+    public const DATE_TIME_FORMAT = 'Y-m-d H:i:s T';
 
     protected Collection $properties;
     protected string $filePath;

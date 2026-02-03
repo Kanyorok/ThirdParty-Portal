@@ -14,7 +14,7 @@ use Illuminate\Validation\ValidationException;
 
 class StartMeetingRequest extends FormRequest
 {
-    public const string NoSchedule = 'NONE';
+    public const NoSchedule = 'NONE';
 
     /**
      * Get the validation rules that apply to the request.
