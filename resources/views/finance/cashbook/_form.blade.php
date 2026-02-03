@@ -105,7 +105,7 @@
         <label class="form-label">Party Type</label>
         <select name="PartyType" id="PartyType" class="form-select select2-basic"
                 data-placeholder="Select party type">
-            <option value="">Select party type</option>
+            <option value="" disabled @selected($partyType==='')>Select party type</option>
             <option value="VENDOR" @selected($partyType==='VENDOR')>Vendor</option>
             <option value="TENANT" @selected($partyType==='TENANT')>Tenant</option>
             <option value="OTHER" @selected($partyType==='OTHER')>Other</option>
@@ -136,7 +136,7 @@
         <input type="email" name="PartyEmail" class="form-control" value="{{ $partyEmail }}">
     </div>
     <div class="col-md-12">
-        <label class="form-label">Narration</label>
+        <label class="form-label">Narration (Optional)</label>
         <textarea name="Narration" class="form-control" rows="2" placeholder="Narration">{{ old('Narration', $entry->Narration ?? '') }}</textarea>
     </div>
 </div>
@@ -151,8 +151,8 @@
             <tr>
                 <th style="width:56px">#</th>
                 <th class="col-gl">GL Account</th>
-                <th class="col-desc">Narration</th>
                 <th class="col-amt">Amount (DR)</th>
+                <th class="col-desc">Narration</th>
                 <th style="width:90px">Action</th>
             </tr>
             </thead>
@@ -171,13 +171,13 @@
                             @endforeach
                         </select>
                     </td>
-                    <td class="col-desc">
-                        <input name="lines[{{ $idx }}][Description]" class="form-control"
-                               value="{{ $ln['Description'] ?? '' }}" placeholder="Narration">
-                    </td>
                     <td class="col-amt">
                         <input type="number" step="0.01" name="lines[{{ $idx }}][AmountDr]"
                                class="form-control line-amount text-end" value="{{ $ln['AmountDr'] ?? '' }}">
+                    </td>
+                    <td class="col-desc">
+                        <input name="lines[{{ $idx }}][Description]" class="form-control"
+                               value="{{ $ln['Description'] ?? '' }}" placeholder="Narration">
                     </td>
                     <td class="text-center">
                         <button type="button" class="btn btn-sm btn-outline-danger remove-line" title="Remove">
@@ -198,12 +198,12 @@
                             @endforeach
                         </select>
                     </td>
-                    <td class="col-desc">
-                        <input name="lines[0][Description]" class="form-control" placeholder="Narration">
-                    </td>
                     <td class="col-amt">
                         <input type="number" step="0.01" name="lines[0][AmountDr]"
                                class="form-control line-amount text-end">
+                    </td>
+                    <td class="col-desc">
+                        <input name="lines[0][Description]" class="form-control" placeholder="Narration">
                     </td>
                     <td class="text-center">
                         <button type="button" class="btn btn-sm btn-outline-danger remove-line" title="Remove">
@@ -342,6 +342,28 @@
             bankHint.textContent = (code || name) ? `Bank GL: ${code} ${name ? '— ' + name : ''}` : '';
         }
 
+        function getBankGl() {
+            return bankSel?.selectedOptions[0]?.dataset?.gl || '';
+        }
+
+        function updateGlAccountOptions() {
+            if (!bankSel) return;
+            const bankGl = getBankGl();
+            document.querySelectorAll('.gl-account-select').forEach(sel => {
+                sel.querySelectorAll('option').forEach(opt => {
+                    if (!opt.value) return;
+                    opt.disabled = !!bankGl && String(opt.value) === String(bankGl);
+                });
+                if (bankGl && String(sel.value) === String(bankGl)) {
+                    if (window.jQuery && $.fn.select2) {
+                        $(sel).val(null).trigger('change');
+                    } else {
+                        sel.value = '';
+                    }
+                }
+            });
+        }
+
         function getEntryType() {
             return document.querySelector('input[name="EntryType"]:checked')?.value || '{{ $etype }}';
         }
@@ -428,10 +450,19 @@
 
         function initGlSelect2() {
             if (!(window.jQuery && $.fn.select2)) return;
+            const defaultMatcher = $.fn.select2.defaults.defaults.matcher;
             $('.gl-account-select').select2({
                 placeholder: 'Select GL',
                 width: '100%',
                 dropdownAutoWidth: true,
+                matcher: function (params, data) {
+                    if (!data.id) return data;
+                    const bankGl = getBankGl();
+                    if (bankGl && String(data.id) === String(bankGl)) {
+                        return null;
+                    }
+                    return defaultMatcher ? defaultMatcher(params, data) : data;
+                },
                 templateResult: function (data) {
                     if (!data.id) return data.text;
                     const $option = $(data.element);
@@ -449,6 +480,7 @@
                     );
                 }
             });
+            updateGlAccountOptions();
         }
 
         function addPaymentLine(line = {}) {
@@ -476,6 +508,7 @@
                 const amt = clone.querySelector('input[name*="[AmountDr]"]');
                 if (amt) amt.value = line.AmountDr;
             }
+            updateGlAccountOptions();
             recalcTotals();
         }
 
@@ -628,6 +661,7 @@
         document.getElementById('etypeP')?.addEventListener('change', refreshMappingLines);
         bankSel?.addEventListener('change', () => {
             setBankHint();
+            updateGlAccountOptions();
             refreshMappingLines();
         });
         amtEl?.addEventListener('input', refreshMappingLines);
@@ -639,7 +673,10 @@
                 $(this).select2({placeholder: placeholder, width: '100%', dropdownAutoWidth: true, allowClear: true});
             });
             initGlSelect2();
-            if (partyType?.value) {
+            if (partyType) {
+                $(partyType)
+                    .off('select2:select.cashbookParty select2:clear.cashbookParty')
+                    .on('select2:select.cashbookParty select2:clear.cashbookParty', toggleParty);
                 toggleParty();
             }
         };
@@ -648,6 +685,7 @@
         setCurrencyHint();
         setBaseCalc();
         setBankHint();
+        updateGlAccountOptions();
         toggleParty();
         recalcTotals();
         curSel?.addEventListener('change', setCurrencyHint);

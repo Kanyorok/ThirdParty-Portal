@@ -100,11 +100,11 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="editCode" class="form-label">UOM Code</label>
+                            <label for="editCode" class="form-label">UOM Code<span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="editCode" name="Code" required>
                         </div>
                         <div class="mb-3">
-                            <label for="editName" class="form-label">UOM Name</label>
+                            <label for="editName" class="form-label">UOM Name<span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="editName" name="Name" required>
                         </div>
                         <div class="form-check mb-3">

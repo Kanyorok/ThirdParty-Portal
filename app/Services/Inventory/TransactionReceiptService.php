@@ -30,7 +30,6 @@ class TransactionReceiptService
             $deliveredValue = Transfers::Delivered->value;
             $inTransitValue = Transfers::InTransit->value;
 
-            // Create the receipt
             $receipt = TransactionReceipt::create([
                 'TransferId' => $validatedData['TransferID'],
                 'ReceivedBy' => $validatedData['ReceivedBy'],
@@ -46,7 +45,6 @@ class TransactionReceiptService
             $receipt->ReceiptId = 'REC/' . now()->format('Ymd') . '/' . str_pad($receipt->Id, 4, '0', STR_PAD_LEFT);
             $receipt->save();
 
-            // Update transfer status
             if ($transfer && $transfer->Status == $inTransitValue) {
                 $transfer->Status = $deliveredValue;
                 $transfer->ModifiedBy = $userId;
@@ -54,10 +52,8 @@ class TransactionReceiptService
                 $transfer->save();
             }
 
-            // Create receipt items and update stock with FIFO logic
             $this->createReceiptItemsWithFIFO($receipt, $items, $transfer, $userId);
 
-            // Update inventory holds from In Transit to Delivered
             $sourceCodeId = CodeDetail::where('CodeID', 'Source')
                 ->where('Description', 'Transaction Transfer')
                 ->value('ID');
@@ -105,7 +101,6 @@ class TransactionReceiptService
             throw new Exception("Source type 'Transfer Receipts' not found in t_CodeDetails.");
         }
 
-        // Group items by store for processing
         $itemsByStore = collect($items)->groupBy('store_id');
 
         foreach ($itemsByStore as $storeId => $storeItems) {
@@ -114,14 +109,12 @@ class TransactionReceiptService
                 $receivedQty = $itemData['received_qty'];
                 $damagedQty = $itemData['damaged_qty'] ?? 0;
 
-                // Get the corresponding transfer item to get batch allocations
                 $transferItem = $transfer->items()->where('Item', $itemId)->first();
 
                 if (! $transferItem) {
                     throw new Exception("Transfer item not found for item {$itemId}");
                 }
 
-                // Find or create stock item at destination
                 $stock = StockItem::where('ItemID', $itemId)
                     ->where('Branch', $toBranchId)
                     ->where('Store', $storeId)
@@ -149,7 +142,6 @@ class TransactionReceiptService
                         'ModifiedOn' => now(),
                     ]);
                 } else {
-                    // Recalculate weighted average cost for existing stock
                     $oldQty = $stock->CurrentQty;
                     $oldCost = $stock->UnitCost;
                     $newQty = $receivedQty;
@@ -161,7 +153,6 @@ class TransactionReceiptService
                     }
                 }
 
-                // Create receipt item
                 $receiptItem = $receipt->items()->create([
                     'item' => $itemId,
                     'Store' => $storeId,
@@ -179,16 +170,13 @@ class TransactionReceiptService
                     'ModifiedOn' => now(),
                 ]);
 
-                // Update stock quantity (only good received items)
                 $stock->CurrentQty += $receivedQty;
                 $stock->ModifiedBy = $userId;
                 $stock->ModifiedOn = now();
                 $stock->save();
 
-                // CREATE STOCKGRNLEDGER ENTRIES WITH GRN ALLOCATIONS
                 $this->createGRNLedgerEntriesForTransfer($receipt, $transferItem, $stock, $storeId, $toBranchId, $receivedQty, $userId);
 
-                // Generate SKU ID for stock transaction
                 $latestSKU = StockTransaction::where('SKUID', 'like', 'SKU%')
                     ->orderByDesc('id')
                     ->value('SKUID');
@@ -199,7 +187,6 @@ class TransactionReceiptService
 
                 $skuId = 'SKU' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
 
-                // Get last balance for this item/store/branch
                 $lastToQty = StockTransaction::where('ItemID', $itemId)
                     ->where('BranchID', $toBranchId)
                     ->where('StoreID', $storeId)
@@ -213,7 +200,6 @@ class TransactionReceiptService
 
                 $newToQty = $lastToQty + $receivedQty;
 
-                // Create stock transaction
                 StockTransaction::create([
                     'SKUID' => $skuId,
                     'TransactionType' => $transferSource,
@@ -237,7 +223,6 @@ class TransactionReceiptService
                     'ModifiedOn' => now(),
                 ]);
 
-                // Handle Damaged Items
                 if ($damagedQty > 0) {
                     $damagedReasonId = CodeDetail::where('CodeID', 'AdjustmentReason')
                         ->where('Description', 'Damaged in Transit')
@@ -273,19 +258,13 @@ class TransactionReceiptService
         }
     }
 
-    /**
-     * Create StockGRNLedger entries for transfer receipt
-     */
     private function createGRNLedgerEntriesForTransfer($receipt, $transferItem, $stock, $storeId, $branchId, $receivedQty, $userId)
     {
-        // Get batch allocations from transfer item
         $batchAllocations = json_decode($transferItem->BatchAllocation, true) ?? [];
 
         if (empty($batchAllocations)) {
-            // If no specific allocations, use FIFO from source
             $allocations = $this->allocateFIFOFromSource($transferItem, $storeId, $branchId, $receivedQty);
         } else {
-            // Use the pre-allocated batches from transfer
             $allocations = $batchAllocations;
         }
 
@@ -294,7 +273,6 @@ class TransactionReceiptService
             $totalAllocated += $allocation['quantity'];
         }
 
-        // If total allocated doesn't match received (due to damages), adjust proportionally
         if ($totalAllocated != $receivedQty && $totalAllocated > 0) {
             $ratio = $receivedQty / $totalAllocated;
             foreach ($allocations as &$allocation) {
@@ -302,7 +280,6 @@ class TransactionReceiptService
             }
         }
 
-        // Create StockGRNLedger entries for EACH allocation (multiple GRN IDs)
         foreach ($allocations as $allocation) {
             StockGRNLedger::create([
                 'GRNID' => $allocation['grn_id'],
@@ -318,7 +295,7 @@ class TransactionReceiptService
                 'ReceivedDate' => now(),
                 'SourceType' => 'transfer',
                 'SourceReference' => $receipt->transfer->TransferId,
-                'ParentLedgerId' => $allocation['ledger_id'] ?? null, // Link to source ledger
+                'ParentLedgerId' => $allocation['ledger_id'] ?? null,
                 'CreatedBy' => $userId,
                 'CreatedOn' => now(),
                 'ModifiedBy' => $userId,
@@ -327,15 +304,10 @@ class TransactionReceiptService
         }
     }
 
-    /**
-     * Allocate FIFO from source when no specific allocations exist
-     */
     private function allocateFIFOFromSource($transferItem, $storeId, $branchId, $quantity)
     {
-        // Get source branch (from transfer)
         $sourceBranch = $transferItem->transfer->FromBranch;
 
-        // Get default store for source branch
         $sourceStore = Store::where('BranchID', $sourceBranch)
             ->where('Status', true)
             ->first();
@@ -344,7 +316,6 @@ class TransactionReceiptService
             throw new Exception("No active store found for source branch {$sourceBranch}");
         }
 
-        // Get available batches from source in FIFO order
         $availableBatches = StockGRNLedger::where('ItemNo', $transferItem->Item)
             ->where('Store', $sourceStore->Id)
             ->where('Branch', $sourceBranch)
@@ -381,9 +352,6 @@ class TransactionReceiptService
         return $allocations;
     }
 
-    /**
-     * Calculate average cost from allocations
-     */
     private function calculateAverageCost($transferItem, $receivedQty)
     {
         $batchAllocations = json_decode($transferItem->BatchAllocation, true) ?? [];
@@ -403,9 +371,6 @@ class TransactionReceiptService
         return $totalQty > 0 ? $totalCost / $totalQty : 0;
     }
 
-    /**
-     * Get allocation summary for remarks
-     */
     private function getAllocationSummary($transferItem)
     {
         $batchAllocations = json_decode($transferItem->BatchAllocation, true) ?? [];
@@ -438,9 +403,7 @@ class TransactionReceiptService
                 if ($stock) {
                     $stock->CurrentQty -= $item->ReceivedQty;
 
-                    // Recalculate unit cost after deletion
                     if ($stock->CurrentQty > 0) {
-                        // Get remaining ledger entries
                         $remainingValue = StockGRNLedger::where('StockItemId', $stock->Id)
                             ->where('RemainingQTY', '>', 0)
                             ->get()
@@ -456,14 +419,12 @@ class TransactionReceiptService
                     $stock->save();
                 }
 
-                // Delete StockGRNLedger entries for this receipt
                 StockGRNLedger::where('SourceType', 'transfer')
                     ->where('SourceReference', $receipt->transfer->TransferId)
                     ->where('ItemNo', $item->item)
                     ->where('Store', $item->Store)
                     ->delete();
 
-                // Delete stock transactions
                 StockTransaction::where('ReferenceID', $receiptId)
                     ->where('ItemID', $item->item)
                     ->delete();

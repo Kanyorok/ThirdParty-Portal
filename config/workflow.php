@@ -111,7 +111,7 @@ return [
     ],
 
 
-     'RFQId' => [
+    'RFQId' => [
         'Approved' => WorkflowStatus::Approved->value,  // 'A'
         'Rejected' => WorkflowStatus::Rejected->value,  // 'R'
         'Pending' => WorkflowStatus::Pending->value,    // 'P'

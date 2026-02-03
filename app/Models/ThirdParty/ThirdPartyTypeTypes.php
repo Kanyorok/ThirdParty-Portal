@@ -32,7 +32,7 @@ class ThirdPartyTypeTypes extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'ThirdPartyTypeTypes';
+        return 'Id';
     }
 
     public function party(): MorphTo

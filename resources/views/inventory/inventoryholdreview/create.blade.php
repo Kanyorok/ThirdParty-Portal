@@ -33,32 +33,32 @@
             @csrf
 
             <div class="mb-3">
-                <label for="InventoryHoldID" class="form-label">Select Item to Review</label>
+                <label for="InventoryHoldID" class="form-label">Select Item to Review<span class="text-danger">*</span></label>
                 <select name="InventoryHoldID" id="InventoryHoldID" class="form-control" required>
                     <option value="">-- Select --</option>
                     @foreach($holds as $hold)
                         @php
-                            $displayText = $hold->InventoryHoldID;
-                            if ($hold->sourceDetail) {
-                                $sourceType = $hold->sourceDetail->Description ?? '';
-                                if ($sourceType === 'Transaction Transfer' && $hold->fromBranch) {
-                                    $displayText .= ' (' . $hold->fromBranch->Name . ' → ' . ($hold->branch->Name ?? 'Current') . ')';
-                                } else {
-                                    $displayText .= ' (' . $sourceType . ')';
-                                }
+                            // Get the actual source document ID (AdjustmentID or ReceiptID)
+                            $sourceType = $hold->sourceDetail->Description ?? '';
+                            $sourceDocumentId = $hold->source_document_id ?? $hold->SourceID ?? 'N/A';
+                            
+                            // Build the display text: SourceDocumentID (Source Type)
+                            if ($sourceType) {
+                                $displayText = $sourceDocumentId . ' (' . $sourceType . ')';
+                            } else {
+                                $displayText = $sourceDocumentId;
                             }
                         @endphp
                         <option value="{{ $hold->Id }}" 
                                 data-itemid="{{ $hold->ItemID }}"
                                 data-branchid="{{ $hold->BranchID }}"
                                 data-quantity="{{ $hold->Quantity }}"
-                                data-frombranch="{{ $hold->fromBranch->Name ?? '' }}"
+                                data-frombranch="{{ $hold->branch->Name ?? '' }}"
                                 data-currentbranch="{{ $hold->branch->Name ?? '' }}"
-                                data-sourcetype="{{ $hold->sourceDetail->Description ?? '' }}"
+                                data-sourcetype="{{ $sourceType }}"
+                                data-sourceid="{{ $sourceDocumentId }}"
                                 data-store="{{ $hold->store->StoreName ?? '' }}"
-                                 @foreach($reviews as $review)
-                                data-defect="{{ $review->defectDetail->Description ?? $review->Reason }}"
-                                @endforeach
+                                data-defect="{{ $hold->defectDetail->Description ?? $hold->Reason }}"
                                 data-itemname="{{ $hold->item->ItemName ?? '' }}"
                                 {{ old('InventoryHoldID') == $hold->Id ? 'selected' : '' }}>
                             {{ $displayText }}
@@ -76,38 +76,43 @@
                 <h6 class="mb-3">Item Details</h6>
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Item Name</label>
+                        <label class="form-label">Item Name<span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="ItemName" disabled>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Quantity</label>
+                        <label class="form-label">Quantity<span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="Quantity" disabled>
                     </div>
                 </div>
                 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Source / Transfer Path</label>
+                        <label class="form-label">Source / Transfer Path<span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="SourceDisplay" disabled>
                     </div>
                     
-                    <div class="col-md-6" id="store-col" style="display: none;">
-                        <label class="form-label">Store</label>
-                        <input type="text" class="form-control" id="Store" disabled>
+                    <div class="col-md-6">
+                        <label class="form-label">Source ID<span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="SourceID" disabled>
                     </div>
                 </div>
                 
                 <div class="row mb-3">
-                    <div class="col-12">
-                        <label class="form-label">Defect Reason</label>
+                    <div class="col-md-6" id="store-col">
+                        <label class="form-label">Store</label>
+                        <input type="text" class="form-control" id="Store" disabled>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Defect Reason<span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="Defect" disabled>
                     </div>
                 </div>
             </div>
 
             <div class="mb-3 mt-4">
-                <label for="Condition" class="form-label">Condition Assessment</label>
+                <label for="Condition" class="form-label">Condition Assessment<span class="text-danger">*</span></label>
                 <select name="Condition" id="Condition" class="form-control" required>
                     <option value="">-- Select Condition --</option>
                     @php
@@ -169,6 +174,7 @@
         const fromBranch = selectedOption.getAttribute('data-frombranch');
         const currentBranch = selectedOption.getAttribute('data-currentbranch');
         const sourceType = selectedOption.getAttribute('data-sourcetype');
+        const sourceId = selectedOption.getAttribute('data-sourceid');
         const store = selectedOption.getAttribute('data-store');
         const defect = selectedOption.getAttribute('data-defect');
         const itemId = selectedOption.getAttribute('data-itemid');
@@ -179,14 +185,10 @@
         document.getElementById('Quantity').value = quantity || '';
         document.getElementById('Store').value = store || '';
         document.getElementById('Defect').value = defect || '';
+        document.getElementById('SourceID').value = sourceId || '';
         
         // Determine source display
-        let sourceDisplay = '';
-        if (sourceType === 'Transaction Transfer' && fromBranch) {
-            sourceDisplay = `${fromBranch} → ${currentBranch || 'Current Branch'}`;
-        } else {
-            sourceDisplay = sourceType || fromBranch || 'N/A';
-        }
+        let sourceDisplay = sourceType || 'N/A';
         document.getElementById('SourceDisplay').value = sourceDisplay;
 
         // Set hidden fields
@@ -197,6 +199,14 @@
 
         // Show details section
         document.getElementById('hold-details').classList.remove('d-none');
+
+        // Show/hide store field based on source type
+        const storeCol = document.getElementById('store-col');
+        if (sourceType && sourceType.toLowerCase().includes('adjustment')) {
+            storeCol.style.display = 'none';
+        } else {
+            storeCol.style.display = 'block';
+        }
 
         // 🔒 Disable or hide "Return to Sender" if it's an Adjustment
         const returnBtn = document.getElementById('returnBtn');

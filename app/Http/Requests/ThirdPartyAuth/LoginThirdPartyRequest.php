@@ -16,14 +16,16 @@ class LoginThirdPartyRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email:rfc,dns', 'max:255'],
             'password' => ['required', 'string'],
+            'email' => 'required|email',
+            'password' => ['required', 'string', Password::min(8)],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'profile_type.required' => 'The profile type is required.',
-            'profile_type.in' => 'The selected profile type is invalid.',
+            // 'profile_type.required' => 'The profile type is required.',
+            // 'profile_type.in' => 'The selected profile type is invalid.',
             'email.required' => __('auth.email_required'),
             'email.email' => __('auth.invalid_email_format'),
             'password.required' => __('auth.password_required'),

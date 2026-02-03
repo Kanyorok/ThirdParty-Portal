@@ -26,7 +26,11 @@ class CRDBAuthMiddleware
         if (! $request->ajax() && ! $request->expectsJson()) {
             abort(Response::HTTP_NOT_FOUND);
         }
-        if ($request->header('x-source') !== SystemIntegrationEnum::CRDB->value) {
+        $source = $request->header('x-source');
+        if (! is_string($source) || ! in_array($source, [
+            SystemIntegrationEnum::CRDB->value,
+            IntegrationsEnum::CRDB->value,
+        ], true)) {
             return $this->_fail('client: no source');
         }
         $bearerToken = $request->bearerToken();

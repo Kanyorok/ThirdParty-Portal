@@ -86,6 +86,18 @@ class CashBookController extends Controller
             'lines.*.AmountCr' => 'nullable|numeric',
         ]);
 
+        $bankGl = BankAccount::where('AccountID', $request->input('BankAccountID'))
+            ->value('GLAccountID');
+        $lineGlIds = collect($request->input('lines', []))
+            ->pluck('GLAccountID')
+            ->filter()
+            ->map(fn ($id) => (int)$id);
+        if ($bankGl && $lineGlIds->contains((int)$bankGl)) {
+            return back()
+                ->withErrors(['lines' => 'Bank GL account cannot be selected in the GL split lines.'])
+                ->withInput();
+        }
+
         return DB::transaction(function () use ($request) {
             $hdr = new Cashbook($request->only([
                 'EntryType', 'BankAccountID', 'DocDate', 'CurrencyID', 'ExchangeRate',
@@ -203,6 +215,18 @@ class CashBookController extends Controller
             'PartyEmail' => 'nullable|email|max:120',
         ]);
 
+        $bankGl = BankAccount::where('AccountID', $request->input('BankAccountID'))
+            ->value('GLAccountID');
+        $lineGlIds = collect($request->input('lines', []))
+            ->pluck('GLAccountID')
+            ->filter()
+            ->map(fn ($id) => (int)$id);
+        if ($bankGl && $lineGlIds->contains((int)$bankGl)) {
+            return back()
+                ->withErrors(['lines' => 'Bank GL account cannot be selected in the GL split lines.'])
+                ->withInput();
+        }
+
         return DB::transaction(function () use ($request, $entry) {
             $entry->fill($request->only([
                 'BankAccountID', 'DocDate', 'CurrencyID', 'ExchangeRate',
@@ -262,58 +286,29 @@ class CashBookController extends Controller
     }
 
     /**
-     * AJAX: Select2 vendors from Supplier Master -> Third Parties
+     * AJAX: Select2 vendors from Third Parties
      */
     public function partyVendors(Request $request)
     {
-        $q = trim((string)$request->query('q', ''));
-        if (mb_strlen($q) < 2) {
-            return response()->json(['results' => []]);
-        }
-
-        $vendors = DB::table('t_SupplierMaster as sm')
-            ->join('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
-            ->where(function ($query) use ($q) {
-                $query->where('tp.ThirdPartyName', 'like', "%{$q}%")
-                    ->orWhere('tp.TradingName', 'like', "%{$q}%")
-                    ->orWhere('tp.RegistrationNumber', 'like', "%{$q}%")
-                    ->orWhere('tp.Email', 'like', "%{$q}%")
-                    ->orWhere('tp.Phone', 'like', "%{$q}%");
-            })
-            ->select('tp.Id as ThirdPartyId', 'tp.ThirdPartyName', 'tp.TradingName', 'tp.RegistrationNumber', 'tp.Email')
-            ->orderBy('tp.ThirdPartyName')
-            ->limit(20)
-            ->get();
-
-        $results = $vendors->map(function ($v) {
-            $name = $v->TradingName ?: $v->ThirdPartyName;
-            $text = trim($name) !== '' ? $name : 'Unknown Vendor';
-
-            return [
-                'id' => $v->ThirdPartyId,
-                'text' => $text,
-                'meta' => [
-                    'registration' => $v->RegistrationNumber,
-                    'email' => $v->Email,
-                ],
-            ];
-        });
-
-        return response()->json(['results' => $results]);
+        return $this->searchThirdParties($request, 'Vendor');
     }
 
     /**
-     * AJAX: Select2 tenants from Tenant Master -> Third Parties
+     * AJAX: Select2 tenants from Third Parties
      */
     public function partyTenants(Request $request)
+    {
+        return $this->searchThirdParties($request, 'Tenant');
+    }
+
+    private function searchThirdParties(Request $request, string $fallbackLabel)
     {
         $q = trim((string)$request->query('q', ''));
         if (mb_strlen($q) < 2) {
             return response()->json(['results' => []]);
         }
 
-        $tenants = DB::table('t_TenantMaster as tm')
-            ->join('t_ThirdParties as tp', 'tp.Id', '=', 'tm.ThirdPartyId')
+        $parties = DB::table('t_ThirdParties as tp')
             ->where(function ($query) use ($q) {
                 $query->where('tp.ThirdPartyName', 'like', "%{$q}%")
                     ->orWhere('tp.TradingName', 'like', "%{$q}%")
@@ -326,16 +321,16 @@ class CashBookController extends Controller
             ->limit(20)
             ->get();
 
-        $results = $tenants->map(function ($t) {
-            $name = $t->TradingName ?: $t->ThirdPartyName;
-            $text = trim($name) !== '' ? $name : 'Unknown Tenant';
+        $results = $parties->map(function ($party) use ($fallbackLabel) {
+            $name = $party->TradingName ?: $party->ThirdPartyName;
+            $text = trim($name) !== '' ? $name : 'Unknown ' . $fallbackLabel;
 
             return [
-                'id' => $t->ThirdPartyId,
+                'id' => $party->ThirdPartyId,
                 'text' => $text,
                 'meta' => [
-                    'registration' => $t->RegistrationNumber,
-                    'email' => $t->Email,
+                    'registration' => $party->RegistrationNumber,
+                    'email' => $party->Email,
                 ],
             ];
         });
@@ -363,6 +358,8 @@ class CashBookController extends Controller
         }
 
         // TODO: call your GL posting service here
+        // - Bank leg from BankAccount.GLAccountID (DR for Receipt, CR for Payment)
+        // - Counter legs from CashbookLine (already balanced by mapping/validation)
 
         $entry->Status = 'Posted';
         $entry->PostedOn = now();

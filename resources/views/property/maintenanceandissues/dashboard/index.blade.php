@@ -33,7 +33,7 @@
         <div class="col-md-3">
             <div class="card text-white bg-warning shadow-sm text-center">
                 <div class="card-body">
-                    <h6>In Progress</h6>
+                    <h6>Pending</h6>
                     <h3>{{ $inProgress }}</h3>
                 </div>
             </div>
@@ -103,7 +103,9 @@
             <button type="submit" class="btn btn-outline-primary w-100">
                 <i class="bi bi-funnel me-1"></i> Filter
             </button>
-            <button type="submit" class="btn btn-outline-secondary w-100">
+            <button type="button"
+                    onclick="window.location='{{ route('maintenancedashboard.index') }}'"
+                    class="btn btn-outline-secondary w-100">
                 <i class="bi bi-arrow-clockwise me-1"></i> Reset
             </button>
         </div>

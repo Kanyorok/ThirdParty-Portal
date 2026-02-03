@@ -40,7 +40,7 @@
             <form method="POST" action="{{ route('pricemanagement.store') }}">
                 @csrf
                 <div class="mb-3">
-                    <label class="form-label">Item</label>
+                    <label class="form-label">Item<span class="text-danger">*</span></label>
                     <select class="form-select" name="ItemID" id="itemSelect" required>
                         <option selected disabled>Select Item</option>
                         @foreach($items ?? [] as $item)
@@ -54,7 +54,7 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">UOM</label>
+                    <label class="form-label">UOM<span class="text-danger">*</span></label>
                     <select class="form-select" id="uomSelect" disabled>
                         <option selected disabled>Auto-filled from Item</option>
                     </select>
@@ -62,11 +62,11 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Estimated Price</label>
+                    <label class="form-label">Estimated Price<span class="text-danger">*</span></label>
                     <input type="number" step="0.01" class="form-control" name="ActualPrice" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Currency</label>
+                    <label class="form-label">Currency<span class="text-danger">*</span></label>
                     <select class="form-select" name="CurrencyCode" required>
                         <option selected disabled>-- Select Currency --</option>
                         @foreach($currencies ?? [] as $currenc)

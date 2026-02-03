@@ -14,7 +14,7 @@ class PropertyBlockBulkRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => 'required|file|mimes:csv,xlsx,xls|max:10000',
+            'file' => 'required|file|mimes:csv,xlsx,xls|max:20000',
         ];
     }
 

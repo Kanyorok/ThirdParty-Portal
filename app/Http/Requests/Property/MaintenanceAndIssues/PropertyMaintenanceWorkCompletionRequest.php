@@ -24,7 +24,7 @@ class PropertyMaintenanceWorkCompletionRequest extends FormRequest
         return [
             'RequestNumber' => 'required|exists:t_AssignRequest,Id',
             'CompletionDate' => 'required|date|before_or_equal:today',
-            'WorkDoneSummary' => 'nullable|string|max:255',
+            'WorkDoneSummary' => 'required|string|max:255',
             'PartsUsed' => 'nullable|string|max:255',
             'Cost' => 'nullable|integer',
             'FinalStatus' => 'required|exists:t_CodeDetails,ID',

@@ -2,17 +2,58 @@
 
 namespace App\Http\Controllers\ThirdParty\API;
 
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdParty\Api\LoginThirdPartyRequest;
+use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
+use App\Http\Requests\ThirdParty\ResetPasswordRequest;
 use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
+use App\Models\Insurance\BancassuranceCustomer;
+use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\ThirdParty\SupplierMaster;
 use App\Models\ThirdParty\ThirdPartyUser;
+use App\Services\RegistrationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
 
 class ThirdPartyAuthController extends Controller
 {
+    protected RegistrationService $registrationService;
+
+    public function __construct(RegistrationService $registrationService)
+    {
+        $this->registrationService = $registrationService;
+    }
+
+    public function register(NewThirdPartyRequest $request): JsonResponse
+    {
+        try {
+            $user = $this->registrationService->registerThirdParty($request->validated());
+
+            return response()->json([
+                'success' => true,
+                'email_verification_required' => true,
+                // 'userId' => $user->UserID,
+                'userIid' => $user->Id,
+
+
+            ], 201);
+        } catch (\Throwable $e) {
+            Log::error('Third-party registration failed', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'REGISTRATION_FAILED',
+                'message' => __('auth.registration_failed'),
+            ], 500);
+        }
+    }
+
     public function login(LoginThirdPartyRequest $request): JsonResponse
     {
         $user = ThirdPartyUser::with([
@@ -25,138 +66,152 @@ class ThirdPartyAuthController extends Controller
             ->first();
 
         if (! $user || ! Hash::check($request->password, $user->Password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Failed to authenticate.'],
-            ]);
-        }
-
-        if (! $user->hasVerifiedEmail()) {
             return response()->json([
                 'success' => false,
-                'message' => ('Unverified Email'),
-                'requires_verification' => true,
+                'error' => 'INVALID_CREDENTIALS',
+                'message' => __('auth.invalid_credentials'),
+            ], 401);
+        }
+
+        if (! $user->EmailVerifiedOn) {
+            return response()->json([
+                'success' => false,
+                'error' => 'EMAIL_NOT_VERIFIED',
+                'message' => __('auth.email_not_verified'),
             ], 403);
         }
 
-        if (! $user->isActive()) {
+        if (! $user->IsActive) {
             return response()->json([
                 'success' => false,
-                'message' => ('Account inactive'),
+                'error' => 'ACCOUNT_DISABLED',
+                'message' => __('auth.account_inactive'),
             ], 403);
         }
 
+        if (! $user->isApproved()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'ACCOUNT_NOT_APPROVED',
+                'message' => __('auth.acc_not_approved'),
+            ], 403);
+        }
+
+        $profileType = $request->input('profile_type');
+
+        if ($profileType) {
+            $authorized = match ($profileType) {
+                'Supplier' => SupplierMaster::where('ThirdPartyId', $user->ThirdPartyId)
+                    ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved->value)
+                    ->exists(),
+                'Tenant' => PropertyNewTenant::where('ThirdPartyId', $user->ThirdPartyId)
+                    ->where('IsActive', true)
+                    ->exists(),
+                'Customer' => BancassuranceCustomer::where('ThirdPartyId', $user->ThirdPartyId)
+                    ->exists(),
+                default => false,
+            };
+
+            if (! $authorized) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'PROFILE_NOT_AUTHORIZED',
+                    'message' => __('auth.profile_not_authorized'),
+                ], 403);
+            }
+        }
+
+        $user->tokens()->delete();
         $token = $user->createToken('auth-token', ['third_party'])->plainTextToken;
 
         return response()->json([
             'success' => true,
-            'message' => ('Login Succcessful'),
-            'user' => new ThirdPartyUserResource($user),
+            'user' => (new ThirdPartyUserResource($user))->resolve(),
             'token' => $token,
+            'token_type' => 'Bearer',
         ]);
     }
 
     public function me(Request $request): JsonResponse
     {
-        try {
-            $user = $request->user();
+        $user = $request->user();
 
-            if (! $user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthenticated',
-                ], 401);
-            }
-
-            // Load relationships
-            $user->load([
-                'thirdParty.types',
-                'thirdParty.supplierMaster',
-                'thirdParty.tenantProfile',
-                'thirdParty.customerProfile',
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'user' => new ThirdPartyUserResource($user),
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Error in /me endpoint', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred',
-                'error' => config('app.debug') ? $e->getMessage() : null,
-            ], 500);
+                'error' => 'UNAUTHENTICATED',
+                'message' => __('auth.unauthenticated'),
+            ], 401);
         }
+
+        $user->load([
+            'thirdParty.types',
+            'thirdParty.supplierMaster',
+            'thirdParty.tenantProfile',
+            'thirdParty.customerProfile',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'user' => new ThirdPartyUserResource($user),
+        ]);
+    }
+
+    public function validateToken(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! $user || ! $user->IsActive || ! $user->EmailVerifiedOn) {
+            return response()->json(['valid' => false], 403);
+        }
+
+        return response()->json([
+            'valid' => true,
+            'user' => [
+                'id' => $user->getAuthIdentifier(),
+                'email' => $user->Email,
+            ],
+        ]);
     }
 
     public function logout(Request $request): JsonResponse
     {
-        // Get the token from request attributes (set by our custom middleware)
-        $token = $request->attributes->get('sanctum_token');
-
-        if ($token) {
-            $token->delete();
+        if ($request->user()) {
+            $request->user()->currentAccessToken()->delete();
         }
 
         return response()->json([
             'success' => true,
-            'message' => ('Logged out successfully.'),
+            'message' => __('auth.logout_successful'),
         ]);
     }
 
-    public function verify(Request $request, string $id, string $hash): JsonResponse
+    public function forgotPassword(Request $request): JsonResponse
     {
-        $user = ThirdPartyUser::findOrFail($id);
+        $request->validate(['email' => 'required|email']);
 
-        if (! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid verification link.',
-            ], 403);
-        }
+        $status = Password::broker('thirdparties')->sendResetLink(
+            $request->only('email')
+        );
 
-        if ($user->hasVerifiedEmail()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Email already verified. You can now login.',
-                'already_verified' => true,
-            ]);
-        }
-
-        if ($user->markEmailAsVerified()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Email verified successfully! You can now login.',
-            ]);
-        }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Unable to verify email. Please try again.',
-        ], 500);
+        return $status === Password::RESET_LINK_SENT
+            ? response()->json(['success' => true, 'message' => __($status)])
+            : response()->json(['success' => false, 'message' => __($status)], 400);
     }
 
-    public function resendVerificationEmail(Request $request): JsonResponse
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
     {
-        $user = $request->user();
+        $status = Password::broker('thirdparties')->reset(
+            $request->validated(),
+            function ($user, $password) {
+                $user->forceFill([
+                    'Password' => Hash::make($password),
+                ])->save();
+            }
+        );
 
-        if ($user->hasVerifiedEmail()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Email already verified.',
-            ], 400);
-        }
-
-        $user->sendEmailVerificationNotification();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Verification email sent! Please check your inbox.',
-        ]);
+        return $status === Password::PASSWORD_RESET
+            ? response()->json(['success' => true, 'message' => __($status)])
+            : response()->json(['success' => false, 'message' => __($status)], 400);
     }
 }

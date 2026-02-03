@@ -190,33 +190,45 @@ class ThirdParties extends Model
     {
         if ($this->relationLoaded('types')) {
             return $this->types->contains(function ($type) {
-                return (isset($type->Code) && str_starts_with($type->Code, 'SU'))
-                    || (isset($type->pivot->PartyType) && $type->pivot->PartyType === SupplierMaster::getPrimaryKey());
+                return in_array($type->pivot->PartyType, [
+                    'SupplierMasterId',
+                    'SupplierMaster',
+                    (new SupplierMaster())->getMorphClass(),
+                ]) || (isset($type->Code) && str_starts_with($type->Code, 'SU'));
             });
         }
 
-        return $this->ThirdPartyType === \App\Enums\ThirdParty\ThirdPartyTypeEnum::Supplier;
+        return $this->supplierMaster()->exists();
     }
 
     public function isTenant(): bool
     {
         if ($this->relationLoaded('types')) {
             return $this->types->contains(function ($type) {
-                return isset($type->pivot->PartyType) && $type->pivot->PartyType === PropertyNewTenant::getPrimaryKey();
+                return in_array($type->pivot->PartyType, [
+                    'PropertyNewTenant',
+                    'App\Models\PropertyManagement\PropertyNewTenant',
+                    (new PropertyNewTenant())->getMorphClass(),
+                ]) || (isset($type->Code) && str_starts_with($type->Code, 'TN'))
+                   || $type->TypeId == 1;
             });
         }
 
-        return false;
+        return $this->tenantProfile()->exists();
     }
 
     public function isCustomer(): bool
     {
         if ($this->relationLoaded('types')) {
             return $this->types->contains(function ($type) {
-                return isset($type->pivot->PartyType) && $type->pivot->PartyType === BancassuranceCustomer::getPrimaryKey();
+                return in_array($type->pivot->PartyType, [
+                    'BancassuranceCustomer',
+                    'App\Models\Insurance\BancassuranceCustomer',
+                    (new BancassuranceCustomer())->getMorphClass(),
+                ]) || (isset($type->Code) && str_starts_with($type->Code, 'CU'));
             });
         }
 
-        return false;
+        return $this->customerProfile()->exists();
     }
 }

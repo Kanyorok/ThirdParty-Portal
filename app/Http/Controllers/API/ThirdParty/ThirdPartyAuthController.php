@@ -40,15 +40,10 @@ class ThirdPartyAuthController extends Controller
                 'redirectUrl' => '/register/third-party-details?user_id=' . $userData->UserID,
             ], 201);
         } catch (\Exception $e) {
-            // Force-write to single channel so it goes to storage/logs/laravel.log
             Log::channel('single')->error('Third-party registration failed', [
                 'error' => $e->getMessage(),
                 'exception' => get_class($e),
                 'ip' => $request->ip(),
-                'forwarded_for' => $request->header('X-Forwarded-For'),
-                'user_agent' => $request->userAgent(),
-                'url' => $request->fullUrl(),
-                'route' => optional($request->route())->getName(),
                 'payload' => $request->except(['Password', 'Password_confirmation']),
             ]);
 
@@ -62,10 +57,8 @@ class ThirdPartyAuthController extends Controller
 
     public function login(LoginThirdPartyRequest $request): JsonResponse
     {
-
         try {
             $user = ThirdPartyUser::where('Email', $request->email)->first();
-
 
             if (! $user || ! Hash::check($request->password, $user->Password)) {
                 throw ValidationException::withMessages([
@@ -73,7 +66,6 @@ class ThirdPartyAuthController extends Controller
                 ]);
             }
 
-            // Enforce account status BEFORE creating token
             if (! $user->isActive()) {
                 return response()->json([
                     'success' => false,
@@ -88,24 +80,19 @@ class ThirdPartyAuthController extends Controller
             }
 
 
-            // Optional: single-session behavior
             $user->tokens()->delete();
 
             $token = $user->createToken('api')->plainTextToken;
 
-            $responseData = [
+            return response()->json([
                 'user' => (new ThirdPartyUserResource($user->load(['thirdParty.types'])))->resolve(),
                 'token' => $token,
                 'token_type' => 'Bearer',
-            ];
-
-
-
-            return response()->json($responseData);
+            ]);
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
-            Log::error('Login Exception', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            Log::error('Login Exception', ['message' => $e->getMessage()]);
 
             return response()->json([
                 'message' => __('auth.login_failed'),
@@ -114,7 +101,6 @@ class ThirdPartyAuthController extends Controller
         }
     }
 
-    // Token validation for SPA
     public function validateToken(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -197,14 +183,14 @@ class ThirdPartyAuthController extends Controller
         if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => __('auth.unauthenticated'),
+                'message' => "Not Authorized",
             ], 401);
         }
 
         if ($user->hasVerifiedEmail()) {
             return response()->json([
                 'success' => false,
-                'message' => __('auth.email_already_verified'),
+                'message' => "Email already verified!",
             ], 400);
         }
 
@@ -212,7 +198,7 @@ class ThirdPartyAuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('auth.verification_link_sent'),
+            'message' => "Email Verification Resent Successfully!",
         ], 200);
     }
 
@@ -245,14 +231,13 @@ class ThirdPartyAuthController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        // We use the 'thirdparties' broker defined in config/auth.php
         $status = Password::broker('thirdparties')->sendResetLink(
             $request->only('email')
         );
 
         return $status === Password::RESET_LINK_SENT
             ? response()->json(['message' => __($status)])
-            : response()->json(['message' => __($status)], 400); // translation strings from resources/lang
+            : response()->json(['message' => __($status)], 400);
     }
 
     public function resetPassword(Request $request): JsonResponse
@@ -266,12 +251,9 @@ class ThirdPartyAuthController extends Controller
         $status = Password::broker('thirdparties')->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user, $password) {
-                // Handle custom column 'Password' and hashing
                 $user->forceFill([
                     'Password' => Hash::make($password),
                 ])->save();
-
-                // Clear tokens if api setup requires it, though createsToken() handles login separately
             }
         );
 

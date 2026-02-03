@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class CRDBCustomerController extends Controller
 {
-    //Sync customer info by executing the p_Customers stored procedure EXEC dbo.r_CustomerData  @IsSynced = 0
+    // Sync customer info by executing the p_Customers stored procedure EXEC dbo.r_CustomerData @IsSynced = 0
 
     public function syncCustomers(Request $request)
     {
@@ -61,7 +61,7 @@ class CRDBCustomerController extends Controller
         }
     }
 
-    //Fetch Client Summary Statement
+    // Fetch Client Summary Statement
     public function getClientSummaryStatement(Request $request)
     {
         $request->validate([

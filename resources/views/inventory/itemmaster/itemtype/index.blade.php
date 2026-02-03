@@ -105,7 +105,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="editTypeName" class="form-label">Type Name</label>
+                        <label for="editTypeName" class="form-label">Type Name<span class="text-danger">*</span></label>
                         <select class="form-select" id="editTypeName" name="TypeName" required>
                             <option value="">Select Item Type</option>
                             @foreach($itmTypes as $itmType)
