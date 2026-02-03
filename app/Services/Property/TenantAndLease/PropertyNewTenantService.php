@@ -95,13 +95,13 @@ class PropertyNewTenantService extends ThirdPartiesService
 
             $file = (isset($data['document']) && $data['document'] instanceof UploadedFile) ? $data['document'] : null;
 
-        self::createFromParty(
-            party: $party,
-            actor: $actor,
-            document: $file,
-            Remarks: $data['tenant_Remarks'] ?? $data['remarks'] ?? $data['Remarks'] ?? null,
-            tenantType: $data['tenant_type'] ?? null
-        );
+            self::createFromParty(
+                party: $party,
+                actor: $actor,
+                document: $file,
+                Remarks: $data['tenant_Remarks'] ?? $data['remarks'] ?? $data['Remarks'] ?? null,
+                tenantType: $data['tenant_type'] ?? null
+            );
 
             return $party;
         });

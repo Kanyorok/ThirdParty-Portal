@@ -68,13 +68,13 @@ class ThirdPartyService extends ThirdPartiesService
             $partyService = new self($parentParty);
 
             foreach ($partyTypes as $type) {
-            match ($type->Code) {
-                self::TypeTenant => $partyService->addTenant(
-                    $actor,
-                    $data['user_Remarks'] ?? null,
-                    $data['document'] ?? null,
-                    $data
-                ),
+                match ($type->Code) {
+                    self::TypeTenant => $partyService->addTenant(
+                        $actor,
+                        $data['user_Remarks'] ?? null,
+                        $data['document'] ?? null,
+                        $data
+                    ),
                     self::TypeSupplier => $partyService->addSupplier($actor, $data),
                     self::TypeCustomer => $partyService->addCustomer(
                         $data['Referral'] ?? null,

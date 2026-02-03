@@ -7,7 +7,6 @@ use App\Enums\ThirdParty\ThirdPartyStatusEnum;
 use App\Models\Auth\User;
 use App\Models\ThirdParty\SupplierMaster;
 use App\Services\Core\ApprovalWorkflowService;
-use App\Services\ThirdParties\ThirdPartyStatusService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -53,9 +52,9 @@ class SupplierWorkflowService extends ApprovalWorkflowService
             $statusColumn
         );
 
-            if ($result) {
-                $supplier->ApprovalStatus = ThirdPartyApprovalStatusEnum::Approved;
-                $supplier->save();
+        if ($result) {
+            $supplier->ApprovalStatus = ThirdPartyApprovalStatusEnum::Approved;
+            $supplier->save();
 
             // Activate associated ThirdPartyUsers
             // Activate associated ThirdPartyUsers

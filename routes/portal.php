@@ -15,7 +15,6 @@ use App\Http\Controllers\ThirdParty\API\ThirdPartyAuthController;
 use App\Http\Controllers\ThirdParty\API\ThirdPartyPasswordController;
 use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
 use Illuminate\Http\Request;
-
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('portal/auth')->name('portal.auth.')->group(function () {

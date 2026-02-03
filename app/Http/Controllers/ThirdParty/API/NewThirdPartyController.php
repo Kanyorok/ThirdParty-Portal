@@ -120,4 +120,3 @@ class NewThirdPartyController extends Controller
         });
     }
 }
-

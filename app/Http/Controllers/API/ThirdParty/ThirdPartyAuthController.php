@@ -261,4 +261,4 @@ class ThirdPartyAuthController extends Controller
             ? response()->json(['message' => __($status)])
             : response()->json(['message' => __($status)], 400);
     }
-} 
+}

@@ -2,11 +2,10 @@
 
 namespace App\Models\ThirdParty;
 
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
-use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
-use App\Services\CRMEmailService;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Auth\Passwords\CanResetPassword;
