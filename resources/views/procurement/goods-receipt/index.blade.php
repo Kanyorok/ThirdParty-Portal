@@ -128,6 +128,7 @@
                                         </td>
                                         <td>
                                             {{ $receipt->supplier->thirdParty->thirdParty->TradingName ?? $receipt->supplier->thirdParty->thirdParty->ThirdPartyName ?? 'N/A' }}
+                                                                                                    
                                         </td>
                                         <td>
                                             {{ $receipt->ReceivedDate ? $receipt->ReceivedDate->format('d M Y') : 'N/A' }}

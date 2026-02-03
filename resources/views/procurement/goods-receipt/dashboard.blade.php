@@ -144,7 +144,7 @@
                                                                 {{ $grn->item_type_display }}
                                                             </span>
                                                         </td>
-                                                        <td>{{ $grn->supplier->thirdParty->TradingName ?? 'N/A' }}</td>
+                                                        <td>{{ $grn->supplier->thirdParty->thirdParty->TradingName ?? $grn->supplier->thirdParty->thirdParty->ThirdPartyName ?? 'N/A' }}</td>
                                                         <td>
                                                             @php
                                                                 $displayValue = $grn->TotalValue;

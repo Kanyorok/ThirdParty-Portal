@@ -17,21 +17,24 @@ use Illuminate\Support\Facades\Log;
 class GoodsReceiptController extends Controller
 {
     public function index()
-    {
-        $this->authorize('viewAny', GoodsReceipt::class);
+{
+    $this->authorize('viewAny', GoodsReceipt::class);
 
-        $goodsReceipts = GoodsReceipt::with('receiver', 'supplier')
-            ->where('InspectionStatus', PostingEnum::Draft)
-            ->selectRaw('MIN(id) as id')
-            ->groupBy('GRNID')
-            ->get()
-            ->map(function ($receipt) {
-                return GoodsReceipt::with('receiver', 'supplier')->find($receipt->id);
-            });
+    $goodsReceipts = GoodsReceipt::with([
+            'receiver',
+            'supplier.thirdParty.thirdParty'
+        ])
+        ->where('InspectionStatus', PostingEnum::Draft)
+        ->whereIn('id', function ($query) {
+            $query->selectRaw('MIN(id)')
+                  ->from('t_GoodsReceipts')
+                  ->groupBy('GRNID');
+        })
+        ->get();
 
+    return view('procurement.goodreceipts.index', compact('goodsReceipts'));
+}
 
-        return view('procurement.goodreceipts.index', compact('goodsReceipts'));
-    }
 
     public function create()
     {
