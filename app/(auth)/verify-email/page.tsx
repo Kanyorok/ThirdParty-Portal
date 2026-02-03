@@ -3,6 +3,18 @@
 import { useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
+const normalizeVerifyEmailPath = (raw?: string | null): string | null => {
+    if (!raw) return null
+    const trimmed = raw.trim()
+    if (!trimmed) return null
+    if (/^https?:\/\//i.test(trimmed)) return trimmed
+
+    const base = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || ''
+    const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+
+    return base ? `${base}${path}` : path
+}
+
 export default function VerifyEmail() {
     const searchParams = useSearchParams()
     const router = useRouter()
@@ -20,7 +32,13 @@ export default function VerifyEmail() {
 
         const run = async () => {
             try {
-                const res = await fetch(verifyUrl, { headers: { Accept: 'application/json' } })
+                const normalizedUrl = normalizeVerifyEmailPath(verifyUrl)
+                if (!normalizedUrl) {
+                    router.replace('/verify-email/invalid')
+                    return
+                }
+
+                const res = await fetch(normalizedUrl, { headers: { Accept: 'application/json' } })
 
                 if (res.status === 200) {
                     router.replace('/verify-email/success')

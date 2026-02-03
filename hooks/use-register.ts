@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -17,6 +17,42 @@ const emptyToUndefined = (value: unknown) => {
 }
 
 const hasRole = (types: string[] | undefined, flag: string) => types?.includes(flag)
+
+const VERIFY_EMAIL_LINK_REGEX = /https?:\/\/[^"'<>\s]+\/verify-email\?[^"'<>\s]+/i
+
+const extractVerifyEmailUrl = (payload: Record<string, any> | null | undefined): string | null => {
+    if (!payload) {
+        return null
+    }
+
+    const candidates = [
+        payload.verify_url,
+        payload.verifyUrl,
+        payload.verificationUrl,
+        payload.data?.verify_url,
+        payload.data?.verifyUrl,
+        payload.data?.verificationUrl,
+        payload.data?.data?.verify_url,
+        payload.data?.data?.verifyUrl,
+        payload.data?.data?.verificationUrl,
+    ]
+
+    for (const candidate of candidates) {
+        if (typeof candidate === "string" && candidate.trim()) {
+            return candidate
+        }
+    }
+
+    const message = payload.message ?? payload.data?.message ?? payload.data?.data?.message
+    if (typeof message === "string") {
+        const match = message.match(VERIFY_EMAIL_LINK_REGEX)
+        if (match && match[0]) {
+            return match[0]
+        }
+    }
+
+    return null
+}
 
 const registerSchema = z.object({
     Name: z.string().min(2),
@@ -46,20 +82,6 @@ const registerSchema = z.object({
     user_Password: z.preprocess(emptyToUndefined, z.string().min(8).optional()),
     user_Password_confirmation: z.preprocess(emptyToUndefined, z.string().optional())
 }).superRefine((data, ctx) => {
-    if (!data.createUser) return
-
-    if (!data.user_FirstName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_FirstName"], message: "First name is required." })
-    if (!data.user_LastName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_LastName"], message: "Last name is required." })
-    if (!data.user_Email) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Email"], message: "Admin email is required." })
-    if (!data.user_Phone) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Phone"], message: "Admin phone is required." })
-    if (!data.user_Gender) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Gender"], message: "Gender is required." })
-    if (!data.user_Password) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Password"], message: "Password is required." })
-    if (!data.user_Password_confirmation) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Password_confirmation"], message: "Confirm your password." })
-
-    if (data.user_Password && data.user_Password_confirmation && data.user_Password !== data.user_Password_confirmation) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Password_confirmation"], message: "Passwords do not match." })
-    }
-
     if (hasRole(data.types, "SU") && !data.user_SupplierCategoryId) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
@@ -74,6 +96,32 @@ const registerSchema = z.object({
             path: ["user_Remarks"],
             message: "Tell us why you need tenant access."
         })
+    }
+
+    if (hasRole(data.types, "CU")) {
+        if (!data.user_DateOfBirth) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_DateOfBirth"], message: "Customer date of birth is required." })
+        }
+        if (!data.user_MaritalStatus) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_MaritalStatus"], message: "Marital status is required." })
+        }
+        if (!data.user_Occupation) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Occupation"], message: "Occupation is required." })
+        }
+    }
+
+    if (!data.createUser) return
+
+    if (!data.user_FirstName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_FirstName"], message: "First name is required." })
+    if (!data.user_LastName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_LastName"], message: "Last name is required." })
+    if (!data.user_Email) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Email"], message: "Admin email is required." })
+    if (!data.user_Phone) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Phone"], message: "Admin phone is required." })
+    if (!data.user_Gender) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Gender"], message: "Gender is required." })
+    if (!data.user_Password) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Password"], message: "Password is required." })
+    if (!data.user_Password_confirmation) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Password_confirmation"], message: "Confirm your password." })
+
+    if (data.user_Password && data.user_Password_confirmation && data.user_Password !== data.user_Password_confirmation) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Password_confirmation"], message: "Passwords do not match." })
     }
 })
 
@@ -93,22 +141,28 @@ export const useRegisterForm = () => {
     const [isLoadingMetadata, setIsLoadingMetadata] = useState(true)
     const [isLoadingLocalities, setIsLoadingLocalities] = useState(false)
     const [metadataError, setMetadataError] = useState<string | null>(null)
+    const [verifyEmailUrl, setVerifyEmailUrl] = useState<string | null>(null)
+    const lastVerifyEmailUrlRef = useRef<string | null>(null)
+    const resetVerifyEmailUrl = useCallback(() => {
+        lastVerifyEmailUrlRef.current = null
+        setVerifyEmailUrl(null)
+    }, [])
 
     const form = useForm<RegisterFormInputs>({
         resolver: zodResolver(registerSchema) as any,
         mode: "onBlur",
         defaultValues: {
             Name: "",
-            TradingName: null,
+            TradingName: "",
             BusinessType: "",
             RegistrationNumber: "",
             TaxPIN: "",
-            VATNumber: null,
+            VATNumber: "",
             Country: "KE",
             Location: 0,
             Email: "",
             Phone: "",
-            PhysicalAddress: null,
+            PhysicalAddress: "",
             Website: "",
             types: [],
             user_SupplierCategoryId: null,
@@ -192,7 +246,9 @@ export const useRegisterForm = () => {
         }
     }, [selectedCountryCode, fetchLocalities, form])
 
-    const onSubmitHandler = async (values: RegisterFormInputs) => {
+    const getLastVerifyEmailUrl = useCallback(() => lastVerifyEmailUrlRef.current, [])
+
+    const registerThirdParty = useCallback(async (values: RegisterFormInputs) => {
         const { user_SupplierCategoryId, ...rest } = values
         const payload = {
             ...rest,
@@ -221,8 +277,17 @@ export const useRegisterForm = () => {
             throw new Error(result.message)
         }
 
-        return result
-    }
+        const verifyEmailLink = extractVerifyEmailUrl(result)
+        lastVerifyEmailUrlRef.current = verifyEmailLink
+        setVerifyEmailUrl(verifyEmailLink)
+
+        const normalizedResult = {
+            ...(typeof result === "object" && result !== null ? result : { message: String(result) }),
+            verifyEmailUrl: verifyEmailLink,
+        }
+
+        return normalizedResult
+    }, [form])
 
     return {
         form,
@@ -231,7 +296,10 @@ export const useRegisterForm = () => {
         isLoadingMetadata,
         isLoadingLocalities,
         metadataError,
-        onSubmit: form.handleSubmit(onSubmitHandler),
+        onSubmit: form.handleSubmit(registerThirdParty),
+        verifyEmailUrl,
+        resetVerifyEmailUrl,
+        getLastVerifyEmailUrl,
         isSubmitting: form.formState.isSubmitting,
         toggleType: (type: string) => {
             const current = form.getValues("types") || []

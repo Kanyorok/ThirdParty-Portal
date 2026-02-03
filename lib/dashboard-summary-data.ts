@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
 import { isClosedByDeadline } from "@/lib/deadline"
+import { resolveTenantIdFromSessionUser } from "@/lib/profile/resolve-tenant-id"
 
 export type PreqBreakdown = Record<
     "approved" | "submitted" | "under_review" | "rejected" | "not_applied",
@@ -16,6 +17,28 @@ export type RFQBreakdown = Record<
     "invited" | "draft" | "submitted" | "closed",
     number
 >
+
+export type TenderBreakdown = Record<"open" | "draft" | "closed", number>
+
+export type TenantLeaseSummary = {
+    total: number
+    active: number
+    expiringSoon: number
+    inactive: number
+}
+
+export type TenantInvoiceSummary = {
+    total: number
+    paid: number
+    pending: number
+    overdue: number
+    outstandingAmount: number
+}
+
+export type TenantBreakdown = {
+    leases: TenantLeaseSummary
+    invoices: TenantInvoiceSummary
+}
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL
 
@@ -80,9 +103,15 @@ export async function getDashboardData() {
 
     let activePreq = 0
     let completedPreq = 0
+    const user = session?.user as any
     const preqBreakdown: PreqBreakdown = {
         approved: 0, submitted: 0, under_review: 0, rejected: 0, not_applied: 0,
     }
+
+    const tenantId = resolveTenantIdFromSessionUser(user)
+    const hasTenantProfile = Boolean(
+        (user?.isTenant ?? user?.is_tenant) && tenantId
+    )
 
     if (preqRes.status === "fulfilled" && Array.isArray(preqRes.value?.data)) {
         preqRes.value.data.forEach((round: any) => {
@@ -120,7 +149,124 @@ export async function getDashboardData() {
     const rfqBreakdown = computeRFQBreakdown(rfqData)
 
     const tenderVal = tendersRes.status === "fulfilled" ? tendersRes.value : null
-    const tendersAvailable = tenderVal?.total ?? (Array.isArray(tenderVal?.data) ? tenderVal.data.length : 0)
+    const tenderItems = Array.isArray(tenderVal?.data)
+        ? tenderVal.data
+        : Array.isArray(tenderVal)
+            ? tenderVal
+            : []
+    const tenderBreakdown: TenderBreakdown = { open: 0, draft: 0, closed: 0 }
+    tenderItems.forEach((tender: any) => {
+        const status = String(tender?.status || tender?.Status || "").toLowerCase()
+        if (status === "dr" || status === "draft") {
+            tenderBreakdown.draft++
+        } else if (status === "cl" || status === "closed" || status === "archived") {
+            tenderBreakdown.closed++
+        } else {
+            tenderBreakdown.open++
+        }
+    })
+
+    const tendersAvailable = tenderVal?.total ?? tenderItems.length
+
+    let tenantBreakdown: TenantBreakdown | null = null
+
+    if (hasTenantProfile && tenantId) {
+        const [leasesRes, invoicesRes] = await Promise.allSettled([
+            fetch(`${API_BASE}/api/v1/property/leases/tenant?id=${tenantId}&page=1`, {
+                headers,
+                cache: "no-store",
+            }).then((r) => r.json()),
+            fetch(
+                `${API_BASE}/api/v1/property/invoices/tenant?tenant_id=${tenantId}&page=1`,
+                {
+                    headers,
+                    cache: "no-store",
+                }
+            ).then((r) => r.json()),
+        ])
+
+        const leaseEntries =
+            leasesRes.status === "fulfilled" && Array.isArray(leasesRes.value?.data)
+                ? leasesRes.value.data
+                : []
+        const invoiceEntries =
+            invoicesRes.status === "fulfilled" && Array.isArray(invoicesRes.value?.data)
+                ? invoicesRes.value.data
+                : []
+
+        const leaseTotal =
+            Number(leasesRes.status === "fulfilled" ? leasesRes.value?.meta?.total : NaN) ||
+            leaseEntries.length
+
+        const now = new Date()
+        const soonThreshold = new Date(now)
+        soonThreshold.setDate(now.getDate() + 30)
+
+        const activeLeases = leaseEntries.filter((lease: any) => Boolean(lease?.isActive)).length
+        const expiringSoon = leaseEntries.filter((lease: any) => {
+            const endDateString = lease?.dates?.end
+            if (!endDateString) return false
+            const deadline = new Date(endDateString)
+            if (Number.isNaN(deadline.getTime())) return false
+            return deadline >= now && deadline <= soonThreshold
+        }).length
+
+        const inactiveLeases = Math.max(0, leaseTotal - activeLeases)
+
+        let invoicePaid = 0
+        let invoicePending = 0
+        let invoiceOverdue = 0
+        let outstandingAmount = 0
+
+        const invoiceTotal =
+            Number(invoicesRes.status === "fulfilled" ? invoicesRes.value?.meta?.total : NaN) ||
+            invoiceEntries.length
+
+        invoiceEntries.forEach((invoice: any) => {
+            const status = String(invoice?.status ?? "").toLowerCase()
+            const amountNodes = invoice?.amounts ?? {}
+            const subtotal =
+                (Number(amountNodes.rent) || 0) +
+                (Number(amountNodes.serviceCharge) || 0) +
+                (Number(amountNodes.otherCharges) || 0) +
+                (Number(amountNodes.parkingFee) || 0)
+            const taxRate = Number(invoice?.tax?.rate ?? 0)
+            const taxAmount = Number.isFinite(taxRate) ? (subtotal * taxRate) / 100 : 0
+            const totalAmount = subtotal + taxAmount
+
+            const isPaid = status === "paid"
+            const isOverdue = status === "o" || status === "overdue"
+            const isPending = status === "p" || status === "pending"
+
+            if (isPaid) {
+                invoicePaid++
+            } else if (isOverdue) {
+                invoiceOverdue++
+            } else {
+                invoicePending++
+            }
+
+            if (!isPaid) {
+                outstandingAmount += Number.isFinite(totalAmount) ? totalAmount : 0
+            }
+        })
+
+        tenantBreakdown = {
+            leases: {
+                total: leaseTotal,
+                active: activeLeases,
+                expiringSoon,
+                inactive: inactiveLeases,
+            },
+            invoices: {
+                total: invoiceTotal,
+                paid: invoicePaid,
+                pending: invoicePending,
+                overdue: invoiceOverdue,
+                outstandingAmount: Math.max(0, outstandingAmount),
+            },
+        }
+    }
 
     return {
         summary: {
@@ -133,7 +279,9 @@ export async function getDashboardData() {
         breakdowns: {
             prequalification: preqBreakdown,
             rfqs: rfqBreakdown,
-            invitations: { pending: 0, accepted: 0, declined: 0, submitted: 0 }
+            tenders: tenderBreakdown,
+            tenant: tenantBreakdown ?? undefined,
+            invitations: { pending: 0, accepted: 0, declined: 0, submitted: 0 },
         },
     }
 }

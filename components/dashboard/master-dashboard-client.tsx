@@ -95,13 +95,13 @@ export function MasterDashboardClient({
 
       <motion.section variants={itemVariants}>
         <Card className="bg-card rounded-2xl border border-border/50 shadow-none">
-          <CardHeader className="border-b border-border/40 py-5">
-            <CardTitle className="text-base font-semibold">
-              Overview
-            </CardTitle>
-            <CardDescription>
-              Quick totals across your profiles.
-            </CardDescription>
+          <CardHeader className="border-b border-border/40 py-5 grid-rows-[auto]">
+            <div className="flex items-baseline gap-3">
+              <CardTitle className="text-base font-semibold">Overview</CardTitle>
+              <span className="text-xs font-semibold tracking-[0.4em] text-muted-foreground">
+                Quick totals across your profiles.
+              </span>
+            </div>
           </CardHeader>
           <CardContent className="pb-6">
             <RequestSummaryCards />
@@ -120,7 +120,7 @@ export function MasterDashboardClient({
             </CardDescription>
           </CardHeader>
           <CardContent className="pb-6">
-            <SummaryCharts />
+            <SummaryCharts profile={activeProfile} />
           </CardContent>
         </Card>
       </motion.section>

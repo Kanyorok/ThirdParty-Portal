@@ -30,16 +30,27 @@ export default function RegisterForm() {
     selectedTypes,
     isSupplier,
     isTenant,
-    isCustomer
+    isCustomer,
+    verifyEmailUrl,
+    resetVerifyEmailUrl,
+    getLastVerifyEmailUrl
   } = useRegisterForm()
 
   const createUser = form.watch("createUser")
+
+  React.useEffect(() => {
+    if (!verifyEmailUrl) return
+    router.replace(verifyEmailUrl)
+    resetVerifyEmailUrl()
+  }, [verifyEmailUrl, router, resetVerifyEmailUrl])
 
   const submitDirectly = async () => {
     setAuthError(null)
     try {
       await onSubmit()
-      setSuccess(true)
+      if (!getLastVerifyEmailUrl()) {
+        setSuccess(true)
+      }
     } catch (error: any) {
       setAuthError(error?.message ?? "An unexpected error occurred.")
     }
@@ -248,6 +259,25 @@ export default function RegisterForm() {
                   <Input {...form.register("Phone")} className={inputStyle} />
                 </div>
 
+                {isSupplier && (
+                  <div className="md:col-span-2">
+                    <label className={labelStyle}>
+                      Supplier Category <span className="text-red-500">*</span>
+                    </label>
+                    <select {...form.register("user_SupplierCategoryId")} className={inputStyle}>
+                      <option value="">Select...</option>
+                      {metadata.supplierCategories.map(cat => (
+                        <option key={cat.id ?? cat.value} value={cat.id ?? cat.value}>
+                          {cat.name ?? cat.description ?? cat.label ?? `Category ${cat.id ?? cat.value}`}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.user_SupplierCategoryId && (
+                      <p className={errorStyle}>{errors.user_SupplierCategoryId.message}</p>
+                    )}
+                  </div>
+                )}
+
                 <div>
                   <label className={labelStyle}>Website</label>
                   <Input {...form.register("Website")} className={inputStyle} />
@@ -287,6 +317,53 @@ export default function RegisterForm() {
                     <label className={labelStyle}>Tenant Remarks</label>
                     <Input {...form.register("user_Remarks")} className={inputStyle} />
                   </div>
+                )}
+
+                {isCustomer && !isTenant && (
+                  <div className="md:col-span-2">
+                    <label className={labelStyle}>Customer Remarks</label>
+                    <Input {...form.register("user_Remarks")} className={inputStyle} />
+                  </div>
+                )}
+
+                {isCustomer && (
+                  <>
+                    <div className="md:col-span-2">
+                      <label className={labelStyle}>Customer Date of Birth</label>
+                      <Input type="date" {...form.register("user_DateOfBirth")} className={inputStyle} />
+                      {errors.user_DateOfBirth && (
+                        <p className={errorStyle}>{errors.user_DateOfBirth.message}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className={labelStyle}>Marital Status</label>
+                      <select {...form.register("user_MaritalStatus")} className={inputStyle}>
+                        <option value="">Select...</option>
+                        {metadata.maritalStatuses.map(ms => (
+                          <option key={ms.value ?? ms.id} value={ms.value ?? ms.id}>
+                            {ms.description ?? ms.name ?? ms.label ?? ms.value ?? `Status ${ms.id ?? ''}`}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.user_MaritalStatus && (
+                        <p className={errorStyle}>{errors.user_MaritalStatus.message}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className={labelStyle}>Occupation</label>
+                      <select {...form.register("user_Occupation")} className={inputStyle}>
+                        <option value="">Select...</option>
+                        {metadata.occupations.map(opt => (
+                          <option key={opt.value ?? opt.id} value={opt.value ?? opt.id}>
+                            {opt.description ?? opt.name ?? opt.label ?? opt.value ?? `Occupation ${opt.id ?? ''}`}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.user_Occupation && (
+                        <p className={errorStyle}>{errors.user_Occupation.message}</p>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
 
