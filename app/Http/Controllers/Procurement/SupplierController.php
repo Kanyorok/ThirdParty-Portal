@@ -346,13 +346,13 @@ class SupplierController extends Controller
         $supplier = SupplierMaster::where('ThirdPartyId', $id)->firstOrFail();
 
         // Check permission - using update policy for now as suspension is an edit
-        if (!auth()->user()->can('update', $supplier)) {
+        if (! auth()->user()->can('update', $supplier)) {
             return redirect()->back()->with('error', 'You are not authorized to suspend this supplier.');
         }
 
         try {
             $supplier->ApprovalStatus = ThirdPartyApprovalStatusEnum::Suspended;
-            
+
             // Capture user ID for modification tracking if available in model
             if (in_array('ModifiedBy', $supplier->getFillable())) {
                 $supplier->ModifiedBy = Auth::id();
@@ -478,8 +478,8 @@ class SupplierController extends Controller
             $isSuspended = $supplier->ApprovalStatus === ThirdPartyApprovalStatusEnum::Suspended->value; // or check string 'Suspended'
         }
 
-        if (!$isSuspended && auth()->user()->can('update', $supplier)) {
-             $buttons .= '
+        if (! $isSuspended && auth()->user()->can('update', $supplier)) {
+            $buttons .= '
                 <form action="' . $suspendUrl . '" method="POST" class="inline-block ms-1" onsubmit="return confirm(\'Are you sure you want to suspend this supplier? Users will be deactivated.\');">
                     ' . csrf_field() . '
                     <button type="submit" class="btn btn-sm btn-dark">Suspend</button>

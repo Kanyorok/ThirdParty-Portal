@@ -2313,7 +2313,6 @@ class TenderController extends Controller
         return $invitationsSent;
     }
 
-
     /**
      * Download a specific document attached to a tender.
      */
@@ -2335,6 +2334,7 @@ class TenderController extends Controller
 
         } catch (\Exception $e) {
             Log::error("Failed to download document {$documentId} for tender {$id}: " . $e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to download document: ' . $e->getMessage());
         }
     }
@@ -2347,7 +2347,7 @@ class TenderController extends Controller
         try {
             $tender = Tender::findOrFail($id);
             $document = \App\Models\DMS\Document::where('DocumentId', $documentId)->firstOrFail();
-            
+
             // Replicate DocumentPreviewController logic
             return view('dms.files.embed')
                 ->with('file', $document)
@@ -2355,6 +2355,7 @@ class TenderController extends Controller
 
         } catch (\Exception $e) {
             Log::error("Failed to preview document {$documentId}: " . $e->getMessage());
+
             return response("Failed to load preview: " . $e->getMessage(), 404);
         }
     }
@@ -2366,13 +2367,13 @@ class TenderController extends Controller
     {
         try {
             $tender = Tender::findOrFail($id);
-            
+
             if ($tender->Status !== TenderStatusEnum::Draft) {
                 return redirect()->back()->with('error', 'Documents can only be deleted when tender is in Draft status.');
             }
 
-            if ($tender->CreatedBy !== Auth::id() && !Auth::user()->hasRole(['Super Admin', 'Administrator'])) {
-                 return redirect()->back()->with('error', 'You are not authorized to delete documents from this tender.');
+            if ($tender->CreatedBy !== Auth::id() && ! Auth::user()->hasRole(['Super Admin', 'Administrator'])) {
+                return redirect()->back()->with('error', 'You are not authorized to delete documents from this tender.');
             }
 
             $document = \App\Models\DMS\Document::where('DocumentId', $documentId)->firstOrFail();
@@ -2388,9 +2389,8 @@ class TenderController extends Controller
 
         } catch (\Exception $e) {
             Log::error("Failed to delete document {$documentId} for tender {$id}: " . $e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to delete document: ' . $e->getMessage());
         }
     }
 }
-
-

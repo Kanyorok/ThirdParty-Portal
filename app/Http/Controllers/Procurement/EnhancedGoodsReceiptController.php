@@ -93,7 +93,7 @@ class EnhancedGoodsReceiptController extends Controller
     public function getAvailablePurchaseOrders()
     {
         // Logic adapted from GoodsReceiptController::create
-        
+
         // 1. Get total received quantities per PO line item from existing GRNs
         $receivedQuantities = DB::table('t_GoodsReceipts')
             ->select('POID', 'ItemNo', DB::raw('SUM(ReceivedQTY) as TotalReceived'))
@@ -116,12 +116,12 @@ class EnhancedGoodsReceiptController extends Controller
                       ->orWhere('t_Orders.DocStatus', 'a');
             })
             ->select(
-                't_Orders.Id', 
-                't_Orders.OrderNo', 
-                't_Orders.ExtOrdNum', 
-                't_Orders.AccountID', 
-                't_Orders.OrdTotIncl', 
-                't_Orders.BranchID', 
+                't_Orders.Id',
+                't_Orders.OrderNo',
+                't_Orders.ExtOrdNum',
+                't_Orders.AccountID',
+                't_Orders.OrdTotIncl',
+                't_Orders.BranchID',
                 't_Branches.Name as BranchName',
                 'tp.TradingName as SupplierName',
                 'tp.ThirdPartyName as SupplierFullName'
@@ -182,7 +182,7 @@ class EnhancedGoodsReceiptController extends Controller
                         'ThirdPartyName' => $order->SupplierFullName,
                     ],
                 ];
-                
+
                 $filteredOrders->push($order);
             }
         }
@@ -204,15 +204,15 @@ class EnhancedGoodsReceiptController extends Controller
                 ->leftJoin('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
                 ->where('t_Orders.Id', $poId)
                 ->select(
-                    't_Orders.Id', 
-                    't_Orders.OrderNo', 
-                    't_Orders.AccountID', 
+                    't_Orders.Id',
+                    't_Orders.OrderNo',
+                    't_Orders.AccountID',
                     'tp.TradingName as SupplierName',
                     'tp.ThirdPartyName as SupplierFullName'
                 )
                 ->first();
 
-            if (!$order) {
+            if (! $order) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Purchase Order not found.',
@@ -223,7 +223,7 @@ class EnhancedGoodsReceiptController extends Controller
             $orderLines = DB::table('t_OrderLines as ol')
                 ->join('t_items as i', 'ol.iStockCodeID', '=', 'i.Id')
                 ->leftJoin('t_CodeDetails as cd', 'i.InventoryType', '=', 'cd.Id')
-                ->leftJoin('t_ItemTypes as it', 'i.ItemType', '=', 'it.Id') 
+                ->leftJoin('t_ItemTypes as it', 'i.ItemType', '=', 'it.Id')
                 ->leftJoin('t_UOM as u', 'i.UOM', '=', 'u.Id')
                 ->where('ol.iOrderID', $poId)
                 ->whereNull('ol.DeletedOn')
@@ -234,7 +234,7 @@ class EnhancedGoodsReceiptController extends Controller
                     'ol.fUnitPriceExcl',
                     'i.ItemName',
                     'i.ItemDescription',
-                    'i.ItemType', 
+                    'i.ItemType',
                     'it.TypeName as ItemTypeName',
                     'u.Name as UOMName'
                 )
@@ -267,10 +267,10 @@ class EnhancedGoodsReceiptController extends Controller
                     // But here we have stdClass. Let's map manually or create a temporary object if needed.
                     // Actually, the previous implementation used determineItemType with an Item model.
                     // We'll mimic the mapping logic here for performance.
-                    
+
                     $itemTypeStr = $line->ItemTypeName ?? 'Stock';
                     $itemType = EnhancedGoodsReceipt::ITEM_TYPE_STOCK; // Default
-                    
+
                     $typeMapping = [
                         'Stock' => EnhancedGoodsReceipt::ITEM_TYPE_STOCK,
                         'Inventory' => EnhancedGoodsReceipt::ITEM_TYPE_STOCK,
@@ -279,7 +279,7 @@ class EnhancedGoodsReceiptController extends Controller
                         'Service' => EnhancedGoodsReceipt::ITEM_TYPE_SERVICE,
                         'Non-Stock' => EnhancedGoodsReceipt::ITEM_TYPE_SERVICE,
                     ];
-                    
+
                     if (isset($typeMapping[$itemTypeStr])) {
                         $itemType = $typeMapping[$itemTypeStr];
                     }
@@ -411,16 +411,15 @@ class EnhancedGoodsReceiptController extends Controller
     public function getLineDetails($lineId)
     {
         $line = EnhancedGoodsReceipt::with(['item', 'item.uom', 'order', 'supplier', 'receiver'])->findOrFail($lineId);
-        
+
         // Calculate TotalValue if missing
         $totalValue = $line->TotalValue;
         if (($totalValue == 0 || $totalValue == 0.00) && $line->ReceivedQTY > 0) {
-             $totalValue = $line->ReceivedQTY * $line->UnitPrice;
+            $totalValue = $line->ReceivedQTY * $line->UnitPrice;
         }
 
         return view('procurement.goods-receipt.partials.line-details', compact('line', 'totalValue'));
     }
-
 
     /**
      * Retry processing for a specific line
@@ -429,7 +428,7 @@ class EnhancedGoodsReceiptController extends Controller
     {
         try {
             $line = EnhancedGoodsReceipt::findOrFail($lineId);
-            
+
             // Reset status to pending to allow reprocessing
             $line->update([
                 'ProcessingStatus' => EnhancedGoodsReceipt::STATUS_PENDING,
@@ -442,6 +441,7 @@ class EnhancedGoodsReceiptController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to retry processing', ['line_id' => $lineId, 'error' => $e->getMessage()]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to reset line item: ' . $e->getMessage(),

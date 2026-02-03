@@ -406,7 +406,7 @@ Route::middleware(['module:300000'])->group(function () {
 
         Route::get('initiatetender/{id}/document/{documentId}/preview', [TenderController::class, 'previewDocument'])
             ->name('initiatetender.document.preview');
-            
+
         Route::delete('initiatetender/{id}/document/{documentId}', [TenderController::class, 'deleteDocument'])
             ->name('initiatetender.document.delete');
 
