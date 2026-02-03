@@ -192,45 +192,48 @@ class ThirdParties extends Model
     }
 
     public function isSupplier(): bool
-{
-    if ($this->relationLoaded('types')) {
-        return $this->types->contains(function ($type) {
-            return in_array($type->pivot->PartyType, [
-                'SupplierMasterId', 
-                'SupplierMaster', 
-                (new SupplierMaster())->getMorphClass()
-            ]) || (isset($type->Code) && str_starts_with($type->Code, 'SU'));
-        });
-    }
-    return $this->supplierMaster()->exists();
-}
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->contains(function ($type) {
+                return in_array($type->pivot->PartyType, [
+                    'SupplierMasterId',
+                    'SupplierMaster',
+                    (new SupplierMaster())->getMorphClass(),
+                ]) || (isset($type->Code) && str_starts_with($type->Code, 'SU'));
+            });
+        }
 
-public function isTenant(): bool
-{
-    if ($this->relationLoaded('types')) {
-        return $this->types->contains(function ($type) {
-            return in_array($type->pivot->PartyType, [
-                'PropertyNewTenant',
-                'App\Models\PropertyManagement\PropertyNewTenant',
-                (new PropertyNewTenant())->getMorphClass()
-            ]) || (isset($type->Code) && str_starts_with($type->Code, 'TN')) 
-               || $type->TypeId == 1;
-        });
+        return $this->supplierMaster()->exists();
     }
-    return $this->tenantProfile()->exists();
-}
 
-public function isCustomer(): bool
-{
-    if ($this->relationLoaded('types')) {
-        return $this->types->contains(function ($type) {
-            return in_array($type->pivot->PartyType, [
-                'BancassuranceCustomer',
-                'App\Models\Insurance\BancassuranceCustomer',
-                (new BancassuranceCustomer())->getMorphClass()
-            ]) || (isset($type->Code) && str_starts_with($type->Code, 'CU'));
-        });
+    public function isTenant(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->contains(function ($type) {
+                return in_array($type->pivot->PartyType, [
+                    'PropertyNewTenant',
+                    'App\Models\PropertyManagement\PropertyNewTenant',
+                    (new PropertyNewTenant())->getMorphClass(),
+                ]) || (isset($type->Code) && str_starts_with($type->Code, 'TN'))
+                   || $type->TypeId == 1;
+            });
+        }
+
+        return $this->tenantProfile()->exists();
     }
-    return $this->customerProfile()->exists();
-}
+
+    public function isCustomer(): bool
+    {
+        if ($this->relationLoaded('types')) {
+            return $this->types->contains(function ($type) {
+                return in_array($type->pivot->PartyType, [
+                    'BancassuranceCustomer',
+                    'App\Models\Insurance\BancassuranceCustomer',
+                    (new BancassuranceCustomer())->getMorphClass(),
+                ]) || (isset($type->Code) && str_starts_with($type->Code, 'CU'));
+            });
+        }
+
+        return $this->customerProfile()->exists();
+    }
 }

@@ -13,9 +13,9 @@ use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\Insurance\BancassuranceCustomersService;
 use App\Services\Property\TenantAndLease\PropertyNewTenantService as TenantService;
 use DateTime;
-use RuntimeException;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class ThirdPartyService extends ThirdPartiesService
 {
@@ -61,7 +61,7 @@ class ThirdPartyService extends ThirdPartiesService
                 $actor
             );
 
-            if (!$parentParty) {
+            if (! $parentParty) {
                 throw new ErroredException('Failed to create ThirdParty record');
             }
 
@@ -135,7 +135,7 @@ class ThirdPartyService extends ThirdPartiesService
             if ($types) {
                 $partyTypes = self::getTypes($types);
                 foreach ($partyTypes as $type) {
-                    if (!$party->types()->where('t_ThirdPartyTypes.TypeId', $type->TypeId)->exists()) {
+                    if (! $party->types()->where('t_ThirdPartyTypes.TypeId', $type->TypeId)->exists()) {
                         match ($type->Code) {
                             self::TypeTenant => $partyService->addTenant($actor, $data['user_Remarks'] ?? null, $data['document'] ?? null),
                             self::TypeSupplier => $partyService->addSupplier($actor, $data),
@@ -199,7 +199,7 @@ class ThirdPartyService extends ThirdPartiesService
         mixed $Occupation,
         User|ThirdPartyUser $actor
     ): BancassuranceCustomersService {
-        if (!$DateOfBirth || !$Gender || !$MaritalStatus || !$Occupation) {
+        if (! $DateOfBirth || ! $Gender || ! $MaritalStatus || ! $Occupation) {
             throw new ErroredException('Missing required details for Customer registration');
         }
 

@@ -2,8 +2,8 @@
 
 namespace App\Services\Procurement\Suppliers\Prequalification;
 
-use App\Models\Procurement\Prequalification\PrequalificationRound;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
+use App\Models\Procurement\Prequalification\PrequalificationRound;
 use Illuminate\Database\Eloquent\Collection;
 
 class PrequalificationRoundService
@@ -17,7 +17,7 @@ class PrequalificationRoundService
                 'applicationId' => PrequalificationApplication::select('ApplicationID')
                     ->whereColumn('RoundID', 't_PrequalificationRounds.RoundID')
                     ->where('SupplierID', $SupplierId)
-                    ->limit(1)
+                    ->limit(1),
             ])
             ->where('Status', \App\Enums\Procurement\PrequalificationRoundEnum::Open)
             ->latest('CreatedOn')

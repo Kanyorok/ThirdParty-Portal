@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\Tender;
 use App\Models\ThirdParies\Supplier;
-use App\Services\Procurement\EncryptedBidDocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -26,7 +25,7 @@ class TenderSubmissionController extends Controller
         return view('procurement.tendering.suppliermanagement.bidsubmission.index', compact('submissions'));
     }
 
-    public function store(Request $request): JsonResponse
+    public function create(Request $request)
     {
         $this->authorize(\App\Enums\Core\PermissionEnum::BidSubmissionWrite->value);
         // Exclude tenders that already have submissions & filter by Published status
@@ -100,7 +99,7 @@ class TenderSubmissionController extends Controller
         // Map submission_mode to t_CodeDetails ID
         $submissionModeId = DB::table('t_CodeDetails')
             ->where('CodeID', 'SubmissionMode')
-            ->where('Description', $data['submission_mode'])
+            ->where('Description', $request->submission_mode)
             ->value('ID');
 
         if (! $submissionModeId) {
@@ -157,41 +156,27 @@ class TenderSubmissionController extends Controller
                 'ModifiedBy' => $request->user()->Id,
             ]);
 
-        $submission = BidSubmission::create([
-            'TenderRef' => $data['tender_id'],
-            'SupplierId' => $supplier->Id,
-            'SupplierName' => $supplier->supplierMaster?->thirdParty?->TradingName,
-            'SubmissionMode' => $submissionModeId,
-            'ReceivedAt' => now(),
-            'RecordedBy' => 'portal',
-            'Remarks' => $data['remarks'] ?? null,
-            'SubmissionSource' => 'portal',
-            'DocumentsAccessible' => false,
-            'CreatedBy' => $userId,
-            'ModifiedBy' => $userId,
-        ]);
+            // Handle file upload
+            if ($request->hasFile('bid_files')) {
+                $bidSubmission->newDocument(
+                    \App\Enums\Core\ModulesEnum::Procurement,
+                    $request->file('bid_files'),
+                    [\App\Enums\Core\PermissionEnum::BidSubmissionView->value],
+                    $request->user()
+                );
+            }
 
-        $encrypted = EncryptedBidDocumentService::storeEncryptedBidDocuments(
-            $submission,
-            [$request->file('bid_file')],
-            Auth::user()
-        );
+            DB::commit();
 
-        $submission->update([
-            'EncryptedDocuments' => json_encode($encrypted),
-            'ModifiedBy' => $userId,
-        ]);
+            return redirect()->route('tendersubmissions.index')
+                ->with('success', 'Bid submission recorded successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
 
-        DB::commit();
-
-        return response()->json([
-            'message' => 'Bid submitted successfully',
-            'data' => [
-                'submissionId' => $submission->Id,
-                'tenderId' => $data['tender_id'],
-                'status' => 'sealed',
-            ],
-        ], 201);
+            return redirect()->back()
+                ->withErrors(['error' => 'Failed to record bid submission: ' . $e->getMessage()])
+                ->withInput();
+        }
     }
 
     private function resolveSupplier(): ?Supplier
@@ -199,7 +184,9 @@ class TenderSubmissionController extends Controller
         $user = Auth::user();
 
         if (property_exists($user, 'ThirdPartyId') && $user->ThirdPartyId) {
-            return Supplier::whereHas('supplierMaster', fn ($q) =>
+            return Supplier::whereHas(
+                'supplierMaster',
+                fn ($q) =>
                 $q->where('ThirdPartyId', $user->ThirdPartyId)
             )->first();
         }
@@ -207,7 +194,9 @@ class TenderSubmissionController extends Controller
         $tpu = DB::table('t_ThirdPartyUsers')->where('Id', $user->Id)->first();
 
         if ($tpu?->ThirdPartyId) {
-            return Supplier::whereHas('supplierMaster', fn ($q) =>
+            return Supplier::whereHas(
+                'supplierMaster',
+                fn ($q) =>
                 $q->where('ThirdPartyId', $tpu->ThirdPartyId)
             )->first();
         }

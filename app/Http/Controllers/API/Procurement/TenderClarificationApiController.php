@@ -156,12 +156,12 @@ class TenderClarificationApiController extends Controller
                 ], 422);
             }
 
-        $hasAccess = DB::table('t_TenderInvitations')
-            ->where('TenderId', $data['tender_id'])
-            ->where('SupplierId', $supplier->Id)
-            ->whereNull('DeletedOn')
-            ->whereRaw('LOWER(ResponseStatus) = ?', ['accepted'])
-            ->exists();
+            $hasAccess = DB::table('t_TenderInvitations')
+                ->where('TenderId', $data['tender_id'])
+                ->where('SupplierId', $supplier->Id)
+                ->whereNull('DeletedOn')
+                ->whereRaw('LOWER(ResponseStatus) = ?', ['accepted'])
+                ->exists();
 
             if ($request->third_party_id) {
                 $supplier = Supplier::whereHas('supplierMaster', function ($query) use ($request) {

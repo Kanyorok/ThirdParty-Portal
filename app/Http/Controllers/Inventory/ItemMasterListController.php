@@ -58,11 +58,11 @@ class ItemMasterListController extends Controller
         ]);
     }
 
-   public function import(Request $request)
-{
-    $request->validate([
-        'file' => 'required|mimes:xlsx,xls,csv',
-    ]);
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv',
+        ]);
 
         try {
             $import = new ItemMasterListImport();
@@ -128,73 +128,6 @@ class ItemMasterListController extends Controller
 
             return back()->with('error', $errorMessage);
         }
-        
-        // Get the import statistics
-        $processed = $itemsSheet->getProcessedCount();
-        $created = $itemsSheet->getCreatedCount();
-        $updated = $itemsSheet->getUpdatedCount();
-        $skipped = $itemsSheet->getSkippedCount();
-        $errors = $itemsSheet->getErrors();
-        
-        // Build success message with details
-        $successMessage = "Import completed! ";
-        $successMessage .= "Processed: {$processed} rows. ";
-        $successMessage .= "Created: {$created} new items. ";
-        $successMessage .= "Updated: {$updated} existing items. ";
-        
-        if ($skipped > 0) {
-            $successMessage .= "Skipped: {$skipped} rows.";
-        }
-        
-        // If there are validation errors, show them
-        if (!empty($errors)) {
-            $errorMessage = "<strong>Some rows had errors:</strong><br>";
-            foreach (array_slice($errors, 0, 20) as $error) { // Show first 20 errors max
-                $errorMessage .= "• {$error}<br>";
-            }
-            
-            if (count($errors) > 20) {
-                $errorMessage .= "<br>... and " . (count($errors) - 20) . " more errors.";
-            }
-            
-            return back()
-                ->with('warning', $successMessage)
-                ->with('error_details', $errorMessage);
-        }
-        
-        // Log for debugging
-        \Log::info('Item Master List Import Statistics', [
-            'processed' => $processed,
-            'created' => $created,
-            'updated' => $updated,
-            'skipped' => $skipped,
-            'imported_by' => Auth::id(),
-        ]);
-        
-        return back()->with('success', $successMessage);
-        
-    } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-        // Handle Excel validation errors
-        $errors = collect($e->failures())->map(function($failure) {
-            $row = $failure->row();
-            $errors = implode(', ', $failure->errors());
-            return "Row {$row}: {$errors}";
-        })->implode('<br>');
-        
-        return back()->with('error', "Validation errors:<br>{$errors}");
-        
-    } catch (\Exception $e) {
-        \Log::error('Item Master List Import Failed', [
-            'error' => $e->getMessage(),
-            'file' => $request->file('file')?->getClientOriginalName(),
-            'trace' => $e->getTraceAsString(),
-        ]);
-        
-        $errorMessage = config('app.debug') 
-            ? "Import failed: " . $e->getMessage()
-            : "Import failed. Please check the file format and try again.";
-            
-        return back()->with('error', $errorMessage);
     }
 
     public function export()

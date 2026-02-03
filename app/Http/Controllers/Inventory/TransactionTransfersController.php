@@ -87,19 +87,13 @@ class TransactionTransfersController extends Controller
         return view('inventory.transactions.transfers.create', compact('users', 'currentUser'));
     }
 
-    $branchId = $currentBranch->Id;
-    $this->authorize('create', TransactionTransfer::class);
-    
-    // Get current user
-    $currentUser = $request->user();
-    
-    // Get other users for dropdown (if needed for override)
-    $users = User::whereHas('employee', function ($q) use ($branchId) {
-        $q->where('BranchId', $branchId);
-    })->get();
+    public function store(TransactionTransferRequest $request)
+    {
+        $this->authorize('create', TransactionTransfer::class);
 
-    return view('inventory.transactions.transfers.create', compact('users', 'currentUser'));
-}
+        $validatedData = $request->validated();
+        $items = $validatedData['items'] ?? [];
+        unset($validatedData['items']);
 
         DB::beginTransaction();
 

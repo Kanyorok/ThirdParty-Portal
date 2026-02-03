@@ -1,18 +1,14 @@
-<?php 
+<?php
 
 namespace App\Http\Controllers\ThirdParty\API;
 
-use App\Services\ThirdParties\TenantService;
-use App\Services\Insurance\BancassuranceCustomersService;
-use App\Services\ThirdParties\ThirdPartiesService;
+use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
-use App\Services\ThirdParties\SupplierService;
 use App\Services\ThirdParties\ThirdPartyService;
-use Illuminate\Support\Facades\DB;
 use DateTime;
-use App\Exceptions\ErroredException;
+use Illuminate\Support\Facades\DB;
 
 class NewThirdPartyController extends Controller
 {
@@ -21,16 +17,16 @@ class NewThirdPartyController extends Controller
         return DB::transaction(function () use ($request) {
             $country = $request->getCountry();
             $location = $request->getLocation($country);
-            
+
             $businessType = $request->getBusinessType();
-            
-            if (!$businessType) {
+
+            if (! $businessType) {
                 throw new ErroredException("Invalid Business Type provided.");
             }
 
             $actor = SystemHelper::user();
             $types = $request->validated('types') ?? [];
-            
+
             $email = $request->validated('Email');
             if (empty($email)) {
                 $registrationNumber = $request->validated('RegistrationNumber');
@@ -100,8 +96,8 @@ class NewThirdPartyController extends Controller
                     'name' => $party->ThirdPartyName,
                     'isSupplier' => $party->isSupplier(),
                     'isTenant' => $party->isTenant(),
-                    'isCustomer' => $party->isCustomer()
-                ]
+                    'isCustomer' => $party->isCustomer(),
+                ],
             ], 201);
         });
     }

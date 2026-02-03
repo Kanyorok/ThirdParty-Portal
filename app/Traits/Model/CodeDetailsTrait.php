@@ -11,9 +11,9 @@ trait CodeDetailsTrait
     {
         $value = $this->validated($inputKey);
 
-        if (!$value) {
+        if (! $value) {
             throw ValidationException::withMessages([
-                $inputKey => "The {$inputKey} field is required."
+                $inputKey => "The {$inputKey} field is required.",
             ]);
         }
 
@@ -28,7 +28,7 @@ trait CodeDetailsTrait
         }
 
         throw ValidationException::withMessages([
-            $inputKey => "{$value} is not a valid {$codeId}."
+            $inputKey => "{$value} is not a valid {$codeId}.",
         ]);
     }
 }

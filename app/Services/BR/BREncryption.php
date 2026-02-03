@@ -38,7 +38,7 @@ class BREncryption
     public static function hashUser(\App\Models\Auth\User|\App\Models\ThirdParty\ThirdPartyUser $user, #[\SensitiveParameter] string $password): string
     {
         $identifier = ($user instanceof \App\Models\Auth\User) ? $user->UserID : $user->Email;
-        
+
         return self::_encryptText($identifier . $password);
     }
 

@@ -51,7 +51,7 @@ class ThirdPartyPasswordController extends Controller
         $broker = Password::broker('thirdparties');
         $user = ThirdPartyUser::where('Email', $request->email)->first();
 
-        if (!$user || !$broker->tokenExists($user, $request->token)) {
+        if (! $user || ! $broker->tokenExists($user, $request->token)) {
             throw ValidationException::withMessages([
                 'email' => ['Confirm the email and token are valid.'],
             ]);
@@ -60,6 +60,7 @@ class ThirdPartyPasswordController extends Controller
         if ($user->Linked) {
             (new UserService($user))->syncBR();
             $broker->deleteToken($user);
+
             return $this->succeeded('Account linked with core banking, synced. Use core banking password.');
         }
 
@@ -88,7 +89,7 @@ class ThirdPartyPasswordController extends Controller
             'status' => true,
             'message' => $message,
             'route' => $route,
-            'data' => $data
+            'data' => $data,
         ], $status);
     }
 }

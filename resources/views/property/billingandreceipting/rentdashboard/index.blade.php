@@ -8,7 +8,7 @@
     <small>Overview of lease invoices and collections</small>
 </p>
 
-<!-- Summary Cards -->
+{{-- Summary Cards --}}
 <div class="row mb-4">
     @php
         $cards = [
@@ -31,14 +31,17 @@
     @endforeach
 </div>
 
-<!-- Filters -->
+{{-- Filters --}}
+@php
+    $billingMonth = request('billing_month') 
+        ?? \Carbon\Carbon::now()->format('Y-m');
+@endphp
+
 <form class="row g-2 mb-3" method="GET" action="{{ route('rentdashboard.index') }}">
 
     <div class="col-md-3">
         <select name="property_id" class="form-select">
-            <option value="" {{ request('property_id') ? '' : 'selected' }}>
-                All Properties
-            </option>
+            <option value="">All Properties</option>
             @foreach($properties as $property)
                 <option value="{{ $property->Id }}"
                     {{ request('property_id') == $property->Id ? 'selected' : '' }}>
@@ -50,9 +53,7 @@
 
     <div class="col-md-3">
         <select name="tenant_id" class="form-select">
-            <option value="" {{ request('tenant_id') ? '' : 'selected' }}>
-                All Tenants
-            </option>
+            <option value="">All Tenants</option>
             @foreach($tenants as $tenant)
                 <option value="{{ $tenant->Id }}"
                     {{ request('tenant_id') == $tenant->Id ? 'selected' : '' }}>
@@ -66,7 +67,7 @@
         <input type="month"
                name="billing_month"
                class="form-control"
-               value="{{ request('billing_month') }}">
+               value="{{ $billingMonth }}">
     </div>
 
     <div class="col-md-3 d-flex gap-2">
@@ -78,8 +79,8 @@
     </div>
 </form>
 
-<!-- Table -->
-<div class="table-responsive mb-4">
+{{-- Table --}}
+<div class="table-responsive mb-3">
 <table class="table table-bordered table-striped align-middle">
 <thead class="table-light">
 <tr>
@@ -90,32 +91,47 @@
     <th>Invoice Date</th>
     <th>Amount Due</th>
     <th>Amount Paid</th>
+    <th>Balance</th>
     <th>Status</th>
 </tr>
 </thead>
 <tbody>
-@foreach($invoices as $invoice)
+@forelse($invoices as $invoice)
 <tr>
     <td>{{ $loop->iteration }}</td>
     <td>{{ $invoice->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
     <td>{{ $invoice->lease->property->PropertyName ?? '-' }}</td>
     <td>{{ $invoice->lease->unit->UnitCode ?? '-' }}</td>
     <td>{{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d M Y') }}</td>
-    <td>KES {{ number_format($invoice->DerivedDue) }}</td>
-    <td>KES {{ number_format($invoice->DerivedPaid) }}</td>
+    <td>{{ $invoice->currency->SymbolNative ?? '-' }} {{ number_format($invoice->DerivedDue) }}</td>
+    <td>{{ $invoice->currency->SymbolNative ?? '-' }} {{ number_format($invoice->DerivedPaid) }}</td>
+    <td>{{ $invoice->currency->SymbolNative ?? '-' }} {{ number_format($invoice->DerivedDue - $invoice->DerivedPaid) }}</td>
     <td>
-        <span class="badge bg-{{ $invoice->DerivedStatus === 'Fully Paid' ? 'success' :
-            ($invoice->DerivedStatus === 'Partial Paid' ? 'warning' : 'danger') }}">
+        <span class="badge bg-{{ 
+            $invoice->DerivedStatus === 'Fully Paid' ? 'success' :
+            ($invoice->DerivedStatus === 'Partial Paid' ? 'warning' : 'danger')
+        }}">
             {{ $invoice->DerivedStatus }}
         </span>
     </td>
 </tr>
-@endforeach
+@empty
+<tr>
+    <td colspan="8" class="text-center text-muted">
+        No records found
+    </td>
+</tr>
+@endforelse
 </tbody>
 </table>
 </div>
 
-<!-- Chart -->
+{{-- Pagination --}}
+<div class="d-flex justify-content-end mb-4">
+    {{ $invoices->links() }}
+</div>
+
+{{-- Chart --}}
 <div class="card">
     <div class="card-header">
         <h6 class="mb-0">Invoices vs Collections by Month</h6>

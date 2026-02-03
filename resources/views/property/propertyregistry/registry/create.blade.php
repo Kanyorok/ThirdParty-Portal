@@ -34,7 +34,6 @@
 
         <div class="card shadow-lg border-0 rounded-4">
 
-            {{-- Header --}}
             <div class="card-header bg-primary border-bottom rounded-top-4">
                 <h5 class="mb-0 fw-bold">
                     <i class="bi bi-house-door me-2"></i>
@@ -44,7 +43,6 @@
 
             <div class="card-body p-4">
 
-                {{-- ================= BASIC DETAILS ================= --}}
                 <div class="mb-4">
                     <h6 class="section-title">Basic Details</h6>
 
@@ -88,7 +86,6 @@
                     </div>
                 </div>
 
-                {{-- ================= TYPE / OWNER / DATE ================= --}}
                 <div class="mb-4">
                     <h6 class="section-title">Ownership & Classification</h6>
 
@@ -126,7 +123,6 @@
                     </div>
                 </div>
 
-                {{-- ================= LOCATION ================= --}}
                 <div class="mb-4">
                     <h6 class="section-title">Location Details</h6>
 

@@ -8,24 +8,23 @@ use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Locality;
 use App\Models\Finance\FinanceRole;
+use App\Models\ThirdParies\Supplier;
 use App\Models\ThirdParty\SupplierMaster;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyType;
 use App\Models\ThirdParty\ThirdPartyUser;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use App\Models\ThirdParies\Supplier;
 
 class SupplierService extends ThirdPartiesService
 {
     public function __construct(public SupplierMaster $supplier)
     {
-        if (!$supplier->relationLoaded('party')) {
+        if (! $supplier->relationLoaded('party')) {
             $supplier->load('party');
         }
 
-        if (!$supplier->party) {
+        if (! $supplier->party) {
             throw new \RuntimeException("Supplier {$supplier->SupplierID} has no associated ThirdParty record");
         }
 

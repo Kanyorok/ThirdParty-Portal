@@ -64,7 +64,7 @@ class BancassuranceCustomersService extends ThirdPartiesService
             $auditId = ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id;
 
             $dob = $data['user_DateOfBirth'] ?? $customer->DateOfBirth;
-            if ($dob && !($dob instanceof DateTime)) {
+            if ($dob && ! ($dob instanceof DateTime)) {
                 $dob = new DateTime($dob);
             }
 
@@ -110,7 +110,7 @@ class BancassuranceCustomersService extends ThirdPartiesService
             $marital = $data['user_MaritalStatus_model'] ?? null;
             $occ = $data['user_Occupation_model'] ?? null;
 
-            if (!$dob || !$gender || !$marital || !$occ) {
+            if (! $dob || ! $gender || ! $marital || ! $occ) {
                 throw new \InvalidArgumentException('Missing required customer profile data in $data array.');
             }
 
@@ -156,7 +156,7 @@ class BancassuranceCustomersService extends ThirdPartiesService
     {
         return ThirdPartyType::query()->withTrashed()->where('Code', ThirdPartyService::TypeCustomer)->firstOr(function () {
             $role = FinanceRole::query()->first();
-            if (!$role instanceof FinanceRole) {
+            if (! $role instanceof FinanceRole) {
                 throw new \RuntimeException("No finance roles found " . __CLASS__);
             }
             $actor = SystemHelper::user();

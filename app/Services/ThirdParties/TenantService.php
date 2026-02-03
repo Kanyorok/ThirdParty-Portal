@@ -29,7 +29,7 @@ class TenantService extends ThirdPartiesService
     {
         return ThirdPartyType::query()->withTrashed()->where('Code', ThirdPartyService::TypeTenant)->firstOr(function () {
             $role = FinanceRole::query()->first();
-            if (!$role instanceof FinanceRole) {
+            if (! $role instanceof FinanceRole) {
                 throw new \RuntimeException("No finance roles found " . __CLASS__);
             }
             $actor = SystemHelper::user();

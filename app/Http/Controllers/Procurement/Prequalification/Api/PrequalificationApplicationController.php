@@ -31,6 +31,7 @@ class PrequalificationApplicationController extends Controller
     public function show(PrequalificationApplication $application): View
     {
         $application->load('round.prequalificationSections.masterSection.criteria', 'category', 'supplier.party');
+
         return view('procurement.suppliers.prequalification.supplier-applications.show', compact('application'));
     }
 
@@ -38,7 +39,7 @@ class PrequalificationApplicationController extends Controller
     {
         try {
             $user = Auth::user();
-            if (!$user) {
+            if (! $user) {
                 return response()->json(['message' => 'Unauthenticated'], 401);
             }
 
@@ -101,6 +102,7 @@ class PrequalificationApplicationController extends Controller
 
                 $categories = $roundCats->map(function ($cat) use ($round, $appsByKey) {
                     $app = $appsByKey->get("{$round->RoundID}:{$cat->SupplierCategoryID}");
+
                     return [
                         'id' => (int) $cat->SupplierCategoryID,
                         'name' => $cat->CategoryName,
@@ -119,7 +121,7 @@ class PrequalificationApplicationController extends Controller
                     'startDate' => $round->StartDate?->format('Y-m-d'),
                     'endDate' => $round->EndDate?->format('Y-m-d'),
                     'categories' => $categories,
-                    'canApply' => $supplierEligible && !$isExpired && $round->Status === PrequalificationRoundEnum::Open,
+                    'canApply' => $supplierEligible && ! $isExpired && $round->Status === PrequalificationRoundEnum::Open,
                     'supplierEligible' => $supplierEligible,
                 ];
             });
@@ -132,6 +134,7 @@ class PrequalificationApplicationController extends Controller
             ]);
         } catch (\Throwable $e) {
             Log::error('Prequalification API Error', ['msg' => $e->getMessage()]);
+
             return response()->json(['message' => 'Internal Server Error'], 500);
         }
     }
@@ -141,13 +144,13 @@ class PrequalificationApplicationController extends Controller
         $user = Auth::user();
         $thirdPartyId = $user->third_party_id ?? null;
 
-        if (!$thirdPartyId) {
+        if (! $thirdPartyId) {
             return response()->json(['error' => 'No organization profile found'], 400);
         }
 
         $supplierMaster = SupplierMaster::where('ThirdPartyId', $thirdPartyId)->first();
 
-        if (!$supplierMaster) {
+        if (! $supplierMaster) {
             return response()->json(['error' => 'Supplier onboarding incomplete'], 400);
         }
 
@@ -159,6 +162,7 @@ class PrequalificationApplicationController extends Controller
         $categoryIds = array_unique($validated['category_ids']);
 
         DB::beginTransaction();
+
         try {
             $ids = [];
             foreach ($categoryIds as $cid) {
@@ -173,9 +177,11 @@ class PrequalificationApplicationController extends Controller
                 $ids[] = $app->ApplicationID;
             }
             DB::commit();
+
             return response()->json(['ids' => $ids], 201);
         } catch (\Throwable $e) {
             DB::rollBack();
+
             return response()->json(['error' => 'Submission failed'], 500);
         }
     }

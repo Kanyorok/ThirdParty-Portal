@@ -65,7 +65,7 @@ class ThirdPartyRegistrationService
 
             if (! empty($data['category_ids'])) {
                 $supplierService->party->categories()->sync($data['category_ids']);
-            } elseif (!empty($data['supplier_category_id'])) {
+            } elseif (! empty($data['supplier_category_id'])) {
                 $supplierService->party->categories()->sync([$data['supplier_category_id']]);
             }
 

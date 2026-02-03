@@ -2,7 +2,6 @@
 
 namespace App\Models\ThirdParty;
 
-use App\Enums\EmailPriorityEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
@@ -12,7 +11,6 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
-use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -303,7 +301,8 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
         }
     }
 
-    public function getEmailAttribute($val){
+    public function getEmailAttribute($val)
+    {
         return $this->attributes['Email'] ?? $val;
     }
 
@@ -311,8 +310,10 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
     {
         if ($key === 'email') {
             $this->attributes['Email'] = $val;
+
             return $this;
         }
+
         return parent::setAttribute($key, $val);
     }
 }

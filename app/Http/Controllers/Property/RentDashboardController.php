@@ -14,7 +14,15 @@ class RentDashboardController extends Controller
 {
     public function index(Request $request)
     {
+        if (! $request->filled('billing_month')) {
+            $request->merge([
+                'billing_month' => Carbon::now()->format('Y-m'),
+            ]);
+        }
+
         $query = PropertyInvoice::with([
+            'currency',
+            'tax',
             'receipts',
             'lease.property',
             'lease.unit',
@@ -34,13 +42,18 @@ class RentDashboardController extends Controller
         }
 
         if ($request->filled('billing_month')) {
-            $query->whereMonth('InvoiceDate', Carbon::parse($request->billing_month)->month)
-                  ->whereYear('InvoiceDate', Carbon::parse($request->billing_month)->year);
+            $month = Carbon::parse($request->billing_month);
+            $query->whereMonth('InvoiceDate', $month->month)
+                  ->whereYear('InvoiceDate', $month->year);
         }
 
-        $invoices = $query->get();
+        $invoices = $query->orderBy('InvoiceDate', 'desc')
+                          ->paginate(10)
+                          ->withQueryString();
 
-        $requestIds = $invoices->pluck('RequestID')->filter()->unique();
+        $invoiceCollection = $invoices->getCollection();
+
+        $requestIds = $invoiceCollection->pluck('RequestID')->filter()->unique();
         $financeByReq = collect();
 
         if ($requestIds->isNotEmpty()) {
@@ -51,7 +64,7 @@ class RentDashboardController extends Controller
             )->keyBy('RequestID');
         }
 
-        $invoices->each(function ($inv) use ($financeByReq) {
+        $invoiceCollection->each(function ($inv) use ($financeByReq) {
             $due = (float)($inv->RentAmount ?? 0)
                 + (float)($inv->ServicesCharge ?? 0)
                 + (float)($inv->ParkingFee ?? 0)
@@ -60,14 +73,15 @@ class RentDashboardController extends Controller
             $fin = $inv->RequestID ? $financeByReq->get($inv->RequestID) : null;
             $paid = $fin ? (float)($fin->AmountPaid ?? 0) : 0;
 
-            $inv->DerivedDue = $due;
+            $taxRate = (float)((($inv->tax->Rate ?? 0) / 100) + 1);
+            $inv->DerivedDue = $due * $taxRate;
             $inv->DerivedPaid = $paid;
             $inv->DerivedStatus = $paid >= $due && $due > 0
                 ? 'Fully Paid'
                 : ($paid > 0 ? 'Partial Paid' : 'Pending');
         });
 
-        $invoiceByMonth = $invoices->groupBy(
+        $invoiceByMonth = $invoiceCollection->groupBy(
             fn ($i) =>
             Carbon::parse($i->InvoiceDate)->format('Y-m')
         )->map(fn ($g) => $g->sum('DerivedDue'));
@@ -99,21 +113,21 @@ class RentDashboardController extends Controller
             ],
         ]);
 
-        $collected = (float)$allocations->sum('AmountAllocated');
+        $collected = (float) $allocations->sum('AmountAllocated');
 
-        $overdue = $invoices->sum(
+        $overdue = $invoiceCollection->sum(
             fn ($i) =>
             max(($i->DerivedDue ?? 0) - ($i->DerivedPaid ?? 0), 0)
         );
 
-        $partial = $invoices->sum(
+        $partial = $invoiceCollection->sum(
             fn ($i) =>
             ($i->DerivedPaid > 0 && $i->DerivedPaid < $i->DerivedDue)
                 ? $i->DerivedPaid
                 : 0
         );
 
-        $dueSoon = 0; // Optional future logic
+        $dueSoon = 0;
 
         $properties = PropertyRegistry::all();
         $tenants = PropertyNewTenant::with('thirdParty')->get();

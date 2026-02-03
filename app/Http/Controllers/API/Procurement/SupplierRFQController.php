@@ -4,9 +4,9 @@ namespace App\Http\Controllers\API\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\RFQ;
-use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\RFQClarification;
 use App\Models\Procurement\RFQLine;
+use App\Models\Procurement\RFQResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -37,7 +37,7 @@ class SupplierRFQController extends Controller
 
     protected function toDateString(mixed $value): ?string
     {
-        if (!$value) {
+        if (! $value) {
             return null;
         }
 
@@ -80,32 +80,32 @@ class SupplierRFQController extends Controller
         $data = $request->all();
         $merge = [];
 
-        if (!array_key_exists('rfqId', $data)) {
+        if (! array_key_exists('rfqId', $data)) {
             $merge['rfqId'] = $data['RFQId'] ?? $data['rfq_id'] ?? $data['rfqID'] ?? null;
         }
 
-        if (!array_key_exists('supplierId', $data)) {
+        if (! array_key_exists('supplierId', $data)) {
             $merge['supplierId'] = $data['SupplierId'] ?? null;
         }
 
-        if (!array_key_exists('currency', $data)) {
+        if (! array_key_exists('currency', $data)) {
             $merge['currency'] = $data['Currency'] ?? null;
         }
 
-        if (!array_key_exists('durationDays', $data)) {
+        if (! array_key_exists('durationDays', $data)) {
             $merge['durationDays'] = $data['DurationDays'] ?? $data['duration_days'] ?? null;
         }
 
-        if (!array_key_exists('isDraft', $data)) {
+        if (! array_key_exists('isDraft', $data)) {
             $merge['isDraft'] = $data['IsDraft'] ?? null;
         }
 
-        if (!array_key_exists('items', $data)) {
+        if (! array_key_exists('items', $data)) {
             $rawItems = $data['RequisitionItems'] ?? $data['items'] ?? null;
 
             if (is_array($rawItems)) {
                 $merge['items'] = collect($rawItems)->map(function ($it) {
-                    if (!is_array($it)) {
+                    if (! is_array($it)) {
                         return $it;
                     }
 
@@ -118,7 +118,7 @@ class SupplierRFQController extends Controller
             }
         }
 
-        if (!empty($merge)) {
+        if (! empty($merge)) {
             $request->merge($merge);
         }
     }
@@ -128,7 +128,7 @@ class SupplierRFQController extends Controller
         try {
             $user = $this->thirdPartyUser();
 
-            if (!$user || !isset($user->ThirdPartyId)) {
+            if (! $user || ! isset($user->ThirdPartyId)) {
                 return response()->json(['data' => []]);
             }
 
@@ -177,8 +177,8 @@ class SupplierRFQController extends Controller
                 ->with(['items.uom'])
                 ->orderByDesc('Id')
                 ->get()
-                ->groupBy(fn($r) => $r->RFQId . '|' . $r->SupplierId)
-                ->map(fn($group) => $group->first());
+                ->groupBy(fn ($r) => $r->RFQId . '|' . $r->SupplierId)
+                ->map(fn ($group) => $group->first());
 
             $data = $invitations->map(function ($inv) use ($rfqs, $responses) {
                 $rfq = $rfqs->get($inv->rfqId);
@@ -200,6 +200,7 @@ class SupplierRFQController extends Controller
             return response()->json(['data' => $data]);
         } catch (\Throwable $e) {
             Log::error('listInvitations failed', ['error' => $e->getMessage()]);
+
             return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
@@ -209,7 +210,7 @@ class SupplierRFQController extends Controller
         try {
             $user = $this->thirdPartyUser();
 
-            if (!$user || !isset($user->ThirdPartyId)) {
+            if (! $user || ! isset($user->ThirdPartyId)) {
                 return response()->json(['error' => 'Authentication required'], 401);
             }
 
@@ -233,7 +234,7 @@ class SupplierRFQController extends Controller
                 )
                 ->first();
 
-            if (!$invitation) {
+            if (! $invitation) {
                 return response()->json(['error' => 'Not Found'], 404);
             }
 
@@ -275,6 +276,7 @@ class SupplierRFQController extends Controller
             ]);
         } catch (\Throwable $e) {
             Log::error('getInvitation failed', ['rfq' => $rfq, 'error' => $e->getMessage()]);
+
             return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
@@ -293,12 +295,12 @@ class SupplierRFQController extends Controller
                 'items.*.rfqLineId' => 'required|integer|exists:t_RFQLines,Id',
                 'items.*.quotedPrice' => 'required|numeric|min:0',
                 'items.*.totalPayable' => 'required|numeric|min:0',
-                'isDraft' => 'sometimes|boolean'
+                'isDraft' => 'sometimes|boolean',
             ]);
 
             $user = $this->thirdPartyUser();
 
-            if (!$user || !isset($user->ThirdPartyId)) {
+            if (! $user || ! isset($user->ThirdPartyId)) {
                 return response()->json(['error' => 'Authentication required'], 401);
             }
 
@@ -308,19 +310,19 @@ class SupplierRFQController extends Controller
                 ->where('RFQId', $validated['rfqId'])
                 ->whereIn('SupplierId', $supplierIds);
 
-            if (!empty($validated['supplierId'])) {
+            if (! empty($validated['supplierId'])) {
                 $supplierIdQuery->where('SupplierId', (int)$validated['supplierId']);
             }
 
             $supplierId = $supplierIdQuery->value('SupplierId');
 
-            if (!$supplierId) {
+            if (! $supplierId) {
                 return response()->json(['error' => 'No invitation found'], 403);
             }
 
             $rfqModel = RFQ::query()->where('Id', $validated['rfqId'])->first();
 
-            if (!$rfqModel) {
+            if (! $rfqModel) {
                 return response()->json(['error' => 'RFQ not found'], 404);
             }
 
@@ -332,7 +334,7 @@ class SupplierRFQController extends Controller
                 ->get()
                 ->keyBy('Id');
 
-            $missingLineIds = $rfqLineIds->reject(fn($id) => $rfqLines->has($id))->values();
+            $missingLineIds = $rfqLineIds->reject(fn ($id) => $rfqLines->has($id))->values();
             if ($missingLineIds->isNotEmpty()) {
                 return response()->json([
                     'error' => 'Invalid rfqLineId(s) for this rfqId',
@@ -417,6 +419,7 @@ class SupplierRFQController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('submitResponse failed', ['error' => $e->getMessage()]);
+
             return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
@@ -428,12 +431,12 @@ class SupplierRFQController extends Controller
                 'rfqId' => 'required|integer|exists:t_RFQ,Id',
                 'supplierId' => 'sometimes|integer',
                 'question' => 'required|string|max:1000',
-                'rfqLineId' => 'nullable|integer|exists:t_RFQLines,Id'
+                'rfqLineId' => 'nullable|integer|exists:t_RFQLines,Id',
             ]);
 
             $user = $this->thirdPartyUser();
 
-            if (!$user || !isset($user->ThirdPartyId)) {
+            if (! $user || ! isset($user->ThirdPartyId)) {
                 return response()->json(['error' => 'Authentication required'], 401);
             }
 
@@ -443,23 +446,23 @@ class SupplierRFQController extends Controller
                 ->where('RFQId', $validated['rfqId'])
                 ->whereIn('SupplierId', $supplierIds);
 
-            if (!empty($validated['supplierId'])) {
+            if (! empty($validated['supplierId'])) {
                 $supplierIdQuery->where('SupplierId', (int)$validated['supplierId']);
             }
 
             $supplierId = $supplierIdQuery->value('SupplierId');
 
-            if (!$supplierId) {
+            if (! $supplierId) {
                 return response()->json(['error' => 'No invitation found'], 403);
             }
 
-            if (!empty($validated['rfqLineId'])) {
+            if (! empty($validated['rfqLineId'])) {
                 $validLineForRfq = RFQLine::query()
                     ->where('RFQId', $validated['rfqId'])
                     ->where('Id', $validated['rfqLineId'])
                     ->exists();
 
-                if (!$validLineForRfq) {
+                if (! $validLineForRfq) {
                     return response()->json(['error' => 'Invalid rfqLineId for this rfqId'], 422);
                 }
             }
@@ -491,6 +494,7 @@ class SupplierRFQController extends Controller
             ], 422);
         } catch (\Throwable $e) {
             Log::error('postClarification failed', ['error' => $e->getMessage()]);
+
             return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
@@ -500,7 +504,7 @@ class SupplierRFQController extends Controller
         try {
             $user = $this->thirdPartyUser();
 
-            if (!$user || !isset($user->ThirdPartyId)) {
+            if (! $user || ! isset($user->ThirdPartyId)) {
                 return response()->json(['data' => []]);
             }
 
@@ -517,12 +521,13 @@ class SupplierRFQController extends Controller
                     'RFQLineId',
                     'Question',
                     'Answer',
-                    'CreatedOn'
+                    'CreatedOn',
                 ]);
 
             return response()->json(['data' => $data]);
         } catch (\Throwable $e) {
             Log::error('listClarifications failed', ['rfq' => $rfq, 'error' => $e->getMessage()]);
+
             return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }

@@ -271,7 +271,7 @@ class TenderApiController extends Controller
                     ->whereIn('Status', self::VISIBLE_STATUSES);
             });
 
-            if (!empty($supplierIds)) {
+            if (! empty($supplierIds)) {
                 $q->orWhere(function (Builder $restricted) use ($supplierIds) {
                     $restricted->where('TenderType', TenderTypeEnum::Restricted->value)
                         ->whereIn('Status', self::VISIBLE_STATUSES)
@@ -291,30 +291,6 @@ class TenderApiController extends Controller
     {
         if ($status = $request->query('status')) {
             $query->where('Status', $status);
-        }
-
-            // Add relationships one by one
-            $query->with(['procurementMode', 'currency']);
-
-            $tenders = $query->limit(10)->get();
-
-            return response()->json([
-                'message' => 'Tenders retrieved successfully.',
-                'data' => $tenders,
-                'debug' => [
-                    'total_count' => $count,
-                    'returned' => $tenders->count(),
-                ],
-            ], 200);
-        } catch (\Exception $e) {
-            \Log::error('TENDER API ERROR: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
-
-            return response()->json([
-                'message' => 'Failed to retrieve tenders.',
-                'error' => $e->getMessage(),
-                'trace' => config('app.debug') ? $e->getTraceAsString() : null,
-            ], 500);
         }
     }
 
