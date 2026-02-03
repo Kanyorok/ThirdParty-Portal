@@ -737,7 +737,6 @@
                 .map(i => ({ invoice_id: i.id, allocate: Number(i.allocate.toFixed(2)) }));
 
             // Debug logging
-            console.log('Form submission data:', {
                 customer: state.customer,
                 allocations: allocations,
                 amountReceived: amountInput.value,

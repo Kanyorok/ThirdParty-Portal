@@ -395,7 +395,6 @@
 
                 usersTable.on('error', function (er) {
                     nWarning("an issue occurred while loading users.");
-                    console.log(er);
                 });
             } else {
                 usersTable.ajax.reload();
@@ -440,7 +439,6 @@
 
                 branchesTable.on('error', function (er) {
                     nWarning("an issue occurred while loading teams.");
-                    console.log(er);
                 });
             } else {
                 branchesTable.ajax.reload();
@@ -476,7 +474,6 @@
 
                 teamsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading teams.");
-                    console.log(er);
                 });
             } else {
                 teamsTable.ajax.reload();
@@ -513,7 +510,6 @@
 
                 rolesTable.on('error', function (er) {
                     nWarning("an issue occurred while loading roles.");
-                    console.log(er);
                 });
             } else {
                 rolesTable.ajax.reload();

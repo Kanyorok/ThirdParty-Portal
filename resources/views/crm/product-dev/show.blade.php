@@ -903,7 +903,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading workflow.");
-                    // console.log(er);
                 });
             } else {
                 $('#productWorkflowTable').DataTable().ajax.reload();
@@ -945,7 +944,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading workflow.");
-                    // console.log(er);
                 });
             } else {
                 $('#productActivitiesTable').DataTable().ajax.reload();

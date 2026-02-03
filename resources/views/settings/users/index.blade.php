@@ -109,7 +109,6 @@
 
                 usersTable.on('error', function (er) {
                     nWarning("an issue occurred while loading users.");
-                    console.log(er);
                 });
             } else {
                 usersTable.ajax.reload();

@@ -92,7 +92,6 @@
 
                 tagsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading tags.");
-                    console.log(er);
                 });
             } else {
                 tagsTable.ajax.reload();

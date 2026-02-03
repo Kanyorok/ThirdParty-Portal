@@ -284,11 +284,6 @@
 
     // : Log data on page load
     if (DEBUG) {
-      console.log('=== TENDER FORM DEBUG ===');
-      console.log('Available Plans:', availablePlans);
-      console.log('Plan Items by Plan:', planItemsByPlan);
-      console.log('All Items with Categories:', allItemsWithCategoryIds.length);
-      console.log('Suppliers:', suppliers.length);
     }
 
     // ============================================================================
@@ -308,7 +303,6 @@
       itemSel.innerHTML = '<option selected disabled>-- Select Item --</option>';
 
       if (!planId) {
-        if (DEBUG) console.log('No plan selected');
         return;
       }
 
@@ -317,9 +311,6 @@
       const selectedCategory = itemCatSel ? itemCatSel.value : '';
 
       if (DEBUG) {
-        console.log('Loading items for plan:', planId);
-        console.log('Selected Category:', selectedCategory);
-        console.log('Found items (total):', items.length);
       }
 
       let visibleCount = 0;
@@ -355,7 +346,6 @@
         itemSel.appendChild(opt);
       }
 
-      if (DEBUG) console.log('Populated item select with', visibleCount, 'items (filtered)');
     }
 
     // ============================================================================
@@ -427,7 +417,6 @@
 
       tbody.appendChild(row);
 
-      if (DEBUG) console.log('Added plan item to grid:', compositeKey);
 
       // Update tab status after adding
       updateTabStatus();
@@ -500,7 +489,6 @@
 
       tbody.appendChild(tr);
 
-      if (DEBUG) console.log('Added manual item row:', key);
 
       // Update tab status
       updateTabStatus();
@@ -645,7 +633,6 @@
         return;
       }
 
-      console.log('populateSuppliers called with categoryId:', categoryId);
       suppliersList.innerHTML = '';
 
       // Validate categoryId is present AND is a number
@@ -661,7 +648,6 @@
 
       try {
         const url = `{{ url('procurement/initiatetender/prequalified-suppliers') }}/${encodeURIComponent(categoryId)}`;
-        console.log('Fetching suppliers from:', url);
         
         const res = await fetch(url, {
           credentials: 'same-origin'
@@ -676,10 +662,8 @@
           data
         } = await res.json();
         
-        console.log('API Response:', { success, data });
         
         const rows = Array.isArray(data) ? data : [];
-        console.log('Rows to process:', rows.length);
 
         if (supplierMatchCount) {
           supplierMatchCount.textContent = `Matching suppliers: ${rows.length}`;
@@ -700,7 +684,6 @@
               value: r.SupplierId || r.ThirdPartyId || r.ThirdPartyID || r.Id || '',
               label: r.SupplierName || r.ThirdPartyName || `Supplier #${r.SupplierId || r.ThirdPartyId || r.ThirdPartyID || r.Id || ''}`
             };
-            console.log('Mapped row:', r, '->', mapped);
             return mapped;
           })
           .filter(r => {
@@ -710,7 +693,6 @@
           })
           .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
           
-        console.log('Final mapped rows:', mappedRows);
 
         mappedRows.forEach(({
             value,
@@ -720,10 +702,8 @@
             opt.value = value;
             opt.textContent = label;
             suppliersList.appendChild(opt);
-            console.log('Added option:', value, label);
           });
           
-        console.log('✓ Suppliers populated successfully');
 
       } catch (e) {
         console.error('Failed to load suppliers', e);
@@ -880,7 +860,6 @@
       // Initialize tab status
       updateTabStatus();
 
-      if (DEBUG) console.log('Tender form initialized');
     });
 
   })();

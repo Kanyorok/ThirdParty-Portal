@@ -128,7 +128,6 @@
             e.preventDefault();
             let response = await saveForm($(this), $('#mailReplyContactBtn'), true, true, true);
             if (response) {
-                console.log(response);
             }
         });
     });

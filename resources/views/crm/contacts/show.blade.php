@@ -336,9 +336,6 @@
             const startTime = new Date(startTimeString).getTime();
             const now = new Date().getTime();
             const distance = Math.abs((now - startTime));
-            /*  console.log(distance);
-              console.log(startTime);
-              console.log(now);*/
             let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             let seconds = Math.floor((distance % (1000 * 60)) / 1000);

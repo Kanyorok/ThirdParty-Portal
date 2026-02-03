@@ -856,7 +856,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading activities.");
-                    // console.log(er);
                 });
             } else {
                 $('#fileActivitiesTable').DataTable().ajax.reload();
@@ -888,7 +887,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading permissions.");
-                    // console.log(er);
                 });
             } else {
                 $('#filePermissionsTable').DataTable().ajax.reload();

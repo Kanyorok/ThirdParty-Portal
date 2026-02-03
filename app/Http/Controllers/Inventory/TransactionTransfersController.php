@@ -162,9 +162,6 @@ class TransactionTransfersController extends Controller
         $this->authorize('update', TransactionTransfer::class);
         $transactionTransfer = TransactionTransfer::findOrFail($Id);
 
-        // TODO: Implement update logic - service doesn't have update method yet
-        // $this->service->update($transactionTransfer, $request->validated());
-
         $transactionTransfer->update($request->validated());
 
         return redirect()

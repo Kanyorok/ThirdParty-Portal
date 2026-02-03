@@ -163,7 +163,6 @@
                 fetch(`/finance/finance/pos/${selectedVendor}`)
                     .then(response => response.json())
                     .then(data => {
-                        //console.log('PO Data',data);
 
                         if (data.length === 0) {
                             pos.innerHTML = '<option selected disabled>No PO found</option>';
@@ -191,7 +190,6 @@
                 fetch(`/finance/finance/grns/${selectedPO}`)
                     .then(response => response.json())
                     .then(data =>{
-                        //console.log("GRNDATA", data);
 
                         if (data.length === 0) {
                             grns.innerHTML = '<option selected disabled>No GRN found</option>';
@@ -216,7 +214,6 @@
                 fetch(`/finance/finance/viewpo/${selectedPO}`)
                     .then(response => response.json())
                     .then(data => {
-                        //console.log("PO Details", data);
                         const poDetailsContent = document.getElementById('poDetailsContent');
                         poDetailsContent.innerHTML = '';
 

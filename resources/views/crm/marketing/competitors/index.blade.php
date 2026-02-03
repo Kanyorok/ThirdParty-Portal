@@ -276,7 +276,6 @@
 
                 competitorsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading competitors.");
-                    console.log(er);
                 });
             } else {
                 competitorsTable.ajax.reload();
