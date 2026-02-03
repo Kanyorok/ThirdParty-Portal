@@ -400,11 +400,51 @@
         {{-- Attached Documents --}}
         <div class="card shadow-sm mb-4">
             <div class="card-body">
-                <h5 class="card-title mb-3">📎 Attached Documents</h5>
+                <h5 class="card-title mb-3">📎 Attached Documents (Updated)</h5>
                 <div class="p-3 border rounded bg-light">
                     @forelse($documents as $document)
-                        <div class="mb-2">
-                            {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                        <div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom">
+                            <div class="d-flex align-items-center">
+                                <div class="me-2">
+                                    {!! $document->ext()?->getIcon() ?? '<i class="far fa-file"></i>' !!}
+                                </div>
+                                <div>
+                                    <strong>{{ $document->Name }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ $document->getFormattedSize() }} • Uploaded {{ $document->CreatedOn?->format('d M Y H:i') }}</small>
+                                </div>
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                {{-- Preview Button --}}
+                                <a href="javascript:void(0)" 
+                                   class="btn btn-outline-info modal-preview-document" 
+                                   data-url="{{ route('initiatetender.document.preview', ['id' => $tender->Id, 'documentId' => $document->DocumentId]) }}"
+                                   title="Preview">
+                                   <i class="fas fa-eye"></i>
+                                </a>
+                                
+                                {{-- Download Button --}}
+                                <a href="{{ route('initiatetender.document.download', ['id' => $tender->Id, 'documentId' => $document->DocumentId]) }}" 
+                                   class="btn btn-outline-primary" 
+                                   title="Download"
+                                   target="_blank">
+                                   <i class="fas fa-download"></i>
+                                </a>
+
+                                {{-- Delete Button (Only if Draft) --}}
+                                @if($tender->Status === \App\Enums\TenderStatusEnum::Draft && ($isSubmitter || auth()->user()->hasRole(['Super Admin', 'Administrator'])))
+                                    <form action="{{ route('initiatetender.document.delete', ['id' => $tender->Id, 'documentId' => $document->DocumentId]) }}" 
+                                          method="POST" 
+                                          class="d-inline"
+                                          onsubmit="return confirm('Are you sure you want to delete this document?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
                         </div>
                     @empty
                         <p class="text-muted mb-0">No documents attached.</p>

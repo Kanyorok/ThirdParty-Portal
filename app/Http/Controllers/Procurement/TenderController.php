@@ -882,6 +882,15 @@ class TenderController extends Controller
 
                 ]);
 
+                // Duplicate Check
+                $exists = TenderItems::where('TenderID', $id)
+                    ->where('ItemID', $validated['item_id'])
+                    ->exists();
+
+                if ($exists) {
+                    return redirect()->back()->with('error', 'This item has already been added to the tender.');
+                }
+
 
                 DB::beginTransaction();
 
@@ -2303,4 +2312,85 @@ class TenderController extends Controller
 
         return $invitationsSent;
     }
+
+
+    /**
+     * Download a specific document attached to a tender.
+     */
+    public function downloadDocument(Request $request, $id, $documentId)
+    {
+        try {
+            $tender = Tender::findOrFail($id);
+            // Search by DocumentId (UUID) column
+            $document = \App\Models\DMS\Document::where('DocumentId', $documentId)->firstOrFail();
+
+            $service = new \App\Services\DMS\DocumentService($document);
+            $content = $service->getFileContent(false);
+            $mimeType = $document->MimeType;
+            $filename = $document->Name;
+
+            return response()->streamDownload(function () use ($content) {
+                echo $content;
+            }, $filename, ['Content-Type' => $mimeType]);
+
+        } catch (\Exception $e) {
+            Log::error("Failed to download document {$documentId} for tender {$id}: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to download document: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Preview a specific document attached to a tender.
+     */
+    public function previewDocument(Request $request, $id, $documentId)
+    {
+        try {
+            $tender = Tender::findOrFail($id);
+            $document = \App\Models\DMS\Document::where('DocumentId', $documentId)->firstOrFail();
+            
+            // Replicate DocumentPreviewController logic
+            return view('dms.files.embed')
+                ->with('file', $document)
+                ->with('service', new \App\Services\DMS\DocumentService($document));
+
+        } catch (\Exception $e) {
+            Log::error("Failed to preview document {$documentId}: " . $e->getMessage());
+            return response("Failed to load preview: " . $e->getMessage(), 404);
+        }
+    }
+
+    /**
+     * Delete a specific document attached to a tender.
+     */
+    public function deleteDocument(Request $request, $id, $documentId)
+    {
+        try {
+            $tender = Tender::findOrFail($id);
+            
+            if ($tender->Status !== TenderStatusEnum::Draft) {
+                return redirect()->back()->with('error', 'Documents can only be deleted when tender is in Draft status.');
+            }
+
+            if ($tender->CreatedBy !== Auth::id() && !Auth::user()->hasRole(['Super Admin', 'Administrator'])) {
+                 return redirect()->back()->with('error', 'You are not authorized to delete documents from this tender.');
+            }
+
+            $document = \App\Models\DMS\Document::where('DocumentId', $documentId)->firstOrFail();
+            $document->delete();
+
+            activity()
+                ->performedOn($tender)
+                ->causedBy(Auth::user())
+                ->withProperties(['document_id' => $documentId, 'filename' => $document->Name])
+                ->log('Deleted tender document');
+
+            return redirect()->back()->with('success', 'Document deleted successfully.');
+
+        } catch (\Exception $e) {
+            Log::error("Failed to delete document {$documentId} for tender {$id}: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to delete document: ' . $e->getMessage());
+        }
+    }
 }
+
+

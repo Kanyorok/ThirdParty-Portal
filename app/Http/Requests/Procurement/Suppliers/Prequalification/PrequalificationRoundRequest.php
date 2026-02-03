@@ -24,7 +24,9 @@ abstract class PrequalificationRoundRequest extends FormRequest
             // Always require basic fields on create to satisfy DB constraints; relax only on update
             'Title' => [$this->isUpdate() ? 'sometimes' : 'required', 'string', 'max:255'],
             'Description' => ['sometimes', 'string', 'nullable'],
-            'StartDate' => [$this->isUpdate() ? 'sometimes' : 'required', 'date'],
+            'StartDate' => $this->isUpdate()
+                ? ['sometimes', 'date']
+                : ['required', 'date', 'after_or_equal:today'],
             'EndDate' => [$this->isUpdate() ? 'sometimes' : 'required', 'date', 'after_or_equal:StartDate'],
             'MaxVendors' => ['sometimes', 'integer', 'min:1', 'nullable'],
             'Status' => ['sometimes', new Enum(PrequalificationRoundEnum::class), 'nullable'],

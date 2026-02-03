@@ -146,7 +146,14 @@
                                                         </td>
                                                         <td>{{ $grn->supplier->thirdParty->TradingName ?? 'N/A' }}</td>
                                                         <td>
-                                                            <strong>KES {{ number_format($grn->TotalValue ?? 0, 2) }}</strong>
+                                                            @php
+                                                                $displayValue = $grn->TotalValue;
+                                                                if (($displayValue == 0 || $displayValue == 0.00) && $grn->ReceivedQTY > 0) {
+                                                                    $unitPrice = $grn->UnitPrice > 0 ? $grn->UnitPrice : ($grn->orderLine->fUnitPriceExcl ?? 0);
+                                                                    $displayValue = $grn->ReceivedQTY * $unitPrice;
+                                                                }
+                                                            @endphp
+                                                            <strong>KES {{ number_format($displayValue, 2) }}</strong>
                                                         </td>
                                                         <td>
                                                             @php $badge = $grn->processing_status_badge ?? ['text' => 'Unknown', 'class' => 'secondary'] @endphp

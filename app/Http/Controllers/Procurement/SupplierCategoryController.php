@@ -23,7 +23,7 @@ class SupplierCategoryController extends Controller
                 'Description',
                 'IsActive',
                 'CreatedOn'
-            );
+            )->whereNull('DeletedOn');
 
             return DataTables::of($categories)
                 ->addColumn('actions', function ($row) {
@@ -43,7 +43,7 @@ class SupplierCategoryController extends Controller
                 ->make(true);
         }
 
-        $supplierCategories = SupplierCategory::all();
+        $supplierCategories = SupplierCategory::whereNull('DeletedOn')->latest('CreatedOn')->get();
 
         return view('procurement.suppliers.supplier_categories.index', compact('supplierCategories'));
     }
@@ -122,9 +122,9 @@ class SupplierCategoryController extends Controller
         return redirect()->route('proc.supplier-cat.index')->with('success', 'Supplier Category updated successfully.');
     }
 
-    public function destroy(SupplierCategory $supplierCategory)
+    public function destroy(SupplierCategory $supplier_cat)
     {
-        $supplierCategory->delete();
+        $supplier_cat->delete();
 
         if (request()->wantsJson()) {
             return response()->json(['success' => true]);
