@@ -442,7 +442,6 @@
 
                 campaignWorkflowTable.on('error', function (er) {
                     nWarning("an issue occurred while loading workflow.");
-                    console.log(er);
                 });
             } else {
                 campaignWorkflowTable.ajax.reload();
@@ -477,7 +476,6 @@
 
                 campaignContactsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading contacts.");
-                    console.log(er);
                 });
             } else {
                 campaignContactsTable.ajax.reload();

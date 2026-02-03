@@ -161,7 +161,6 @@
         const leaseSelect = document.getElementById('lease-select');
 
         function populateFromOption(selected) {
-            console.log("DEBUG → selected dataset:", selected ? selected.dataset : null);
 
             if (!selected || !selected.value) {
                 ['lease-display', 'tenant-display', 'property-display', 'frequency-display', 'enddate-current', 'rent', 'service', 'parking', 'other'].forEach(id => {
@@ -193,7 +192,6 @@
                 selected.dataset.enddate ||
                 selected.getAttribute('data-enddate') || '';
 
-            console.log("DEBUG → end date found:", endDate);
             document.getElementById('enddate-current').value = endDate || '';
 
             // Financials

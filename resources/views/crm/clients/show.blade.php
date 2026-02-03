@@ -1179,9 +1179,6 @@ u@php use App\Services\BR\ClientService; @endphp
             const startTime = new Date(startTimeString).getTime();
             const now = new Date().getTime();
             const distance = Math.abs((now - startTime));
-            /*  console.log(distance);
-              console.log(startTime);
-              console.log(now);*/
             let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             let seconds = Math.floor((distance % (1000 * 60)) / 1000);
@@ -1242,7 +1239,6 @@ u@php use App\Services\BR\ClientService; @endphp
 
                 callsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the notes.");
-                    console.log(er);
                 });
             } else {
                 callsTable.ajax.reload();
@@ -1292,7 +1288,6 @@ u@php use App\Services\BR\ClientService; @endphp
 
                 ticketsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading tickets.");
-                    console.log(er);
                 });
             } else {
                 ticketsTable.ajax.reload();
@@ -1332,7 +1327,6 @@ u@php use App\Services\BR\ClientService; @endphp
 
                 notesTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the notes.");
-                    console.log(er);
                 });
             } else {
                 notesTable.ajax.reload();
@@ -1368,7 +1362,6 @@ u@php use App\Services\BR\ClientService; @endphp
 
                 scheduleTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the schedule.");
-                    console.log(er);
                 });
             } else {
                 scheduleTable.ajax.reload();
@@ -1404,7 +1397,6 @@ u@php use App\Services\BR\ClientService; @endphp
 
                 AppointmentsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading meetings.");
-                    console.log(er);
                 });
             } else {
                 AppointmentsTable.ajax.reload();
@@ -1445,7 +1437,6 @@ u@php use App\Services\BR\ClientService; @endphp
 
                 discussionsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the client discussions.");
-                    console.log(er);
                 });
             } else {
                 discussionsTable.ajax.reload();
@@ -1501,7 +1492,6 @@ u@php use App\Services\BR\ClientService; @endphp
 
                 accountsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the client portfolio.");
-                    console.log(er);
                 });
             } else {
                 accountsTable.ajax.reload();
@@ -1538,7 +1528,6 @@ u@php use App\Services\BR\ClientService; @endphp
 
                 relationsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the relations list.");
-                    console.log(er);
                 });
             } else {
                 relationsTable.ajax.reload();
@@ -1656,7 +1645,6 @@ u@php use App\Services\BR\ClientService; @endphp
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading the reviews.");
-                    console.log(er);
                 });
             } else {
                 $('#reviewsTable').DataTable().ajax.reload();
@@ -1690,7 +1678,6 @@ u@php use App\Services\BR\ClientService; @endphp
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading client contacts.");
-                    // console.log(er);
                 });
             } else {
                 $('#contactsTable').DataTable().ajax.reload();

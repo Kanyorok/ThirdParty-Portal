@@ -222,9 +222,6 @@
                     itemSelect.empty().append('<option value="">Select Item</option>');
                     
                     // Log for debugging
-                    console.log('Loading items for store:', storeId);
-                    console.log('Selected item ID:', selectedItemId);
-                    console.log('Available items:', data);
                     
                     if (data && data.length > 0) {
                         data.forEach(item => {
@@ -386,7 +383,6 @@
 
         // Initialize with current consumption data
       function initializeForm() {
-        console.log('Initializing form...');
         
         // Items are already loaded from server, just trigger change to set UOM
         if ($('#ItemID').val()) {

@@ -352,8 +352,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Get the requisition ID from the RFQ
     const requisitionId = {{ $rfq->RequisitionId ?? 'null' }};
     
-    console.log('RFQ ID:', rfqId);
-    console.log('Requisition ID:', requisitionId);
     
     if (!requisitionId) {
         categoryDropdown.innerHTML = '<option value="">⚠️ No requisition linked to this RFQ</option>';
@@ -368,7 +366,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Use Laravel's route helper to generate the correct URL
     const url = `{{ route('rfq-lines.requisition.categories', ':requisitionId') }}`.replace(':requisitionId', requisitionId);
     
-    console.log('Fetching categories from:', url);
 
     fetch(url, {
         method: 'GET',
@@ -381,8 +378,6 @@ document.addEventListener('DOMContentLoaded', function() {
         credentials: 'same-origin'
     })
     .then(response => {
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
         
         if (!response.ok) {
             return response.text().then(text => {
@@ -393,7 +388,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return response.json();
     })
     .then(data => {
-        console.log('Received data:', data);
         
         categoryDropdown.innerHTML = '<option value="">-- Select Category --</option>';
         
@@ -415,7 +409,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 categoryDropdown.appendChild(option);
             });
             categoryDropdown.disabled = false;
-            console.log(`Successfully loaded ${data.categories.length} categories`);
         }
     })
     .catch(error => {

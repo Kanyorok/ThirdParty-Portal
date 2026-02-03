@@ -241,7 +241,6 @@
                 }
             }).on('error', function () {
                 nWarning("an issue occurred while loading permissions.");
-                // console.log(er);
             });
         } else {
             $('#repoPermissionsTable').DataTable().ajax.reload();

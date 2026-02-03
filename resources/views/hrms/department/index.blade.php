@@ -80,7 +80,6 @@
 
                 departmentsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading departments.");
-                    console.log(er);
                 });
             } else {
                 departmentsTable.ajax.reload();

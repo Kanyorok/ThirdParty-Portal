@@ -314,9 +314,11 @@
     const requisitionId = "{{ $id ?? '' }}";
     // Check if plan exists based on requisition info
     const requisitionInfo = @json($requisitionInfo);
-    console.log('Requisition Info:', requisitionInfo);
-    const hasPlan = {{ isset($requisitionInfo->PlanRef) && $requisitionInfo->PlanRef ? 'true' : 'false' }};
-    console.log('Has Plan:', hasPlan);
+    const hasPlan = {
+        {
+            isset($requisitionInfo - > PlanRef) && $requisitionInfo - > PlanRef ? 'true' : 'false'
+        }
+    };
 
     function getRequisitionIdFromUrl() {
         return requisitionId || window.location.pathname.split('/').pop();
@@ -352,7 +354,6 @@
     }
 
     $(document).ready(function() {
-        console.log('Page loaded, initializing components...');
 
         // Initialize DataTable if there are items
         @if(count($details) > 0)
@@ -372,7 +373,6 @@
                 dropdownParent: $Modal,
                 width: '100%'
             });
-            console.log('Select2 initialized successfully');
         } catch (error) {
             console.error('Select2 initialization error:', error);
         }
@@ -380,10 +380,8 @@
         // Show modal for adding item - FIXED
         $('.modal-create-item').on('click', function(e) {
             e.preventDefault();
-            console.log('Add Items button clicked');
 
             const reqId = getRequisitionIdFromUrl();
-            console.log('Setting requisition ID:', reqId);
 
             $('#RequisitionID').val(reqId);
 
@@ -416,10 +414,8 @@
         // Submit for approval button
         $('#submitForApproval').on('click', function(e) {
             e.preventDefault();
-            console.log('Submit for approval clicked');
 
             const itemCount = $('#requsitionItemsTable tbody tr').not(':has(td[colspan])').length;
-            console.log('Item count:', itemCount);
 
             if (itemCount === 0) {
                 if (typeof Swal !== 'undefined') {
@@ -440,7 +436,6 @@
         // Handle submit form
         $('#submitForm').on('submit', function(e) {
             e.preventDefault();
-            console.log('Submitting requisition for approval...');
 
             const submitBtn = $('#confirmSubmitBtn');
             submitBtn.prop('disabled', true).html(
@@ -454,7 +449,6 @@
         // Handle form submission for adding items
         $('#createRequisitionItemForm').on('submit', async function(e) {
             e.preventDefault();
-            console.log('Submitting item form...');
 
             const submitBtn = $('#createRequisitionItemBtn');
             submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Saving...');
@@ -470,7 +464,6 @@
                     }
                 } else {
                     // Fallback: submit form directly
-                    console.log('saveForm not found, submitting directly');
                     this.submit();
                 }
             } catch (error) {
@@ -563,7 +556,6 @@
             $('#LineItemID').val('');
         }
 
-        console.log('All event handlers attached successfully');
 
         // Update EstimatedPrice when EstUnitCostDisplay changes (for manual entry)
         $('#EstUnitCostDisplay').on('input', function() {

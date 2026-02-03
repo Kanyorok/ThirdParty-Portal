@@ -771,7 +771,6 @@
 
                 competitorProductsTable.on('error', function () {
                     nWarning("an issue occurred while loading the competitor products.");
-                    //console.log(er);
                 });
             } else {
                 competitorProductsTable.ajax.reload();

@@ -188,7 +188,6 @@
 
                 campaignContactsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading contacts.");
-                    console.log(er);
                 });
             } else {
                 campaignContactsTable.ajax.reload();
