@@ -146,7 +146,6 @@
 
                 ticketsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading tickets.");
-                    console.log(er);
                 });
             } else {
                 ticketsTable.ajax.reload();

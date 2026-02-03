@@ -423,7 +423,6 @@
                 },
                 eventClick: function (eventInfo) {
                     let event = eventInfo.event;
-                    console.log(eventInfo);
                     showOffCanvasMain(event.title, eventInfo.event.extendedProps.actions.show);
                 }
             });
@@ -557,7 +556,6 @@
 
                 planWorkflowTable.on('error', function (er) {
                     nWarning("an issue occurred while loading workflow.");
-                    console.log(er);
                 });
             } else {
                 planWorkflowTable.ajax.reload();
@@ -594,7 +592,6 @@
 
                 planActivityTable.on('error', function (er) {
                     nWarning("an issue occurred while loading activities.");
-                    console.log(er);
                 });
             } else {
                 planActivityTable.ajax.reload();

@@ -20,15 +20,17 @@ class GoodsReceiptController extends Controller
     {
         $this->authorize('viewAny', GoodsReceipt::class);
 
-        $goodsReceipts = GoodsReceipt::with('receiver', 'supplier')
+        $goodsReceipts = GoodsReceipt::with([
+                'receiver',
+                'supplier.thirdParty.thirdParty',
+            ])
             ->where('InspectionStatus', PostingEnum::Draft)
-            ->selectRaw('MIN(id) as id')
-            ->groupBy('GRNID')
-            ->get()
-            ->map(function ($receipt) {
-                return GoodsReceipt::with('receiver', 'supplier')->find($receipt->id);
-            });
-
+            ->whereIn('id', function ($query) {
+                $query->selectRaw('MIN(id)')
+                      ->from('t_GoodsReceipts')
+                      ->groupBy('GRNID');
+            })
+            ->get();
 
         return view('procurement.goodreceipts.index', compact('goodsReceipts'));
     }

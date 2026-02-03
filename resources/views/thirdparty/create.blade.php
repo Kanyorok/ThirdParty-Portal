@@ -643,7 +643,6 @@
                     const field = $('#' + fieldId);
                     if (!field.val()) {
                         field.addClass('is-invalid');
-                        console.log(fieldId)
                         isValid = false;
                     }
                 });
@@ -692,7 +691,6 @@
                     };
                 },
                 processResults: function(data) {
-                    console.log('Select2 Data:', data);
                     return {
                         results: data.results
                     };

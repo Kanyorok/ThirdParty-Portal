@@ -262,6 +262,7 @@ Route::middleware(['module:300000'])->group(function () {
     Route::post('suppliers/{id}/submit', [SupplierController::class, 'submit'])->name('suppliers.submit');
     Route::post('suppliers/{id}/reject', [SupplierController::class, 'reject'])->name('suppliers.reject');
     Route::post('suppliers/{id}/activate', [SupplierController::class, 'activate'])->name('suppliers.activate');
+    Route::post('suppliers/{id}/suspend', [SupplierController::class, 'suspend'])->name('suppliers.suspend');
     Route::resource('suppliers', SupplierController::class);
 
 
@@ -398,6 +399,18 @@ Route::middleware(['module:300000'])->group(function () {
         // AJAX Route for Allowed Categories
         Route::get('/allowed-categories', [TenderController::class, 'allowedCategories'])
             ->name('initiatetender.allowedCategories');
+
+        // Document Management Routes (Custom to bypass binding issues)
+        Route::get('initiatetender/{id}/document/{documentId}/download', [TenderController::class, 'downloadDocument'])
+            ->name('initiatetender.document.download');
+
+        Route::get('initiatetender/{id}/document/{documentId}/preview', [TenderController::class, 'previewDocument'])
+            ->name('initiatetender.document.preview');
+
+        Route::delete('initiatetender/{id}/document/{documentId}', [TenderController::class, 'deleteDocument'])
+            ->name('initiatetender.document.delete');
+
+
 
 
 

@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\Tender;
 use App\Models\ThirdParies\Supplier;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class TenderSubmissionController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(): View
     {
         $this->authorize(\App\Enums\Core\PermissionEnum::BidSubmissionRead->value);
         $submissions = BidSubmission::with([
@@ -28,6 +30,7 @@ class TenderSubmissionController extends Controller
     public function create(Request $request)
     {
         $this->authorize(\App\Enums\Core\PermissionEnum::BidSubmissionWrite->value);
+        $currencies = \App\Models\Core\Currency::all();
         // Exclude tenders that already have submissions & filter by Published status
         $tenders = Tender::select('TenderNo', 'Title')
             ->where('Status', \App\Enums\TenderStatusEnum::Published->value)
@@ -44,7 +47,7 @@ class TenderSubmissionController extends Controller
             ->where('CodeID', 'SubmissionMode')
             ->get(['ID', 'Description']);
 
-        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes'));
+        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes', 'currencies'));
     }
 
     public function view($Id)
@@ -161,7 +164,7 @@ class TenderSubmissionController extends Controller
                 $bidSubmission->newDocument(
                     \App\Enums\Core\ModulesEnum::Procurement,
                     $request->file('bid_files'),
-                    [\App\Enums\Core\PermissionEnum::BidSubmissionView->value],
+                    [\App\Enums\Core\PermissionEnum::BidSubmissionRead->value],
                     $request->user()
                 );
             }

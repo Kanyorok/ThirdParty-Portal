@@ -111,7 +111,6 @@
                     fetch(`/finance/get-type-groups?GLAccountTypeID=${typeID}`)
                         .then(res => res.json())
                         .then(data => {
-                            console.log('Acc',data)
                             typeGroup.innerHTML = '<option disabled selected>-- GL Account Type --</option>';
                             data.forEach(item => {
                                 let selected = item.Id == gl.type_group?.Id ? 'selected' : '';
@@ -126,7 +125,6 @@
                     fetch(`/finance/get-sub-account-types?GLTypeGroupID=${subTypeID}`)
                         .then(res => res.json())
                         .then(data => {
-                            console.log('Type', data);
                             subType.innerHTML = '<option disabled selected>-- GL Sub Account Type --</option>';
                             data.forEach(item => {
                                 let selected = item.Id == gl.sub_account?.Id ? 'selected' : '';

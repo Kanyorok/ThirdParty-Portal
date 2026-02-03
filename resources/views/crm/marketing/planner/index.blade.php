@@ -226,7 +226,6 @@
 
                 campaignTable.on('error', function (er) {
                     nWarning("an issue occurred while loading Planner.");
-                    console.log(er);
                 });
             } else {
                 campaignTable.ajax.reload();

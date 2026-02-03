@@ -177,7 +177,6 @@
                     columnDefs: [
                         {
                             "render": function (data, type, row) {
-                                //console.log(row.emails_count);
                                 let Subject = row.email.Subject;
                                 if (row.emails_count > 1) {
                                     Subject = " (" + row.emails_count + ")&nbsp;" + Subject;
@@ -211,7 +210,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading emails.");
-                    // console.log(er);
                 });
             } else {
                 $('#conversationsTable').DataTable().ajax.reload();

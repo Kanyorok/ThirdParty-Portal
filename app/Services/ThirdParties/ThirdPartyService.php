@@ -19,9 +19,9 @@ use RuntimeException;
 
 class ThirdPartyService extends ThirdPartiesService
 {
-    public const string TypeTenant = 'TN';
-    public const string TypeSupplier = 'SU';
-    public const string TypeCustomer = 'CU';
+    public const TypeTenant = 'TN';
+    public const TypeSupplier = 'SU';
+    public const TypeCustomer = 'CU';
 
     public static function create(
         string $name,

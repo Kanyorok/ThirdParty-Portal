@@ -147,7 +147,6 @@
 
                 productsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading products.");
-                    console.log(er);
                 });
             } else {
                 productsTable.ajax.reload();

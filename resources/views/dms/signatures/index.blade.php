@@ -92,7 +92,6 @@
 
                 signaturesTable.on('error', function (er) {
                     nWarning("an issue occurred while loading signatures.");
-                    console.log(er);
                 });
             } else {
                 signaturesTable.ajax.reload();

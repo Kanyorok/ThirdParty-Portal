@@ -627,7 +627,6 @@
                     }
                 }).on('error', function (er) {
                     nWarning("an issue occurred while loading question options.");
-                    console.log(er);
                 });
             } else {
                 $('#' + questionID + 'AnswersTable').DataTable().ajax.reload();

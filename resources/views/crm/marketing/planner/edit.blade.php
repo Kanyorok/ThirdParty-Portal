@@ -464,7 +464,6 @@
 
                 planActivityTable.on('error', function (er) {
                     nWarning("an issue occurred while loading activities.");
-                    console.log(er);
                 });
             } else {
                 planActivityTable.ajax.reload();

@@ -41,7 +41,7 @@ class TicketService extends ApprovalWorkflowService
 {
     use SpecialPermissionsTrait;
 
-    public const string ALL = 'all';
+    public const ALL = 'all';
 
     public function __construct(public Ticket $ticket)
     {

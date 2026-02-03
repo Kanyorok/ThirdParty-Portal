@@ -126,7 +126,6 @@
 
                 teamsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading teams.");
-                    console.log(er);
                 });
             } else {
                 teamsTable.ajax.reload();

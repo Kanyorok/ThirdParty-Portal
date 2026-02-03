@@ -240,7 +240,6 @@ $(document).ready(function() {
     const workflowId = {{ $approval->Id }};
     const STORAGE_KEY = 'workflow-stage-form-' + workflowId;
 
-    console.log('Initial workflow state:', {
         workflowId: workflowId,
         hasFinalStage: workflowHasFinalStage,
         finalStageName: @json($approval->FinalStage ?? null)
@@ -248,7 +247,6 @@ $(document).ready(function() {
 
     // Function to reload workflow state from server
     function reloadWorkflowState() {
-        console.log('Reloading workflow state...');
         
         return $.ajax({
             url: '/settings/workflows/' + workflowId + '/state',
@@ -262,7 +260,6 @@ $(document).ready(function() {
                 if (res.status === 'success') {
                     workflowHasFinalStage = res.workflow.IsFinalStage;
                     
-                    console.log('Workflow state reloaded:', {
                         hasFinalStage: workflowHasFinalStage,
                         stageCount: res.stages.length
                     });
@@ -339,7 +336,6 @@ $(document).ready(function() {
             );
         });
         
-        console.log('Stages table rebuilt with ' + stages.length + ' stages');
     }
 
     // Enhanced save form state
@@ -374,7 +370,6 @@ $(document).ready(function() {
             const saved = sessionStorage.getItem(STORAGE_KEY);
             if (saved) {
                 const formData = JSON.parse(saved);
-                console.log('Loading saved form state:', formData);
 
                 $('input[name="StageName"]').val(formData.StageName || '');
                 $('input[name="EscalationLimit"]').val(formData.EscalationLimit || '');
@@ -404,7 +399,6 @@ $(document).ready(function() {
     function clearFormState() {
         try {
             sessionStorage.removeItem(STORAGE_KEY);
-            console.log('Form state cleared');
         } catch (error) {
             console.error('Error clearing form state:', error);
         }
@@ -446,7 +440,6 @@ $(document).ready(function() {
 
     function updateFormVisibility(hasFinalStage) {
         workflowHasFinalStage = hasFinalStage;
-        console.log('Updating form visibility:', {hasFinalStage: hasFinalStage});
         
         if (hasFinalStage) {
             $('#stageForm').hide();
@@ -510,7 +503,6 @@ $(document).ready(function() {
                     
                     // Reload entire workflow state
                     // reloadWorkflowState().then(function() {
-                    //     console.log('Workflow state reloaded after stage creation');
                     // });
                     window.location.reload();
                 } else {
@@ -562,7 +554,6 @@ $(document).ready(function() {
                     
                     // Reload entire workflow state
                     // reloadWorkflowState().then(function() {
-                    //     console.log('Workflow state reloaded after stage deletion');
                     // });
                     window.location.reload();
                 } else {
@@ -609,7 +600,6 @@ $(document).ready(function() {
         });
     });
 
-    console.log('Workflow stage form initialized');
 });
 </script>
 @endpush

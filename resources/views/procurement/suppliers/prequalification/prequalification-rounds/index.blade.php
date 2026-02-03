@@ -73,38 +73,61 @@
                             </span>
                         </td>
                         <td>
-                            <a href="{{ route('prequalification.prequalification-rounds.show', $Round) }}"
-                                class="btn btn-sm btn-info text-white me-1">
-                                <i class="bi bi-eye"></i> View
-                            </a>
+                        <td>
+                            @php
+                                $isTrashed = $Round->trashed();
+                                $isExpired = $Round->EndDate && $Round->EndDate->isPast();
+                                $isDraft = $Round->Status === \App\Enums\Procurement\PrequalificationRoundEnum::Draft;
+                            @endphp
 
-                            <a href="{{ route('prequalification.prequalification-rounds.edit', $Round) }}"
-                                class="btn btn-sm btn-warning me-1" data-ajax="1">
-                                <i class="bi bi-pencil"></i> Edit
-                            </a>
-
-                            @if($Round->Status === \App\Enums\Procurement\PrequalificationRoundEnum::Draft)
-                                @php $isExpired = $Round->EndDate && $Round->EndDate->isPast(); @endphp
-                                @if($Round->Status === \App\Enums\Procurement\PrequalificationRoundEnum::Draft && !$isExpired)
-                            <a href="{{ route('prequalification.prequalification-rounds.edit', $Round) }}?publish=1"
-                               class="btn btn-sm btn-secondary me-1" title="Publish (set status to Open)" data-bs-toggle="tooltip" data-ajax="1">
-                                <i class="bi bi-upload"></i> Publish
-                            </a>
-                            @endif
-                                @if($isExpired)
-                                <span class="badge bg-secondary me-1" title="This round has expired">Expired</span>
-                                @endif
-                            @endif
-
-                            <form action="{{ route('prequalification.prequalification-rounds.destroy', $Round) }}"
-                                method="POST" class="d-inline-flex"
-                                onsubmit="return confirm('Are you sure you want to delete this round?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger">
+                            @if($isTrashed)
+                                <button class="btn btn-sm btn-secondary me-1" disabled title="Cannot view deleted round">
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                                <button class="btn btn-sm btn-secondary me-1" disabled title="Cannot edit deleted round">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                                <button class="btn btn-sm btn-secondary" disabled title="Already deleted">
                                     <i class="bi bi-trash"></i> Delete
                                 </button>
-                            </form>
+                            @else
+                                <a href="{{ route('prequalification.prequalification-rounds.show', $Round) }}"
+                                    class="btn btn-sm btn-info text-white me-1">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+
+                                @if($isExpired)
+                                    <button class="btn btn-sm btn-secondary me-1" disabled title="Cannot edit expired round">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </button>
+                                @else
+                                    <a href="{{ route('prequalification.prequalification-rounds.edit', $Round) }}"
+                                        class="btn btn-sm btn-warning me-1" data-ajax="1">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+                                @endif
+
+                                @if($isDraft)
+                                    @if(!$isExpired)
+                                        <a href="{{ route('prequalification.prequalification-rounds.edit', $Round) }}?publish=1"
+                                        class="btn btn-sm btn-secondary me-1" title="Publish (set status to Open)" data-bs-toggle="tooltip" data-ajax="1">
+                                            <i class="bi bi-upload"></i> Publish
+                                        </a>
+                                    @else
+                                        <span class="badge bg-secondary me-1" title="This round has expired">Expired</span>
+                                    @endif
+                                @endif
+
+                                <form action="{{ route('prequalification.prequalification-rounds.destroy', $Round) }}"
+                                    method="POST" class="d-inline-flex"
+                                    onsubmit="return confirm('Are you sure you want to delete this round?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </form>
+                            @endif
                         </td>
                     </tr>
                     @empty

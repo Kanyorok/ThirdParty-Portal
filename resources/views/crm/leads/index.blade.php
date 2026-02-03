@@ -265,7 +265,6 @@
 
                 wonLeadsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading leads.");
-                    console.log(er);
                 });
             } else {
                 wonLeadsTable.ajax.reload();
@@ -323,7 +322,6 @@
 
                 activeLeadsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading leads.");
-                    console.log(er);
                 });
             } else {
                 activeLeadsTable.ajax.reload();

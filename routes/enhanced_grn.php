@@ -26,6 +26,8 @@ Route::prefix('goods-receipt')->name('goods-receipt.')->group(function () {
 
     // AJAX endpoints
     Route::get('/api/po-details/{poId}', [EnhancedGoodsReceiptController::class, 'getPODetails'])->name('po-details');
+    Route::get('/api/line-details/{lineId}', [EnhancedGoodsReceiptController::class, 'getLineDetails'])->name('api.line-details');
+    Route::post('/api/retry-processing/{lineId}', [EnhancedGoodsReceiptController::class, 'retryProcessing'])->name('api.retry-processing');
     Route::post('/api/quality-check/{grnLineId}', [EnhancedGoodsReceiptController::class, 'updateQualityStatus'])->name('quality-check');
 
     // Reports and summaries
