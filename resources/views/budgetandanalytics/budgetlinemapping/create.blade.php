@@ -169,7 +169,6 @@
                 fetch(`/budget/budgetlinemapping/gl-subtypes/${typeId}`)
                     .then(response => response.json())
                     .then(data => {
-                        console.log(data);
                         subTypeSelect.innerHTML = '<option selected disabled>-- Select Sub-Type --</option>';
                         data.forEach(function (subType) {
                             subTypeSelect.innerHTML += `<option data-type-id="${subType.GLSubAccountTypeID}" value="${subType.Id}">${subType.Description}</option>`;

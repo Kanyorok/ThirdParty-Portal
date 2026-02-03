@@ -252,7 +252,6 @@
 
             // Load items (from plan or by type)
             function loadItems(requisitionId, type = null) {
-                console.log('Loading items from plan for requisition:', requisitionId);
                 
                 $.ajax({
                     url: type ? `/requisitionItem/getItems/${type}` : `/requisitionItem/getItems`,
@@ -264,7 +263,6 @@
                         $('#Item').empty().append('<option value="">Loading items from plan...</option>');
                     },
                     success: function(response) {
-                        console.log('Plan Items Response:', response);
                         
                         $('#Item').empty();
                         
@@ -272,7 +270,6 @@
                             $('#Item').append('<option value="" selected disabled>Select an item</option>');
                             
                             $.each(response.data, function(index, item) {
-                                console.log('Processing item:', item);
                                 
                                 const itemId = item.Id || '';
                                 const itemName = item.Name || 'Unknown Item';
@@ -303,10 +300,8 @@
                                 width: '100%'
                             });
                             
-                            console.log('Items loaded successfully:', response.data.length);
                         } else {
                             $('#Item').append('<option value="">No items available</option>');
-                            console.log('No items found');
                         }
                     },
                     error: function(xhr, status, error) {
@@ -319,7 +314,6 @@
                         $('#Item').empty().append('<option value="">No items available for this type</option>');
                         
                         // Don't show alert popup - just log and show user-friendly message
-                        console.log('No items found or error occurred. Please try a different type or contact support if the issue persists.');
                     }
                 });
             }
@@ -329,12 +323,10 @@
             $('#Type').on('change', function() {
                 const typeId = $(this).val();
                 
-                console.log('Type selected:', typeId);
                 
                 if (typeId !== '' && typeId !== null) {
                     const requisitionId = $('#RequisitionID').val();
                     
-                    console.log('Fetching items for type ID:', typeId, 'requisition:', requisitionId);
                     
                     loadItems(requisitionId, typeId);
                 } else {
@@ -356,7 +348,6 @@
                 const availableQty = parseFloat(selectedOption.attr('data-available')) || 0;
                 const itemName = selectedOption.attr('data-name');
                 
-                console.log('Item selected:', {
                     itemName: itemName,
                     uom: uom,
                     price: price,

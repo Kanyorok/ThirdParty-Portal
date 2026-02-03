@@ -25,13 +25,13 @@ use App\Models\DMS\Repository;
 use App\Services\Core\PermissionsService;
 use App\Services\DMS\Files\FileProperties;
 use App\Services\DMS\Verification\SignatureService;
-use Cache;
 use DateTime;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -43,7 +43,7 @@ use Throwable;
 
 class DocumentService extends PermissionsService
 {
-    protected const string CHECKSUM = 'sha256';
+    protected const CHECKSUM = 'sha256';
     public ExtensionsEnum $type;
 
     public function __construct(public Document $document)
@@ -246,7 +246,7 @@ class DocumentService extends PermissionsService
     /**
      * @throws ErroredException
      */
-    protected function _newVersion(DisksEnum $disk, string $path, string $name, int $sizeInBytes, User $actor, Collection $properties = null, string $checksum = null): static
+    protected function _newVersion(DisksEnum $disk, string $path, string $name, int $sizeInBytes, User $actor, ?Collection $properties = null, ?string $checksum = null): static
     {
 
         $this->document->versions()->create([
@@ -318,7 +318,7 @@ class DocumentService extends PermissionsService
      * 3. @param User|null $actor checked out
      * @return int
      */
-    public function isCheckedOut(User $actor = null): int
+    public function isCheckedOut(?User $actor = null): int
     {
         if (! $this->type->canCheckOut()) {
             return 0;
@@ -535,6 +535,8 @@ class DocumentService extends PermissionsService
                 $query->whereIn('t_Teams.TeamID', $this->document->permissions()->where('Party', Team::getPrimaryKey())->select('PartyID'));
             });
         })->paginate(5);
+
+        return $this->document->creator?->getImage('alt="user-image" class="avtar"') . '<span class="avtar avtar-xs bg-light-primary text-primary">+' . $users->total() . '</span>';
     }
 
     private function _tagsHtml(): string

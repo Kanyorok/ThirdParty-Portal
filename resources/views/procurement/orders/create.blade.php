@@ -771,7 +771,6 @@
             const awardedThirdPartyId = parseInt(rfqOption.data('thirdparty-id')); // t_ThirdParties.Id for lookups/items
             const matchThirdPartyId = Number.isFinite(awardedThirdPartyId) ? awardedThirdPartyId : NaN;
             
-            console.log('RFQ Selected:', {selectedRFQNo, rfqId, supplierLegacyId, awardedThirdPartyId, matchThirdPartyId});
             
             if (!isNaN(rfqId)) {
                 $('#SourceId').val(rfqId);
@@ -779,7 +778,6 @@
                 $('#SourceId').val('');
             }
 
-        console.log('RFQ Selected:', {
             selectedRFQNo,
             rfqId,
             supplierLegacyId,
@@ -813,17 +811,14 @@
             // Fetch RFQ items for this supplier (use ThirdPartyId as rr.SupplierId in t_RFQResponse)
             if (!isNaN(rfqId) && Number.isFinite(matchThirdPartyId)) {
                 const url = `/procurement/purchase-order/rfq-items/${rfqId}?supplierId=${matchThirdPartyId}`;
-                console.log('Fetching RFQ items from:', url);
                 fetch(url)
                     .then(r => {
-                        console.log('RFQ items response status:', r.status);
                         return r.json();
                     })
                     .then(({
                         success,
                         data
                     }) => {
-                        console.log('RFQ items received:', {
                             success,
                             count: data?.length,
                             data
@@ -838,17 +833,14 @@
             } else if (!isNaN(rfqId)) {
                 // fallback without supplier filter
                 const url = `/procurement/purchase-order/rfq-items/${rfqId}`;
-                console.log('Fetching RFQ items (no supplier filter) from:', url);
                 fetch(url)
                     .then(r => {
-                        console.log('RFQ items response status:', r.status);
                         return r.json();
                     })
                     .then(({
                         success,
                         data
                     }) => {
-                        console.log('RFQ items received:', {
                             success,
                             count: data?.length,
                             data
@@ -1123,7 +1115,6 @@
         const catId = $(this).val() ? parseInt($(this).val(), 10) : 0;
         const planId = $('#directPlanSelect').val() ? parseInt($('#directPlanSelect').val(), 10) : 0;
 
-        console.log('Category changed:', {
             catId,
             planId
         });
@@ -1139,17 +1130,14 @@
                 $hiddenSup.val('');
             }
             // Load ALL prequalified suppliers (ignoring category)
-            console.log('Fetching suppliers from:', `{{ url('procurement/purchase-order/prequalified-suppliers/0') }}`);
             fetch(`{{ url('procurement/purchase-order/prequalified-suppliers/0') }}`)
                 .then(r => {
-                    console.log('Supplier response status:', r.status);
                     return r.json();
                 })
                 .then(({
                     success,
                     data
                 }) => {
-                    console.log('Supplier data received:', {
                         success,
                         count: data?.length,
                         data
@@ -1162,7 +1150,6 @@
                         $preqSupplier.append(`<option value="${value}" data-supplier-id="${supplierId || ''}" data-address="${address}">${display}</option>`);
                     });
                     $preqSupplier.prop('disabled', false);
-                    console.log('Suppliers populated:', $preqSupplier.find('option').length - 1, 'options');
                 })
                 .catch((err) => {
                     console.error('Error loading suppliers:', err);

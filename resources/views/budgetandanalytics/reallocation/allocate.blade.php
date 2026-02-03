@@ -306,7 +306,6 @@
                     })
                 });
                 const data = await res.json();
-                console.log(data)
                 const payload = Array.isArray(data) ? (data[0] || {}) : (data || {});
                 const months = payload.months || [];
                 const allocated = parseMoney(payload.totAmountAllocated);

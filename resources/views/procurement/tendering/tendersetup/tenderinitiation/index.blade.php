@@ -429,7 +429,6 @@
 
         function initializeDataTable() {
             try {
-                console.log('Initializing DataTable...');
 
                 // Check if table exists
                 if (!$('#tendersTable').length) {
@@ -445,7 +444,6 @@
 
                 // DEBUG: Count and validate columns
                 var headerCells = $('#tendersTable thead tr th').length;
-                console.log('Header columns: ' + headerCells);
                 
                 var hasErrors = false;
                 var hasDataRows = false;
@@ -457,7 +455,6 @@
                     
                     // Skip rows with colspan (like empty state)
                     if (colspan) {
-                        console.log('Row ' + index + ' has colspan=' + colspan + ' (empty state row)');
                         return;
                     }
                     
@@ -467,7 +464,6 @@
                     
                     if (cellCount !== headerCells) {
                         console.error('Row ' + index + ' has ' + cellCount + ' cells (Expected ' + headerCells + ')');
-                        console.log('Row HTML:', $(this).html());
                         hasErrors = true;
                     }
                 });
@@ -478,7 +474,6 @@
                     return;
                 }
 
-                console.log('Found ' + dataRowCount + ' data rows');
 
                 if (hasErrors) {
                     console.error('Column count mismatch detected. Cannot initialize DataTable.');
@@ -489,7 +484,6 @@
                 if ($.fn.DataTable.isDataTable('#tendersTable')) {
                     try {
                         $('#tendersTable').DataTable().destroy();
-                        console.log('Destroyed existing DataTable instance');
                     } catch (err) {
                         console.warn('Error destroying DataTable:', err);
                     }
@@ -566,7 +560,6 @@
                     } // Actions
                 ],
                 "initComplete": function() {
-                    console.log('DataTable initialized successfully');
                     enforceControlVisibility();
                     isInitialized = true;
                 },
@@ -575,7 +568,6 @@
                 }
             });
 
-            console.log('DataTable instance created');
             
             } catch (error) {
                 console.error('Error initializing DataTable:', error);
@@ -679,7 +671,6 @@
 
         // Re-initialize after partial content loads (AJAX navigation)
         document.addEventListener('partial:loaded', function(e) {
-            console.log('Partial content loaded, reinitializing DataTable...');
 
             // Wait for DOM to settle
             setTimeout(function() {

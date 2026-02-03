@@ -62,7 +62,6 @@
 
                 notesTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the notes.");
-                    console.log(er);
                 });
             } else {
                 notesTable.ajax.reload();

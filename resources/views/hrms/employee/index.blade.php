@@ -97,7 +97,6 @@
 
                 employeesTable.on('error', function (er) {
                     nWarning("an issue occurred while loading employees.");
-                    console.log(er);
                 });
             } else {
                 employeesTable.ajax.reload();

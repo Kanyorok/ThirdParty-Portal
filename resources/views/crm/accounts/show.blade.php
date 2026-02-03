@@ -112,7 +112,6 @@
 
                 trxAccountTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the transactions.");
-                    console.log(er);
                 });
             } else {
                 trxAccountTable.ajax.reload();

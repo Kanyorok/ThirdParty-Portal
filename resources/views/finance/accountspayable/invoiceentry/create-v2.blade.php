@@ -1434,7 +1434,5 @@
 <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
 <script>
     // Debug: Check if jQuery is available after scripts load
-    console.log('Scripts section loaded. jQuery available:', typeof window.$ !== 'undefined');
-    console.log('Select2 available:', typeof window.$ !== 'undefined' && typeof window.$.fn.select2 !== 'undefined');
 </script>
 @endsection

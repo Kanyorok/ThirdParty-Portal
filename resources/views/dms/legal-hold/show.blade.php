@@ -324,7 +324,6 @@
 
                 DocumentsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the list.");
-                    console.log(er);
                 });
             } else {
                 DocumentsTable.ajax.reload();
@@ -366,7 +365,6 @@
                       }
                   }).on('error', function () {
                       nWarning("an issue occurred while loading activities.");
-                      // console.log(er);
                   });
               } else {
                   $('#holdActivitiesTable').DataTable().ajax.reload();

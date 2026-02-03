@@ -194,7 +194,6 @@
                     url: `/procurement/purchaseOrder/rqfDetails/${referenceNumber}`,
                     type: 'GET',
                     success: function (response) {
-                        // console.log('RFQ Details:', response);
 
 
                         if (response.success) {
@@ -213,11 +212,9 @@
                             if (rfq.items && rfq.items.length > 0) {
                                 let itemsTable = $('#poTable tbody');
                                 itemsTable.empty();
-                                // console.log('start')
                                 $.each(rfq.items, function (index, line) {
                                     // const item = line.item;
 
-                                    // console.log('end' + line.ItemType)
 
                                     itemsTable.append(`
                                 <tr>
@@ -274,7 +271,6 @@
                         type: 'GET',
                         success: function (response) {
 
-                            // console.log(response)/
                             let itemCodeSelect = row.find('.itemCode');
                             itemCodeSelect.empty().append(
                                 '<option value="">Select Item</option>');
@@ -287,7 +283,6 @@
                         },
                         error: function (response) {
                             alert('Failed to load items');
-                            console.log(response);
                         }
                     });
                 } else {
@@ -316,7 +311,6 @@
                         },
                         error: function (response) {
                             alert('Failed to load item details');
-                            console.log(response);
                         }
                     });
                 } else {

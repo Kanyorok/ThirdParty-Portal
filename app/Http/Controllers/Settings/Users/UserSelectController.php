@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 
 class UserSelectController extends Controller
 {
-    protected const int LIMIT = 10;
+    protected const LIMIT = 10;
 
     /**
      * Handle the incoming request.

@@ -232,14 +232,12 @@ document.addEventListener("DOMContentLoaded", function () {
         if (button) {
             const needId = button.getAttribute('data-id');
             
-            console.log('Fetching need details for ID:', needId);
             
             // Reset modal content
             needDetails.innerHTML = '<p class="text-muted"><i class="spinner-border spinner-border-sm"></i> Loading details...</p>';
 
             // Construct the URL
             const url = `/procurement/dashboard/show/${needId}`;
-            console.log('Fetching from URL:', url);
 
             fetch(url, {
                 method: 'GET',
@@ -251,14 +249,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 credentials: 'same-origin'
             })
             .then(res => {
-                console.log('Response status:', res.status);
                 if (!res.ok) {
                     throw new Error(`HTTP error! Status: ${res.status} - ${res.statusText}`);
                 }
                 return res.json();
             })
             .then(data => {
-                console.log('Response data:', data);
                 
                 if (data.error) {
                     needDetails.innerHTML = `<p class="text-danger">Error: ${data.error}</p>`;

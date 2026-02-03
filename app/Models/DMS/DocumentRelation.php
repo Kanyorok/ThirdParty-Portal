@@ -13,9 +13,9 @@ class DocumentRelation extends Model
     use SoftDeletes;
     use UserActorTrait;
 
-    public const string CREATED_AT = 'CreatedOn';
-    public const string UPDATED_AT = 'ModifiedOn';
-    public const string DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_DocumentRelations';
     protected $primaryKey = 'Id';
