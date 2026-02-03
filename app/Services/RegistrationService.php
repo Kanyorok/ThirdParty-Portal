@@ -44,7 +44,36 @@ class RegistrationService
         });
     }
 
-    public function sendThirdPartyVerificationEmail(ThirdPartyUser $user): void
+    public function sendThirdPartyVerificationEmail(ThirdPartyUser $user): string
+    {
+        $frontendVerifyUrl = $this->buildThirdPartyVerificationUrl($user);
+
+        $body = '<p>Please click the button below to verify your email address.</p>'
+            . '<p><a href="' . $frontendVerifyUrl . '" style="background-color:#2563eb;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;display:inline-block;">Verify Email Address</a></p>'
+            . '<p style="font-size:small;color:#666;margin-top:20px;">If the button above does not work, copy and paste the following link into your browser:<br>'
+            . $frontendVerifyUrl . '</p>'
+            . '<p>If you did not create an account, no further action is required.</p>';
+
+        $actor = User::where('UserID', 'ERPSYS')->first() ?? User::first();
+
+        \App\Services\CRMEmailService::createRaw(
+            $actor,
+            'Verify Email Address - ' . config('app.name'),
+            $body,
+            [['Name' => $user->fullName, 'Email' => $user->Email]],
+            'EMAIL_VERIFICATION',
+            (string) $user->getKey()
+        )->send(true);
+
+        return $frontendVerifyUrl;
+    }
+
+    public function getThirdPartyVerificationUrl(ThirdPartyUser $user): string
+    {
+        return $this->buildThirdPartyVerificationUrl($user);
+    }
+
+    private function buildThirdPartyVerificationUrl(ThirdPartyUser $user): string
     {
         $expiresTs = now()->addMinutes(config('auth.verification.expire', 60))->timestamp;
         $hash = sha1($user->getEmailForVerification());
@@ -67,24 +96,7 @@ class RegistrationService
             ?? config('app.frontend_url')
             ?? config('app.url');
 
-        $frontendVerifyUrl = rtrim($frontendBase, '/') . '/verify-email?verify_url=' . urlencode($backendVerifyUrl);
-
-        $body = '<p>Please click the button below to verify your email address.</p>'
-            . '<p><a href="' . $frontendVerifyUrl . '" style="background-color:#2563eb;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;display:inline-block;">Verify Email Address</a></p>'
-            . '<p style="font-size:small;color:#666;margin-top:20px;">If the button above does not work, copy and paste the following link into your browser:<br>'
-            . $frontendVerifyUrl . '</p>'
-            . '<p>If you did not create an account, no further action is required.</p>';
-
-        $actor = User::where('UserID', 'ERPSYS')->first() ?? User::first();
-
-        \App\Services\CRMEmailService::createRaw(
-            $actor,
-            'Verify Email Address - ' . config('app.name'),
-            $body,
-            [['Name' => $user->fullName, 'Email' => $user->Email]],
-            'EMAIL_VERIFICATION',
-            (string) $user->getKey()
-        )->send(true);
+        return rtrim($frontendBase, '/') . '/verify-email?verify_url=' . urlencode($backendVerifyUrl);
     }
 
     public function createThirdPartyForUser(ThirdPartyUser $user, array $thirdPartyData): ThirdParties

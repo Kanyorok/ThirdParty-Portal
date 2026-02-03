@@ -31,14 +31,13 @@ class ThirdPartyAuthController extends Controller
     {
         try {
             $user = $this->registrationService->registerThirdParty($request->validated());
+            $verificationUrl = $this->registrationService->getThirdPartyVerificationUrl($user);
 
             return response()->json([
                 'success' => true,
                 'email_verification_required' => true,
-                // 'userId' => $user->UserID,
+                'verification_url' => $verificationUrl,
                 'userIid' => $user->Id,
-
-
             ], 201);
         } catch (\Throwable $e) {
             Log::error('Third-party registration failed', [
