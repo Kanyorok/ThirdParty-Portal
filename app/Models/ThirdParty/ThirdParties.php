@@ -181,9 +181,14 @@ class ThirdParties extends Model
             ->with('category');
     }
 
+    // public function isApproved(): bool
+    // {
+    //     return $this->status?->Value === \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved->value;
+    // }
+
     public function isApproved(): bool
     {
-        return $this->status?->Value === \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved->value;
+        return $this->status?->Code === 'A';
     }
 
     public function isSupplier(): bool

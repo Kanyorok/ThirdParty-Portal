@@ -4,6 +4,7 @@ namespace App\Services\BR;
 
 use App\Models\Auth\User;
 use App\Models\BR\BRUser;
+use App\Models\ThirdParty\ThirdPartyUser;
 
 class BREncryption
 {
@@ -29,7 +30,7 @@ class BREncryption
         return self::isValid($user->OperatorID . $password, $user->Password);
     }
 
-    public static function checkAuthUser(User $user, #[\SensitiveParameter] string $password): bool
+    public static function checkAuthUser(User|ThirdPartyUser $user, #[\SensitiveParameter] string $password): bool
     {
         return self::isValid($user->UserID . $password, $user->Password);
     }

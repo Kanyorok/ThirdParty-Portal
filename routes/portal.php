@@ -18,7 +18,6 @@ use App\Http\Controllers\API\Procurement\SupplierRFQController;
 use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
 use App\Http\Controllers\API\Procurement\TenderSubmissionApiController;
 use App\Http\Controllers\API\Procurement\TenderInvitationResponseApiController;
-// use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
 
 use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
 

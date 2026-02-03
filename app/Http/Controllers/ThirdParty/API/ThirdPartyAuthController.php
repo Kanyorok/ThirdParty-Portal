@@ -10,6 +10,7 @@ use App\Models\Insurance\BancassuranceCustomer;
 use App\Http\Requests\ThirdParty\Api\LoginThirdPartyRequest;
 use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
 use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
+use App\Services\BR\BREncryption;
 use App\Services\RegistrationService;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
+use RuntimeException;
 use App\Http\Requests\ThirdParty\ResetPasswordRequest;
 
 class ThirdPartyAuthController extends Controller
@@ -65,7 +67,7 @@ class ThirdPartyAuthController extends Controller
             ->where('Email', strtolower($request->email))
             ->first();
 
-        if (! $user || ! Hash::check($request->password, $user->Password)) {
+        if (! $user || ! $this->verifyPassword($user, $request->password)) {
             return response()->json([
                 'success' => false,
                 'error' => 'INVALID_CREDENTIALS',
@@ -121,6 +123,11 @@ class ThirdPartyAuthController extends Controller
             }
         }
 
+        if ($this->shouldRehash($user)) {
+            $user->Password = Hash::make($request->password);
+            $user->save();
+        }
+
         $user->tokens()->delete();
         $token = $user->createToken('auth-token', ['third_party'])->plainTextToken;
 
@@ -130,6 +137,27 @@ class ThirdPartyAuthController extends Controller
             'token' => $token,
             'token_type' => 'Bearer',
         ]);
+    }
+
+    private function verifyPassword(ThirdPartyUser $user, string $plain): bool
+    {
+        try {
+            return Hash::check($plain, $user->Password);
+        } catch (RuntimeException $e) {
+            return BREncryption::checkAuthUser($user, $plain);
+        }
+    }
+
+    private function shouldRehash(ThirdPartyUser $user): bool
+    {
+        return ! $this->isBcryptHash($user->Password);
+    }
+
+    private function isBcryptHash(string $hash): bool
+    {
+        return str_starts_with($hash, '$2y$')
+            || str_starts_with($hash, '$2a$')
+            || str_starts_with($hash, '$2b$');
     }
 
     public function me(Request $request): JsonResponse

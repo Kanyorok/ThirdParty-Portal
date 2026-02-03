@@ -6,6 +6,7 @@ use App\Enums\EmailPriorityEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Services\CRMEmailService;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Auth\MustVerifyEmail;
@@ -184,7 +185,16 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
 
     public function isApproved(): bool
     {
-        return (bool) ($this->IsApproved ?? false);
+        if ($this->thirdParty?->status?->Code === 'A') {
+            return true;
+        }
+
+        return $this->thirdParty?->supplierMaster?->ApprovalStatus === ThirdPartyApprovalStatusEnum::Approved;
+    }
+
+    public function getIsApprovedAttribute(): bool
+    {
+        return $this->isApproved();
     }
 
     public function isSupplier(): bool

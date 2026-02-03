@@ -1,4 +1,4 @@
-<?php
+<!-- <?php
 
 namespace App\Http\Controllers\API\ThirdParty;
 
@@ -259,4 +259,4 @@ class ThirdPartyAuthController extends Controller
             ? response()->json(['message' => __($status)])
             : response()->json(['message' => __($status)], 400);
     }
-}
+} -->
