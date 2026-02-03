@@ -139,7 +139,7 @@ class StockConsumptionController extends Controller
             ? $currentEmployee->FirstName . ' ' . $currentEmployee->LastName . ' (' . ($currentEmployee->EmployeeID ?? $currentUser->UserName) . ')'
             : $currentUser->UserName;
 
-      
+
         $users = User::whereHas('employee', function ($q) use ($branchId) {
             $q->where('BranchId', $branchId);
         })

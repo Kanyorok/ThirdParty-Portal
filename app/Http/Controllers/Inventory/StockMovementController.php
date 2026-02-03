@@ -10,7 +10,6 @@ use App\Models\Inventory\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class StockMovementController extends Controller
 {
@@ -26,7 +25,7 @@ class StockMovementController extends Controller
 
         $branches = $isHeadOffice ? Branch::all() : Branch::where('Id', $branchId)->get();
 
-        $stores = $isHeadOffice 
+        $stores = $isHeadOffice
             ? Store::all()
             : Store::where('BranchID', $branchId)->get();
 
@@ -84,16 +83,16 @@ class StockMovementController extends Controller
         foreach ($transactions as $tx) {
             $openingQty = $tx->closing_qty - ($tx->total_in_qty - $tx->total_out_qty);
             $closingQty = $tx->closing_qty;
-            
+
             $item = ItemMasterList::find($tx->ItemID);
-            
+
             $unitCost = $this->getUnitPriceForItem($tx, $item);
-            
+
             $openingValue = $openingQty * $unitCost;
             $inValue = $tx->total_in_value > 0 ? $tx->total_in_value : ($tx->total_in_qty * $unitCost);
             $outValue = $tx->total_out_value > 0 ? $tx->total_out_value : ($tx->total_out_qty * $unitCost);
             $closingValue = $closingQty * $unitCost;
-            
+
             if (count($movementData) === 0) {
                 \Log::debug('Transaction calculation:', [
                     'item_id' => $tx->ItemID,
@@ -109,10 +108,10 @@ class StockMovementController extends Controller
                     'tx_avg_unit_cost' => $tx->avg_unit_cost,
                     'tx_total_in_value' => $tx->total_in_value,
                     'tx_total_out_value' => $tx->total_out_value,
-                    'item_unit_cost' => $item ? $item->UnitCost : 'no item'
+                    'item_unit_cost' => $item ? $item->UnitCost : 'no item',
                 ]);
             }
-            
+
             $movementData[$tx->ItemID] = [
                 'label' => $item ? ($item->ItemName ?? $item->Description) : 'Unknown',
                 'quantity' => [
@@ -128,7 +127,7 @@ class StockMovementController extends Controller
                     (float) $closingValue,
                 ],
             ];
-            
+
             $totalOpening += $openingQty;
             $totalIn += $tx->total_in_qty;
             $totalOut += $tx->total_out_qty;
@@ -168,25 +167,24 @@ class StockMovementController extends Controller
         ));
     }
 
-
     private function getUnitPriceForItem($transaction, $item = null)
     {
         if (isset($transaction->avg_unit_cost) && $transaction->avg_unit_cost > 0) {
             return $transaction->avg_unit_cost;
         }
-        
+
         $totalQty = $transaction->total_in_qty + $transaction->total_out_qty;
         $totalValue = $transaction->total_in_value + $transaction->total_out_value;
 
         if ($totalQty > 0 && $totalValue > 0) {
             return $totalValue / $totalQty;
         }
-        
+
         if ($item && isset($item->UnitCost) && $item->UnitCost > 0) {
             return $item->UnitCost;
         }
-        
-        return 100; 
+
+        return 100;
     }
 
     private function getDailyMovementData($baseQuery)
@@ -210,12 +208,12 @@ class StockMovementController extends Controller
 
         foreach ($dailyAggregates as $index => $day) {
             $unitCost = $day->avg_unit_cost > 0 ? $day->avg_unit_cost : 100;
-            
+
             $openingQty = $index === 0 ? 0 : $previousClosingQty;
             $closingQty = $openingQty + $day->in_qty - $day->out_qty;
-            
+
             $openingValue = $openingQty * $unitCost;
-            
+
             $inValue = $day->in_value > 0 ? $day->in_value : ($day->in_qty * $unitCost);
             $outValue = $day->out_value > 0 ? $day->out_value : ($day->out_qty * $unitCost);
             $closingValue = $closingQty * $unitCost;

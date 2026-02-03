@@ -25,9 +25,9 @@ class TransactionAdjustmentController extends Controller
     public function index(Request $request)
     {
         $this->authorize('viewAny', StockAdjustment::class);
-        
+
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -73,13 +73,14 @@ class TransactionAdjustmentController extends Controller
 
         try {
             $this->service->create($request->validated());
+
             return redirect()->route('transactionsadjustment.index')
                 ->with('success', 'Stock adjustment recorded successfully.');
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             return back()->withErrors([
-                'error' => 'Failed to create stock adjustment: ' . $e->getMessage()
+                'error' => 'Failed to create stock adjustment: ' . $e->getMessage(),
             ])->withInput();
         }
     }
@@ -96,7 +97,7 @@ class TransactionAdjustmentController extends Controller
     public function approve(StockAdjustment $stockAdjustment, Request $request)
     {
         $this->authorize('approve', $stockAdjustment);
-        
+
         $comments = $request->input('comments');
         $this->service->approve($stockAdjustment->Id, $comments);
 
@@ -185,7 +186,7 @@ class TransactionAdjustmentController extends Controller
     public function destroy(StockAdjustment $stockAdjustment, Request $request)
     {
         $this->authorize('destroy', $stockAdjustment);
-        
+
         $currentBranch = $request->user()->branch;
         $branchId = $currentBranch->Id;
 
@@ -204,7 +205,7 @@ class TransactionAdjustmentController extends Controller
     public function reject(StockAdjustment $stockAdjustment, Request $request)
     {
         $this->authorize('approve', $stockAdjustment);
-        
+
         $comments = $request->input('comments');
         $this->service->reject($stockAdjustment->Id, $comments);
 

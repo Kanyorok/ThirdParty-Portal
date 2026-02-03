@@ -14,7 +14,6 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
 class TransactionApprovalController extends Controller
 {
@@ -115,7 +114,7 @@ class TransactionApprovalController extends Controller
 
             $user = Auth::user();
             $canApprove = $this->workflow->canApproveModel($record, $user);
-                        
+
         } elseif ($transactionType === 'Stock Adjustment') {
             $record = StockAdjustment::with([
                 'branch', 'creator', 'items.item',
@@ -132,8 +131,8 @@ class TransactionApprovalController extends Controller
 
             $user = Auth::user();
             $canApprove = $this->workflow->canApproveModel($record, $user);
-            
-            
+
+
         } else {
             $record = TransactionTransfer::with([
                 'fromBranch', 'toBranch', 'creator', 'items.item',
@@ -181,7 +180,7 @@ class TransactionApprovalController extends Controller
                 $currentBranch = Auth::user()->branch;
                 if ($record->FromBranch != $currentBranch->Id) {
                     $message = 'You can only approve transfers from your branch.';
-                    
+
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
@@ -196,7 +195,7 @@ class TransactionApprovalController extends Controller
 
                 if (! $this->workflow->canApproveModel($record, $user)) {
                     $message = 'You are not authorized to approve this transfer.';
-                    
+
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
@@ -208,8 +207,8 @@ class TransactionApprovalController extends Controller
                 }
 
                 $lock = Cache::lock('approve-TransactionTransfer-' . $record->Id, 10);
-                if (!$lock->get()) {
-                    $message = 'Transfer has been approved, or another user is working on it.';                    
+                if (! $lock->get()) {
+                    $message = 'Transfer has been approved, or another user is working on it.';
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
@@ -222,7 +221,7 @@ class TransactionApprovalController extends Controller
 
                 try {
                     $this->transferService->approve($record->Id, 'Transfer approved');
-                    
+
 
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
@@ -237,7 +236,7 @@ class TransactionApprovalController extends Controller
                     optional($lock)->release();
                 }
             } catch (Exception $e) {
-                
+
                 $errorMessage = $this->getErrorMessage($e);
 
                 if ($request->ajax() || $request->wantsJson()) {
@@ -259,7 +258,7 @@ class TransactionApprovalController extends Controller
                 $currentBranch = Auth::user()->branch;
                 if ($record->Branch != $currentBranch->Id) {
                     $message = 'You can only approve adjustments for your branch.';
-                    
+
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
@@ -274,7 +273,7 @@ class TransactionApprovalController extends Controller
 
                 if (! $this->workflow->canApproveModel($record, $user)) {
                     $message = 'You are not authorized to approve this adjustment.';
-                    
+
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
@@ -286,8 +285,8 @@ class TransactionApprovalController extends Controller
                 }
 
                 $lock = Cache::lock('approve-StockAdjustment-' . $record->Id, 10);
-                if (!$lock->get()) {
-                    $message = 'Adjustment has been approved, or another user is working on it.';                    
+                if (! $lock->get()) {
+                    $message = 'Adjustment has been approved, or another user is working on it.';
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
@@ -314,7 +313,7 @@ class TransactionApprovalController extends Controller
                     optional($lock)->release();
                 }
             } catch (Exception $e) {
-                
+
                 $errorMessage = $this->getErrorMessage($e);
 
                 if ($request->ajax() || $request->wantsJson()) {
@@ -328,7 +327,7 @@ class TransactionApprovalController extends Controller
             }
         }
 
-        $message = 'Unknown transaction type.';        
+        $message = 'Unknown transaction type.';
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => false,
@@ -352,7 +351,7 @@ class TransactionApprovalController extends Controller
                 $currentBranch = Auth::user()->branch;
                 if ($record->FromBranch != $currentBranch->Id) {
                     $message = 'You can only reject transfers from your branch.';
-                    
+
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
@@ -367,7 +366,7 @@ class TransactionApprovalController extends Controller
 
                 if (! $this->workflow->canApproveModel($record, $user)) {
                     $message = 'You are not authorized to reject this transfer.';
-                    
+
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
@@ -379,8 +378,8 @@ class TransactionApprovalController extends Controller
                 }
 
                 $lock = Cache::lock('reject-TransactionTransfer-' . $record->Id, 10);
-                if (!$lock->get()) {
-                    $message = 'Transfer has been processed, or another user is working on it.';                    
+                if (! $lock->get()) {
+                    $message = 'Transfer has been processed, or another user is working on it.';
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
@@ -407,7 +406,7 @@ class TransactionApprovalController extends Controller
                     optional($lock)->release();
                 }
             } catch (Exception $e) {
-                
+
                 $errorMessage = $this->getErrorMessage($e);
 
                 if ($request->ajax() || $request->wantsJson()) {
@@ -429,7 +428,7 @@ class TransactionApprovalController extends Controller
                 $currentBranch = Auth::user()->branch;
                 if ($record->Branch != $currentBranch->Id) {
                     $message = 'You can only reject adjustments for your branch.';
-                    
+
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
@@ -444,7 +443,7 @@ class TransactionApprovalController extends Controller
 
                 if (! $this->workflow->canApproveModel($record, $user)) {
                     $message = 'You are not authorized to reject this adjustment.';
-                    
+
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
@@ -456,8 +455,8 @@ class TransactionApprovalController extends Controller
                 }
 
                 $lock = Cache::lock('reject-StockAdjustment-' . $record->Id, 10);
-                if (!$lock->get()) {
-                    $message = 'Adjustment has been processed, or another user is working on it.';                    
+                if (! $lock->get()) {
+                    $message = 'Adjustment has been processed, or another user is working on it.';
                     if ($request->ajax() || $request->wantsJson()) {
                         return response()->json([
                             'success' => false,
@@ -484,7 +483,7 @@ class TransactionApprovalController extends Controller
                     optional($lock)->release();
                 }
             } catch (Exception $e) {
-                
+
                 $errorMessage = $this->getErrorMessage($e);
 
                 if ($request->ajax() || $request->wantsJson()) {
@@ -498,7 +497,7 @@ class TransactionApprovalController extends Controller
             }
         }
 
-        $message = 'Unknown transaction type.';        
+        $message = 'Unknown transaction type.';
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => false,

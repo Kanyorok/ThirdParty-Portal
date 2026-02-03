@@ -14,10 +14,10 @@ class CRDBGeneralLedgerController extends Controller
         }
 
         try {
-            # Check if the stored procedure exists and runs
+            // Check if the stored procedure exists and runs
             $data = DB::select("EXEC p_GLAccounts");
 
-            # Check if data is empty
+            // Check if data is empty
             if (empty($data)) {
                 return response()->json([
                     'status' => 'empty',
@@ -61,7 +61,7 @@ class CRDBGeneralLedgerController extends Controller
                 ], 404);
             }
 
-            # Convert ALL numeric-looking values to string to preserve formatting
+            // Convert ALL numeric-looking values to string to preserve formatting
             $data = collect($rows)->map(function ($row) {
                 $row->Balances = number_format((float) $row->Balances, 6, '.', '');
                 $row->LocalBalances = number_format((float) $row->LocalBalances, 6, '.', '');
@@ -87,7 +87,7 @@ class CRDBGeneralLedgerController extends Controller
         }
     }
 
-    # Sync for EOD Balances
+    // Sync for EOD Balances
     public function syncEOD(Request $request)
     {
         return 'Endpoint for ERP EOD';

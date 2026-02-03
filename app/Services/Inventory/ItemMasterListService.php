@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\DB;
 
 class ItemMasterListService
 {
-
     public function create(array $data, ?UploadedFile $imageFile = null, ?UploadedFile $document = null): ItemMasterList
     {
         return DB::transaction(function () use ($data, $imageFile, $document) {
@@ -81,7 +80,7 @@ class ItemMasterListService
 
             $item->Category = $data['SubCategory'] ?? $data['Category'] ?? $item->Category;
 
-            if (!empty($data['remove_image']) && $data['remove_image'] == '1') {
+            if (! empty($data['remove_image']) && $data['remove_image'] == '1') {
                 if ($item->ImageId) {
                     Image::destroy($item->ImageId);
                 }
@@ -127,7 +126,6 @@ class ItemMasterListService
         });
     }
 
-
     public function delete(ItemMasterList $item): void
     {
         $inactiveId = CodeDetail::where('CodeID', 'ItemStatus')
@@ -157,7 +155,6 @@ class ItemMasterListService
                 ->log('Item deleted');
         });
     }
-
 
     protected function storeImage(UploadedFile $file): Image
     {

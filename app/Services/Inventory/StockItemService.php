@@ -82,7 +82,7 @@ class StockItemService
 
     public function destroy(StockItem $item): void
     {
-              
+
         $item->DeletedBy = auth()->id();
         $item->Status = '0';
         $item->save();
@@ -103,7 +103,6 @@ class StockItemService
             $storeSegment . '-' .
             str_pad($Id, 5, '0', STR_PAD_LEFT);
     }
-
 
     protected function isDuplicateSKUCodeError(QueryException $e): bool
     {

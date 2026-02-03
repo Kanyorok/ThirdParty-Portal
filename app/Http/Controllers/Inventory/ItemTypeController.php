@@ -50,6 +50,7 @@ class ItemTypeController extends Controller
         $this->authorize('view', ItemType::class);
         $itemtypes = ItemType::with('type')->get();
         $itmTypes = CodeDetail::where('CodeID', 'ItemTypeStatus')->get();
+
         return response()->json($itemtypes);
     }
 
@@ -59,6 +60,7 @@ class ItemTypeController extends Controller
         $itemtype = ItemType::findOrFail($Id);
         $itmTypes = CodeDetail::where('CodeID', 'ItemTypeStatus')->whereNotIn('ID', ItemType::whereNull('DeletedOn')->pluck('TypeName'))
             ->get();
+
         return response()->json($itemtype);
     }
 

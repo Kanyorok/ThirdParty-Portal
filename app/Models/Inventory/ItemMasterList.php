@@ -66,7 +66,6 @@ class ItemMasterList extends Model
         'ModifiedOn' => 'datetime',
     ];
 
-
     public function inUse(): bool
     {
         return $this->stockItems()->exists()

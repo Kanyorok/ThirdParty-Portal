@@ -5,10 +5,9 @@ namespace App\Http\Controllers\Inventory;
 use App\Enums\Inventory\Transfers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\TransactionReceiptRequest;
-use App\Models\Auth\User;
 use App\Models\Core\Branch;
-use App\Models\Inventory\StockGRNLedger;
 use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\StockGRNLedger;
 use App\Models\Inventory\Store;
 use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionTransfer;
@@ -52,7 +51,7 @@ class TransactionReceiptsController extends Controller
     {
         $this->authorize('create', TransactionReceipt::class);
         $currentBranch = Auth::user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -186,11 +185,11 @@ class TransactionReceiptsController extends Controller
     }
 
     public function getTransferItems($id)
-{
-    $currentBranch = Auth::user()->branch;
-    if (!$currentBranch instanceof Branch) {
-        return response()->json(['error' => 'Current user branch not found.'], 403);
-    }
+    {
+        $currentBranch = Auth::user()->branch;
+        if (! $currentBranch instanceof Branch) {
+            return response()->json(['error' => 'Current user branch not found.'], 403);
+        }
 
         $branchId = $currentBranch->Id;
 
@@ -200,21 +199,21 @@ class TransactionReceiptsController extends Controller
             'ToBranch',
         ])->findOrFail($id);
 
-    if ($transfer->ToBranch != $branchId) {
-        return response()->json(['error' => 'You can only access transfers destined for your branch.'], 403);
-    }
+        if ($transfer->ToBranch != $branchId) {
+            return response()->json(['error' => 'You can only access transfers destined for your branch.'], 403);
+        }
 
-    if ($transfer->Status != Transfers::InTransit->value) {
-        return response()->json(['error' => 'Only transfers in transit can be received.'], 403);
-    }
+        if ($transfer->Status != Transfers::InTransit->value) {
+            return response()->json(['error' => 'Only transfers in transit can be received.'], 403);
+        }
 
-    if ($transfer->receipt()->exists()) {
-        return response()->json(['error' => 'This transfer has already been received.'], 403);
-    }
+        if ($transfer->receipt()->exists()) {
+            return response()->json(['error' => 'This transfer has already been received.'], 403);
+        }
 
-    $mainStore = Store::where('BranchID', $branchId)
-        ->where('IsMainStore', true)
-        ->first();
+        $mainStore = Store::where('BranchID', $branchId)
+            ->where('IsMainStore', true)
+            ->first();
 
         if (! $mainStore) {
             return response()->json(['error' => 'No main store found for your branch. Please contact admin.'], 404);

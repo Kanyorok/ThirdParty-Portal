@@ -14,7 +14,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class InterBranchRequisitionApprovalController extends Controller
 {
@@ -43,7 +42,7 @@ class InterBranchRequisitionApprovalController extends Controller
             ->where('Status', 'P')
             ->orderBy('CreatedOn', 'desc')
             ->get();
-        
+
         $user = Auth::user();
         $pendingRequisitions = $pendingRequisitions->map(function ($requisition) use ($user) {
             $requisition->canApprove = $this->workflow->canApproveModel($requisition, $user);
@@ -61,7 +60,7 @@ class InterBranchRequisitionApprovalController extends Controller
                 return redirect()->route('interbranchrequisitionapproval.index')
                     ->with('error', 'You can only view requisitions for your branch.');
             }
-            
+
             if ($requisition) {
                 $requisition->canApprove = $this->workflow->canApproveModel($requisition, $user);
             }
@@ -148,10 +147,10 @@ class InterBranchRequisitionApprovalController extends Controller
             return redirect()->back()->with('error', $message);
         }
 
-    try {
-        DB::transaction(function () use ($requisition, $user) {
-            $this->workflow->approve($requisition, $user, InterBranchRequisitionEnum::Approved, 'Approved via UI', 'Status');
-        });
+        try {
+            DB::transaction(function () use ($requisition, $user) {
+                $this->workflow->approve($requisition, $user, InterBranchRequisitionEnum::Approved, 'Approved via UI', 'Status');
+            });
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -160,33 +159,34 @@ class InterBranchRequisitionApprovalController extends Controller
                 ]);
             }
 
-        return redirect()->route('interbranchrequisitionapproval.index')->with('success', 'Requisition approved successfully.');
-    } catch (ErroredException $e) {
-        $errorMessage = $e->getMessage();
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => false,
-                'error' => $errorMessage
-            ], 400);
-        }
-        return redirect()->back()->with('error', $errorMessage);
-    } catch (Exception $e) {
-        
-        $errorMessage = 'Unexpected error, try again later.';
-        $errorLower = strtolower($e->getMessage());
-        
-        if (str_contains($errorLower, 'cannot approve your own submission') || 
-            str_contains($errorLower, 'maker-checker')) {
-            $errorMessage = 'You cannot approve your own submission. Please have another user approve this requisition.';
-        } elseif (str_contains($errorLower, 'already approved') || 
-                 str_contains($errorLower, 'already actioned')) {
-            $errorMessage = 'This requisition has already been approved or processed.';
-        } elseif (str_contains($errorLower, 'not in approvable status') ||
-                 str_contains($errorLower, 'no pending approval found')) {
-            $errorMessage = 'This requisition cannot be approved in its current status or no pending approval found for your user.';
-        } elseif (str_contains($errorLower, 'insufficient stock')) {
-            $errorMessage = 'Insufficient stock available for one or more items.';
-        }
+            return redirect()->route('interbranchrequisitionapproval.index')->with('success', 'Requisition approved successfully.');
+        } catch (ErroredException $e) {
+            $errorMessage = $e->getMessage();
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $errorMessage,
+                ], 400);
+            }
+
+            return redirect()->back()->with('error', $errorMessage);
+        } catch (Exception $e) {
+
+            $errorMessage = 'Unexpected error, try again later.';
+            $errorLower = strtolower($e->getMessage());
+
+            if (str_contains($errorLower, 'cannot approve your own submission') ||
+                str_contains($errorLower, 'maker-checker')) {
+                $errorMessage = 'You cannot approve your own submission. Please have another user approve this requisition.';
+            } elseif (str_contains($errorLower, 'already approved') ||
+                     str_contains($errorLower, 'already actioned')) {
+                $errorMessage = 'This requisition has already been approved or processed.';
+            } elseif (str_contains($errorLower, 'not in approvable status') ||
+                     str_contains($errorLower, 'no pending approval found')) {
+                $errorMessage = 'This requisition cannot be approved in its current status or no pending approval found for your user.';
+            } elseif (str_contains($errorLower, 'insufficient stock')) {
+                $errorMessage = 'Insufficient stock available for one or more items.';
+            }
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -253,11 +253,11 @@ class InterBranchRequisitionApprovalController extends Controller
 
         $reason = $request->input('reason');
 
-    try {
-        DB::transaction(function () use ($requisition, $user, $reason) {
-            $this->workflow->reject($requisition, $user, InterBranchRequisitionEnum::Rejected, $reason);
-        });
-        
+        try {
+            DB::transaction(function () use ($requisition, $user, $reason) {
+                $this->workflow->reject($requisition, $user, InterBranchRequisitionEnum::Rejected, $reason);
+            });
+
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -266,31 +266,32 @@ class InterBranchRequisitionApprovalController extends Controller
                 ]);
             }
 
-        return redirect()->route('interbranchrequisitionapproval.index')->with('success', 'Requisition rejected successfully.');
-    } catch (ErroredException $e) {
-        $errorMessage = $e->getMessage();
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => false,
-                'error' => $errorMessage
-            ], 400);
-        }
-        return redirect()->back()->with('error', $errorMessage);
-    } catch (Exception $e) {
-        
-        $errorMessage = 'Unexpected error, try again later.';
-        $errorLower = strtolower($e->getMessage());
-        
-        if (str_contains($errorLower, 'cannot approve your own submission') || 
-            str_contains($errorLower, 'maker-checker')) {
-            $errorMessage = 'You cannot reject your own submission. Please have another user review this requisition.';
-        } elseif (str_contains($errorLower, 'already rejected') || 
-                 str_contains($errorLower, 'already actioned')) {
-            $errorMessage = 'This requisition has already been rejected or processed.';
-        } elseif (str_contains($errorLower, 'not in rejectable status') ||
-                 str_contains($errorLower, 'no pending approval found')) {
-            $errorMessage = 'This requisition cannot be rejected in its current status or no pending approval found for your user.';
-        }
+            return redirect()->route('interbranchrequisitionapproval.index')->with('success', 'Requisition rejected successfully.');
+        } catch (ErroredException $e) {
+            $errorMessage = $e->getMessage();
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $errorMessage,
+                ], 400);
+            }
+
+            return redirect()->back()->with('error', $errorMessage);
+        } catch (Exception $e) {
+
+            $errorMessage = 'Unexpected error, try again later.';
+            $errorLower = strtolower($e->getMessage());
+
+            if (str_contains($errorLower, 'cannot approve your own submission') ||
+                str_contains($errorLower, 'maker-checker')) {
+                $errorMessage = 'You cannot reject your own submission. Please have another user review this requisition.';
+            } elseif (str_contains($errorLower, 'already rejected') ||
+                     str_contains($errorLower, 'already actioned')) {
+                $errorMessage = 'This requisition has already been rejected or processed.';
+            } elseif (str_contains($errorLower, 'not in rejectable status') ||
+                     str_contains($errorLower, 'no pending approval found')) {
+                $errorMessage = 'This requisition cannot be rejected in its current status or no pending approval found for your user.';
+            }
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -358,43 +359,43 @@ class InterBranchRequisitionApprovalController extends Controller
                 );
             });
 
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Your decision has been recorded.'
-            ]);
-        }
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Your decision has been recorded.',
+                ]);
+            }
 
-        return redirect()->route('interbranchrequisitionapproval.index')
-            ->with('success', 'Your decision has been recorded.');
+            return redirect()->route('interbranchrequisitionapproval.index')
+                ->with('success', 'Your decision has been recorded.');
 
-    } catch (Exception $e) {
-        
-        $errorMessage = 'Unexpected error: ' . $e->getMessage();
-        $errorLower = strtolower($e->getMessage());
-        
-        if (str_contains($errorLower, 'cannot approve your own submission') || 
-            str_contains($errorLower, 'maker-checker')) {
-            $errorMessage = 'You cannot approve or reject your own submission. Please have another user review this requisition.';
-        } elseif (str_contains($errorLower, 'no pending approval found') || 
-                 str_contains($errorLower, 'already actioned')) {
-            $errorMessage = 'No pending approval found for your user or this requisition has already been processed.';
-        } elseif (str_contains($errorLower, 'insufficient stock')) {
-            $errorMessage = 'Insufficient stock available for one or more items.';
-        } elseif (str_contains($errorLower, 'already processed')) {
-            $errorMessage = 'This requisition has already been processed.';
-        } elseif (str_contains($errorLower, 'not authorized')) {
-            $errorMessage = 'You are not authorized to process this requisition.';
-        } elseif (str_contains($errorLower, 'invalid status')) {
-            $errorMessage = 'This requisition cannot be processed in its current status.';
-        }
+        } catch (Exception $e) {
 
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => false,
-                'error' => $errorMessage
-            ], 400);
-        }
+            $errorMessage = 'Unexpected error: ' . $e->getMessage();
+            $errorLower = strtolower($e->getMessage());
+
+            if (str_contains($errorLower, 'cannot approve your own submission') ||
+                str_contains($errorLower, 'maker-checker')) {
+                $errorMessage = 'You cannot approve or reject your own submission. Please have another user review this requisition.';
+            } elseif (str_contains($errorLower, 'no pending approval found') ||
+                     str_contains($errorLower, 'already actioned')) {
+                $errorMessage = 'No pending approval found for your user or this requisition has already been processed.';
+            } elseif (str_contains($errorLower, 'insufficient stock')) {
+                $errorMessage = 'Insufficient stock available for one or more items.';
+            } elseif (str_contains($errorLower, 'already processed')) {
+                $errorMessage = 'This requisition has already been processed.';
+            } elseif (str_contains($errorLower, 'not authorized')) {
+                $errorMessage = 'You are not authorized to process this requisition.';
+            } elseif (str_contains($errorLower, 'invalid status')) {
+                $errorMessage = 'This requisition cannot be processed in its current status.';
+            }
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $errorMessage,
+                ], 400);
+            }
 
             return redirect()->back()->with('error', $errorMessage)->withInput();
         } finally {

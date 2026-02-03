@@ -3,7 +3,6 @@
 namespace App\Services\Inventory;
 
 use App\Enums\Inventory\InterBranchRequisitionEnum;
-use App\Models\Core\Workflow;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InterBranchRequisitionItem;
 use App\Models\Inventory\StockItem;
@@ -33,7 +32,7 @@ class InterBranchRequisitionService
         $items = $data['items'] ?? [];
         $fromBranch = $data['FromBranch'];
 
-       foreach ($items as $index => $item) {
+        foreach ($items as $index => $item) {
             $totalStock = StockItem::where('ItemID', $item['Item'])
                 ->where('Branch', $fromBranch)
                 ->where('Status', '1')
@@ -69,22 +68,22 @@ class InterBranchRequisitionService
         }
 
 
-            try {
-                $requisitionflow = new ApprovalWorkflow('InterBranchRequisitionStatus', 'Status');
-                $requisitionflow->submit(
-                    $requisition,
-                    $user = Auth::user(),
-                    InterBranchRequisitionEnum::Pending,
-                    'Interbranch Requisition Submitted for Approval'
-                );
-            } catch (\Exception $e) {
-                $requisition->items()->delete();
-                $requisition->forceDelete();
-                
-                throw ValidationException::withMessages([
-                    'workflow' => 'Workflow configuration is missing. Please configure the approval workflow for Inter-Branch Requisitions before creating requisitions. Contact your system administrator.'
-                ]);
-            }
+        try {
+            $requisitionflow = new ApprovalWorkflow('InterBranchRequisitionStatus', 'Status');
+            $requisitionflow->submit(
+                $requisition,
+                $user = Auth::user(),
+                InterBranchRequisitionEnum::Pending,
+                'Interbranch Requisition Submitted for Approval'
+            );
+        } catch (\Exception $e) {
+            $requisition->items()->delete();
+            $requisition->forceDelete();
+
+            throw ValidationException::withMessages([
+                'workflow' => 'Workflow configuration is missing. Please configure the approval workflow for Inter-Branch Requisitions before creating requisitions. Contact your system administrator.',
+            ]);
+        }
 
         activity()
             ->performedOn($requisition)
@@ -176,18 +175,18 @@ class InterBranchRequisitionService
     ): void {
         $user = $user ?: Auth::user();
 
-            if (!empty($approvedQty)) {
-                foreach ($approvedQty as $itemId => $qty) {
-                    $item = $requisition->items()->find($itemId);
-                    if ($item) {
-                        $item->ApprovedQty = $qty;
-                        $item->Remarks = $itemRemarks[$itemId] ?? $item->Remarks;
-                        $item->ModifiedBy = $user->Id;
-                        $item->ModifiedOn = Carbon::now();
-                        $item->save();
-                    }
+        if (! empty($approvedQty)) {
+            foreach ($approvedQty as $itemId => $qty) {
+                $item = $requisition->items()->find($itemId);
+                if ($item) {
+                    $item->ApprovedQty = $qty;
+                    $item->Remarks = $itemRemarks[$itemId] ?? $item->Remarks;
+                    $item->ModifiedBy = $user->Id;
+                    $item->ModifiedOn = Carbon::now();
+                    $item->save();
                 }
             }
+        }
 
         $workflow = new ApprovalWorkflow('InterBranchRequisitionStatus', 'Status');
 
@@ -197,19 +196,20 @@ class InterBranchRequisitionService
             $workflow->reject($requisition, $user, InterBranchRequisitionEnum::Rejected, $comments, 'Status');
         }
 
-            activity()
-                ->causedBy($user)
-                ->performedOn($requisition)
-                ->event(strtolower($action))
-                ->log("{$action} inter-branch requisition (ID: {$requisition->Id}) with comment: '{$comments}'");
-        }
-            public function getApprovalLevelFromStatus($status)
-            {
-                return match ($status) {
-                    InterBranchRequisitionEnum::Pending->value => InterBranchRequisitionEnum::Pending->label(),
-                    InterBranchRequisitionEnum::Approved->value => InterBranchRequisitionEnum::Approved->label(),
-                    InterBranchRequisitionEnum::Rejected->value => InterBranchRequisitionEnum::Rejected->label(),
-                    default => 'N/A',
-                };
-            }
-        }
+        activity()
+            ->causedBy($user)
+            ->performedOn($requisition)
+            ->event(strtolower($action))
+            ->log("{$action} inter-branch requisition (ID: {$requisition->Id}) with comment: '{$comments}'");
+    }
+
+    public function getApprovalLevelFromStatus($status)
+    {
+        return match ($status) {
+            InterBranchRequisitionEnum::Pending->value => InterBranchRequisitionEnum::Pending->label(),
+            InterBranchRequisitionEnum::Approved->value => InterBranchRequisitionEnum::Approved->label(),
+            InterBranchRequisitionEnum::Rejected->value => InterBranchRequisitionEnum::Rejected->label(),
+            default => 'N/A',
+        };
+    }
+}
