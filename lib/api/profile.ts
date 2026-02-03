@@ -14,7 +14,7 @@ type UpdateProfileResponse = {
 export const apiService = {
   async deleteAccount(password: string, accessToken: string): Promise<DeleteAccountResponse> {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL
-    const endpoint = process.env.NEXT_PUBLIC_DELETE_ACCOUNT_ENDPOINT
+    const endpoint = process.env.NEXT_PUBLIC_API_URL
 
     if (!baseUrl || !endpoint) {
       throw new Error("Delete account endpoint is not configured")
