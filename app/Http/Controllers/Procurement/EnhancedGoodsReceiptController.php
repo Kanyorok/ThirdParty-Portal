@@ -69,7 +69,7 @@ class EnhancedGoodsReceiptController extends Controller
 
         // Load full data for each GRN
         $goodsReceipts->getCollection()->transform(function ($receipt) {
-            return EnhancedGoodsReceipt::with(['receiver', 'supplier', 'order'])
+            return EnhancedGoodsReceipt::with(['receiver', 'supplier.thirdParty.thirdParty', 'order'])
                 ->find($receipt->id);
         });
 
@@ -92,48 +92,90 @@ class EnhancedGoodsReceiptController extends Controller
      */
     public function getAvailablePurchaseOrders()
     {
-        // Get POs with their order lines and items
-        return DB::table('t_Orders as o')
-            ->join('t_OrderLines as ol', 'o.Id', '=', 'ol.iOrderID')
-            ->join('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
-            ->leftJoin('t_Suppliers as s', 'o.AccountID', '=', 's.Id')
-            ->leftJoin('t_ThirdParties as tp', 's.ThirdPartyID', '=', 'tp.Id')
-            ->where('o.Status', 'approved')
-            ->whereRaw('ol.fQuantity > COALESCE((
-                SELECT SUM(ReceivedQTY)
-                FROM t_GoodsReceipts
-                WHERE POID = o.Id
-                AND ItemNo = ol.iStockCodeID
-                AND DeletedOn IS NULL
-            ), 0)')
-            ->whereNull('o.DeletedOn')
-            ->whereNull('ol.DeletedOn')
-            ->select([
-                'o.Id',
-                'o.OrderNo',
-                'o.AccountID',
-                'tp.TradingName as SupplierName',
-                'tp.ThirdPartyName as SupplierFullName',
-            ])
-            ->distinct()
-            ->get()
-            ->map(function ($order) {
-                // Get order lines for this order
-                $orderLines = DB::table('t_OrderLines as ol')
-                    ->join('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
-                    ->where('ol.iOrderID', $order->Id)
-                    ->whereNull('ol.DeletedOn')
-                    ->whereRaw('ol.fQuantity > COALESCE((
-                        SELECT SUM(ReceivedQTY)
-                        FROM t_GoodsReceipts
-                        WHERE POID = ?
-                        AND ItemNo = ol.iStockCodeID
-                        AND DeletedOn IS NULL
-                    ), 0)', [$order->Id])
-                    ->select(['ol.*', 'i.ItemName', 'i.ItemDescription'])
-                    ->get();
+        // Logic adapted from GoodsReceiptController::create
 
-                $order->remaining_lines = $orderLines;
+        // 1. Get total received quantities per PO line item from existing GRNs
+        $receivedQuantities = DB::table('t_GoodsReceipts')
+            ->select('POID', 'ItemNo', DB::raw('SUM(ReceivedQTY) as TotalReceived'))
+            ->whereNull('DeletedOn')
+            ->groupBy('POID', 'ItemNo')
+            ->get()
+            ->groupBy(fn ($item) => (int) $item->POID)
+            ->map(function ($items) {
+                return $items->keyBy(fn ($item) => (int) $item->ItemNo)->map(fn ($item) => (float) $item->TotalReceived);
+            });
+
+        // 2. Fetch all approved POs with their Supplier Details
+        $Orders = DB::table('t_Orders')
+            ->leftJoin('t_Branches', 't_Orders.BranchID', '=', 't_Branches.Id')
+            ->leftJoin('t_Suppliers as s', 't_Orders.AccountID', '=', 's.Id')
+            ->leftJoin('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+            ->leftJoin('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
+            ->where(function ($query) {
+                $query->where('t_Orders.DocStatus', 'A')  // Approved
+                      ->orWhere('t_Orders.DocStatus', 'a');
+            })
+            ->select(
+                't_Orders.Id',
+                't_Orders.OrderNo',
+                't_Orders.ExtOrdNum',
+                't_Orders.AccountID',
+                't_Orders.OrdTotIncl',
+                't_Orders.BranchID',
+                't_Branches.Name as BranchName',
+                'tp.TradingName as SupplierName',
+                'tp.ThirdPartyName as SupplierFullName'
+            )
+            ->orderByDesc('t_Orders.CreatedOn')
+            ->get();
+
+        // 3. Fetch all order lines with item details
+        $OrderLines = DB::table('t_OrderLines as ol')
+            ->join('t_items as i', 'ol.iStockCodeID', '=', 'i.Id')
+            ->leftJoin('t_CodeDetails as cd', 'i.InventoryType', '=', 'cd.Id')
+            ->select(
+                'ol.Id',
+                'ol.iOrderID',
+                'ol.iStockCodeID',
+                'ol.fQuantity',
+                'ol.fUnitPriceExcl',
+                'cd.Description as InventoryType',
+                'i.ItemName',
+                'i.ItemDescription',
+                'i.Category',
+                'i.UOM'
+            )
+            ->get();
+
+        $linesGrouped = $OrderLines->groupBy('iOrderID');
+
+        // 4. Filter orders to only include those with remaining items
+        $filteredOrders = collect();
+
+        foreach ($Orders as $order) {
+            $orderLines = $linesGrouped[$order->Id] ?? collect();
+            $receivedForPO = $receivedQuantities[(int) $order->Id] ?? collect();
+
+            // Calculate remaining quantities for each line
+            $linesWithRemaining = $orderLines->map(function ($line) use ($receivedForPO) {
+                $received = $receivedForPO[(int) $line->iStockCodeID] ?? 0;
+                $remaining = $line->fQuantity - $received;
+
+                // Add remaining quantity to line object
+                $line->fReceivedSoFar = $received;
+                $line->fRemainingQty = max(0, $remaining);
+
+                return $line;
+            })->filter(function ($line) {
+                // Only keep lines with remaining quantity > 0
+                return $line->fRemainingQty > 0;
+            });
+
+            // Only include PO if it has remaining items
+            if ($linesWithRemaining->isNotEmpty()) {
+                // Map to structure expected by EnhancedGoodsReceiptController view
+                $order->remaining_lines = $linesWithRemaining->values();
+                // Map supplier object structure
                 $order->supplier = (object)[
                     'thirdParty' => (object)[
                         'TradingName' => $order->SupplierName,
@@ -141,27 +183,11 @@ class EnhancedGoodsReceiptController extends Controller
                     ],
                 ];
 
-                return $order;
-            })
-            ->filter(function ($order) {
-                return $order->remaining_lines->isNotEmpty();
-            })
-            ->values()
-            ->map(function ($order) {
-                $order->remaining_lines = $order->orderLines->filter(function ($line) {
-                    $receivedQty = EnhancedGoodsReceipt::where('POID', $order->Id)
-                        ->where('ItemNo', $line->iStockCodeID)
-                        ->whereNull('DeletedOn')
-                        ->sum('ReceivedQTY');
+                $filteredOrders->push($order);
+            }
+        }
 
-                    return $line->fQuantity > $receivedQty;
-                });
-
-                return $order;
-            })
-            ->filter(function ($order) {
-                return $order->remaining_lines->isNotEmpty();
-            });
+        return $filteredOrders;
     }
 
     /**
@@ -170,42 +196,106 @@ class EnhancedGoodsReceiptController extends Controller
     public function getPODetails($poId): JsonResponse
     {
         try {
-            $order = Order::with(['orderLines.item.itemType', 'supplier.thirdParty'])
-                ->findOrFail($poId);
+            // 1. Fetch Order with Supplier Details using DB Query (matching getAvailablePurchaseOrders logic)
+            $order = DB::table('t_Orders')
+                ->leftJoin('t_Branches', 't_Orders.BranchID', '=', 't_Branches.Id')
+                ->leftJoin('t_Suppliers as s', 't_Orders.AccountID', '=', 's.Id')
+                ->leftJoin('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+                ->leftJoin('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
+                ->where('t_Orders.Id', $poId)
+                ->select(
+                    't_Orders.Id',
+                    't_Orders.OrderNo',
+                    't_Orders.AccountID',
+                    'tp.TradingName as SupplierName',
+                    'tp.ThirdPartyName as SupplierFullName'
+                )
+                ->first();
+
+            if (! $order) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Purchase Order not found.',
+                ], 404);
+            }
+
+            // 2. Fetch Order Lines
+            $orderLines = DB::table('t_OrderLines as ol')
+                ->join('t_items as i', 'ol.iStockCodeID', '=', 'i.Id')
+                ->leftJoin('t_CodeDetails as cd', 'i.InventoryType', '=', 'cd.Id')
+                ->leftJoin('t_ItemTypes as it', 'i.ItemType', '=', 'it.Id')
+                ->leftJoin('t_UOM as u', 'i.UOM', '=', 'u.Id')
+                ->where('ol.iOrderID', $poId)
+                ->whereNull('ol.DeletedOn')
+                ->select(
+                    'ol.Id',
+                    'ol.iStockCodeID',
+                    'ol.fQuantity',
+                    'ol.fUnitPriceExcl',
+                    'i.ItemName',
+                    'i.ItemDescription',
+                    'i.ItemType',
+                    'it.TypeName as ItemTypeName',
+                    'u.Name as UOMName'
+                )
+                ->get();
+
+            // 3. Get Received Quantities for this PO
+            $receivedQuantities = DB::table('t_GoodsReceipts')
+                ->where('POID', $poId)
+                ->whereNull('DeletedOn')
+                ->groupBy('ItemNo')
+                ->select('ItemNo', DB::raw('SUM(ReceivedQTY) as TotalReceived'))
+                ->pluck('TotalReceived', 'ItemNo');
 
             $poDetails = [
                 'order_no' => $order->OrderNo,
                 'supplier' => [
                     'id' => $order->AccountID,
-                    'name' => $order->supplier->thirdParty->TradingName ?? $order->supplier->thirdParty->ThirdPartyName ?? 'Unknown Supplier',
+                    'name' => $order->SupplierName ?? $order->SupplierFullName ?? 'Unknown Supplier',
                 ],
                 'lines' => [],
             ];
 
-            foreach ($order->orderLines as $line) {
-                $receivedQty = EnhancedGoodsReceipt::where('POID', $poId)
-                    ->where('ItemNo', $line->iStockCodeID)
-                    ->whereNull('DeletedOn')
-                    ->sum('ReceivedQTY');
-
+            foreach ($orderLines as $line) {
+                $receivedQty = $receivedQuantities[$line->iStockCodeID] ?? 0;
                 $remainingQty = $line->fQuantity - $receivedQty;
 
                 if ($remainingQty > 0) {
-                    $item = $line->item;
-                    $itemType = $this->determineItemType($item);
+                    // Determine Item Type using helper or direct mapping
+                    // Since we fetched ItemTypeName, we can try to map it, or use the helper if we had an object
+                    // But here we have stdClass. Let's map manually or create a temporary object if needed.
+                    // Actually, the previous implementation used determineItemType with an Item model.
+                    // We'll mimic the mapping logic here for performance.
+
+                    $itemTypeStr = $line->ItemTypeName ?? 'Stock';
+                    $itemType = EnhancedGoodsReceipt::ITEM_TYPE_STOCK; // Default
+
+                    $typeMapping = [
+                        'Stock' => EnhancedGoodsReceipt::ITEM_TYPE_STOCK,
+                        'Inventory' => EnhancedGoodsReceipt::ITEM_TYPE_STOCK,
+                        'Asset' => EnhancedGoodsReceipt::ITEM_TYPE_ASSET,
+                        'Fixed Asset' => EnhancedGoodsReceipt::ITEM_TYPE_ASSET,
+                        'Service' => EnhancedGoodsReceipt::ITEM_TYPE_SERVICE,
+                        'Non-Stock' => EnhancedGoodsReceipt::ITEM_TYPE_SERVICE,
+                    ];
+
+                    if (isset($typeMapping[$itemTypeStr])) {
+                        $itemType = $typeMapping[$itemTypeStr];
+                    }
 
                     $poDetails['lines'][] = [
                         'id' => $line->Id,
                         'item_id' => $line->iStockCodeID,
-                        'item_name' => $item->ItemName ?? 'Unknown Item',
-                        'item_description' => $item->ItemDescription ?? '',
+                        'item_name' => $line->ItemName ?? 'Unknown Item',
+                        'item_description' => $line->ItemDescription ?? '',
                         'item_type' => $itemType,
                         'item_type_display' => $this->getItemTypeDisplay($itemType),
-                        'ordered_qty' => $line->fQuantity,
-                        'received_qty' => $receivedQty,
-                        'remaining_qty' => $remainingQty,
-                        'unit_price' => $line->fUnitPriceExcl,
-                        'uom' => $item->uom->Name ?? 'Each',
+                        'ordered_qty' => (float)$line->fQuantity,
+                        'received_qty' => (float)$receivedQty,
+                        'remaining_qty' => max(0, (float)$remainingQty),
+                        'unit_price' => (float)$line->fUnitPriceExcl,
+                        'uom' => $line->UOMName ?? 'Each',
                     ];
                 }
             }
@@ -278,9 +368,9 @@ class EnhancedGoodsReceiptController extends Controller
                     'UnitPrice' => $itemData['unit_price'],
                     'TotalValue' => $totalValue,
                     'DeliveryNoteRef' => $request->delivery_note_ref,
-                    'BatchNumber' => $itemData['batch_number'],
-                    'ExpiryDate' => $itemData['expiry_date'],
-                    'ManufactureDate' => $itemData['manufacture_date'],
+                    'BatchNumber' => $itemData['batch_number'] ?? null,
+                    'ExpiryDate' => $itemData['expiry_date'] ?? null,
+                    'ManufactureDate' => $itemData['manufacture_date'] ?? null,
                     'InspectionStatus' => PostingEnum::Draft,
                     'ProcessingStatus' => EnhancedGoodsReceipt::STATUS_PENDING,
                     'QualityStatus' => $qualityStatus,
@@ -316,6 +406,50 @@ class EnhancedGoodsReceiptController extends Controller
     }
 
     /**
+     * Get line details for AJAX modal
+     */
+    public function getLineDetails($lineId)
+    {
+        $line = EnhancedGoodsReceipt::with(['item', 'item.uom', 'order', 'supplier', 'receiver'])->findOrFail($lineId);
+
+        // Calculate TotalValue if missing
+        $totalValue = $line->TotalValue;
+        if (($totalValue == 0 || $totalValue == 0.00) && $line->ReceivedQTY > 0) {
+            $totalValue = $line->ReceivedQTY * $line->UnitPrice;
+        }
+
+        return view('procurement.goods-receipt.partials.line-details', compact('line', 'totalValue'));
+    }
+
+    /**
+     * Retry processing for a specific line
+     */
+    public function retryProcessing($lineId): JsonResponse
+    {
+        try {
+            $line = EnhancedGoodsReceipt::findOrFail($lineId);
+
+            // Reset status to pending to allow reprocessing
+            $line->update([
+                'ProcessingStatus' => EnhancedGoodsReceipt::STATUS_PENDING,
+                'ProcessingErrors' => null,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Line item reset for processing.',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to retry processing', ['line_id' => $lineId, 'error' => $e->getMessage()]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reset line item: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Show GRN details
      */
     public function show($grnId, $poId)
@@ -326,7 +460,7 @@ class EnhancedGoodsReceiptController extends Controller
             'receiver',
             'qualityChecker',
             'poster',
-            'supplier.thirdParty',
+            'supplier.thirdParty.thirdParty',
             'order',
             'orderLine',
         ])
@@ -344,10 +478,13 @@ class EnhancedGoodsReceiptController extends Controller
             'grn_id' => $grnId,
             'po_id' => $poId,
             'order_no' => $grnLines->first()->order->OrderNo ?? 'N/A',
-            'supplier_name' => $grnLines->first()->supplier->thirdParty->TradingName ?? 'N/A',
+            'supplier_name' => $grnLines->first()->supplier->thirdParty->thirdParty->TradingName ?? 'N/A',
+            'received_date' => $grnLines->first()->ReceivedDate,
             'received_date' => $grnLines->first()->ReceivedDate,
             'total_lines' => $grnLines->count(),
-            'total_value' => $grnLines->sum('TotalValue'),
+            'total_value' => $grnLines->sum(function ($line) {
+                return ($line->TotalValue > 0) ? $line->TotalValue : ($line->ReceivedQTY * $line->UnitPrice);
+            }),
             'can_post' => $grnLines->every->canBePosted(),
             'processing_status' => $this->getGRNProcessingStatus($grnLines),
         ];
@@ -473,7 +610,7 @@ class EnhancedGoodsReceiptController extends Controller
         ];
 
         // Get recent GRNs
-        $recentGRNs = EnhancedGoodsReceipt::with(['item', 'supplier'])
+        $recentGRNs = EnhancedGoodsReceipt::with(['item', 'supplier', 'orderLine'])
             ->orderByDesc('CreatedOn')
             ->limit(10)
             ->get();

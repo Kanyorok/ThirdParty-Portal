@@ -30,6 +30,7 @@ class TenderSubmissionController extends Controller
     public function create(Request $request)
     {
         $this->authorize(\App\Enums\Core\PermissionEnum::BidSubmissionWrite->value);
+        $currencies = \App\Models\Core\Currency::all();
         // Exclude tenders that already have submissions & filter by Published status
         $tenders = Tender::select('TenderNo', 'Title')
             ->where('Status', \App\Enums\TenderStatusEnum::Published->value)
@@ -46,7 +47,7 @@ class TenderSubmissionController extends Controller
             ->where('CodeID', 'SubmissionMode')
             ->get(['ID', 'Description']);
 
-        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes'));
+        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes', 'currencies'));
     }
 
     public function view($Id)

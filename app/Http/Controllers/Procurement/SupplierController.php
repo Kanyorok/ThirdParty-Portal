@@ -341,6 +341,41 @@ class SupplierController extends Controller
         }
     }
 
+    public function suspend($id)
+    {
+        $supplier = SupplierMaster::where('ThirdPartyId', $id)->firstOrFail();
+
+        // Check permission - using update policy for now as suspension is an edit
+        if (! auth()->user()->can('update', $supplier)) {
+            return redirect()->back()->with('error', 'You are not authorized to suspend this supplier.');
+        }
+
+        try {
+            $supplier->ApprovalStatus = ThirdPartyApprovalStatusEnum::Suspended;
+
+            // Capture user ID for modification tracking if available in model
+            if (in_array('ModifiedBy', $supplier->getFillable())) {
+                $supplier->ModifiedBy = Auth::id();
+            }
+
+            $supplier->save();
+
+            // Deactivate associated users
+            \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyId', $id)
+                ->update(['IsActive' => false]);
+
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($supplier)
+                ->event('suspend')
+                ->log("Suspended supplier {$supplier->SupplierID} linked to ThirdParty {$id}");
+
+            return redirect()->back()->with('success', 'Supplier has been suspended.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Suspension failed: ' . $e->getMessage());
+        }
+    }
+
     public function reject($id)
     {
         $supplier = SupplierMaster::where('ThirdPartyId', $id)->firstOrFail();
@@ -370,6 +405,7 @@ class SupplierController extends Controller
         $activateUrl = route('suppliers.activate', $id);
         $submitUrl = route('suppliers.submit', $id);
         $rejectUrl = route('suppliers.reject', $id);
+        $suspendUrl = route('suppliers.suspend', $id);
 
 
         $buttons = '';
@@ -431,6 +467,22 @@ class SupplierController extends Controller
                 <form action="' . $rejectUrl . '" method="POST" class="inline-block ms-1">
                     ' . csrf_field() . '
                     <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                </form>';
+        }
+
+        // Suspend Button: Show if NOT already suspended and user can update
+        $isSuspended = false;
+        if (is_object($supplier->ApprovalStatus) && property_exists($supplier->ApprovalStatus, 'value')) {
+            $isSuspended = $supplier->ApprovalStatus->value === ThirdPartyApprovalStatusEnum::Suspended->value;
+        } elseif (is_string($supplier->ApprovalStatus)) {
+            $isSuspended = $supplier->ApprovalStatus === ThirdPartyApprovalStatusEnum::Suspended->value; // or check string 'Suspended'
+        }
+
+        if (! $isSuspended && auth()->user()->can('update', $supplier)) {
+            $buttons .= '
+                <form action="' . $suspendUrl . '" method="POST" class="inline-block ms-1" onsubmit="return confirm(\'Are you sure you want to suspend this supplier? Users will be deactivated.\');">
+                    ' . csrf_field() . '
+                    <button type="submit" class="btn btn-sm btn-dark">Suspend</button>
                 </form>';
         }
 

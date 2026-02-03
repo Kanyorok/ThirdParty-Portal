@@ -124,7 +124,15 @@
                                             <strong>{{ number_format($line->ReceivedQTY, 2) }}</strong> {{ $line->item->uom->Name ?? '' }}
                                         </td>
                                         <td>KES {{ number_format($line->UnitPrice, 2) }}</td>
-                                        <td><strong>KES {{ number_format($line->TotalValue, 2) }}</strong></td>
+                                        <td>
+                                            @php
+                                                $displayValue = $line->TotalValue;
+                                                if (($displayValue == 0 || $displayValue == 0.00) && $line->ReceivedQTY > 0) {
+                                                    $displayValue = $line->ReceivedQTY * $line->UnitPrice;
+                                                }
+                                            @endphp
+                                            <strong>KES {{ number_format($displayValue, 2) }}</strong>
+                                        </td>
                                         <td>
                                             @php $qualityBadge = $line->quality_status_badge @endphp
                                             <span class="badge bg-{{ $qualityBadge['class'] }}">

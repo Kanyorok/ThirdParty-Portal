@@ -197,17 +197,14 @@
             <div class="modal-body">
                 <form action="{{ route('requisitionItem.store') }}" method="post" id="createRequisitionItemForm">
                     @csrf
-                    <div class="modal-body">
-                        <p>Are you sure you want to submit this requisition for approval?</p>
-                        <div class="mb-3">
-                            <label for="submitRemarks" class="form-label">Remarks <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="submitRemarks" name="remarks" rows="3" 
-                                      placeholder="Add any additional comments..." required></textarea>
-                        </div>
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> 
-                            Once submitted, this requisition will be sent to the approval workflow and you will not be able to add more items.
-                        </div>
+                    <div class="mb-3">
+                        <label for="Type" class="form-label">Type <span class="text-danger">*</span></label>
+                        <select class="form-control" name="Type" id="Type" required>
+                            <option selected disabled value="">Select Type</option>
+                            @foreach($types as $type)
+                            <option value="{{ $type->Id }}">{{ $type->TypeName ?? $type->Name ?? $type->Description }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div class="mb-3">
@@ -243,6 +240,7 @@
                         <p id="UOM_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                     </div>
 
+                    <input type="hidden" name="RequisitionID" id="RequisitionID">
                     <input type="hidden" name="EstimatedPrice" id="EstimatedPrice">
                     <input type="hidden" class="form-control" id="LineItemID" name="LineItemID">
 
@@ -286,8 +284,8 @@
                 <div class="modal-body">
                     <p>Are you sure you want to submit this requisition for approval?</p>
                     <div class="mb-3">
-                        <label for="submitRemarks" class="form-label">Remarks</label>
-                        <textarea class="form-control" id="submitRemarks" name="remarks" rows="3"
+                        <label for="submitRemarks" class="form-label">Remarks <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="submitRemarks" name="remarks" rows="3" required
                             placeholder="Add any additional comments..."></textarea>
                     </div>
                     <div class="alert alert-info">
@@ -309,7 +307,7 @@
 
 @section('scripts')
 <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-<script src="{{ asset('assets/js/datatables.js') }}"></script>
+<script src="{{ asset('assets/libs/dataTables/jquery.dataTables.min.js') }}"></script>
 <script>
     const $Modal = $('#RequisitionItemModal');
     const $SubmitModal = $('#submitConfirmationModal');
@@ -358,7 +356,7 @@
     $(document).ready(function() {
 
         // Initialize DataTable if there are items
-        @if($details - > count() > 0)
+        @if(count($details) > 0)
         $('#requsitionItemsTable').DataTable({
             pageLength: 10,
             ordering: true,
@@ -563,6 +561,28 @@
         $('#EstUnitCostDisplay').on('input', function() {
             if (!$(this).prop('readonly')) {
                 $('#EstimatedPrice').val($(this).val());
+            }
+        });
+        // Delete item handler
+        $(document).on('click', '.remove-plan-item', function(e) {
+            e.preventDefault();
+            const itemId = $(this).data('line-id');
+
+            if (confirm('Are you sure you want to delete this item?')) {
+                $.ajax({
+                    url: '/procurement/requisitionLine/' + itemId,
+                    type: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                         location.reload();
+                    },
+                    error: function(xhr) {
+                        alert('Error deleting item');
+                        console.error(xhr);
+                    }
+                });
             }
         });
     });

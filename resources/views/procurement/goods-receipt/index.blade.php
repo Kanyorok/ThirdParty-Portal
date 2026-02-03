@@ -109,7 +109,9 @@
                                         $grnLines = \App\Models\Procurement\EnhancedGoodsReceipt::byGRN($receipt->GRNID)
                                                                                                    ->byPO($receipt->POID)
                                                                                                    ->get();
-                                        $totalValue = $grnLines->sum('TotalValue');
+                                        $totalValue = $grnLines->sum(function($line) {
+                                            return ($line->TotalValue > 0) ? $line->TotalValue : ($line->ReceivedQTY * $line->UnitPrice);
+                                        });
                                         $lineCount = $grnLines->count();
                                         $processingStatus = $grnLines->every->isProcessed() ? 'processed' : 
                                                           ($grnLines->some->isProcessed() ? 'partial' : 
@@ -125,7 +127,8 @@
                                             <small class="text-muted">{{ $receipt->POID }}</small>
                                         </td>
                                         <td>
-                                            {{ $receipt->supplier->thirdParty->TradingName ?? $receipt->supplier->thirdParty->ThirdPartyName ?? 'N/A' }}
+                                            {{ $receipt->supplier->thirdParty->thirdParty->TradingName ?? $receipt->supplier->thirdParty->thirdParty->ThirdPartyName ?? 'N/A' }}
+                                                                                                    
                                         </td>
                                         <td>
                                             {{ $receipt->ReceivedDate ? $receipt->ReceivedDate->format('d M Y') : 'N/A' }}

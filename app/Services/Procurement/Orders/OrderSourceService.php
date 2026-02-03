@@ -18,33 +18,21 @@ class OrderSourceService
         $awardedFromRFQAward = collect([]);
 
         try {
-            // Join t_RFQResponse to find all potential suppliers for approved RFQs
-            // Not just "awarded" ones, but any approved RFQ with a response.
-            // Logic: Approved RFQs are those with orders? No, Approved RFQs are ready for PO.
-            // Current Logic: Fetch from t_RFQAward.
-            // BUT previous change: We want ALL responses for approved RFQs.
-
-            // 1. Get Approved RFQs (from t_RFQ where Status is Approved? or just t_RFQAward?)
-            // Actually, the previous controller logic joined t_RFQAward.
-            // AND we wanted to enable selecting un-awarded but responded RFQs.
-
-            // Replicating Controller Logic:
-            // "Fetch all approved RFQs (via Responses)"
-            $awardedFromRFQAward = DB::table('t_RFQResponse as r')
-               ->join('t_RFQ as q', 'r.RFQId', '=', 'q.Id')
-               ->join('t_ThirdParties as tp', 'r.SupplierId', '=', 'tp.Id') // r.SupplierId is ThirdPartyId
-               // Controller had: DB::table('t_RFQAward as a')...
-               // WAIT. My previous edit to controller CHANGED it to query t_RFQResponse.
-
-               // Let's perform the query exactly as the Controller had it (after my fix).
+            // Fetch Awarded RFQs joining through the Award table
+            $awardedFromRFQAward = DB::table('t_RFQAward as ra')
+               ->join('t_RFQ as q', 'ra.RFQId', '=', 'q.Id')
+               ->join('t_Suppliers as s', 'ra.SupplierId', '=', 's.Id')
+               ->leftJoin('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+               ->leftJoin('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
                ->select(
                    'q.Id',
                    'q.RFQNumber',
-                   'r.SupplierId', // ThirdPartyId
+                   'ra.SupplierId',
                    'tp.Id as ThirdPartyId',
                    DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName, '') as SupplierName"),
                    DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
                )
+               ->where('ra.AwardStatus', 'Approved')
                ->distinct()
                ->get();
         } catch (\Throwable $e) {
