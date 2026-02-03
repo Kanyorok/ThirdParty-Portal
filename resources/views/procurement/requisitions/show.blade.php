@@ -571,6 +571,28 @@
                 $('#EstimatedPrice').val($(this).val());
             }
         });
+        // Delete item handler
+        $(document).on('click', '.remove-plan-item', function(e) {
+            e.preventDefault();
+            const itemId = $(this).data('line-id');
+
+            if (confirm('Are you sure you want to delete this item?')) {
+                $.ajax({
+                    url: '/procurement/requisitionLine/' + itemId,
+                    type: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                         location.reload();
+                    },
+                    error: function(xhr) {
+                        alert('Error deleting item');
+                        console.error(xhr);
+                    }
+                });
+            }
+        });
     });
 </script>
 @endsection
