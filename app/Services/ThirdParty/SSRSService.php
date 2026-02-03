@@ -26,7 +26,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SSRSService
 {
-    public const string UserParameter = 'LoginUser';
+    public const UserParameter = 'LoginUser';
 
     protected PendingRequest $_query;
 

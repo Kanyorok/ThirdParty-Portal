@@ -26,7 +26,7 @@ class DashboardController extends Controller
         $this->middleware('ajax')->only('search');
     }
 
-    protected const int MONTHS = 6;
+    protected const MONTHS = 6;
 
     /**
      * Handle the incoming request.
