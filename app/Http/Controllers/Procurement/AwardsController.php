@@ -72,8 +72,8 @@ class AwardsController extends Controller
         })
             ->whereExists(function ($q) {
                 $q->select(DB::raw(1))
-                  ->from('t_TenderCommitteeEvaluations as e')
-                  ->whereColumn('e.TenderID', 't_Tenders.Id');
+                    ->from('t_TenderCommitteeEvaluations as e')
+                    ->whereColumn('e.TenderID', 't_Tenders.Id');
             })
             ->with('award')
             ->get()
@@ -138,8 +138,8 @@ class AwardsController extends Controller
         $rfqPending = RFQ::whereIn('Id', $rfqsWithEval)
             ->whereNotExists(function ($q) {
                 $q->select(DB::raw(1))
-                  ->from('t_RFQAward as a')
-                  ->whereColumn('a.RFQId', 't_RFQ.Id');
+                    ->from('t_RFQAward as a')
+                    ->whereColumn('a.RFQId', 't_RFQ.Id');
             })
             ->get()
             ->map(function ($rfq) {
@@ -366,21 +366,21 @@ class AwardsController extends Controller
     {
         return Tender::whereHas('submissions', function ($query) {
             $query->where('IsResponsive', true)
-                  ->whereIn('BidStatus', ['responsive', 'evaluated']);
+                ->whereIn('BidStatus', ['responsive', 'evaluated']);
         })
-        ->with(['award'])
-        ->get()
-        ->map(function ($tender) {
-            return [
-                'id' => $tender->Id,
-                'number' => $tender->TenderNo,
-                'title' => $tender->Title,
-                'type' => $this->determineTenderType($tender),
-                'has_award' => $tender->award !== null,
-                'award_status' => $tender->award ? $tender->award->AwardStatus : null,
-            ];
-        })
-        ->groupBy('type');
+            ->with(['award'])
+            ->get()
+            ->map(function ($tender) {
+                return [
+                    'id' => $tender->Id,
+                    'number' => $tender->TenderNo,
+                    'title' => $tender->Title,
+                    'type' => $this->determineTenderType($tender),
+                    'has_award' => $tender->award !== null,
+                    'award_status' => $tender->award ? $tender->award->AwardStatus : null,
+                ];
+            })
+            ->groupBy('type');
     }
 
     /**
@@ -1229,7 +1229,7 @@ class AwardsController extends Controller
     {
         $financialSection = collect($sectionScores)->first(function ($section) {
             return stripos($section['section_name'], 'financial') !== false ||
-                   stripos($section['section_name'], 'finance') !== false;
+                stripos($section['section_name'], 'finance') !== false;
         });
 
         return $financialSection ? $financialSection['score'] : null;
@@ -1328,7 +1328,7 @@ class AwardsController extends Controller
         // Get tenders that are eligible for award (have completed evaluations)
         $tenders = Tender::whereHas('submissions', function ($query) {
             $query->where('IsResponsive', true)
-                  ->whereIn('BidStatus', ['responsive', 'evaluated']);
+                ->whereIn('BidStatus', ['responsive', 'evaluated']);
         })->whereDoesntHave('awards')->get();
 
         return view('procurement.awards.create', compact('tenders'));

@@ -48,11 +48,20 @@ class Store extends Model
         'DeletedBy' => 'integer',
         'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
-
     ];
 
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'BranchID', 'Id');
+    }
+
+    public function stockItems()
+    {
+        return $this->hasMany(StockItem::class, 'Store', 'Id');
+    }
+
+    public function hasStockItems(): bool
+    {
+        return $this->stockItems()->exists();
     }
 }

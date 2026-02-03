@@ -2,6 +2,7 @@
 
 namespace App\Models\Inventory;
 
+use App\Enums\Inventory\Transfers;
 use App\Models\Auth\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -34,7 +35,7 @@ class TransactionReceipt extends Model
     ];
 
     protected $casts = [
-        'Status' => \App\Enums\Inventory\Transfers::class,
+        'Status' => Transfers::class,
     ];
 
     public static function getPrimaryKey(): string

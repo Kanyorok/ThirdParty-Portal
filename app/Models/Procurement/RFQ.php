@@ -40,6 +40,9 @@ class RFQ extends Model
                 // Use the convenience method with proper type hints
                 $workflowService->submitRFQ($rfq, $user, 'RFQ Created');
             }
+
+            app(\App\Services\Procurement\RFQ\RFQWorkflowService::class)
+                ->submitRFQ($rfq, $user, 'RFQ Created');
         });
     }
 

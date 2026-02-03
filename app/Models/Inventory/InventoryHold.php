@@ -22,7 +22,6 @@ class InventoryHold extends Model
     protected $primaryKey = 'Id';
     protected $connection = 'sqlsrv';
 
-
     protected $fillable = [
         'InventoryHoldID', 'ItemID', 'BranchID', 'Store', 'Quantity', 'Reason', 'Source', 'SourceID',
         'Status', 'Remarks', 'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy',
@@ -32,6 +31,11 @@ class InventoryHold extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'Reason', 'ID')
             ->where('CodeID', 'Adjustment Reason');
+    }
+
+    public function defectDetail()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Reason', 'ID');
     }
 
     public function item()
@@ -59,6 +63,11 @@ class InventoryHold extends Model
         return $this->belongsTo(Branch::class, 'BranchID');
     }
 
+    public function fromBranch()
+    {
+        return $this->belongsTo(Branch::class, 'BranchID');
+    }
+
     public function store()
     {
         return $this->belongsTo(Store::class, 'Store');
@@ -67,6 +76,29 @@ class InventoryHold extends Model
     public function sourceDetail()
     {
         return $this->belongsTo(CodeDetail::class, 'Source');
+    }
+
+    public function sourceAdjustment()
+    {
+        return $this->belongsTo(StockAdjustment::class, 'SourceID', 'Id');
+    }
+
+    public function sourceReceipt()
+    {
+        return $this->belongsTo(TransactionReceipt::class, 'SourceID', 'Id');
+    }
+
+    public function getSourceDocumentIdAttribute()
+    {
+        $sourceType = $this->sourceDetail->Description ?? '';
+
+        if (stripos($sourceType, 'adjustment') !== false && $this->sourceAdjustment) {
+            return $this->sourceAdjustment->AdjustmentId ?? $this->SourceID;
+        } elseif ((stripos($sourceType, 'receipt') !== false || stripos($sourceType, 'transfer') !== false) && $this->sourceReceipt) {
+            return $this->sourceReceipt->ReceiptId ?? $this->SourceID;
+        }
+
+        return $this->SourceID;
     }
 
     public function inventoryHoldReview()

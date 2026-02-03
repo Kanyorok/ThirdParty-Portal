@@ -10,15 +10,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 
 class TenderClarificationApiController extends Controller
 {
-    /**
-     * Submit a clarification question from the portal
-     * POST /api/tender-clarifications
-     */
     public function submitClarification(Request $request): JsonResponse
     {
         try {
@@ -28,8 +22,6 @@ class TenderClarificationApiController extends Controller
                     'error' => 'Missing required fields: tender_id, question',
                 ], 422);
             }
-
-
 
             // Resolve supplier
             $supplier = null;
@@ -146,12 +138,9 @@ class TenderClarificationApiController extends Controller
                 'debug' => $e->getTraceAsString(),
             ], 500);
         }
+
     }
 
-    /**
-     * Get clarifications for a specific tender and supplier
-     * GET /api/tender-clarifications?tender_id=X&third_party_id=Y
-     */
     public function getClarifications(Request $request): JsonResponse
     {
         try {
@@ -167,9 +156,12 @@ class TenderClarificationApiController extends Controller
                 ], 422);
             }
 
-            // Resolve supplier from request or auth
-            $supplier = null;
-            $user = Auth::user();
+            $hasAccess = DB::table('t_TenderInvitations')
+                ->where('TenderId', $data['tender_id'])
+                ->where('SupplierId', $supplier->Id)
+                ->whereNull('DeletedOn')
+                ->whereRaw('LOWER(ResponseStatus) = ?', ['accepted'])
+                ->exists();
 
             if ($request->third_party_id) {
                 $supplier = Supplier::whereHas('supplierMaster', function ($query) use ($request) {
@@ -262,79 +254,7 @@ class TenderClarificationApiController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
-    }
 
-    /**
-     * Get all pending clarifications for ERP staff to respond to
-     * GET /api/tender-clarifications/pending
-     */
-    public function getPendingClarifications(Request $request): JsonResponse
-    {
-        try {
-            $page = (int)$request->query('page', 1);
-            $limit = (int)$request->query('limit', 20);
-            $tenderId = $request->query('tender_id');
-
-            $query = VendorClarifications::with(['tenderID', 'vendorID'])
-                ->whereNull('Answer')
-                ->whereNull('DeletedOn');
-
-            // Filter by specific tender if requested
-            if ($tenderId) {
-                $query->where('TenderID', $tenderId);
-            }
-
-            $total = $query->count();
-            $offset = ($page - 1) * $limit;
-
-            $clarifications = $query->orderBy('QuestionDate', 'asc')
-                ->skip($offset)
-                ->take($limit)
-                ->get();
-
-            // Format the response with additional supplier information
-            $formattedClarifications = $clarifications->map(function ($clarification) {
-                // Get supplier name from third party relationship
-                $supplierName = 'Unknown Supplier';
-                if ($clarification->vendorID && $clarification->vendorID->thirdParty) {
-                    $supplierName = $clarification->vendorID->thirdParty->TradingName
-                        ?? $clarification->vendorID->thirdParty->ThirdPartyName;
-                }
-
-                return [
-                    'clarificationId' => $clarification->ClarificationID,
-                    'tenderId' => $clarification->TenderID,
-                    'tenderNo' => $clarification->tenderID->TenderNo ?? 'N/A',
-                    'tenderTitle' => $clarification->tenderID->Title ?? 'N/A',
-                    'vendorId' => $clarification->VendorID,
-                    'supplierName' => $supplierName,
-                    'question' => $clarification->Question,
-                    'questionDate' => $clarification->QuestionDate,
-                    'daysPending' => now()->diffInDays($clarification->QuestionDate),
-                    'createdBy' => $clarification->CreatedBy,
-                    'createdOn' => $clarification->CreatedOn,
-                ];
-            });
-
-            return response()->json([
-                'data' => $formattedClarifications,
-                'pagination' => [
-                    'total' => $total,
-                    'page' => $page,
-                    'limit' => $limit,
-                    'pages' => ceil($total / $limit),
-                ],
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error fetching pending clarifications', [
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'error' => 'Failed to fetch pending clarifications',
-                'message' => $e->getMessage(),
-            ], 500);
-        }
     }
 
     /**
@@ -416,5 +336,6 @@ class TenderClarificationApiController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
+
     }
 }

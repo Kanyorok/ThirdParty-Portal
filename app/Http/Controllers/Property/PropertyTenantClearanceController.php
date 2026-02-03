@@ -31,7 +31,13 @@ class PropertyTenantClearanceController extends Controller
     {
         $this->authorize(PermissionEnum::TenantClearanceCreate, PropertyTenantClearance::class);
         $newtenants = PropertyLeaseTermination::whereNotIn('LeaseID', PropertyTenantClearance::pluck('LeaseId'))
-            ->with('lease.tenant', 'code')->get();
+            ->with('lease.tenant.thirdParty', 'code')
+            ->get()
+            ->filter(function ($termination) {
+                return $termination->lease
+                    && $termination->lease->tenant
+                    && $termination->lease->tenant->thirdParty;
+            });
         $codedetails = CodeDetail::where('CodeID', 'DepositRefunded')->get();
 
         return view('property.tenantmanagement.tenantclearance.create', compact('newtenants', 'codedetails'));

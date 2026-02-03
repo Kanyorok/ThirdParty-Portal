@@ -37,8 +37,8 @@
                             @foreach ($newtenants as $newtenant)
                                 <option value="{{ $newtenant->Id }}"
                                     {{ old('LeaseID') == $newtenant->Id ? 'selected' : '' }}>
-                                    LSno: {{ $newtenant->LeaseNumber }} —
-                                    Name: {{ $newtenant->tenant->thirdParty->ThirdPartyName }}
+                                    LSno: {{ $newtenant->LeaseNumber ?? 'No.'}} —
+                                    Name: {{ $newtenant->tenant->thirdParty->ThirdPartyName ?? 'Name'}}
                                 </option>
                             @endforeach
                         </select>
@@ -76,7 +76,7 @@
                             @foreach ($terminationReasons as $reason)
                                 <option value="{{ $reason->ID }}"
                                     {{ old('TerminationReason') == $reason->ID ? 'selected' : '' }}>
-                                    {{ $reason->Description }}
+                                    {{ $reason->Description ?? 'No Description' }}
                                 </option>
                             @endforeach
                         </select>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\ThirdParty\Api;
 
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class TenantProfileResource extends JsonResource
@@ -13,7 +14,9 @@ class TenantProfileResource extends JsonResource
             'typeName' => $this->type->Name ?? null,
             'remarks' => $this->Remarks,
             'isActive' => (bool)$this->IsActive,
-            'createdOn' => $this->CreatedOn ? $this->CreatedOn->toIso8601String() : null,
+            'createdOn' => $this->CreatedOn instanceof Carbon
+                ? $this->CreatedOn->toIso8601String()
+                : ($this->CreatedOn ? Carbon::parse($this->CreatedOn)->toIso8601String() : null),
         ];
     }
 }

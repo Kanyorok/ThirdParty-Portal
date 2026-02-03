@@ -9,7 +9,9 @@
         }
         /* Match Bootstrap input (.form-control) height */
         .select2-container--default .select2-selection--single {
-            height: calc(1.5em + 0.75rem + 2px);
+            height: calc(2.25rem + 2px);
+            min-height: calc(2.25rem + 2px);
+            padding: 0.375rem 0.75rem;
             border: 1px solid #ced4da;
             border-radius: 0.375rem;
             background-color: #fff;
@@ -17,14 +19,15 @@
             align-items: center;
         }
         .select2-container--default .select2-selection--single .select2-selection__rendered {
-            padding-left: 0.75rem;
-            padding-right: 2.25rem; /* space for arrow */
+            padding-left: 0;
+            padding-right: 2rem; /* space for arrow */
             line-height: 1.5;
         }
         .select2-container--default .select2-selection--single .select2-selection__arrow {
             height: 100%;
-            top: 0;
+            top: 50%;
             right: 0.75rem;
+            transform: translateY(-50%);
         }
         .select2-container--default .select2-selection--single .select2-selection__clear {
             margin-right: 2.25rem;

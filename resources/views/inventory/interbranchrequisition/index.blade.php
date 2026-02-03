@@ -107,7 +107,7 @@
                         <i class="bi bi-info-circle-fill me-2 fs-5"></i>
                         <div>
                             <p class="mb-0">
-                                <i> HQ can only edit/delete requisitions they raised</i>
+                                <i> HQ cannot edit or delete any requisitions</i>
                             </p>
                         </div>
                     </div>
@@ -132,35 +132,16 @@
                                 <tbody>
                                 @foreach ($allRequisitions as $requisition)
                                     @php
-                                        // For HQ: Allow edit/delete if FromBranch = HQ (HQ raised it)
-                                        $isRaisedByHQ = $requisition->FromBranch == $currentBranch->Id;
-                                        $canModifyByBranch = $isRaisedByHQ;
+                                        // HQ cannot edit/delete ANY requisitions
+                                        $canEdit = false;
+                                        $canDelete = false;
                                         
                                         // Get status enum
                                         $statusEnum = \App\Enums\Inventory\InterBranchRequisitionEnum::tryFrom($requisition->Status);
                                         
-                                        // Check if status allows editing (only Pending status)
-                                        $statusAllowsEdit = $requisition->Status === 'P';
-                                        $statusAllowsDelete = $requisition->Status === 'P';
-                                        
-                                        // Final decision combining branch logic AND status logic
-                                        $canEdit = $canModifyByBranch && $statusAllowsEdit;
-                                        $canDelete = $canModifyByBranch && $statusAllowsDelete;
-                                        
                                         // Tooltip messages
-                                        $editTooltip = '';
-                                        $deleteTooltip = '';
-                                        
-                                        if (!$isRaisedByHQ) {
-                                            $editTooltip = 'HQ cannot edit requisitions raised by other branches.';
-                                            $deleteTooltip = 'HQ cannot delete requisitions raised by other branches.';
-                                        } else if (!$statusAllowsEdit) {
-                                            $editTooltip = 'Cannot edit - requisition status is ' . ($statusEnum ? $statusEnum->label() : $requisition->Status);
-                                            $deleteTooltip = 'Cannot delete - requisition status is ' . ($statusEnum ? $statusEnum->label() : $requisition->Status);
-                                        } else {
-                                            $editTooltip = 'Edit Requisition';
-                                            $deleteTooltip = 'Delete Requisition';
-                                        }
+                                        $editTooltip = 'HQ cannot edit any requisitions.';
+                                        $deleteTooltip = 'HQ cannot delete any requisitions.';
                                     @endphp
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
@@ -186,42 +167,23 @@
                                                     <i class="bi bi-eye text-white"></i>
                                                 </a>
                                                 
-                                                <!-- Edit button - conditional -->
-                                                @if($canEdit)
-                                                    <a href="{{ route('interbranchrequisition.edit', $requisition->Id) }}"
-                                                       class="btn btn-edit btn-sm"
-                                                       data-bs-toggle="tooltip"
-                                                       title="{{ $editTooltip }}">
-                                                        <i class="bi bi-pencil text-white"></i>
-                                                    </a>
-                                                @else
-                                                    <button type="button"
-                                                            class="btn btn-edit btn-sm disabled"
-                                                            data-bs-toggle="tooltip"
-                                                            title="{{ $editTooltip }}"
-                                                            onclick="return showCustomError('{{ $editTooltip }}');">
-                                                        <i class="bi bi-pencil text-white"></i>
-                                                    </button>
-                                                @endif
+                                                <!-- Edit button - always disabled for HQ -->
+                                                <button type="button"
+                                                        class="btn btn-edit btn-sm disabled"
+                                                        data-bs-toggle="tooltip"
+                                                        title="{{ $editTooltip }}"
+                                                        onclick="return showCustomError('{{ $editTooltip }}');">
+                                                    <i class="bi bi-pencil text-white"></i>
+                                                </button>
                                                 
-                                                <!-- Delete button - conditional -->
-                                                @if($canDelete)
-                                                    <button type="button"
-                                                            class="btn btn-delete btn-sm"
-                                                            data-bs-toggle="tooltip"
-                                                            title="{{ $deleteTooltip }}"
-                                                            onclick="confirmDelete('{{ $requisition->Id }}', '{{ $requisition->ReqNo }}')">
-                                                        <i class="bi bi-trash text-white"></i>
-                                                    </button>
-                                                @else
-                                                    <button type="button"
-                                                            class="btn btn-delete btn-sm disabled"
-                                                            data-bs-toggle="tooltip"
-                                                            title="{{ $deleteTooltip }}"
-                                                            onclick="return showCustomError('{{ $deleteTooltip }}');">
-                                                        <i class="bi bi-trash text-white"></i>
-                                                    </button>
-                                                @endif
+                                                <!-- Delete button - always disabled for HQ -->
+                                                <button type="button"
+                                                        class="btn btn-delete btn-sm disabled"
+                                                        data-bs-toggle="tooltip"
+                                                        title="{{ $deleteTooltip }}"
+                                                        onclick="return showCustomError('{{ $deleteTooltip }}');">
+                                                    <i class="bi bi-trash text-white"></i>
+                                                </button>
                                             </div>
 
                                             <form id="delete-form-{{ $requisition->Id }}"
@@ -248,7 +210,8 @@
                         <i class="bi bi-info-circle-fill me-2 fs-5"></i>
                         <div>
                             <p class="mb-0">
-                               <i> <strong>Incoming to HQ:</strong> Requisitions from other branches to HQ (Other branches requesting items from HQ)<br></i>
+                               <i> <strong>Incoming to HQ:</strong> Requisitions from other branches to HQ (Other branches requesting items from HQ)<br>
+                               <strong>Note:</strong> HQ cannot edit or delete any requisitions</i>
                             </p>
                         </div>
                     </div>
@@ -273,32 +236,16 @@
                                 <tbody>
                                 @foreach ($incomingRequisitions as $requisition)
                                     @php
-                                        // For HQ incoming: HQ raised these (FromBranch = HQ)
-                                        $isRaisedByHQ = true; // Always true for incoming tab
-                                        $canModifyByBranch = $isRaisedByHQ;
+                                        // HQ cannot edit/delete ANY requisitions
+                                        $canEdit = false;
+                                        $canDelete = false;
                                         
                                         // Get status enum
                                         $statusEnum = \App\Enums\Inventory\InterBranchRequisitionEnum::tryFrom($requisition->Status);
                                         
-                                        // Check if status allows editing (only Pending status)
-                                        $statusAllowsEdit = $requisition->Status === 'P';
-                                        $statusAllowsDelete = $requisition->Status === 'P';
-                                        
-                                        // Final decision combining branch logic AND status logic
-                                        $canEdit = $canModifyByBranch && $statusAllowsEdit;
-                                        $canDelete = $canModifyByBranch && $statusAllowsDelete;
-                                        
                                         // Tooltip messages
-                                        $editTooltip = '';
-                                        $deleteTooltip = '';
-                                        
-                                        if (!$statusAllowsEdit) {
-                                            $editTooltip = 'Cannot edit - requisition status is ' . ($statusEnum ? $statusEnum->label() : $requisition->Status);
-                                            $deleteTooltip = 'Cannot delete - requisition status is ' . ($statusEnum ? $statusEnum->label() : $requisition->Status);
-                                        } else {
-                                            $editTooltip = 'Edit Requisition';
-                                            $deleteTooltip = 'Delete Requisition';
-                                        }
+                                        $editTooltip = 'HQ cannot edit any requisitions.';
+                                        $deleteTooltip = 'HQ cannot delete any requisitions.';
                                     @endphp
                                     <tr class="incoming-row">
                                         <td>{{ $loop->iteration }}</td>
@@ -324,42 +271,23 @@
                                                     <i class="bi bi-eye text-white"></i>
                                                 </a>
                                                 
-                                                <!-- Edit button - conditional -->
-                                                @if($canEdit)
-                                                    <a href="{{ route('interbranchrequisition.edit', $requisition->Id) }}"
-                                                       class="btn btn-edit btn-sm"
-                                                       data-bs-toggle="tooltip"
-                                                       title="{{ $editTooltip }}">
-                                                        <i class="bi bi-pencil text-white"></i>
-                                                    </a>
-                                                @else
-                                                    <button type="button"
-                                                            class="btn btn-edit btn-sm disabled"
-                                                            data-bs-toggle="tooltip"
-                                                            title="{{ $editTooltip }}"
-                                                            onclick="return showCustomError('{{ $editTooltip }}');">
-                                                        <i class="bi bi-pencil text-white"></i>
-                                                    </button>
-                                                @endif
+                                                <!-- Edit button - always disabled for HQ -->
+                                                <button type="button"
+                                                        class="btn btn-edit btn-sm disabled"
+                                                        data-bs-toggle="tooltip"
+                                                        title="{{ $editTooltip }}"
+                                                        onclick="return showCustomError('{{ $editTooltip }}');">
+                                                    <i class="bi bi-pencil text-white"></i>
+                                                </button>
                                                 
-                                                <!-- Delete button - conditional -->
-                                                @if($canDelete)
-                                                    <button type="button"
-                                                            class="btn btn-delete btn-sm"
-                                                            data-bs-toggle="tooltip"
-                                                            title="{{ $deleteTooltip }}"
-                                                            onclick="confirmDelete('{{ $requisition->Id }}', '{{ $requisition->ReqNo }}')">
-                                                        <i class="bi bi-trash text-white"></i>
-                                                    </button>
-                                                @else
-                                                    <button type="button"
-                                                            class="btn btn-delete btn-sm disabled"
-                                                            data-bs-toggle="tooltip"
-                                                            title="{{ $deleteTooltip }}"
-                                                            onclick="return showCustomError('{{ $deleteTooltip }}');">
-                                                        <i class="bi bi-trash text-white"></i>
-                                                    </button>
-                                                @endif
+                                                <!-- Delete button - always disabled for HQ -->
+                                                <button type="button"
+                                                        class="btn btn-delete btn-sm disabled"
+                                                        data-bs-toggle="tooltip"
+                                                        title="{{ $deleteTooltip }}"
+                                                        onclick="return showCustomError('{{ $deleteTooltip }}');">
+                                                    <i class="bi bi-trash text-white"></i>
+                                                </button>
                                             </div>
 
                                             <form id="delete-form-{{ $requisition->Id }}"
@@ -386,7 +314,8 @@
                         <i class="bi bi-info-circle-fill me-2 fs-5"></i>
                         <div>
                             <p class="mb-0">
-                                <i> <strong>Other Requisitions:</strong> Requisitions between other branches<br></i>
+                                <i> <strong>Other Requisitions:</strong> Requisitions between other branches<br>
+                                <strong>Note:</strong> HQ cannot edit or delete any requisitions</i>
                             </p>
                         </div>
                     </div>
@@ -411,24 +340,16 @@
                                 <tbody>
                                 @foreach ($otherRequisitions as $requisition)
                                     @php
-                                        // For HQ other requisitions: HQ did NOT raise these
-                                        $isRaisedByHQ = false; // Neither FromBranch nor ToBranch is HQ
-                                        $canModifyByBranch = $isRaisedByHQ;
+                                        // HQ cannot edit/delete ANY requisitions
+                                        $canEdit = false;
+                                        $canDelete = false;
                                         
                                         // Get status enum
                                         $statusEnum = \App\Enums\Inventory\InterBranchRequisitionEnum::tryFrom($requisition->Status);
                                         
-                                        // Check if status allows editing (only Pending status)
-                                        $statusAllowsEdit = $requisition->Status === 'P';
-                                        $statusAllowsDelete = $requisition->Status === 'P';
-                                        
-                                        // Final decision combining branch logic AND status logic
-                                        $canEdit = $canModifyByBranch && $statusAllowsEdit;
-                                        $canDelete = $canModifyByBranch && $statusAllowsDelete;
-                                        
                                         // Tooltip messages
-                                        $editTooltip = 'HQ cannot edit requisitions between other branches.';
-                                        $deleteTooltip = 'HQ cannot delete requisitions between other branches.';
+                                        $editTooltip = 'HQ cannot edit any requisitions.';
+                                        $deleteTooltip = 'HQ cannot delete any requisitions.';
                                     @endphp
                                     <tr class="other-row">
                                         <td>{{ $loop->iteration }}</td>
@@ -454,42 +375,23 @@
                                                     <i class="bi bi-eye text-white"></i>
                                                 </a>
                                                 
-                                                <!-- Edit button - conditional -->
-                                                @if($canEdit)
-                                                    <a href="{{ route('interbranchrequisition.edit', $requisition->Id) }}"
-                                                       class="btn btn-edit btn-sm"
-                                                       data-bs-toggle="tooltip"
-                                                       title="{{ $editTooltip }}">
-                                                        <i class="bi bi-pencil text-white"></i>
-                                                    </a>
-                                                @else
-                                                    <button type="button"
-                                                            class="btn btn-edit btn-sm disabled"
-                                                            data-bs-toggle="tooltip"
-                                                            title="{{ $editTooltip }}"
-                                                            onclick="return showCustomError('{{ $editTooltip }}');">
-                                                        <i class="bi bi-pencil text-white"></i>
-                                                    </button>
-                                                @endif
+                                                <!-- Edit button - always disabled for HQ -->
+                                                <button type="button"
+                                                        class="btn btn-edit btn-sm disabled"
+                                                        data-bs-toggle="tooltip"
+                                                        title="{{ $editTooltip }}"
+                                                        onclick="return showCustomError('{{ $editTooltip }}');">
+                                                    <i class="bi bi-pencil text-white"></i>
+                                                </button>
                                                 
-                                                <!-- Delete button - conditional -->
-                                                @if($canDelete)
-                                                    <button type="button"
-                                                            class="btn btn-delete btn-sm"
-                                                            data-bs-toggle="tooltip"
-                                                            title="{{ $deleteTooltip }}"
-                                                            onclick="confirmDelete('{{ $requisition->Id }}', '{{ $requisition->ReqNo }}')">
-                                                        <i class="bi bi-trash text-white"></i>
-                                                    </button>
-                                                @else
-                                                    <button type="button"
-                                                            class="btn btn-delete btn-sm disabled"
-                                                            data-bs-toggle="tooltip"
-                                                            title="{{ $deleteTooltip }}"
-                                                            onclick="return showCustomError('{{ $deleteTooltip }}');">
-                                                        <i class="bi bi-trash text-white"></i>
-                                                    </button>
-                                                @endif
+                                                <!-- Delete button - always disabled for HQ -->
+                                                <button type="button"
+                                                        class="btn btn-delete btn-sm disabled"
+                                                        data-bs-toggle="tooltip"
+                                                        title="{{ $deleteTooltip }}"
+                                                        onclick="return showCustomError('{{ $deleteTooltip }}');">
+                                                    <i class="bi bi-trash text-white"></i>
+                                                </button>
                                             </div>
 
                                             <form id="delete-form-{{ $requisition->Id }}"
@@ -517,6 +419,7 @@
                         <div>
                             <p class="mb-0">
                                 <i><strong>Incoming to {{ $currentBranch->Name }}:</strong> Requisitions from other branches (Other branches requesting items from {{ $currentBranch->Name }})</i><br>
+                                <i><strong>Note:</strong> You cannot edit or delete incoming requisitions</i>
                             </p>
                         </div>
                     </div>
@@ -584,42 +487,23 @@
                                                     <i class="bi bi-eye text-white"></i>
                                                 </a>
                                                 
-                                                <!-- Edit button - conditional -->
-                                                @if($canEdit)
-                                                    <a href="{{ route('interbranchrequisition.edit', $requisition->Id) }}"
-                                                       class="btn btn-edit btn-sm"
-                                                       data-bs-toggle="tooltip"
-                                                       title="{{ $editTooltip }}">
-                                                        <i class="bi bi-pencil text-white"></i>
-                                                    </a>
-                                                @else
-                                                    <button type="button"
-                                                            class="btn btn-edit btn-sm disabled"
-                                                            data-bs-toggle="tooltip"
-                                                            title="{{ $editTooltip }}"
-                                                            onclick="return showCustomError('{{ $editTooltip }}');">
-                                                        <i class="bi bi-pencil text-white"></i>
-                                                    </button>
-                                                @endif
+                                                <!-- Edit button - always disabled for incoming -->
+                                                <button type="button"
+                                                        class="btn btn-edit btn-sm disabled"
+                                                        data-bs-toggle="tooltip"
+                                                        title="{{ $editTooltip }}"
+                                                        onclick="return showCustomError('{{ $editTooltip }}');">
+                                                    <i class="bi bi-pencil text-white"></i>
+                                                </button>
                                                 
-                                                <!-- Delete button - conditional -->
-                                                @if($canDelete)
-                                                    <button type="button"
-                                                            class="btn btn-delete btn-sm"
-                                                            data-bs-toggle="tooltip"
-                                                            title="{{ $deleteTooltip }}"
-                                                            onclick="confirmDelete('{{ $requisition->Id }}', '{{ $requisition->ReqNo }}')">
-                                                        <i class="bi bi-trash text-white"></i>
-                                                    </button>
-                                                @else
-                                                    <button type="button"
-                                                            class="btn btn-delete btn-sm disabled"
-                                                            data-bs-toggle="tooltip"
-                                                            title="{{ $deleteTooltip }}"
-                                                            onclick="return showCustomError('{{ $deleteTooltip }}');">
-                                                        <i class="bi bi-trash text-white"></i>
-                                                    </button>
-                                                @endif
+                                                <!-- Delete button - always disabled for incoming -->
+                                                <button type="button"
+                                                        class="btn btn-delete btn-sm disabled"
+                                                        data-bs-toggle="tooltip"
+                                                        title="{{ $deleteTooltip }}"
+                                                        onclick="return showCustomError('{{ $deleteTooltip }}');">
+                                                    <i class="bi bi-trash text-white"></i>
+                                                </button>
                                             </div>
 
                                             <form id="delete-form-{{ $requisition->Id }}"
@@ -646,7 +530,8 @@
                         <i class="bi bi-info-circle-fill me-2 fs-5"></i>
                         <div>
                             <p class="mb-0">
-                                <i><strong>Outgoing from {{ $currentBranch->Name }}:</strong> Requisitions from Moshi to other branches ({{ $currentBranch->Name }} requesting items from other branches)</i>
+                                <i><strong>Outgoing from {{ $currentBranch->Name }}:</strong> Requisitions from {{ $currentBranch->Name }} to other branches ({{ $currentBranch->Name }} requesting items from other branches)</i><br>
+                                <i><strong>Note:</strong> You can only edit/delete pending outgoing requisitions</i>
                             </p>
                         </div>
                     </div>
@@ -785,6 +670,7 @@
                         <div>
                             <p class="mb-0">
                                 <i><strong>All Requisitions:</strong> View all requisitions involving {{ $currentBranch->Name }} (as sending or receiving branch)</i><br>
+                                <i><strong>Note:</strong> You can only edit/delete pending requisitions where your branch is the receiving branch</i>
                             </p>
                         </div>
                     </div>
@@ -813,7 +699,7 @@
                                         $isReceivingBranch = $requisition->ToBranch == $currentBranch->Id;
                                         $isSendingBranch = $requisition->FromBranch == $currentBranch->Id;
                                         
-                                        // NEW LOGIC FOR NON-HQ: Allow edit/delete only if ToBranch = current branch (receiving)
+                                        // Allow edit/delete only if ToBranch = current branch (receiving)
                                         // Disable if FromBranch = current branch (sending)
                                         $canModifyByBranch = $isReceivingBranch && !$isSendingBranch;
                                         
@@ -933,7 +819,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
@@ -958,36 +844,36 @@
             });
         }
         
-       // Initialize DataTable for the currently active tab
-function initializeActiveTabDataTable() {
-    var activeTable = $('.tab-pane.active .requisition-table');
-    if (activeTable.length) {
-        activeTable.DataTable({
-            pageLength: 10, // Default page length
-            lengthMenu: [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, "All"]], // Records per page options
-            ordering: true,
-            order: [[4, 'desc']], // Sort by Date column (4th column) in descending order
-            searching: true,
-            lengthChange: true, // Enable records per page dropdown
-            dom: '<"top"fl>rt<"bottom"ip><"clear">', // Include length menu in layout
-            language: {
-                emptyTable: "No requisitions found.",
-                lengthMenu: "Show _MENU_ entries",
-                search: "Search:",
-                info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                paginate: {
-                    first: "First",
-                    last: "Last",
-                    next: "Next",
-                    previous: "Previous"
-                }
-            },
-            drawCallback: function() {
-                initializeTooltips();
+        // Initialize DataTable for the currently active tab
+        function initializeActiveTabDataTable() {
+            var activeTable = $('.tab-pane.active .requisition-table');
+            if (activeTable.length) {
+                activeTable.DataTable({
+                    pageLength: 10, // Default page length
+                    lengthMenu: [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, "All"]], // Records per page options
+                    ordering: true,
+                    order: [[4, 'desc']], // Sort by Date column (4th column) in descending order
+                    searching: true,
+                    lengthChange: true, // Enable records per page dropdown
+                    dom: '<"top"fl>rt<"bottom"ip><"clear">', // Include length menu in layout
+                    language: {
+                        emptyTable: "No requisitions found.",
+                        lengthMenu: "Show _MENU_ entries",
+                        search: "Search:",
+                        info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                        paginate: {
+                            first: "First",
+                            last: "Last",
+                            next: "Next",
+                            previous: "Previous"
+                        }
+                    },
+                    drawCallback: function() {
+                        initializeTooltips();
+                    }
+                });
             }
-        });
-    }
-}
+        }
         
         // Initial tooltip setup
         initializeTooltips();
@@ -1237,6 +1123,38 @@ function initializeActiveTabDataTable() {
     padding: 3px 8px;
     border-radius: 4px;
     border: 1px solid #ced4da;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .btn-group .btn {
+        padding: 0.2rem 0.4rem;
+        margin-right: 0.15rem;
+    }
+    
+    .bi {
+        font-size: 0.75rem;
+    }
+    
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .d-flex.justify-content-between h3 {
+        margin-bottom: 1rem;
+    }
+    
+    .nav-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+        flex-wrap: nowrap;
+    }
+    
+    .nav-tabs .nav-item {
+        display: inline-block;
+        float: none;
+    }
 }
 </style>
 @endsection

@@ -12,6 +12,7 @@ use App\Models\Inventory\StockTransaction;
 use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class StockAdjustmentService
@@ -58,12 +59,20 @@ class StockAdjustmentService
                 ]);
             }
 
-            $this->workflow->submit(
-                $adjustment,
-                Auth::user(),
-                Transfers::Pending,
-                'Stock Adjustment Submitted for Approval'
-            );
+            try {
+                $this->workflow->submit(
+                    $adjustment,
+                    Auth::user(),
+                    Transfers::Pending,
+                    'Stock Adjustment Submitted for Approval'
+                );
+            } catch (\Exception $e) {
+                DB::rollBack();
+
+                throw ValidationException::withMessages([
+                    'workflow' => 'Workflow configuration is missing. Please configure the approval workflow for Stock Adjustments before creating adjustments. Contact your system administrator.',
+                ]);
+            }
 
             activity()->performedOn($adjustment)
                 ->causedBy(Auth::user())
@@ -71,6 +80,8 @@ class StockAdjustmentService
                 ->log('Created Stock Adjustment');
 
             DB::commit();
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (Throwable $th) {
             DB::rollBack();
 

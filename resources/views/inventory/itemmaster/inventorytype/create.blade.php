@@ -23,7 +23,7 @@
                 
                 <div class="mb-3">
                     
-                    <label for="Type" class="form-label">Inventory Type</label>
+                    <label for="Type" class="form-label">Inventory Type<span class="text-danger">*</span></label>
                     <select class="form-select @error('Type') is-invalid @enderror" id="Type" name="Type" required>
                         <option value="">Select Inventory Type</option>
                         @foreach($inventoryTypes as $inventoryType)

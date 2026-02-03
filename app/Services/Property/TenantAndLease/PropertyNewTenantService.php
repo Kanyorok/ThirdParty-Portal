@@ -4,7 +4,6 @@ namespace App\Services\Property\TenantAndLease;
 
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
-use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
@@ -17,13 +16,11 @@ use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\ThirdParties\ThirdPartiesService;
 use App\Services\ThirdParties\ThirdPartyService;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 class PropertyNewTenantService extends ThirdPartiesService
 {
-    /**
-     * Create a new class instance.
-     */
     public function __construct(public PropertyNewTenant $propertyNewTenant)
     {
         parent::__construct($propertyNewTenant->thirdParty);
@@ -32,7 +29,7 @@ class PropertyNewTenantService extends ThirdPartiesService
     public static function getType(): ThirdPartyType
     {
         return ThirdPartyType::query()->withTrashed()->where('Code', ThirdPartyService::TypeTenant)->firstOr(function () {
-            $role = FinanceRole::query()->first(); // todo fix your Finance role
+            $role = FinanceRole::query()->first();
             if ($role instanceof FinanceRole === false) {
                 throw new RuntimeException("No finance roles found " . __CLASS__);
             }
@@ -48,16 +45,12 @@ class PropertyNewTenantService extends ThirdPartiesService
         });
     }
 
-    /**
-     * @throws ErroredException
-     */
-    public static function createFromParty(ThirdParties $party, User|ThirdPartyUser $user, UploadedFile $document = null, string $Remarks = null): self
+    public static function createFromParty(ThirdParties $party, User|ThirdPartyUser $user, ?UploadedFile $document = null, ?string $Remarks = null): self
     {
         $tenant = PropertyNewTenant::create([
             'ThirdPartyId' => $party->Id,
             'TenantType' => $party->BusinessType,
             'Remarks' => $Remarks,
-            'IsActive' => true,
             'IsActive' => true,
             'CreatedBy' => ($user instanceof User) ? $user->Id : SystemHelper::user()->Id,
             'ModifiedBy' => ($user instanceof User) ? $user->Id : SystemHelper::user()->Id,
@@ -72,7 +65,8 @@ class PropertyNewTenantService extends ThirdPartiesService
             );
         }
 
-        activity()->causedBy($user->Id)->performedOn($tenant)->event('create')->log("Added New Tenant {$tenant->Id}.");
+        activity()->causedBy($user)->performedOn($tenant)->event('create')->log("Added New Tenant {$tenant->Id}.");
+
         $service = new self($tenant);
         $service->addType(self::getType(), PropertyNewTenant::getPrimaryKey(), $tenant->Id, $user);
 
@@ -94,50 +88,23 @@ class PropertyNewTenantService extends ThirdPartiesService
         ?CodeDetail $status,
         ?array $extra,
         User|ThirdPartyUser $actor,
-        UploadedFile $document = null,
-        string $Remarks = null
-    ): self {
-        return self::createFromParty(
-            party: parent::create($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor),
-            user: $actor,
-            document: $document,
-            Remarks: $Remarks
-        );
+        array $data = []
+    ): ThirdParties {
+        return DB::transaction(function () use ($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor, $data) {
+            $party = parent::create($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor, $data);
+
+            $file = (isset($data['document']) && $data['document'] instanceof UploadedFile) ? $data['document'] : null;
+
+            self::createFromParty(
+                party: $party,
+                user: $actor,
+                document: $file,
+                Remarks: $data['tenant_Remarks'] ?? $data['remarks'] ?? $data['Remarks'] ?? null
+            );
+
+            return $party;
+        });
     }
-
-    /*   public static function create(
-           ThirdParties $ThirdPartyId,
-           CodeDetail $TenantType,
-           string $Remarks = null,
-           bool   $IsActive,
-           User   $user,
-           UploadedFile $document = null
-       ): self
-       {
-           $newtenant = PropertyNewTenant::create([
-               'ThirdPartyId' => $ThirdPartyId->Id,
-               'TenantType' => $TenantType->ID,
-               'Remarks' => $Remarks,
-               'IsActive' => $IsActive,
-               'CreatedBy' => $user->Id,
-               'ModifiedBy' => $user->Id,
-           ]);
-
-           if ($document) {
-           $newtenant->newDocument(
-               ModulesEnum::Property,
-               $document,
-               [PermissionEnum::TenantMaintenanceView->value],
-               $user
-               );
-           }
-
-           activity()->causedBy($user->Id)
-               ->performedOn($newtenant)
-               ->event('create')
-               ->log("Added New Tenant {$newtenant->Id}.");
-           return new self($newtenant);
-       }*/
 
     public static function update(
         PropertyNewTenant $propertyNewTenant,
@@ -147,7 +114,6 @@ class PropertyNewTenantService extends ThirdPartiesService
         User $user,
         UploadedFile $document = null
     ): self {
-        // Update tenant details
         $propertyNewTenant->update([
             'TenantType' => $TenantType->ID,
             'Remarks' => $Remarks,
@@ -167,7 +133,7 @@ class PropertyNewTenantService extends ThirdPartiesService
         }
 
         activity()
-            ->causedBy($user->Id)
+            ->causedBy($user)
             ->performedOn($propertyNewTenant)
             ->event('update')
             ->log("Updated Tenant {$propertyNewTenant->Id}.");

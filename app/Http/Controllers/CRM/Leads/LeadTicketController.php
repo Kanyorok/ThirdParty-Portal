@@ -86,9 +86,9 @@ class LeadTicketController extends Controller
                     $service->addWatcher($watcher, RoleEnum::Read, $owner);
                 }
 
-                if (($emailConversation instanceof EmailConversation)) {//attach documents in email to ticket
+                if (($emailConversation instanceof EmailConversation)) { //attach documents in email to ticket
                     foreach ($emailConversation->email->attachments as $attachment) {
-                        if ($attachment instanceof Image) {//todo fix on migration.
+                        if ($attachment instanceof Image) { //todo fix on migration.
                             try {
                                 $extension = ExtensionsEnum::fromMimeType($attachment->MIMEType);
                             } catch (ErroredException) {

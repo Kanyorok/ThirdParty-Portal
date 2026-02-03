@@ -43,7 +43,7 @@ class Supplier extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'SupplierCategoriesId';
+        return 'SupplierCategoriesId'; // You kiding,right?
     }
 
     /**

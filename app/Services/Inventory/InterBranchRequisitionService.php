@@ -3,7 +3,6 @@
 namespace App\Services\Inventory;
 
 use App\Enums\Inventory\InterBranchRequisitionEnum;
-use App\Models\Core\Workflow;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InterBranchRequisitionItem;
 use App\Models\Inventory\StockItem;
@@ -34,13 +33,15 @@ class InterBranchRequisitionService
         $fromBranch = $data['FromBranch'];
 
         foreach ($items as $index => $item) {
-            $stock = StockItem::where('ItemID', $item['Item'])
+            $totalStock = StockItem::where('ItemID', $item['Item'])
                 ->where('Branch', $fromBranch)
-                ->first();
+                ->where('Status', '1')
+                ->where('DeletedOn', null)
+                ->sum('CurrentQty');
 
-            if (! $stock || $stock->CurrentQty < $item['RequestedQty']) {
+            if ($totalStock < $item['RequestedQty']) {
                 throw ValidationException::withMessages([
-                    "items.$index.RequestedQty" => "Insufficient stock for Item ID {$item['Item']} in Branch {$fromBranch}. Requested {$item['RequestedQty']}, available " . ($stock->CurrentQty ?? 0) . ".",
+                    "items.$index.RequestedQty" => "Insufficient stock for Item ID {$item['Item']} in Branch {$fromBranch}. Requested {$item['RequestedQty']}, available " . $totalStock . ".",
                 ]);
             }
         }
@@ -66,16 +67,23 @@ class InterBranchRequisitionService
             InterBranchRequisitionItem::create($item);
         }
 
-        //create workflow instance and submit for approval
-        $requisitionflow = new ApprovalWorkflow('InterBranchRequisitionStatus', 'Status');
-        $requisitionflow->submit(
-            $requisition,
-            $user = Auth::user(),
-            InterBranchRequisitionEnum::Pending,
-            'Interbranch Requisition Submitted for Approval'
-        );
 
+        try {
+            $requisitionflow = new ApprovalWorkflow('InterBranchRequisitionStatus', 'Status');
+            $requisitionflow->submit(
+                $requisition,
+                $user = Auth::user(),
+                InterBranchRequisitionEnum::Pending,
+                'Interbranch Requisition Submitted for Approval'
+            );
+        } catch (\Exception $e) {
+            $requisition->items()->delete();
+            $requisition->forceDelete();
 
+            throw ValidationException::withMessages([
+                'workflow' => 'Workflow configuration is missing. Please configure the approval workflow for Inter-Branch Requisitions before creating requisitions. Contact your system administrator.',
+            ]);
+        }
 
         activity()
             ->performedOn($requisition)
@@ -167,7 +175,6 @@ class InterBranchRequisitionService
     ): void {
         $user = $user ?: Auth::user();
 
-        // Update item quantities and remarks if provided
         if (! empty($approvedQty)) {
             foreach ($approvedQty as $itemId => $qty) {
                 $item = $requisition->items()->find($itemId);
@@ -189,7 +196,6 @@ class InterBranchRequisitionService
             $workflow->reject($requisition, $user, InterBranchRequisitionEnum::Rejected, $comments, 'Status');
         }
 
-        // Log activity
         activity()
             ->causedBy($user)
             ->performedOn($requisition)

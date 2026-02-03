@@ -15,7 +15,7 @@ class RequisitionRequest extends FormRequest
     {
         return [
 
-            'ProcurementPlan' => ['nullable'],
+            'ProcurementPlan' => ['required',  'string'],
             'Branch' => ['required', 'numeric'],
             'Department' => ['required', 'numeric'],
             'Remarks' => ['required', 'string'],

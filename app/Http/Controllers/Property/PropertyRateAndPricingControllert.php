@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Property;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Property\PropertyRateAndPricingBulkRequest;
 use App\Http\Requests\Property\PropertyRateAndPricingRequest;
 use App\Models\Core\Currency;
 use App\Models\Finance\FinanceTaxRuleConfiguration;
@@ -12,8 +13,12 @@ use App\Models\PropertyManagement\PropertyFloor;
 use App\Models\PropertyManagement\PropertyRateAndPricing;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyUnit;
+use App\Services\Property\PropertyRateAndPricingBulkService;
 use App\Services\Property\PropertyRateAndPricingService;
 use Log;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PropertyRateAndPricingControllert extends Controller
 {
@@ -120,12 +125,13 @@ class PropertyRateAndPricingControllert extends Controller
         try {
             $pricing = PropertyRateAndPricing::findOrFail($id);
 
+            // Keep the original property, block, floor, and unit (read-only fields)
             PropertyRateAndPricingService::update(
                 $pricing,
-                PropertyRegistry::findOrFail($validated['PropertyId']),
-                PropertyBlock::findOrFail($validated['BlockId']),
-                PropertyFloor::findOrFail($validated['FloorId']),
-                PropertyUnit::findOrFail($validated['UnitId']),
+                PropertyRegistry::findOrFail($pricing->PropertyId),
+                PropertyBlock::findOrFail($pricing->BlockId),
+                PropertyFloor::findOrFail($pricing->FloorId),
+                PropertyUnit::findOrFail($pricing->UnitId),
                 $validated['Rent'],
                 $validated['ParkingFee'],
                 $validated['ServiceCharge'],
@@ -160,5 +166,86 @@ class PropertyRateAndPricingControllert extends Controller
 
             return back()->withErrors('An error occurred while deleting the Property Rate and Pricing. Please try again.');
         }
+    }
+
+    /**
+     * Show bulk upload form
+     */
+    public function bulkCreate()
+    {
+        $this->authorize(PermissionEnum::PropertyRateAndPricingCreate, PropertyRateAndPricing::class);
+
+        return view('property.propertyrateandpricing.bulk-create');
+    }
+
+    /**
+     * Process bulk upload
+     */
+    public function bulkStore(PropertyRateAndPricingBulkRequest $request)
+    {
+        $this->authorize(PermissionEnum::PropertyRateAndPricingCreate, PropertyRateAndPricing::class);
+
+        try {
+            $file = $request->file('file');
+            $data = Excel::toArray([], $file)[0];
+
+            // Extract headers from first row
+            $headers = array_shift($data);
+
+            // Map data to associative arrays
+            $mappedData = [];
+            foreach ($data as $row) {
+                if (! empty(array_filter($row))) {
+                    $mappedData[] = array_combine($headers, $row);
+                }
+            }
+
+            // Process bulk upload
+            $results = PropertyRateAndPricingBulkService::processBulkUpload($mappedData, auth()->user());
+
+            return redirect()->route('propertyrateandpricing.index')->with([
+                'success' => "Bulk upload completed. {$results['successful']} records created successfully.",
+                'errors' => $results['errors'],
+                'summary' => $results,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in bulk upload: ' . $e->getMessage());
+
+            return back()->withErrors('An error occurred during bulk upload: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Download bulk upload template
+     */
+    public function bulkTemplate()
+    {
+        $this->authorize(PermissionEnum::PropertyRateAndPricingCreate, PropertyRateAndPricing::class);
+
+        $headers = ['PropertyId', 'BlockId', 'FloorId', 'UnitId', 'Rent', 'ParkingFee', 'ServiceCharge', 'OtherCharges', 'DepositAmount', 'CurrencyId', 'TaxId'];
+        $sampleData = [
+            [1, 1, 1, 1, 50000, 3000, 20, 100, 34000, 75, 1],
+        ];
+
+        return Excel::download(new class ($sampleData, $headers) implements FromArray, WithHeadings {
+            private $data;
+            private $headers;
+
+            public function __construct($data, $headers)
+            {
+                $this->data = $data;
+                $this->headers = $headers;
+            }
+
+            public function array(): array
+            {
+                return $this->data;
+            }
+
+            public function headings(): array
+            {
+                return $this->headers;
+            }
+        }, 'PropertyRateAndPricing_Bulk_Template.xlsx');
     }
 }
