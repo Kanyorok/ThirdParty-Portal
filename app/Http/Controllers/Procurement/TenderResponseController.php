@@ -21,6 +21,9 @@ class TenderResponseController extends Controller
     public function create()
     {
         $tenders = Tender::where('ApprovalStatus', TenderApprovalStatusEnum::APPROVED)
+            ->whereNot('Status', \App\Enums\TenderStatusEnum::OpeningInProgress->value)
+            ->whereNot('Status', \App\Enums\TenderStatusEnum::Awarded->value)
+            ->where('SubmissionDeadline', '>', now())
             ->select('Id', 'TenderNo', 'Title')
             ->get();
 

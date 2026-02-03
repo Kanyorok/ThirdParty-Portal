@@ -26,7 +26,6 @@ class PurchaseOrderController extends Controller
         protected OrderService $orderService,
         protected DocumentApprovalService $documentApprovalService,
         protected RFQService $rfqService,
-        protected SupplierService $supplierService,
         protected ApprovalWorkflow $workflowService,  // Changed type hint
         protected OrderSourceService $orderSourceService
     ) {
@@ -571,7 +570,7 @@ class PurchaseOrderController extends Controller
         if (! $order) {
             return redirect()->back()->with('error', 'Order not found.');
         }
-        $suppliers = $this->supplierService->getSuppliers();
+        $suppliers = SupplierService::getSuppliers();
 
         return view('procurement.orders.edit', compact('order', 'suppliers'));
     }
