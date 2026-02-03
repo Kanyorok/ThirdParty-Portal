@@ -8,6 +8,7 @@ use App\Http\Requests\ThirdParty\Api\LoginThirdPartyRequest;
 use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
 use App\Http\Requests\ThirdParty\ResetPasswordRequest;
 use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\BR\BREncryption;
 use App\Services\RegistrationService;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +17,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use RuntimeException;
-use App\Http\Requests\ThirdParty\ResetPasswordRequest;
 
 class ThirdPartyAuthController extends Controller
 {

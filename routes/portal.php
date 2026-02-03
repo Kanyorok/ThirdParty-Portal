@@ -3,6 +3,17 @@
 use App\Http\Controllers\API\Procurement\SupplierRFQController;
 use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
 use App\Http\Controllers\API\Procurement\TenderInvitationResponseApiController;
+use App\Http\Controllers\API\Procurement\TenderSubmissionApiController;
+use App\Http\Controllers\Procurement\Prequalification\Api\PrequalificationApplicationController;
+use App\Http\Controllers\Procurement\TenderApiController;
+use App\Http\Controllers\ThirdParty\API\LookupController;
+use App\Http\Controllers\ThirdParty\API\MetadataController;
+use App\Http\Controllers\ThirdParty\API\NewThirdPartyController;
+use App\Http\Controllers\ThirdParty\API\ProfileController;
+use App\Http\Controllers\ThirdParty\API\ThirdPartyAuthController;
+use App\Http\Controllers\ThirdParty\API\ThirdPartyPasswordController;
+use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
+use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Route;
 
