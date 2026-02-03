@@ -4,6 +4,7 @@ namespace App\Models\Inventory;
 
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Procurement\Requisitions;
+use App\Models\Inventory\ItemMasterList;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -55,6 +56,11 @@ class ItemType extends Model
         return $this->hasMany(Requisitions::class, 'ItemTypeId', 'Id');
     }
 
+    public function items()
+    {
+        return $this->hasMany(ItemMasterList::class, 'ItemType', 'Id');
+    }
+
     public function type()
     {
         return $this->belongsTo(CodeDetail::class, 'TypeName', 'ID');
@@ -64,4 +70,5 @@ class ItemType extends Model
     {
         return $this->type ? $this->type->Description : (string)$this->TypeName;
     }
+
 }

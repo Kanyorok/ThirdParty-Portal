@@ -43,7 +43,7 @@ class ItemTypePolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function destroy(User $user): bool
+    public function delete(User $user): bool
     {
         return $user->can(PermissionEnum::ItemTypeDelete->value);
     }

@@ -6,6 +6,7 @@ use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Inventory\ItemMasterList;
 
 class InventoryType extends Model
 {
@@ -43,8 +44,15 @@ class InventoryType extends Model
         return 'InventoryTypesId';
     }
 
+    public function items()
+    {
+        return $this->hasMany(ItemMasterList::class, 'InventoryType', 'Id');
+    }
+
     public function type()
     {
         return $this->belongsTo(CodeDetail::class, 'Type', 'ID');
     }
+
+
 }
