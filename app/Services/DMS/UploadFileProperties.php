@@ -8,13 +8,13 @@ use App\Helpers\SystemHelper;
 use Carbon\Carbon;
 use Exception;
 use getID3;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use PhpOffice\PhpPresentation\IOFactory as PptFactory;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpWord\IOFactory as WordFactory;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 // Add getID3 import for media file analysis
 

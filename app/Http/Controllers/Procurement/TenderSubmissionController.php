@@ -1,17 +1,19 @@
 <?php
 
-namespace App\Http\Controllers\API\Procurement;
+namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\Tender;
 use App\Models\ThirdParies\Supplier;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class TenderSubmissionController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(): View
     {
         $this->authorize(\App\Enums\Core\PermissionEnum::BidSubmissionRead->value);
         $submissions = BidSubmission::with([
@@ -28,14 +30,32 @@ class TenderSubmissionController extends Controller
     public function create(Request $request)
     {
         $this->authorize(\App\Enums\Core\PermissionEnum::BidSubmissionWrite->value);
+        $currencies = \App\Models\Core\Currency::all();
         // Exclude tenders that already have submissions & filter by Published status
-        $tenders = Tender::select('TenderNo', 'Title')
+        $tenders = Tender::select('Id', 'TenderNo', 'Title', 'TenderType', 'SubmissionDeadline')
             ->where('Status', \App\Enums\TenderStatusEnum::Published->value)
             ->whereNot('Status', \App\Enums\TenderStatusEnum::Awarded->value)
             ->whereNot('Status', \App\Enums\TenderStatusEnum::Closed->value)
             ->where('ApprovalStatus', '!=', \App\Enums\TenderApprovalStatusEnum::REJECTED->value)
-            // ->doesntHave('submissions') // Removed to allow multiple submissions per tender (e.g. Public Tenders)
-            ->get();
+            ->where('SubmissionDeadline', '>', now()) // Filter by deadline
+            ->withCount(['invitedSuppliers', 'submissions']) // Get counts for filtering
+            ->get()
+            ->filter(function ($tender) {
+                // For restricted tenders, check if all invited suppliers have submitted
+                if ($tender->TenderType === \App\Enums\TenderTypeEnum::Restricted) {
+                    // Check if submissions count >= invited count (simple check, or use diff if needed)
+                    // Note: This assumes 1 submission per supplier.
+                    // If multiple submissions allowed per supplier, better to check unique supplier IDs in submissions.
+                    // But typically 1 active submission.
+                    // Let's rely on counts for performance, or check more deeply if needed.
+                    // Actually, let's filter: if invited count > 0 and submissions >= invited, hide it.
+                    if ($tender->invited_suppliers_count > 0 && $tender->submissions_count >= $tender->invited_suppliers_count) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
 
         // Initialize suppliers (loaded via AJAX)
         $suppliers = [];
@@ -44,7 +64,7 @@ class TenderSubmissionController extends Controller
             ->where('CodeID', 'SubmissionMode')
             ->get(['ID', 'Description']);
 
-        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes'));
+        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes', 'currencies'));
     }
 
     public function view($Id)
@@ -161,7 +181,7 @@ class TenderSubmissionController extends Controller
                 $bidSubmission->newDocument(
                     \App\Enums\Core\ModulesEnum::Procurement,
                     $request->file('bid_files'),
-                    [\App\Enums\Core\PermissionEnum::BidSubmissionView->value],
+                    [\App\Enums\Core\PermissionEnum::BidSubmissionRead->value],
                     $request->user()
                 );
             }
@@ -177,6 +197,53 @@ class TenderSubmissionController extends Controller
                 ->withErrors(['error' => 'Failed to record bid submission: ' . $e->getMessage()])
                 ->withInput();
         }
+    }
+
+    public function getInvitedSuppliers($tenderId)
+    {
+        // Try finding by TenderNo first (as it's passed from Select2 value)
+        $tender = Tender::where('TenderNo', $tenderId)->first();
+
+        // Fallback to ID if not found
+        if (! $tender) {
+            $tender = Tender::find($tenderId);
+        }
+
+        if (! $tender) {
+            return response()->json(['error' => 'Tender not found'], 404);
+        }
+
+        // Get IDs of suppliers who already submitted for this tender
+        $submittedSupplierIds = BidSubmission::where('TenderRef', $tender->TenderNo)
+            ->pluck('SupplierId')
+            ->toArray();
+
+        $query = Supplier::query();
+
+        // If Restricted, only show invited suppliers
+        if ($tender->TenderType === \App\Enums\TenderTypeEnum::Restricted) {
+            $query->whereIn('Id', $tender->invitedSuppliers()->pluck('t_Suppliers.Id'));
+        }
+
+        // Exclude suppliers who have already submitted
+        $query->whereNotIn('Id', $submittedSupplierIds);
+
+        // Fetch suppliers with details
+        $suppliers = $query->with(['supplierMaster.party'])->get();
+
+        // Map to format expected by frontend (Id, SupplierName)
+        $data = $suppliers->unique('Id')->map(function ($supplier) {
+            $name = $supplier->supplierMaster->party->TradingName
+                ?? $supplier->supplierMaster->party->ThirdPartyName
+                ?? 'Unknown Supplier';
+
+            return [
+                'Id' => $supplier->Id,
+                'SupplierName' => $name,
+            ];
+        })->values();
+
+        return response()->json($data);
     }
 
     private function resolveSupplier(): ?Supplier

@@ -4,11 +4,11 @@ namespace App\Http\Controllers\ThirdParty\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\ThirdParty\ThirdPartyUser;
-use App\Services\BR\BREncryption;
 use App\Services\HRM\UserService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
@@ -65,7 +65,7 @@ class ThirdPartyPasswordController extends Controller
         }
 
         $user->forceFill([
-            'Password' => BREncryption::hashUser($user, $request->password),
+            'Password' => Hash::make($request->password),
             'remember_token' => Str::random(60),
         ])->save();
 

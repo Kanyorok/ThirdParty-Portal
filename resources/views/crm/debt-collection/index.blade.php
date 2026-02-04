@@ -162,7 +162,6 @@
 
                 productsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading loans.");
-                    console.log(er);
                 });
             } else {
                 productsTable.clear().destroy();

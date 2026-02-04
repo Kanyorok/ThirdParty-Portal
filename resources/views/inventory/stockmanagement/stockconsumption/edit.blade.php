@@ -369,7 +369,6 @@
         }
 
       function initializeForm() {
-        console.log('Initializing form...');
         
         if ($('#ItemID').val()) {
             $('#ItemID').trigger('change');

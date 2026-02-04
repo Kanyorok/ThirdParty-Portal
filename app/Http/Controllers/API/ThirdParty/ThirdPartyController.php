@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\ThirdParty;
 
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdPartyAuth\StoreThirdPartyRequest;
 use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyRequest;
@@ -11,6 +12,7 @@ use App\Http\Resources\ThirdParty\ThirdPartyResource;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\RegistrationService;
+use App\Services\ThirdParties\ThirdPartyStatusService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -165,6 +167,7 @@ class ThirdPartyController extends Controller
         $thirdParty->save();
 
         $thirdParty->users()->update(['IsActive' => true]);
+        (new ThirdPartyStatusService())->applyStatus($thirdParty, ThirdPartyStatusEnum::Active);
 
         return (new ThirdPartyResource($thirdParty->load('users')))->response()->setStatusCode(200);
     }
@@ -180,6 +183,7 @@ class ThirdPartyController extends Controller
         $thirdParty->save();
 
         $thirdParty->users()->update(['IsActive' => false]);
+        (new ThirdPartyStatusService())->applyStatus($thirdParty, ThirdPartyStatusEnum::Suspended);
 
         return (new ThirdPartyResource($thirdParty->load('users')))->response()->setStatusCode(200);
     }

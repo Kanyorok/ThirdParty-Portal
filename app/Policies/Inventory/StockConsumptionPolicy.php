@@ -31,5 +31,4 @@ class StockConsumptionPolicy
     {
         return $user->can(PermissionEnum::StockConsumptionDelete->value);
     }
-    
 }

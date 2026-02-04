@@ -26,7 +26,7 @@ class InventoryHoldReviewController extends Controller
         $this->authorize('viewAny', InventoryHoldReview::class);
 
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -58,7 +58,7 @@ class InventoryHoldReviewController extends Controller
         $this->authorize('create', InventoryHoldReview::class);
 
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -89,8 +89,8 @@ class InventoryHoldReviewController extends Controller
             'store',
             'sourceDetail',
             'defectDetail',
-            'sourceAdjustment', 
-            'sourceReceipt'     
+            'sourceAdjustment',
+            'sourceReceipt',
         ])
             ->whereNull('DeletedOn')
             ->where('BranchID', $branchId)
@@ -129,7 +129,7 @@ class InventoryHoldReviewController extends Controller
         $this->authorize('view', InventoryHoldReview::class);
 
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -158,7 +158,7 @@ class InventoryHoldReviewController extends Controller
     public function resolve(Request $request, $id)
     {
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -175,7 +175,7 @@ class InventoryHoldReviewController extends Controller
                 ->where('FromBranch', $branchId)
                 ->first();
 
-            if (!$holdReview) {
+            if (! $holdReview) {
                 $inventoryHold = InventoryHold::withTrashed()
                     ->where('Id', $id)
                     ->where('BranchID', $branchId)
@@ -202,7 +202,7 @@ class InventoryHoldReviewController extends Controller
     public function destroy($id, Request $request)
     {
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -220,7 +220,7 @@ class InventoryHoldReviewController extends Controller
     public function getDetails($id, Request $request)
     {
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 

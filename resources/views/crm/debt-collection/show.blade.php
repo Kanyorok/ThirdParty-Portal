@@ -551,7 +551,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading guarantors.");
-                    // console.log(er);
                 });
             } else {
                 $('#guarantorsTable').DataTable().ajax.reload();
@@ -581,7 +580,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading collaterals.");
-                    // console.log(er);
                 });
             } else {
                 $('#collateralsTable').DataTable().ajax.reload();
@@ -610,7 +608,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading collaterals.");
-                    // console.log(er);
                 });
             } else {
                 $('#MessagesTable').DataTable().ajax.reload();
@@ -640,7 +637,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading tasks.");
-                    // console.log(er);
                 });
             } else {
                 $('#tasksTable').DataTable().ajax.reload();

@@ -108,7 +108,7 @@ class TransactionReceiptService
                 $itemId = $itemData['item'];
                 $receivedQty = $itemData['received_qty'];
                 $damagedQty = $itemData['damaged_qty'] ?? 0;
-                
+
                 $transferItem = $transfer->items()->where('Item', $itemId)->first();
 
                 if (! $transferItem) {
@@ -295,7 +295,7 @@ class TransactionReceiptService
                 'ReceivedDate' => now(),
                 'SourceType' => 'transfer',
                 'SourceReference' => $receipt->transfer->TransferId,
-                'ParentLedgerId' => $allocation['ledger_id'] ?? null, 
+                'ParentLedgerId' => $allocation['ledger_id'] ?? null,
                 'CreatedBy' => $userId,
                 'CreatedOn' => now(),
                 'ModifiedBy' => $userId,
@@ -304,11 +304,10 @@ class TransactionReceiptService
         }
     }
 
-
     private function allocateFIFOFromSource($transferItem, $storeId, $branchId, $quantity)
     {
         $sourceBranch = $transferItem->transfer->FromBranch;
-        
+
         $sourceStore = Store::where('BranchID', $sourceBranch)
             ->where('Status', true)
             ->first();
@@ -352,7 +351,6 @@ class TransactionReceiptService
 
         return $allocations;
     }
-
 
     private function calculateAverageCost($transferItem, $receivedQty)
     {
@@ -404,7 +402,7 @@ class TransactionReceiptService
 
                 if ($stock) {
                     $stock->CurrentQty -= $item->ReceivedQty;
-                    
+
                     if ($stock->CurrentQty > 0) {
                         $remainingValue = StockGRNLedger::where('StockItemId', $stock->Id)
                             ->where('RemainingQTY', '>', 0)

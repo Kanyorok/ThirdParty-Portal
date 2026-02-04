@@ -10,10 +10,9 @@ use App\Models\Inventory\StockAdjustmentItem;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\StockTransaction;
 use App\Services\Workflow\ApprovalWorkflow;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Exception;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class StockAdjustmentService
@@ -69,9 +68,9 @@ class StockAdjustmentService
                 );
             } catch (\Exception $e) {
                 DB::rollBack();
-                
+
                 throw ValidationException::withMessages([
-                    'workflow' => 'Workflow configuration is missing. Please configure the approval workflow for Stock Adjustments before creating adjustments. Contact your system administrator.'
+                    'workflow' => 'Workflow configuration is missing. Please configure the approval workflow for Stock Adjustments before creating adjustments. Contact your system administrator.',
                 ]);
             }
 

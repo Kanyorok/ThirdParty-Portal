@@ -45,15 +45,15 @@ class PropertyNewTenantService extends ThirdPartiesService
         });
     }
 
-    public static function createFromParty(ThirdParties $party, User|ThirdPartyUser $user, ?UploadedFile $document = null, ?string $Remarks = null): self
+    public static function createFromParty(ThirdParties $party, User|ThirdPartyUser $actor, ?UploadedFile $document = null, ?string $remarks = null, ?int $tenantType = null): self
     {
         $tenant = PropertyNewTenant::create([
             'ThirdPartyId' => $party->Id,
-            'TenantType' => $party->BusinessType,
-            'Remarks' => $Remarks,
+            'TenantType' => $tenantType ?? $party->BusinessType,
+            'Remarks' => $remarks,
             'IsActive' => true,
-            'CreatedBy' => ($user instanceof User) ? $user->Id : SystemHelper::user()->Id,
-            'ModifiedBy' => ($user instanceof User) ? $user->Id : SystemHelper::user()->Id,
+            'CreatedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
+            'ModifiedBy' => ($actor instanceof User) ? $actor->Id : SystemHelper::user()->Id,
         ]);
 
         if ($document instanceof UploadedFile) {
@@ -61,14 +61,14 @@ class PropertyNewTenantService extends ThirdPartiesService
                 ModulesEnum::Property,
                 $document,
                 [PermissionEnum::TenantMaintenanceView->value],
-                $user
+                $actor
             );
         }
 
-        activity()->causedBy($user)->performedOn($tenant)->event('create')->log("Added New Tenant {$tenant->Id}.");
+        activity()->causedBy($actor)->performedOn($tenant)->event('create')->log("Added New Tenant {$tenant->Id}.");
 
         $service = new self($tenant);
-        $service->addType(self::getType(), PropertyNewTenant::getPrimaryKey(), $tenant->Id, $user);
+        $service->addType(self::getType(), PropertyNewTenant::getPrimaryKey(), $tenant->Id, $actor);
 
         return $service;
     }
@@ -76,7 +76,7 @@ class PropertyNewTenantService extends ThirdPartiesService
     public static function create(
         string $name,
         ?string $tradingName,
-        CodeDetail $businessType,
+        ?CodeDetail $businessType,
         string $registrationNumber,
         string $taxPIN,
         ?string $vatNumber,
@@ -97,9 +97,10 @@ class PropertyNewTenantService extends ThirdPartiesService
 
             self::createFromParty(
                 party: $party,
-                user: $actor,
+                actor: $actor,
                 document: $file,
-                Remarks: $data['tenant_Remarks'] ?? $data['remarks'] ?? $data['Remarks'] ?? null
+                Remarks: $data['tenant_Remarks'] ?? $data['remarks'] ?? $data['Remarks'] ?? null,
+                tenantType: $data['tenant_type'] ?? null
             );
 
             return $party;

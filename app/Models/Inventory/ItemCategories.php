@@ -118,7 +118,7 @@ class ItemCategories extends Model
                 $category->CategoryCode = 'CAT-' . str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
             }
 
-            if (empty($category->CategoryCode) && !empty($category->ParentId)) {
+            if (empty($category->CategoryCode) && ! empty($category->ParentId)) {
                 $parentCategory = ItemCategories::find($category->ParentId);
 
                 $lastSubCategory = ItemCategories::where('ParentId', $category->ParentId)

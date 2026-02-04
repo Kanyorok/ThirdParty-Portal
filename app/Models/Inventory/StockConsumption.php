@@ -89,16 +89,15 @@ class StockConsumption extends Model
         return $this->belongsTo(StockItem::class, 'StockItemID', 'Id');
     }
 
-
     public function masterItem()
     {
         return $this->hasOneThrough(
             ItemMasterList::class,
             StockItem::class,
             'Id',
-            'Id', 
-            'ItemID', 
-            'ItemID' 
+            'Id',
+            'ItemID',
+            'ItemID'
         );
     }
 

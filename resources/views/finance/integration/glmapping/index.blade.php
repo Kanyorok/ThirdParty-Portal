@@ -246,18 +246,15 @@
 @section('scripts')
 <script>
     $(document).ready(function() {
-        console.log('GL Mapping script loaded');
 
         // Test if jQuery is working
         if (typeof $ !== 'undefined') {
-            console.log('jQuery is loaded');
         } else {
             console.error('jQuery is not loaded');
         }
 
         // Handle module change for transaction types in create modal
         $(document).on('change', '#createModuleID', function() {
-            console.log('Create module changed');
             const selectedModule = $(this).val();
             const transactionSelect = $('#createTransactionType');
 
@@ -268,7 +265,6 @@
                     url: `/finance/finance/transactions/${selectedModule}`,
                     method: 'GET',
                     success: function(data) {
-                        console.log('Transaction types loaded:', data);
                         let options = '<option selected disabled value="">-- Select Transaction Type --</option>';
                         if (data && data.length > 0) {
                             data.forEach(function(item) {
@@ -289,7 +285,6 @@
 
         // Handle module change for transaction types in edit modal
         $(document).on('change', '#editModuleID', function() {
-            console.log('Edit module changed');
             const selectedModule = $(this).val();
             const transactionSelect = $('#editTransactionType');
 
@@ -300,7 +295,6 @@
                     url: `/finance/finance/transactions/${selectedModule}`,
                     method: 'GET',
                     success: function(data) {
-                        console.log('Edit transaction types loaded:', data);
                         let options = '<option selected disabled value="">-- Select Transaction Type --</option>';
                         if (data && data.length > 0) {
                             data.forEach(function(item) {
@@ -321,15 +315,12 @@
 
         // Handle edit button clicks
         $(document).on('click', '.edit-mapping-btn', function() {
-            console.log('Edit button clicked');
             const mappingId = $(this).data('mapping-id');
-            console.log('Mapping ID:', mappingId);
             loadEditData(mappingId);
         });
 
         // Function to load edit data
         function loadEditData(mappingId) {
-            console.log('Loading edit data for mapping:', mappingId);
             $.ajax({
                 url: `/finance/glpostingmap/${mappingId}/edit`,
                 method: 'GET',
@@ -338,7 +329,6 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(data) {
-                    console.log('Edit data loaded:', data);
                     // Populate form fields
                     $('#editModuleID').val(data.ModuleID);
                     $('#editDebitGLAccountID').val(data.DebitGLAccountID);
@@ -366,7 +356,6 @@
         // Handle form submissions via AJAX for create modal
         $(document).on('submit', '#createMappingForm', function(e) {
             e.preventDefault();
-            console.log('Create form submitted');
 
             const form = $(this);
             const submitBtn = form.find('button[type="submit"]');
@@ -378,7 +367,6 @@
             const debitAccount = $('select[name="DebitGLAccountID"]').val();
             const creditAccount = $('select[name="CreditGLAccountID"]').val();
 
-            console.log('Form validation:', {
                 moduleID: moduleID,
                 transactionType: transactionType,
                 debitAccount: debitAccount,
@@ -392,8 +380,6 @@
 
             // Debug: Log form data
             const formData = form.serialize();
-            console.log('Form data being sent:', formData);
-            console.log('Form action URL:', form.attr('action'));
 
             // Disable button and show loading
             submitBtn.prop('disabled', true);
@@ -408,7 +394,6 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(data) {
-                    console.log('Create response:', data);
                     if (data.success) {
                         showToast('success', data.message || 'Mapping created successfully');
                         $('#createMappingModal').modal('hide');
@@ -455,7 +440,6 @@
         // Handle form submissions via AJAX for edit modal
         $(document).on('submit', '#editMappingForm', function(e) {
             e.preventDefault();
-            console.log('Edit form submitted');
 
             const form = $(this);
             const submitBtn = form.find('button[type="submit"]');
@@ -467,7 +451,6 @@
             const debitAccount = $('#editDebitGLAccountID').val();
             const creditAccount = $('#editCreditGLAccountID').val();
 
-            console.log('Edit form validation:', {
                 moduleID: moduleID,
                 transactionType: transactionType,
                 debitAccount: debitAccount,
@@ -492,7 +475,6 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(data) {
-                    console.log('Edit response:', data);
                     if (data.success) {
                         showToast('success', data.message || 'Mapping updated successfully');
                         $('#editMappingModal').modal('hide');
@@ -516,7 +498,6 @@
     });
 
     function showToast(type, message) {
-        console.log('Showing toast:', type, message);
         const toastHtml = `
         <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert" aria-live="assertive" aria-atomic="true" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
             <div class="d-flex">

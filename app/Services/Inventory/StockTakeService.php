@@ -19,7 +19,6 @@ class StockTakeService
         $this->stockTake = $stockTake;
     }
 
-
     public static function createWithLines(
         Branch $branch,
         Store $store,
@@ -68,7 +67,6 @@ class StockTakeService
             return new self($stockTake);
         });
     }
-
 
     public function addLine(
         int $itemId,

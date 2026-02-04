@@ -287,7 +287,6 @@
 
                 membersTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the list.");
-                    console.log(er);
                 });
             } else {
                 membersTable.ajax.reload();
@@ -350,7 +349,6 @@
 
                 leadsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading leads.");
-                    console.log(er);
                 });
             } else {
                 leadsTable.ajax.reload();

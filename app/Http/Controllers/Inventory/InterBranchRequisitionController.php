@@ -31,10 +31,10 @@ class InterBranchRequisitionController extends Controller
         $this->authorize('viewAny', InterBranchRequisition::class);
 
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
-        
+
         $isHeadOffice = $currentBranch->IsHQ;
         $branchId = $currentBranch->Id;
 
@@ -44,7 +44,7 @@ class InterBranchRequisitionController extends Controller
             $allQuery = clone $baseQuery;
             $incomingQuery = clone $baseQuery;
             $otherQuery = clone $baseQuery;
-            
+
             if ($request->filled('status')) {
                 $enum = InterBranchRequisitionEnum::tryFrom($request->status);
                 $status = $enum ? $enum->value : $request->status;
@@ -52,27 +52,27 @@ class InterBranchRequisitionController extends Controller
                 $incomingQuery->where('Status', $status);
                 $otherQuery->where('Status', $status);
             }
-            
+
             $allRequisitions = $allQuery->orderBy('CreatedOn', 'desc')->get();
-            
+
             $incomingRequisitions = $incomingQuery
-                ->where('FromBranch', $branchId) 
+                ->where('FromBranch', $branchId)
                 ->orderBy('CreatedOn', 'desc')
                 ->get();
-                
+
             $otherRequisitions = $otherQuery
                 ->where('FromBranch', '!=', $branchId)
                 ->where('ToBranch', '!=', $branchId)
                 ->orderBy('CreatedOn', 'desc')
                 ->get();
-                
+
             $groupedRequisitions = $allRequisitions;
-            $outgoingRequisitions = collect(); 
+            $outgoingRequisitions = collect();
         } else {
             $incomingQuery = clone $baseQuery;
             $outgoingQuery = clone $baseQuery;
             $allQuery = clone $baseQuery;
-            
+
             if ($request->filled('status')) {
                 $enum = InterBranchRequisitionEnum::tryFrom($request->status);
                 $status = $enum ? $enum->value : $request->status;
@@ -80,17 +80,17 @@ class InterBranchRequisitionController extends Controller
                 $outgoingQuery->where('Status', $status);
                 $allQuery->where('Status', $status);
             }
-            
+
             $incomingRequisitions = $incomingQuery
-                ->where('FromBranch', $branchId) 
+                ->where('FromBranch', $branchId)
                 ->orderBy('CreatedOn', 'desc')
                 ->get();
-                
+
             $outgoingRequisitions = $outgoingQuery
-                ->where('ToBranch', $branchId) 
+                ->where('ToBranch', $branchId)
                 ->orderBy('CreatedOn', 'desc')
                 ->get();
-                
+
             $allRequisitions = $allQuery
                 ->where(function ($q) use ($branchId) {
                     $q->where('FromBranch', $branchId)
@@ -98,7 +98,7 @@ class InterBranchRequisitionController extends Controller
                 })
                 ->orderBy('CreatedOn', 'desc')
                 ->get();
-                
+
             $otherRequisitions = collect();
             $groupedRequisitions = $allRequisitions;
         }
@@ -119,7 +119,7 @@ class InterBranchRequisitionController extends Controller
         $this->authorize('create', InterBranchRequisition::class);
 
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -172,12 +172,13 @@ class InterBranchRequisitionController extends Controller
             }
         }
 
-        if (!isset($data['Status'])) {
+        if (! isset($data['Status'])) {
             $data['Status'] = InterBranchRequisitionEnum::Pending->value;
         }
 
         try {
             $this->service->create($data);
+
             return redirect()->route('interbranchrequisition.index')
                 ->with('success', 'Requisition submitted successfully.');
         } catch (ValidationException $e) {
@@ -192,7 +193,7 @@ class InterBranchRequisitionController extends Controller
     {
         $this->authorize('view', InterBranchRequisition::class);
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -211,7 +212,7 @@ class InterBranchRequisitionController extends Controller
     public function edit($Id, Request $request)
     {
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -243,7 +244,7 @@ class InterBranchRequisitionController extends Controller
 
         $categories = ItemCategories::whereNull('ParentId')->get();
         $subcategories = ItemCategories::whereNotNull('ParentId')->get();
-        
+
         $items = ItemMasterList::with('uom', 'category')
             ->whereIn('Status', function ($q) {
                 $q->select('ID')->from('t_CodeDetails')
@@ -253,7 +254,7 @@ class InterBranchRequisitionController extends Controller
             ->get();
 
         $fromBranch = Branch::findOrFail($item->FromBranch);
-        $branches = Branch::where('Id', '!=', $currentBranch->Id)->get(); 
+        $branches = Branch::where('Id', '!=', $currentBranch->Id)->get();
         $uoms = UnitOfMeasure::all();
 
         return view('inventory.interbranchrequisition.edit', compact(
@@ -272,7 +273,7 @@ class InterBranchRequisitionController extends Controller
     public function update(InterBranchRequisitionRequest $request, $Id)
     {
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -306,7 +307,7 @@ class InterBranchRequisitionController extends Controller
                 ->where('Branch', $fromBranchId)
                 ->where('ItemId', $itemId)
                 ->sum('CurrentQty');
-                
+
 
             if ($totalStock < $requestedQty) {
                 $itemName = $itemData['item_name'] ?? 'Unknown Item';
@@ -315,12 +316,13 @@ class InterBranchRequisitionController extends Controller
             }
         }
 
-        if (!isset($data['Status']) && $item->Status) {
+        if (! isset($data['Status']) && $item->Status) {
             $data['Status'] = $item->Status;
         }
 
         try {
             $this->service->update($item, $data);
+
             return redirect()->route('interbranchrequisition.index')->with('success', 'Requisition updated successfully!');
         } catch (Exception $e) {
             return back()->withErrors('Failed to update Requisition: ' . $e->getMessage())->withInput();
@@ -330,7 +332,7 @@ class InterBranchRequisitionController extends Controller
     public function destroy($Id, Request $request)
     {
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -360,7 +362,7 @@ class InterBranchRequisitionController extends Controller
     public function getSubcategories(Request $request)
     {
         $categoryId = $request->get('category_id');
-        if (!$categoryId) {
+        if (! $categoryId) {
             return response()->json([]);
         }
 
@@ -375,7 +377,7 @@ class InterBranchRequisitionController extends Controller
     {
         $item = ItemMasterList::with('uom')->select('Id', 'ItemCode', 'UOM')->find($Id);
 
-        if (!$item) {
+        if (! $item) {
             return response()->json(['error' => 'Item not found'], 404);
         }
 
@@ -389,12 +391,12 @@ class InterBranchRequisitionController extends Controller
     {
         $fromBranchId = $request->get('from_branch_id');
 
-        if (!is_numeric($fromBranchId)) {
+        if (! is_numeric($fromBranchId)) {
             return response()->json(['message' => 'Invalid branch selected.', 'categories' => []]);
         }
 
         $activeStatusId = CodeDetail::where('CodeID', 'ItemStatus')
-            ->where('Description', 'Active') 
+            ->where('Description', 'Active')
             ->value('ID');
 
         $categories = DB::table('t_Items')
@@ -419,13 +421,13 @@ class InterBranchRequisitionController extends Controller
             if ($category->ParentId === null) {
                 $uniqueTopLevelCategories[$category->Id] = ['Id' => $category->Id, 'Name' => $category->Name];
             } else {
-                if (!isset($uniqueTopLevelCategories[$category->ParentId])) {
+                if (! isset($uniqueTopLevelCategories[$category->ParentId])) {
                     $uniqueTopLevelCategories[$category->ParentId] = ['Id' => $category->ParentId, 'Name' => $category->ParentName];
                 }
             }
         }
 
-        usort($uniqueTopLevelCategories, fn($a, $b) => strcmp($a['Name'], $b['Name']));
+        usort($uniqueTopLevelCategories, fn ($a, $b) => strcmp($a['Name'], $b['Name']));
 
         if (empty($uniqueTopLevelCategories)) {
             return response()->json(['message' => 'No categories with available items in this branch.', 'categories' => []]);
@@ -439,7 +441,7 @@ class InterBranchRequisitionController extends Controller
         $fromBranchId = $request->get('from_branch_id');
         $categoryId = $request->get('category_id');
 
-        if (!is_numeric($fromBranchId) || !is_numeric($categoryId)) {
+        if (! is_numeric($fromBranchId) || ! is_numeric($categoryId)) {
             return response()->json(['message' => 'Invalid branch or category selected.', 'subcategories' => []]);
         }
 
@@ -470,16 +472,16 @@ class InterBranchRequisitionController extends Controller
         $subcategoryId = $request->get('subcategory_id');
         $fromBranchId = $request->get('from_branch_id');
 
-        if ((!is_null($subcategoryId) && !is_numeric($subcategoryId)) ||
-            (!is_null($categoryId) && !is_numeric($categoryId)) ||
-            (!is_null($fromBranchId) && !is_numeric($fromBranchId))) {
+        if ((! is_null($subcategoryId) && ! is_numeric($subcategoryId)) ||
+            (! is_null($categoryId) && ! is_numeric($categoryId)) ||
+            (! is_null($fromBranchId) && ! is_numeric($fromBranchId))) {
             return response()->json(['message' => 'Invalid input provided.', 'items' => []]);
         }
 
         if (empty($fromBranchId)) {
             return response()->json([
                 'message' => 'Please select a "Requesting Branch" first to view available items.',
-                'items'   => []
+                'items' => [],
             ]);
         }
 
@@ -511,7 +513,7 @@ class InterBranchRequisitionController extends Controller
 
         return response()->json([
             'message' => 'Items retrieved successfully.',
-            'items'   => $items
+            'items' => $items,
         ]);
     }
 }

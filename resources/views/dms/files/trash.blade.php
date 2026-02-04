@@ -136,7 +136,6 @@
 
                 DocumentsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the files.");
-                    console.log(er);
                 });
             } else {
                 DocumentsTable.ajax.reload();

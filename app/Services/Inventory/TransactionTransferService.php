@@ -116,7 +116,7 @@ class TransactionTransferService
                 ? $this->getHQBranchId()
                 : $transfer->FromBranch;
 
-            if (!$this->branchHasGRNLedger($fromBranch, $itemId)) {
+            if (! $this->branchHasGRNLedger($fromBranch, $itemId)) {
                 throw new Exception("Branch {$fromBranch} has no GRN ledger entries for item {$itemId}. Cannot transfer without GRN tracking.");
             }
 
@@ -157,7 +157,7 @@ class TransactionTransferService
 
     public function getAvailableGRNBatches($itemId, $branchId, $storeId = null)
     {
-        if (!$storeId) {
+        if (! $storeId) {
             $store = $this->getDefaultStoreForBranch($branchId);
             $storeId = $store ? $store->Id : null;
         }
@@ -226,7 +226,7 @@ class TransactionTransferService
 
             foreach ($transfer->items as $item) {
                 $sourceStore = $this->getDefaultStoreForBranch($transfer->FromBranch);
-                
+
                 $stockFrom = StockItem::where('ItemID', $item->Item)
                     ->where('Store', $sourceStore->Id)
                     ->where('Branch', $transfer->FromBranch)
@@ -242,7 +242,7 @@ class TransactionTransferService
 
                 $allocations = [];
                 $remainingQty = $item->DispatchedQty;
-                
+
                 $availableBatches = StockGRNLedger::where('ItemNo', $item->Item)
                     ->where('Store', $sourceStore->Id)
                     ->where('Branch', $transfer->FromBranch)
@@ -255,7 +255,7 @@ class TransactionTransferService
                     throw new Exception("No GRN batches available for Item {$item->Item} in branch {$transfer->FromBranch}");
                 }
 
-                if (!empty($item->BatchAllocation) && !$isHQ) {
+                if (! empty($item->BatchAllocation) && ! $isHQ) {
                     $userAllocations = json_decode($item->BatchAllocation, true);
 
                     foreach ($userAllocations as $userAlloc) {
@@ -282,7 +282,7 @@ class TransactionTransferService
                             'parent_ledger_id' => $batch->ParentLedgerId,
                             'source_type' => $batch->SourceType ?? 'procurement',
                         ];
-                        
+
                         $batch->RemainingQTY -= $userAlloc['quantity'];
                         $batch->save();
 
@@ -305,7 +305,7 @@ class TransactionTransferService
                             'parent_ledger_id' => $batch->ParentLedgerId,
                             'source_type' => $batch->SourceType ?? 'procurement',
                         ];
-                        
+
                         $batch->RemainingQTY -= $allocatedQty;
                         $batch->save();
 
@@ -324,7 +324,7 @@ class TransactionTransferService
                 $totalCost += $itemCost;
 
                 $item->BatchAllocation = json_encode($allocations);
-                $item->UnitCost = $itemCost / max($item->DispatchedQty, 1); 
+                $item->UnitCost = $itemCost / max($item->DispatchedQty, 1);
                 $item->save();
 
                 $stockFrom->CurrentQty -= $item->DispatchedQty;
@@ -434,7 +434,6 @@ class TransactionTransferService
         }
     }
 
- 
     protected function getDefaultStoreForBranch($branchId)
     {
         $store = Store::where('BranchID', $branchId)

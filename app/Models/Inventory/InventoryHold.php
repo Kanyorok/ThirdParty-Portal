@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models\Inventory;
 
 use App\Models\Auth\User;
@@ -7,10 +8,6 @@ use App\Models\Core\Branch;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Inventory\StockAdjustment;
-use App\Models\Inventory\TransactionReceipt;
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\Store;
 
 class InventoryHold extends Model
 {
@@ -66,7 +63,6 @@ class InventoryHold extends Model
         return $this->belongsTo(Branch::class, 'BranchID');
     }
 
-
     public function fromBranch()
     {
         return $this->belongsTo(Branch::class, 'BranchID');
@@ -87,7 +83,6 @@ class InventoryHold extends Model
         return $this->belongsTo(StockAdjustment::class, 'SourceID', 'Id');
     }
 
-
     public function sourceReceipt()
     {
         return $this->belongsTo(TransactionReceipt::class, 'SourceID', 'Id');
@@ -96,14 +91,13 @@ class InventoryHold extends Model
     public function getSourceDocumentIdAttribute()
     {
         $sourceType = $this->sourceDetail->Description ?? '';
-        
+
         if (stripos($sourceType, 'adjustment') !== false && $this->sourceAdjustment) {
             return $this->sourceAdjustment->AdjustmentId ?? $this->SourceID;
-        } 
-        elseif ((stripos($sourceType, 'receipt') !== false || stripos($sourceType, 'transfer') !== false) && $this->sourceReceipt) {
+        } elseif ((stripos($sourceType, 'receipt') !== false || stripos($sourceType, 'transfer') !== false) && $this->sourceReceipt) {
             return $this->sourceReceipt->ReceiptId ?? $this->SourceID;
         }
-        
+
         return $this->SourceID;
     }
 

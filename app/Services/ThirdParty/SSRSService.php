@@ -12,12 +12,12 @@ use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\FileCookieJar;
 use GuzzleHttp\Exception\GuzzleException;
-use Http;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Psr\Http\Message\ResponseInterface;
 use SensitiveParameter;
@@ -26,7 +26,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SSRSService
 {
-    public const string UserParameter = 'LoginUser';
+    public const UserParameter = 'LoginUser';
 
     protected PendingRequest $_query;
 

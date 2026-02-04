@@ -197,17 +197,14 @@
             <div class="modal-body">
                 <form action="{{ route('requisitionItem.store') }}" method="post" id="createRequisitionItemForm">
                     @csrf
-                    <div class="modal-body">
-                        <p>Are you sure you want to submit this requisition for approval?</p>
-                        <div class="mb-3">
-                            <label for="submitRemarks" class="form-label">Remarks <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="submitRemarks" name="remarks" rows="3" 
-                                      placeholder="Add any additional comments..." required></textarea>
-                        </div>
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> 
-                            Once submitted, this requisition will be sent to the approval workflow and you will not be able to add more items.
-                        </div>
+                    <div class="mb-3">
+                        <label for="Type" class="form-label">Type <span class="text-danger">*</span></label>
+                        <select class="form-control" name="Type" id="Type" required>
+                            <option selected disabled value="">Select Type</option>
+                            @foreach($types as $type)
+                            <option value="{{ $type->Id }}">{{ $type->TypeName ?? $type->Name ?? $type->Description }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div class="mb-3">
@@ -243,6 +240,7 @@
                         <p id="UOM_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                     </div>
 
+                    <input type="hidden" name="RequisitionID" id="RequisitionID">
                     <input type="hidden" name="EstimatedPrice" id="EstimatedPrice">
                     <input type="hidden" class="form-control" id="LineItemID" name="LineItemID">
 
@@ -286,8 +284,8 @@
                 <div class="modal-body">
                     <p>Are you sure you want to submit this requisition for approval?</p>
                     <div class="mb-3">
-                        <label for="submitRemarks" class="form-label">Remarks</label>
-                        <textarea class="form-control" id="submitRemarks" name="remarks" rows="3"
+                        <label for="submitRemarks" class="form-label">Remarks <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="submitRemarks" name="remarks" rows="3" required
                             placeholder="Add any additional comments..."></textarea>
                     </div>
                     <div class="alert alert-info">
@@ -309,20 +307,14 @@
 
 @section('scripts')
 <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-<script src="{{ asset('assets/js/datatables.js') }}"></script>
+<script src="{{ asset('assets/libs/dataTables/jquery.dataTables.min.js') }}"></script>
 <script>
     const $Modal = $('#RequisitionItemModal');
     const $SubmitModal = $('#submitConfirmationModal');
     const requisitionId = "{{ $id ?? '' }}";
     // Check if plan exists based on requisition info
     const requisitionInfo = @json($requisitionInfo);
-    console.log('Requisition Info:', requisitionInfo);
-    const hasPlan = {
-        {
-            isset($requisitionInfo - > PlanRef) && $requisitionInfo - > PlanRef ? 'true' : 'false'
-        }
-    };
-    console.log('Has Plan:', hasPlan);
+    const hasPlan = {{ isset($requisitionInfo->PlanRef) && $requisitionInfo->PlanRef ? 'true' : 'false' }};
 
     function getRequisitionIdFromUrl() {
         return requisitionId || window.location.pathname.split('/').pop();
@@ -358,10 +350,9 @@
     }
 
     $(document).ready(function() {
-        console.log('Page loaded, initializing components...');
 
         // Initialize DataTable if there are items
-        @if($details - > count() > 0)
+        @if(count($details) > 0)
         $('#requsitionItemsTable').DataTable({
             pageLength: 10,
             ordering: true,
@@ -378,7 +369,6 @@
                 dropdownParent: $Modal,
                 width: '100%'
             });
-            console.log('Select2 initialized successfully');
         } catch (error) {
             console.error('Select2 initialization error:', error);
         }
@@ -386,10 +376,8 @@
         // Show modal for adding item - FIXED
         $('.modal-create-item').on('click', function(e) {
             e.preventDefault();
-            console.log('Add Items button clicked');
 
             const reqId = getRequisitionIdFromUrl();
-            console.log('Setting requisition ID:', reqId);
 
             $('#RequisitionID').val(reqId);
 
@@ -422,10 +410,8 @@
         // Submit for approval button
         $('#submitForApproval').on('click', function(e) {
             e.preventDefault();
-            console.log('Submit for approval clicked');
 
             const itemCount = $('#requsitionItemsTable tbody tr').not(':has(td[colspan])').length;
-            console.log('Item count:', itemCount);
 
             if (itemCount === 0) {
                 if (typeof Swal !== 'undefined') {
@@ -446,7 +432,6 @@
         // Handle submit form
         $('#submitForm').on('submit', function(e) {
             e.preventDefault();
-            console.log('Submitting requisition for approval...');
 
             const submitBtn = $('#confirmSubmitBtn');
             submitBtn.prop('disabled', true).html(
@@ -460,7 +445,6 @@
         // Handle form submission for adding items
         $('#createRequisitionItemForm').on('submit', async function(e) {
             e.preventDefault();
-            console.log('Submitting item form...');
 
             const submitBtn = $('#createRequisitionItemBtn');
             submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Saving...');
@@ -476,7 +460,6 @@
                     }
                 } else {
                     // Fallback: submit form directly
-                    console.log('saveForm not found, submitting directly');
                     this.submit();
                 }
             } catch (error) {
@@ -569,12 +552,33 @@
             $('#LineItemID').val('');
         }
 
-        console.log('All event handlers attached successfully');
 
         // Update EstimatedPrice when EstUnitCostDisplay changes (for manual entry)
         $('#EstUnitCostDisplay').on('input', function() {
             if (!$(this).prop('readonly')) {
                 $('#EstimatedPrice').val($(this).val());
+            }
+        });
+        // Delete item handler
+        $(document).on('click', '.remove-plan-item', function(e) {
+            e.preventDefault();
+            const itemId = $(this).data('line-id');
+
+            if (confirm('Are you sure you want to delete this item?')) {
+                $.ajax({
+                    url: '/procurement/requisitionLine/' + itemId,
+                    type: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                         location.reload();
+                    },
+                    error: function(xhr) {
+                        alert('Error deleting item');
+                        console.error(xhr);
+                    }
+                });
             }
         });
     });

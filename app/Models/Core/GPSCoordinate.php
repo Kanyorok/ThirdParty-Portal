@@ -10,8 +10,8 @@ class GPSCoordinate extends Model
 {
     use UserActorTrait;
 
-    public const string CREATED_AT = 'CreatedOn';
-    public const string UPDATED_AT = 'ModifiedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
     protected $table = 't_GPSCoordinates';
     protected $primaryKey = 'Id';
 

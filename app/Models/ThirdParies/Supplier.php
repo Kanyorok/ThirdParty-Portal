@@ -22,8 +22,8 @@ class Supplier extends Model
     protected $table = 't_Suppliers';
     protected $primaryKey = 'Id';
 
-    public const string CREATED_AT = 'CreatedOn';
-    public const string UPDATED_AT = 'ModifiedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
     protected $fillable = [
         'RoundID',
         'SupplierMasterId',

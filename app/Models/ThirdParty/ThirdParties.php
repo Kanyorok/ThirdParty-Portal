@@ -175,7 +175,6 @@ class ThirdParties extends Model
      */
     public function legacyCategories()
     {
-        //todo move to supplier master model
         return $this->hasMany(\App\Models\ThirdParty\ThirdPartyCategory::class, 'ThirdPartyId', 'Id')
             ->whereNull('DeletedOn')
             ->with('category');
@@ -183,7 +182,7 @@ class ThirdParties extends Model
 
     public function isApproved(): bool
     {
-        return $this->status?->Value === \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved->value;
+        return $this->status?->Code === 'A';
     }
 
     public function isSupplier(): bool

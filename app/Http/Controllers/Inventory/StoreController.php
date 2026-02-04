@@ -21,16 +21,16 @@ class StoreController extends Controller
     public function index(Request $request)
     {
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
-        $branchId = $currentBranch->Id; 
-        
+        $branchId = $currentBranch->Id;
+
         $stores = Store::where('BranchID', $branchId)
             ->withCount('stockItems')
             ->get();
-            
+
         return view('inventory.stores.index', compact('stores'));
     }
 
@@ -39,7 +39,7 @@ class StoreController extends Controller
         $this->authorize('create', Store::class);
 
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -80,7 +80,7 @@ class StoreController extends Controller
         $this->authorize('update', $store);
 
         $currentBranch = $request->user()->branch;
-        if (!$currentBranch instanceof Branch) {
+        if (! $currentBranch instanceof Branch) {
             return redirect()->back()->with('fail', 'Current user branch not found.');
         }
 
@@ -91,7 +91,7 @@ class StoreController extends Controller
             ->where('IsMainStore', true)
             ->where('Id', '!=', $Id)
             ->exists();
-        
+
         $hasStockItems = $store->stockItems()->exists();
         $stockItemsCount = $hasStockItems ? $store->stockItems()->count() : 0;
 
@@ -132,7 +132,7 @@ class StoreController extends Controller
                 return redirect()->back()->with('error', 'Cannot delete the main store as it is the only store for this branch.');
             }
         }
-        
+
         if ($store->hasStockItems()) {
             return redirect()->back()->with('error', 'Cannot delete store with existing stock items. Please remove all stock items first.');
         }

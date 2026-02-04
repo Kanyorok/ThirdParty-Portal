@@ -16,7 +16,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class StockTakeController extends Controller
 {
@@ -57,7 +56,7 @@ class StockTakeController extends Controller
             ->with('item')
             ->get();
 
-        return response()->json($stocks); 
+        return response()->json($stocks);
     }
 
     public function store(StockTakeRequest $request)
@@ -129,18 +128,18 @@ class StockTakeController extends Controller
         try {
             $stock = StockTake::findOrFail($id);
 
-        $stock->update([
-            'BranchId' => $validated['BranchId'],
-            'StoreId' => $validated['StoreId'],
-            'CountedBy' => $validated['CountedBy'],
-            'CountDate' => $validated['CountDate'],
-            'ModifiedBy' => Auth::id(),
-        ]);
+            $stock->update([
+                'BranchId' => $validated['BranchId'],
+                'StoreId' => $validated['StoreId'],
+                'CountedBy' => $validated['CountedBy'],
+                'CountDate' => $validated['CountDate'],
+                'ModifiedBy' => Auth::id(),
+            ]);
 
-        if (isset($validated['lines'])) {
-            foreach ($validated['lines'] as $lineData) {
-                if (!empty($lineData['Id'])) {
-                    $line = StockTakeLines::find($lineData['Id']);
+            if (isset($validated['lines'])) {
+                foreach ($validated['lines'] as $lineData) {
+                    if (! empty($lineData['Id'])) {
+                        $line = StockTakeLines::find($lineData['Id']);
 
                         if ($line) {
                             $line->update([
@@ -162,16 +161,17 @@ class StockTakeController extends Controller
                 ->withProperties(['action' => 'update'])
                 ->log('Updated Stock Take and lines');
 
-        return redirect()->route('stocktake.index')->with('success', 'Stock Take updated successfully');
-    } catch (\Throwable $th) {
-        DB::rollBack();
-        return back()->withErrors(['error' => 'Failed to update Stock Take'])->withInput();
+            return redirect()->route('stocktake.index')->with('success', 'Stock Take updated successfully');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            return back()->withErrors(['error' => 'Failed to update Stock Take'])->withInput();
+        }
     }
-}
 
     public function destroy($id)
     {
-         $this->authorize(PermissionEnum::StockTakeDestroy, StockTake::class);
+        $this->authorize(PermissionEnum::StockTakeDestroy, StockTake::class);
 
         try {
             $branchId = session('LoginBranchId');

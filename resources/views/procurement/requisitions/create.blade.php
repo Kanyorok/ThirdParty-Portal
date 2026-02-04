@@ -181,10 +181,7 @@
             </div>
         </div>
     </div>
-@endsection
-@section('scripts')
-    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-    <script src="{{ asset('assets/js/datatables.js') }}"></script>
+
 
 <div class="modal fade" id="RequisitionItemModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
