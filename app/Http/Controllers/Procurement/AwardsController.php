@@ -723,6 +723,15 @@ class AwardsController extends Controller
                 }
             } else {
                 $award->approve($user, $remarks);
+                // Also update the RFQ status to 'Awarded' (Aw)
+                // Use 'Aw' as added to CodeDetailSeeder
+                if ($award->rfq) {
+                    $award->rfq->update([
+                        'Status' => 'Aw',
+                        'ModifiedBy' => $user->Id,
+                        'ModifiedOn' => now(),
+                    ]);
+                }
             }
 
 

@@ -125,7 +125,7 @@
 
       <!-- Action Buttons -->
       <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Submit</button>
         <a href="{{ route('evaluations.index') }}" class="btn btn-danger">Cancel</a>
       </div>
     </form>
@@ -142,8 +142,15 @@
       const committeeMemberInput = document.querySelector('[name="CommitteeMember"]');
       const userIdInput = document.querySelector('[name="UserID"]');
       const form = document.getElementById('evaluationForm');
+      const confirmCheckbox = document.getElementById('confirmCheck');
+      const submitBtn = document.getElementById('submitBtn');
       // Holds per-supplier mapping of section weights and criteria ids for computing weighted totals
       const sectionMap = {};
+
+      // Toggle submit button based on checkbox
+      confirmCheckbox.addEventListener('change', function() {
+        submitBtn.disabled = !this.checked;
+      });
 
       // Custom validation for form submission
       form.addEventListener('submit', function(event) {
