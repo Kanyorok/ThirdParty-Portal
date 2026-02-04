@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Core\Approval\CodeDetail;
 
 class ItemTypeService
 {
@@ -47,19 +48,16 @@ class ItemTypeService
             $disabledCount = 0;
             $enabledCount = 0;
 
-            // If changing from active to inactive and should disable related items
             if ($wasActive && $willBeInactive && $disableRelatedItems) {
                 $disabledCount = $this->disableRelatedItems($itemType);
                 Log::info("Disabled {$disabledCount} items related to Item Type {$itemType->Id}");
             }
 
-            // If changing from inactive to active and should enable related items
             if ($wasInactive && $willBeActive && $enableRelatedItems) {
                 $enabledCount = $this->enableRelatedItems($itemType);
                 Log::info("Enabled {$enabledCount} items related to Item Type {$itemType->Id}");
             }
 
-            // Update the item type
             $itemType->update([
                 'TypeName' => $data['TypeName'],
                 'StockTracked' => $data['StockTracked'],
@@ -69,7 +67,6 @@ class ItemTypeService
                 'ModifiedOn' => Carbon::now(),
             ]);
 
-            // Build log message
             $logMessage = 'Updated Item Type ' . $itemType->Id;
             if ($disabledCount > 0) {
                 $logMessage .= ' and disabled ' . $disabledCount . ' related items';
@@ -102,18 +99,14 @@ class ItemTypeService
      */
     public function checkRelatedItems(ItemType $itemType, string $checkType = 'active'): array
     {
-        // Adjust column name based on your actual ItemMasterList table structure
-        // Common column names: ItemTypeId, ItemType, item_type_id, etc.
         $query = ItemMasterList::where('ItemType', $itemType->Id)
             ->whereNull('DeletedOn');
 
         if ($checkType === 'active') {
-            // Check for active items
             $query->whereHas('status', function($q) {
                 $q->where('Description', 'Active');
             });
         } else {
-            // Check for inactive items
             $query->whereHas('status', function($q) {
                 $q->where('Description', 'Inactive');
             });
@@ -138,8 +131,7 @@ class ItemTypeService
     {
         $user = Auth::user();
         
-        // Get the "Inactive" status ID
-        $inactiveStatusId = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'ItemStatus')
+        $inactiveStatusId = CodeDetail::where('CodeID', 'ItemStatus')
             ->where('Description', 'Inactive')
             ->value('Id');
 
@@ -148,7 +140,6 @@ class ItemTypeService
             throw new \Exception('Inactive status configuration not found');
         }
 
-        // Update all active items related to this item type
         $affectedRows = ItemMasterList::where('ItemType', $itemType->Id)
             ->whereNull('DeletedOn')
             ->whereHas('status', function($query) {
@@ -160,7 +151,6 @@ class ItemTypeService
                 'ModifiedOn' => Carbon::now()
             ]);
 
-        // Log activity for tracking
         activity()
             ->causedBy($user)
             ->performedOn($itemType)
@@ -180,8 +170,7 @@ class ItemTypeService
     {
         $user = Auth::user();
         
-        // Get the "Active" status ID
-        $activeStatusId = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'ItemStatus')
+        $activeStatusId = CodeDetail::where('CodeID', 'ItemStatus')
             ->where('Description', 'Active')
             ->value('Id');
 
@@ -190,7 +179,6 @@ class ItemTypeService
             throw new \Exception('Active status configuration not found');
         }
 
-        // Update all inactive items related to this item type
         $affectedRows = ItemMasterList::where('ItemType', $itemType->Id)
             ->whereNull('DeletedOn')
             ->whereHas('status', function($query) {
@@ -202,7 +190,6 @@ class ItemTypeService
                 'ModifiedOn' => Carbon::now()
             ]);
 
-        // Log activity for tracking
         activity()
             ->causedBy($user)
             ->performedOn($itemType)

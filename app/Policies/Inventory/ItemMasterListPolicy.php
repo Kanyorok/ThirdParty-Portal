@@ -4,7 +4,7 @@ namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
-use App\Models\Inventory\ItemMasterList;
+
 
 class ItemMasterListPolicy
 {
@@ -13,7 +13,7 @@ class ItemMasterListPolicy
         return $user->can(PermissionEnum::MasterListView->value);
     }
 
-    public function view(User $user, ItemMasterList $item): bool
+    public function view(User $user): bool
     {
         return $user->can(PermissionEnum::MasterListView->value);
     }
@@ -23,23 +23,14 @@ class ItemMasterListPolicy
         return $user->can(PermissionEnum::MasterListCreate->value);
     }
 
-    public function update(User $user, ItemMasterList $item): bool
+    public function update(User $user): bool
     {
         return $user->can(PermissionEnum::MasterListUpdate->value);
     }
 
-    public function delete(User $user, ItemMasterList $item): bool
+    public function delete(User $user): bool
     {
-        return $user->can(PermissionEnum::MasterListDestroy->value);
+        return $user->can(PermissionEnum::MasterListDelete->value);
     }
 
-    public function restore(User $user, ItemMasterList $item): bool
-    {
-        return false;
-    }
-
-    public function forceDelete(User $user, ItemMasterList $item): bool
-    {
-        return false;
-    }
 }

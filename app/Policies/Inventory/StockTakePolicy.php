@@ -4,7 +4,7 @@ namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
-use App\Models\Inventory\StockTake;
+
 
 class StockTakePolicy
 {
@@ -13,23 +13,23 @@ class StockTakePolicy
         return $user->can(PermissionEnum::StockTakeView->value);
     }
 
-    public function view(User $user, StockTake $stockTake): bool
+    public function view(User $user): bool
     {
         return $user->can(PermissionEnum::StockTakeView->value);
     }
 
-    public function create(User $user, StockTake $stockTake): bool
+    public function create(User $user): bool
     {
         return $user->can(PermissionEnum::StockTakeCreate->value);
     }
 
-    public function update(User $user, StockTake $stockTake): bool
+    public function update(User $user): bool
     {
         return $user->can(PermissionEnum::StockTakeUpdate->value);
     }
 
-    public function destroy(User $user, StockTake $stockTake): bool
+    public function destroy(User $user): bool
     {
-        return $user->can(PermissionEnum::StockTakeDestroy->value);
+        return $user->can(PermissionEnum::StockTakeDelete->value);
     }
 }

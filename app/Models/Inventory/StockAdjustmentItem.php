@@ -6,6 +6,10 @@ use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\ItemMasterList;
+
 
 class StockAdjustmentItem extends Model
 {

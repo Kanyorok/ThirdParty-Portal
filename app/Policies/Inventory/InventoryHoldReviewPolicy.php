@@ -25,9 +25,4 @@ class InventoryHoldReviewPolicy
         return $user->can(PermissionEnum::InventoryHoldReviewCreate->value);
     }
 
-   
-    public function edit(User $user): bool
-    {
-        return $user->can(PermissionEnum::InventoryHoldReviewUpdate->value);
-    }
 }

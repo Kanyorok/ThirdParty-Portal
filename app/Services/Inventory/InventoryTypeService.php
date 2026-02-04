@@ -48,13 +48,11 @@ class InventoryTypeService
             $disabledCount = 0;
             $enabledCount = 0;
 
-            // If changing from active to inactive and should disable related items
             if ($wasActive && $willBeInactive && $disableRelatedItems) {
                 $disabledCount = $this->disableRelatedItems($type);
                 Log::info("Disabled {$disabledCount} items related to Inventory Type {$type->Id}");
             }
 
-            // If changing from inactive to active and should enable related items
             if ($wasInactive && $willBeActive && $enableRelatedItems) {
                 $enabledCount = $this->enableRelatedItems($type);
                 Log::info("Enabled {$enabledCount} items related to Inventory Type {$type->Id}");
@@ -62,7 +60,6 @@ class InventoryTypeService
 
             $type->update($data);
 
-            // Build log message
             $logMessage = 'Updated Inventory Type ' . $type->Id;
             if ($disabledCount > 0) {
                 $logMessage .= ' and disabled ' . $disabledCount . ' related items';
@@ -99,12 +96,10 @@ class InventoryTypeService
             ->whereNull('DeletedOn');
 
         if ($checkType === 'active') {
-            // Check for active items
             $query->whereHas('status', function($q) {
                 $q->where('Description', 'Active');
             });
         } else {
-            // Check for inactive items
             $query->whereHas('status', function($q) {
                 $q->where('Description', 'Inactive');
             });
@@ -129,7 +124,6 @@ class InventoryTypeService
     {
         $user = Auth::user();
         
-        // Get the "Inactive" status ID
         $inactiveStatusId = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'ItemStatus')
             ->where('Description', 'Inactive')
             ->value('Id');
@@ -139,7 +133,6 @@ class InventoryTypeService
             throw new \Exception('Inactive status configuration not found');
         }
 
-        // Update all active items related to this inventory type
         $affectedRows = ItemMasterList::where('InventoryType', $type->Id)
             ->whereNull('DeletedOn')
             ->whereHas('status', function($query) {
@@ -151,7 +144,6 @@ class InventoryTypeService
                 'ModifiedOn' => Carbon::now()
             ]);
 
-        // Log activity for tracking
         activity()
             ->causedBy($user)
             ->performedOn($type)
@@ -171,7 +163,6 @@ class InventoryTypeService
     {
         $user = Auth::user();
         
-        // Get the "Active" status ID
         $activeStatusId = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'ItemStatus')
             ->where('Description', 'Active')
             ->value('Id');
@@ -181,7 +172,6 @@ class InventoryTypeService
             throw new \Exception('Active status configuration not found');
         }
 
-        // Update all inactive items related to this inventory type
         $affectedRows = ItemMasterList::where('InventoryType', $type->Id)
             ->whereNull('DeletedOn')
             ->whereHas('status', function($query) {
@@ -193,7 +183,6 @@ class InventoryTypeService
                 'ModifiedOn' => Carbon::now()
             ]);
 
-        // Log activity for tracking
         activity()
             ->causedBy($user)
             ->performedOn($type)

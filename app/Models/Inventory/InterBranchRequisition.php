@@ -7,6 +7,11 @@ use App\Models\Core\Branch;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Inventory\InterBranchRequisitionItem;
+use App\Models\Inventory\TransactionTransfer as InventoryTransactionTransfer;
+use App\Models\Transactions\TransactionTransfer;
+use Illuminate\Support\Facades\DB;
+
 
 class InterBranchRequisition extends Model
 {
@@ -82,7 +87,7 @@ class InterBranchRequisition extends Model
     public function scopeActive($query)
     {
         $activeStatusId = cache()->rememberForever('status_active_id', function () {
-            return \DB::table('t_CodeDetails')
+            return DB::table('t_CodeDetails')
                 ->where('Code', 'Status')
                 ->where('Name', 'Active')
                 ->value('Id');
