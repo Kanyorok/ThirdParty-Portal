@@ -42,12 +42,14 @@ class PayrollDeductionController extends Controller
             'EmployerCreditGLAccountID' => ['nullable','integer','exists:t_FinanceGLAccounts,Id'],
             'IsMandatory' => ['nullable', 'boolean'],
             'ShowInPayslip' => ['nullable', 'boolean'],
+            'IsTaxAllowable' => ['nullable', 'boolean'],
             'ApplyFor' => ['nullable', 'string', 'max:50'],
         ]);
 
         $data['IsActive'] = 1;
         $data['IsMandatory'] = $request->boolean('IsMandatory');
         $data['ShowInPayslip'] = $request->boolean('ShowInPayslip', true);
+        $data['IsTaxAllowable'] = $request->boolean('IsTaxAllowable');
         $data['EmployerContributionEnabled'] = $request->boolean('EmployerContributionEnabled');
         $data['CreatedBy'] = $request->user()->Id ?? $request->user()->id ?? null;
         $data['CreatedOn'] = now();
@@ -86,12 +88,14 @@ class PayrollDeductionController extends Controller
             'IsActive' => ['nullable', 'boolean'],
             'IsMandatory' => ['nullable', 'boolean'],
             'ShowInPayslip' => ['nullable', 'boolean'],
+            'IsTaxAllowable' => ['nullable', 'boolean'],
             'ApplyFor' => ['nullable', 'string', 'max:50'],
         ]);
 
         $data['IsActive'] = $request->has('IsActive') ? $request->boolean('IsActive') : $deduction->IsActive;
         $data['IsMandatory'] = $request->boolean('IsMandatory', $deduction->IsMandatory);
         $data['ShowInPayslip'] = $request->boolean('ShowInPayslip', $deduction->ShowInPayslip);
+        $data['IsTaxAllowable'] = $request->boolean('IsTaxAllowable', $deduction->IsTaxAllowable);
         $data['EmployerContributionEnabled'] = $request->boolean('EmployerContributionEnabled', $deduction->EmployerContributionEnabled);
         $data['ModifiedBy'] = $request->user()->Id ?? $request->user()->id ?? null;
         $data['ModifiedOn'] = now();

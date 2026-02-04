@@ -125,6 +125,12 @@
                             <label for="ShowInPayslip" class="form-check-label">Show in Payslip</label>
                         </div>
                     </div>
+                    <div class="col-md-4 d-flex align-items-center">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" class="form-check-input" name="IsTaxAllowable" value="1" id="IsTaxAllowable" @checked(old('IsTaxAllowable', $deduction->IsTaxAllowable))>
+                            <label for="IsTaxAllowable" class="form-check-label">Tax Allowable (Reduces Taxable Income)</label>
+                        </div>
+                    </div>
                     <div class="col-md-4">
                         <label class="form-label">Applicable For</label>
                         <select name="ApplyFor" class="form-select">

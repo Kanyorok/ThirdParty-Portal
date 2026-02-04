@@ -1547,6 +1547,18 @@ class PayrollRunController extends Controller
         $gross = $basic + (float)$approvedAllowances + $overtimeAmount + $attendanceAdjustment + $leaveAdjustment;
         $taxableIncome = $basic + (float)$taxableAllowances + $overtimeAmount + $attendanceAdjustment + $leaveAdjustment;
 
+        // Subtract tax-allowable deductions from taxable income
+        $allowableDeductions = MonthlyDeduction::where('EmployeeID', $emp->Id)
+            ->where('Status', 'Approved')
+            ->where('Month', $month)
+            ->where('Year', $year)
+            ->whereHas('deduction', function ($q) {
+                $q->where('IsTaxAllowable', 1);
+            })
+            ->sum('Amount');
+        
+        $taxableIncome = max(0, $taxableIncome - (float)$allowableDeductions);
+
         $pensionableAllowances = MonthlyAllowance::where('EmployeeID', $emp->Id)
             ->where('Status','Approved')
             ->where('Month', $month)
