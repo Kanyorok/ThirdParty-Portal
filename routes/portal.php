@@ -9,13 +9,12 @@ use App\Http\Controllers\Procurement\TenderApiController;
 use App\Http\Controllers\ThirdParty\API\LookupController;
 use App\Http\Controllers\ThirdParty\API\MetadataController;
 use App\Http\Controllers\ThirdParty\API\NewThirdPartyController;
+use App\Http\Controllers\ThirdParty\API\NotificationController;
 use App\Http\Controllers\ThirdParty\API\ProfileController;
 use App\Http\Controllers\ThirdParty\API\ThirdPartyAuthController;
 use App\Http\Controllers\ThirdParty\API\ThirdPartyPasswordController;
 use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
 use Illuminate\Http\Request;
-// use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
-
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
@@ -26,7 +25,7 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
     Route::get(
         'email/verify/{user}/{hash}',
         [ThirdPartyAuthController::class, 'verifyEmail']
-    )->name('portal.auth.email.verify');
+    )->name('email.verify');
 
     Route::post(
         'email/resend',
@@ -80,6 +79,12 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
         Route::get('customer', [ProfileController::class, 'getCustomerProfile']);
         Route::put('customer', [ProfileController::class, 'updateCustomerProfile']);
     });
+});
+
+Route::middleware(['auth.thirdparty'])->prefix('portal')->group(function () {
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::post('notifications/{type}/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 });
 
 Route::middleware(['auth.thirdparty'])->prefix('supplier')->group(function () {

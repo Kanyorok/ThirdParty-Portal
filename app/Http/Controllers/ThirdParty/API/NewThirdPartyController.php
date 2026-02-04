@@ -6,12 +6,18 @@ use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
+use App\Models\ThirdParty\ThirdPartyUser;
+use App\Services\RegistrationService;
 use App\Services\ThirdParties\ThirdPartyService;
 use DateTime;
 use Illuminate\Support\Facades\DB;
 
 class NewThirdPartyController extends Controller
 {
+    public function __construct(protected RegistrationService $registrationService)
+    {
+    }
+
     public function store(NewThirdPartyRequest $request)
     {
         return DB::transaction(function () use ($request) {
@@ -86,11 +92,23 @@ class NewThirdPartyController extends Controller
 
             $party->load('types');
 
+            $verificationUrl = null;
+            if ($request->boolean('createUser')) {
+                $user = ThirdPartyUser::where('ThirdPartyId', $party->Id)
+                    ->where('Email', strtolower($request->validated('user_Email')))
+                    ->first();
+
+                if ($user) {
+                    $verificationUrl = $this->registrationService->getThirdPartyVerificationUrl($user);
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => $request->boolean('createUser')
                     ? 'Registration successful! Check your email to verify your account.'
                     : 'Profile created successfully.',
+                'verification_url' => $verificationUrl,
                 'data' => [
                     'id' => $party->Id,
                     'name' => $party->ThirdPartyName,

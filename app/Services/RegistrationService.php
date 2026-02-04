@@ -44,30 +44,9 @@ class RegistrationService
         });
     }
 
-    public function sendThirdPartyVerificationEmail(ThirdPartyUser $user): void
+    public function sendThirdPartyVerificationEmail(ThirdPartyUser $user): string
     {
-        $expiresTs = now()->addMinutes(config('auth.verification.expire', 60))->timestamp;
-        $hash = sha1($user->getEmailForVerification());
-
-        $baseUrl = route(
-            'portal.auth.email.verify',
-            ['id' => $user->getKey(), 'hash' => $hash],
-            false
-        );
-
-        $signature = hash_hmac(
-            'sha256',
-            $baseUrl . '?expires=' . $expiresTs,
-            config('app.key')
-        );
-
-        $backendVerifyUrl = $baseUrl . '?expires=' . $expiresTs . '&signature=' . $signature;
-
-        $frontendBase = $user->verificationBaseUrl
-            ?? config('app.frontend_url')
-            ?? config('app.url');
-
-        $frontendVerifyUrl = rtrim($frontendBase, '/') . '/verify-email?verify_url=' . urlencode($backendVerifyUrl);
+        $frontendVerifyUrl = $this->buildThirdPartyVerificationUrl($user);
 
         $body = '<p>Please click the button below to verify your email address.</p>'
             . '<p><a href="' . $frontendVerifyUrl . '" style="background-color:#2563eb;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;display:inline-block;">Verify Email Address</a></p>'
@@ -85,6 +64,39 @@ class RegistrationService
             'EMAIL_VERIFICATION',
             (string) $user->getKey()
         )->send(true);
+
+        return $frontendVerifyUrl;
+    }
+
+    public function getThirdPartyVerificationUrl(ThirdPartyUser $user): string
+    {
+        return $this->buildThirdPartyVerificationUrl($user);
+    }
+
+    private function buildThirdPartyVerificationUrl(ThirdPartyUser $user): string
+    {
+        $expiresTs = now()->addMinutes(config('auth.verification.expire', 60))->timestamp;
+        $hash = sha1($user->getEmailForVerification());
+
+        $baseUrl = route(
+            'portal.auth.email.verify',
+            ['user' => $user->getKey(), 'hash' => $hash],
+            false
+        );
+
+        $signature = hash_hmac(
+            'sha256',
+            $baseUrl . '?expires=' . $expiresTs,
+            config('app.key')
+        );
+
+        $backendVerifyUrl = $baseUrl . '?expires=' . $expiresTs . '&signature=' . $signature;
+
+        $frontendBase = $user->verificationBaseUrl
+            ?? config('app.frontend_url')
+            ?? config('app.url');
+
+        return rtrim($frontendBase, '/') . '/verify-email?verify_url=' . urlencode($backendVerifyUrl);
     }
 
     public function createThirdPartyForUser(ThirdPartyUser $user, array $thirdPartyData): ThirdParties

@@ -11,6 +11,7 @@ use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyType;
 use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\Insurance\BancassuranceCustomersService;
+use App\Services\Property\TenantAndLease\PropertyNewTenantService as TenantService;
 use DateTime;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -71,7 +72,8 @@ class ThirdPartyService extends ThirdPartiesService
                     self::TypeTenant => $partyService->addTenant(
                         $actor,
                         $data['user_Remarks'] ?? null,
-                        $data['document'] ?? null
+                        $data['document'] ?? null,
+                        $data
                     ),
                     self::TypeSupplier => $partyService->addSupplier($actor, $data),
                     self::TypeCustomer => $partyService->addCustomer(
@@ -170,14 +172,17 @@ class ThirdPartyService extends ThirdPartiesService
         }
     }
 
-    public function addTenant(User|ThirdPartyUser $actor, ?string $Remarks, ?UploadedFile $document = null): TenantService
+    public function addTenant(User|ThirdPartyUser $actor, ?string $Remarks, ?UploadedFile $document = null, array $data = []): TenantService
     {
+        $tenantType = $data['tenant_type'] ?? 80;
+        $remarks = $Remarks ?? $data['tenant_Remarks'] ?? $data['remarks'] ?? 'Portal registration';
+
         return TenantService::createFromParty(
             party: $this->party,
             actor: $actor,
             document: $document,
-            tenantType: $data['tenant_type'] ?? 80,
-            remarks: $data['remarks'] ?? 'Portal registration'
+            tenantType: $tenantType,
+            remarks: $remarks
         );
     }
 

@@ -8,16 +8,16 @@ use App\Http\Requests\ThirdParty\Api\LoginThirdPartyRequest;
 use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
 use App\Http\Requests\ThirdParty\ResetPasswordRequest;
 use App\Http\Resources\ThirdParty\Api\ThirdPartyUserResource;
-use App\Models\Insurance\BancassuranceCustomer;
-use App\Models\PropertyManagement\PropertyNewTenant;
-use App\Models\ThirdParty\SupplierMaster;
 use App\Models\ThirdParty\ThirdPartyUser;
+use App\Services\BR\BREncryption;
 use App\Services\RegistrationService;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
+use RuntimeException;
 
 class ThirdPartyAuthController extends Controller
 {
@@ -32,14 +32,13 @@ class ThirdPartyAuthController extends Controller
     {
         try {
             $user = $this->registrationService->registerThirdParty($request->validated());
+            $verificationUrl = $this->registrationService->getThirdPartyVerificationUrl($user);
 
             return response()->json([
                 'success' => true,
                 'email_verification_required' => true,
-                // 'userId' => $user->UserID,
+                'verification_url' => $verificationUrl,
                 'userIid' => $user->Id,
-
-
             ], 201);
         } catch (\Throwable $e) {
             Log::error('Third-party registration failed', [
@@ -65,7 +64,7 @@ class ThirdPartyAuthController extends Controller
             ->where('Email', strtolower($request->email))
             ->first();
 
-        if (! $user || ! Hash::check($request->password, $user->Password)) {
+        if (! $user || ! $this->verifyPassword($user, $request->password)) {
             return response()->json([
                 'success' => false,
                 'error' => 'INVALID_CREDENTIALS',
@@ -121,6 +120,11 @@ class ThirdPartyAuthController extends Controller
             }
         }
 
+        if ($this->shouldRehash($user)) {
+            $user->Password = Hash::make($request->password);
+            $user->save();
+        }
+
         $user->tokens()->delete();
         $token = $user->createToken('auth-token', ['third_party'])->plainTextToken;
 
@@ -130,6 +134,27 @@ class ThirdPartyAuthController extends Controller
             'token' => $token,
             'token_type' => 'Bearer',
         ]);
+    }
+
+    private function verifyPassword(ThirdPartyUser $user, string $plain): bool
+    {
+        try {
+            return Hash::check($plain, $user->Password);
+        } catch (RuntimeException $e) {
+            return BREncryption::checkAuthUser($user, $plain);
+        }
+    }
+
+    private function shouldRehash(ThirdPartyUser $user): bool
+    {
+        return ! $this->isBcryptHash($user->Password);
+    }
+
+    private function isBcryptHash(string $hash): bool
+    {
+        return str_starts_with($hash, '$2y$')
+            || str_starts_with($hash, '$2a$')
+            || str_starts_with($hash, '$2b$');
     }
 
     public function me(Request $request): JsonResponse
@@ -213,5 +238,83 @@ class ThirdPartyAuthController extends Controller
         return $status === Password::PASSWORD_RESET
             ? response()->json(['success' => true, 'message' => __($status)])
             : response()->json(['success' => false, 'message' => __($status)], 400);
+    }
+
+    public function verifyEmail(string $id, string $hash): JsonResponse
+    {
+        $user = $this->resolveThirdPartyUser($id);
+
+        if (! $user || ! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            return response()->json([
+                'success' => false,
+                'message' => __('auth.invalid_verification_link'),
+            ], 403);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => true,
+                'message' => __('auth.email_already_verified'),
+                'user' => [
+                    'id' => $user->Id,
+                ],
+            ], 200);
+        }
+
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => __('auth.email_verified'),
+            'user' => [
+                'id' => $user->Id,
+            ],
+        ], 200);
+    }
+
+    public function resendVerification(Request $request): JsonResponse
+    {
+        $user = $this->resolveThirdPartyUser($request->user_id);
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'message' => __('auth.unauthenticated'),
+            ], 401);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => false,
+                'message' => __('auth.email_already_verified'),
+            ], 400);
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return response()->json([
+            'success' => true,
+            'message' => __('auth.verification_link_sent'),
+        ]);
+    }
+
+    private function resolveThirdPartyUser(?string $id = null): ?ThirdPartyUser
+    {
+        $user = request()->user();
+        if ($user instanceof ThirdPartyUser) {
+            return $user;
+        }
+
+        if (! $id) {
+            return null;
+        }
+
+        if (is_numeric($id)) {
+            return ThirdPartyUser::find($id);
+        }
+
+        return ThirdPartyUser::where('UserID', $id)->first();
     }
 }
