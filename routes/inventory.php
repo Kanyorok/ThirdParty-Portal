@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Inventory\BinTrackingController;
 use App\Http\Controllers\Inventory\ExpiryBatchTrackingController;
 use App\Http\Controllers\Inventory\InterBranchRequisitionApprovalController;
 use App\Http\Controllers\Inventory\InterBranchRequisitionController;
@@ -83,9 +82,6 @@ Route::middleware(['module:400000'])->namespace('Inventory')->prefix('inventory'
     Route::get('/openingstock/create', [OpeningStockController::class, 'create'])->name('openingstock.create');
     Route::get('/downloads/opening-stock-sample', [OpeningStockController::class, 'downloadSampleTemplate'])->name('openingstock.sample');
     Route::post('/openingstock/upload', [OpeningStockController::class, 'uploadExcel'])->name('openingstock.upload');
-
-    Route::get('/inventorytracking', [BinTrackingController::class, 'index'])->name('bintracking.index');
-    Route::get('/inventorytracking/create', [BinTrackingController::class, 'create'])->name('bintracking.create');
 
     Route::resource('movementdashboard', StockMovementController::class);
 
