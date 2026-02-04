@@ -326,6 +326,13 @@ class SupplierRFQController extends Controller
                 return response()->json(['error' => 'RFQ not found'], 404);
             }
 
+            // Check Submission Deadline
+            if ($rfqModel->SubmissionDeadline && \Carbon\Carbon::parse($rfqModel->SubmissionDeadline)->isPast()) {
+                return response()->json([
+                    'error' => 'The submission deadline for this RFQ has passed. Responses can no longer be submitted.',
+                ], 422);
+            }
+
             $rfqLineIds = collect($validated['items'])->pluck('rfqLineId')->unique()->values();
 
             $rfqLines = RFQLine::query()

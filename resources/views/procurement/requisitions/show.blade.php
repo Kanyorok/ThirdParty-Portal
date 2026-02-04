@@ -314,11 +314,7 @@
     const requisitionId = "{{ $id ?? '' }}";
     // Check if plan exists based on requisition info
     const requisitionInfo = @json($requisitionInfo);
-    const hasPlan = {
-        {
-            isset($requisitionInfo - > PlanRef) && $requisitionInfo - > PlanRef ? 'true' : 'false'
-        }
-    };
+    const hasPlan = {{ isset($requisitionInfo->PlanRef) && $requisitionInfo->PlanRef ? 'true' : 'false' }};
 
     function getRequisitionIdFromUrl() {
         return requisitionId || window.location.pathname.split('/').pop();
