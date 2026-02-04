@@ -175,7 +175,7 @@
 
             <!-- Action Buttons -->
             <div class="d-flex justify-content-end gap-2">
-                <button type="submit" class="btn btn-primary">Save Submission</button>
+                <button type="submit" class="btn btn-primary" id="btnSubmit">Save Submission</button>
                 <button type="reset" class="btn btn-secondary">Clear</button>
             </div>
         </form>
@@ -188,6 +188,17 @@
 <script src="{{ asset('assets/js/select2.min.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Prevent double submission
+        const form = document.querySelector('form');
+        const btnSubmit = document.getElementById('btnSubmit');
+        
+        form.addEventListener('submit', function() {
+            if(form.checkValidity()) {
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
+            }
+        });
+        
         // Initialize Select2
         $('#tenderSelect').select2({
             placeholder: '-- Select Tender --',

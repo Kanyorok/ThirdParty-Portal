@@ -14,6 +14,9 @@ class BidSubmission extends Model
 {
     use SoftDeletes;
     use UserActorTrait;
+    use \App\Traits\Model\DocumentsTrait;
+
+
 
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';

@@ -99,16 +99,34 @@ class TenderResponseController extends Controller
 
     public function getInvitedSuppliers($tenderId)
     {
-        $tender = Tender::with(['invitedSuppliers.supplierMaster.thirdParty'])
-            ->findOrFail($tenderId);
+        // For manual response, typically we want to allow recording for any valid supplier,
+        // especially for Open Tenders or if the invitation list is being built dynamically.
+        // User requested "all active and prequalified suppliers".
 
-        $suppliers = $tender->invitedSuppliers->map(function ($supplier) {
-            return [
-                'Id' => $supplier->Id,
-                'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName
-                    ?? $supplier->supplierMaster->thirdParty->ThirdPartyName,
-            ];
-        });
+        // Get IDs of suppliers who have already responded (not Pending)
+        $respondedSupplierIds = TenderInvitation::where('TenderId', $tenderId)
+            ->where('ResponseStatus', '!=', 'Pending')
+            ->pluck('SupplierId')
+            ->toArray();
+
+        $suppliers = Supplier::where('Active_Status', true)
+            ->whereNull('DeletedOn')
+            ->whereNotIn('Id', $respondedSupplierIds) // Exclude already responded
+            ->with(['supplierMaster.thirdParty'])
+            ->get()
+            ->map(function ($supplier) {
+                $name = $supplier->supplierMaster->thirdParty->TradingName
+                    ?? $supplier->supplierMaster->thirdParty->ThirdPartyName
+                    ?? 'Unknown Supplier';
+
+                return [
+                    'Id' => $supplier->Id,
+                    'SupplierName' => $name,
+                ];
+            })
+            ->unique('Id') // Start by unique ID
+            ->unique('SupplierName') // Ensure unique names in dropdown
+            ->values();
 
         return response()->json($suppliers);
     }

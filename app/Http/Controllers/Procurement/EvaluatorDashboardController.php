@@ -64,10 +64,13 @@ class EvaluatorDashboardController extends Controller
             $sectionsConfigured = $tender->tenderSections->isNotEmpty();
             $weightValidation = $sectionsConfigured ? TenderSection::validateWeightsForTender($tender->Id) : null;
 
-            // Get user's role in this tender committee
-            $userRole = TenderCommitteeMember::where('TenderID', $tender->Id)
+            // Get user's committee member record for this tender
+            $committeeMember = TenderCommitteeMember::where('TenderID', $tender->Id)
                 ->where('UserID', $currentUserId)
-                ->value('Role') ?? 'Member';
+                ->first();
+
+            $userRole = $committeeMember->Role ?? 'Member';
+            $memberId = $committeeMember->Id ?? null;
 
             // Get responsive bids for this tender
             $responsiveBids = $tender->submissions()
@@ -79,6 +82,15 @@ class EvaluatorDashboardController extends Controller
             foreach ($responsiveBids as $bid) {
                 $evaluationStatus = $bid->getEvaluationStatus();
 
+                // Check if THIS specific bid (via SupplierId) has been evaluated by THIS member
+                $hasEvaluatedBid = false;
+                if ($memberId) {
+                    $hasEvaluatedBid = \App\Models\Procurement\TenderCommitteeEvaluation::where('TenderID', $tender->Id)
+                        ->where('MemberID', $memberId)
+                        ->where('SupplierId', $bid->SupplierId)
+                        ->exists();
+                }
+
                 $evaluationData->push([
                     'tender_id' => $tender->Id,
                     'tender_no' => $tender->TenderNo,
@@ -89,9 +101,7 @@ class EvaluatorDashboardController extends Controller
                     'weight_valid' => $weightValidation ? $weightValidation['is_valid'] : false,
                     'total_weight' => $weightValidation ? $weightValidation['total_weight'] : 0,
                     'user_role' => $userRole,
-                    'has_evaluated' => TenderCommitteeMember::where('TenderID', $tender->Id)
-                            ->where('UserID', $currentUserId)
-                            ->value('HasEvaluated') ?? false,
+                    'has_evaluated' => $hasEvaluatedBid,
                     'bid_id' => $bid->Id,
                     'supplier_name' => $bid->SupplierName,
                     'supplier_id' => $bid->SupplierId,
