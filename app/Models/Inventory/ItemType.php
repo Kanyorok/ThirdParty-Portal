@@ -55,6 +55,11 @@ class ItemType extends Model
         return $this->hasMany(Requisitions::class, 'ItemTypeId', 'Id');
     }
 
+    public function items()
+    {
+        return $this->hasMany(ItemMasterList::class, 'ItemType', 'Id');
+    }
+
     public function type()
     {
         return $this->belongsTo(CodeDetail::class, 'TypeName', 'ID');

@@ -34,7 +34,6 @@
             </div>
         </div>
 
-        <!-- Add more cards for Fast-Moving, Aging, Valuation, etc. -->
     </div>
 
 @endsection

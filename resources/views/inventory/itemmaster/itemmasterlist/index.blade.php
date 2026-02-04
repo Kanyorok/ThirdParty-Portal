@@ -7,49 +7,41 @@
 @endsection
 
 @section('content')
-@if($errors->any())
-    <div class="alert alert-danger">
-        <ul class="mb-0">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+        @if($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-{{-- @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fas fa-check-circle me-2"></i>
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
-@if(session('warning'))
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-triangle me-2"></i>
-        {{ session('warning') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
-@if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-circle me-2"></i>
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif --}}
-
-@if(session('error_details'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <h5 class="alert-heading"><i class="fas fa-times-circle me-2"></i>Import Errors</h5>
-        <div class="import-errors" style="max-height: 300px; overflow-y: auto;">
-            {!! session('error_details') !!}
-        </div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+        @if(session('error_details'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <h5 class="alert-heading"><i class="fas fa-times-circle me-2"></i>Import Errors</h5>
+                <div class="import-errors" style="max-height: 300px; overflow-y: auto;">
+                    {!! session('error_details') !!}
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
 <div class="container mt-5">
     <div class="card shadow rounded-4">
@@ -62,13 +54,7 @@
         </div>
 
         <div class="card-body">
-            {{-- Flash Messages --}}
-            {{-- @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif --}}
+
             @if(session('error'))
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     {{ session('error') }}
@@ -76,7 +62,6 @@
                 </div>
             @endif
 
-            {{-- Bulk Upload Section --}}
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body">
                     <form action="{{ route('itemmasterlist.import') }}" method="POST" enctype="multipart/form-data" class="row g-3 align-items-center">
@@ -98,7 +83,6 @@
                 </div>
             </div>
 
-            {{-- Items Table --}}
             <div class="table-responsive">
                 <table id="itemsTable" class="table table-bordered table-striped align-middle">
                     <thead class="table-light">
@@ -147,7 +131,6 @@
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        {{-- View Button (Always Available) --}}
                                         <a href="{{ route('itemmasterlist.show', $item->Id) }}" 
                                            class="btn btn-view btn-sm" 
                                            data-bs-toggle="tooltip" 
@@ -172,7 +155,6 @@
                                             </a>
                                         @endif
 
-                                        {{-- Delete Button (Disabled if in use) --}}
                                         @if($isInUse)
                                             <span class="badge in-use-badge" 
                                                   data-bs-toggle="tooltip" 
@@ -227,7 +209,6 @@
             }
         });
 
-        // SweetAlert delete confirmation
         $(document).on('click', '.delete-btn', function () {
             const itemId = $(this).data('id');
             const itemName = $(this).data('name');

@@ -43,6 +43,11 @@ class InventoryType extends Model
         return 'InventoryTypesId';
     }
 
+    public function items()
+    {
+        return $this->hasMany(ItemMasterList::class, 'InventoryType', 'Id');
+    }
+
     public function type()
     {
         return $this->belongsTo(CodeDetail::class, 'Type', 'ID');

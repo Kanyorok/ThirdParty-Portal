@@ -8,14 +8,11 @@ use Illuminate\Validation\Rule;
 
 class UpdateItemCategoryRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         $category = ItemCategories::findOrFail($this->route('id'));
 
-        return auth()->user()->can('update', $category);
+        return $this->user()->can('update', $category);
     }
 
     /**
@@ -42,9 +39,6 @@ class UpdateItemCategoryRequest extends FormRequest
         ];
     }
 
-    /**
-     * Get custom error messages for validator errors.
-     */
     public function messages(): array
     {
         return [

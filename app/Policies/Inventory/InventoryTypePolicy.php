@@ -4,55 +4,36 @@ namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
-use App\Models\Inventory\InventoryType;
 
 class InventoryTypePolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::InventoryTypeView->value);
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, InventoryType $inventoryType): bool
+    public function view(User $user): bool
     {
         return $user->can(PermissionEnum::InventoryTypeView->value);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
         return $user->can(PermissionEnum::InventoryTypeCreate->value);
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user): bool
     {
         return $user->can(PermissionEnum::InventoryTypeUpdate->value);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function destroy(User $user): bool
     {
-        return $user->can(PermissionEnum::InventoryTypeDestroy->value);
+        return $user->can(PermissionEnum::InventoryTypeDelete->value);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function edit(User $user, InventoryType $inventoryType): bool
+    public function edit(User $user): bool
     {
-        return $user->can(PermissionEnum::InventoryTypeRestore->value);
+        return $user->can(PermissionEnum::InventoryTypeUpdate->value);
     }
 }

@@ -11,7 +11,6 @@
       <form action="{{ route('uomconversion.store') }}" method="POST">
         @csrf
 
-        {{-- Item Selection --}}
         <div class="row g-3 mb-3">
           <div class="col-md-4">
             <label class="form-label">Item <span class="text-danger">*</span></label>
@@ -30,14 +29,12 @@
             @enderror
           </div>
 
-          {{-- Base UOM (ID is hidden, Name is displayed) --}}
           <div class="col-md-4">
             <label class="form-label">Base UOM</label>
             <input type="hidden" id="base_uom_id" name="UOM">
             <input type="text" id="base_uom_name" class="form-control" readonly>
           </div>
 
-          {{-- Alternate UOM --}}
           <div class="col-md-4">
             <label class="form-label">Alternate UOM <span class="text-danger">*</span></label>
             <select name="AlternateUOM" class="form-select @error('AlternateUOM') is-invalid @enderror" required>
@@ -52,7 +49,6 @@
           </div>
         </div>
 
-        {{-- Conversion Factor & Remarks --}}
         <div class="row g-3 mb-3">
           <div class="col-md-4">
             <label class="form-label">Conversion Factor <span class="text-danger">*</span></label>
@@ -86,34 +82,29 @@ document.getElementById('item_id').addEventListener('change', function () {
     let uomId = selectedOption.getAttribute('data-uom-id') || '';
     let uomName = selectedOption.getAttribute('data-uom-name') || '';
 
-    document.getElementById('base_uom_id').value = uomId;  // ID saved to DB
-    document.getElementById('base_uom_name').value = uomName; // Displayed only
+    document.getElementById('base_uom_id').value = uomId;  
+    document.getElementById('base_uom_name').value = uomName;
 });
 
-// Form validation
 document.querySelector('form').addEventListener('submit', function(e) {
     let isValid = true;
     const submitBtn = document.getElementById('submitBtn');
 
-    // Clear previous validation errors
     document.querySelectorAll('.invalid-feedback.client-error').forEach(el => el.remove());
     document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 
-    // Validate Item field
     const itemField = document.getElementById('item_id');
     if (!itemField.value.trim()) {
         showValidationError(itemField, 'Item is required.');
         isValid = false;
     }
 
-    // Validate Alternate UOM field
     const alternateUomField = document.querySelector('select[name="AlternateUOM"]');
     if (!alternateUomField.value.trim()) {
         showValidationError(alternateUomField, 'Alternate UOM is required.');
         isValid = false;
     }
 
-    // Validate Conversion Factor field
     const conversionFactorField = document.querySelector('input[name="ConversionFactor"]');
     if (!conversionFactorField.value.trim()) {
         showValidationError(conversionFactorField, 'Conversion Factor is required.');
@@ -125,7 +116,6 @@ document.querySelector('form').addEventListener('submit', function(e) {
         return false;
     }
 
-    // If valid, disable button and show loading state
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting...';
 });
@@ -133,7 +123,6 @@ document.querySelector('form').addEventListener('submit', function(e) {
 function showValidationError(field, message) {
     field.classList.add('is-invalid');
 
-    // Check if error message already exists
     let errorDiv = field.parentNode.querySelector('.invalid-feedback.client-error');
     if (!errorDiv) {
         errorDiv = document.createElement('div');

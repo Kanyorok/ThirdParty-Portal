@@ -41,10 +41,8 @@
         </a>
     </div>
 
-    <!-- Tabs Navigation -->
     <ul class="nav nav-tabs mb-3" id="requisitionTabs" role="tablist">
         @if($isHeadOffice)
-            <!-- For Head Office - All Requisitions Tab -->
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" 
                         type="button" role="tab" aria-controls="all" aria-selected="true">
@@ -52,7 +50,6 @@
                     <span class="badge bg-secondary ms-1">{{ $allRequisitions->count() }}</span>
                 </button>
             </li>
-            <!-- For Head Office - Incoming Tab (other branches requesting FROM HQ) -->
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="incoming-tab" data-bs-toggle="tab" data-bs-target="#incoming" 
                         type="button" role="tab" aria-controls="incoming" aria-selected="false">
@@ -60,7 +57,6 @@
                     <span class="badge bg-primary ms-1">{{ $incomingRequisitions->count() }}</span>
                 </button>
             </li>
-            <!-- For Head Office - Other Requisitions Tab (HQ removed Outgoing tab) -->
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="other-tab" data-bs-toggle="tab" data-bs-target="#other" 
                         type="button" role="tab" aria-controls="other" aria-selected="false">
@@ -69,7 +65,6 @@
                 </button>
             </li>
         @else
-            <!-- For Non-HQ Branches - Incoming Tab (other branches requesting FROM us) -->
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="incoming-tab" data-bs-toggle="tab" data-bs-target="#incoming" 
                         type="button" role="tab" aria-controls="incoming" aria-selected="true">
@@ -77,7 +72,6 @@
                     <span class="badge bg-primary ms-1">{{ $incomingRequisitions->count() }}</span>
                 </button>
             </li>
-            <!-- For Non-HQ Branches - Outgoing Tab (we're requesting FROM others) -->
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="outgoing-tab" data-bs-toggle="tab" data-bs-target="#outgoing" 
                         type="button" role="tab" aria-controls="outgoing" aria-selected="false">
@@ -85,7 +79,6 @@
                     <span class="badge bg-success ms-1">{{ $outgoingRequisitions->count() }}</span>
                 </button>
             </li>
-            <!-- For Non-HQ Branches - All Tab -->
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" 
                         type="button" role="tab" aria-controls="all" aria-selected="false">
@@ -96,12 +89,9 @@
         @endif
     </ul>
 
-    <!-- Tab Content -->
     <div class="tab-content" id="requisitionTabsContent">
         @if($isHeadOffice)
-            <!-- Head Office - All Requisitions Tab -->
             <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
-                <!-- Information for All Requisitions Tab -->
                 <div class="alert alert-info mb-3">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-info-circle-fill me-2 fs-5"></i>
@@ -132,14 +122,11 @@
                                 <tbody>
                                 @foreach ($allRequisitions as $requisition)
                                     @php
-                                        // HQ cannot edit/delete ANY requisitions
                                         $canEdit = false;
                                         $canDelete = false;
                                         
-                                        // Get status enum
                                         $statusEnum = \App\Enums\Inventory\InterBranchRequisitionEnum::tryFrom($requisition->Status);
                                         
-                                        // Tooltip messages
                                         $editTooltip = 'HQ cannot edit any requisitions.';
                                         $deleteTooltip = 'HQ cannot delete any requisitions.';
                                     @endphp
@@ -159,7 +146,6 @@
                                         <td>{{ $requisition->items->count() }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <!-- View button - always available -->
                                                 <a href="{{ route('interbranchrequisition.show', $requisition->Id) }}"
                                                    class="btn btn-view btn-sm"
                                                    data-bs-toggle="tooltip"
@@ -167,7 +153,6 @@
                                                     <i class="bi bi-eye text-white"></i>
                                                 </a>
                                                 
-                                                <!-- Edit button - always disabled for HQ -->
                                                 <button type="button"
                                                         class="btn btn-edit btn-sm disabled"
                                                         data-bs-toggle="tooltip"
@@ -176,7 +161,6 @@
                                                     <i class="bi bi-pencil text-white"></i>
                                                 </button>
                                                 
-                                                <!-- Delete button - always disabled for HQ -->
                                                 <button type="button"
                                                         class="btn btn-delete btn-sm disabled"
                                                         data-bs-toggle="tooltip"
@@ -202,9 +186,7 @@
                 </div>
             </div>
             
-            <!-- Head Office - Incoming Tab -->
             <div class="tab-pane fade" id="incoming" role="tabpanel" aria-labelledby="incoming-tab">
-                <!-- Information for Incoming to HQ Tab -->
                 <div class="alert alert-info mb-3">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-info-circle-fill me-2 fs-5"></i>
@@ -236,14 +218,11 @@
                                 <tbody>
                                 @foreach ($incomingRequisitions as $requisition)
                                     @php
-                                        // HQ cannot edit/delete ANY requisitions
                                         $canEdit = false;
                                         $canDelete = false;
                                         
-                                        // Get status enum
                                         $statusEnum = \App\Enums\Inventory\InterBranchRequisitionEnum::tryFrom($requisition->Status);
                                         
-                                        // Tooltip messages
                                         $editTooltip = 'HQ cannot edit any requisitions.';
                                         $deleteTooltip = 'HQ cannot delete any requisitions.';
                                     @endphp
@@ -263,7 +242,6 @@
                                         <td>{{ $requisition->items->count() }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <!-- View button - always available -->
                                                 <a href="{{ route('interbranchrequisition.show', $requisition->Id) }}"
                                                    class="btn btn-view btn-sm"
                                                    data-bs-toggle="tooltip"
@@ -271,7 +249,6 @@
                                                     <i class="bi bi-eye text-white"></i>
                                                 </a>
                                                 
-                                                <!-- Edit button - always disabled for HQ -->
                                                 <button type="button"
                                                         class="btn btn-edit btn-sm disabled"
                                                         data-bs-toggle="tooltip"
@@ -280,7 +257,6 @@
                                                     <i class="bi bi-pencil text-white"></i>
                                                 </button>
                                                 
-                                                <!-- Delete button - always disabled for HQ -->
                                                 <button type="button"
                                                         class="btn btn-delete btn-sm disabled"
                                                         data-bs-toggle="tooltip"
@@ -306,9 +282,7 @@
                 </div>
             </div>
             
-            <!-- Head Office - Other Requisitions Tab -->
             <div class="tab-pane fade" id="other" role="tabpanel" aria-labelledby="other-tab">
-                <!-- Information for Other Requisitions Tab -->
                 <div class="alert alert-info mb-3">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-info-circle-fill me-2 fs-5"></i>
@@ -340,14 +314,11 @@
                                 <tbody>
                                 @foreach ($otherRequisitions as $requisition)
                                     @php
-                                        // HQ cannot edit/delete ANY requisitions
                                         $canEdit = false;
                                         $canDelete = false;
                                         
-                                        // Get status enum
                                         $statusEnum = \App\Enums\Inventory\InterBranchRequisitionEnum::tryFrom($requisition->Status);
                                         
-                                        // Tooltip messages
                                         $editTooltip = 'HQ cannot edit any requisitions.';
                                         $deleteTooltip = 'HQ cannot delete any requisitions.';
                                     @endphp
@@ -367,7 +338,6 @@
                                         <td>{{ $requisition->items->count() }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <!-- View button - always available -->
                                                 <a href="{{ route('interbranchrequisition.show', $requisition->Id) }}"
                                                    class="btn btn-view btn-sm"
                                                    data-bs-toggle="tooltip"
@@ -375,7 +345,6 @@
                                                     <i class="bi bi-eye text-white"></i>
                                                 </a>
                                                 
-                                                <!-- Edit button - always disabled for HQ -->
                                                 <button type="button"
                                                         class="btn btn-edit btn-sm disabled"
                                                         data-bs-toggle="tooltip"
@@ -384,7 +353,6 @@
                                                     <i class="bi bi-pencil text-white"></i>
                                                 </button>
                                                 
-                                                <!-- Delete button - always disabled for HQ -->
                                                 <button type="button"
                                                         class="btn btn-delete btn-sm disabled"
                                                         data-bs-toggle="tooltip"
@@ -410,9 +378,7 @@
                 </div>
             </div>
         @else
-            <!-- Non-HQ - Incoming Tab -->
             <div class="tab-pane fade show active" id="incoming" role="tabpanel" aria-labelledby="incoming-tab">
-                <!-- Information for Incoming Tab -->
                 <div class="alert alert-info mb-3">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-info-circle-fill me-2 fs-5"></i>
@@ -444,22 +410,17 @@
                                 <tbody>
                                 @foreach ($incomingRequisitions as $requisition)
                                     @php
-                                        // For non-HQ branches: Incoming tab = our branch is sending (FromBranch = our branch)
-                                        // So we CANNOT edit/delete these (we're the sending branch)
+                                   
                                         $canModifyByBranch = false;
                                         
-                                        // Get status enum
                                         $statusEnum = \App\Enums\Inventory\InterBranchRequisitionEnum::tryFrom($requisition->Status);
                                         
-                                        // Check if status allows editing (only Pending status)
                                         $statusAllowsEdit = $requisition->Status === 'P';
                                         $statusAllowsDelete = $requisition->Status === 'P';
                                         
-                                        // Final decision combining branch logic AND status logic
                                         $canEdit = $canModifyByBranch && $statusAllowsEdit;
                                         $canDelete = $canModifyByBranch && $statusAllowsDelete;
                                         
-                                        // Tooltip messages
                                         $editTooltip = 'You cannot edit requisitions where your branch is the sending branch.';
                                         $deleteTooltip = 'You cannot delete requisitions where your branch is the sending branch.';
                                     @endphp
@@ -479,7 +440,6 @@
                                         <td>{{ $requisition->items->count() }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <!-- View button - always available -->
                                                 <a href="{{ route('interbranchrequisition.show', $requisition->Id) }}"
                                                    class="btn btn-view btn-sm"
                                                    data-bs-toggle="tooltip"
@@ -487,7 +447,6 @@
                                                     <i class="bi bi-eye text-white"></i>
                                                 </a>
                                                 
-                                                <!-- Edit button - always disabled for incoming -->
                                                 <button type="button"
                                                         class="btn btn-edit btn-sm disabled"
                                                         data-bs-toggle="tooltip"
@@ -496,7 +455,6 @@
                                                     <i class="bi bi-pencil text-white"></i>
                                                 </button>
                                                 
-                                                <!-- Delete button - always disabled for incoming -->
                                                 <button type="button"
                                                         class="btn btn-delete btn-sm disabled"
                                                         data-bs-toggle="tooltip"
@@ -522,9 +480,7 @@
                 </div>
             </div>
             
-            <!-- Non-HQ - Outgoing Tab -->
             <div class="tab-pane fade" id="outgoing" role="tabpanel" aria-labelledby="outgoing-tab">
-                <!-- Information for Outgoing Tab -->
                 <div class="alert alert-info mb-3">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-info-circle-fill me-2 fs-5"></i>
@@ -556,22 +512,16 @@
                                 <tbody>
                                 @foreach ($outgoingRequisitions as $requisition)
                                     @php
-                                        // For non-HQ branches: Outgoing tab = our branch is receiving (ToBranch = our branch)
-                                        // So we CAN edit/delete these (we're the receiving branch)
                                         $canModifyByBranch = true;
                                         
-                                        // Get status enum
                                         $statusEnum = \App\Enums\Inventory\InterBranchRequisitionEnum::tryFrom($requisition->Status);
                                         
-                                        // Check if status allows editing (only Pending status)
                                         $statusAllowsEdit = $requisition->Status === 'P';
                                         $statusAllowsDelete = $requisition->Status === 'P';
                                         
-                                        // Final decision combining branch logic AND status logic
                                         $canEdit = $canModifyByBranch && $statusAllowsEdit;
                                         $canDelete = $canModifyByBranch && $statusAllowsDelete;
                                         
-                                        // Tooltip messages
                                         $editTooltip = '';
                                         $deleteTooltip = '';
                                         
@@ -599,7 +549,6 @@
                                         <td>{{ $requisition->items->count() }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <!-- View button - always available -->
                                                 <a href="{{ route('interbranchrequisition.show', $requisition->Id) }}"
                                                    class="btn btn-view btn-sm"
                                                    data-bs-toggle="tooltip"
@@ -607,7 +556,6 @@
                                                     <i class="bi bi-eye text-white"></i>
                                                 </a>
                                                 
-                                                <!-- Edit button - conditional -->
                                                 @if($canEdit)
                                                     <a href="{{ route('interbranchrequisition.edit', $requisition->Id) }}"
                                                        class="btn btn-edit btn-sm"
@@ -625,7 +573,6 @@
                                                     </button>
                                                 @endif
                                                 
-                                                <!-- Delete button - conditional -->
                                                 @if($canDelete)
                                                     <button type="button"
                                                             class="btn btn-delete btn-sm"
@@ -661,9 +608,7 @@
                 </div>
             </div>
             
-            <!-- Non-HQ - All Tab -->
             <div class="tab-pane fade" id="all" role="tabpanel" aria-labelledby="all-tab">
-                <!-- Information for All Tab -->
                 <div class="alert alert-info mb-3">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-info-circle-fill me-2 fs-5"></i>
@@ -695,26 +640,19 @@
                                 <tbody>
                                 @foreach ($allRequisitions as $requisition)
                                     @php
-                                        // For non-HQ branches: Determine if our branch is receiving (ToBranch) or sending (FromBranch)
                                         $isReceivingBranch = $requisition->ToBranch == $currentBranch->Id;
                                         $isSendingBranch = $requisition->FromBranch == $currentBranch->Id;
                                         
-                                        // Allow edit/delete only if ToBranch = current branch (receiving)
-                                        // Disable if FromBranch = current branch (sending)
                                         $canModifyByBranch = $isReceivingBranch && !$isSendingBranch;
                                         
-                                        // Get status enum
                                         $statusEnum = \App\Enums\Inventory\InterBranchRequisitionEnum::tryFrom($requisition->Status);
                                         
-                                        // Check if status allows editing (only Pending status)
                                         $statusAllowsEdit = $requisition->Status === 'P';
                                         $statusAllowsDelete = $requisition->Status === 'P';
                                         
-                                        // Final decision combining branch logic AND status logic
                                         $canEdit = $canModifyByBranch && $statusAllowsEdit;
                                         $canDelete = $canModifyByBranch && $statusAllowsDelete;
                                         
-                                        // Tooltip messages
                                         $editTooltip = '';
                                         $deleteTooltip = '';
                                         
@@ -748,7 +686,6 @@
                                         <td>{{ $requisition->items->count() }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <!-- View button - always available -->
                                                 <a href="{{ route('interbranchrequisition.show', $requisition->Id) }}"
                                                    class="btn btn-view btn-sm"
                                                    data-bs-toggle="tooltip"
@@ -756,7 +693,6 @@
                                                     <i class="bi bi-eye text-white"></i>
                                                 </a>
                                                 
-                                                <!-- Edit button - conditional -->
                                                 @if($canEdit)
                                                     <a href="{{ route('interbranchrequisition.edit', $requisition->Id) }}"
                                                        class="btn btn-edit btn-sm"
@@ -774,7 +710,6 @@
                                                     </button>
                                                 @endif
                                                 
-                                                <!-- Delete button - conditional -->
                                                 @if($canDelete)
                                                     <button type="button"
                                                             class="btn btn-delete btn-sm"
@@ -824,19 +759,14 @@
 
 <script>
     $(document).ready(function () {
-        // Initialize DataTables for the active tab
         initializeActiveTabDataTable();
         
-        // Re-initialize DataTables when tab changes
         $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
-            // Destroy existing DataTable instances
             $('.requisition-table').DataTable().destroy();
-            // Initialize DataTable for the newly active tab
             initializeActiveTabDataTable();
             initializeTooltips();
         });
         
-        // Initialize tooltips
         function initializeTooltips() {
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -844,18 +774,17 @@
             });
         }
         
-        // Initialize DataTable for the currently active tab
         function initializeActiveTabDataTable() {
             var activeTable = $('.tab-pane.active .requisition-table');
             if (activeTable.length) {
                 activeTable.DataTable({
-                    pageLength: 10, // Default page length
-                    lengthMenu: [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, "All"]], // Records per page options
+                    pageLength: 10, 
+                    lengthMenu: [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, "All"]], 
                     ordering: true,
-                    order: [[4, 'desc']], // Sort by Date column (4th column) in descending order
+                    order: [[4, 'desc']], 
                     searching: true,
-                    lengthChange: true, // Enable records per page dropdown
-                    dom: '<"top"fl>rt<"bottom"ip><"clear">', // Include length menu in layout
+                    lengthChange: true, 
+                    dom: '<"top"fl>rt<"bottom"ip><"clear">',
                     language: {
                         emptyTable: "No requisitions found.",
                         lengthMenu: "Show _MENU_ entries",
@@ -875,7 +804,6 @@
             }
         }
         
-        // Initial tooltip setup
         initializeTooltips();
     });
 
@@ -912,18 +840,14 @@
         document.getElementById('customErrorContainer').style.display = 'none';
     }
     
-    // Handle filter form submission for specific tabs
     $('#filterForm').on('submit', function(e) {
-        // Get current active tab
         var activeTab = $('.nav-link.active').attr('id');
         
-        // Store the active tab in sessionStorage to restore after page reload
         if (activeTab) {
             sessionStorage.setItem('activeRequisitionTab', activeTab);
         }
     });
     
-    // Restore active tab on page load
     $(document).ready(function() {
         var activeTab = sessionStorage.getItem('activeRequisitionTab');
         if (activeTab) {
@@ -946,12 +870,10 @@
     margin-right: 0;
 }
 
-/* Ensure tooltips work properly */
 .tooltip {
     pointer-events: none;
 }
 
-/* Solid background colors with white icons */
 .btn-view {
     background-color: #5b6b79 !important;
     color: white !important;
@@ -967,7 +889,6 @@
     color: white !important;
 }
 
-/* Hover effects */
 .btn-view:hover {
     background-color: #0b5ed7 !important;
     color: white !important;
@@ -989,13 +910,12 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* Disabled state for buttons */
 .btn.disabled {
     opacity: 0.6;
     cursor: not-allowed;
     transform: none !important;
     box-shadow: none !important;
-    pointer-events: auto; /* Allow tooltips on disabled buttons */
+    pointer-events: auto; 
 }
 
 .btn.disabled:hover {
@@ -1004,24 +924,20 @@
     box-shadow: none !important;
 }
 
-/* Ensure icons are properly sized and white */
 .bi {
     font-size: 0.875rem;
     color: white;
 }
 
-/* Badge styling */
 .badge {
     font-size: 0.75em;
     padding: 0.35em 0.65em;
 }
 
-/* Table responsive adjustments */
 .table-responsive {
     border-radius: 0.375rem;
 }
 
-/* Add Requisition button styling */
 .btn-success {
     background-color: #198754;
     border-color: #198754;
@@ -1032,7 +948,6 @@
     border-color: #146c43;
 }
 
-/* Nav tabs styling */
 .nav-tabs .nav-link {
     color: #495057;
     border: 1px solid transparent;
@@ -1051,7 +966,6 @@
     font-weight: 600;
 }
 
-/* Information alert styling */
 .alert-info {
     background-color: #e7f1ff;
     border-color: #cfe2ff;
@@ -1062,7 +976,6 @@
     color: #0d6efd;
 }
 
-/* Tab-specific row highlighting */
 .incoming-row {
     background-color: rgba(13, 110, 253, 0.05) !important;
 }
@@ -1075,7 +988,6 @@
     background-color: rgba(255, 193, 7, 0.05) !important;
 }
 
-/* Status-specific styling */
 .status-pending {
     background-color: #ffc107;
 }
@@ -1092,20 +1004,17 @@
     background-color: #0dcaf0;
 }
 
-/* Tab badge styling */
 .nav-link .badge {
     font-size: 0.65em;
     padding: 0.25em 0.5em;
 }
 
-/* Empty table message */
 .dataTables_empty {
     text-align: center;
     padding: 2rem !important;
     color: #6c757d;
 }
 
-/* DataTables styling */
 .dataTables_wrapper .dataTables_length,
 .dataTables_wrapper .dataTables_filter,
 .dataTables_wrapper .dataTables_info,
@@ -1125,7 +1034,6 @@
     border: 1px solid #ced4da;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
     .btn-group .btn {
         padding: 0.2rem 0.4rem;

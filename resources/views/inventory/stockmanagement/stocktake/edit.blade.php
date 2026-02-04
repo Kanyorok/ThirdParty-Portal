@@ -21,7 +21,6 @@
             @csrf
             @method('PUT')
 
-            {{-- Header Section --}}
             <div class="row g-3 mb-4">
                 <div class="col-md-3">
                     <label class="form-label">📍 Branch<span class="text-danger">*</span></label>
@@ -65,7 +64,6 @@
                 </div>
             </div>
 
-            {{-- Line Items Table --}}
             <div class="card mb-4">
                 <div class="card-header">
                     <strong>🧾 Update Line Items</strong>
@@ -108,7 +106,6 @@
                 </div>
             </div>
 
-            {{-- Action Buttons --}}
             <div class="d-flex justify-content-end gap-2">
                 <button type="submit" class="btn btn-success">Update</button>
                 <a href="{{ route('stocktake.index') }}" class="btn btn-secondary">Cancel</a>

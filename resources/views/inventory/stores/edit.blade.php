@@ -93,10 +93,8 @@
                             @enderror
                         </div>
 
-                        <!-- Main Store Checkbox -->
                         <div class="col-md-6">
                             <div class="form-check mt-4">
-                                <!-- Hidden input to ensure value is always submitted -->
                                 <input type="hidden" name="IsMainStore" value="0">
                                 <input type="checkbox" name="IsMainStore" id="IsMainStore" 
                                        value="1" class="form-check-input" 
@@ -126,7 +124,6 @@
                             @enderror
                         </div>
 
-                        <!-- Status Checkbox with Stock Items Protection -->
                         <div class="col-md-6 d-flex align-items-center">
                             <div class="form-check mt-4">
                                 <input type="hidden" name="Status" value="0">

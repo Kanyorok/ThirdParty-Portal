@@ -116,7 +116,6 @@
             }
         });
 
-        // Update discrepancy dynamically
         document.addEventListener('input', function (event) {
             if (event.target.classList.contains('received-qty')) {
                 const row = event.target.closest('tr');

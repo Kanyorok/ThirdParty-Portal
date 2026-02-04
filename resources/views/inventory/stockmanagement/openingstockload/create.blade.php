@@ -26,7 +26,6 @@
         </div>
     @endif
 
-    <!-- Bulk Upload Card -->
     <div class="card shadow">
         <small class="card-header bg-light">📤 Download the opening stock template and update it with the relevant data</small>
         <div class="card-body">

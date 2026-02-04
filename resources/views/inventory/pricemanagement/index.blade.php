@@ -2,18 +2,33 @@
 @section('title', 'Item Price Management')
 @section('content')
 @if($errors->any())
-<div class="alert alert-danger">
-    <ul>
-        @foreach($errors->all() as $error)
-        <li>{{ $error }}</li>
-        @endforeach
-    </ul>
-</div>
-@endif
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 <div class="container mt-4">
     <h4 class="mb-3">Item Pricing</h4>
 
-    <!-- Nav Tabs -->
     <ul class="nav nav-tabs" id="priceTabs" role="tablist">
         <li class="nav-item">
             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#addPrice" type="button"
@@ -32,10 +47,8 @@
         </li>
     </ul>
 
-    <!-- Tab Contents -->
     <div class="tab-content border p-3">
 
-        <!-- Add Price Tab -->
         <div class="tab-pane fade show active" id="addPrice" role="tabpanel">
             <form method="POST" action="{{ route('pricemanagement.store') }}">
                 @csrf
@@ -80,15 +93,11 @@
                     <input class="form-check-input" type="checkbox" name="IsDefault" id="isDefault" value="1">
                     <label class="form-check-label" for="isDefault">Mark as Default Price</label>
                 </div>
-                {{-- <div class="mb-3 mt-3">
-                    <label class="form-label">Source</label>
-                    <input type="text" class="form-control" name="Source" placeholder="Optional">
-                </div> --}}
+
                 <button type="submit" class="btn btn-primary mt-3">Save Price</button>
             </form>
         </div>
 
-        <!-- View Prices Tab -->
         <div class="tab-pane fade" id="viewPrices" role="tabpanel">
             <table id="pricingTable" class="table table-bordered table-striped align-middle">
                 <thead class="table-light">
@@ -99,9 +108,6 @@
                         <th>UOM</th>
                         <th>Estimated Price</th>
                         <th>Currency</th>
-                        {{-- <th>Effective From</th> --}}
-                        {{-- <th>Effective To</th>
-                        <th>Default</th> --}}
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -114,9 +120,6 @@
                         <td>{{ $price->uom->Code ?? '-' }}</td>
                         <td>{{ $price->ActualPrice ? number_format($price->ActualPrice, 2) : '0.00' }}</td>
                         <td>{{ $price->currency->Code ?? '-' }}</td>
-                        {{-- <td>{{ $price->EffectiveFrom ? \Carbon\Carbon::parse($price->EffectiveFrom)->format('Y-m-d') : '—' }}</td>
-                        <td>{{ $price->EffectiveTo ? \Carbon\Carbon::parse($price->EffectiveTo)->format('Y-m-d') : '—' }}</td>
-                        <td>{!! $price->IsDefault ? '✔️' : '' !!}</td> --}}
                         <td>
                             <div class="d-flex gap-1">
                                 <a href="{{ route('pricemanagement.edit', $price->Id) }}" 
@@ -136,15 +139,11 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <!-- <td colspan="11" class="text-center">No prices found.</td> -->
-                    </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        <!-- Upload Price List Tab -->
         <div class="tab-pane fade" id="uploadPrice" role="tabpanel">
             <form action="{{ route('pricemanagement.upload') }}" method="POST" enctype="multipart/form-data">
                 @csrf
@@ -166,7 +165,6 @@
     </div>
 </div>
 
-<!-- Add Font Awesome CSS for icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -196,7 +194,6 @@
             const uomId = selectedOption.getAttribute('data-uom');
             const uomCode = selectedOption.getAttribute('data-uom-code');
 
-            // Set UOM display dropdown (disabled)
             uomSelect.innerHTML = '';
             if (uomId && uomCode) {
                 const option = document.createElement('option');
@@ -206,7 +203,6 @@
                 uomSelect.appendChild(option);
             }
 
-            // Set hidden input for actual form submission
             uomHidden.value = uomId;
         });
     });

@@ -8,12 +8,9 @@ use Illuminate\Validation\Rule;
 
 class StoreItemCategoryRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return auth()->user()->can('create', ItemCategories::class);
+        return $this->user()->can('create', ItemCategories::class);
     }
 
     /**
@@ -39,9 +36,6 @@ class StoreItemCategoryRequest extends FormRequest
         ];
     }
 
-    /**
-     * Get custom error messages for validator errors.
-     */
     public function messages(): array
     {
         return [

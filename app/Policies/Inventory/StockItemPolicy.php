@@ -8,9 +8,6 @@ use App\Models\Inventory\StockItem;
 
 class StockItemPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::StockItemView->value);
@@ -21,35 +18,23 @@ class StockItemPolicy
         return $user->can(PermissionEnum::StockItemView->value);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
         return $user->can(PermissionEnum::StockItemCreate->value);
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, StockItem $stockItem): bool
+    public function update(User $user): bool
     {
         return $user->can(PermissionEnum::StockItemUpdate->value);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function destroy(User $user): bool
     {
-        return $user->can(PermissionEnum::StockItemDestroy->value);
+        return $user->can(PermissionEnum::StockItemDelete->value);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function edit(User $user, StockItem $stockItem): bool
+    public function edit(User $user): bool
     {
-        return false;
+        return $user->can(PermissionEnum::StockItemUpdate->value);
     }
 }

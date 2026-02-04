@@ -26,7 +26,7 @@ class UnitOfMeasureRequest extends FormRequest
                 'max:50',
                 Rule::unique('t_UOM', 'Code')
                     ->ignore($this->route('Id'))
-                    ->whereNull('DeletedOn'), // ← exclude soft-deleted records
+                    ->whereNull('DeletedOn'),
             ],
             'Name' => [
                 'required',
@@ -34,16 +34,13 @@ class UnitOfMeasureRequest extends FormRequest
                 'max:255',
                 Rule::unique('t_UOM', 'Name')
                     ->ignore($this->route('Id'))
-                    ->whereNull('DeletedOn'), // ← exclude soft-deleted records
+                    ->whereNull('DeletedOn'),
             ],
             'BaseUnit' => 'nullable|boolean',
             'Active' => 'required|boolean',
         ];
     }
 
-    /**
-     * Get custom error messages for validator errors.
-     */
     public function messages(): array
     {
         return [

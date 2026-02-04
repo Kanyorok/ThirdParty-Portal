@@ -7,15 +7,8 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
-// Correctly import Illuminate\Validation\Validator
-
-// Import StockItem model
-
 class StockAdjustmentRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
 
@@ -59,10 +52,8 @@ class StockAdjustmentRequest extends FormRequest
                 return;
             }
 
-            // Get all unique Item IDs from the incoming request for efficient querying
             $requestedItemIds = collect($items)->pluck('Item')->unique()->toArray();
 
-            // Fetch current quantities for all relevant items in the specified branch
             $currentStocks = StockItem::where('Branch', $branchId)
                 ->whereIn('ItemID', $requestedItemIds)
                 ->pluck('CurrentQty', 'ItemID');
@@ -72,14 +63,10 @@ class StockAdjustmentRequest extends FormRequest
                 $adjustmentQty = $itemData['AdjustmentQty'] ?? null;
 
                 if ($itemId !== null && is_numeric($adjustmentQty)) {
-                    // Get the current quantity for this specific item. Default to 0 if not found.
-                    // This handles cases where an item might not exist in stock yet.
                     $currentQty = $currentStocks->get($itemId, 0);
 
-                    // Calculate the potential new quantity after adjustment
                     $newQty = $currentQty + (float)$adjustmentQty;
 
-                    // Add an error if the new quantity would be negative
                     if ($newQty < 0) {
                         $validator->errors()->add(
                             "items.{$index}.AdjustmentQty",

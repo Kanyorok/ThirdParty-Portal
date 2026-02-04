@@ -7,52 +7,34 @@ use App\Models\Auth\User;
 
 class TransactionTransferPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::TransactionTransferView->value);
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user): bool
     {
         return $user->can(PermissionEnum::TransactionTransferView->value);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
         return $user->can(PermissionEnum::TransactionTransferCreate->value);
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user): bool
     {
         return $user->can(PermissionEnum::TransactionTransferUpdate->value);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function destroy(User $user): bool
     {
-        return $user->can(PermissionEnum::TransactionTransferDestroy->value);
+        return $user->can(PermissionEnum::TransactionTransferDelete->value);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function edit(User $user, TransactionTransfer $transactionTransfer): bool
+    public function edit(User $user): bool
     {
-        return $user->can(PermissionEnum::TransactionTransferRestore->value);
+        return $user->can(PermissionEnum::TransactionTransferUpdate->value);
     }
 
     public function approve(User $user): bool

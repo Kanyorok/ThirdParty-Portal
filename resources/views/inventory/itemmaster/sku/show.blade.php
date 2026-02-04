@@ -20,7 +20,6 @@
 
         <div class="container bg-white shadow-sm rounded p-4">
 
-            {{-- Row 1: SKU, Item, UOM, Unit Cost --}}
             <div class="row mb-3">
                 <div class="col-md-3">
                     <p><strong>SKU Code:</strong> {{ $item->SKUCode }}</p>
@@ -33,7 +32,6 @@
                 </div>
             </div>
 
-            {{-- Row 2: Current Qty, Min, Reorder, Max --}}
             <div class="row mb-3">
                 <div class="col-md-3">
                     <p><strong>Current Qty:</strong> {{ $item->CurrentQty }}</p>
@@ -46,7 +44,6 @@
                 </div>
             </div>
 
-            {{-- Row 3: Branch, Store, Last Received, Status --}}
             <div class="row mb-3">
                 <div class="col-md-3">
                     <p><strong>Branch:</strong> {{ optional($item->branch)->Name ?? 'N/A' }}</p>
@@ -70,7 +67,6 @@
             </div>
 
 
-            {{-- Actions --}}
             <div class="d-flex gap-2 mt-3">
                 <a href="{{ route('sku.index') }}" class="btn btn-secondary">Back</a>
                 <a href="{{ route('sku.edit', $item->Id) }}" class="btn btn-warning">Edit SKU</a>

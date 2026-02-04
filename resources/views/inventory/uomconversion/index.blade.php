@@ -2,19 +2,16 @@
 @section('title', 'UOM Conversion Mapping Management')
 @section('styles')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-{{-- Font Awesome for icons --}}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 @endsection
 @section('content')
 <div class="container py-4">
 
-    <!-- UOM Conversion List Header + Add Button -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>UOM Conversions List</h4>
         <a href="{{ route('uomconversion.create') }}" class="btn btn-primary">Add New UOM Conversion</a>
     </div>
 
-    <!-- UOM Conversion Table -->
     <div class="card">
         <div class="card-body">
             <div class="table-responsive">

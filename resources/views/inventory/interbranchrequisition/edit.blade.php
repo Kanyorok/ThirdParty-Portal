@@ -24,14 +24,12 @@
             <div class="card-body">
                 <div class="row g-3 mb-3">
 
-                    {{-- Requesting Branch (ToBranch – always logged-in branch) --}}
                     <div class="col-md-4">
                         <label class="form-label">Requesting Branch <span class="text-danger">*</span></label>
                         <input type="hidden" name="ToBranch" value="{{ $currentBranch->Id }}">
                         <input type="text" class="form-control" value="{{ $currentBranch->Name }}" readonly>
                     </div>
 
-                    {{-- From Branch --}}
                     <div class="col-md-4">
                         <label class="form-label">From Branch <span class="text-danger">*</span></label>
                         <select name="FromBranch" id="FromBranch" class="form-select" required>
@@ -45,7 +43,6 @@
                         </select>
                     </div>
 
-                    {{-- Date --}}
                     <div class="col-md-4">
                         <label class="form-label">Date</label>
                         <input type="hidden" name="CreatedOn"
@@ -71,7 +68,6 @@
     </form>
 </div>
 
-{{-- ITEM TEMPLATE --}}
 <template id="itemTemplate">
     <div class="card mb-3 item-entry">
         <div class="card-body border">
@@ -137,9 +133,7 @@
 <script>
 let itemCounter = 0;
 
-/* ===============================
-   AJAX HELPERS (SAME AS CREATE)
-================================ */
+
 
 function populateCategories(entry, selected = null, cb = null) {
     const fromBranch = document.getElementById('FromBranch').value;
@@ -227,16 +221,14 @@ function fetchItemDetails(id, entry) {
         .then(r => r.json())
         .then(d => {
             entry.querySelector('.item-code').value = d.item_code ?? '';
-            entry.querySelector('.item-code-hidden').value = d.item_code ?? ''; // ✅ Add this
+            entry.querySelector('.item-code-hidden').value = d.item_code ?? ''; 
             entry.querySelector('.item-uom').value = d.item_uom ?? '';
             entry.querySelector('.item-name-hidden').value =
                 entry.querySelector('.item-select option:checked')?.text || '';
         });
 }
 
-/* ===============================
-   ADD ITEM
-================================ */
+
 
 function addItem(values = {}) {
     const tpl = document.getElementById('itemTemplate').content.cloneNode(true);
@@ -260,9 +252,7 @@ function addItem(values = {}) {
     itemCounter++;
 }
 
-/* ===============================
-   EVENTS
-================================ */
+
 
 document.getElementById('addItemBtn').onclick = () => addItem();
 
@@ -288,16 +278,14 @@ document.addEventListener('change', e => {
     }
 });
 
-/* ===============================
-   INITIAL LOAD
-================================ */
+
 
 @php
 $rows = old('items')
     ? old('items')
     : $item->items->map(fn($i) => [
-        'Category'     => $i->item->category->ParentId ?? $i->item->category->Id,  // ✅ Parent or itself
-        'Subcategory'  => $i->item->category->ParentId ? $i->item->category->Id : null,  // ✅ Only if has parent
+        'Category'     => $i->item->category->ParentId ?? $i->item->category->Id,  
+        'Subcategory'  => $i->item->category->ParentId ? $i->item->category->Id : null,  
         'Item'         => $i->Item,
         'RequestedQty' => $i->RequestedQty,
         'Remarks'      => $i->Remarks,

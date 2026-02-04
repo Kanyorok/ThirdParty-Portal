@@ -7,7 +7,6 @@
     <div class="container bg-white shadow rounded p-4">
         <h4 class="mb-4">Create Transaction Transfer</h4>
 
-        {{-- Validation Errors --}}
         @if($errors->any())
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="fas fa-exclamation-triangle me-2"></i>
@@ -21,7 +20,6 @@
             </div>
         @endif
 
-        {{-- Specific Workflow Error --}}
         @if($errors->has('workflow'))
             <div class="alert alert-warning alert-dismissible fade show" role="alert">
                 <i class="fas fa-exclamation-triangle me-2"></i>
@@ -31,7 +29,6 @@
             </div>
         @endif
 
-        {{-- Branch Information Banner --}}
         @php
             $currentBranch = auth()->user()->branch ?? null;
             $isHQ = $currentBranch && $currentBranch->IsHQ;
@@ -56,7 +53,6 @@
             </div>
         </div>
 
-        {{-- Workflow Configuration Info --}}
         <div class="alert alert-info mb-4">
             <div class="d-flex align-items-start">
                 <i class="fas fa-cogs me-2 mt-1"></i>
@@ -72,7 +68,6 @@
             </div>
         </div>
 
-        {{-- Step 1: Select requisition type & number --}}
         <div class="card mb-4">
             <div class="card-header bg-light">
                 <h6 class="mb-0">Select Requisition</h6>
@@ -113,7 +108,6 @@
             </div>
         </div>
 
-        {{-- Step 2: Transfer form --}}
         <div id="transferDetails" style="display: none">
             <div class="card">
                 <div class="card-header bg-light">
@@ -143,11 +137,9 @@
                             <div class="col-md-3">
                                 <label for="toBranch" class="form-label">To Branch <span class="text-danger">*</span></label>
 
-                                {{-- For Interbranch (hidden field) --}}
                                 <input type="hidden" id="toBranchHidden" name="ToBranch">
                                 <input type="text" class="form-control" id="toBranchText" readonly style="display: none;">
 
-                                {{-- For Procurement (dropdown) --}}
                                 <select class="form-select" id="toBranchSelect" style="display: none;">
                                     <option value="">-- Select Branch --</option>
                                     @foreach (Branch::where('IsHQ', 0)->get() as $branch)
@@ -159,11 +151,9 @@
                             <div class="col-md-3">
                                 <label for="TransferredBy" class="form-label">Transferred By <span class="text-danger">*</span></label>
                                 
-                                {{-- Hidden field for form submission --}}
                                 <input type="hidden" name="TransferredBy" id="TransferredBy" 
                                     value="{{ $currentUser->Id ?? auth()->id() }}">
                                 
-                                {{-- Display-only field for user visibility --}}
                                 <input type="text" class="form-control" id="TransferredByDisplay" 
                                     value="{{ $currentUser->Name ?? auth()->user()->Name }}" readonly>
                                 
@@ -178,7 +168,6 @@
                             <input type="hidden" name="RequisitionType" id="RequisitionType">
                         </div>
 
-                        {{-- Items Section --}}
                         <div id="itemsSection">
                             <div class="mb-3">
                                 <h5>Requisition Items</h5>
@@ -209,7 +198,6 @@
                             </div>
                         </div>
 
-                        {{-- GRN Batch Selection Modal (for non-HQ only) --}}
                         @if(!$isHQ)
                         <div class="modal fade" id="grnBatchModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
                             <div class="modal-dialog modal-xl">
@@ -294,20 +282,16 @@
                         </div>
                         @endif
 
-                        {{-- Error Alert --}}
                         <div id="ajax-error" class="alert alert-danger d-none"></div>
 
-                        {{-- Success Alert --}}
                         <div id="ajax-success" class="alert alert-success d-none"></div>
 
-                        {{-- Warning Alert for GRN Requirement --}}
                         <div id="grnWarning" class="alert alert-warning d-none">
                             <i class="fas fa-exclamation-triangle me-2"></i>
                             <strong>GRN Tracking Required:</strong> All items must have GRN ledger entries at your branch. 
                             Items without GRN batches cannot be transferred.
                         </div>
 
-                        {{-- Action Buttons --}}
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-success" id="submitBtn">
                                 <i class="fas fa-paper-plane me-1"></i> Submit Transfer for Approval
@@ -382,7 +366,6 @@
         border-top: 2px solid #dee2e6;
     }
     
-    /* Responsive adjustments */
     @media (max-width: 768px) {
         .table-responsive {
             font-size: 0.875rem;
@@ -420,7 +403,6 @@
             let currentBatches = {};
             let isHQ = {{ $isHQ ? 'true' : 'false' }};
 
-            // Update info based on HQ status
             if (isHQ) {
                 grnBatchInfoText.textContent = 'You are logged in as Headquarters. Transfers will use FIFO (First-In-First-Out) automatically from available GRN batches.';
                 grnBatchInfo.style.display = 'block';
@@ -432,14 +414,12 @@
             const requisitionsBaseUrl = "{{ url(route('requisitions.by-type', ['type' => 'PLACEHOLDER'])) }}";
             const requisitionDetailsBaseUrl = "{{ url(route('requisitions.details', ['id' => 'PLACEHOLDER'])) }}";
 
-            // Load requisitions when type changes
             requisitionTypeSelect.addEventListener('change', function () {
                 selectedType = this.value;
                 requisitionTypeHidden.value = selectedType;
                 requisitionIdSelect.innerHTML = '<option value="">Loading...</option>';
                 requisitionIdSelect.disabled = true;
                 
-                // Update info text
                 if (selectedType === 'interbranch') {
                     requisitionInfoText.innerHTML = '<i class="fas fa-info-circle me-1"></i> Showing interbranch requisitions where your branch is the <strong>From Branch</strong>';
                     requisitionInfoText.className = 'text-info';
@@ -460,7 +440,6 @@
                     return;
                 }
 
-                // Reset form
                 requisitionIdHidden.value = '';
                 itemsBody.innerHTML = '';
                 fromBranchText.value = '';
@@ -497,14 +476,12 @@
                             return;
                         }
 
-                        // Update info text with count
                         requisitionInfoText.innerHTML = `<i class="fas fa-info-circle me-1"></i> Showing ${selectedType} requisitions where ${selectedType === 'interbranch' ? 'your branch is the <strong>From Branch</strong>' : 'from HQ'} - ${data.length} requisition(s) available`;
 
                         data.forEach(req => {
                             const text = selectedType === 'interbranch' ? req.ReqNo : req.GRNID;
                             const value = selectedType === 'interbranch' ? req.Id : req.id;
                             
-                            // Add branch info for display
                             let displayText = text;
                             if (selectedType === 'interbranch' && req.toBranch) {
                                 displayText += ` → ${req.toBranch.Name || 'N/A'}`;
@@ -523,11 +500,9 @@
                     });
             });
 
-            // Load requisition details when number changes
             requisitionIdSelect.addEventListener('change', function () {
                 const id = this.value;
 
-                // Reset details
                 itemsBody.innerHTML = '';
                 fromBranchText.value = '';
                 fromBranchHidden.value = '';
@@ -547,7 +522,6 @@
                 requisitionIdHidden.value = id;
                 const detailsUrl = requisitionDetailsBaseUrl.replace('PLACEHOLDER', id) + `?type=${selectedType}`;
 
-                // Show loading state
                 itemsBody.innerHTML = '<tr><td colspan="' + (isHQ ? '8' : '9') + '" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading items and checking GRN availability...</td></tr>';
 
                 fetch(detailsUrl)
@@ -559,33 +533,27 @@
                     })
                     .then(data => {
                         if (selectedType === 'procurement') {
-                            // Procurement: From = HQ, To = dropdown
                             fromBranchText.value = 'Headquarters';
                             fromBranchHidden.value = '{{ Branch::where("IsHQ", 1)->value("Id") ?? "" }}';
 
-                            // Show dropdown for ToBranch and hide others
                             toBranchSelect.style.display = 'block';
                             toBranchText.style.display = 'none';
 
-                            // Pre-select if data available
                             if (data.to_branch && data.to_branch.Id) {
                                 toBranchSelect.value = data.to_branch.Id;
                             }
 
                         } else {
-                            // Interbranch: From + To from requisition
                             fromBranchText.value = data.from_branch?.Name || 'N/A';
                             fromBranchHidden.value = data.from_branch?.Id || '';
 
                             toBranchText.value = data.to_branch?.Name || 'N/A';
                             toBranchHidden.value = data.to_branch?.Id || '';
 
-                            // Show text input for display and hide dropdown
                             toBranchText.style.display = 'block';
                             toBranchSelect.style.display = 'none';
                         }
 
-                        // Populate items table
                         itemsBody.innerHTML = '';
                         let hasItemsWithoutGRN = false;
                         
@@ -643,7 +611,6 @@
                                 `;
                             });
                             
-                            // Check GRN availability for all items
                             checkAllItemsGRNAvailability(data.items);
                         } else {
                             itemsBody.innerHTML = '<tr><td colspan="' + (isHQ ? '8' : '9') + '" class="text-center text-muted py-4">No items found for this requisition</td></tr>';
@@ -658,9 +625,7 @@
                     });
             });
 
-            // Form validation on submit
             transferForm.addEventListener('submit', function (e) {
-                // Validate dispatched quantities
                 const dispatchedInputs = document.querySelectorAll('input[name*="dispatched_qty"]');
                 let hasInvalidQuantity = false;
 
@@ -689,7 +654,6 @@
                     return;
                 }
 
-                // Validate batch allocations for non-HQ
                 if (!isHQ) {
                     const allocationInputs = document.querySelectorAll('input[name*="batch_allocation"]');
                     let hasInvalidAllocation = false;
@@ -721,7 +685,6 @@
                     }
                 }
 
-                // For procurement, ensure ToBranch is selected
                 if (selectedType === 'procurement') {
                     const toBranchSelect = document.getElementById('toBranchSelect');
                     if (!toBranchSelect || !toBranchSelect.value) {
@@ -733,9 +696,7 @@
                 }
             });
 
-            // Initialize based on current branch
             @if($currentBranch && !$currentBranch->IsHQ)
-                // Disable procurement option for non-HQ users
                 const procurementOption = requisitionTypeSelect.querySelector('option[value="procurement"]');
                 if (procurementOption) {
                     procurementOption.disabled = true;
@@ -743,7 +704,6 @@
             @endif
         });
 
-        // Function to check GRN availability for an item
         function checkGRNAvailability(index, itemId) {
             const fromBranch = document.getElementById('FromBranch').value;
             const url = "{{ route('transaction-transfers.grn-batches') }}?item_id=" + itemId + "&branch_id=" + fromBranch;
@@ -755,13 +715,11 @@
                     const dispatchedInput = document.getElementById('dispatchedQty' + index);
                     
                     if (data.batches && data.batches.length > 0) {
-                        // Has GRN batches - enable
                         batchBtn.disabled = false;
                         batchBtn.classList.remove('btn-secondary');
                         batchBtn.classList.add('btn-outline-info');
                         dispatchedInput.disabled = false;
                     } else {
-                        // No GRN batches - disable and show warning
                         batchBtn.disabled = true;
                         batchBtn.classList.remove('btn-outline-info');
                         batchBtn.classList.add('btn-secondary');
@@ -776,7 +734,6 @@
                 });
         }
 
-        // Function to check all items for GRN availability
         function checkAllItemsGRNAvailability(items) {
             let allItemsHaveGRN = true;
             
@@ -792,14 +749,12 @@
                         const itemRow = document.getElementById('itemRow' + index);
                         
                         if (data.batches && data.batches.length > 0) {
-                            // Has GRN batches
                             batchBtn.disabled = false;
                             batchBtn.classList.remove('btn-secondary');
                             batchBtn.classList.add('btn-outline-info');
                             dispatchedInput.disabled = false;
                             itemRow.classList.remove('table-warning');
                         } else {
-                            // No GRN batches
                             batchBtn.disabled = true;
                             batchBtn.classList.remove('btn-outline-info');
                             batchBtn.classList.add('btn-secondary');
@@ -809,7 +764,6 @@
                             allItemsHaveGRN = false;
                         }
                         
-                        // Show warning if any item lacks GRN
                         if (!allItemsHaveGRN) {
                             document.getElementById('grnWarning').classList.remove('d-none');
                         }
@@ -820,7 +774,6 @@
             });
         }
 
-        // Helper function to validate quantity in real-time
         window.validateQuantity = function (input, maxQty, index) {
             const value = parseFloat(input.value);
             if (value > maxQty) {
@@ -834,7 +787,6 @@
             } else {
                 input.setCustomValidity('');
                 
-                // For non-HQ, validate batch allocation
                 if (!isHQ) {
                     const allocationInput = document.getElementById('batchAllocation' + index);
                     if (allocationInput && allocationInput.value) {
@@ -850,8 +802,6 @@
             }
         };
 
-        // =================== GRN Batch Selection Functions ===================
-        // Global variables for batch selection
         let batchData = {};
         let currentModalIndex = null;
 
@@ -870,7 +820,6 @@
             document.getElementById('allocationMessage').innerHTML = '';
             document.getElementById('saveBatchBtn').disabled = true;
             
-            // Fetch available GRN batches
             const fromBranch = document.getElementById('FromBranch').value;
             const url = "{{ route('transaction-transfers.grn-batches') }}?item_id=" + itemId + "&branch_id=" + fromBranch;
             
@@ -881,7 +830,6 @@
                     tbody.innerHTML = '';
                     
                     if (data.batches && data.batches.length > 0) {
-                        // Clear batch data
                         batchData = {};
                         
                         data.batches.forEach((batch, i) => {
@@ -935,11 +883,9 @@
                             `;
                             tbody.appendChild(tr);
                             
-                            // Store batch data
                             batchData[i] = batch;
                         });
                         
-                        // Update info text
                         const transferCount = data.batches.filter(b => b.source_type === 'transfer').length;
                         const procurementCount = data.batches.filter(b => b.source_type !== 'transfer').length;
                         
@@ -950,7 +896,6 @@
                         const allocationMessage = document.getElementById('allocationMessage');
                         allocationMessage.innerHTML = infoText;
                         
-                        // Load existing allocation if any
                         const existingAllocation = document.getElementById('batchAllocation' + index).value;
                         if (existingAllocation) {
                             try {
@@ -1034,7 +979,6 @@
                 const batchRow = document.getElementById(`batchRow${index}`);
                 if (batchRow) {
                     if (anyChecked) {
-                        // If any are checked, uncheck all
                         checkbox.checked = false;
                         const qtyInput = document.querySelector(`.allocate-qty[data-index="${index}"]`);
                         if (qtyInput) {
@@ -1043,7 +987,6 @@
                         }
                         batchRow.classList.remove('selected');
                     } else {
-                        // If none are checked, check all
                         checkbox.checked = true;
                         const qtyInput = document.querySelector(`.allocate-qty[data-index="${index}"]`);
                         if (qtyInput) {
@@ -1085,7 +1028,6 @@
             let quantity = parseFloat(qtyInput.value) || 0;
             const maxQty = parseFloat(qtyInput.getAttribute('max'));
             
-            // Validate quantity
             if (quantity > maxQty) {
                 quantity = maxQty;
                 qtyInput.value = maxQty;
@@ -1096,7 +1038,6 @@
                 qtyInput.value = 0;
             }
             
-            // Round to 4 decimal places
             quantity = Math.round(quantity * 10000) / 10000;
             qtyInput.value = quantity;
             
@@ -1160,7 +1101,6 @@
                 const qtyInput = document.querySelector(`.allocate-qty[data-index="${batchIndex}"]`);
                 let quantity = parseFloat(qtyInput.value) || 0;
                 
-                // Round to 4 decimal places
                 quantity = Math.round(quantity * 10000) / 10000;
                 
                 if (quantity > 0) {
@@ -1178,7 +1118,6 @@
                 }
             });
             
-            // Validate allocation
             totalAllocated = Math.round(totalAllocated * 10000) / 10000;
             
             if (Math.abs(totalAllocated - requiredQty) > 0.0001) { // Allow tiny floating point differences
@@ -1186,11 +1125,9 @@
                 return;
             }
             
-            // Save allocation
             const allocationInput = document.getElementById('batchAllocation' + index);
             allocationInput.value = JSON.stringify(allocation);
             
-            // Update summary display
             const summaryDiv = document.getElementById('batchSummary' + index);
             if (allocation.length > 0) {
                 const summary = allocation.map(a => 
@@ -1218,7 +1155,6 @@
                     </div>
                 `;
                 
-                // Enable the dispatched quantity input
                 const dispatchedInput = document.getElementById('dispatchedQty' + index);
                 if (dispatchedInput) {
                     dispatchedInput.disabled = false;
@@ -1228,17 +1164,14 @@
                 summaryDiv.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-circle"></i> No batches selected</span>';
             }
             
-            // Close modal
             bootstrap.Modal.getInstance(document.getElementById('grnBatchModal')).hide();
             
-            // Show success message
             showError('GRN batch selection saved successfully.');
         }
     </script>
 @endpush
 
 <style>
-    /* Additional styles for better UX */
     .quantity-input:disabled {
         background-color: #e9ecef;
         opacity: 0.6;
@@ -1263,13 +1196,11 @@
         transition: width 0.3s ease;
     }
     
-    /* Modal scrollbar */
     #grnBatchModal .modal-body {
         max-height: 70vh;
         overflow-y: auto;
     }
     
-    /* Responsive table in modal */
     @media (max-width: 992px) {
         #grnBatchModal .modal-dialog {
             margin: 0.5rem;

@@ -39,7 +39,6 @@
                     @enderror
                 </div>
 
-                <!-- Hidden field for Active status -->
                 <input type="hidden" name="Status" value="1">
                 
                 <div class="d-flex justify-content-end">

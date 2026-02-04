@@ -2,9 +2,9 @@
 
 namespace App\Models\Inventory;
 
+use App\Models\Auth\User;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Branch;
-use App\Models\Core\CodeDetail;
-use App\Models\Core\User;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;

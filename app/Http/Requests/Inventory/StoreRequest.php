@@ -2,14 +2,12 @@
 
 namespace App\Http\Requests\Inventory;
 
+use App\Models\Inventory\Store;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
@@ -22,7 +20,7 @@ class StoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        $storeId = $this->route('Id'); // Get the store ID if it's an update
+        $storeId = $this->route('Id');
 
         return [
             'StoreName' => [
@@ -39,7 +37,6 @@ class StoreRequest extends FormRequest
             'IsMainStore' => [
                 'nullable',
                 'boolean',
-                // Custom validation to ensure only one main store per branch
                 function ($attribute, $value, $fail) use ($storeId) {
                     if ($value === true) {
                         $branchId = $this->BranchID ?? null;
@@ -49,7 +46,7 @@ class StoreRequest extends FormRequest
                             return;
                         }
 
-                        $existingMainStore = \App\Models\Inventory\Store::where('BranchID', $branchId)
+                        $existingMainStore = Store::where('BranchID', $branchId)
                             ->where('IsMainStore', true)
                             ->whereNull('DeletedOn')
                             ->when($storeId, function ($query) use ($storeId) {

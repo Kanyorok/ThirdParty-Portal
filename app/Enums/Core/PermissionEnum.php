@@ -350,27 +350,27 @@ enum PermissionEnum: string
     case MasterListView = 'masterList-view';
     case MasterListUpdate = 'masterList-update';
     case MasterListCreate = 'masterList-create';
-    case MasterListDestroy = 'masterList-destroy';
+    case MasterListDelete = 'masterList-delete';
 
     case ItemCategoryView = 'itemCategory-view';
     case ItemCategoryUpdate = 'itemCategory-update';
     case ItemCategoryCreate = 'itemCategory-create';
-    case ItemCategoryDestroy = 'itemCategory-destroy';
+    case ItemCategoryDelete = 'itemCategory-delete';
 
     case StockItemView = 'stockItem-view';
     case StockItemUpdate = 'stockItem-update';
     case StockItemCreate = 'stockItem-create';
-    case StockItemDestroy = 'stockItem-destroy';
+    case StockItemDelete = 'stockItem-delete';
 
     case StoreView = 'storeItem-view';
     case StoreUpdate = 'storeItem-update';
     case StoreCreate = 'storeItem-create';
-    case StoreDestroy = 'storeItem-destroy';
+    case StoreDelete = 'storeItem-delete';
 
     case InventoryTypeView = 'inventoryType-view';
     case InventoryTypeUpdate = 'inventoryType-update';
     case InventoryTypeCreate = 'inventoryType-create';
-    case InventoryTypeDestroy = 'inventoryType-destroy';
+    case InventoryTypeDelete = 'inventoryType-delete';
 
     case ItemTypeView = 'itemType-view';
     case ItemTypeUpdate = 'itemType-update';
@@ -380,23 +380,23 @@ enum PermissionEnum: string
     case UOMView = 'uom-view';
     case UOMUpdate = 'uom-update';
     case UOMCreate = 'uom-create';
-    case UOMDestroy = 'uom-destroy';
+    case UOMDelete = 'uom-delete';
 
     case InterBranchRequisitionView = 'interBranchRequisition-view';
     case InterBranchRequisitionUpdate = 'interBranchRequisition-update';
     case InterBranchRequisitionCreate = 'interBranchRequisition-create';
-    case InterBranchRequisitionDestroy = 'interBranchRequisition-destroy';
+    case InterBranchRequisitionDelete = 'interBranchRequisition-delete';
     case InterBranchRequisitionApproval = 'interBranchRequisition-approval';
 
     case PriceManagementView = 'priceManagement-view';
     case PriceManagementUpdate = 'priceManagement-update';
     case PriceManagementCreate = 'priceManagement-create';
-    case PriceManagementDestroy = 'priceManagement-destroy';
+    case PriceManagementDelete = 'priceManagement-delete';
 
     case StockTakeView = 'stockTake-view';
     case StockTakeUpdate = 'stockTake-update';
     case StockTakeCreate = 'stockTake-create';
-    case StockTakeDestroy = 'stockTake-destroy';
+    case StockTakeDelete = 'stockTake-delete';
 
     case StockConsumptionView = 'stockConsumption-view';
     case StockConsumptionUpdate = 'stockConsumption-update';
@@ -406,30 +406,28 @@ enum PermissionEnum: string
     case TransactionReceiptView = 'transactionReceipt-view';
     case TransactionReceiptUpdate = 'transactionReceipt-update';
     case TransactionReceiptCreate = 'transactionReceipt-create';
-    case TransactionReceiptDestroy = 'transactionReceipt-destroy';
+    case TransactionReceiptDelete = 'transactionReceipt-delete';
 
     case TransactionTransferView = 'transactionTransfer-view';
     case TransactionTransferUpdate = 'transactionTransfer-update';
     case TransactionTransferCreate = 'transactionTransfer-create';
-    case TransactionTransferDestroy = 'transactionTransfer-destroy';
+    case TransactionTransferDelete = 'transactionTransfer-delete';
     case TransactionTransferApproval = 'transactionTransfer-approval';
 
     case StockAdjustmentView = 'stockAdjustment-view';
     case StockAdjustmentUpdate = 'stockAdjustment-update';
     case StockAdjustmentCreate = 'stockAdjustment-create';
-    case StockAdjustmentDestroy = 'stockAdjustment-destroy';
+    case StockAdjustmentDelete = 'stockAdjustment-delete';
     case StockAdjustmentApproval = 'stockAdjustment-approval';
 
 
     case InventoryHoldReviewView = 'inventoryHoldReview-view';
-    // case InventoryHoldReviewUpdate = 'inventoryHoldReview-update';
     case InventoryHoldReviewCreate = 'inventoryHoldReview-create';
-    // case InventoryHoldReviewDestroy = 'inventoryHoldReview-destroy';
 
     case UOMConversionView = 'uomConversion-view';
     case UOMConversionUpdate = 'uomConversion-update';
     case UOMConversionCreate = 'uomConversion-create';
-    case UOMConversionDestroy = 'uomConversion-destroy';
+    case UOMConversionDelete = 'uomConversion-delete';
 
     case InventoryDashboardView = 'inventoryDashboard-view';
     case InventoryReportsView = 'inventoryReports-view';
@@ -1064,22 +1062,22 @@ enum PermissionEnum: string
 
 
             //Inventory
-            [self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy],
-            [self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy],
-            [self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDestroy],
-            [self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDestroy],
-            [self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy],
+            [self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDelete],
+            [self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDelete],
+            [self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDelete],
+            [self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDelete],
+            [self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDelete],
             [self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDelete],
-            [self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy],
-            [self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy, self::InterBranchRequisitionApproval],
-            [self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy],
-            [self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy],
-            [self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval],
+            [self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDelete],
+            [self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDelete, self::InterBranchRequisitionApproval],
+            [self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDelete],
+            [self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDelete],
+            [self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDelete, self::TransactionTransferApproval],
             [self::StockConsumptionView, self::StockConsumptionUpdate, self::StockConsumptionCreate, self::StockConsumptionDelete],
 
-            [self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy, self::StockAdjustmentApproval],
-            [self::InventoryHoldReviewView, self::InventoryHoldReviewCreate, /*self::InventoryHoldReviewUpdate, self::InventoryHoldReviewDestroy*/],
-            [self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDestroy],
+            [self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDelete, self::StockAdjustmentApproval],
+            [self::InventoryHoldReviewView, self::InventoryHoldReviewCreate],
+            [self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDelete],
 
             [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
             [self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete],
@@ -1089,7 +1087,7 @@ enum PermissionEnum: string
             [self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete, self::PlanMaintenanceApproval],
             [self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete],
             [self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete],
-            [self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy],
+            [self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDelete],
 
             /////////////////////////// Budget and Analytics  ///////////////////////
             [self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete],
@@ -1304,23 +1302,23 @@ enum PermissionEnum: string
             self::Departments, self::EmployeesView, self::EmployeesCreate, self::EmployeesUpdate, self::EmployeesDelete => ModulesEnum::HRM,
 
             //Inventory
-            self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy,
-            self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy,
-            self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDestroy,
-            self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDestroy,
-            self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy,
+            self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDelete,
+            self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDelete,
+            self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDelete,
+            self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDelete,
+            self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDelete,
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDelete,
-            self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,
-            self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy, self::InterBranchRequisitionApproval,
+            self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDelete,
+            self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDelete, self::InterBranchRequisitionApproval,
             self::InventoryHoldReviewView, /*self::InventoryHoldReviewUpdate,*/ self::InventoryHoldReviewCreate, /*self::InventoryHoldReviewDestroy,*/
-            self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDestroy,
+            self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDelete,
 
-            self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy,
-            self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy,
-            self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy,
-            self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval,
+            self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDelete,
+            self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDelete,
+            self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDelete,
+            self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDelete, self::TransactionTransferApproval,
             self::StockConsumptionView, self::StockConsumptionUpdate, self::StockConsumptionCreate, self::StockConsumptionDelete,
-            self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy, self::StockAdjustmentApproval => ModulesEnum::Inventory,
+            self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDelete, self::StockAdjustmentApproval => ModulesEnum::Inventory,
             //Fleet Management
             self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy,
             self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy,
@@ -1508,23 +1506,23 @@ enum PermissionEnum: string
             self::ProcurementConfigRead, self::ProcurementConfigWrite, self::ProcurementConfigUpdate, self::ProcurementConfigDelete => 'Procurement Configuration',
 
             //Inventory
-            self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDestroy => 'Item Master',
-            self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDestroy => 'Item Category',
-            self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDestroy => 'Stock Item',
-            self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDestroy => 'Store',
-            self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDestroy => 'Inventory Type',
-            self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy => 'UOM',
+            self::MasterListView, self::MasterListUpdate, self::MasterListCreate, self::MasterListDelete => 'Item Master',
+            self::ItemCategoryView, self::ItemCategoryUpdate, self::ItemCategoryCreate, self::ItemCategoryDelete => 'Item Category',
+            self::StockItemView, self::StockItemUpdate, self::StockItemCreate, self::StockItemDelete => 'Stock Item',
+            self::StoreView, self::StoreUpdate, self::StoreCreate, self::StoreDelete => 'Store',
+            self::InventoryTypeView, self::InventoryTypeUpdate, self::InventoryTypeCreate, self::InventoryTypeDelete => 'Inventory Type',
+            self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDelete => 'UOM',
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDelete => 'Item Type',
-            self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy, self::InterBranchRequisitionApproval => 'InterBranch Requisition',
-            self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy => 'Price Management',
-            self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy => 'Receipt',
-            self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy => 'Stock Take',
-            self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval => 'Transfer',
+            self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDelete, self::InterBranchRequisitionApproval => 'InterBranch Requisition',
+            self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDelete => 'Price Management',
+            self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDelete => 'Receipt',
+            self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDelete => 'Stock Take',
+            self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDelete, self::TransactionTransferApproval => 'Transfer',
             self::StockConsumptionView, self::StockConsumptionUpdate, self::StockConsumptionCreate, self::StockConsumptionDelete => 'Stock Consumption',
 
-            self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy, self::StockAdjustmentApproval => 'Stock Adjustment',
-            self::InventoryHoldReviewView, /*self::InventoryHoldReviewUpdate,*/ self::InventoryHoldReviewCreate /*, self::InventoryHoldReviewDestroy*/ => 'Stock Defects Review',
-            self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDestroy => 'UOM Conversion',
+            self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDelete, self::StockAdjustmentApproval => 'Stock Adjustment',
+            self::InventoryHoldReviewView, /*self::InventoryHoldReviewUpdate,*/ self::InventoryHoldReviewCreate /*, self::InventoryHoldReviewDelete*/ => 'Stock Defects Review',
+            self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDelete => 'UOM Conversion',
 
             //Fleet Management
             self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy => 'Fleet Model',

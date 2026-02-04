@@ -4,7 +4,6 @@ namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
-use App\Models\Inventory\PriceManagement;
 
 class PriceManagementPolicy
 {
@@ -13,43 +12,28 @@ class PriceManagementPolicy
         return $user->can(PermissionEnum::PriceManagementView->value);
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, PriceManagement $priceManagement): bool
+    public function view(User $user): bool
     {
         return $user->can(PermissionEnum::PriceManagementView->value);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
         return $user->can(PermissionEnum::PriceManagementCreate->value);
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user): bool
     {
         return $user->can(PermissionEnum::PriceManagementUpdate->value);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function destroy(User $user): bool
     {
-        return $user->can(PermissionEnum::PriceManagementDestroy->value);
+        return $user->can(PermissionEnum::PriceManagementDelete->value);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function edit(User $user, PriceManagement $priceManagement): bool
+    public function edit(User $user): bool
     {
-        return $user->can(PermissionEnum::PriceManagementRestore->value);
+        return $user->can(PermissionEnum::PriceManagementUpdate->value);
     }
 }

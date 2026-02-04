@@ -38,11 +38,9 @@
                     <option value="">-- Select --</option>
                     @foreach($holds as $hold)
                         @php
-                            // Get the actual source document ID (AdjustmentID or ReceiptID)
                             $sourceType = $hold->sourceDetail->Description ?? '';
                             $sourceDocumentId = $hold->source_document_id ?? $hold->SourceID ?? 'N/A';
                             
-                            // Build the display text: SourceDocumentID (Source Type)
                             if ($sourceType) {
                                 $displayText = $sourceDocumentId . ' (' . $sourceType . ')';
                             } else {
@@ -138,11 +136,6 @@
                 <button type="button" class="btn btn-danger" id="disposeBtn">
                     <i class="fas fa-trash"></i> Dispose Item
                 </button>
-                <!--
-                <button type="button" class="btn btn-warning" id="repairBtn">
-                    <i class="fas fa-tools"></i> Mark for Repair
-                </button>
-                -->
                 <button type="button" class="btn btn-info" id="returnBtn">
                     <i class="fas fa-undo"></i> Return to Sender
                 </button>
@@ -168,7 +161,6 @@
             return;
         }
 
-        // Get data from data attributes
         const itemName = selectedOption.getAttribute('data-itemname');
         const quantity = selectedOption.getAttribute('data-quantity');
         const fromBranch = selectedOption.getAttribute('data-frombranch');
@@ -180,27 +172,22 @@
         const itemId = selectedOption.getAttribute('data-itemid');
         const branchId = selectedOption.getAttribute('data-branchid');
 
-        // Populate the form fields
         document.getElementById('ItemName').value = itemName || '';
         document.getElementById('Quantity').value = quantity || '';
         document.getElementById('Store').value = store || '';
         document.getElementById('Defect').value = defect || '';
         document.getElementById('SourceID').value = sourceId || '';
         
-        // Determine source display
         let sourceDisplay = sourceType || 'N/A';
         document.getElementById('SourceDisplay').value = sourceDisplay;
 
-        // Set hidden fields
         document.getElementById('ItemID_hidden').value = itemId || '';
         document.getElementById('FromBranch_hidden').value = branchId || '';
         document.getElementById('Quantity_hidden').value = quantity || '';
         document.getElementById('Id_hidden').value = this.value;
 
-        // Show details section
         document.getElementById('hold-details').classList.remove('d-none');
 
-        // Show/hide store field based on source type
         const storeCol = document.getElementById('store-col');
         if (sourceType && sourceType.toLowerCase().includes('adjustment')) {
             storeCol.style.display = 'none';
@@ -208,7 +195,6 @@
             storeCol.style.display = 'block';
         }
 
-        // 🔒 Disable or hide "Return to Sender" if it's an Adjustment
         const returnBtn = document.getElementById('returnBtn');
         if (sourceType && sourceType.toLowerCase().includes('adjustment')) {
             returnBtn.disabled = true;
@@ -223,7 +209,6 @@
         }
     });
 
-    // Action button handlers
     document.getElementById('disposeBtn').addEventListener('click', function () {
         if (confirm('Are you sure you want to dispose this item? This action cannot be undone.')) {
             submitAction('dispose');
@@ -237,7 +222,7 @@
     });
 
     document.getElementById('returnBtn').addEventListener('click', function () {
-        if (this.disabled) return; // Prevent disabled button action
+        if (this.disabled) return; 
         if (confirm('Return this item to the sender?')) {
             submitAction('return');
         }
@@ -250,7 +235,6 @@
             return;
         }
 
-        // Validate required fields for dispose action
         if (action === 'dispose') {
             const condition = document.getElementById('Condition').value;
             if (!condition) {
@@ -270,7 +254,6 @@
         form.submit();
     }
 
-    // Initialize form if there's a previously selected value
     document.addEventListener('DOMContentLoaded', function() {
         const holdSelect = document.getElementById('InventoryHoldID');
         if (holdSelect.value) {
