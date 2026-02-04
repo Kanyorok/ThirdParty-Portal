@@ -29,7 +29,6 @@ class TransactionTransferRequest extends FormRequest
             'items.*.remarks' => 'nullable|string|max:255',
         ];
 
-        // Conditional rule for RequisitionId
         if ($this->input('RequisitionType') === 'procurement') {
             $rules['RequisitionId'] = 'required|exists:t_GoodsReceipts,Id';
         } else {

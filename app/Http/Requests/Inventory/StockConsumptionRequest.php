@@ -38,12 +38,10 @@ class StockConsumptionRequest extends FormRequest
                     $typeName = strtoupper($typeDetail->Description);
 
                     if ($typeName === 'EMPLOYEE') {
-                        // Check if it's a valid user ID
                         if (! User::where('Id', $value)->exists()) {
                             $fail('The selected issued to employee is invalid.');
                         }
                     } elseif ($typeName === 'DEPARTMENT') {
-                        // Check if it's a valid department ID
                         if (! Department::where('Id', $value)->exists()) {
                             $fail('The selected issued to department is invalid.');
                         }

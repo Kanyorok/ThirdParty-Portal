@@ -46,13 +46,13 @@
                 @enderror
             </div>
             <div class="col-md-6">
-                <label for="branch" class="form-label">Branch</label><span class="text-danger">*</span>
-                <input type="hidden" id="branch" name="Branch" value="{{ $branch->Id }}">
-                <input type="text" class="form-control" value="{{ $branch->Name }}" readonly>
-                @error('Branch')
-                <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
+            <label for="branch" class="form-label">Branch</label><span class="text-danger">*</span>
+            <input type="hidden" id="branch" name="Branch" value="{{ $currentBranch->Id }}">
+            <input type="text" class="form-control" value="{{ $currentBranch->Name }}" readonly>
+            @error('Branch')
+            <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
         </div>
 
         <div class="table-responsive mb-3">
