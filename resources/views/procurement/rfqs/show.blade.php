@@ -245,7 +245,21 @@
         </div>
         @endif
     </div>
-    <div class="text-end">
+    <div class="text-end mb-3">
+        {{-- Submit for Approval button - shown when RFQ is in Pending status AND not already submitted --}}
+        @if (in_array($rfq->Status, ['Pending', 'pe', 'Pe']) && count($pendingApprovals) === 0)
+        <form action="{{ route('rfqs.submit', $rfq->Id) }}" method="POST" class="d-inline">
+            @csrf
+            <button type="submit"
+                class="btn btn-primary btn-sm"
+                onclick="return confirm('Are you sure you want to submit this RFQ for approval?');"
+                {{ $rfq->rfqLines->isEmpty() ? 'disabled' : '' }}
+                title="{{ $rfq->rfqLines->isEmpty() ? 'Please add at least one RFQ line before submitting' : 'Submit RFQ for approval' }}">
+                Submit for Approval
+            </button>
+        </form>
+        @endif
+
         @if (in_array($rfq->Status, ['Approved', 'Ap', 'AP', 'a', 'A']))
         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#publishModal">Publish to Suppliers</button>
         <button type="button" class="btn btn-secondary btn-sm" onclick="printRFQ()">Print</button>

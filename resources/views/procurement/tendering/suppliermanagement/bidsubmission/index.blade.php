@@ -24,6 +24,13 @@ use Illuminate\Support\Facades\Storage;
         <a href="{{ route('tendersubmission.create') }}" class="btn btn-sm btn-success">+ Record Manual Submission</a>
     </div>
 
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="table-responsive">
         <table id="bidsubmissionTable" class="table table-bordered table-striped align-middle">
             <thead class="table-light">

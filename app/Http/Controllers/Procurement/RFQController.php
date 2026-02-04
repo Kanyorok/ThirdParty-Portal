@@ -203,7 +203,51 @@ class RFQController extends Controller
         ]);
 
         return redirect()->route('rfqs.show', $rfq->Id)
-            ->with('success', 'RFQ created successfully and submitted for approval.');
+            ->with('success', 'RFQ created successfully.');
+    }
+
+    /**
+     * Submit the RFQ for approval (Workflow).
+     */
+    public function submit(Request $request, $id)
+    {
+        $rfq = RFQ::findOrFail($id);
+        $this->authorize('create', $rfq);
+
+        Log::info('Submit for approval request received', [
+            'rfq_id' => $rfq->Id,
+            'rfq_number' => $rfq->RFQNumber,
+            'current_status' => $rfq->Status,
+            'user_id' => Auth::user()->Id,
+            'user_name' => Auth::user()->Name,
+        ]);
+
+        // Check if RFQ has at least one line item
+        if ($rfq->rfqLines()->count() < 1) {
+            Log::warning('Submit blocked - no line items', [
+                'rfq_id' => $rfq->Id,
+            ]);
+
+            return redirect()->back()->with('error', 'Cannot submit an RFQ without any items. Please add at least one RFQ line.');
+        }
+
+        // Use Workflow Service to submit for approval
+        $result = $this->workflowService->submitRFQ($rfq, Auth::user(), 'Submitted via UI');
+
+        // Refresh to get updated status
+        $rfq->refresh();
+
+        Log::info('Submit for approval completed', [
+            'rfq_id' => $rfq->Id,
+            'result' => $result,
+            'new_status' => $rfq->Status,
+        ]);
+
+        if ($result) {
+            return redirect()->back()->with('success', 'RFQ submitted for Approval successfully.');
+        } else {
+            return redirect()->back()->with('error', 'Failed to submit RFQ for approval. Please check workflow configuration.');
+        }
     }
 
     /**

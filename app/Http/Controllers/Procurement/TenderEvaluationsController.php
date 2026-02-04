@@ -25,7 +25,7 @@ class TenderEvaluationsController extends Controller
     {
         $search = $request->query('search', '');
 
-        $sections = Section::select('Id', 'SectionName')->get();
+        $sections = Section::select('Id', 'SectionName')->where('IsActive', true)->get();
 
         // Get unique tenderID from the TenderSection table
         $tenderSections = TenderSection::select('TenderID')->distinct()->get();

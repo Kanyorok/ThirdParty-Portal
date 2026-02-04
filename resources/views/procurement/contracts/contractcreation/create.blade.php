@@ -161,11 +161,13 @@
                 <div class="col-md-6">
                     <label class="form-label">Contract Start Date <span class="text-danger">*</span></label>
                     <input type="date" name="start_date" class="form-control"
+                           min="{{ date('Y-m-d') }}"
                            value="{{ old('start_date', $award->ContractStartDate ? $award->ContractStartDate->format('Y-m-d') : date('Y-m-d')) }}">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Contract End Date <span class="text-danger">*</span></label>
                     <input type="date" name="end_date" class="form-control"
+                           min="{{ date('Y-m-d') }}"
                            value="{{ old('end_date', $award->ContractEndDate ? $award->ContractEndDate->format('Y-m-d') : '') }}">
                 </div>
             </div>
@@ -242,17 +244,34 @@
             const startDateInput = document.querySelector('input[name="start_date"]');
             const endDateInput = document.querySelector('input[name="end_date"]');
 
-            if (startDateInput && endDateInput && !endDateInput.value) {
+            if (startDateInput && endDateInput) {
+                // Update end date min attribute when start date changes
                 startDateInput.addEventListener('change', function () {
                     if (this.value) {
-                        // Default to 12 months contract duration
-                        const startDate = new Date(this.value);
-                        const endDate = new Date(startDate);
-                        endDate.setMonth(endDate.getMonth() + 12);
+                        // Set minimum date for end date to be the start date
+                        endDateInput.min = this.value;
 
-                        endDateInput.value = endDate.toISOString().split('T')[0];
+                        // If end date is current set and is before start date, reset it
+                        if (endDateInput.value && endDateInput.value < this.value) {
+                            endDateInput.value = '';
+                        }
+
+                        // Auto-set default duration if end date empty
+                        if (!endDateInput.value) {
+                            // Default to 12 months contract duration
+                            const startDate = new Date(this.value);
+                            const endDate = new Date(startDate);
+                            endDate.setMonth(endDate.getMonth() + 12);
+
+                            endDateInput.value = endDate.toISOString().split('T')[0];
+                        }
                     }
                 });
+
+                // Trigger change event to set initial state if value exists
+                if (startDateInput.value) {
+                    endDateInput.min = startDateInput.value;
+                }
             }
         });
     </script>

@@ -247,6 +247,8 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'RequisitionStatus', 'Description' => 'Pending', 'Value' => 'Pe'],
             ['CodeID' => 'RequisitionStatus', 'Description' => 'Rejected', 'Value' => 'Re'],
             ['CodeID' => 'RequisitionStatus', 'Description' => 'Deferred', 'Value' => 'De'],
+            ['CodeID' => 'RequisitionStatus', 'Description' => 'Published', 'Value' => 'Pub'],
+            ['CodeID' => 'RequisitionStatus', 'Description' => 'Awarded', 'Value' => 'Aw'],
 
             // Requisition Urgency
             ['CodeID' => 'RequisitionUrgency', 'Description' => 'Very Urgent', 'Value' => 1],
