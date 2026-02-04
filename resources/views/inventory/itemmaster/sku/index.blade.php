@@ -137,7 +137,6 @@
         }
         initializeTooltips();
 
-        // SweetAlert delete confirmation
         $(document).on('click', '.delete-btn', function () {
             const itemId = $(this).data('id');
             const itemName = $(this).data('name');

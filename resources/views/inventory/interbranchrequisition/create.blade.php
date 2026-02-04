@@ -15,7 +15,6 @@
 
     <div class="container mt-4">
 
-        {{-- Workflow Setup Information --}}
         <div class="alert alert-info alert-dismissible fade show" role="alert">
             <i class="fas fa-info-circle me-2"></i>
             <strong>Workflow Configuration Required:</strong>
@@ -33,7 +32,6 @@
                 <div class="card-body">
                     <div class="row g-3 mb-3">
                         @if($isHeadOffice)
-                            {{-- Head Office: From Branch is fixed, To Branch is selectable --}}
                             <div class="col-md-4">
                                 <label class="form-label">From Branch <span class="text-danger">*</span></label>
                                 <input type="hidden" id="FromBranch" name="FromBranch" value="{{ $fromBranch->Id }}">
@@ -52,7 +50,6 @@
                                 </select>
                             </div>
                         @else
-                            {{-- Non-Head Office: From Branch is selectable, To Branch is fixed --}}
 
                             <div class="col-md-4">
                                 <label class="form-label">Requesting Branch <span class="text-danger">*</span></label>
@@ -64,7 +61,7 @@
                                 <select name="FromBranch" id="FromBranch" class="form-select" required>
                                     <option value="">Select Branch</option>
                                     @foreach ($branches as $branch)
-                                        @if($branch->Id != $currentBranch->Id) {{-- Exclude current branch --}}
+                                        @if($branch->Id != $currentBranch->Id) 
                                             <option
                                                 value="{{ $branch->Id }}" {{ old('FromBranch') == $branch->Id ? 'selected' : '' }}>
                                                 {{ $branch->Name }}
@@ -77,10 +74,8 @@
                         @endif
                         <div class="col-md-4">
                          <label class="form-label">Date <span class="text-danger">*</span></label>
-                        {{-- Hidden field for form submission with Y-m-d format --}}
                         <input type="hidden" name="CreatedOn" value="{{ now()->format('Y-m-d') }}">
                         
-                        {{-- Display-only field for user visibility --}}
                         <input type="text" class="form-control" value="{{ now()->format('m/d/Y') }}" readonly>
                         
                         <small class="text-muted">Current date (non-editable)</small>
@@ -128,7 +123,6 @@
                         <select name="items[__INDEX__][Item]" class="form-select item-select" data-initial="" required>
                             <option value="">-- Select Item --</option>
                         </select>
-                        {{-- Hidden input for item_name, required for server-side validation error message --}}
                         <input type="hidden" name="items[__INDEX__][item_name]" class="item-name-hidden">
                     </div>
                     <div class="col-md-2">
@@ -161,7 +155,6 @@
         <script>
             let itemCounter = 0;
 
-            // Function to populate categories based on selected branch's stock
             function populateCategoriesByBranch(entry, selectedCategory = null, callback = null) {
                 const categorySelect = entry.querySelector('.category-select');
                 const subcategorySelect = entry.querySelector('.subcategory-select');
@@ -169,8 +162,8 @@
                 const fromBranchSelect = document.getElementById('FromBranch');
                 const fromBranchId = fromBranchSelect.value;
 
-                categorySelect.innerHTML = ''; // Clear previous options
-                categorySelect.disabled = true; // Disable until loaded
+                categorySelect.innerHTML = ''; 
+                categorySelect.disabled = true; 
                 subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
                 subcategorySelect.disabled = true;
                 itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
@@ -184,7 +177,6 @@
                     return callback?.();
                 }
 
-                // Using the specific route: /inventory/get-categories-by-branch
                 fetch(`/inventory/get-categories-by-branch?from_branch_id=${fromBranchId}`)
                     .then(response => response.json())
                     .then(data => {
@@ -210,7 +202,6 @@
                     });
             }
 
-            // Function to populate subcategories by branch and category
             function populateSubcategoriesByBranchAndCategory(entry, selectedSubcat = null, callback = null) {
                 const categorySelect = entry.querySelector('.category-select');
                 const subcategorySelect = entry.querySelector('.subcategory-select');
@@ -232,16 +223,14 @@
                     return callback?.();
                 }
 
-                // Using the specific route: /inventory/get-subcategories-by-branch-and-category
                 fetch(`/inventory/get-subcategories-by-branch-and-category?from_branch_id=${fromBranchId}&category_id=${categoryId}`)
                     .then(response => response.json())
                     .then(data => {
                         subcategorySelect.disabled = false;
                         if (data.subcategories.length === 0) {
                             subcategorySelect.innerHTML = `<option value="">${data.message || '-- No Subcategories Available --'}</option>`;
-                            // If no subcategories, load items directly from the parent category
                             populateItemsByBranchAndCategoryOrSubcategory(entry, null, categoryId);
-                            subcategorySelect.disabled = true; // Keep subcategory disabled as there are no options
+                            subcategorySelect.disabled = true; 
                         } else {
                             subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
                             data.subcategories.forEach(subcat => {
@@ -262,14 +251,13 @@
                     });
             }
 
-            // Function to populate items by branch and category/subcategory
             function populateItemsByBranchAndCategoryOrSubcategory(entry, selectedItem = null, fallbackCategoryId = null) {
                 const categorySelect = entry.querySelector('.category-select');
                 const subcategorySelect = entry.querySelector('.subcategory-select');
                 const itemSelect = entry.querySelector('.item-select');
                 const fromBranchSelect = document.getElementById('FromBranch');
 
-                const categoryId = fallbackCategoryId || categorySelect.value; // Use fallback if provided
+                const categoryId = fallbackCategoryId || categorySelect.value;
                 const subcategoryId = subcategorySelect.value;
                 const fromBranchId = fromBranchSelect.value;
 
@@ -280,7 +268,6 @@
                 entry.querySelector('.item-name-hidden').value = '';
 
                 let fetchUrl = '';
-                // Using the specific route: /inventory/get-items
                 if (fromBranchId && (subcategoryId || categoryId)) {
                     fetchUrl = `/inventory/get-items?`;
                     if (subcategoryId) {
@@ -346,7 +333,6 @@
                     });
             }
 
-            // Function to fetch Item Code and UOM (uses the exact route format /items/code/{Id})
             function fetchItemCodeAndUom(itemId, entry) {
                 if (!itemId) {
                     entry.querySelector('.item-code').value = '';
@@ -354,7 +340,6 @@
                     entry.querySelector('.item-name-hidden').value = '';
                     return;
                 }
-                // Using the specific route: /items/code/{Id}
                 fetch(`/inventory/items/code/${itemId}`)
                     .then(response => response.json())
                     .then(data => {
@@ -376,7 +361,6 @@
                 const clone = template.content.cloneNode(true);
                 const currentItemIndex = itemCounter;
 
-                // Replace __INDEX__ in all names
                 const fields = clone.querySelectorAll('[name]');
                 fields.forEach(element => {
                     element.name = element.name.replace('__INDEX__', currentItemIndex);
@@ -394,7 +378,6 @@
                 const requestedQtyInput = newEntry.querySelector('.item-qty');
                 const remarksInput = newEntry.querySelector('[name$="[Remarks]"]');
 
-                // Set initial values from old input or provided values
                 if (values.Category) {
                     categorySelect.setAttribute('data-initial', values.Category);
                 }
@@ -420,16 +403,14 @@
                     remarksInput.value = values.Remarks;
                 }
 
-                // Populate categories and then subcategories/items based on old values
                 populateCategoriesByBranch(newEntry, values.Category, () => {
                     if (values.Category) {
-                        categorySelect.value = values.Category; // Ensure selected
+                        categorySelect.value = values.Category;
                         populateSubcategoriesByBranchAndCategory(newEntry, values.Subcategory, () => {
                             if (values.Subcategory) {
-                                subcategorySelect.value = values.Subcategory; // Ensure selected
+                                subcategorySelect.value = values.Subcategory;
                                 populateItemsByBranchAndCategoryOrSubcategory(newEntry, values.Item);
                             } else if (values.Category) {
-                                // If subcategory was not set, but category was, load items for that category
                                 populateItemsByBranchAndCategoryOrSubcategory(newEntry, values.Item, values.Category);
                             }
                         });
@@ -447,7 +428,6 @@
                 addItem();
             });
 
-            // Handle changes on From Branch select to update all item categories
             document.getElementById('FromBranch').addEventListener('change', function () {
                 const itemEntries = document.querySelectorAll('.item-entry');
                 itemEntries.forEach(entry => {
@@ -455,23 +435,20 @@
                 });
             });
 
-            // Delegated event listener for category and subcategory changes
             document.addEventListener('change', function (e) {
                 const entry = e.target.closest('.item-entry');
                 if (!entry) return;
 
                 if (e.target.classList.contains('category-select')) {
                     populateSubcategoriesByBranchAndCategory(entry);
-                    populateItemsByBranchAndCategoryOrSubcategory(entry); // Reset items when category changes
+                    populateItemsByBranchAndCategoryOrSubcategory(entry); 
                 } else if (e.target.classList.contains('subcategory-select')) {
                     populateItemsByBranchAndCategoryOrSubcategory(entry);
                 } else if (e.target.classList.contains('item-select')) {
-                    // Call the dedicated function to fetch item code and UOM
                     fetchItemCodeAndUom(e.target.value, entry);
                 }
             });
 
-            // Initial load: Add first item automatically if no old inputs (fresh form) or repopulate from old input
             @if (!old('items'))
             addItem();
             @else

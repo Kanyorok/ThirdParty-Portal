@@ -15,7 +15,6 @@
     <div class="container">
         <h4 class="mb-4">Select Stock Transfer/Adjustment to Approve</h4>
 
-        {{-- Approval Restrictions Info --}}
         <div class="alert alert-info alert-dismissible fade show" role="alert">
             <i class="fas fa-info-circle me-2"></i>
             <strong>Approval Restrictions:</strong>
@@ -141,7 +140,6 @@
                         </td>
                         <td>
                             <div class="btn-group" role="group" aria-label="Action buttons">
-                                <!-- Approve Button -->
                                 <form method="POST"
                                       action="{{ route('transactionsapproval.approve', ['Id' => $record->Id]) }}"
                                       onsubmit="return confirm('Are you sure you want to approve this {{ strtolower($transactionType) }}?')"
@@ -156,7 +154,6 @@
                                     </button>
                                 </form>
                                 
-                                <!-- Reject Button -->
                                 <form method="POST"
                                       action="{{ route('transactionsapproval.reject', ['Id' => $record->Id]) }}"
                                       onsubmit="return confirm('Are you sure you want to reject this {{ strtolower($transactionType) }}?')">
@@ -215,13 +212,12 @@
                     }
                 },
                 columnDefs: [
-                    {orderable: false, targets: [8]} // Action column
+                    {orderable: false, targets: [8]} 
                 ],
-                order: [[5, 'desc']] // Default order by date descending
+                order: [[5, 'desc']] 
             });
             @endif
 
-            // Initialize tooltips
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);

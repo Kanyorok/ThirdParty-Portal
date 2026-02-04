@@ -45,12 +45,10 @@
                 <tbody>
                 @foreach($adjustment->items as $index => $item)
                     @php
-                        // Calculate new quantity
                         $currentQty = $item->current_stock_qty ?? 0;
                         $adjustmentQty = $item->AdjustmentQty ?? 0;
                         $newQty = $currentQty + $adjustmentQty;
                         
-                        // Find reason description
                         $reasonDescription = 'N/A';
                         if ($item->Reason && $reasons) {
                             $reason = $reasons->firstWhere('ID', $item->Reason);

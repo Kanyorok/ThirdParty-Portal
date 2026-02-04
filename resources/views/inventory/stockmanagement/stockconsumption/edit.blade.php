@@ -202,13 +202,12 @@
         const oldIssuedToType = '{{ old('IssuedToType', $consumption->IssuedToType) }}';
         const oldIssuedToID = '{{ old('IssuedToID', $consumption->IssuedToID) }}';
         
-        // Store the current store ID from the form
         const currentStoreId = '{{ $consumption->StoreID }}';
         
         let availableQty = 0;
         let originalQty = parseFloat('{{ $consumption->Quantity }}') || 0;
         let originalItemId = '{{ $consumption->ItemID }}';
-        let itemsLoaded = false; // Flag to track if items have been loaded
+        let itemsLoaded = false; 
 
         function loadItems(storeId, selectedItemId) {
             let itemSelect = $('#ItemID');
@@ -221,24 +220,19 @@
                 success: function (data) {
                     itemSelect.empty().append('<option value="">Select Item</option>');
                     
-                    // Log for debugging
                     console.log('Loading items for store:', storeId);
                     console.log('Selected item ID:', selectedItemId);
                     console.log('Available items:', data);
                     
                     if (data && data.length > 0) {
                         data.forEach(item => {
-                            // Check if this is the selected item
                             const isSelected = (item.Id == selectedItemId);
                             
-                            // Calculate available quantity
                             let itemAvailableQty = parseFloat(item.CurrentQty) || 0;
                             if (item.Id == originalItemId) {
-                                // If this is the original item, add back the consumed quantity
                                 itemAvailableQty = itemAvailableQty + originalQty;
                             }
                             
-                            // Create option element
                             const option = new Option(
                                 item.ItemName || 'Unknown Item',
                                 item.Id,
@@ -246,30 +240,25 @@
                                 isSelected
                             );
                             
-                            // Set data attributes
                             $(option).data('uom', item.UOMCode || '');
                             $(option).data('uom-id', item.UOM || '');
                             $(option).data('currentqty', itemAvailableQty);
                             
                             itemSelect.append(option);
                             
-                            // If this is the selected item, update UOM display
                             if (isSelected) {
                                 availableQty = itemAvailableQty;
                                 $('#UOM_Display').val(item.UOMCode || '');
                                 $('#UOM').val(item.UOM || '');
                                 
-                                // Update quantity placeholder
                                 $('#Quantity').attr('placeholder', `Max: ${availableQty.toFixed(2)}`);
                             }
                         });
                         
                         itemsLoaded = true;
                         
-                        // If we have a selected item but it wasn't found in the results
                         if (selectedItemId && !itemSelect.val()) {
                             console.warn('Selected item not found in results:', selectedItemId);
-                            // Optionally, add a placeholder option
                             itemSelect.prepend(new Option(
                                 'Selected Item (Not Found)',
                                 selectedItemId,
@@ -281,14 +270,12 @@
                         itemSelect.append('<option value="">No items found</option>');
                     }
                     
-                    // Validate quantity after items load
                     validateQuantity();
                 },
                 error: function(xhr, status, error) {
                     console.error('Error loading items:', error);
                     itemSelect.empty().append('<option value="">Error loading items</option>');
                     
-                    // Try to keep the selected item if possible
                     if (selectedItemId) {
                         itemSelect.append(new Option(
                             'Selected Item',
@@ -344,7 +331,6 @@
             const issuedBy = $('#IssuedBy').val();
             const issuedTo = $('#IssuedToID').val();
             
-            // Remove any existing validation messages
             $('#issued-to-error').remove();
             $('#IssuedToID').removeClass('is-invalid');
             
@@ -362,13 +348,11 @@
             const currentQty = parseFloat($('#Quantity').val()) || 0;
             const itemId = $('#ItemID').val();
             
-            // Reset validation
             $('#Quantity').removeClass('is-invalid');
             $('#qty-error').remove();
             $('button[type="submit"]').prop('disabled', false);
 
             if (currentQty > 0 && itemId) {
-                // Get selected option's available quantity
                 const selectedOption = $('#ItemID option:selected');
                 const maxQty = parseFloat(selectedOption.data('currentqty')) || 0;
                 
@@ -384,16 +368,13 @@
             return true;
         }
 
-        // Initialize with current consumption data
       function initializeForm() {
         console.log('Initializing form...');
         
-        // Items are already loaded from server, just trigger change to set UOM
         if ($('#ItemID').val()) {
             $('#ItemID').trigger('change');
         }
 
-        // Load issued to options
         if (oldIssuedToType) {
             loadIssuedToOptions(oldIssuedToType, oldIssuedToID);
         }

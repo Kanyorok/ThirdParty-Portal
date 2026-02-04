@@ -54,13 +54,7 @@
         </div>
 
         <div class="card-body">
-            {{-- Flash Messages --}}
-            {{-- @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif --}}
+
             @if(session('error'))
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     {{ session('error') }}
@@ -68,7 +62,6 @@
                 </div>
             @endif
 
-            {{-- Bulk Upload Section --}}
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body">
                     <form action="{{ route('itemmasterlist.import') }}" method="POST" enctype="multipart/form-data" class="row g-3 align-items-center">
@@ -90,7 +83,6 @@
                 </div>
             </div>
 
-            {{-- Items Table --}}
             <div class="table-responsive">
                 <table id="itemsTable" class="table table-bordered table-striped align-middle">
                     <thead class="table-light">
@@ -139,7 +131,6 @@
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        {{-- View Button (Always Available) --}}
                                         <a href="{{ route('itemmasterlist.show', $item->Id) }}" 
                                            class="btn btn-view btn-sm" 
                                            data-bs-toggle="tooltip" 
@@ -164,7 +155,6 @@
                                             </a>
                                         @endif
 
-                                        {{-- Delete Button (Disabled if in use) --}}
                                         @if($isInUse)
                                             <span class="badge in-use-badge" 
                                                   data-bs-toggle="tooltip" 
@@ -219,7 +209,6 @@
             }
         });
 
-        // SweetAlert delete confirmation
         $(document).on('click', '.delete-btn', function () {
             const itemId = $(this).data('id');
             const itemName = $(this).data('name');

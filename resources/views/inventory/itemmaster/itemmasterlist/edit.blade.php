@@ -81,7 +81,6 @@
                     </div>
                 </div>
 
-                {{-- Row 2 --}}
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label for="Category" class="form-label">Parent Category <span class="text-danger">*</span></label>
@@ -90,7 +89,6 @@
                             <option value="">-- Select Parent Category --</option>
                             @foreach($categories as $category)
                                 @php
-                                    // Get the parent category ID from the current item's category
                                     $parentId = $item->category ? ($item->category->ParentId ?? $item->category->Id) : null;
                                 @endphp
                                 <option value="{{ $category->Id }}" 
@@ -143,7 +141,6 @@
                     </div>
                 </div>
 
-                {{-- Row 3 --}}
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label for="InventoryType" class="form-label">Inventory Type <span class="text-danger">*</span></label>
@@ -206,11 +203,9 @@
                     </div>
                 </div>
 
-                {{-- Document Upload --}}
                 <div class="mb-3">
                     <label class="form-label">Supporting Documents</label>
                     
-                    {{-- Existing documents --}}
                     <div class="card bg-light p-3 mb-3">
                         <h6 class="fw-bold mb-2">📄 Existing Documents</h6>
                         @forelse($item->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
@@ -220,7 +215,6 @@
                         @endforelse
                     </div>
                     
-                    {{-- Upload new document --}}
                     <div class="mb-3">
                         <label class="form-label">Upload Supporting Document</label>
                         <input type="file" name="Document" 
@@ -234,7 +228,6 @@
                     </div>
                 </div>
 
-                {{-- Full-width Description --}}
                 <div class="mb-4">
                     <label for="ItemDescription" class="form-label">Item Description <span class="text-danger">*</span></label>
                     <textarea name="ItemDescription" id="ItemDescription" 
@@ -268,14 +261,12 @@
 @section('scripts')
 <script>
     $(document).ready(function () {
-        // Handle image removal
         $('#remove-image-btn').on('click', function () {
             $('#current-image-section').hide();
             $('#remove-image').val('1');
             $(this).hide();
         });
 
-        // Category change for subcategories
         $('#category').change(function () {
             let categoryId = $(this).val();
             if (!categoryId) {
@@ -295,7 +286,6 @@
                         $('#subcategory').append(`<option value="${value.Id}">${value.Name}</option>`);
                     });
                     
-                    // Set old value if exists
                     @if(old('SubCategory'))
                         $('#subcategory').val('{{ old('SubCategory') }}');
                     @endif
@@ -306,28 +296,23 @@
             });
         });
 
-        // Form validation
         $('#itemMasterListForm').on('submit', function(e) {
             let isValid = true;
             
-            // Reset error states
             $(this).find('.is-invalid').removeClass('is-invalid');
             $('.invalid-feedback').hide();
             
-            // Check required fields
             $('#ItemName, #BarCode, #ItemType, #Category, #UOM, #InventoryType, #ItemDescription').each(function() {
                 if (!$(this).val() || $(this).val().trim() === '') {
                     isValid = false;
                     $(this).addClass('is-invalid');
                     
-                    // Show specific error for description
                     if ($(this).is('#ItemDescription')) {
                         $('#description-error').show();
                     }
                 }
             });
             
-            // Check if description is not just whitespace
             const description = $('#ItemDescription').val().trim();
             if (!description) {
                 isValid = false;
@@ -337,18 +322,15 @@
             
             if (!isValid) {
                 e.preventDefault();
-                // Show alert message
                 alert('Please fill in all required fields (marked with *) before submitting.');
                 return false;
             }
             
-            // Disable submit button to prevent double submission
             $('#submitBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...');
             
             return true;
         });
 
-        // Real-time validation for description
         $('#ItemDescription').on('input', function() {
             const value = $(this).val().trim();
             if (value) {
@@ -369,12 +351,10 @@
 .form-label {
     font-weight: 500;
 }
-/* Style for required field labels */
 .form-label span.text-danger {
     color: #dc3545 !important;
     font-weight: bold;
 }
-/* Style for invalid fields */
 .is-invalid {
     border-color: #dc3545 !important;
 }

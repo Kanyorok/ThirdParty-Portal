@@ -51,7 +51,6 @@
                             <label for="ItemID" class="form-label">Item</label><span class="text-danger">*</span>
                             <select name="ItemID" id="Item" class="form-select" required>
                                 <option value="">-- Select Item --</option>
-                                {{-- Items will be populated by JavaScript --}}
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -64,7 +63,6 @@
                             <label for="Store" class="form-label">Store</label><span class="text-danger">*</span>
                             <select name="Store" id="Store" class="form-select">
                                 <option value="">-- Select Store --</option>
-                                {{-- Stores will be populated by JavaScript --}}
                             </select>
                         </div>
                     </div>
@@ -147,7 +145,6 @@
             const initialBranchId = "{{ old('Branch', $item->Branch) }}";
             const initialStoreId = "{{ old('Store', $item->Store) }}";
 
-            // Function to validate quantity fields
             window.validateQuantity = function(input) {
                 const value = parseFloat(input.value);
                 const errorDiv = document.getElementById(input.id + 'Error');
@@ -167,7 +164,6 @@
                 }
             };
 
-            // Function to validate all quantity fields before form submission
             function validateAllQuantities() {
                 const currentQty = document.getElementById('currentQty');
                 const minStockLevel = document.getElementById('minStockLevel');
@@ -180,7 +176,6 @@
                 return isCurrentQtyValid && isMinStockValid && isReorderQtyValid;
             }
 
-            // Form submission handler
             form.addEventListener('submit', function(e) {
                 if (!validateAllQuantities()) {
                     e.preventDefault();
@@ -188,12 +183,10 @@
                     return false;
                 }
                 
-                // Disable submit button to prevent double submission
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
             });
 
-            // Prevent negative input through keyboard
             document.querySelectorAll('input[type="number"]').forEach(input => {
                 input.addEventListener('keydown', function(e) {
                     if (e.key === '-' || e.key === 'e' || e.key === 'E') {
@@ -201,7 +194,6 @@
                     }
                 });
                 
-                // Additional validation on blur
                 input.addEventListener('blur', function() {
                     if (this.value < 0) {
                         this.value = 0;
@@ -225,7 +217,6 @@
                                 }
                                 subcategorySelect.appendChild(option);
                             });
-                            // After loading subcategories, check if we need to load items
                             if (selectedSubcategoryId) {
                                 loadItems(selectedSubcategoryId, selectedSubcategoryId, initialItemId);
                             }

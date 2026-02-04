@@ -12,7 +12,6 @@
         </div>
     @endif
 
-    {{-- Specific Workflow Error --}}
     @if($errors->has('workflow'))
         <div class="alert alert-warning alert-dismissible fade show" role="alert">
             <i class="fas fa-exclamation-triangle me-2"></i>
@@ -25,7 +24,6 @@
 <div class="container bg-white shadow rounded p-4">
     <h4 class="mb-4">Stock Adjustment Form</h4>
 
-    {{-- Workflow Setup Information --}}
     <div class="alert alert-info alert-dismissible fade show" role="alert">
         <i class="fas fa-info-circle me-2"></i>
         <strong>Workflow Configuration Required:</strong>
@@ -78,7 +76,6 @@
                 @php $oldItems = old('items'); @endphp
 
                 @if ($oldItems)
-                    {{-- repopulate old values on validation failure --}}
                     @foreach ($oldItems as $index => $item)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
@@ -143,7 +140,6 @@
                         </tr>
                     @endforeach
                 @else
-                    {{-- preload branch stock items on first load --}}
                     @foreach ($stockItems as $index => $stock)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
@@ -221,7 +217,6 @@
     </form>
 </div>
 
-    {{-- Scripts --}}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -246,12 +241,10 @@
         }
     }
 
-    // remove row button
     $(document).on('click', '.remove-row', function () {
         $(this).closest('tr').remove();
     });
 
-    // handle dynamic branch reload
     document.getElementById('branch').addEventListener('change', function () {
         const branchId = this.value;
         if (!branchId) return;

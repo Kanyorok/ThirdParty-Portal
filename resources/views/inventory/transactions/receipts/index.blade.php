@@ -12,7 +12,6 @@
         use App\Enums\Inventory\Transfers;use Carbon\Carbon;
     @endphp
 
-    {{-- Custom Error/Success Message Containers --}}
     @if($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -110,7 +109,6 @@
                     </tbody>
                 </table>
 
-                {{-- Pagination --}}
                 <div class="d-flex justify-content-center">
                     {{ $receipts->links() }}
                 </div>

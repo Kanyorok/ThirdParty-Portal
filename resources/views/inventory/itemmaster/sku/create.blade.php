@@ -125,7 +125,6 @@
         </div>
     </div>
 
-    {{-- Category -> Subcategory -> Item --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const categorySelect = document.getElementById('Category');
@@ -136,7 +135,6 @@
             const oldSubcategory = "{{ old('Subcategory') }}";
             const oldItem = "{{ old('ItemID') }}";
 
-            // Load subcategories + items when category changes
             categorySelect.addEventListener('change', function () {
                 const categoryId = this.value;
                 subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
@@ -173,7 +171,6 @@
                 }
             });
 
-            // When subcategory changes, load items under it
             subcategorySelect.addEventListener('change', function () {
                 const subcategoryId = this.value;
                 itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
@@ -195,7 +192,6 @@
                 }
             });
 
-            // Auto-load old selections on validation error
             if (oldCategory) {
                 categorySelect.dispatchEvent(new Event('change'));
                 setTimeout(() => {
@@ -205,7 +201,6 @@
                 }, 500);
             }
 
-            // Populate UOM + UnitCost on item change
             itemSelect.addEventListener('change', function () {
                 const itemId = this.value;
 
@@ -224,14 +219,12 @@
                 }
             });
 
-            // Trigger item details if old item exists
             if (oldItem) {
                 itemSelect.dispatchEvent(new Event('change'));
             }
         });
     </script>
 
-    {{-- Restrict LastReceived to today --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const today = new Date().toISOString().split('T')[0];
@@ -239,13 +232,11 @@
         });
     </script>
 
-    {{-- Store validation based on branch --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const storeSelect = document.getElementById('Store');
             const userBranchId = {{ $branch->Id ?? 'null' }};
 
-            // If no stores are available for the user's branch, show message
             if (userBranchId) {
                 const storeOptions = storeSelect.querySelectorAll('option');
                 let hasStores = false;

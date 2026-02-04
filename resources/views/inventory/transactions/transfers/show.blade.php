@@ -15,7 +15,6 @@
 
 @section('content')
 <div class="container mt-4">
-    {{-- Custom client-side error --}}
     <div id="customErrorContainer" style="display:none;">
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <span id="customErrorMessage"></span>
@@ -82,7 +81,6 @@
             <i class="fas fa-arrow-left"></i> Back
         </a>
 
-        {{-- Edit button restriction --}}
         @if($isPending)
             <a href="{{ route('transactionstransfers.edit', $transferitem->Id) }}"
                class="btn btn-warning">
@@ -95,7 +93,6 @@
             </button>
         @endif
 
-        {{-- Delete button restriction --}}
         @if($isPending)
             <form id="delete-form-{{ $transferitem->Id }}"
                   action="{{ route('transactionstransfers.destroy', $transferitem->Id) }}"
@@ -116,7 +113,6 @@
     </div>
 </div>
 
-{{-- Scripts --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 <script>
     function confirmDelete(id) {

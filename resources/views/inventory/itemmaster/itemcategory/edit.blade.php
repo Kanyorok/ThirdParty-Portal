@@ -85,7 +85,6 @@
                 </select>
             </div>
 
-            <!-- Auto-assign ModifiedBy -->
             <div class="d-flex justify-content-start mt-4">
                 <input type="hidden" name="ModifiedBy" value="{{ auth()->id() }}">
                 <button type="submit" class="btn btn-success"

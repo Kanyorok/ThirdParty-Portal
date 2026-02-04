@@ -3,7 +3,6 @@
 @section('title', 'Edit Stock Adjustment')
 
 @section('content')
-    {{-- This section displays general validation errors from $errors->all() --}}
     @if ($errors->any())
         <div class="alert alert-danger">
             <strong>There were some issues with your submission:</strong>
@@ -180,7 +179,6 @@
         </form>
     </div>
 
-    {{-- Scripts: mirror create --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -205,30 +203,11 @@
             }
         }
 
-        // remove row button
         $(document).on('click', '.remove-row', function () {
             $(this).closest('tr').remove();
         });
 
-        // Since branch is now read-only, we don't need the branch change event
-        // Remove or comment out the branch change event listener
-        /* 
-        document.getElementById('branch').addEventListener('change', function () {
-            // This function is no longer needed since branch is read-only
-        });
-        */
-
         $(document).ready(function () {
-            // Since branch is read-only, we don't need to trigger branch change
-            // Remove or comment out this section
-            /*
-            const selectedBranch = "{{ old('Branch', $adjustment->Branch) }}";
-            if (selectedBranch) {
-                $('#branch').val(selectedBranch).trigger('change');
-            }
-            */
-
-            // run initial calculations for existing rows
             document.querySelectorAll('.adjustment-qty').forEach(input => calculateNewQty(input));
         });
     </script>

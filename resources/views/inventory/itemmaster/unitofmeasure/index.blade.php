@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Unit Of Measure (UOM) List')
 @section('styles')
-    {{-- Font Awesome for icons --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 @endsection
 @section('content')
@@ -69,7 +68,6 @@
         </div>
     </div>
 
-    <!-- Show Modal -->
     <div class="modal fade" id="showUOMModal" tabindex="-1" aria-labelledby="showUOMModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -87,7 +85,6 @@
         </div>
     </div>
 
-    <!-- Edit Modal -->
     <div class="modal fade" id="editUOMModal" tabindex="-1" aria-labelledby="editUOMModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">

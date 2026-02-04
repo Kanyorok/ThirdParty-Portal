@@ -12,28 +12,23 @@
         </a>
 
         @php
-            // Determine if current user can edit/delete this requisition
             $canEdit = false;
             $canDelete = false;
             $editTooltip = '';
             $deleteTooltip = '';
             
-            // Check 1: Is user from HQ?
             if ($isHeadOffice) {
                 $editTooltip = 'HQ cannot edit any requisitions.';
                 $deleteTooltip = 'HQ cannot delete any requisitions.';
             }
-            // Check 2: Is user from the requesting branch (ToBranch)?
             elseif ($item->ToBranch != $currentBranch->Id) {
                 $editTooltip = 'You can only edit requisitions created by your branch.';
                 $deleteTooltip = 'You can only delete requisitions created by your branch.';
             }
-            // Check 3: Is status pending?
             elseif ($item->Status !== 'P') {
                 $editTooltip = 'Only pending requisitions can be edited.';
                 $deleteTooltip = 'Only pending requisitions can be deleted.';
             }
-            // All checks passed
             else {
                 $canEdit = true;
                 $canDelete = true;
@@ -42,7 +37,6 @@
             }
         @endphp
 
-        {{-- Edit button --}}
         @if($canEdit)
             <a href="{{ route('interbranchrequisition.edit', $item->Id) }}"
                class="btn btn-warning btn-sm"
@@ -60,7 +54,6 @@
             </button>
         @endif
 
-        {{-- Delete button --}}
         @if($canDelete)
             <button type="button"
                     class="btn btn-danger btn-sm"

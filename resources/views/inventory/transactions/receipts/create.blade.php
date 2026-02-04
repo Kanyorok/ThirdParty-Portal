@@ -79,7 +79,6 @@
         </div>
     </div>
 
-    {{-- Receipt Form (hidden by default) --}}
     <div id="receiptFormContainer" class="mt-4" style="display: none;">
         <div class="card">
             <div class="card-header bg-light">
@@ -118,14 +117,12 @@
                         </div>
                     </div>
 
-                    {{-- Store Information --}}
                     <div class="alert alert-info mb-3">
                         <i class="fas fa-store me-2"></i>
                         <strong>Store Information:</strong> All items will be received into your branch's main store: 
                         <span id="storeInfo" class="fw-bold"></span>
                     </div>
 
-                    {{-- Items Section --}}
                     <div id="itemsSection" class="mb-4">
                         <h5>Transfer Items</h5>
                         <div id="allocationInfo" class="alert alert-info mb-3" style="display: none;">
@@ -165,7 +162,6 @@
     </div>
 </div>
 
-{{-- GRN Allocation Details Modal --}}
 <div class="modal fade" id="allocationModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -218,10 +214,8 @@
     function selectTransfer(transferId) {
         selectedTransferId = transferId;
         
-        // Show loading
         $('#itemsBody').html('<tr><td colspan="8" class="text-center"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading transfer details...</td></tr>');
         
-        // Fetch transfer items
         fetch("{{ route('transactionsreceipts.get-transfer-items', '') }}/" + transferId)
             .then(response => response.json())
             .then(data => {
@@ -235,12 +229,10 @@
                 
                 $('#transferId').val(transferId);
                 
-                // Update store info
                 if (mainStore) {
                     $('#storeInfo').text(mainStore.StoreName);
                 }
                 
-                // Populate items table
                 $('#itemsBody').empty();
                 
                 let hasSpecificAllocations = false;
@@ -254,7 +246,6 @@
                         fifoAllocations = true;
                     }
                     
-                    // Get store name
                     const storeName = item.main_store ? item.main_store.StoreName : 'Main Store';
                     const storeId = item.main_store ? item.main_store.Id : '';
                     
@@ -321,7 +312,6 @@
                     `);
                 });
                 
-                // Update allocation info
                 let infoText = '';
                 if (hasSpecificAllocations) {
                     infoText = 'This transfer has specific GRN batch allocations. Costs will be tracked per batch.';
@@ -334,7 +324,6 @@
                 $('#allocationInfoText').text(infoText);
                 $('#allocationInfo').show();
                 
-                // Show receipt form
                 $('#receiptFormContainer').show();
                 $('html, body').animate({
                     scrollTop: $('#receiptFormContainer').offset().top
@@ -391,7 +380,6 @@
         $('#storeInfo').text('');
     }
 
-    // Calculate and update discrepancy
     function updateDiscrepancy(index) {
         const $row = $(`input[data-index="${index}"]`).first().closest('tr');
         const receivedQty = parseFloat($row.find('.received-qty').val()) || 0;
@@ -399,44 +387,37 @@
         
         const discrepancy = receivedQty - dispatchedQty;
         
-        // Update discrepancy field
         const $discrepancyField = $row.find('.discrepancy-qty');
         $discrepancyField.val(discrepancy.toFixed(2));
         
-        // Color code the discrepancy field
         if (discrepancy > 0) {
-            $discrepancyField.css('color', '#28a745'); // Green for surplus
+            $discrepancyField.css('color', '#28a745'); 
         } else if (discrepancy < 0) {
-            $discrepancyField.css('color', '#dc3545'); // Red for shortage
+            $discrepancyField.css('color', '#dc3545'); 
         } else {
-            $discrepancyField.css('color', '#6c757d'); // Gray for exact match
+            $discrepancyField.css('color', '#6c757d'); 
         }
     }
 
-    // Validate received and damaged quantities
     $(document).on('input', '.received-qty, .damaged-qty', function() {
         const index = $(this).data('index');
         const $row = $(this).closest('tr');
         const receivedQty = parseFloat($row.find('.received-qty').val()) || 0;
         const damagedQty = parseFloat($row.find('.damaged-qty').val()) || 0;
         
-        // Update discrepancy when received qty changes
         if ($(this).hasClass('received-qty')) {
             updateDiscrepancy(index);
         }
         
-        // Validate damaged quantity doesn't exceed received quantity
         if (damagedQty > receivedQty) {
             alert(`Damaged quantity (${damagedQty}) cannot exceed received quantity (${receivedQty})`);
             $row.find('.damaged-qty').val(0);
         }
     });
 
-    // Form submission
     $('#receiptForm').on('submit', function(e) {
         e.preventDefault();
         
-        // Validate all items
         let isValid = true;
         let hasDiscrepancies = false;
         let discrepancyDetails = [];
@@ -450,14 +431,12 @@
             const dispatchedQty = parseFloat(transferItems[index]?.DispatchedQty) || 0;
             const itemName = transferItems[index]?.item?.ItemName || '';
             
-            // Validate damaged quantity
             if (damagedQty > receivedQty) {
                 alert(`Damaged quantity cannot exceed received quantity for item: ${itemName}`);
                 isValid = false;
                 return false;
             }
             
-            // Track discrepancies
             if (discrepancyQty !== 0) {
                 hasDiscrepancies = true;
                 const type = discrepancyQty > 0 ? 'Surplus' : 'Shortage';
@@ -467,7 +446,6 @@
         
         if (!isValid) return;
         
-        // Warn about discrepancies
         if (hasDiscrepancies) {
             const message = 'The following items have discrepancies:\n\n' + 
                           discrepancyDetails.join('\n') + 
@@ -478,10 +456,8 @@
             }
         }
         
-        // Show loading
         $(this).find('button[type="submit"]').html('<i class="fas fa-spinner fa-spin me-1"></i> Processing...').prop('disabled', true);
         
-        // Submit form
         this.submit();
     });
 </script>

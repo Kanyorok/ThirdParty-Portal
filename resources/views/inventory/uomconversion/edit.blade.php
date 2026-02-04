@@ -11,7 +11,6 @@
         @csrf
         @method('PUT')
 
-        {{-- Item Selection --}}
         <div class="row g-3 mb-3">
           <div class="col-md-4">
             <label class="form-label">Item</label>
@@ -28,14 +27,12 @@
             </select>
           </div>
 
-          {{-- Base UOM --}}
           <div class="col-md-4">
             <label class="form-label">Base UOM</label>
             <input type="hidden" id="base_uom_id" name="UOM" value="{{ $uomConversion->UOM }}">
             <input type="text" id="base_uom_name" class="form-control" value="{{ $uomConversion->uom->Name ?? '' }}" readonly>
           </div>
 
-          {{-- Alternate UOM --}}
           <div class="col-md-4">
             <label class="form-label">Alternate UOM</label>
             <select name="AlternateUOM" class="form-select" required>
@@ -49,7 +46,6 @@
           </div>
         </div>
 
-        {{-- Conversion Factor & Remarks --}}
         <div class="row g-3 mb-3">
           <div class="col-md-4">
             <label class="form-label">Conversion Factor</label>

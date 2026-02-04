@@ -3,7 +3,6 @@
 @section('title', 'Item Categories')
 
 @section('styles')
-    {{-- Font Awesome for icons --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 @endsection
 
@@ -88,7 +87,6 @@
         </div>
     </div>
 
-    {{-- Delete Confirmation Script --}}
     <script>
         function confirmDelete(id, button) {
             if (confirm('⚠️ Are you sure you want to delete this category?')) {
