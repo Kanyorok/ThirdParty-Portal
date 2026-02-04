@@ -122,7 +122,17 @@
     </div>
 
     <div class="card shadow-sm">
-        <div class="card-header bg-white">Employees</div>
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span>Employees</span>
+            @if($run->Status !== 'Approved')
+                <form method="POST" action="{{ route('hr.payroll.runs.recalcAll', $run->Id) }}" onsubmit="return confirm('Are you sure you want to recalculate payroll for ALL employees? This may take a few moments.');">
+                    @csrf
+                    <button class="btn btn-sm btn-warning" type="submit">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Recalc All Employees
+                    </button>
+                </form>
+            @endif
+        </div>
         <div class="card-body p-0">
             <table class="table mb-0">
                 <thead>

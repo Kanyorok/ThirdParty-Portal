@@ -754,6 +754,49 @@ class PayrollRunController extends Controller
         return redirect()->route('hr.payroll.runs.show', $run->Id)->with('success', 'Payroll line recalculated.');
     }
 
+    public function recalcAll($id)
+    {
+        $run = PayrollRun::with('cycle')->findOrFail($id);
+        if (!$run->cycle) {
+            return redirect()->route('hr.payroll.runs.show', $run->Id)
+                ->withErrors(['run' => 'Payroll cycle not found for this run.']);
+        }
+        if ($run->Status === 'Approved') {
+            return redirect()->route('hr.payroll.runs.show', $run->Id)
+                ->withErrors(['run' => 'Approved payroll runs cannot be recalculated.']);
+        }
+
+        $employees = Employee::where('IsActive', 1)
+            ->whereNull('DeletedOn')
+            ->where(function ($q) {
+                $q->whereNull('Status')->orWhere('Status', '!=', 'Exited');
+            })
+            ->get(['Id','FirstName','LastName','GradeID','BasicSalary']);
+
+        $recalculated = 0;
+        foreach ($employees as $employee) {
+            $lineData = $this->buildPayrollLineData($run->cycle, $employee, $run);
+
+            $line = PayrollRunLine::firstOrNew([
+                'PayrollRunID' => $run->Id,
+                'EmployeeID' => $employee->Id,
+            ]);
+            $line->fill($lineData);
+            if ($line->exists) {
+                $line->ModifiedBy = auth()->id();
+                $line->ModifiedOn = now();
+            } else {
+                $line->CreatedBy = auth()->id();
+                $line->CreatedOn = now();
+            }
+            $line->save();
+            $recalculated++;
+        }
+
+        return redirect()->route('hr.payroll.runs.show', $run->Id)
+            ->with('success', "Payroll recalculated for {$recalculated} employee(s).");
+    }
+
     public function payslip($runId, $employeeId)
     {
         $run = PayrollRun::with('cycle')->findOrFail($runId);

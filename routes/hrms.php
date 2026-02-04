@@ -404,6 +404,7 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     Route::post('payroll/runs/{id}/approve', [\App\Http\Controllers\HR\PayrollRunController::class, 'approve'])->name('payroll.runs.approve');
     Route::post('payroll/runs/{id}/reject', [\App\Http\Controllers\HR\PayrollRunController::class, 'reject'])->name('payroll.runs.reject');
     Route::post('payroll/runs/{id}/employees/{employeeId}/recalc', [\App\Http\Controllers\HR\PayrollRunController::class, 'recalcLine'])->name('payroll.runs.recalc');
+    Route::post('payroll/runs/{id}/recalc-all', [\App\Http\Controllers\HR\PayrollRunController::class, 'recalcAll'])->name('payroll.runs.recalcAll');
     Route::get('payroll/runs/{id}/bank-file', [\App\Http\Controllers\HR\PayrollRunController::class, 'bankFile'])->name('payroll.runs.bankfile');
     Route::get('payroll/runs/{id}/eft', [\App\Http\Controllers\HR\PayrollRunController::class, 'eftXml'])->name('payroll.runs.eft');
     Route::get('payroll/runs/{id}/employees/{employeeId}/payslip', [\App\Http\Controllers\HR\PayrollRunController::class, 'payslip'])->name('payroll.runs.payslip');
