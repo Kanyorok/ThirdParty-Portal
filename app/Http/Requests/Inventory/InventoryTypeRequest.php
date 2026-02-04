@@ -18,23 +18,23 @@ class InventoryTypeRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
      */
-   public function rules()
-{
-    $typeId = $this->route('inventorytype') ?? $this->route('id');
-    
-    return [
-        'Type' => [
-            'required',
-            'exists:t_CodeDetails,ID',
-            'string',
-            'max:255',
-            Rule::unique('t_InventoryTypes', 'Type')
-                ->ignore($typeId, 'Id')  
-                ->whereNull('DeletedOn'),
-        ],
-        'Status' => 'required|boolean',
-    ];
-}
+    public function rules()
+    {
+        $typeId = $this->route('inventorytype') ?? $this->route('id');
+        
+        return [
+            'Type' => [
+                'required',
+                'exists:t_CodeDetails,ID',
+                'string',
+                'max:255',
+                Rule::unique('t_InventoryTypes', 'Type')
+                    ->ignore($typeId, 'Id')  
+                    ->whereNull('DeletedOn'),
+            ],
+            'Status' => 'required|boolean',
+        ];
+    }
 
     public function messages()
     {
