@@ -9,7 +9,6 @@ use App\Models\Inventory\InterBranchRequisition;
 
 class InterBranchRequisitionPolicy
 {
-
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::InterBranchRequisitionView->value);
@@ -20,24 +19,20 @@ class InterBranchRequisitionPolicy
         return $user->can(PermissionEnum::InterBranchRequisitionView->value);
     }
 
-
     public function create(User $user): bool
     {
         return $user->can(PermissionEnum::InterBranchRequisitionCreate->value);
     }
-
 
     public function update(User $user): bool
     {
         return $user->can(PermissionEnum::InterBranchRequisitionUpdate->value);
     }
 
-
     public function destroy(User $user): bool
     {
         return $user->can(PermissionEnum::InterBranchRequisitionDelete->value);
     }
-
 
     public function edit(User $user): bool
     {

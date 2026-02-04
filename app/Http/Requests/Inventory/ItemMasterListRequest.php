@@ -36,28 +36,28 @@ class ItemMasterListRequest extends FormRequest
                 'nullable',
                 'regex:/^[A-Za-z0-9]+$/',
                 'max:255',
-                Rule::unique('t_Items', 'BarCode')->whereNull('DeletedOn'), 
+                Rule::unique('t_Items', 'BarCode')->whereNull('DeletedOn'),
             ];
 
             $rules['ItemName'] = [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('t_Items', 'ItemName')->whereNull('DeletedOn'), 
+                Rule::unique('t_Items', 'ItemName')->whereNull('DeletedOn'),
             ];
         } else {
             $rules['BarCode'] = [
                 'nullable',
                 'regex:/^[A-Za-z0-9]+$/',
                 'max:255',
-                Rule::unique('t_Items', 'BarCode')->ignore($itemId, 'Id')->whereNull('DeletedOn'), 
+                Rule::unique('t_Items', 'BarCode')->ignore($itemId, 'Id')->whereNull('DeletedOn'),
             ];
 
             $rules['ItemName'] = [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('t_Items', 'ItemName')->ignore($itemId, 'Id')->whereNull('DeletedOn'), 
+                Rule::unique('t_Items', 'ItemName')->ignore($itemId, 'Id')->whereNull('DeletedOn'),
             ];
         }
 

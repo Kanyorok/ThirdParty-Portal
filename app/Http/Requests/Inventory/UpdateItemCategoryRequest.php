@@ -8,7 +8,6 @@ use Illuminate\Validation\Rule;
 
 class UpdateItemCategoryRequest extends FormRequest
 {
-   
     public function authorize(): bool
     {
         $category = ItemCategories::findOrFail($this->route('id'));
@@ -39,7 +38,6 @@ class UpdateItemCategoryRequest extends FormRequest
             'ItemTypeId' => 'nullable|integer|exists:t_ItemTypes,Id',
         ];
     }
-
 
     public function messages(): array
     {

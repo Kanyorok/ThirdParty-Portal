@@ -59,7 +59,7 @@ class InventoryTypeController extends Controller
 
     /**
      * Check if inventory type has related items (active or inactive)
-     * 
+     *
      * @param int $id
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -71,7 +71,7 @@ class InventoryTypeController extends Controller
 
         // Determine what type of check to perform (active or inactive items)
         $checkType = $request->query('check_type', 'active');
-        
+
         $result = $this->service->checkRelatedItems($type, $checkType);
 
         return response()->json($result);
@@ -84,13 +84,13 @@ class InventoryTypeController extends Controller
 
         $disableRelatedItems = $request->input('disable_related_items', false) == '1';
         $enableRelatedItems = $request->input('enable_related_items', false) == '1';
-        
+
         // Check what action is being performed
         $wasActive = $type->Status == 1;
         $wasInactive = $type->Status == 0;
         $willBeActive = $request->input('Status') == 1;
         $willBeInactive = $request->input('Status') == 0;
-        
+
         try {
             $this->service->update($type, $request->validated(), $disableRelatedItems, $enableRelatedItems);
 
@@ -99,13 +99,11 @@ class InventoryTypeController extends Controller
                 return redirect()
                     ->route('inventorytype.index')
                     ->with('success', "Inventory type deactivated successfully. Related item(s) were also deactivated.");
-            } 
-            elseif ($wasInactive && $willBeActive && $enableRelatedItems) {
+            } elseif ($wasInactive && $willBeActive && $enableRelatedItems) {
                 return redirect()
                     ->route('inventorytype.index')
                     ->with('success', "Inventory type activated successfully. Related item(s) were also activated.");
-            } 
-            else {
+            } else {
                 return redirect()
                     ->route('inventorytype.index')
                     ->with('success', 'Inventory type updated successfully.');

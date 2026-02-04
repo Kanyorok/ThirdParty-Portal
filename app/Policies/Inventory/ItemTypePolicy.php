@@ -5,10 +5,8 @@ namespace App\Policies\Inventory;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 
-
 class ItemTypePolicy
 {
- 
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::ItemTypeView->value);
@@ -19,7 +17,6 @@ class ItemTypePolicy
         return $user->can(PermissionEnum::ItemTypeView->value);
     }
 
-
     public function create(User $user): bool
     {
         return $user->can(PermissionEnum::ItemTypeCreate->value);
@@ -29,7 +26,6 @@ class ItemTypePolicy
     {
         return $user->can(PermissionEnum::ItemTypeUpdate->value);
     }
-
 
     public function delete(User $user): bool
     {

@@ -8,7 +8,6 @@ use Illuminate\Validation\Rule;
 
 class StoreItemCategoryRequest extends FormRequest
 {
-
     public function authorize(): bool
     {
         return $this->user()->can('create', ItemCategories::class);
@@ -36,7 +35,6 @@ class StoreItemCategoryRequest extends FormRequest
             'ItemTypeId' => 'nullable|integer|exists:t_ItemTypes,Id',
         ];
     }
-
 
     public function messages(): array
     {

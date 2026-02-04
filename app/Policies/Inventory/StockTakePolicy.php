@@ -5,7 +5,6 @@ namespace App\Policies\Inventory;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 
-
 class StockTakePolicy
 {
     public function viewAny(User $user): bool

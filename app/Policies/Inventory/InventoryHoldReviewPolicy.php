@@ -21,5 +21,4 @@ class InventoryHoldReviewPolicy
     {
         return $user->can(PermissionEnum::InventoryHoldReviewCreate->value);
     }
-
 }

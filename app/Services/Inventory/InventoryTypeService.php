@@ -39,6 +39,7 @@ class InventoryTypeService
         $data['ModifiedOn'] = Carbon::now();
 
         DB::beginTransaction();
+
         try {
             $wasActive = $type->Status == 1;
             $wasInactive = $type->Status == 0;
@@ -75,17 +76,19 @@ class InventoryTypeService
                 ->log($logMessage);
 
             DB::commit();
+
             return $type;
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Error updating inventory type: ' . $e->getMessage());
+
             throw $e;
         }
     }
 
     /**
      * Check if inventory type has related items (active or inactive)
-     * 
+     *
      * @param InventoryType $type
      * @param string $checkType 'active' or 'inactive'
      * @return array
@@ -96,11 +99,11 @@ class InventoryTypeService
             ->whereNull('DeletedOn');
 
         if ($checkType === 'active') {
-            $query->whereHas('status', function($q) {
+            $query->whereHas('status', function ($q) {
                 $q->where('Description', 'Active');
             });
         } else {
-            $query->whereHas('status', function($q) {
+            $query->whereHas('status', function ($q) {
                 $q->where('Description', 'Inactive');
             });
         }
@@ -110,38 +113,39 @@ class InventoryTypeService
         return [
             'hasItems' => $relatedItems->count() > 0,
             'count' => $relatedItems->count(),
-            'items' => $relatedItems
+            'items' => $relatedItems,
         ];
     }
 
     /**
      * Disable all active items related to an inventory type
-     * 
+     *
      * @param InventoryType $type
      * @return int Number of items disabled
      */
     protected function disableRelatedItems(InventoryType $type): int
     {
         $user = Auth::user();
-        
+
         $inactiveStatusId = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'ItemStatus')
             ->where('Description', 'Inactive')
             ->value('Id');
 
-        if (!$inactiveStatusId) {
+        if (! $inactiveStatusId) {
             Log::warning('Inactive status not found in CodeDetail table');
+
             throw new \Exception('Inactive status configuration not found');
         }
 
         $affectedRows = ItemMasterList::where('InventoryType', $type->Id)
             ->whereNull('DeletedOn')
-            ->whereHas('status', function($query) {
+            ->whereHas('status', function ($query) {
                 $query->where('Description', 'Active');
             })
             ->update([
                 'Status' => $inactiveStatusId,
                 'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => Carbon::now()
+                'ModifiedOn' => Carbon::now(),
             ]);
 
         activity()
@@ -155,32 +159,33 @@ class InventoryTypeService
 
     /**
      * Enable all inactive items related to an inventory type
-     * 
+     *
      * @param InventoryType $type
      * @return int Number of items enabled
      */
     protected function enableRelatedItems(InventoryType $type): int
     {
         $user = Auth::user();
-        
+
         $activeStatusId = \App\Models\Core\Approval\CodeDetail::where('CodeID', 'ItemStatus')
             ->where('Description', 'Active')
             ->value('Id');
 
-        if (!$activeStatusId) {
+        if (! $activeStatusId) {
             Log::warning('Active status not found in CodeDetail table');
+
             throw new \Exception('Active status configuration not found');
         }
 
         $affectedRows = ItemMasterList::where('InventoryType', $type->Id)
             ->whereNull('DeletedOn')
-            ->whereHas('status', function($query) {
+            ->whereHas('status', function ($query) {
                 $query->where('Description', 'Inactive');
             })
             ->update([
                 'Status' => $activeStatusId,
                 'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => Carbon::now()
+                'ModifiedOn' => Carbon::now(),
             ]);
 
         activity()

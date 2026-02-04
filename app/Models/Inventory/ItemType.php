@@ -4,7 +4,6 @@ namespace App\Models\Inventory;
 
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Procurement\Requisitions;
-use App\Models\Inventory\ItemMasterList;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -70,5 +69,4 @@ class ItemType extends Model
     {
         return $this->type ? $this->type->Description : (string)$this->TypeName;
     }
-
 }

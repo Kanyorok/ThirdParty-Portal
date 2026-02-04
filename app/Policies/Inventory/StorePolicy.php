@@ -5,10 +5,8 @@ namespace App\Policies\Inventory;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 
-
 class StorePolicy
 {
-    
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::StoreView->value);

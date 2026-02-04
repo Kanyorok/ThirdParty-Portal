@@ -69,7 +69,7 @@ class ItemTypeController extends Controller
 
     /**
      * Check if item type has related items (active or inactive)
-     * 
+     *
      * @param int $Id
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -81,7 +81,7 @@ class ItemTypeController extends Controller
 
         // Determine what type of check to perform (active or inactive items)
         $checkType = $request->query('check_type', 'active');
-        
+
         $result = $this->service->checkRelatedItems($itemType, $checkType);
 
         return response()->json($result);
@@ -94,13 +94,13 @@ class ItemTypeController extends Controller
 
         $disableRelatedItems = $request->input('disable_related_items', false) == '1';
         $enableRelatedItems = $request->input('enable_related_items', false) == '1';
-        
+
         // Check what action is being performed
         $wasActive = $itemtype->Active == 1;
         $wasInactive = $itemtype->Active == 0;
         $willBeActive = $request->input('Active') == 1;
         $willBeInactive = $request->input('Active') == 0;
-        
+
         try {
             $this->service->update($itemtype, $request->validated(), $disableRelatedItems, $enableRelatedItems);
 
@@ -109,13 +109,11 @@ class ItemTypeController extends Controller
                 return redirect()
                     ->route('itemtype.index')
                     ->with('success', "Item type deactivated successfully. Related item(s) were also deactivated.");
-            } 
-            elseif ($wasInactive && $willBeActive && $enableRelatedItems) {
+            } elseif ($wasInactive && $willBeActive && $enableRelatedItems) {
                 return redirect()
                     ->route('itemtype.index')
                     ->with('success', "Item type activated successfully. Related item(s) were also activated.");
-            } 
-            else {
+            } else {
                 return redirect()
                     ->route('itemtype.index')
                     ->with('success', 'Item type updated successfully.');

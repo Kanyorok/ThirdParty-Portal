@@ -6,7 +6,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StockItemRequest extends FormRequest
 {
-    
     public function authorize(): bool
     {
         return true;

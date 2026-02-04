@@ -4,11 +4,9 @@ namespace App\Policies\Inventory;
 
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
-use App\Models\Inventory\InventoryType;
 
 class InventoryTypePolicy
 {
-    
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::InventoryTypeView->value);
@@ -33,7 +31,6 @@ class InventoryTypePolicy
     {
         return $user->can(PermissionEnum::InventoryTypeDelete->value);
     }
-
 
     public function edit(User $user): bool
     {

@@ -26,7 +26,7 @@ class UnitOfMeasureRequest extends FormRequest
                 'max:50',
                 Rule::unique('t_UOM', 'Code')
                     ->ignore($this->route('Id'))
-                    ->whereNull('DeletedOn'), 
+                    ->whereNull('DeletedOn'),
             ],
             'Name' => [
                 'required',
@@ -34,13 +34,12 @@ class UnitOfMeasureRequest extends FormRequest
                 'max:255',
                 Rule::unique('t_UOM', 'Name')
                     ->ignore($this->route('Id'))
-                    ->whereNull('DeletedOn'), 
+                    ->whereNull('DeletedOn'),
             ],
             'BaseUnit' => 'nullable|boolean',
             'Active' => 'required|boolean',
         ];
     }
-
 
     public function messages(): array
     {
