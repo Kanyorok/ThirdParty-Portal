@@ -229,7 +229,7 @@
                         <select id="customerSelect" class="form-select form-select-lg" style="width: 100%;">
                             <option disabled selected value="">-- Search and select a customer --</option>
                         </select>
-                        <small class="text-muted">Type customer name, ID number, or email to search</small>
+                        <small class="text-muted">Type at least 2 characters of a name, ID number, email, or phone</small>
                     </div>
                     <div class="col-md-4 d-flex align-items-end">
                         <button id="loadStatementBtn" class="btn btn-lg w-100 shadow-sm" 
@@ -425,26 +425,48 @@ $(document).ready(function() {
     // Initialize Select2
     $('#customerSelect').select2({
         ajax: {
-            url: '/finance/api/thirdparties/select2',
+            url: "{{ route('thirdparties.select2') }}",
             dataType: 'json',
             delay: 250,
             data: function(params) {
+                const term = (params.term || '').trim();
+                console.debug('[CustomerSelect] request', { term, page: params.page || 1 });
                 return {
-                    q: params.term,
+                    q: term,
                     page: params.page || 1
                 };
             },
             processResults: function(data) {
+                console.debug('[CustomerSelect] response', data);
                 return {
-                    results: data.results,
-                    pagination: data.pagination
+                    results: data.results || [],
+                    pagination: data.pagination || { more: false }
                 };
             },
-            cache: true
+            cache: true,
+            error: function(xhr, status, err) {
+                console.error('[CustomerSelect] ajax error', { status, err, response: xhr?.responseText });
+            }
         },
         placeholder: '-- Search and select a customer --',
-        minimumInputLength: 0,
-        allowClear: true
+        minimumInputLength: 2,
+        allowClear: true,
+        width: '100%',
+        language: {
+            inputTooShort: function() {
+                return 'Type at least 2 characters to search';
+            }
+        }
+    });
+
+    $('#customerSelect').on('select2:select', function(e) {
+        console.debug('[CustomerSelect] selected', e.params?.data);
+    });
+    $('#customerSelect').on('select2:open', function() {
+        console.debug('[CustomerSelect] opened');
+    });
+    $('#customerSelect').on('select2:close', function() {
+        console.debug('[CustomerSelect] closed');
     });
 
     // Enable/disable load button based on selection
