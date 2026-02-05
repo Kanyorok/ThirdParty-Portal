@@ -377,6 +377,7 @@ class OrderSourceService
         // Base Items from RFQ Lines joined with Master Items
         $items = DB::table('t_RFQLines as rl')
             ->join('t_Items as i', 'rl.ItemId', '=', 'i.Id')
+            ->leftJoin('t_RequisitionLines as rql', 'rl.RequisitionLineId', '=', 'rql.Id')
             ->where('rl.RFQId', $rfqId)
             ->select(
                 'i.Id as itemCode',
@@ -384,11 +385,12 @@ class OrderSourceService
                 'rl.Quantity as quantity',
                 'i.ItemDescription as description', // Fixed column name
                 'i.UOM as uom',
-                'i.ItemType as itemType'
+                'i.ItemType as itemType',
+                DB::raw('COALESCE(rql.ExpectedPrice, 0) as reqUnitPrice')
             )
             ->get();
 
-        // If Supplier is provided, try to fetch quoted prices
+        // If Supplier is provided, try to fetch quoted prices (kept for reference or potential future use, but currently overridden by req price)
         $quotedPrices = [];
         if ($supplierId) {
             $response = DB::table('t_RFQResponse')
@@ -413,11 +415,13 @@ class OrderSourceService
             $remaining = max(0, $item->quantity - $prev);
 
             // Determine Price
-            // Check quoted prices by name
-            $price = 0;
-            if (isset($quotedPrices[$item->itemName])) {
-                $price = $quotedPrices[$item->itemName];
-            }
+            // User Request: Populate from Requisition Line (ExpectedPrice)
+            $price = (float)$item->reqUnitPrice;
+
+            // Prior logic used quoted prices:
+            // if (isset($quotedPrices[$item->itemName])) {
+            //     $price = $quotedPrices[$item->itemName];
+            // }
 
             return [
                 'itemCode' => $code,
