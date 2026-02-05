@@ -54,7 +54,7 @@ class EmployeeController extends Controller
 
     public function __construct()
     {
-        $this->middleware('ajax')->except(['index', 'create', 'store', 'show']);
+        $this->middleware('ajax')->except(['index', 'create', 'store', 'show', 'edit', 'update', 'statusForm', 'statusUpdate', 'createUser']);
         // Authorization is done individually in each method for better debugging
     }
 
@@ -246,10 +246,9 @@ class EmployeeController extends Controller
             ->with('success', 'Employee created successfully.');
     }
 
-    public function show($id)
+    public function show(Employee $employee)
     {
-        $employee = Employee::with(['branch', 'department', 'grade', 'role', 'supervisor', 'bank', 'bankBranch', 'contacts', 'documents', 'salaryHistory'])
-            ->findOrFail($id);
+        $employee->load(['branch', 'department', 'grade', 'role', 'supervisor', 'bank', 'bankBranch', 'contacts', 'documents', 'salaryHistory']);
 
         // Authorize: Check if user can view this employee
         $this->authorize('view', $employee);
@@ -368,12 +367,11 @@ class EmployeeController extends Controller
 
     }
 
-    public function edit($id)
+    public function edit(Employee $employee)
     {
-        $employee = Employee::findOrFail($id);
         if ($employee->Status === 'Exited') {
             return redirect()
-                ->route('hr.employees.show', $employee->Id)
+                ->route('hr.employees.show', $employee->EmployeeNo)
                 ->withErrors(['status' => 'Exited employees are read-only.']);
         }
         $grades   = JobGrade::where('IsActive', 1)->orderBy('Name')->get();
@@ -391,16 +389,14 @@ class EmployeeController extends Controller
         return view('hr.employees.edit', compact('employee', 'grades', 'roles', 'branches', 'departments', 'supervisors', 'banks', 'bankBranches', 'statusList', 'religions', 'employmentTypes', 'contractTypes'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Employee $employee)
     {
-        $employee = Employee::findOrFail($id);
-        
         // Authorize: Check if user can update this employee
         $this->authorize('update', $employee);
         
         if ($employee->Status === 'Exited') {
             return redirect()
-                ->route('hr.employees.show', $employee->Id)
+                ->route('hr.employees.show', $employee->EmployeeNo)
                 ->withErrors(['status' => 'Exited employees cannot be updated.']);
         }
 
@@ -495,10 +491,8 @@ class EmployeeController extends Controller
             ->with('success', 'Employee updated successfully.');
     }
 
-    public function destroy($id)
+    public function destroy(Employee $employee)
     {
-        $employee = Employee::findOrFail($id);
-
         // Authorize: Check if user can delete this employee
         $this->authorize('delete', $employee);
 
@@ -517,16 +511,15 @@ class EmployeeController extends Controller
             ->with('success', 'Employee deactivated successfully.');
     }
 
-    public function statusForm($id)
+    public function statusForm(Employee $employee)
     {
-        $employee = Employee::with(['branch', 'department'])->findOrFail($id);
+        $employee->load(['branch', 'department']);
         $statusList = self::STATUSES;
         return view('hr.employees.status', compact('employee', 'statusList'));
     }
 
-    public function statusUpdate(Request $request, $id)
+    public function statusUpdate(Request $request, Employee $employee)
     {
-        $employee = Employee::findOrFail($id);
         $data = $request->validate([
             'Status' => ['required', Rule::in(self::STATUSES)],
             'StatusReason' => ['nullable', 'string', 'max:255'],
@@ -662,11 +655,9 @@ class EmployeeController extends Controller
     /**
      * Create a user account for an employee
      */
-    public function createUser($id)
+    public function createUser(Employee $employee)
     {
         try {
-            $employee = Employee::findOrFail($id);
-            
             // Check if employee already has a user account
             $employeeService = new EmployeeService($employee);
             if ($employeeService->hasUserAccount()) {
@@ -682,7 +673,7 @@ class EmployeeController extends Controller
             return back()->with('success', 'User account created successfully. Password reset link sent to ' . $employee->Email);
         } catch (Exception $e) {
             Log::error('Failed to create user account for employee', [
-                'employee_id' => $id,
+                'employee_id' => $employee->Id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);

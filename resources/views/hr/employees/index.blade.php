@@ -131,7 +131,7 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
-                                    <a href="{{ route('hr.employees.show', $emp->Id) }}"
+                                    <a href="{{ route('hr.employees.show', $emp->EmployeeNo) }}"
                                        class="btn btn-sm btn-outline-secondary">View</a>
                                 </td>
                             </tr>

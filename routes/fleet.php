@@ -24,7 +24,7 @@ use App\Http\Controllers\Fleet\FleetVehicleRequestController;
 use App\Http\Controllers\Fleet\VehicleController;
 use App\Http\Controllers\Fleet\VehicleDocumentController;
 use App\Http\Controllers\FleetManagement\ComplianceAndDocumentationController;
-use App\Http\Controllers\FleetManagement\DriverManagementController;
+// use App\Http\Controllers\FleetManagement\DriverManagementController; // Controller does not exist
 use App\Http\Controllers\FleetManagement\FleetMakeController;
 use App\Http\Controllers\FleetManagement\FleetModelController;
 use App\Http\Controllers\FleetManagement\FleetProcurementAndDisposalController;
@@ -54,14 +54,15 @@ Route::middleware(['module:600000'])->namespace('Fleet')->prefix('fleet')->group
     // Route::resource('tripmanagement', TripManagementController::class);
     Route::resource('fuelmanagement', FuelManagementController::class);
 
+    // DriverManagementController routes commented out - controller file does not exist
     // Route::resource('drivermanagement', DriverManagementController::class);
-    Route::get('/drivermanagement', [DriverManagementController::class, 'index'])->name('drivermanagement.index');
-    Route::get('/drivermanagement/create', [DriverManagementController::class, 'create'])->name('drivermanagement.create');
-    Route::get('/drivermanagement/{Id}', [DriverManagementController::class, 'show'])->name('drivermanagement.show');
-    Route::get('/drivermanagement/{Id}/edit', [DriverManagementController::class, 'edit'])->name('drivermanagement.edit');
-    Route::put('/drivermanagement/{Id}', [DriverManagementController::class, 'update'])->name('drivermanagement.update');
-    Route::post('/drivermanagement', [DriverManagementController::class, 'store'])->name('drivermanagement.store');
-    Route::delete('/drivermanagement/{Id}', [DriverManagementController::class, 'destroy'])->name('drivermanagement.destroy');
+    // Route::get('/drivermanagement', [DriverManagementController::class, 'index'])->name('drivermanagement.index');
+    // Route::get('/drivermanagement/create', [DriverManagementController::class, 'create'])->name('drivermanagement.create');
+    // Route::get('/drivermanagement/{Id}', [DriverManagementController::class, 'show'])->name('drivermanagement.show');
+    // Route::get('/drivermanagement/{Id}/edit', [DriverManagementController::class, 'edit'])->name('drivermanagement.edit');
+    // Route::put('/drivermanagement/{Id}', [DriverManagementController::class, 'update'])->name('drivermanagement.update');
+    // Route::post('/drivermanagement', [DriverManagementController::class, 'store'])->name('drivermanagement.store');
+    // Route::delete('/drivermanagement/{Id}', [DriverManagementController::class, 'destroy'])->name('drivermanagement.destroy');
 
     // Route::resource('fleetmake', FleetMakeController::class);
     Route::get('/fleetmake', [FleetMakeController::class, 'index'])->name('fleetmake.index');
