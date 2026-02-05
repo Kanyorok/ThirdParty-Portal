@@ -246,36 +246,204 @@ class PayrollRunController extends Controller
     public function masterRegister($id)
     {
         $run = PayrollRun::with(['cycle','lines.employee.branch','lines.employee.department'])->findOrFail($id);
-        return view('hr.payroll.reports.master_register', compact('run'));
+        
+        $month = (int)($run->cycle?->Month ?? now()->month);
+        $year = (int)($run->cycle?->Year ?? now()->year);
+        
+        // Get all unique allowances for this payroll period
+        $allowances = MonthlyAllowance::with('allowance')
+            ->where('Month', $month)
+            ->where('Year', $year)
+            ->where('Status', 'Approved')
+            ->whereIn('EmployeeID', $run->lines->pluck('EmployeeID'))
+            ->get()
+            ->groupBy('EmployeeID');
+        
+        // Get all unique deductions for this payroll period
+        $deductions = MonthlyDeduction::with('deduction')
+            ->where('Month', $month)
+            ->where('Year', $year)
+            ->where('Status', 'Approved')
+            ->whereIn('EmployeeID', $run->lines->pluck('EmployeeID'))
+            ->get()
+            ->groupBy('EmployeeID');
+        
+        // Get employer contributions for this payroll period
+        $employerContributions = PayrollEmployerContribution::with('deduction')
+            ->where('PayrollRunID', $run->Id)
+            ->where('Month', $month)
+            ->where('Year', $year)
+            ->get()
+            ->groupBy('EmployeeID');
+        
+        // Get unique allowance names
+        $allowanceNames = MonthlyAllowance::where('Month', $month)
+            ->where('Year', $year)
+            ->where('Status', 'Approved')
+            ->whereIn('EmployeeID', $run->lines->pluck('EmployeeID'))
+            ->select('Name')
+            ->distinct()
+            ->orderBy('Name')
+            ->pluck('Name')
+            ->toArray();
+        
+        // Get unique deduction names
+        $deductionNames = MonthlyDeduction::where('Month', $month)
+            ->where('Year', $year)
+            ->where('Status', 'Approved')
+            ->whereIn('EmployeeID', $run->lines->pluck('EmployeeID'))
+            ->select('Name')
+            ->distinct()
+            ->orderBy('Name')
+            ->pluck('Name')
+            ->toArray();
+        
+        // Get unique employer contribution names (deduction names for employer match)
+        $employerContributionNames = PayrollEmployerContribution::with('deduction')
+            ->where('PayrollRunID', $run->Id)
+            ->where('Month', $month)
+            ->where('Year', $year)
+            ->get()
+            ->map(function($contrib) {
+                return $contrib->deduction?->Name ?? 'Unknown';
+            })
+            ->unique()
+            ->sort()
+            ->values()
+            ->toArray();
+        
+        return view('hr.payroll.reports.master_register', compact('run', 'allowances', 'deductions', 'employerContributions', 'allowanceNames', 'deductionNames', 'employerContributionNames'));
     }
 
     public function masterRegisterExport($id)
     {
         $run = PayrollRun::with(['cycle','lines.employee.branch','lines.employee.department'])->findOrFail($id);
-        $rows = $run->lines->map(function ($line) {
-            return [
+        
+        $month = (int)($run->cycle?->Month ?? now()->month);
+        $year = (int)($run->cycle?->Year ?? now()->year);
+        
+        // Get all allowances and deductions for this period
+        $allowancesByEmployee = MonthlyAllowance::where('Month', $month)
+            ->where('Year', $year)
+            ->where('Status', 'Approved')
+            ->whereIn('EmployeeID', $run->lines->pluck('EmployeeID'))
+            ->get()
+            ->groupBy('EmployeeID');
+        
+        $deductionsByEmployee = MonthlyDeduction::where('Month', $month)
+            ->where('Year', $year)
+            ->where('Status', 'Approved')
+            ->whereIn('EmployeeID', $run->lines->pluck('EmployeeID'))
+            ->get()
+            ->groupBy('EmployeeID');
+        
+        // Get employer contributions
+        $employerContributionsByEmployee = PayrollEmployerContribution::with('deduction')
+            ->where('PayrollRunID', $run->Id)
+            ->where('Month', $month)
+            ->where('Year', $year)
+            ->get()
+            ->groupBy('EmployeeID');
+        
+        // Get unique allowance and deduction names
+        $allowanceNames = MonthlyAllowance::where('Month', $month)
+            ->where('Year', $year)
+            ->where('Status', 'Approved')
+            ->whereIn('EmployeeID', $run->lines->pluck('EmployeeID'))
+            ->select('Name')
+            ->distinct()
+            ->orderBy('Name')
+            ->pluck('Name')
+            ->toArray();
+        
+        $deductionNames = MonthlyDeduction::where('Month', $month)
+            ->where('Year', $year)
+            ->where('Status', 'Approved')
+            ->whereIn('EmployeeID', $run->lines->pluck('EmployeeID'))
+            ->select('Name')
+            ->distinct()
+            ->orderBy('Name')
+            ->pluck('Name')
+            ->toArray();
+        
+        // Get unique employer contribution names
+        $employerContributionNames = PayrollEmployerContribution::with('deduction')
+            ->where('PayrollRunID', $run->Id)
+            ->where('Month', $month)
+            ->where('Year', $year)
+            ->get()
+            ->map(function($contrib) {
+                return $contrib->deduction?->Name ?? 'Unknown';
+            })
+            ->unique()
+            ->sort()
+            ->values()
+            ->toArray();
+        
+        // Build rows with individual allowances, deductions, and employer contributions
+        $rows = $run->lines->map(function ($line) use ($allowancesByEmployee, $deductionsByEmployee, $employerContributionsByEmployee, $allowanceNames, $deductionNames, $employerContributionNames) {
+            $row = [
                 'Employee' => trim(($line->employee?->FirstName ?? '') . ' ' . ($line->employee?->LastName ?? '')),
                 'Branch' => $line->employee?->branch?->Name ?? '-',
                 'Department' => $line->employee?->department?->Name ?? '-',
                 'Basic' => (float)$line->BasicSalary,
-                'Allowances' => (float)$line->TotalAllowances,
-                'Deductions' => (float)$line->TotalDeductions,
-                'NetPay' => (float)$line->NetPay,
             ];
+            
+            // Add individual allowances
+            $empAllowances = $allowancesByEmployee->get($line->EmployeeID, collect());
+            foreach ($allowanceNames as $allowanceName) {
+                $amount = $empAllowances->where('Name', $allowanceName)->sum('Amount');
+                $row[$allowanceName] = (float)$amount;
+            }
+            
+            // Add Gross Pay
+            $row['GrossPay'] = (float)$line->GrossPay;
+            
+            // Add individual deductions
+            $empDeductions = $deductionsByEmployee->get($line->EmployeeID, collect());
+            foreach ($deductionNames as $deductionName) {
+                $amount = $empDeductions->where('Name', $deductionName)->sum('Amount');
+                $row[$deductionName] = (float)$amount;
+            }
+            
+            // Add employer contributions
+            $empContributions = $employerContributionsByEmployee->get($line->EmployeeID, collect());
+            foreach ($employerContributionNames as $contributionName) {
+                $amount = $empContributions->filter(function($contrib) use ($contributionName) {
+                    return ($contrib->deduction?->Name ?? 'Unknown') === $contributionName;
+                })->sum('Amount');
+                $row['Employer: ' . $contributionName] = (float)$amount;
+            }
+            
+            $row['NetPay'] = (float)$line->NetPay;
+            
+            return $row;
         })->toArray();
-
+        
+        // Build columns
         $columns = [
             ['key' => 'Employee', 'label' => 'Employee'],
             ['key' => 'Branch', 'label' => 'Branch'],
             ['key' => 'Department', 'label' => 'Department'],
             ['key' => 'Basic', 'label' => 'Basic'],
-            ['key' => 'Allowances', 'label' => 'Allowances'],
-            ['key' => 'Deductions', 'label' => 'Deductions'],
-            ['key' => 'NetPay', 'label' => 'Net Pay'],
         ];
+        
+        foreach ($allowanceNames as $name) {
+            $columns[] = ['key' => $name, 'label' => $name];
+        }
+        
+        $columns[] = ['key' => 'GrossPay', 'label' => 'Gross Pay'];
+        
+        foreach ($deductionNames as $name) {
+            $columns[] = ['key' => $name, 'label' => $name];
+        }
+        
+        foreach ($employerContributionNames as $name) {
+            $columns[] = ['key' => 'Employer: ' . $name, 'label' => 'Employer: ' . $name];
+        }
+        
+        $columns[] = ['key' => 'NetPay', 'label' => 'Net Pay'];
 
-        $month = (int)($run->cycle?->Month ?? now()->month);
-        $year = (int)($run->cycle?->Year ?? now()->year);
         $filename = "master_register_{$month}_{$year}.xlsx";
 
         return Excel::download(new StatutoryReturnExport($columns, $rows), $filename);

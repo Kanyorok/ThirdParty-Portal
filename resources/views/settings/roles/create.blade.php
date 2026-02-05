@@ -2,8 +2,16 @@
     <form action="{{ route('roles.store') }}" method="post" id="createRoleForm"> @csrf
         <div class="col-12 mb-3">
             <label class="form-label" for="RoleName">Role Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="RoleName" name="RoleName" required placeholder="RoleName" value="{{ old('RoleName') }}">
+            <select class="form-select" id="RoleName" name="RoleName" required>
+                <option value="">Select Job Role</option>
+                @foreach(($jobRoles ?? []) as $jobRole)
+                    <option value="{{ $jobRole->Name }}" {{ old('RoleName') == $jobRole->Name ? 'selected' : '' }}>
+                        {{ $jobRole->Code }} - {{ $jobRole->Name }}
+                    </option>
+                @endforeach
+            </select>
             <p id="RoleName_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+            <div class="form-text">Select a job role from the Human Capital Suite module</div>
         </div>
 
         <div class="col-12 mb-3">

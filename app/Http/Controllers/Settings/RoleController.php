@@ -88,7 +88,13 @@ class RoleController extends Controller
         return in_array($perm->name, $enumPermissions);
     });
 
-    return view('settings.roles.create', compact('dynamicPermissions'));
+    // Get active job roles from HR module
+    $jobRoles = \App\Models\HR\JobRole::where('IsActive', 1)
+        ->whereNull('DeletedOn')
+        ->orderBy('Name')
+        ->get(['Id', 'Code', 'Name']);
+
+    return view('settings.roles.create', compact('dynamicPermissions', 'jobRoles'));
     }
 
     public function store(RoleRequest $request): JsonResponse
@@ -138,7 +144,13 @@ class RoleController extends Controller
             return in_array($perm->name, $enumPermissions);
         });
 
-        return view('settings.roles.edit', compact('role', 'permissions', 'dynamicPermissions'));
+        // Get active job roles from HR module
+        $jobRoles = \App\Models\HR\JobRole::where('IsActive', 1)
+            ->whereNull('DeletedOn')
+            ->orderBy('Name')
+            ->get(['Id', 'Code', 'Name']);
+
+        return view('settings.roles.edit', compact('role', 'permissions', 'dynamicPermissions', 'jobRoles'));
     }
 
     public function update(RoleRequest $request, Role $role): JsonResponse
