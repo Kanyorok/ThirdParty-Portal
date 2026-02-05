@@ -14,6 +14,8 @@ Route::prefix('prequalification')
     ->name('prequalification.')
     ->group(function () {
         Route::resource('prequalification-rounds', PrequalificationRoundController::class);
+        Route::post('prequalification-rounds/{prequalification_round}/publish', [PrequalificationRoundController::class, 'publish'])
+            ->name('prequalification-rounds.publish');
         Route::resource('sections', SectionController::class);
         Route::prefix('sections/{section}')->name('sections.')->group(function () {
             Route::resource('criteria', CriteriaController::class)

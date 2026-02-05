@@ -108,6 +108,28 @@ class PrequalificationRoundController extends Controller
         return redirect()->route('prequalification.prequalification-rounds.index')->with('success', 'Prequalification round deleted successfully.');
     }
 
+    public function publish(PrequalificationRound $prequalificationRound): RedirectResponse
+    {
+        $this->authorize('update', $prequalificationRound);
+
+        if ($prequalificationRound->Status !== \App\Enums\Procurement\PrequalificationRoundEnum::Draft) {
+            return redirect()->back()->with('error', 'Only draft rounds can be published.');
+        }
+
+        $now = now();
+        if ($prequalificationRound->EndDate && $prequalificationRound->EndDate < $now) {
+            return redirect()->back()->with('error', 'Cannot publish an expired round.');
+        }
+
+        $prequalificationRound->update([
+            'Status' => \App\Enums\Procurement\PrequalificationRoundEnum::Open,
+            'ModifiedBy' => Auth::id(),
+            'ModifiedOn' => $now,
+        ]);
+
+        return redirect()->back()->with('success', 'Prequalification round published (opened) successfully.');
+    }
+
     private function processRound($request, ?PrequalificationRound $prequalificationRound = null): RedirectResponse
     {
         $validated = $request->validated();
