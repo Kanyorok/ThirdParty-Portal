@@ -26,7 +26,7 @@
 
     <div class="card shadow-sm border-0">
         <div class="card-body">
-            <form method="POST" action="{{ route('hr.employees.status.update', $employee->Id) }}">
+            <form method="POST" action="{{ route('hr.employees.status.update', $employee->EmployeeNo) }}">
                 @csrf
                 @method('PUT')
                 <div class="row g-3">

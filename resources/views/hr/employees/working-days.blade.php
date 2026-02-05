@@ -10,9 +10,9 @@
             <div class="text-muted">{{ $employee->FirstName }} {{ $employee->LastName }} ({{ $employee->EmployeeNo }})</div>
         </div>
         <div class="d-flex gap-2">
-            <a class="btn btn-outline-secondary" href="{{ route('hr.employees.show', $employee->Id) }}">Back</a>
+            <a class="btn btn-outline-secondary" href="{{ route('hr.employees.show', $employee->EmployeeNo) }}">Back</a>
             @if($hasOverrides)
-                <form method="POST" action="{{ route('hr.employees.working-days.destroy', $employee->Id) }}"
+                <form method="POST" action="{{ route('hr.employees.working-days.destroy', $employee->EmployeeNo) }}"
                       onsubmit="return confirm('Reset this employee to company working days?');">
                     @csrf
                     @method('DELETE')
@@ -46,7 +46,7 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <form method="POST" action="{{ route('hr.employees.working-days.update', $employee->Id) }}">
+            <form method="POST" action="{{ route('hr.employees.working-days.update', $employee->EmployeeNo) }}">
                 @csrf
                 <div class="table-responsive">
                     <table class="table align-middle">
