@@ -10,10 +10,37 @@ use Illuminate\Http\Request;
 
 class MonthlyAllowanceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $allowances = MonthlyAllowance::with(['employee','allowance'])->orderByDesc('Id')->paginate(30);
-        return view('hr.payroll.allowances.index', compact('allowances'));
+        $month = $request->input('month');
+        $year = $request->input('year');
+        $employeeSearch = $request->input('employee_search');
+
+        $query = MonthlyAllowance::with(['employee','allowance']);
+
+        // Filter by period if provided
+        if ($month) {
+            $query->where('Month', (int)$month);
+        }
+        if ($year) {
+            $query->where('Year', (int)$year);
+        }
+
+        // Filter by employee name if provided
+        if ($employeeSearch) {
+            $query->whereHas('employee', function($q) use ($employeeSearch) {
+                $q->where('FirstName', 'LIKE', "%{$employeeSearch}%")
+                  ->orWhere('LastName', 'LIKE', "%{$employeeSearch}%");
+            });
+        }
+
+        $allowances = $query->orderBy('EmployeeID')
+            ->orderByDesc('Year')
+            ->orderByDesc('Month')
+            ->get()
+            ->groupBy('EmployeeID');
+        
+        return view('hr.payroll.allowances.index', compact('allowances', 'month', 'year', 'employeeSearch'));
     }
 
     public function create()

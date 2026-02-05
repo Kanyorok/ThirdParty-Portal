@@ -16,8 +16,7 @@ class MonthlyDeductionController extends Controller
         $month = (int) $request->input('month', now()->month);
         $year = (int) $request->input('year', now()->year);
 
-        $employees = Employee::where('IsActive', 1)->orderBy('FirstName')->get(['Id','FirstName','LastName']);
-        $deductions = MonthlyDeduction::with(['deduction'])
+        $deductions = MonthlyDeduction::with(['employee', 'deduction'])
             ->where('Month', $month)
             ->where('Year', $year)
             ->orderBy('EmployeeID')
@@ -25,7 +24,7 @@ class MonthlyDeductionController extends Controller
             ->get();
         $deductionsByEmployee = $deductions->groupBy('EmployeeID');
 
-        return view('hr.payroll.deductions.index', compact('employees', 'deductionsByEmployee', 'month', 'year'));
+        return view('hr.payroll.deductions.index', compact('deductionsByEmployee', 'month', 'year'));
     }
 
     public function create()

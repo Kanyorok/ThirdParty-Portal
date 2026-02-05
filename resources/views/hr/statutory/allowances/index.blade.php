@@ -22,6 +22,7 @@
                             <th>Code</th>
                             <th>Name</th>
                             <th>Taxable</th>
+                            <th>Mandatory</th>
                             <th>Status</th>
                             <th>Rules</th>
                             <th></th>
@@ -33,8 +34,21 @@
                                 <td>{{ $allowance->Code }}</td>
                                 <td>{{ $allowance->Name }}</td>
                                 <td>{{ $allowance->IsTaxable ? 'Yes' : 'No' }}</td>
+                                <td>
+                                    @if($allowance->IsMandatory)
+                                        <span class="badge bg-primary">Yes</span>
+                                    @else
+                                        <span class="text-muted">No</span>
+                                    @endif
+                                </td>
                                 <td>{{ $allowance->IsActive ? 'Active' : 'Inactive' }}</td>
-                                <td><a href="{{ route('hr.statutory.allowances.rules.index', $allowance->Id) }}" class="btn btn-sm btn-outline-secondary">Manage Rules</a></td>
+                                <td>
+                                    @if($allowance->IsMandatory)
+                                        <a href="{{ route('hr.statutory.allowances.rules.index', $allowance->Id) }}" class="btn btn-sm btn-outline-secondary">Manage Rules</a>
+                                    @else
+                                        <span class="text-muted small">N/A</span>
+                                    @endif
+                                </td>
                                 <td class="text-end">
                                     <a class="btn btn-sm btn-outline-primary" href="{{ route('hr.statutory.allowances.edit', $allowance->Id) }}">Edit</a>
                                     <form class="d-inline" action="{{ route('hr.statutory.allowances.destroy', $allowance->Id) }}" method="POST" onsubmit="return confirm('Deactivate this allowance?');">
@@ -45,7 +59,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="text-center">No allowances found.</td></tr>
+                            <tr><td colspan="7" class="text-center">No allowances found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

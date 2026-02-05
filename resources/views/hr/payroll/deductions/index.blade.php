@@ -46,21 +46,21 @@
     </div>
 
     <div class="accordion" id="deductionsAccordion">
-        @forelse($employees as $emp)
+        @forelse($deductionsByEmployee as $employeeId => $rows)
             @php
-                $rows = $deductionsByEmployee[$emp->Id] ?? collect();
+                $employee = $rows->first()->employee;
                 $total = $rows->sum('Amount');
             @endphp
             <div class="accordion-item mb-2">
-                <h2 class="accordion-header" id="heading_{{ $emp->Id }}">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_{{ $emp->Id }}">
+                <h2 class="accordion-header" id="heading_{{ $employeeId }}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_{{ $employeeId }}">
                         <div class="d-flex w-100 justify-content-between align-items-center">
-                            <div>{{ $emp->FirstName }} {{ $emp->LastName }}</div>
+                            <div>{{ $employee->FirstName }} {{ $employee->LastName }}</div>
                             <div class="text-muted small me-3">Total: {{ number_format($total, 2) }} | Items: {{ $rows->count() }}</div>
                         </div>
                     </button>
                 </h2>
-                <div id="collapse_{{ $emp->Id }}" class="accordion-collapse collapse" data-bs-parent="#deductionsAccordion">
+                <div id="collapse_{{ $employeeId }}" class="accordion-collapse collapse" data-bs-parent="#deductionsAccordion">
                     <div class="accordion-body p-0">
                         <table class="table mb-0">
                             <thead>
@@ -74,7 +74,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($rows as $row)
+                                @foreach($rows as $row)
                                     <tr>
                                         <td>{{ $row->deduction?->Name ?? $row->Name }}</td>
                                         <td>
@@ -100,16 +100,18 @@
                                             @endif
                                         </td>
                                     </tr>
-                                @empty
-                                    <tr><td colspan="6" class="text-center text-muted py-3">No deductions for this period.</td></tr>
-                                @endforelse
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         @empty
-            <div class="text-center text-muted py-3">No employees found.</div>
+            <div class="card shadow-sm">
+                <div class="card-body text-center text-muted py-4">
+                    No deductions for {{ $month }}/{{ $year }}.
+                </div>
+            </div>
         @endforelse
     </div>
 </div>
