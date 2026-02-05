@@ -72,6 +72,18 @@ class PayrollAllowanceRuleController extends Controller
         return redirect()->route('hr.statutory.allowances.rules.index', $allowanceId)->with('success', 'Rule deactivated.');
     }
 
+    public function activate($allowanceId, $id)
+    {
+        $rule = PayrollAllowanceRule::where('AllowanceID', $allowanceId)->findOrFail($id);
+        $rule->update([
+            'IsActive'   => 1,
+            'ModifiedBy' => auth()->id(),
+            'ModifiedOn' => now(),
+        ]);
+
+        return redirect()->route('hr.statutory.allowances.rules.index', $allowanceId)->with('success', 'Rule activated.');
+    }
+
     protected function validateRule(Request $request): array
     {
         return $request->validate([

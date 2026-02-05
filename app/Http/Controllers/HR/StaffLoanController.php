@@ -16,7 +16,7 @@ class StaffLoanController extends Controller
 {
     public function index()
     {
-        $loans = StaffLoan::with('employee')->orderByDesc('Id')->paginate(30);
+        $loans = StaffLoan::with('employee')->orderByDesc('Id')->get();
         return view('hr.payroll.loans.index', compact('loans'));
     }
 
@@ -45,10 +45,10 @@ class StaffLoanController extends Controller
             'EmployeeID' => ['required','exists:t_HREmployees,Id'],
             'LoanRef' => ['nullable','string','max:100'],
             'Name' => ['required','string','max:150'],
-            'Principal' => ['required','numeric'],
-            'InterestRate' => ['nullable','numeric'],
+            'Principal' => ['required','numeric','min:0.01'],
+            'InterestRate' => ['nullable','numeric','min:0'],
             'TenureMonths' => ['required','integer','min:1','max:360'],
-            'InstallmentAmount' => ['required','numeric','min:0.01'],
+            'InstallmentAmount' => ['nullable','numeric','min:0.01'],
             'StartDate' => ['required','date'],
             'EndDate' => ['nullable','date','after_or_equal:StartDate'],
         ]);
@@ -64,6 +64,22 @@ class StaffLoanController extends Controller
                     'LoanRef' => 'A loan with this reference already exists for this employee (pending/approved).',
                 ]);
             }
+        }
+
+        // Calculate monthly installment amount
+        $principal = (float)$data['Principal'];
+        $interestRate = (float)($data['InterestRate'] ?? 0);
+        $tenure = (int)$data['TenureMonths'];
+
+        if ($interestRate == 0) {
+            // No interest - simple division
+            $data['InstallmentAmount'] = round($principal / $tenure, 2);
+        } else {
+            // Calculate with interest using reducing balance method (PMT formula)
+            $monthlyRate = $interestRate / 100 / 12;
+            $numerator = $monthlyRate * pow(1 + $monthlyRate, $tenure);
+            $denominator = pow(1 + $monthlyRate, $tenure) - 1;
+            $data['InstallmentAmount'] = round($principal * ($numerator / $denominator), 2);
         }
 
         $data['Balance'] = $data['Principal'];
@@ -116,6 +132,55 @@ class StaffLoanController extends Controller
         ]);
 
         return redirect()->route('hr.payroll.loans.index')->with('success', 'Loan rejected.');
+    }
+
+    public function cancel($id)
+    {
+        $loan = StaffLoan::findOrFail($id);
+        
+        // Only allow cancellation for Approved loans
+        if ($loan->Status !== 'Approved') {
+            return redirect()->route('hr.payroll.loans.index')
+                ->with('error', 'Only approved loans can be cancelled.');
+        }
+
+        // Check if any repayments have been made
+        $deductions = MonthlyDeduction::where('StaffLoanID', $loan->Id)->get();
+        
+        // Check if any of these deductions have been processed in a payroll run
+        $hasPayments = false;
+        foreach ($deductions as $deduction) {
+            // Check if this deduction appears in any payroll run line
+            // We consider a payment made if the month/year has passed or if Balance has reduced
+            if ($deduction->Month < now()->month && $deduction->Year <= now()->year) {
+                // Check if this period has been processed
+                $hasPayments = true;
+                break;
+            }
+        }
+
+        // If loan balance has changed from principal, payments have been made
+        if ($loan->Balance < $loan->Principal) {
+            $hasPayments = true;
+        }
+
+        if ($hasPayments) {
+            return redirect()->route('hr.payroll.loans.index')
+                ->with('error', 'Cannot cancel loan. Repayments have already started. Balance: ' . number_format($loan->Balance, 2));
+        }
+
+        // Cancel the loan
+        $loan->update([
+            'Status' => 'Cancelled',
+            'ModifiedBy' => auth()->id(),
+            'ModifiedOn' => now(),
+        ]);
+
+        // Delete all associated monthly deductions (since no payments have been made)
+        MonthlyDeduction::where('StaffLoanID', $loan->Id)->delete();
+
+        return redirect()->route('hr.payroll.loans.index')
+            ->with('success', 'Loan cancelled successfully. All pending deductions have been removed.');
     }
 
     private function generateLoanRepaymentDeductions(StaffLoan $loan): void

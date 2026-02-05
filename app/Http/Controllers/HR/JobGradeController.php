@@ -82,4 +82,18 @@ class JobGradeController extends Controller
         return redirect()->route('hr.config.jobgrades.index')
             ->with('success', 'Job grade deactivated successfully.');
     }
+
+    public function activate($id)
+    {
+        $grade = JobGrade::findOrFail($id);
+
+        $grade->update([
+            'IsActive'   => 1,
+            'ModifiedBy' => auth()->id(),
+            'ModifiedOn' => now(),
+        ]);
+
+        return redirect()->route('hr.config.jobgrades.index')
+            ->with('success', 'Job grade activated successfully.');
+    }
 }

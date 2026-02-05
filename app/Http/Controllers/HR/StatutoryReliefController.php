@@ -103,6 +103,18 @@ class StatutoryReliefController extends Controller
         return redirect()->route('hr.statutory.reliefs.index')->with('success', 'Relief deactivated.');
     }
 
+    public function activate($id)
+    {
+        $relief = StatutoryRelief::findOrFail($id);
+        $relief->update([
+            'IsActive'   => 1,
+            'ModifiedBy' => auth()->id(),
+            'ModifiedOn' => now(),
+        ]);
+
+        return redirect()->route('hr.statutory.reliefs.index')->with('success', 'Relief activated.');
+    }
+
     private function normalizeReliefData(array &$data): void
     {
         if (($data['ReliefType'] ?? '') === 'Percentage') {

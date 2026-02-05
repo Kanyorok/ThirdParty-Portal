@@ -50,11 +50,18 @@
                                 <td>{{ $rule->IsActive ? 'Active' : 'Inactive' }}</td>
                                 <td class="text-end">
                                     <a class="btn btn-sm btn-outline-primary" href="{{ route('hr.statutory.allowances.rules.edit', [$allowance->Id, $rule->Id]) }}">Edit</a>
-                                    <form class="d-inline" action="{{ route('hr.statutory.allowances.rules.destroy', [$allowance->Id, $rule->Id]) }}" method="POST" onsubmit="return confirm('Deactivate this rule?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger" type="submit">Deactivate</button>
-                                    </form>
+                                    @if($rule->IsActive)
+                                        <form class="d-inline" action="{{ route('hr.statutory.allowances.rules.destroy', [$allowance->Id, $rule->Id]) }}" method="POST" onsubmit="return confirm('Deactivate this rule?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Deactivate</button>
+                                        </form>
+                                    @else
+                                        <form class="d-inline" action="{{ route('hr.statutory.allowances.rules.activate', [$allowance->Id, $rule->Id]) }}" method="POST" onsubmit="return confirm('Activate this rule?');">
+                                            @csrf
+                                            <button class="btn btn-sm btn-outline-success" type="submit">Activate</button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

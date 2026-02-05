@@ -133,7 +133,9 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
 
     // HR Config — Job Grades & Roles
     Route::resource('config/job-grades', JobGradeController::class)->names('config.jobgrades')->except(['show']);
+    Route::post('config/job-grades/{grade}/activate', [JobGradeController::class, 'activate'])->name('config.jobgrades.activate');
     Route::resource('config/job-roles', JobRoleController::class)->names('config.jobroles')->except(['show']);
+    Route::post('config/job-roles/{role}/activate', [JobRoleController::class, 'activate'])->name('config.jobroles.activate');
     Route::resource('config/religions', ReligionController::class)->names('config.religions')->except(['show']);
 
     // HR Config — KPI setup (stubs)
@@ -174,10 +176,15 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
 
     // Statutory & Payroll Rules
     Route::resource('statutory/deductions', \App\Http\Controllers\HR\PayrollDeductionController::class)->names('statutory.deductions')->except(['show']);
+    Route::post('statutory/deductions/{deduction}/activate', [\App\Http\Controllers\HR\PayrollDeductionController::class, 'activate'])->name('statutory.deductions.activate');
     Route::resource('statutory/deductions/{deduction}/rules', \App\Http\Controllers\HR\PayrollDeductionRuleController::class)->names('statutory.deductions.rules')->except(['show']);
+    Route::post('statutory/deductions/{deduction}/rules/{rule}/activate', [\App\Http\Controllers\HR\PayrollDeductionRuleController::class, 'activate'])->name('statutory.deductions.rules.activate');
     Route::resource('statutory/allowances', PayrollAllowanceController::class)->names('statutory.allowances')->except(['show']);
+    Route::post('statutory/allowances/{allowance}/activate', [PayrollAllowanceController::class, 'activate'])->name('statutory.allowances.activate');
     Route::resource('statutory/allowances/{allowance}/rules', PayrollAllowanceRuleController::class)->names('statutory.allowances.rules')->except(['show']);
+    Route::post('statutory/allowances/{allowance}/rules/{rule}/activate', [PayrollAllowanceRuleController::class, 'activate'])->name('statutory.allowances.rules.activate');
     Route::resource('statutory/reliefs', \App\Http\Controllers\HR\StatutoryReliefController::class)->names('statutory.reliefs')->except(['show']);
+    Route::post('statutory/reliefs/{relief}/activate', [\App\Http\Controllers\HR\StatutoryReliefController::class, 'activate'])->name('statutory.reliefs.activate');
 
     // Exit Management Config
     Route::resource('config/exit-types', ExitTypeController::class)->names('config.exit-types')->except(['show', 'destroy']);
@@ -432,6 +439,7 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     Route::resource('payroll/deductions', \App\Http\Controllers\HR\MonthlyDeductionController::class)->names('payroll.deductions')->only(['index','create','store']);
     Route::post('payroll/loans/{id}/approve', [\App\Http\Controllers\HR\StaffLoanController::class, 'approve'])->name('payroll.loans.approve');
     Route::post('payroll/loans/{id}/reject', [\App\Http\Controllers\HR\StaffLoanController::class, 'reject'])->name('payroll.loans.reject');
+    Route::post('payroll/loans/{id}/cancel', [\App\Http\Controllers\HR\StaffLoanController::class, 'cancel'])->name('payroll.loans.cancel');
     Route::resource('payroll/loans', \App\Http\Controllers\HR\StaffLoanController::class)->names('payroll.loans')->only(['index','create','store','show']);
     Route::get('payroll/gratuity', [\App\Http\Controllers\HR\GratuityController::class, 'index'])->name('payroll.gratuity.index');
     Route::get('payroll/gratuity/create', [\App\Http\Controllers\HR\GratuityController::class, 'create'])->name('payroll.gratuity.create');

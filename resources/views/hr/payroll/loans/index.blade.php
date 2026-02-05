@@ -13,12 +13,28 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
     <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <table class="table mb-0">
-                <thead><tr><th>Employee</th><th>Ref</th><th>Name</th><th>Principal</th><th>Monthly Repay</th><th>Tenure</th><th>Start</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+        <div class="card-body">
+            <table class="table table-hover" id="loansTable">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Ref</th>
+                        <th>Name</th>
+                        <th>Principal</th>
+                        <th>Monthly Repay</th>
+                        <th>Tenure</th>
+                        <th>Start</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
                 <tbody>
-                    @forelse($loans as $loan)
+                    @foreach($loans as $loan)
                         <tr>
                             <td>{{ $loan->employee?->FirstName }} {{ $loan->employee?->LastName }}</td>
                             <td>{{ $loan->LoanRef ?? '-' }}</td>
@@ -27,7 +43,17 @@
                             <td>{{ number_format($loan->InstallmentAmount, 2) }}</td>
                             <td>{{ (int)$loan->TenureMonths }}</td>
                             <td>{{ $loan->StartDate ? $loan->StartDate->format('Y-m-d') : '-' }}</td>
-                            <td>{{ $loan->Status }}</td>
+                            <td>
+                                @if($loan->Status === 'Approved')
+                                    <span class="badge bg-success">{{ $loan->Status }}</span>
+                                @elseif($loan->Status === 'Pending')
+                                    <span class="badge bg-warning">{{ $loan->Status }}</span>
+                                @elseif($loan->Status === 'Cancelled')
+                                    <span class="badge bg-secondary">{{ $loan->Status }}</span>
+                                @else
+                                    <span class="badge bg-danger">{{ $loan->Status }}</span>
+                                @endif
+                            </td>
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-primary" href="{{ route('hr.payroll.loans.show', $loan->Id) }}">View</a>
                                 @if($loan->Status === 'Pending')
@@ -39,18 +65,40 @@
                                         @csrf
                                         <button class="btn btn-sm btn-outline-danger">Reject</button>
                                     </form>
+                                @elseif($loan->Status === 'Approved' && $loan->Balance >= $loan->Principal)
+                                    <form method="POST" action="{{ route('hr.payroll.loans.cancel', $loan->Id) }}" class="d-inline ms-1" onsubmit="return confirm('Cancel this loan? All pending repayment deductions will be removed.');">
+                                        @csrf
+                                        <button class="btn btn-sm btn-outline-warning">Cancel</button>
+                                    </form>
                                 @endif
                             </td>
                         </tr>
-                    @empty
-                        <tr><td colspan="9" class="text-center text-muted py-3">No loans yet.</td></tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
     </div>
-    <div class="mt-3">
-        {{ $loans->links() }}
-    </div>
 </div>
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    $('#loansTable').DataTable({
+        pageLength: 25,
+        order: [[6, 'desc']], // Sort by Start Date descending
+        language: {
+            search: "Search loans:",
+            lengthMenu: "Show _MENU_ loans per page",
+            info: "Showing _START_ to _END_ of _TOTAL_ loans",
+            infoEmpty: "No loans available",
+            infoFiltered: "(filtered from _MAX_ total loans)",
+            zeroRecords: "No matching loans found"
+        },
+        columnDefs: [
+            { orderable: false, targets: -1 } // Disable sorting on Actions column
+        ]
+    });
+});
+</script>
+@endpush
 @endsection

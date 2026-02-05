@@ -116,4 +116,16 @@ class PayrollDeductionController extends Controller
 
         return redirect()->route('hr.statutory.deductions.index')->with('success', 'Deduction deactivated.');
     }
+
+    public function activate($id)
+    {
+        $deduction = PayrollDeduction::findOrFail($id);
+        $deduction->update([
+            'IsActive' => 1,
+            'ModifiedBy' => auth()->id(),
+            'ModifiedOn' => now(),
+        ]);
+
+        return redirect()->route('hr.statutory.deductions.index')->with('success', 'Deduction activated.');
+    }
 }

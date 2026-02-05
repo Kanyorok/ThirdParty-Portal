@@ -90,4 +90,18 @@ class JobRoleController extends Controller
         return redirect()->route('hr.config.jobroles.index')
             ->with('success', 'Job role deactivated successfully.');
     }
+
+    public function activate($id)
+    {
+        $role = JobRole::findOrFail($id);
+
+        $role->update([
+            'IsActive'   => 1,
+            'ModifiedBy' => auth()->id(),
+            'ModifiedOn' => now(),
+        ]);
+
+        return redirect()->route('hr.config.jobroles.index')
+            ->with('success', 'Job role activated successfully.');
+    }
 }

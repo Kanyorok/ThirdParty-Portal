@@ -51,11 +51,18 @@
                                 </td>
                                 <td class="text-end">
                                     <a class="btn btn-sm btn-outline-primary" href="{{ route('hr.statutory.allowances.edit', $allowance->Id) }}">Edit</a>
-                                    <form class="d-inline" action="{{ route('hr.statutory.allowances.destroy', $allowance->Id) }}" method="POST" onsubmit="return confirm('Deactivate this allowance?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger" type="submit">Deactivate</button>
-                                    </form>
+                                    @if($allowance->IsActive)
+                                        <form class="d-inline" action="{{ route('hr.statutory.allowances.destroy', $allowance->Id) }}" method="POST" onsubmit="return confirm('Deactivate this allowance?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Deactivate</button>
+                                        </form>
+                                    @else
+                                        <form class="d-inline" action="{{ route('hr.statutory.allowances.activate', $allowance->Id) }}" method="POST" onsubmit="return confirm('Activate this allowance?');">
+                                            @csrf
+                                            <button class="btn btn-sm btn-outline-success" type="submit">Activate</button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

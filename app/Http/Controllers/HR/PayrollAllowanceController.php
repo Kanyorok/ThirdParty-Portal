@@ -109,4 +109,16 @@ class PayrollAllowanceController extends Controller
 
         return redirect()->route('hr.statutory.allowances.index')->with('success', 'Allowance deactivated.');
     }
+
+    public function activate($id)
+    {
+        $allowance = PayrollAllowance::findOrFail($id);
+        $allowance->update([
+            'IsActive' => 1,
+            'ModifiedBy' => auth()->id(),
+            'ModifiedOn' => now(),
+        ]);
+
+        return redirect()->route('hr.statutory.allowances.index')->with('success', 'Allowance activated.');
+    }
 }

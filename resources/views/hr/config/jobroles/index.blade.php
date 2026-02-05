@@ -36,11 +36,18 @@
                         <td>{{ $role->IsActive ? 'Active' : 'Inactive' }}</td>
                         <td class="text-end">
                             <a class="btn btn-sm btn-outline-primary" href="{{ route('hr.config.jobroles.edit', $role->Id) }}">Edit</a>
-                            <form class="d-inline" method="POST" action="{{ route('hr.config.jobroles.destroy', $role->Id) }}" onsubmit="return confirm('Deactivate this role?');">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger" type="submit">Deactivate</button>
-                            </form>
+                            @if($role->IsActive)
+                                <form class="d-inline" method="POST" action="{{ route('hr.config.jobroles.destroy', $role->Id) }}" onsubmit="return confirm('Deactivate this role?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Deactivate</button>
+                                </form>
+                            @else
+                                <form class="d-inline" method="POST" action="{{ route('hr.config.jobroles.activate', $role->Id) }}" onsubmit="return confirm('Activate this role?');">
+                                    @csrf
+                                    <button class="btn btn-sm btn-outline-success" type="submit">Activate</button>
+                                </form>
+                            @endif
                         </td>
                     </tr>
                 @empty

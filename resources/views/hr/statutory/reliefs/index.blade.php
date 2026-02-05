@@ -50,11 +50,18 @@
                                 <td>{{ $relief->IsActive ? 'Active' : 'Inactive' }}</td>
                                 <td class="text-end">
                                     <a class="btn btn-sm btn-outline-primary" href="{{ route('hr.statutory.reliefs.edit', $relief->Id) }}">Edit</a>
-                                    <form class="d-inline" action="{{ route('hr.statutory.reliefs.destroy', $relief->Id) }}" method="POST" onsubmit="return confirm('Deactivate this relief?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger" type="submit">Deactivate</button>
-                                    </form>
+                                    @if($relief->IsActive)
+                                        <form class="d-inline" action="{{ route('hr.statutory.reliefs.destroy', $relief->Id) }}" method="POST" onsubmit="return confirm('Deactivate this relief?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Deactivate</button>
+                                        </form>
+                                    @else
+                                        <form class="d-inline" action="{{ route('hr.statutory.reliefs.activate', $relief->Id) }}" method="POST" onsubmit="return confirm('Activate this relief?');">
+                                            @csrf
+                                            <button class="btn btn-sm btn-outline-success" type="submit">Activate</button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

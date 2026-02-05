@@ -36,11 +36,18 @@
                         <td>{{ $grade->IsActive ? 'Active' : 'Inactive' }}</td>
                         <td class="text-end">
                             <a class="btn btn-sm btn-outline-primary" href="{{ route('hr.config.jobgrades.edit', $grade->Id) }}">Edit</a>
-                            <form class="d-inline" method="POST" action="{{ route('hr.config.jobgrades.destroy', $grade->Id) }}" onsubmit="return confirm('Deactivate this grade?');">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger" type="submit">Deactivate</button>
-                            </form>
+                            @if($grade->IsActive)
+                                <form class="d-inline" method="POST" action="{{ route('hr.config.jobgrades.destroy', $grade->Id) }}" onsubmit="return confirm('Deactivate this grade?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Deactivate</button>
+                                </form>
+                            @else
+                                <form class="d-inline" method="POST" action="{{ route('hr.config.jobgrades.activate', $grade->Id) }}" onsubmit="return confirm('Activate this grade?');">
+                                    @csrf
+                                    <button class="btn btn-sm btn-outline-success" type="submit">Activate</button>
+                                </form>
+                            @endif
                         </td>
                     </tr>
                 @empty

@@ -35,11 +35,18 @@
                                 <td><a href="{{ route('hr.statutory.deductions.rules.index', $deduction->Id) }}" class="btn btn-sm btn-outline-secondary">Manage Rules</a></td>
                                 <td class="text-end">
                                     <a class="btn btn-sm btn-outline-primary" href="{{ route('hr.statutory.deductions.edit', $deduction->Id) }}">Edit</a>
-                                    <form class="d-inline" action="{{ route('hr.statutory.deductions.destroy', $deduction->Id) }}" method="POST" onsubmit="return confirm('Deactivate this deduction?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger" type="submit">Deactivate</button>
-                                    </form>
+                                    @if($deduction->IsActive)
+                                        <form class="d-inline" action="{{ route('hr.statutory.deductions.destroy', $deduction->Id) }}" method="POST" onsubmit="return confirm('Deactivate this deduction?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Deactivate</button>
+                                        </form>
+                                    @else
+                                        <form class="d-inline" action="{{ route('hr.statutory.deductions.activate', $deduction->Id) }}" method="POST" onsubmit="return confirm('Activate this deduction?');">
+                                            @csrf
+                                            <button class="btn btn-sm btn-outline-success" type="submit">Activate</button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
