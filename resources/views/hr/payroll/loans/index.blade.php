@@ -83,21 +83,35 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    $('#loansTable').DataTable({
-        pageLength: 25,
-        order: [[6, 'desc']], // Sort by Start Date descending
-        language: {
-            search: "Search loans:",
-            lengthMenu: "Show _MENU_ loans per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ loans",
-            infoEmpty: "No loans available",
-            infoFiltered: "(filtered from _MAX_ total loans)",
-            zeroRecords: "No matching loans found"
-        },
-        columnDefs: [
-            { orderable: false, targets: -1 } // Disable sorting on Actions column
-        ]
-    });
+    console.log('Initializing DataTable for #loansTable');
+    
+    if ($.fn.DataTable) {
+        console.log('DataTables plugin is loaded');
+        
+        try {
+            $('#loansTable').DataTable({
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                order: [[6, 'desc']], // Sort by Start Date descending
+                language: {
+                    search: "Search loans:",
+                    lengthMenu: "Show _MENU_ loans per page",
+                    info: "Showing _START_ to _END_ of _TOTAL_ loans",
+                    infoEmpty: "No loans available",
+                    infoFiltered: "(filtered from _MAX_ total loans)",
+                    zeroRecords: "No matching loans found"
+                },
+                columnDefs: [
+                    { orderable: false, targets: -1 } // Disable sorting on Actions column
+                ]
+            });
+            console.log('DataTable initialized successfully');
+        } catch (e) {
+            console.error('Error initializing DataTable:', e);
+        }
+    } else {
+        console.error('DataTables plugin not loaded');
+    }
 });
 </script>
 @endpush
