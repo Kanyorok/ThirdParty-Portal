@@ -71,6 +71,7 @@
                                     @selected(old('RelieverID') == $emp->Id)>{{ $emp->FirstName }} {{ $emp->LastName }}</option>
                             @endforeach
                         </select>
+                        <div class="form-text">Only employees from the same department are available.</div>
                     </div>
                     <div class="col-md-12">
                         <label class="form-label">Reason</label>
@@ -179,6 +180,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const match = !dept || !relDept || dept === relDept;
             const sameEmployee = selectedEmployeeId && opt.value === selectedEmployeeId;
             opt.disabled = !match || sameEmployee;
+            opt.hidden = !match || sameEmployee;
             if ((!match || sameEmployee) && opt.selected) {
                 opt.selected = false;
                 cleared = true;

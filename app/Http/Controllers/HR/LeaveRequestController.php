@@ -29,13 +29,13 @@ class LeaveRequestController extends Controller
             $query->where('EmployeeID', $request->employee_id);
         }
         $requests = $query->paginate(50);
-        $employees = Employee::orderBy('FirstName')->get(['Id','FirstName','LastName']);
+        $employees = Employee::orderBy('FirstName')->get(['Id','FirstName','LastName','DepartmentID']);
         return view('hr.leave.requests.index', compact('requests','employees'));
     }
 
     public function create()
     {
-        $employees = Employee::orderBy('FirstName')->get(['Id','FirstName','LastName']);
+        $employees = Employee::orderBy('FirstName')->get(['Id','FirstName','LastName','DepartmentID']);
         $types = $this->eligibleLeaveTypesForEmployee(optional($employees->first())->Id);
         return view('hr.leave.requests.create', compact('employees','types'));
     }
