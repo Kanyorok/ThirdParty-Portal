@@ -70,7 +70,7 @@ class CRDBCustomerController extends Controller
         ]);
 
         try {
-            $data = DB::select("EXEC p_GetClientStatement @ThirdPartyID = ?, @Type = ?", [$request->ThirdPartyID, $request->Type]);
+            return$data = DB::select("EXEC p_GetClientStatement @ThirdPartyID = ?, @Type = ?", [$request->ThirdPartyID, $request->Type]);
 
             return response()->json([
                 'status' => 'ok',
