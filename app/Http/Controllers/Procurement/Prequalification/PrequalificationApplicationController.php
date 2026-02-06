@@ -786,9 +786,18 @@ class PrequalificationApplicationController extends Controller
         // but generally should enforce status. Let's enforce standard rules for now.
         $now = now();
         $isClosed = $round->Status === PrequalificationRoundEnum::Closed;
-        // Allow if Draft? Probably not.
+        $isDraft = $round->Status === PrequalificationRoundEnum::Draft;
+        $isExpired = $round->Status === PrequalificationRoundEnum::Expired || ($round->EndDate && $round->EndDate < $now->startOfDay());
+
         if ($isClosed) {
             return back()->withInput()->with('error', 'Applications are closed for this round.');
+        }
+
+        if ($isExpired) {
+            return back()->withInput()->with('error', 'Applications cannot be submitted for an expired round.');
+        }
+        if ($isDraft) {
+            return back()->withInput()->with('error', 'Applications cannot be submitted for a draft round.');
         }
 
         // Check Max Vendors
@@ -812,7 +821,7 @@ class PrequalificationApplicationController extends Controller
                     'RoundID' => $roundId,
                     'SupplierID' => $supplierId,
                     'CategoryID' => $cid,
-                    'Status' => PrequalificationApplicationEnum::Submitted,
+                    'Status' => PrequalificationApplicationEnum::Submitted->value,
                     'SubmittedOn' => now(),
                     'CreatedBy' => Auth::id(),
                 ]);

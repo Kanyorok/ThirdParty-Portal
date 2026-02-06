@@ -28,6 +28,13 @@ class PrequalificationRoundController extends Controller
     public function index(Request $request): View
     {
         $this->authorize('viewAny', PrequalificationRound::class);
+
+        // Auto-expire rounds that have passed their EndDate
+        // We check for rounds that are 'Open' AND EndDate < Today
+        PrequalificationRound::where('Status', \App\Enums\Procurement\PrequalificationRoundEnum::Open)
+            ->whereDate('EndDate', '<', now()->startOfDay())
+            ->update(['Status' => \App\Enums\Procurement\PrequalificationRoundEnum::Expired]);
+
         // Allow optionally including soft-deleted (archived) rounds via ?include_deleted=1
         $includeDeleted = (bool) $request->query('include_deleted', false);
 
