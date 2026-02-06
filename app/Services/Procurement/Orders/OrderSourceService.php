@@ -418,11 +418,6 @@ class OrderSourceService
             // User Request: Populate from Requisition Line (ExpectedPrice)
             $price = (float)$item->reqUnitPrice;
 
-            // Prior logic used quoted prices:
-            // if (isset($quotedPrices[$item->itemName])) {
-            //     $price = $quotedPrices[$item->itemName];
-            // }
-
             return [
                 'itemCode' => $code,
                 'itemName' => $item->itemName,
