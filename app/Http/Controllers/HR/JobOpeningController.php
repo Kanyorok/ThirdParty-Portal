@@ -60,6 +60,9 @@ class JobOpeningController extends Controller
         if ($request->filled('requisition_id')) {
             $requisition = $requisitions->firstWhere('Id', (int)$request->requisition_id);
         }
+        
+        // Auto-generate opening code
+        $generatedCode = $this->generateOpeningCode();
 
         return view('hr.recruitment.openings.create', compact(
             'departments',
@@ -70,7 +73,8 @@ class JobOpeningController extends Controller
             'statusList',
             'requisition',
             'questionGroups',
-            'selectedQuestions'
+            'selectedQuestions',
+            'generatedCode'
         ));
     }
 
@@ -211,5 +215,32 @@ class JobOpeningController extends Controller
         ]);
 
         return redirect()->route('hr.recruitment.openings.index')->with('success', 'Job opening closed.');
+    }
+
+    /**
+     * Generate a unique opening code
+     * Format: JOB-YYYY-NNNN (e.g., JOB-2026-0001)
+     */
+    private function generateOpeningCode(): string
+    {
+        $year = now()->year;
+        $prefix = "JOB-{$year}-";
+        
+        // Get the last opening for this year
+        $lastOpening = JobOpening::where('Code', 'like', "{$prefix}%")
+            ->orderByDesc('Code')
+            ->first();
+        
+        if ($lastOpening) {
+            // Extract the number from the last code and increment
+            $lastNumber = (int) substr($lastOpening->Code, -4);
+            $newNumber = $lastNumber + 1;
+        } else {
+            // First opening of the year
+            $newNumber = 1;
+        }
+        
+        // Format with leading zeros (4 digits)
+        return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 }

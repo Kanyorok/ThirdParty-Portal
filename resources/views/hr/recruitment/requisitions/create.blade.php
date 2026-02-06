@@ -26,7 +26,8 @@
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label class="form-label">Code *</label>
-                        <input type="text" name="Code" class="form-control" value="{{ old('Code') }}" required>
+                        <input type="text" name="Code" class="form-control" value="{{ $generatedCode }}" readonly style="background-color: #f8f9fa;">
+                        <small class="form-text text-muted">Auto-generated</small>
                     </div>
                     <div class="col-md-9">
                         <label class="form-label">Title *</label>

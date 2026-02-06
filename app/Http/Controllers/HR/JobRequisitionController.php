@@ -45,8 +45,11 @@ class JobRequisitionController extends Controller
         $grades = JobGrade::where('IsActive', 1)->orderBy('Name')->get(['Id', 'Name']);
         $roles = JobRole::where('IsActive', 1)->orderBy('Name')->get(['Id', 'Name', 'DepartmentID', 'GradeID']);
         $statusList = self::STATUSES;
+        
+        // Auto-generate requisition code
+        $generatedCode = $this->generateRequisitionCode();
 
-        return view('hr.recruitment.requisitions.create', compact('departments', 'branches', 'grades', 'roles', 'statusList'));
+        return view('hr.recruitment.requisitions.create', compact('departments', 'branches', 'grades', 'roles', 'statusList', 'generatedCode'));
     }
 
     public function store(Request $request)
@@ -181,5 +184,32 @@ class JobRequisitionController extends Controller
         ]);
 
         return redirect()->route('hr.recruitment.requisitions.index')->with('success', 'Requisition closed.');
+    }
+
+    /**
+     * Generate a unique requisition code
+     * Format: REQ-YYYY-NNNN (e.g., REQ-2026-0001)
+     */
+    private function generateRequisitionCode(): string
+    {
+        $year = now()->year;
+        $prefix = "REQ-{$year}-";
+        
+        // Get the last requisition for this year
+        $lastRequisition = JobRequisition::where('Code', 'like', "{$prefix}%")
+            ->orderByDesc('Code')
+            ->first();
+        
+        if ($lastRequisition) {
+            // Extract the number from the last code and increment
+            $lastNumber = (int) substr($lastRequisition->Code, -4);
+            $newNumber = $lastNumber + 1;
+        } else {
+            // First requisition of the year
+            $newNumber = 1;
+        }
+        
+        // Format with leading zeros (4 digits)
+        return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 }
