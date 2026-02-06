@@ -84,8 +84,8 @@ class ThirdPartyController extends Controller
             $customerDetails = [
                 'DateOfBirth' => $request->date('customer_DateOfBirth'),
                 'Gender' => $request->getGender('customer_Gender'),
-                'MaritalStatus' => $request->getMaritalStatus(),
-                'Occupation' => $request->getOccupation(),
+                'MaritalStatus' => $request->getMaritalStatus('customer_MaritalStatus'),
+                'Occupation' => $request->getOccupation('customer_Occupation'),
             ];
         }
         $tenantDetails = [];
@@ -98,7 +98,7 @@ class ThirdPartyController extends Controller
         try {
             return DB::transaction(function () use ($request, $actor, $businessType, $location, $phone, $userDetails, $customerDetails, $tenantDetails, $logo) {
 
-                $service = ThirdPartyService::create(
+                $party = ThirdPartyService::create(
                     name: $request->str('Name')->trim()->toString(),
                     tradingName: $request->str('TradingName')->trim()->toString(),
                     businessType: $businessType,
@@ -113,13 +113,18 @@ class ThirdPartyController extends Controller
                     status: null,
                     extra: null,
                     actor: $actor,
-                    types: $request->array('types'),
-                    CustomerDateOfBirth: $customerDetails['DateOfBirth'] ?? null,
-                    CustomerGender: $customerDetails['Gender'] ?? null,
-                    CustomerMaritalStatus: $customerDetails['MaritalStatus'] ?? null,
-                    CustomerOccupation: $customerDetails['Occupation'] ?? null,
-                    Tenant_Remarks: $tenantDetails['Remarks'] ?? null,
+                    data: [
+                        'types' => $request->array('types'),
+                        'user_DateOfBirth' => $customerDetails['DateOfBirth'] ?? null,
+                        'user_Gender' => $customerDetails['Gender'] ?? null,
+                        'user_MaritalStatus' => $customerDetails['MaritalStatus'] ?? null,
+                        'user_Occupation' => $customerDetails['Occupation'] ?? null,
+                        'tenant_Remarks' => $tenantDetails['Remarks'] ?? null,
+                    ],
                 );
+
+                // Create service wrapper for additional operations
+                $service = new ThirdPartyService($party);
 
                 if ($request->boolean('createUser')) {
                     $service->addUser(
@@ -129,7 +134,7 @@ class ThirdPartyController extends Controller
                         phone: $userDetails['Phone'],
                         gender: $userDetails['Gender'],
                         actor: $actor,
-                        password: $request->get('user_Password') ?? 'password@123'
+                        password: $request->get('user_Password') ?? null
                     );
                 }
 
@@ -137,9 +142,9 @@ class ThirdPartyController extends Controller
                     $service->setLogo($logo, $actor);
                 }
 
-                Log::info('Created ThirdParty:', ['party' => $service->party, 'id' => $service->party->Id]);
+                Log::info('Created ThirdParty:', ['party' => $party, 'id' => $party->Id]);
 
-                return $this->succeeded("{$service->party->ThirdPartyName} created successfully", route('thirdparty.parties.show', $service->party->Id));
+                return $this->succeeded("{$party->ThirdPartyName} created successfully", route('thirdparty.parties.show', $party->Id));
             });
         } catch (ErroredException $e) {
             return $e->toJson();

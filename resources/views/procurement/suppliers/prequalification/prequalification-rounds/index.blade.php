@@ -109,10 +109,14 @@
 
                                 @if($isDraft)
                                     @if(!$isExpired)
-                                        <a href="{{ route('prequalification.prequalification-rounds.edit', $Round) }}?publish=1"
-                                        class="btn btn-sm btn-secondary me-1" title="Publish (set status to Open)" data-bs-toggle="tooltip" data-ajax="1">
-                                            <i class="bi bi-upload"></i> Publish
-                                        </a>
+                                        <form action="{{ route('prequalification.prequalification-rounds.publish', $Round) }}"
+                                            method="POST" class="d-inline-flex"
+                                            onsubmit="return confirm('Are you sure you want to publish this round? It will be open for applications.');">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-success me-1" title="Publish (set status to Open)" data-bs-toggle="tooltip">
+                                                <i class="bi bi-upload"></i> Publish
+                                            </button>
+                                        </form>
                                     @else
                                         <span class="badge bg-secondary me-1" title="This round has expired">Expired</span>
                                     @endif

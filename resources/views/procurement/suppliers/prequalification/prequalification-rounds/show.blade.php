@@ -8,7 +8,9 @@
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                 <h4 class="mb-0 text-primary">Prequalification Round: {{ $prequalificationRound->Title }}</h4>
                 <div>
-                    @if($prequalificationRound->Status !== \App\Enums\Procurement\PrequalificationRoundEnum::Draft)
+                    @if($prequalificationRound->Status !== \App\Enums\Procurement\PrequalificationRoundEnum::Draft && 
+                          $prequalificationRound->Status !== \App\Enums\Procurement\PrequalificationRoundEnum::Closed &&
+                          $prequalificationRound->Status !== \App\Enums\Procurement\PrequalificationRoundEnum::Expired)
                     <a href="{{ route('prequalification.applications.create', ['round_id' => $prequalificationRound->RoundID]) }}" 
                        class="btn btn-primary me-2">
                         <i class="fas fa-plus-circle"></i> Apply for Prequalification

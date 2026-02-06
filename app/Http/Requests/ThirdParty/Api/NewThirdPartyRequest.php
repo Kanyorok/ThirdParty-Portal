@@ -18,6 +18,21 @@ class NewThirdPartyRequest extends FormRequest
 {
     use CodeDetailsTrait;
 
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Convert createUser checkbox to a proper boolean
+        if ($this->has('createUser')) {
+            $value = $this->input('createUser');
+            // Handle various truthy values that checkboxes might send
+            $this->merge([
+                'createUser' => filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false,
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         $isUser = $this->boolean('createUser');
@@ -54,7 +69,6 @@ class NewThirdPartyRequest extends FormRequest
             'user_Phone' => [Rule::requiredIf($isUser), 'nullable', 'string'],
             'user_Gender' => [Rule::requiredIf($isUser || $isCustomer), 'nullable', 'string'],
             'user_Password' => [
-                Rule::requiredIf($isUser),
                 'nullable',
                 'string',
                 'min:8',
@@ -62,7 +76,6 @@ class NewThirdPartyRequest extends FormRequest
             ],
             'supplier_category_id' => [
                 'nullable',
-                Rule::requiredIf($isSupplier),
                 Rule::exists('t_SupplierCategories', 'SupplierCategoryID'),
             ],
             'user_DateOfBirth' => ['nullable', Rule::requiredIf($isCustomer), 'date'],
