@@ -4,7 +4,7 @@ use App\Http\Controllers\API\Procurement\SupplierRFQController;
 use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
 use App\Http\Controllers\API\Procurement\TenderInvitationResponseApiController;
 use App\Http\Controllers\API\Procurement\TenderSubmissionApiController;
-use App\Http\Controllers\Procurement\Prequalification\Api\PrequalificationApplicationController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
 use App\Http\Controllers\Procurement\TenderApiController;
 use App\Http\Controllers\ThirdParty\API\LookupController;
 use App\Http\Controllers\ThirdParty\API\MetadataController;
