@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\LicenseController;
 use App\Http\Controllers\Finance\BankBranchController;
 use App\Http\Controllers\Settings\WorflowLimitsController;
 use App\Http\Controllers\Settings\WorkFlowController;
@@ -171,3 +172,9 @@ Route::middleware(['web', 'auth'])->namespace('App\Http\Controllers')->group(fun
     Route::get('/getCities', [BankBranchController::class, 'getCities'])->name('getCities');
 });
 // // Admin Licensing endpoints (should be accessible post-auth; license check happens after upload)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/license', [LicenseController::class, 'index'])
+        ->name('admin.license.index');
+    Route::post('/admin/license', [LicenseController::class, 'store'])
+        ->name('admin.license.store');
+});
