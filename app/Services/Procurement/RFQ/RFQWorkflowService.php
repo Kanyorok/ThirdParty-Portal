@@ -131,6 +131,10 @@ class RFQWorkflowService extends ApprovalWorkflow
 
         $result = parent::reject($model, $actor, $rejectedStatus, $remarks, $statusColumn ?? 'Status');
 
+        // Save the rejection remarks to the model
+        $model->Remarks = $remarks;
+        $model->save();
+
         $model->refresh();
 
         Log::info('RFQ rejection completed', [

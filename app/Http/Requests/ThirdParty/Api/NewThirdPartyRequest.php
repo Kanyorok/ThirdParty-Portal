@@ -92,7 +92,6 @@ class NewThirdPartyRequest extends FormRequest
             'user_Phone' => [Rule::requiredIf($isUser), 'nullable', 'string'],
             'user_Gender' => [Rule::requiredIf($isUser || $isCustomer), 'nullable', 'string'],
             'user_Password' => [
-                Rule::requiredIf($isUser),
                 'nullable',
                 'string',
                 'min:8',
@@ -100,7 +99,6 @@ class NewThirdPartyRequest extends FormRequest
             ],
             'supplier_category_id' => [
                 'nullable',
-                Rule::requiredIf($isSupplier),
                 Rule::exists('t_SupplierCategories', 'SupplierCategoryID'),
             ],
             'user_DateOfBirth' => ['nullable', Rule::requiredIf($isCustomer), 'date'],

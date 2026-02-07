@@ -30,7 +30,7 @@ class RFQResponseController extends Controller
 
         // Include both Approved and Published RFQs
         // Filter out RFQs where Evaluation has started (exists in t_RFQEvaluations)
-        $rfqs = RFQ::whereIn('Status', ['Ap', 'AP', 'Approved', 'Pub', 'Published'])
+        $rfqs = RFQ::whereIn('Status', [ 'Pub', 'Published'])
             ->where(function ($query) {
                 $query->whereNull('SubmissionDeadline')
                       ->orWhere('SubmissionDeadline', '>=', now());

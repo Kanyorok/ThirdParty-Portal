@@ -26,7 +26,16 @@
                         @else {{ $rfq->Status }} @endif
                     </span>
                 </p>
-                <p><strong>RFQ Reject Remarks:</strong> {{ $rfq->Remarks }}</p>
+                @php
+                    $displayedRejectReason = $rfq->Remarks;
+                    if (empty($displayedRejectReason) && in_array($rfq->Status, ['Rejected', 'Re', 'RE'])) {
+                        $lastRejection = $history->where('Action', 'Rejected')->first();
+                        if ($lastRejection) {
+                            $displayedRejectReason = $lastRejection->Notes;
+                        }
+                    }
+                @endphp
+                <p><strong>RFQ Reject Remarks:</strong> {{ $displayedRejectReason }}</p>
 
             </div>
         </div>
@@ -248,11 +257,10 @@
     <div class="text-end mb-3">
         {{-- Submit for Approval button - shown when RFQ is in Pending status AND not already submitted --}}
         @if (in_array($rfq->Status, ['Pending', 'pe', 'Pe']) && count($pendingApprovals) === 0)
-        <form action="{{ route('rfqs.submit', $rfq->Id) }}" method="POST" class="d-inline">
+        <form id="submitRFQForm" action="{{ route('rfqs.submit', $rfq->Id) }}" method="POST" class="d-inline">
             @csrf
             <button type="submit"
                 class="btn btn-primary btn-sm"
-                onclick="return confirm('Are you sure you want to submit this RFQ for approval?');"
                 {{ $rfq->rfqLines->isEmpty() ? 'disabled' : '' }}
                 title="{{ $rfq->rfqLines->isEmpty() ? 'Please add at least one RFQ line before submitting' : 'Submit RFQ for approval' }}">
                 Submit for Approval
@@ -358,6 +366,8 @@
         </div>
     </div>
 </div>
+@endsection
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const categoryDropdown = document.getElementById('categoryDropdown');
@@ -376,8 +386,8 @@ document.addEventListener('DOMContentLoaded', function() {
     categoryDropdown.innerHTML = '<option value="">Loading categories...</option>';
     categoryDropdown.disabled = true;
 
-    // Use Laravel's route helper to generate the correct URL
-    // Use Laravel's route helper to generate the correct URL
+    // Use Laravel\'s route helper to generate the correct URL
+    // Use Laravel\'s route helper to generate the correct URL
     const url = `{{ route('rfq-lines.requisition.categories', ':requisitionId') }}`.replace(':requisitionId', requisitionId);
     
 
@@ -432,7 +442,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+@endpush
 
+@push('scripts')
 <script>
     function printRFQ() {
         const printContainer = document.getElementById('supplierQuotationsPrint');
@@ -583,20 +595,56 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 </script>
+@endpush
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Handle Submit for Approval Form
+        const submitForm = document.getElementById('submitRFQForm');
+        if (submitForm) {
+            submitForm.addEventListener('submit', function(e) {
+                // Confirm action
+                if (!confirm('Are you sure you want to submit this RFQ for approval?')) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Disable button to prevent double-submit
+                const btn = this.querySelector('button[type="submit"]');
+                if (btn) {
+                    // Use setTimeout to ensure the form submission process starts before disabling
+                    setTimeout(() => {
+                        btn.disabled = true;
+                        btn.innerText = 'Submitting...';
+                    }, 0);
+                }
+            });
+        }
+
         const approveForm = document.getElementById('supplierSelectionForm');
         const suppliersSelect = document.getElementById('suppliers');
 
-        approveForm.addEventListener('submit', function(e) {
-            const selected = Array.from(suppliersSelect.options).filter(option => option.selected);
+        if(approveForm && suppliersSelect) {
+             approveForm.addEventListener('submit', function(e) {
+                const selected = Array.from(suppliersSelect.options).filter(option => option.selected);
 
-            if (selected.length === 0) {
-                e.preventDefault();
-                alert('Please select at least one supplier before approving.');
+                if (selected.length === 0) {
+                    e.preventDefault();
+                    alert('Please select at least one supplier before approving.');
+                }
+            });
+        }
+    });
+
+    // Prevent aria-hidden focus conflict
+    document.addEventListener('hide.bs.modal', function(event) {
+        const modal = event.target;
+        if (modal && modal.classList.contains('modal')) {
+            const active = document.activeElement;
+            if (active && modal.contains(active) && typeof active.blur === 'function') {
+                active.blur();
             }
-        });
+        }
     });
 </script>
-
-@endsection
+@endpush
