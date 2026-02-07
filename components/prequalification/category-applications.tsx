@@ -1,267 +1,241 @@
 "use client"
 
-import { useState } from "react"
-import { RoundCategory, Round } from "@/types/types"
+import { JSX, useCallback, useMemo, useState } from "react"
 import { Badge } from "@/components/common/badge"
 import { Button } from "@/components/common/button"
-import { 
-    Dialog, 
-    DialogContent, 
-    DialogHeader, 
-    DialogTitle, 
-    DialogTrigger 
+import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger
 } from "@/components/common/dialog"
-import { 
-    CheckCircle2, 
-    XCircle, 
-    Clock, 
-    AlertTriangle, 
-    FileCheck, 
-    Eye,
-    Calendar,
-    TrendingUp,
-    Plus
-} from "lucide-react"
+import { Calendar, CheckCircle2, Clock, Info, AlertTriangle, ArrowRight } from "lucide-react"
+import { Round } from "@/types/types"
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
 
-interface CategoryApplicationsProps {
-    round: Round;
-    className?: string;
+const STATUS_THEME: Record<
+    string,
+    { label: string; color: string; icon: JSX.Element }
+> = {
+    NOT_APPLIED: {
+        label: "Not applied",
+        color: "bg-slate-50 text-slate-700 border-slate-200",
+        icon: <Info className="h-3 w-3" />
+    },
+    DRAFT: {
+        label: "Draft",
+        color: "bg-amber-50 text-amber-700 border-amber-200",
+        icon: <Clock className="h-3 w-3" />
+    },
+    SUBMITTED: {
+        label: "Submitted",
+        color: "bg-blue-50 text-blue-700 border-blue-200",
+        icon: <Clock className="h-3 w-3" />
+    },
+    UNDER_REVIEW: {
+        label: "Under review",
+        color: "bg-purple-50 text-purple-700 border-purple-200",
+        icon: <Info className="h-3 w-3" />
+    },
+    APPROVED: {
+        label: "Approved",
+        color: "bg-emerald-50 text-emerald-700 border-emerald-200",
+        icon: <CheckCircle2 className="h-3 w-3" />
+    },
+    REJECTED: {
+        label: "Rejected",
+        color: "bg-rose-50 text-rose-700 border-rose-200",
+        icon: <AlertTriangle className="h-3 w-3" />
+    }
 }
 
-const getCategoryStatusConfig = (status: RoundCategory['status']) => {
-    switch (status) {
-        case 'NOT_APPLIED':
-            return {
-                label: 'Not Applied',
-                icon: <Plus className="w-3 h-3" />,
-                variant: 'outline' as const,
-                color: 'bg-slate-50 text-slate-600 border-slate-200'
-            };
-        case 'DRAFT':
-            return {
-                label: 'Draft',
-                icon: <FileCheck className="w-3 h-3" />,
-                variant: 'secondary' as const,
-                color: 'bg-amber-50 text-amber-700 border-amber-200'
-            };
-        case 'SUBMITTED':
-            return {
-                label: 'Submitted',
-                icon: <Clock className="w-3 h-3" />,
-                variant: 'default' as const,
-                color: 'bg-blue-50 text-blue-700 border-blue-200'
-            };
-        case 'UNDER_REVIEW':
-            return {
-                label: 'Under Review',
-                icon: <Eye className="w-3 h-3" />,
-                variant: 'default' as const,
-                color: 'bg-purple-50 text-purple-700 border-purple-200'
-            };
-        case 'APPROVED':
-            return {
-                label: 'Approved',
-                icon: <CheckCircle2 className="w-3 h-3" />,
-                variant: 'default' as const,
-                color: 'bg-emerald-50 text-emerald-700 border-emerald-200'
-            };
-        case 'REJECTED':
-            return {
-                label: 'Rejected',
-                icon: <XCircle className="w-3 h-3" />,
-                variant: 'destructive' as const,
-                color: 'bg-rose-50 text-rose-700 border-rose-200'
-            };
-        default:
-            return {
-                label: 'Unknown',
-                icon: <AlertTriangle className="w-3 h-3" />,
-                variant: 'secondary' as const,
-                color: 'bg-slate-50 text-slate-600 border-slate-200'
-            };
-    }
-};
+const buildCategoryStatus = (status: string | undefined) => {
+    const normalized = (status ?? "NOT_APPLIED").toUpperCase()
+    const expanded =
+        normalized === "S"
+            ? "SUBMITTED"
+            : normalized === "V"
+            ? "APPROVED"
+            : normalized === "P"
+            ? "UNDER_REVIEW"
+            : normalized
+    const key = expanded
+    return STATUS_THEME[key] ?? STATUS_THEME.NOT_APPLIED
+}
 
-const CategoryProgressBar = ({ category }: { category: RoundCategory }) => (
-    <div className="flex items-center gap-2 min-w-[80px]">
-        <div className="flex-1 h-2 rounded bg-slate-200 dark:bg-slate-800 overflow-hidden">
-            <div 
-                className="h-2 bg-emerald-500 transition-all" 
-                style={{ width: `${Math.min(100, Math.max(0, category.progress_percent))}%` }} 
-            />
-        </div>
-        <span className="text-xs tabular-nums w-8 text-right text-slate-600">
-            {category.progress_percent}%
-        </span>
-    </div>
-);
+const formatDate = (value?: string) => {
+    if (!value) return null
+    const parsed = new Date(value)
+    if (Number.isNaN(parsed.getTime())) return null
+    return parsed.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+    })
+}
 
-const CategoryDetailView = ({ categories }: { categories: RoundCategory[] }) => {
-    return (
-        <div className="space-y-4">
-            {categories.map((category) => {
-                const statusConfig = getCategoryStatusConfig(category.status);
-                
-                return (
-                    <div 
-                        key={category.category_id} 
-                        className="rounded-xl border border-slate-200 bg-white p-4 space-y-3"
-                    >
-                        <div className="flex items-start justify-between">
-                            <div className="space-y-1">
-                                <h4 className="font-medium text-sm">
-                                    {category.category_name}
-                                </h4>
-                                {category.category_description && (
-                                    <p className="text-xs text-slate-600">
-                                        {category.category_description}
-                                    </p>
-                                )}
-                            </div>
-                            <Badge className={cn("text-xs", statusConfig.color)}>
-                                {statusConfig.icon}
-                                <span className="ml-1">{statusConfig.label}</span>
-                            </Badge>
-                        </div>
-                        
-                        {category.has_applied && (
-                            <div className="space-y-2">
-                                <CategoryProgressBar category={category} />
-                                
-                                <div className="grid grid-cols-2 gap-4 text-xs text-slate-600">
-                                    {category.application_date && (
-                                        <div className="flex items-center gap-1">
-                                            <Calendar className="w-3 h-3" />
-                                            <span>Applied: {new Date(category.application_date).toLocaleDateString()}</span>
-                                        </div>
-                                    )}
-                                    {category.updated_on && (
-                                        <div className="flex items-center gap-1">
-                                            <TrendingUp className="w-3 h-3" />
-                                            <span>Updated: {new Date(category.updated_on).toLocaleDateString()}</span>
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                {category.stage_label && (
-                                    <div className="text-xs">
-                                        <span className="font-medium">Current Stage:</span> {category.stage_label}
-                                    </div>
-                                )}
-                                
-                                {category.rejection_reason && (
-                                    <div className="rounded border border-rose-200 bg-rose-50 p-2 text-xs text-rose-700">
-                                        <span className="font-medium">Rejection Reason:</span> {category.rejection_reason}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                );
-            })}
-        </div>
-    );
-};
+interface CategoryApplicationsProps {
+    round: Round
+    className?: string
+}
 
 export default function CategoryApplications({ round, className }: CategoryApplicationsProps) {
-    const [isOpen, setIsOpen] = useState(false);
-    
-    if (!round.categories || round.categories.length === 0) {
-        return (
-            <span className={cn("text-xs text-slate-500", className)}>
-                No categories
-            </span>
-        );
-    }
+    const [isOpen, setIsOpen] = useState(false)
 
-    // Deduplicate categories by id to avoid duplicates in UI
-    const uniqueCategories = Array.from(new Map(round.categories.map(c => [c.category_id, c])).values());
-    const appliedCategories = uniqueCategories.filter(cat => cat.has_applied);
-    const totalCategories = uniqueCategories.length;
-    
-    if (appliedCategories.length === 0) {
-        return (
-            <span className={cn("text-xs text-slate-500", className)}>
-                Not applied
-            </span>
-        );
-    }
+    const categories = round.categories ?? []
+    const appliedCategories = round.appliedCategories ?? categories.filter((cat) => cat.has_applied)
+    const totalCategories = round.categoryCount ?? categories.length
+    const availableCategories = Math.max(totalCategories - appliedCategories.length, 0)
 
-    // Simple summary for table view
-    const SimpleSummary = () => (
-        <div className="flex items-center gap-2">
-            <span className="text-xs font-medium">
-                {appliedCategories.length}/{totalCategories} applied
-            </span>
-            {appliedCategories.length > 0 && (
-                <div className="flex gap-1">
-                    {appliedCategories.slice(0, 2).map((category) => {
-                        const statusConfig = getCategoryStatusConfig(category.status);
-                        return (
-                            <Badge 
-                                key={category.category_id}
-                                className={cn("text-xs px-1 py-0 h-5", statusConfig.color)}
-                            >
-                                {category.category_name.substring(0, 3)}
-                            </Badge>
-                        );
-                    })}
-                    {appliedCategories.length > 2 && (
-                        <Badge className="text-xs px-1 py-0 h-5 bg-slate-100 text-slate-600 border border-slate-200">
-                            +{appliedCategories.length - 2}
-                        </Badge>
-                    )}
-                </div>
-            )}
-        </div>
-    );
+    const instructions = useMemo(() => {
+        if (round.instructions) return round.instructions
+        return round.description
+    }, [round.instructions, round.description])
+
+    const router = useRouter()
+    const startApplication = useCallback(() => {
+        setIsOpen(false)
+        router.push(`/dashboard/prequalification/application?roundId=${round.id}`)
+    }, [router, round.id, setIsOpen])
+
+    const headerButtonText = availableCategories > 0 ? "View active categories" : "View round details"
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <div className={cn("flex flex-col gap-1 text-xs text-slate-500", className)}>
+                <span className="text-sm font-semibold text-slate-700">
+                    {appliedCategories.length}/{totalCategories || 0} categories applied
+                </span>
+                <span className="text-[11px]">
+                    {availableCategories > 0
+                        ? `${availableCategories} categories still open`
+                        : "All categories submitted"}
+                </span>
+            </div>
             <DialogTrigger asChild>
-                <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className={cn("h-auto p-1 font-medium justify-start hover:bg-transparent text-slate-700", className)}
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    className="mt-2 flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-900/90 to-slate-800/90 px-4 py-3 text-[12px] font-semibold uppercase tracking-[0.25em] text-white shadow-lg shadow-slate-900/30 transition-all hover:brightness-110 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-400"
                 >
-                    <SimpleSummary />
+                    {headerButtonText}
+                    <ArrowRight className="h-3 w-3 text-white" />
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <span>Category Applications</span>
-                        <Badge variant="outline" className="text-xs">
-                            {round.title}
-                        </Badge>
+
+            <DialogContent className="w-[clamp(320px,100vw-2rem,1700px)] max-w-[min(100vw-2rem,1700px)] max-h-[calc(100vh-3rem)] overflow-y-auto rounded-[32px] border border-slate-200 bg-white px-6 py-6 shadow-none sm:px-10 lg:px-14 xl:px-16 2xl:px-20">
+                <DialogHeader className="text-left gap-1">
+                    <DialogTitle className="text-xl font-semibold text-slate-900">
+                        {round.title}
                     </DialogTitle>
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.3em] text-slate-500">
+                        Prequalification overview
+                    </p>
                 </DialogHeader>
-                
-                <div className="space-y-4">
-                    {round.applicationSummary && (
-                        <div className="bg-slate-50 rounded-xl border border-slate-200 p-3 space-y-2">
-                            <h4 className="font-medium text-sm">Summary</h4>
-                            <div className="grid grid-cols-2 gap-3 text-xs">
-                                <div>Applied: {round.applicationSummary.applied_categories}/{round.applicationSummary.total_categories}</div>
-                                <div>Approved: {round.applicationSummary.approved_categories}</div>
-                                <div>Rejected: {round.applicationSummary.rejected_categories}</div>
-                                <div>Pending: {round.applicationSummary.pending_categories}</div>
-                            </div>
+
+                <div className="grid gap-8 border-b border-slate-100 pb-6 text-sm text-slate-600 lg:grid-cols-2">
+                    <div className="space-y-2">
+                        <p className="font-semibold text-slate-900">Description</p>
+                        <p className="text-sm leading-relaxed text-slate-600">
+                            {round.description ?? "Description is being curated. Check back soon for more context."}
+                        </p>
+                    </div>
+                    <div className="space-y-2">
+                        <p className="font-semibold text-slate-900">How to apply</p>
+                        <p className="text-sm leading-relaxed text-slate-600">
+                            {round.howToApply ??
+                                instructions ??
+                                "Use the e-procurement portal to submit each category with the requested documentation and fee."}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="mt-8 space-y-5">
+                    <div className="flex items-center justify-between text-xs uppercase tracking-widest text-slate-500">
+                        <span>Categories</span>
+                        <span>
+                            {appliedCategories.length}/{totalCategories || 0} applied
+                        </span>
+                    </div>
+
+                    {categories.length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-sm text-slate-500">
+                            Categories will appear here once the round is fully published.
+                        </div>
+                    ) : (
+                        <div className="space-y-5 divide-y divide-slate-200">
+                            {categories.map((category) => {
+                                const status = buildCategoryStatus(category.status)
+                                return (
+                                    <div
+                                        key={`${category.category_id}-${category.application_id ?? "noseq"}`}
+                                        className="py-4"
+                                    >
+                                        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                                            <div className="flex flex-col gap-1">
+                                                <p className="text-sm font-semibold text-slate-900 break-all">
+                                                    {category.category_name}
+                                                </p>
+                                                <p className="text-xs text-slate-500">
+                                                    {category.category_description ?? "No description provided."}
+                                                </p>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <Badge className={cn("text-xs font-semibold", status.color)}>
+                                                    {status.icon}
+                                                    <span className="ml-1 break-words">{status.label}</span>
+                                                </Badge>
+                                                {category.has_applied && (
+                                                    <Badge className="text-[10px] font-semibold uppercase border border-emerald-200 bg-emerald-50 text-emerald-700">
+                                                        Already applied
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 flex flex-wrap gap-6 text-[11px] text-slate-500">
+                                            {category.application_date && (
+                                                <div className="flex items-center gap-1">
+                                                    <Calendar className="h-3 w-3" />
+                                                    <span>Applied on {formatDate(category.application_date)}</span>
+                                                </div>
+                                            )}
+                                            {category.stage_label && (
+                                                <div className="flex items-center gap-1">
+                                                    <Clock className="h-3 w-3" />
+                                                    <span className="break-words">Current stage: {category.stage_label}</span>
+                                                </div>
+                                            )}
+                                            {category.rejection_reason && (
+                                                <div className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-rose-700">
+                                                    <AlertTriangle className="h-3 w-3" />
+                                                    <span>Rejection: {category.rejection_reason}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )
+                            })}
                         </div>
                     )}
-                    
-                    <CategoryDetailView categories={uniqueCategories} />
                 </div>
+
+                <DialogFooter className="mt-6 flex-col gap-3 border-t border-slate-100 pt-4 text-[12px] text-slate-500 sm:flex-row sm:justify-between">
+                    <span>
+                        Need help? Reach out through the Clarifications Inbox or contact your procurement team for guidance.
+                    </span>
+                    <Button
+                        variant="default"
+                        size="sm"
+                        className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-blue-600 px-5 py-3 text-[13px] font-semibold text-white shadow-lg shadow-emerald-500/40 transition-all hover:scale-[1.01] hover:shadow-emerald-500/60 sm:w-auto"
+                        onClick={startApplication}
+                    >
+                        Start application
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
-    );
+    )
 }
-
-
-
-
-
-
-
-

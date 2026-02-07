@@ -211,12 +211,12 @@ export async function getDashboardData() {
             return deadline >= now && deadline <= soonThreshold
         }).length
 
-        const inactiveLeases = Math.max(0, leaseTotal - activeLeases)
+            const inactiveLeases = Math.max(0, leaseTotal - activeLeases)
 
-        let invoicePaid = 0
-        let invoicePending = 0
-        let invoiceOverdue = 0
-        let outstandingAmount = 0
+            let invoicePaid = 0
+            let invoicePending = 0
+            let invoiceOverdue = 0
+            let outstandingAmount = 0
 
         const invoiceTotal =
             Number(invoicesRes.status === "fulfilled" ? invoicesRes.value?.meta?.total : NaN) ||

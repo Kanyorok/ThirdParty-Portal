@@ -6,6 +6,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 
 type LookupItem = {
+    id: string
+    name: string
+    label: string
     value: string
     description: string
 }

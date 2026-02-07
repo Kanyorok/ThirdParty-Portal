@@ -6,7 +6,7 @@ import { LayoutKeys } from "@/lib/layout-constants"
 
 export async function updateLayoutPreference(key: LayoutKeys, value: string) {
     if (!Object.values(LayoutKeys).includes(key)) {
-        throw new Error("Invalid layout preference key.")
+        throw new Error("Invalid layout key.")
     }
 
     try {
@@ -21,7 +21,7 @@ export async function updateLayoutPreference(key: LayoutKeys, value: string) {
 
         return { success: true, key, value }
     } catch (error) {
-        console.error("Failed to set layout preference cookie:", error)
-        throw new Error("Could not update layout preference due to server error.")
+        console.error("Failed", error)
+        throw new Error("Server Error")
     }
 }

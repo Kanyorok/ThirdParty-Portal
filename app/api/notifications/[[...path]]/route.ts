@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth-options"
 
 export const dynamic = "force-dynamic"
 
-function resolveUpstreamBase(): string {
+function resolveUpstreamBase(pathParts: string[] | undefined): string {
   const explicit = process.env.NEXT_PUBLIC_API_URL
   if (explicit) return explicit
   return "/api/v1/portal/notifications"

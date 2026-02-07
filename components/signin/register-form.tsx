@@ -57,7 +57,7 @@ export default function RegisterForm() {
   }
 
   const nextStep = async () => {
-    const fields: string[] = [
+    const baseFields = [
       "Name",
       "TradingName",
       "BusinessType",
@@ -71,12 +71,15 @@ export default function RegisterForm() {
       "Website",
       "PhysicalAddress",
       "types"
+    ] as const
+
+    const fields = [
+      ...baseFields,
+      ...(isTenant ? ["user_Remarks"] : []),
+      ...(isSupplier ? ["user_SupplierCategoryId"] : [])
     ]
 
-    if (isTenant) fields.push("user_Remarks")
-    if (isSupplier) fields.push("user_SupplierCategoryId")
-
-    const valid = await form.trigger(fields)
+    const valid = await form.trigger(fields as any)
     if (!valid) return
 
     if (!createUser) {
@@ -100,6 +103,40 @@ export default function RegisterForm() {
     "text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2 block"
   const errorStyle =
     "text-xs text-red-600 mt-1.5 flex items-center gap-1"
+
+  const roleLabelMap: Record<string, string> = {
+    SU: "Supplier",
+    TN: "Tenant",
+    CU: "Customer"
+  }
+
+  const benefitHighlights = [
+    {
+      title: "Compliance ready",
+      detail: "Structured fields keep documentation aligned with regulatory expectations."
+    },
+    {
+      title: "Role-aware onboarding",
+      detail: "Supplier, tenant, and customer flows adjust without extra clicks."
+    },
+    {
+      title: "Secure admin access",
+      detail: "Create the first admin with password visibility controls and email verification."
+    }
+  ]
+
+  const stepLabels = [
+    {
+      title: "Organization",
+      detail: "Tell us about your company and how you serve your customers."
+    },
+    {
+      title: "Admin user",
+      detail: "Create the first portal admin and invite colleagues later."
+    }
+  ]
+
+  const selectedRoleNames = selectedTypes?.map(type => roleLabelMap[type] ?? type) ?? []
 
   if (isLoadingMetadata)
     return (
