@@ -18,6 +18,40 @@ class NewThirdPartyRequest extends FormRequest
 {
     use CodeDetailsTrait;
 
+    protected function prepareForValidation(): void
+    {
+        $countryCode = $this->input('Country');
+
+        if (! $countryCode) {
+            return;
+        }
+
+        $country = Country::where('CountryCode', $countryCode)->first();
+
+        if (! $country) {
+            return;
+        }
+
+        $this->formatPhoneField('Phone', $country);
+        $this->formatPhoneField('user_Phone', $country);
+    }
+
+    private function formatPhoneField(string $field, Country $country): void
+    {
+        $value = $this->input($field);
+
+        if (! $value) {
+            return;
+        }
+
+        try {
+            $formatted = (string) (new PhoneNumber($value, $country->CountryCode))->formatE164();
+            $this->merge([$field => $formatted]);
+        } catch (\Throwable) {
+            //
+        }
+    }
+
     public function rules(): array
     {
         $isUser = $this->boolean('createUser');
@@ -37,7 +71,11 @@ class NewThirdPartyRequest extends FormRequest
             'TaxPIN' => ['nullable', 'string', 'max:200'],
             'VATNumber' => ['nullable', 'string', 'max:200'],
             'Email' => ['nullable', 'email', 'max:250'],
-            'Phone' => ['required', (new Phone())->countryField('Country')],
+            'Phone' => [
+                'required',
+                (new Phone())->countryField('Country'),
+                Rule::unique('t_ThirdParties', 'Phone')->whereNull('DeletedOn'),
+            ],
             'PhysicalAddress' => ['nullable', 'string', 'max:200'],
             'types' => ['required', 'array', 'min:1'],
             'logo' => ['nullable', Rule::imageFile()->max(9000)],
@@ -139,7 +177,9 @@ class NewThirdPartyRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'Phone.*' => 'invalid phone number provided.',
+            'Phone.unique' => 'This phone number is already registered. Try a different number buddy!',
+            'Phone.phone' => 'invalid phone number provided.',
+            'Phone.country' => 'invalid phone number provided.',
             'user_Phone.*' => 'invalid phone number provided.',
         ];
     }
