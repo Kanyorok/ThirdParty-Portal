@@ -3,19 +3,30 @@
 import { useMemo, memo } from "react"
 import { motion, Variants } from "framer-motion"
 import {
-  BarChart,
-  Clock,
-  CheckCircle,
-  XCircle,
-  ChevronRight,
   Activity,
-  FileText,
   AlertCircle,
+  BarChart,
+  Building,
+  Calendar,
+  CheckCircle,
+  ChevronRight,
+  Clock,
+  Coins,
+  Edit,
+  FileSearch,
+  FileText,
+  Lock,
   Mail,
+  Wallet,
+  XCircle,
 } from "lucide-react"
 import { Skeleton } from "@/components/common/skeleton"
 import { cn } from "@/lib/utils"
-import { useDashboardStore } from "@/store/use-dashboard-store"
+import {
+  useDashboardStore,
+  type TenantBreakdown,
+} from "@/store/use-dashboard-store"
+import type { ProfileType } from "@/store/use-profile-store"
 import { useShallow } from "zustand/react/shallow"
 
 type PreqBreakdown = {
@@ -31,6 +42,16 @@ type RFQBreakdown = {
   draft: number
   submitted: number
   closed: number
+}
+
+type TenderBreakdown = {
+  open: number
+  draft: number
+  closed: number
+}
+
+type SummaryChartsProps = {
+  profile?: ProfileType
 }
 
 const containerVariants: Variants = {
@@ -126,16 +147,18 @@ const SectionHeader = ({
   </div>
 )
 
-export default function SummaryCharts() {
+export default function SummaryCharts({ profile }: SummaryChartsProps) {
   const { summary, loading, error } = useDashboardStore(
-    useShallow(s => ({
+    useShallow((s) => ({
       summary: s.summary,
       loading: s.loading,
       error: s.error,
     }))
   )
 
-  const preq = summary?.breakdowns?.prequalification as PreqBreakdown | undefined
+  const preq = summary?.breakdowns?.prequalification as
+    | PreqBreakdown
+    | undefined
   const rfqs = summary?.breakdowns?.rfqs as RFQBreakdown | undefined
 
   const preqTotal = useMemo(
@@ -148,20 +171,59 @@ export default function SummaryCharts() {
     [rfqs]
   )
 
+  const tenderBreakdown = summary?.breakdowns?.tenders as
+    | TenderBreakdown
+    | undefined
+  const tenderTotal = useMemo(
+    () => Object.values(tenderBreakdown || {}).reduce((a, b) => a + b, 0),
+    [tenderBreakdown]
+  )
+  const tenderCardTotal = summary?.summary?.tendersAvailable ?? tenderTotal
+  const activePreqCount = summary?.summary?.activePreq ?? 0
+  const completedPreqCount = summary?.summary?.completedPreq ?? 0
+
+  const tenantBreakdown = summary?.breakdowns?.tenant as
+    | TenantBreakdown
+    | undefined
+  const leaseSummary = tenantBreakdown?.leases
+  const invoiceSummary = tenantBreakdown?.invoices
+
+  const leaseTotal = leaseSummary
+    ? leaseSummary.total ||
+      leaseSummary.active +
+        leaseSummary.expiringSoon +
+        leaseSummary.inactive
+    : 0
+
+  const renewalsSoon = leaseSummary?.expiringSoon ?? 0
+  const pendingCount = invoiceSummary?.pending ?? 0
+  const overdueCount = invoiceSummary?.overdue ?? 0
+
+  const invoiceCountFallback =
+    (invoiceSummary?.paid ?? 0) +
+    (invoiceSummary?.pending ?? 0) +
+    (invoiceSummary?.overdue ?? 0)
+
+  const invoiceTotal = Math.max(invoiceSummary?.total ?? 0, invoiceCountFallback)
+  const outstandingAmount = invoiceSummary?.outstandingAmount ?? 0
+  const formattedOutstanding = outstandingAmount.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+
+  const isTenantView = profile === "Tenant"
+
   if (loading)
     return (
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {[1, 2].map(i => (
-          <div
-            key={i}
-            className="rounded-2xl border border-border/50 bg-card p-6"
-          >
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-2xl border border-border/50 bg-card p-6">
             <div className="flex justify-between items-center">
               <Skeleton className="h-6 w-40 rounded-lg" />
               <Skeleton className="h-6 w-20 rounded-full" />
             </div>
             <div className="mt-5 space-y-3">
-              {[1, 2, 3, 4].map(j => (
+              {[1, 2, 3].map((j) => (
                 <Skeleton key={j} className="h-16 w-full rounded-xl" />
               ))}
             </div>
@@ -180,24 +242,160 @@ export default function SummaryCharts() {
       </div>
     )
 
+  if (isTenantView) {
+    return (
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <motion.section className="rounded-2xl bg-card border border-border/50 p-6 md:p-7">
+          <SectionHeader title="Leases" icon={Building} total={leaseTotal} />
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            className="space-y-1"
+          >
+            <StatusListItem
+              value={leaseSummary?.active || 0}
+              total={leaseTotal}
+              label="Active leases"
+              color="bg-emerald-500"
+              icon={CheckCircle}
+            />
+            <StatusListItem
+              value={leaseSummary?.expiringSoon || 0}
+              total={leaseTotal}
+              label="Expiring soon"
+              color="bg-amber-500"
+              icon={Calendar}
+            />
+            <StatusListItem
+              value={leaseSummary?.inactive || 0}
+              total={leaseTotal}
+              label="Inactive"
+              color="bg-slate-500"
+              icon={XCircle}
+            />
+          </motion.div>
+        </motion.section>
+
+        <motion.section className="rounded-2xl bg-card border border-border/50 p-6 md:p-7">
+          <SectionHeader
+            title="Invoices"
+            icon={Wallet}
+            total={invoiceTotal}
+          />
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            className="space-y-1"
+          >
+            <StatusListItem
+              value={invoiceSummary?.pending || 0}
+              total={invoiceTotal}
+              label="Pending payments"
+              color="bg-amber-500"
+              icon={Clock}
+            />
+            <StatusListItem
+              value={invoiceSummary?.overdue || 0}
+              total={invoiceTotal}
+              label="Overdue"
+              color="bg-rose-500"
+              icon={AlertCircle}
+            />
+            <StatusListItem
+              value={invoiceSummary?.paid || 0}
+              total={invoiceTotal}
+              label="Paid"
+              color="bg-emerald-500"
+              icon={CheckCircle}
+            />
+          </motion.div>
+        </motion.section>
+
+        <motion.section className="rounded-2xl bg-card border border-border/50 p-6 md:p-7">
+          <SectionHeader
+            title="Financial snapshot"
+            icon={Coins}
+            total={invoiceTotal}
+          />
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            className="space-y-4"
+          >
+            <div>
+              <p className="text-4xl font-black tracking-tight text-foreground">
+                KES {formattedOutstanding}
+              </p>
+              <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">
+                Outstanding balance
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+              <span className="flex items-center justify-center gap-1 rounded-full border border-border/60 bg-muted/20 px-3 py-1">
+                <AlertCircle className="h-3 w-3 text-rose-500" />
+                Overdue {invoiceSummary?.overdue || 0}
+              </span>
+              <span className="flex items-center justify-center gap-1 rounded-full border border-border/60 bg-muted/20 px-3 py-1">
+                <Clock className="h-3 w-3 text-amber-500" />
+                Pending {invoiceSummary?.pending || 0}
+              </span>
+            </div>
+
+            <div className="space-y-2 text-xs text-muted-foreground">
+              <div className="flex items-center justify-between uppercase tracking-[0.3em]">
+                <span>Renewals soon</span>
+                <span className="font-semibold text-foreground">
+                  {leaseSummary?.expiringSoon || 0}
+                </span>
+              </div>
+              <div className="flex items-center justify-between uppercase tracking-[0.3em]">
+                <span>Active leases</span>
+                <span className="font-semibold text-foreground">
+                  {leaseSummary?.active || 0}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              {invoiceSummary?.total
+                ? `${invoiceSummary.total} invoice${
+                    invoiceSummary.total === 1 ? "" : "s"
+                  } tracked`
+                : "No invoices synced yet."}
+            </p>
+          </motion.div>
+        </motion.section>
+      </div>
+    )
+  }
+
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <motion.section className="rounded-2xl bg-card border border-border/50 p-6 md:p-7">
-        <SectionHeader
-          title="Prequalification"
-          icon={Activity}
-          total={preqTotal}
-        />
+        <SectionHeader title="Prequalification" icon={Activity} total={preqTotal} />
+        <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.4em] text-muted-foreground">
+          <span className="rounded-full border border-border/50 bg-muted/20 px-3 py-1 text-foreground">
+            Active {activePreqCount}
+          </span>
+          <span className="rounded-full border border-border/50 bg-muted/20 px-3 py-1 text-foreground">
+            Completed {completedPreqCount}
+          </span>
+        </div>
         <motion.div
           initial="hidden"
           animate="visible"
           variants={containerVariants}
-          className="space-y-1"
+          className="space-y-1 mt-4"
         >
           <StatusListItem value={preq?.approved || 0} total={preqTotal} label="Approved" color="bg-emerald-500" icon={CheckCircle} />
           <StatusListItem value={preq?.under_review || 0} total={preqTotal} label="In review" color="bg-amber-500" icon={Clock} />
           <StatusListItem value={preq?.submitted || 0} total={preqTotal} label="Submitted" color="bg-sky-500" icon={BarChart} />
           <StatusListItem value={preq?.rejected || 0} total={preqTotal} label="Rejected" color="bg-rose-500" icon={XCircle} />
+          <StatusListItem value={preq?.not_applied || 0} total={preqTotal} label="Not applied" color="bg-slate-500" icon={AlertCircle} />
         </motion.div>
       </motion.section>
 
@@ -213,6 +411,20 @@ export default function SummaryCharts() {
           <StatusListItem value={rfqs?.draft || 0} total={rfqTotal} label="Draft" color="bg-amber-500" icon={Clock} />
           <StatusListItem value={rfqs?.submitted || 0} total={rfqTotal} label="Submitted" color="bg-emerald-500" icon={CheckCircle} />
           <StatusListItem value={rfqs?.closed || 0} total={rfqTotal} label="Closed (Passed Deadline)" color="bg-rose-500" icon={XCircle} />
+        </motion.div>
+      </motion.section>
+
+      <motion.section className="rounded-2xl bg-card border border-border/50 p-6 md:p-7">
+        <SectionHeader title="Tender opportunities" icon={FileSearch} total={tenderCardTotal} />
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+          className="space-y-1"
+        >
+          <StatusListItem value={tenderBreakdown?.open || 0} total={tenderTotal} label="Open & published" color="bg-emerald-500" icon={FileSearch} />
+          <StatusListItem value={tenderBreakdown?.draft || 0} total={tenderTotal} label="Drafts" color="bg-amber-500" icon={Edit} />
+          <StatusListItem value={tenderBreakdown?.closed || 0} total={tenderTotal} label="Closed / archived" color="bg-rose-500" icon={Lock} />
         </motion.div>
       </motion.section>
     </div>

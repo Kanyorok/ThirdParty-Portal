@@ -2,7 +2,13 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/common/card";
-import { Briefcase, CheckCircle2, FileText, Mail, Sparkles } from "lucide-react";
+import {
+    ClipboardCheck,
+    FileSearch,
+    MailCheck,
+    Sparkles,
+    Trophy,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -53,11 +59,34 @@ function resolveCounts(raw?: DashboardSummaryResponse | null) {
     };
 }
 
-const toneClasses: Record<SummaryCardItem["tone"], { icon: string; chip: string; ring: string }> = {
-    primary: { icon: "text-primary", chip: "bg-primary/5 text-primary border-primary/15", ring: "ring-primary/10" },
-    emerald: { icon: "text-emerald-600", chip: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20", ring: "ring-emerald-500/10" },
-    sky: { icon: "text-sky-600", chip: "bg-sky-500/10 text-sky-700 border-sky-500/20", ring: "ring-sky-500/10" },
-    amber: { icon: "text-amber-600", chip: "bg-amber-500/10 text-amber-700 border-amber-500/20", ring: "ring-amber-500/10" },
+const toneClasses: Record<
+    SummaryCardItem["tone"],
+    { icon: string; chip: string; ring: string; card: string }
+> = {
+    primary: {
+        icon: "text-white",
+        chip: "bg-white/15 text-white border-white/25",
+        ring: "ring-white/20",
+        card: "bg-gradient-to-br from-primary/90 via-primary/70 to-primary/60 border-primary/60 text-white",
+    },
+    emerald: {
+        icon: "text-white",
+        chip: "bg-emerald-500/30 text-white border-emerald-500/40",
+        ring: "ring-emerald-500/30",
+        card: "bg-gradient-to-br from-emerald-600 via-emerald-500 to-emerald-400 border-emerald-500/70 text-white",
+    },
+    sky: {
+        icon: "text-white",
+        chip: "bg-sky-500/20 text-white border-sky-500/40",
+        ring: "ring-sky-500/30",
+        card: "bg-gradient-to-br from-sky-600 via-sky-500 to-sky-400 border-sky-500/60 text-white",
+    },
+    amber: {
+        icon: "text-white",
+        chip: "bg-amber-500/25 text-white border-amber-500/40",
+        ring: "ring-amber-500/30",
+        card: "bg-gradient-to-br from-amber-600 via-amber-500 to-amber-400 border-amber-500/60 text-white",
+    },
 };
 
 export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSummaryResponse | null; isLoading?: boolean }) {
@@ -92,28 +121,28 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
         {
             title: "Active prequalification",
             count: resolved.activePreq,
-            icon: Briefcase,
+            icon: ClipboardCheck,
             description: "In progress or under review.",
             tone: "primary",
         },
         {
             title: "Direct invites",
             count: resolved.directInvites,
-            icon: Mail,
+            icon: MailCheck,
             description: "Invitations that need your response.",
             tone: "sky",
         },
         {
             title: "Available tenders",
             count: resolved.tendersAvailable,
-            icon: FileText,
+            icon: FileSearch,
             description: "Open tenders you can apply to.",
             tone: "amber",
         },
         {
             title: "Completed",
             count: resolved.completedPreq,
-            icon: CheckCircle2,
+            icon: Trophy,
             description: "Approved or completed outcomes.",
             tone: "emerald",
         },
@@ -142,8 +171,13 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
                               transition={{ delay: index * 0.05, duration: 0.25, ease: "easeOut" }}
                               className="h-full"
                           >
-                              <Card className="h-full rounded-2xl border border-border/50 bg-card shadow-none">
-                                  <CardContent className="p-5">
+                            <Card
+                                className={cn(
+                                    "h-full rounded-2xl border border-border/60 shadow-none bg-transparent transition hover:-translate-y-0.5 focus-visible:-translate-y-0.5",
+                                    t.card
+                                )}
+                            >
+                                  <CardContent className="flex h-full flex-col gap-3 p-5">
                                       <div className="flex items-start justify-between gap-3">
                                           <div
                                               className={cn(
@@ -155,19 +189,20 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
                                               <item.icon className={cn("h-5 w-5", t.icon)} />
                                           </div>
                                           <div className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-muted/20 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-                                              <Sparkles className="h-3.5 w-3.5 text-primary/70" />
+                                              <Sparkles className="h-3.5 w-3.5 text-white/70" />
                                               Updated
                                           </div>
                                       </div>
 
-                                      <div className="mt-4 text-sm font-semibold text-foreground">{item.title}</div>
-                                      <div className="mt-2 text-3xl font-semibold tracking-tight text-foreground tabular-nums">
+                                      <div className="mt-4 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
+                                          {item.title}
+                                      </div>
+                                      <div className="mt-1 text-3xl font-black tracking-tight text-white tabular-nums">
                                           {item.count.toLocaleString()}
                                       </div>
-                                      <div className="mt-2 text-xs text-muted-foreground">{item.description}</div>
-                                  </CardContent>
-                              </Card>
-                          </motion.div>
+                                      </CardContent>
+                                  </Card>
+                              </motion.div>
                       );
                   })}
         </div>

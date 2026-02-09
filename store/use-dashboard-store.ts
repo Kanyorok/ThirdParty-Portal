@@ -16,6 +16,32 @@ export type RFQBreakdown = {
     closed: number
 }
 
+export type TenderBreakdown = {
+    open: number
+    draft: number
+    closed: number
+}
+
+export type TenantLeaseSummary = {
+    total: number
+    active: number
+    expiringSoon: number
+    inactive: number
+}
+
+export type TenantInvoiceSummary = {
+    total: number
+    paid: number
+    pending: number
+    overdue: number
+    outstandingAmount: number
+}
+
+export type TenantBreakdown = {
+    leases: TenantLeaseSummary
+    invoices: TenantInvoiceSummary
+}
+
 export type RFQItem = {
     submissionDeadline?: string | null
     supplierResponse?: {
@@ -24,11 +50,20 @@ export type RFQItem = {
 }
 
 export type DashboardSummary = {
-    rfqs?: RFQItem[]
+    summary?: {
+        activePreq?: number
+        completedPreq?: number
+        directInvites?: number
+        tendersAvailable?: number
+        rfqsInvited?: number
+    }
     breakdowns?: {
         prequalification?: PreqBreakdown
         rfqs?: RFQBreakdown
+        tenders?: TenderBreakdown
+        tenant?: TenantBreakdown
     }
+    rfqs?: RFQItem[]
 }
 
 export type DashboardState = {

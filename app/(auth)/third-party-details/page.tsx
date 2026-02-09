@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { signOut } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { useState, useEffect } from 'react'
+import { signOut } from 'next-auth/react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { motion, AnimatePresence, Variants } from 'framer-motion'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
 import {
     Check,
     AlertCircle,
@@ -15,31 +15,31 @@ import {
     Building2,
     MapPin,
     UserCircle,
-} from 'lucide-react';
+} from 'lucide-react'
 
-import { Button } from '@/components/common/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/common/form';
-import { Input } from '@/components/common/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/common/select';
+import { Button } from '@/components/common/button'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/common/form'
+import { Input } from '@/components/common/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/common/select'
 
-import { useEnums } from '@/hooks/use-enums';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/common/popover";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { Calendar } from "@/components/common/calendar";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { useEnums } from '@/hooks/use-enums'
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/common/popover"
+import { format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
+import { Calendar } from "@/components/common/calendar"
+import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 interface Country {
-    id: number;
-    name: string;
-    code: string;
-    iso2?: string;
+    id: number
+    name: string
+    code: string
+    iso2?: string
 }
 
 interface Locality {
-    ID: number;
-    Name: string;
+    ID: number
+    Name: string
 }
 
 const formSchema = z.object({
@@ -104,66 +104,66 @@ const formSchema = z.object({
                 code: z.ZodIssueCode.custom,
                 message: "Date of Birth is required for Customers",
                 path: ["customer_DateOfBirth"]
-            });
+            })
         }
         if (!data.customer_Gender) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
                 message: "Gender is required for Customers",
                 path: ["customer_Gender"]
-            });
+            })
         }
         if (!data.customer_MaritalStatus) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
                 message: "Marital Status is required for Customers",
                 path: ["customer_MaritalStatus"]
-            });
+            })
         }
         if (!data.customer_Occupation) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
                 message: "Occupation is required for Customers",
                 path: ["customer_Occupation"]
-            });
+            })
         }
     }
-});
+})
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<typeof formSchema>
 
 //animation variants
 const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { duration: 0.6, staggerChildren: 0.08 } },
-};
+}
 const itemVariants: Variants = {
     hidden: { opacity: 0, y: 24 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-};
+}
 const statusVariants: Variants = {
     hidden: { opacity: 0, y: -16, scale: 0.96 },
     visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4 } },
     exit: { opacity: 0, y: -16, scale: 0.96, transition: { duration: 0.3 } },
-};
+}
 
 export default function RegisterThirdPartyDetails() {
-    const router = useRouter();
+    const router = useRouter()
     // searchParams and userId moved to lower scope to avoid duplication with new logic
 
 
     // Fetch Enums
-    const { data: businessTypes } = useEnums('BusinessType');
-    const { data: typeOptions } = useEnums('third-party-types');
-    const { data: genderOptions } = useEnums('Gender');
-    const { data: maritalStatusOptions } = useEnums('MaritalStatus');
-    const { data: occupationOptions } = useEnums('Occupation');
+    const { data: businessTypes } = useEnums('BusinessType')
+    const { data: typeOptions } = useEnums('third-party-types')
+    const { data: genderOptions } = useEnums('Gender')
+    const { data: maritalStatusOptions } = useEnums('MaritalStatus')
+    const { data: occupationOptions } = useEnums('Occupation')
 
-    const [countries, setCountries] = useState<Country[]>([]);
-    const [localities, setLocalities] = useState<Locality[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
+    const [countries, setCountries] = useState<Country[]>([])
+    const [localities, setLocalities] = useState<Locality[]>([])
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const [success, setSuccess] = useState<string | null>(null)
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
@@ -187,41 +187,41 @@ export default function RegisterThirdPartyDetails() {
             customer_Occupation: '',
         },
         mode: 'onChange',
-    });
+    })
 
     // Helper to check selected types
-    const selectedType = form.watch('types');
-    const isTenant = selectedType === 'TN';
-    const isCustomer = selectedType === 'CU';
-    const selectedCountry = form.watch('Country');
+    const selectedType = form.watch('types')
+    const isTenant = selectedType === 'TN'
+    const isCustomer = selectedType === 'CU'
+    const selectedCountry = form.watch('Country')
 
     // Fetch Countries
     useEffect(() => {
         fetch('/api/v1/countries')
             .then(res => res.json())
             .then(data => {
-                const list = data.data || [];
+                const list = data.data || []
                 setCountries(list.map((c: any) => ({
                     id: c.id,
                     name: c.name,
                     code: c.code, // Expecting CountryCode here
                     iso2: c.iso2
-                })));
+                })))
                 if (list.length > 0) {
                     // Default Kenya if exists or first
-                    const ke = list.find((c: any) => c.code === 'KE');
-                    if (ke) form.setValue('Country', ke.code);
-                    else form.setValue('Country', list[0].code);
+                    const ke = list.find((c: any) => c.code === 'KE')
+                    if (ke) form.setValue('Country', ke.code)
+                    else form.setValue('Country', list[0].code)
                 }
             })
-            .catch(err => console.error("Failed to fetch countries", err));
-    }, [form]);
+            .catch(err => console.error("Failed to fetch countries", err))
+    }, [form])
 
     // Fetch Localities when Country changes
     useEffect(() => {
         if (!selectedCountry) {
-            setLocalities([]);
-            return;
+            setLocalities([])
+            return
         }
         // Fetch localities for country code
         fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/v1/countries/${selectedCountry}/localities`)
@@ -231,29 +231,29 @@ export default function RegisterThirdPartyDetails() {
                 const list = (data.data || []).map((l: any, index: number) => ({
                     ID: l.ID || l.id || l.iD || l.Id || index,
                     Name: l.Name || l.name || `Locality ${index}`,
-                }));
-                setLocalities(list);
+                }))
+                setLocalities(list)
             })
-            .catch(err => console.error("Failed to fetch localities", err));
-    }, [selectedCountry]);
+            .catch(err => console.error("Failed to fetch localities", err))
+    }, [selectedCountry])
 
 
     // Capture userId from URL query params
-    const searchParams = useSearchParams();
-    const [userId, setUserId] = useState<string | null>(null);
+    const searchParams = useSearchParams()
+    const [userId, setUserId] = useState<string | null>(null)
 
     useEffect(() => {
-        const uid = searchParams.get('userId'); // Matches 'userId' from backend redirect
+        const uid = searchParams.get('userId') // Matches 'userId' from backend redirect
         if (uid) {
-            setUserId(uid);
+            setUserId(uid)
 
         } else {
             // Fallback: try reading from session/auth if logged in, or localStorage?
             // Since we are moving to NO AUTH flow, URL param is critical.
             // Maybe show error or redirect if missing?
-            console.warn("No User ID found in URL.");
+            console.warn("No User ID found in URL.")
         }
-    }, [searchParams]);
+    }, [searchParams])
 
     // Check for existing party (if re-visiting) - original useEffect removed as userId is now stateful
     // useEffect(() => {
@@ -261,13 +261,13 @@ export default function RegisterThirdPartyDetails() {
     //         // Logic to check if user already has a party could go here,
     //         // but usually this page is for NEW registration.
     //     }
-    // }, [userId]);
+    // }, [userId])
 
     const onSubmit = async (data: FormData) => {
         try {
             if (!userId) {
-                toast.error("User identification missing. Please use the link from your email.");
-                return;
+                toast.error("User identification missing. Please use the link from your email.")
+                return
             }
 
             const payload = {
@@ -276,42 +276,42 @@ export default function RegisterThirdPartyDetails() {
                 user_id: userId,
                 // Ensure dates are strings if needed, though JSON.stringify handles Date -> ISO string
                 // Backend NewThirdPartyRequest expects 'customer_DateOfBirth' as 'date' so ISO string works.
-            };
+            }
 
             const response = await fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/third-parties/register-details`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify(payload)
-            });
+            })
 
-            const resData = await response.json();
+            const resData = await response.json()
 
             if (!response.ok) {
                 if (response.status === 422 && resData.errors) {
                     const errorMessages = Object.entries(resData.errors)
                         .map(([field, messages]) => `${field}: ${(messages as string[]).join(', ')}`)
-                        .join('; ');
-                    throw new Error(`Validation failed: ${errorMessages}`);
+                        .join(' ')
+                    throw new Error(`Validation failed: ${errorMessages}`)
                 }
-                throw new Error(resData.message || 'Registration failed.');
+                throw new Error(resData.message || 'Registration failed.')
             }
 
-            setSuccess(resData.message || 'Details registered successfully!');
+            setSuccess(resData.message || 'Details registered successfully!')
 
             // Redirect logic
             try {
-                await signOut({ redirect: false });
+                await signOut({ redirect: false })
             } catch { }
             setTimeout(() => {
-                router.replace('/signin?registrationSuccess=true');
-            }, 1000);
+                router.replace('/signin?registrationSuccess=true')
+            }, 1000)
 
         } catch (err: any) {
-            setError(err.message || 'An error occurred.');
+            setError(err.message || 'An error occurred.')
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
-    };
+    }
 
     if (!userId && !success) {
         return (
@@ -323,7 +323,7 @@ export default function RegisterThirdPartyDetails() {
                     <Button asChild className="w-full"><Link href="/signup">Go to Sign Up</Link></Button>
                 </div>
             </div>
-        );
+        )
     }
 
     return (
@@ -593,5 +593,5 @@ export default function RegisterThirdPartyDetails() {
                 </motion.div>
             </div>
         </div>
-    );
+    )
 }
