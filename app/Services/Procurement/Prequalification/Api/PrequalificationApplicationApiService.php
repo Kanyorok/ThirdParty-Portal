@@ -6,14 +6,13 @@ use App\Enums\Procurement\PrequalificationApplicationEnum;
 use App\Enums\Procurement\PrequalificationRoundEnum;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\StorePrequalificationApplicationRequest;
 use App\Models\Auth\User;
-use App\Models\ThirdParty\ThirdPartyUser;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\Procurement\Prequalification\PrequalificationRound;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\Procurement\Prequalification\PrequalificationService;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 
 class PrequalificationApplicationApiService
 {

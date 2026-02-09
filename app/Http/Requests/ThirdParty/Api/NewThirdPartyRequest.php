@@ -48,7 +48,6 @@ class NewThirdPartyRequest extends FormRequest
             $formatted = (string) (new PhoneNumber($value, $country->CountryCode))->formatE164();
             $this->merge([$field => $formatted]);
         } catch (\Throwable) {
-            //
         }
     }
 
