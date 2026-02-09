@@ -40,7 +40,6 @@ class PropertyLeaseTerminationService
         DB::beginTransaction();
 
         try {
-            // Create termination record
             $termination = PropertyLeaseTermination::create([
                 'LeaseID' => $LeaseID->Id,
                 'TerminationDate' => $TerminationDate,
@@ -60,7 +59,6 @@ class PropertyLeaseTerminationService
                 );
             }
 
-            // **Generate Termination Letter PDF immediately**
             $pdf = Pdf::loadView(
                 'property.tenantmanagement.leasemanagement.leasetermination.TerminationLetter',
                 compact('termination')
@@ -75,7 +73,6 @@ class PropertyLeaseTerminationService
                 permissions: [PermissionEnum::PropertyLeaseTerminationView->value]
             );
 
-            //create workflow instance and submit for approval
             $terminationflow = new ApprovalWorkflow('ApprovalStatus', 'Status');
             $terminationflow->submit(
                 $termination,
@@ -105,13 +102,13 @@ class PropertyLeaseTerminationService
                 ]);
 
 
-            // Availability of the property Unit
-            $unit = PropertyUnit::findOrFail($LeaseID->Unit);
-            $unit->update([
-                'IsRentable' => 1,   // Unit can now be rented again
-                'CurrentStatus' => 1,   // Status = Available
-                'ModifiedBy' => $user->Id,
-            ]);
+            // // Availability of the property Unit
+            // $unit = PropertyUnit::findOrFail($LeaseID->Unit);
+            // $unit->update([
+            //     'IsRentable' => 1,   // Unit can now be rented again
+            //     'CurrentStatus' => 1,   // Status = Available
+            //     'ModifiedBy' => $user->Id,
+            // ]);
 
             activity()
                 ->causedBy($user->Id)

@@ -19,7 +19,7 @@
         @csrf
 
         <div class="card shadow">
-            <div class="card-header bg-light fw-bold">Unit Setup</div>
+            <div class="card-header bg-primary fw-bold">Unit Setup</div>
 
             <div class="card-body">
 

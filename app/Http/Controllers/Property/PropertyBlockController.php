@@ -57,7 +57,6 @@ class PropertyBlockController extends Controller
 
     public function edit($id)
     {
-        //Check if user has permission to edit tender categories
         $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyBlock::class);
         $block = PropertyBlock::findOrFail($id);
         $properties = PropertyRegistry::all();
@@ -74,19 +73,17 @@ class PropertyBlockController extends Controller
                 'required',
                 'string',
                 'max:50',
-                Rule::unique(PropertyBlock::class, 'BlockName')
-                    ->where(fn ($query) => $query->where('PropertyID', $request->PropertyID))
-                    ->ignore($id, 'Id'),
             ],
             'Description' => 'nullable|string|max:100',
         ]);
+
 
         DB::beginTransaction();
 
         try {
             $block = PropertyBlock::findOrFail($id);
 
-            $block->update();
+            $block->update($validated);
 
             DB::commit();
             activity()

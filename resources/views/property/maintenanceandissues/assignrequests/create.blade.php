@@ -43,14 +43,23 @@
                 <label class="form-label">
                     Assignment Date <span class="text-danger">*</span>
                 </label>
+
+                {{-- visible but locked --}}
                 <input type="date"
-                       class="form-control"
-                       name="AssignmentDate"
-                       value="{{ old('AssignmentDate', date('Y-m-d')) }}" readonly>
+                    class="form-control bg-light"
+                    value="{{ old('AssignmentDate', date('Y-m-d')) }}"
+                    disabled>
+
+                {{-- actual value that submits --}}
+                <input type="hidden"
+                    name="AssignmentDate"
+                    value="{{ old('AssignmentDate', date('Y-m-d')) }}">
+
                 @error('AssignmentDate')
                     <small class="text-danger">{{ $message }}</small>
                 @enderror
             </div>
+
         </div>
 
         {{-- Auto-filled Info --}}
