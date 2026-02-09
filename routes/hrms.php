@@ -370,6 +370,7 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     // Time & Attendance
     Route::resource('attendance/devices', \App\Http\Controllers\HR\AttendanceDeviceController::class)->names('attendance.devices')->except(['show']);
     Route::get('attendance/logs', [\App\Http\Controllers\HR\AttendanceRawLogController::class, 'index'])->name('attendance.logs.index');
+    Route::get('attendance/reports', [\App\Http\Controllers\HR\AttendanceReportController::class, 'index'])->name('attendance.reports.index');
     Route::get('attendance/daily', [\App\Http\Controllers\HR\AttendanceDailySummaryController::class, 'index'])->name('attendance.daily.index');
     Route::get('attendance/overtime', [\App\Http\Controllers\HR\OvertimeRequestController::class, 'index'])->name('attendance.overtime.index');
     Route::get('attendance/overtime/create', [\App\Http\Controllers\HR\OvertimeRequestController::class, 'create'])->name('attendance.overtime.create');

@@ -17,13 +17,25 @@ class LeaveBalanceController extends Controller
     public function index(Request $request)
     {
         $filter = $request->input('leave_type_filter', 'annual');
-        $leaveTypes = LeaveType::where('IsActive', 1)->orderBy('Name')->get();
-        $balances = $this->filteredBalances($filter)
-            ->orderBy('EmployeeID')
-            ->get();
-        $groupedBalances = $balances->groupBy(fn (LeaveBalance $balance) => $balance->EmployeeID);
+        $search = $request->input('employee_search');
 
-        return view('hr.leave.balances.index', compact('groupedBalances', 'leaveTypes', 'filter'));
+        $leaveTypes = LeaveType::where('IsActive', 1)->orderBy('Name')->get();
+        
+        $query = $this->filteredBalances($filter);
+
+        if ($search) {
+            $query->whereHas('employee', function ($q) use ($search) {
+                $q->where('FirstName', 'like', "%{$search}%")
+                  ->orWhere('LastName', 'like', "%{$search}%")
+                  ->orWhere('EmployeeNo', 'like', "%{$search}%");
+            });
+        }
+
+        $balances = $query->orderBy('EmployeeID')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('hr.leave.balances.index', compact('balances', 'leaveTypes', 'filter', 'search'));
     }
 
     public function accrueMonthly()

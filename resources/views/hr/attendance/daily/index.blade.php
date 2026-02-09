@@ -49,8 +49,8 @@
                             <th>Date</th>
                             <th>Employee</th>
                             <th>Shift</th>
-                            <th>First In</th>
-                            <th>Last Out</th>
+                            <th>Arrived Work</th>
+                            <th>Left Work</th>
                             <th>Hours</th>
                             <th>Overtime</th>
                             <th>Status</th>
@@ -66,11 +66,11 @@
                                 <td>{{ $row->shift->Name ?? '-' }}</td>
                                 <td>{{ optional($row->FirstInTime)->format('H:i') ?? '-' }}</td>
                                 <td>{{ optional($row->LastOutTime)->format('H:i') ?? '-' }}</td>
-                                <td>{{ $row->TotalHours ?? '-' }}</td>
-                                <td>{{ $row->OvertimeHours ?? '-' }}</td>
+                                <td>{{ $row->TotalHours ? $row->TotalHours . ' hrs' : '-' }}</td>
+                                <td>{{ $row->OvertimeHours ? $row->OvertimeHours . ' hrs' : '-' }}</td>
                                 <td>{{ $row->Status }}</td>
-                                <td>{{ $row->LateMinutes ?? '-' }}</td>
-                                <td>{{ $row->EarlyExitMinutes ?? '-' }}</td>
+                                <td>{{ $row->LateMinutes ? abs($row->LateMinutes) . ' min' : '-' }}</td>
+                                <td>{{ $row->EarlyExitMinutes ? abs($row->EarlyExitMinutes) . ' min' : '-' }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="10" class="text-center text-muted">No records.</td></tr>
