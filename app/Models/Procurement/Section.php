@@ -73,6 +73,6 @@ class Section extends Model
     // Section::active()->get();
     public function scopeIsActive($q)
     {
-        return $q->where('IsActive', true);
+        return $q->where('IsActive', 1);
     }
 }

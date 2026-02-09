@@ -425,7 +425,7 @@
                                 <div>
                                     <strong>{{ $document->Name }}</strong>
                                     <br>
-                                    <small class="text-muted">{{ $document->getFormattedSize() }} • Uploaded {{ $document->CreatedOn?->format('d M Y H:i') }}</small>
+                                    <small class="text-muted">{{ $document->current && $document->current->Size ? \Illuminate\Support\Number::fileSize($document->current->Size, 2) : '0 B' }} • Uploaded {{ $document->CreatedOn?->format('d M Y H:i') }}</small>
                                 </div>
                             </div>
                             <div class="btn-group btn-group-sm">

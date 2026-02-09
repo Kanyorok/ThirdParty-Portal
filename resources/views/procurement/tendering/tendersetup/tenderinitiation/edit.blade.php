@@ -365,7 +365,7 @@
                                     @method('PATCH')
                                     <input type="hidden" name="type" value='crudSupplier'>
                                     <input type="hidden" name="crudType" value='deleteSupplier'>
-                                    <input type="hidden" name="supplier_id" value="{{$item->Id}}">
+                                    <input type="hidden" name="tender_supplier_id" value="{{$item->id}}">
                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
                                         onclick="return confirm('Remove supplier \'{{ $item->supplier->party->ThirdPartyName ?? $item->supplier->party->TradingName }}\'?')">
                                         <i class="fas fa-trash-alt"></i>

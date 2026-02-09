@@ -227,5 +227,11 @@ class RFQ extends Model
     {
         return in_array(strtolower($this->Status), ['re', 'rejected']);
     }
-    // In App\Models\Procurement\RFQ.php
+    /**
+     * Relationship to RFQ Evaluations
+     */
+    public function evaluations()
+    {
+        return $this->hasMany(RFQEvaluation::class, 'RFQId', 'Id');
+    }
 }
