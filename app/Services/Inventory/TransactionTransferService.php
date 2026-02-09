@@ -19,6 +19,7 @@ use App\Services\Workflow\ApprovalWorkflow;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class TransactionTransferService
@@ -84,7 +85,7 @@ class TransactionTransferService
         ]);
         $transfer->save();
 
-        $transfer->TransferId = $this->generateTransferId($transfer);
+        $transfer->TransferID = $this->generateTransferId($transfer);
         $transfer->save();
 
         try {
@@ -345,6 +346,10 @@ class TransactionTransferService
                 $transactionTypeId = CodeDetail::where('CodeID', 'Source')
                     ->where('Description', 'Transaction Transfer')->value('ID');
 
+                if (!$transactionTypeId) {
+                    throw new Exception("Transaction type not found for 'Transaction Transfer' in CodeDetail");
+                }
+
                 $lastBalance = StockTransaction::where('ItemID', $item->Item)
                     ->where('BranchID', $transfer->FromBranch)
                     ->orderByDesc('TransactionDate')
@@ -383,6 +388,10 @@ class TransactionTransferService
                 $sourceId = CodeDetail::where('CodeID', 'Source')
                     ->where('Description', 'Transaction Transfer')->value('ID');
 
+                if (!$reasonId || !$sourceId) {
+                    throw new Exception("Required CodeDetails not found - Reason: {$reasonId}, Source: {$sourceId}");
+                }
+
                 InventoryHold::create([
                     'ItemID' => $item->Item,
                     'BranchID' => $transfer->ToBranch,
@@ -418,18 +427,21 @@ class TransactionTransferService
                     'ExchangeRate' => 1,
                     'Narration' => 'Transfer of inventory to branch ' . $transfer->ToBranch .
                                            ' using ' . ($isHQ ? 'FIFO' : 'selected GRN batches') .
-                                           '. Transfer ID: ' . $transfer->TransferId,
+                                           '. Transfer ID: ' . $transfer->TransferID,
                     'SourceTable' => 't_Transfers',
-                    'SystemDescription' => 'Inventory Transfer ' . $transfer->TransferId,
+                    'SystemDescription' => 'Inventory Transfer ' . $transfer->TransferID,
                 ];
 
-                $result = $this->transactionService->postFromTypeMapping($payload);
+                try {
+                    $result = $this->transactionService->postFromTypeMapping($payload);
+                } catch (Exception $fe) {
+                    throw new Exception("Finance transaction failed: " . $fe->getMessage());
+                }
             }
 
             DB::commit();
         } catch (Throwable $th) {
             DB::rollBack();
-
             throw $th;
         }
     }
@@ -438,9 +450,10 @@ class TransactionTransferService
     {
         $store = Store::where('BranchID', $branchId)
             ->where('Status', true)
-            ->where('BranchID', $branchId)
             ->where('IsMainStore', true)
+            ->whereNull('DeletedOn')
             ->first();
+            
 
         if (! $store) {
             throw new Exception("No active store found for branch {$branchId}");
@@ -474,6 +487,6 @@ class TransactionTransferService
     {
         return TransactionTransfer::where('Status', Transfers::InTransit->value)
             ->orderByDesc('CreatedOn')
-            ->get(['Id', 'TransferId', 'TransferDate', 'FromBranch', 'ToBranch']);
+            ->get(['Id', 'TransferID', 'TransferDate', 'FromBranch', 'ToBranch']);
     }
 }

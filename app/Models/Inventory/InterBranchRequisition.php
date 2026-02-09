@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Inventory\InterBranchRequisitionItem;
 use App\Models\Inventory\TransactionTransfer as InventoryTransactionTransfer;
-use App\Models\Transactions\TransactionTransfer;
+use App\Models\Inventory\TransactionTransfer;
 use Illuminate\Support\Facades\DB;
 
 
