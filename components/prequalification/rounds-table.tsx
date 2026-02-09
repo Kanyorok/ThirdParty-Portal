@@ -1,276 +1,201 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useMemo } from "react"
 import { format } from "date-fns"
-import { ChevronLeft, ChevronRight, FilePlus2, Lock, CheckCircle2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/common/button"
 import { Checkbox } from "@/components/common/checkbox"
 import StatusBadge from "./status-badge"
-import ApplicationForm from "./application-form"
 import CategoryApplications from "./category-applications"
-import { useSession } from "next-auth/react"
-import { toast } from "sonner"
-import { Round } from "@/types/types"
+import { useRoundsStore } from "@/hooks/use-rounds-store"
+import { isRoundActive, isRoundArchived } from "@/lib/rounds"
 import { cn } from "@/lib/utils"
 
-type Column = {
-    key: string
-    label: string
-    align?: "left" | "right"
-    render: (round: Round) => React.ReactNode
-}
+export default function RoundsTable() {
+    const rounds = useRoundsStore((state) => state.rounds)
+    const meta = useRoundsStore((state) => state.meta)
+    const loading = useRoundsStore((state) => state.loading)
+    const error = useRoundsStore((state) => state.error)
+    const hideApplied = useRoundsStore((state) => state.hideApplied)
+    const setHideApplied = useRoundsStore((state) => state.setHideApplied)
+    const fetchRounds = useRoundsStore((state) => state.fetchRounds)
+    const setPage = useRoundsStore((state) => state.setPage)
+    const page = useRoundsStore((state) => state.page)
 
-export default function RoundsTable({
-    rounds = [],
-    page = 1,
-    pageSize = 10,
-    totalPages = 1,
-    sortBy = "startDate",
-    sortOrder = "asc",
-}: {
-    rounds?: Round[]
-    total?: number
-    page?: number
-    pageSize?: number
-    totalPages?: number
-    sortBy?: string
-    sortOrder?: "asc" | "desc"
-}) {
-    const { data: session } = useSession()
-    const accessToken = session?.accessToken as string | undefined
-    const router = useRouter()
-    const searchParams = useSearchParams()
-    const [openRoundId, setOpenRoundId] = useState<string | null>(null)
-    const [appliedRoundIds, setAppliedRoundIds] = useState<Set<string>>(new Set())
-    const [hideApplied, setHideApplied] = useState(false)
+    const visibleRounds = useMemo(() => {
+        return hideApplied ? rounds.filter((round) => !round.hasApplied) : rounds
+    }, [rounds, hideApplied])
 
-    const columns: Column[] = useMemo(
-        () => [
-            {
-                key: "title",
-                label: "Round",
-                render: (r) => (
-                    <div className="flex flex-col gap-1">
-                        <span className="text-sm font-semibold tracking-tight leading-tight text-slate-900 line-clamp-2">
-                            {r.title}
-                        </span>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <StatusBadge status={typeof r.status === "object" ? (r.status.value as any) : (r.status as any)} />
-                            <span className="text-xs text-slate-500 tabular-nums">
-                                {format(new Date(r.startDate), "MMM d")} — {format(new Date(r.endDate), "MMM d, yyyy")}
-                            </span>
-                        </div>
-                    </div>
-                ),
-            },
-            {
-                key: "categories",
-                label: "Progress",
-                render: (r) => <CategoryApplications round={r} className="justify-start" />,
-            },
-            {
-                key: "actions",
-                label: "Action",
-                align: "right",
-                render: (r) => {
-                    const appliedCategories = r.categories?.filter(cat => cat.has_applied) || []
-                    const hasAnyApplication = appliedCategories.length > 0 || appliedRoundIds.has(r.id)
-                    const supplierEligible = r.supplierEligible === false ? false : (r.supplierEligible ?? true)
-                    const isClosed = Boolean(r.isClosed)
-                    const isExpired = Boolean(r.isExpired)
-                    const windowOpen = r.windowOpen !== undefined ? Boolean(r.windowOpen) : true
-                    const isFutureWindow = Boolean(r.isFutureWindow)
-                    const duplicateWithinRange = Boolean(r.duplicateWithinRange)
-                    const availableCategories = r.categories?.filter(cat => !cat.has_applied) || []
-                    const canApplyToMore = availableCategories.length > 0
-                    const backendCanApply = r.canApply !== undefined ? Boolean(r.canApply) : undefined
-                    const effectiveCanApply = backendCanApply !== undefined ? backendCanApply : true
+    const totalPages = meta.totalPages ?? 1
+    const total = meta.total ?? rounds.length
+    const openCount = meta.openCount ?? rounds.filter(isRoundActive).length
+    const statusLabel = meta.filters?.status ?? "open"
 
-                    if (!supplierEligible) {
-                        return (
-                            <div className="flex items-center justify-end gap-1.5 text-[11px] font-semibold text-slate-500">
-                                <Lock className="h-3 w-3" />
-                                <span>Ineligible</span>
-                            </div>
-                        )
-                    }
+    const handlePageChange = (nextPage: number) => {
+        if (nextPage < 1 || nextPage > totalPages) return
+        setPage(nextPage)
+        fetchRounds({ page: nextPage })
+    }
 
-                    if (isExpired || isClosed || !windowOpen || isFutureWindow || duplicateWithinRange || !effectiveCanApply) {
-                        return (
-                            <div className="flex items-center justify-end gap-1.5 text-[11px] font-semibold text-slate-500">
-                                <Lock className="h-3 w-3" />
-                                <span>{isExpired ? "Expired" : isClosed ? "Closed" : "Locked"}</span>
-                            </div>
-                        )
-                    }
+    const formatPeriod = (round: typeof rounds[number]) => {
+        const start = round?.startDate ? format(new Date(round.startDate), "do MMMM yyyy") : null
+        const end = round?.endDate ? format(new Date(round.endDate), "do MMMM yyyy") : null
+        if (start && end) return `${start} - ${end}`
+        if (start) return start
+        if (end) return end
+        return "Dates pending"
+    }
 
-                    if (effectiveCanApply && hasAnyApplication && !canApplyToMore) {
-                        return (
-                            <div className="flex items-center justify-end gap-1.5 text-[11px] font-semibold text-emerald-600">
-                                <CheckCircle2 className="h-4 w-4" />
-                                <span>Complete</span>
-                            </div>
-                        )
-                    }
+    if (loading && visibleRounds.length === 0) {
+        return (
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-600">
+                Loading rounds…
+            </div>
+        )
+    }
 
-                    return (
-                        <Button
-                            variant={hasAnyApplication ? "outline" : "default"}
-                            size="sm"
-                            className={cn(
-                                "h-9 px-4 rounded-xl text-xs font-semibold transition-all shadow-none",
-                                hasAnyApplication
-                                    ? "border-slate-200 bg-white hover:bg-slate-50 text-slate-700"
-                                    : "bg-blue-600 hover:bg-blue-700 text-white"
-                            )}
-                            onClick={() => {
-                                if (!accessToken) {
-                                    toast.error("Sign in required")
-                                    return
-                                }
-                                setOpenRoundId(r.id)
-                            }}
-                        >
-                            <FilePlus2 className="mr-1.5 h-3 w-3" />
-                            {hasAnyApplication ? "Continue" : "Apply"}
-                        </Button>
-                    )
-                },
-            },
-        ],
-        [appliedRoundIds, accessToken]
-    )
-
-    const visibleRounds = hideApplied ? rounds.filter(r => !(Boolean(r.hasApplied) || appliedRoundIds.has(r.id))) : rounds
-    const buildPageHref = (nextPage: number) => {
-        const params = new URLSearchParams(searchParams.toString())
-        params.set("page", String(nextPage))
-        params.set("pageSize", String(pageSize))
-        params.set("sortBy", sortBy)
-        params.set("sortOrder", sortOrder)
-        return `?${params.toString()}`
+    if (error) {
+        return (
+            <div className="rounded-3xl border border-rose-200 bg-rose-50/60 p-6 text-center text-sm font-semibold text-rose-700">
+                {error}
+            </div>
+        )
     }
 
     return (
-        <div className="w-full">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-6 py-3 border-b border-slate-200 bg-slate-50/40">
-                <div className="flex items-center gap-2">
+        <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex flex-col gap-3 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1">
+                    <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-500">
+                        Prequalification Rounds
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                        {openCount} open · {total} total · {statusLabel === "open" ? "Active" : "Archived"}
+                    </p>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-600">
                     <Checkbox
-                        id="hide-applied"
+                        id="hide-applied-rounds"
                         checked={hideApplied}
-                        onCheckedChange={(v) => setHideApplied(!!v)}
+                        onCheckedChange={(value) => setHideApplied(Boolean(value))}
                         className="h-4 w-4 border-slate-300"
                     />
-                    <label htmlFor="hide-applied" className="text-xs font-semibold text-slate-700 cursor-pointer">
+                    <label htmlFor="hide-applied-rounds" className="cursor-pointer font-semibold">
                         Hide applied rounds
                     </label>
                 </div>
-                <p className="text-xs text-slate-500">{visibleRounds.length} shown</p>
             </div>
 
-            <div className="hidden md:block">
-                <div className="overflow-hidden">
-                    <table className="w-full border-collapse table-fixed">
+            {visibleRounds.length === 0 ? (
+                <div className="p-8 text-center text-sm text-slate-500">
+                    <p className="font-medium text-slate-700">
+                        No rounds match your filters.
+                    </p>
+                    <p className="mt-2">Use the toolbar to reset filters or try another status.</p>
+                </div>
+            ) : (
+                <div className="overflow-x-auto">
+                    <table className="w-full min-w-[720px] table-fixed border-collapse">
                         <colgroup>
-                            <col className="w-[55%]" />
+                            <col className="w-[45%]" />
                             <col className="w-[25%]" />
-                            <col className="w-[20%]" />
+                            <col className="w-[30%]" />
                         </colgroup>
                         <thead>
-                            <tr className="border-b border-slate-200 bg-white">
-                                {columns.map((col) => (
-                                    <th
-                                        key={col.key}
-                                        className={cn(
-                                            "h-10 px-4 sm:px-6 text-left text-[10px] font-semibold uppercase tracking-widest text-slate-700",
-                                            col.align === "right" && "text-right"
-                                        )}
-                                    >
-                                        {col.label}
-                                    </th>
-                                ))}
+                            <tr className="bg-white text-left text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+                                <th className="px-5 py-3">Round</th>
+                                <th className="px-5 py-3">Prequalification Period</th>
+                                <th className="px-5 py-3">Categories</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {visibleRounds.map((r) => (
-                                <tr key={r.id} className="hover:bg-slate-50/50 transition-colors">
-                                    {columns.map((col) => (
-                                        <td
-                                            key={col.key}
-                                            className={cn(
-                                                "px-4 sm:px-6 py-4 align-top",
-                                                col.align === "right" && "text-right"
-                                            )}
-                                        >
-                                            {col.render(r)}
+                        <tbody>
+                            {visibleRounds.map((round) => {
+                                const appliedCount = round.appliedCategories?.length ?? 0
+                                const totalCategories = round.categoryCount ?? round.categories?.length ?? 0
+                                const availableCount = Math.max(totalCategories - appliedCount, 0)
+                                const isArchived = isRoundArchived(round)
+
+                                return (
+                                    <tr
+                                        key={round.id}
+                                        className={cn(
+                                            "divide-y divide-slate-100 border-b border-slate-100 transition-colors hover:bg-slate-50/60",
+                                            isArchived && "bg-slate-50"
+                                        )}
+                                    >
+                                        <td className="px-5 py-4 align-top">
+                                            <div className="flex flex-col gap-2">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <span className="text-sm font-semibold tracking-tight text-slate-900">
+                                                        {round.title}
+                                                    </span>
+                                                    <StatusBadge status={round.status} />
+                                                </div>
+                                                <p className="text-xs text-slate-500">
+                                                    {round.description?.split("\n")[0] ?? "Description coming soon."}
+                                                </p>
+                                                <div className="text-[11px] font-semibold text-slate-500">
+                                                    {isArchived ? (
+                                                        <span className="inline-flex items-center gap-1 text-amber-600">
+                                                            <CheckCircle2 className="h-3 w-3 text-amber-500" />
+                                                            Archived
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 text-emerald-600">
+                                                            <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                                                            {availableCount > 0 ? `${availableCount} categories open` : "Applied to all categories"}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </td>
-                                    ))}
-                                </tr>
-                            ))}
+
+                                        <td className="px-5 py-4 align-top">
+                                            <div className="text-sm font-semibold text-slate-900">{formatPeriod(round)}</div>
+                                            <p className="text-[11px] text-slate-500">
+                                                {round.maxVendors ? `Max ${round.maxVendors} vendors` : "Vendor slots pending"}
+                                            </p>
+                                        </td>
+
+                                        <td className="px-5 py-4 align-top">
+                                            <CategoryApplications round={round} className="gap-2" />
+                                            <p className="mt-2 text-[11px] text-slate-500">
+                                                {appliedCount}/{totalCategories || "0"} categories applied
+                                            </p>
+                                        </td>
+                                    </tr>
+                                )
+                            })}
                         </tbody>
                     </table>
                 </div>
-            </div>
+            )}
 
-            <div className="md:hidden divide-y divide-slate-100">
-                {visibleRounds.map((r) => (
-                    <div key={r.id} className="p-4 space-y-3">
-                        <div className="space-y-2">
-                            {columns[0]?.render(r)}
-                        </div>
-                        <div className="text-xs font-semibold text-slate-600">Progress</div>
-                        <div>{columns[1]?.render(r)}</div>
-                        <div className="pt-1 flex justify-end">{columns[2]?.render(r)}</div>
-                    </div>
-                ))}
-            </div>
-
-            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-t border-slate-200 bg-white">
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-600">
-                    Page {page} <span className="mx-1 text-slate-300">/</span> {totalPages}
-                </p>
+            <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-xs text-slate-500">
+                <div>
+                    Showing {visibleRounds.length} of {total} rounds · page {page} of {totalPages}
+                </div>
                 <div className="flex items-center gap-2">
                     <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        className="h-9 rounded-xl border-slate-200 bg-white hover:bg-slate-50 shadow-none text-xs font-semibold"
+                        onClick={() => handlePageChange(page - 1)}
                         disabled={page <= 1}
-                        asChild
+                        className="h-9 w-9 rounded-full border border-slate-200 p-0 text-slate-500 hover:border-slate-300 hover:text-slate-700"
                     >
-                        <Link href={buildPageHref(Math.max(1, page - 1))} scroll={false}>
-                            <ChevronLeft className="mr-1 h-4 w-4" /> Prev
-                        </Link>
+                        <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        className="h-9 rounded-xl border-slate-200 bg-white hover:bg-slate-50 shadow-none text-xs font-semibold"
+                        onClick={() => handlePageChange(page + 1)}
                         disabled={page >= totalPages}
-                        asChild
+                        className="h-9 w-9 rounded-full border border-slate-200 p-0 text-slate-500 hover:border-slate-300 hover:text-slate-700"
                     >
-                        <Link href={buildPageHref(Math.min(totalPages, page + 1))} scroll={false}>
-                            Next <ChevronRight className="ml-1 h-4 w-4" />
-                        </Link>
+                        <ChevronRight className="h-4 w-4" />
                     </Button>
                 </div>
             </div>
-
-            {openRoundId && (
-                <ApplicationForm
-                    open={true}
-                    defaultRoundId={openRoundId}
-                    onOpenChange={(o) => { if (!o) setOpenRoundId(null) }}
-                    onSuccess={({ roundId }) => {
-                        setAppliedRoundIds(prev => new Set(prev).add(roundId))
-                        router.refresh()
-                        setOpenRoundId(null)
-                    }}
-                >
-                    <span className="hidden" />
-                </ApplicationForm>
-            )}
-        </div>
+        </section>
     )
 }

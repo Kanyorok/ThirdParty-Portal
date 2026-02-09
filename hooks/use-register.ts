@@ -6,6 +6,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 
 type LookupItem = {
+    id: string
+    name: string
+    label: string
     value: string
     description: string
 }
@@ -15,6 +18,10 @@ const emptyToUndefined = (value: unknown) => {
     const trimmed = value.trim()
     return trimmed.length ? trimmed : undefined
 }
+
+const optionalTextField = () => z.preprocess(emptyToUndefined, z.string().min(1)).optional()
+const optionalEmailField = () => z.preprocess(emptyToUndefined, z.string().email()).optional()
+const optionalUrlField = () => z.preprocess(emptyToUndefined, z.string().url()).optional()
 
 const hasRole = (types: string[] | undefined, flag: string) => types?.includes(flag)
 
@@ -56,23 +63,23 @@ const extractVerifyEmailUrl = (payload: Record<string, any> | null | undefined):
 
 const registerSchema = z.object({
     Name: z.string().min(2),
-    TradingName: z.string().nullable().optional(),
+    TradingName: optionalTextField(),
     BusinessType: z.string().min(1),
     RegistrationNumber: z.string().min(2),
     TaxPIN: z.string().min(2),
-    VATNumber: z.string().nullable().optional(),
+    VATNumber: optionalTextField(),
     Country: z.string().min(1),
     Location: z.coerce.number().min(1),
-    Email: z.string().email(),
+    Email: optionalEmailField(),
     Phone: z.string().min(10),
-    PhysicalAddress: z.string().nullable().optional(),
-    Website: z.string().url().optional().or(z.literal("")).nullable(),
+    PhysicalAddress: optionalTextField(),
+    Website: optionalUrlField(),
     types: z.array(z.string()).min(1),
-    user_SupplierCategoryId: z.preprocess(v => v === "" ? null : v, z.coerce.number().nullable().optional()),
-    user_Remarks: z.preprocess(v => v === "" ? null : v, z.string().nullable().optional()),
-    user_DateOfBirth: z.string().nullable().optional(),
-    user_MaritalStatus: z.string().nullable().optional(),
-    user_Occupation: z.string().nullable().optional(),
+    user_SupplierCategoryId: z.preprocess(v => (v === "" ? null : v), z.coerce.number().nullable().optional()),
+    user_Remarks: optionalTextField(),
+    user_DateOfBirth: optionalTextField(),
+    user_MaritalStatus: optionalTextField(),
+    user_Occupation: optionalTextField(),
     createUser: z.boolean(),
     user_FirstName: z.preprocess(emptyToUndefined, z.string().min(2).optional()),
     user_LastName: z.preprocess(emptyToUndefined, z.string().min(2).optional()),
@@ -166,10 +173,10 @@ export const useRegisterForm = () => {
             Website: "",
             types: [],
             user_SupplierCategoryId: null,
-            user_Remarks: null,
-            user_DateOfBirth: null,
-            user_MaritalStatus: null,
-            user_Occupation: null,
+            user_Remarks: "",
+            user_DateOfBirth: "",
+            user_MaritalStatus: "",
+            user_Occupation: "",
             createUser: true,
             user_FirstName: "",
             user_LastName: "",

@@ -1,35 +1,35 @@
-"use client";
+"use client"
 
-import { useState, useTransition, useCallback } from "react";
-import { Settings } from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/common/button";
-import { Label } from "@/components/common/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/common/popover";
-import { ToggleGroup, ToggleGroupItem } from "@/components/common/toggle-group";
-import { cn } from "@/lib/utils";
+import { useState, useTransition, useCallback } from "react"
+import { Settings } from "lucide-react"
+import { toast } from "sonner"
+import { Button } from "@/components/common/button"
+import { Label } from "@/components/common/label"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/common/popover"
+import { ToggleGroup, ToggleGroupItem } from "@/components/common/toggle-group"
+import { cn } from "@/lib/utils"
 import {
     LayoutKeys,
     type SidebarVariant,
     type SidebarCollapsible,
     type ContentLayout,
     type ToggleOption,
-} from "@/lib/layout-constants";
-import { updateLayoutPreference } from "@/actions/dashboard-layout";
+} from "@/lib/layout-constants"
+import { updateLayoutPreference } from "@/actions/dashboard-layout"
 
 type LayoutControlsProps = {
-    readonly variant: SidebarVariant;
-    readonly collapsible: SidebarCollapsible;
-    readonly contentLayout: ContentLayout;
-};
+    readonly variant: SidebarVariant
+    readonly collapsible: SidebarCollapsible
+    readonly contentLayout: ContentLayout
+}
 
 type LayoutToggleProps<T extends string> = {
-    label: string;
-    value: T;
-    onChange: (value: T) => void;
-    options: ToggleOption<T>[];
-    disabled?: boolean;
-};
+    label: string
+    value: T
+    onChange: (value: T) => void
+    options: ToggleOption<T>[]
+    disabled?: boolean
+}
 
 function LayoutToggle<T extends string>({
     label,
@@ -62,31 +62,31 @@ function LayoutToggle<T extends string>({
                 ))}
             </ToggleGroup>
         </div>
-    );
+    )
 }
 
 const sidebarVariantOptions: ToggleOption<SidebarVariant>[] = [
     { value: "inset", label: "Inset", aria: "Toggle inset sidebar variant" },
     { value: "sidebar", label: "Sidebar", aria: "Toggle classic sidebar variant" },
     { value: "floating", label: "Floating", aria: "Toggle floating sidebar variant" },
-];
+]
 
 const sidebarCollapsibleOptions: ToggleOption<SidebarCollapsible>[] = [
     { value: "icon", label: "Icon", aria: "Toggle sidebar collapsible to icon" },
     { value: "offcanvas", label: "OffCanvas", aria: "Toggle sidebar collapsible to offcanvas" },
-];
+]
 
 const contentLayoutOptions: ToggleOption<ContentLayout>[] = [
     { value: "centered", label: "Centered", aria: "Toggle content layout to centered" },
     { value: "full-width", label: "Full Width", aria: "Toggle content layout to full width" },
-];
+]
 
 export function LayoutControls({ variant, collapsible, contentLayout }: LayoutControlsProps) {
-    const [isPending, startTransition] = useTransition();
+    const [isPending, startTransition] = useTransition()
 
-    const [currentVariant, setCurrentVariant] = useState<SidebarVariant>(variant);
-    const [currentCollapsible, setCurrentCollapsible] = useState<SidebarCollapsible>(collapsible);
-    const [currentContentLayout, setCurrentContentLayout] = useState<ContentLayout>(contentLayout);
+    const [currentVariant, setCurrentVariant] = useState<SidebarVariant>(variant)
+    const [currentCollapsible, setCurrentCollapsible] = useState<SidebarCollapsible>(collapsible)
+    const [currentContentLayout, setCurrentContentLayout] = useState<ContentLayout>(contentLayout)
 
     const handleValueChange = useCallback(
         <T extends string>(
@@ -95,23 +95,23 @@ export function LayoutControls({ variant, collapsible, contentLayout }: LayoutCo
             setValueFn: React.Dispatch<React.SetStateAction<T>>,
         ) => {
             startTransition(async () => {
-                setValueFn(newValue);
+                setValueFn(newValue)
                 try {
-                    await updateLayoutPreference(key, newValue);
+                    await updateLayoutPreference(key, newValue)
                     toast.success("Preference updated", {
                         description: `${key.replace(/_/g, " ").toLowerCase()} saved.`,
                         className: "text-[12px] font-medium tracking-tight",
-                    });
+                    })
                 } catch {
                     toast.error("Update failed", {
                         description: "Couldn't save your layout preference. Please try again.",
                         className: "text-[12px] font-medium tracking-tight",
-                    });
+                    })
                 }
-            });
+            })
         },
         [],
-    );
+    )
 
     return (
         <Popover>
@@ -175,5 +175,5 @@ export function LayoutControls({ variant, collapsible, contentLayout }: LayoutCo
                 </div>
             </PopoverContent>
         </Popover>
-    );
+    )
 }

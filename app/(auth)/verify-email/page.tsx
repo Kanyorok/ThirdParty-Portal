@@ -9,8 +9,13 @@ const normalizeVerifyEmailPath = (raw?: string | null): string | null => {
     if (!trimmed) return null
     if (/^https?:\/\//i.test(trimmed)) return trimmed
 
-    const base = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || ''
-    const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+    const configuredBase =
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') ||
+        process.env.API_BASE_URL?.replace(/\/$/, '') ||
+        ""
+    const fallbackBase = typeof window !== "undefined" ? window.location.origin : ""
+    const base = configuredBase || fallbackBase
+    const path = trimmed.startsWith("/") ? trimmed : `/${trimmed}`
 
     return base ? `${base}${path}` : path
 }

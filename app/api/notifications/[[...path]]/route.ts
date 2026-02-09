@@ -4,15 +4,15 @@ import { authOptions } from "@/lib/auth-options"
 
 export const dynamic = "force-dynamic"
 
-function resolveUpstreamBase(): string {
-  const explicit = process.env.NEXT_PUBLIC_NOTIFICATIONS_ENDPOINT
+function resolveUpstreamBase(pathParts: string[] | undefined): string {
+  const explicit = process.env.NEXT_PUBLIC_API_URL
   if (explicit) return explicit
   return "/api/v1/portal/notifications"
 }
 
 function buildUpstreamUrl(req: NextRequest, pathParts: string[] | undefined) {
   const apiBase = process.env.NEXT_PUBLIC_API_URL ?? ""
-  const base = resolveUpstreamBase()
+  const base = resolveUpstreamBase(pathParts)
 
   const baseUrl = base.startsWith("http") ? new URL(base) : new URL(base, apiBase)
   const cleanBasePath = baseUrl.pathname.replace(/\/+$/, "")
@@ -27,8 +27,13 @@ function buildUpstreamUrl(req: NextRequest, pathParts: string[] | undefined) {
 }
 
 async function proxy(req: NextRequest, pathParts: string[] | undefined) {
-  const session = await getServerSession(authOptions)
-  const token = (session as any)?.accessToken as string | undefined
+  const header = req.headers.get("authorization")
+  const headerMatch = header?.match(/^Bearer\s+(.+)$/i)
+  let token = headerMatch?.[1]
+  if (!token) {
+    const session = await getServerSession(authOptions)
+    token = (session as any)?.accessToken as string | undefined
+  }
   if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const upstreamUrl = buildUpstreamUrl(req, pathParts)
@@ -90,4 +95,3 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ path?: s
   const { path } = await ctx.params
   return proxy(req, path)
 }
-
