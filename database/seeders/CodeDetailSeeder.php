@@ -579,6 +579,12 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'VehicleType', 'Description' => 'Truck', 'Value' => 'TK'],
             ['CodeID' => 'VehicleType', 'Description' => 'Van', 'Value' => 'VA'],
 
+            //Prequalification Rounds
+            ['CodeID' => 'PrequalificationRound', 'Description' => 'Expired', 'Value' => 'E'],
+            ['CodeID' => 'PrequalificationRound', 'Description' => 'Draft', 'Value' => 'D'],
+            ['CodeID' => 'PrequalificationRound', 'Description' => 'Open', 'Value' => 'O'],
+            ['CodeID' => 'PrequalificationRound', 'Description' => 'Closed', 'Value' => 'CL'],
+
             //Inspection Types
             ['CodeID' => 'InspectionType', 'Description' => 'Pre-Trip Inspection', 'Value' => 'PRI'],
             ['CodeID' => 'InspectionType', 'Description' => 'Post-Trip Inspection', 'Value' => 'POI'],
@@ -773,18 +779,45 @@ class CodeDetailSeeder extends Seeder
 
 
         foreach ($entries as $entry) {
-            $exists = DB::table('t_CodeDetails')->where('CodeID', $entry['CodeID'])->where('Description', $entry['Description'])->exists();
-            if (! $exists) {
-                DB::table('t_CodeDetails')->insert([
-                    'CodeID' => $entry['CodeID'],
-                    'Value' => $entry['Value'] ?? null,
-                    'Description' => $entry['Description'],
-                    'DisplayOrder' => $entry['DisplayOrder'] ?? 1,
+            $query = DB::table('t_CodeDetails')->where('CodeID', $entry['CodeID']);
+
+            // Match by Value if present, otherwise by Description (fallback for items without Value)
+            if (isset($entry['Value'])) {
+                $query->where('Value', (string) $entry['Value']);
+            } else {
+                $query->where('Description', $entry['Description']);
+            }
+
+            $existing = $query->first();
+
+            $data = [
+                'CodeID' => $entry['CodeID'],
+                'Value' => isset($entry['Value']) ? (string) $entry['Value'] : null,
+                'Description' => $entry['Description'],
+                'DisplayOrder' => $entry['DisplayOrder'] ?? 1,
+                'IsActive' => $entry['IsActive'] ?? 1,
+            ];
+
+            if ($existing) {
+                // Update existing record
+                DB::table('t_CodeDetails')
+                    ->where('ID', $existing->ID)
+                    ->update(array_merge($data, [
+                        'ModifiedOn' => $date,
+                        'ModifiedBy' => $user->Id,
+                        'DeletedOn' => null, // Restore if soft-deleted
+                        'DeletedBy' => null,
+                    ]));
+            } else {
+                // Insert new record
+                DB::table('t_CodeDetails')->insert(array_merge($data, [
                     'CreatedOn' => $date,
                     'CreatedBy' => $user->Id,
                     'ModifiedOn' => $date,
                     'ModifiedBy' => $user->Id,
-                ]);
+                    'DeletedOn' => null,
+                    'DeletedBy' => null,
+                ]));
             }
         }
     }
