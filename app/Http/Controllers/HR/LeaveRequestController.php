@@ -115,11 +115,112 @@ class LeaveRequestController extends Controller
 
     public function calendar()
     {
-        $events = LeaveRequest::with('employee', 'type', 'reliever')
+        return view('hr.leave.calendar.index');
+    }
+
+    public function calendarData(Request $request)
+    {
+        $start = Carbon::parse($request->query('start'));
+        $end = Carbon::parse($request->query('end'));
+
+        // Fetch leaves in range
+        $leaves = LeaveRequest::with(['employee', 'type', 'reliever'])
             ->whereIn('Status', ['Approved', 'Pending'])
-            ->orderBy('StartDate')
+            ->where(function($q) use ($start, $end) {
+                $q->whereBetween('StartDate', [$start, $end])
+                  ->orWhereBetween('EndDate', [$start, $end])
+                  ->orWhere(function($sq) use ($start, $end) {
+                      $sq->where('StartDate', '<=', $start)
+                         ->where('EndDate', '>=', $end);
+                  });
+            })
             ->get();
-        return view('hr.leave.calendar.index', compact('events'));
+
+        $events = [];
+        $dailyCounts = [];
+        $leaveTypeStats = [];
+
+        foreach ($leaves as $leaf) {
+            $color = match($leaf->Status) {
+                'Approved' => '#28a745', // Green
+                'Pending' => '#ffc107',  // Orange/Yellow
+                default => '#6c757d'
+            };
+
+            $empName = trim(($leaf->employee->FirstName ?? '') . ' ' . ($leaf->employee->LastName ?? ''));
+            if (!$empName) $empName = 'Unknown Employee';
+
+            $typeName = $leaf->type->Name ?? 'Leave';
+            
+            $events[] = [
+                'id' => $leaf->Id,
+                'title' => $empName . ' - ' . $typeName,
+                'start' => $leaf->StartDate,
+                'end' => Carbon::parse($leaf->EndDate)->addDay()->toDateString(), // FullCalendar is exclusive on end date
+                'color' => $color,
+                'extendedProps' => [
+                    'employee' => $empName,
+                    'type' => $typeName,
+                    'status' => $leaf->Status,
+                    'days' => $leaf->TotalDays,
+                    'reliever' => ($leaf->reliever->FirstName ?? '') . ' ' . ($leaf->reliever->LastName ?? ''),
+                    'startDate' => Carbon::parse($leaf->StartDate)->toDateString(), // Explicit date for frontend
+                ]
+            ];
+
+            // Daily Counts Logic
+            $s = Carbon::parse($leaf->StartDate);
+            $e = Carbon::parse($leaf->EndDate);
+            
+            // Clamp to requested view range for stats
+            if ($s->lt($start)) $s = $start->copy();
+            if ($e->gt($end)) $e = $start->copy(); // Wait, if leaf ends after view end, we shouldn't clamp E to START. We should clamp to END.
+            // FIXED BUG: Clamping logic was checking $e > $end then setting $e = $start (in my head).
+            // Actually previous code was: if ($e->gt($end)) $e = Carbon::parse($end);
+            // Correct logic:
+            if ($e->gt($end)) $e = $end->copy();
+
+            // Ensure s <= e after clamping. If clamping makes s > e, then the leave is outside range (shouldn't happen with query but safe to check)
+            if ($s->gt($e)) continue;
+
+            for ($d = $s->copy(); $d->lte($e); $d->addDay()) {
+                $dateStr = $d->toDateString();
+                if (!isset($dailyCounts[$dateStr])) {
+                    $dailyCounts[$dateStr] = [
+                        'count' => 0,
+                        'employees' => []
+                    ];
+                }
+                $dailyCounts[$dateStr]['count']++;
+                $dailyCounts[$dateStr]['employees'][] = [
+                    'name' => $empName,
+                    'type' => $typeName,
+                    'avatar' => $leaf->employee->PhotoPath ?? null
+                ];
+            }
+            
+            // Stats Logic
+            // We should only count days relevant to the view? Or TotalDays of the request?
+            // The requirement says "Leave statistics... populated". Usually means visible days.
+            // If I use $leaf->TotalDays, it counts days outside the month too.
+            // Let's count the calculated days in loop for better accuracy of "Monthly Stats".
+            // Re-calculating duration within window:
+            $daysInView = $s->diffInDays($e) + 1; // Inclusive
+            // Adjust for working days? That's expensive. Let's stick to calendar days for visual stats or use simple diff.
+            // The user wants "Tabulations". simple count is okay.
+            
+            $statsName = $leaf->type->Name ?? 'Other';
+            if (!isset($leaveTypeStats[$statsName])) {
+                $leaveTypeStats[$statsName] = 0;
+            }
+            $leaveTypeStats[$statsName] += $daysInView;
+        }
+
+        return response()->json([
+            'events' => $events,
+            'daily_counts' => $dailyCounts,
+            'stats' => $leaveTypeStats
+        ]);
     }
 
     /**

@@ -396,7 +396,9 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     Route::post('leave/balances/accrue', [\App\Http\Controllers\HR\LeaveBalanceController::class, 'accrueMonthly'])->name('leave.balances.accrue');
     Route::post('leave/balances/load-yearly', [\App\Http\Controllers\HR\LeaveBalanceController::class, 'loadYearlyBalances'])->name('leave.balances.load_yearly');
     Route::get('leave/balances/export', [\App\Http\Controllers\HR\LeaveBalanceController::class, 'export'])->name('leave.balances.export');
+    Route::get('leave/reports', [\App\Http\Controllers\HR\LeaveReportController::class, 'index'])->name('leave.reports.index');
     Route::get('leave/calendar', [\App\Http\Controllers\HR\LeaveRequestController::class, 'calendar'])->name('leave.calendar.index');
+    Route::get('leave/calendar/data', [\App\Http\Controllers\HR\LeaveRequestController::class, 'calendarData'])->name('leave.calendar.data');
 
     // Payroll Management
     Route::get('payroll', [\App\Http\Controllers\HR\PayrollDashboardController::class, 'index'])->name('payroll.dashboard');
