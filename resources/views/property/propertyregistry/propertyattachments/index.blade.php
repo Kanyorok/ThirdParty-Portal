@@ -70,6 +70,12 @@
                                 <td class="text-center">
                                     <div class="d-inline-flex flex-wrap gap-1">
 
+                                        <a href="{{ route('attachments.show', $propertyattachment->Id) }}"
+                                           class="btn btn-sm btn-info"
+                                           title="View Attachment">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+
                                         <a href="{{ route('attachments.edit', $propertyattachment->Id) }}"
                                            class="btn btn-sm btn-warning"
                                            title="Edit Attachment">

@@ -36,7 +36,7 @@ class PropertyNewLeaseController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::PropertyNewLeaseView, PropertyNewLease::class);
-        $newleases = PropertyNewLease::with(['tenant', 'property'])->get();
+        $newleases = PropertyNewLease::with(['tenant', 'property'])->orderBy('Id','desc')->get();
 
         if (request()->wantsJson()) {
             return response()->json($newleases);

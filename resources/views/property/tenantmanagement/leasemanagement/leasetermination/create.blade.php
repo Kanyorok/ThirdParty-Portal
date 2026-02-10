@@ -127,7 +127,8 @@
                 </div>
 
                 <!-- Submit Button -->
-                <div class="text-end">
+                <div class="d-flex justify-content-between">
+                    <a href="{{ route('terminatelease.index') }}" class="btn btn-secondary">Cancel</a>
                     <button type="submit"
                             class="btn btn-success"
                             onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">

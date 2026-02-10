@@ -62,7 +62,7 @@ class PropertyAttachmentsService
         $attachment->update([
             'PropertyID' => $PropertyID->Id,
             'DocumentTitle' => $DocumentTitle,
-            'DocumentType' => $DocumentType->Id,
+            'DocumentType' => $DocumentType->ID,
             'Description' => $Description,
             'ModifiedBy' => $user->Id,
             'ModifiedOn' => now(),
