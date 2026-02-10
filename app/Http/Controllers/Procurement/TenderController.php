@@ -960,7 +960,7 @@ class TenderController extends Controller
             elseif ($crudType == 'updateQty') {
                 // 1. Validation
                 $validated = $request->validate([
-                    'item_id' => 'required|integer|exists:t_TenderItems,Id',
+                    'item_id' => 'required|integer|exists:t_TenderItems,id',
                     'QtyToTender' => 'required|numeric|min:0.01',
                 ]);
 

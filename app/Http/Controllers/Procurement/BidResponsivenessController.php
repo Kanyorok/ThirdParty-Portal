@@ -106,6 +106,8 @@ class BidResponsivenessController extends Controller
 
             return [
                 'id' => $documentId ?? ($doc['id'] ?? 'unknown'),
+                'document_id' => $documentId,
+                'dms_document' => $linked, // Full Document model for DocumentService
                 'filename' => $name,
                 'size' => $sizeBytes !== null ? $this->formatFileSize($sizeBytes) : 'N/A',
                 'uploaded_at' => $uploadedAt,
@@ -151,8 +153,10 @@ class BidResponsivenessController extends Controller
                     'submission_source' => ucfirst($submission->SubmissionSource),
                 ],
                 'supplier_details' => $supplierDetails,
-                'documents' => $documents, // Keep for backward compat if needed
-                'documents_html' => view('partials.documents_summary', ['documents' => $dmsDocs])->render(),
+                'documents' => $documents,
+                'documents_html' => !empty($documents) 
+                    ? view('partials.bid_documents_list', ['documents' => $documents, 'bidId' => $submission->Id])->render() 
+                    : null,
                 'responsiveness_summary' => $responsivenessSummary,
                 'opening_details' => [
                     'opened_at' => $submission->OpenedAt?->format('d/m/Y H:i:s'),

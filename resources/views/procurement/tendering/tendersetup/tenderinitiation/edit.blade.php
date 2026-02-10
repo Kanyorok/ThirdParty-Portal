@@ -287,7 +287,7 @@
                                 @canUpdate('tender')
                                 <button type="button" class="btn btn-sm btn-outline-primary"
                                     data-bs-toggle="modal"
-                                    data-bs-target="#editItemModal-{{$item->Id}}"
+                                    data-bs-target="#editItemModal-{{$item->id}}"
                                     title="Edit Quantity">
                                     <i class="fas fa-edit"></i>
                                 </button>
@@ -303,7 +303,7 @@
                                     @method('PATCH')
                                     <input type="hidden" name="type" value='crudItem'>
                                     <input type="hidden" name="crudType" value='deleteItem'>
-                                    <input type="hidden" name="item_id" value="{{$item->Id}}">
+                                    <input type="hidden" name="item_id" value="{{$item->id}}">
                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
                                         onclick="return confirm('Are you sure you want to delete item \'{{ $item->item?->ItemName }}\'? This action cannot be undone.')">
                                         <i class="fas fa-trash-alt"></i>
@@ -477,7 +477,7 @@
 <!-- Edit Item Modal (Only for MANUAL items) -->
 @foreach ($items as $item)
 @if(strtoupper(string: $item->SourceType) === 'MANUAL')
-<div class="modal fade" id="editItemModal-{{$item->Id}}" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="editItemModal-{{$item->id}}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content rounded-3 shadow">
             <div class="modal-header bg-primary text-white">
@@ -492,7 +492,7 @@
                 @method('PATCH')
                 <input type="hidden" name="type" value="crudItem">
                 <input type="hidden" name="crudType" value="updateQty">
-                <input type="hidden" name="item_id" value="{{ $item->Id }}">
+                <input type="hidden" name="item_id" value="{{ $item->id }}">
 
                 <div class="modal-body">
                     <div class="alert alert-info">
@@ -523,13 +523,13 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="QtyToTender-{{$item->Id}}" class="form-label fw-bold">
+                        <label for="QtyToTender-{{$item->id}}" class="form-label fw-bold">
                             New Quantity <span class="text-danger">*</span>
                         </label>
                         <input type="number" step="0.01" min="0.01"
                             name="QtyToTender"
                             value="{{$item->QtyToTender}}"
-                            id="QtyToTender-{{$item->Id}}"
+                            id="QtyToTender-{{$item->id}}"
                             class="form-control"
                             required>
                         <small class="text-muted">Only quantity can be edited. PR reference is locked after creation.</small>
