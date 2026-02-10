@@ -11,6 +11,32 @@ class TransactionTransferRequest extends FormRequest
         return true;
     }
 
+    public function prepareForValidation()
+    {
+        $items = $this->get('items', []);
+        if (is_array($items)) {
+            foreach ($items as $key => $item) {
+                if (isset($item['batch_allocation']) && is_string($item['batch_allocation'])) {
+                    if (!empty($item['batch_allocation'])) {
+                        try {
+                            $decoded = json_decode($item['batch_allocation'], true);
+                            if (is_array($decoded)) {
+                                $items[$key]['batch_allocation'] = $decoded;
+                            } else {
+                                $items[$key]['batch_allocation'] = null;
+                            }
+                        } catch (\Exception $e) {
+                            $items[$key]['batch_allocation'] = null;
+                        }
+                    } else {
+                        $items[$key]['batch_allocation'] = null;
+                    }
+                }
+            }
+            $this->merge(['items' => $items]);
+        }
+    }
+
 public function rules()
 {
     $rules = [
@@ -29,8 +55,7 @@ public function rules()
         'items.*.remarks' => 'nullable|string|max:255',
     ];
 
-    // Add batch_allocation validation for non-HQ users
-    // This should be handled dynamically based on user's branch
+
     $rules['items.*.batch_allocation'] = 'nullable|array';
     $rules['items.*.batch_allocation.*.ledger_id'] = 'required|exists:t_StockGRNLedger,Id';
     $rules['items.*.batch_allocation.*.quantity'] = 'required|numeric|min:0';
