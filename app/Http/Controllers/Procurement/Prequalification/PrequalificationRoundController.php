@@ -55,12 +55,6 @@ class PrequalificationRoundController extends Controller
         $activeSections = Section::with('criteria')->isActive()->get();
         $prequalificationRound = new PrequalificationRound();
 
-//         dd(
-//     Section::count(),
-//     Section::isActive()->count(),
-//     Section::where('IsActive', 1)->count(),
-//     Section::where('IsActive', true)->count()
-// );
 
         return view(
             'procurement.suppliers.prequalification.prequalification-rounds.create',

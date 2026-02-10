@@ -154,8 +154,8 @@ class BidResponsivenessController extends Controller
                 ],
                 'supplier_details' => $supplierDetails,
                 'documents' => $documents,
-                'documents_html' => !empty($documents) 
-                    ? view('partials.bid_documents_list', ['documents' => $documents, 'bidId' => $submission->Id])->render() 
+                'documents_html' => ! empty($documents)
+                    ? view('partials.bid_documents_list', ['documents' => $documents, 'bidId' => $submission->Id])->render()
                     : null,
                 'responsiveness_summary' => $responsivenessSummary,
                 'opening_details' => [

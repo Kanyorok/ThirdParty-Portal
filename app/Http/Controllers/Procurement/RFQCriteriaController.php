@@ -86,8 +86,10 @@ class RFQCriteriaController extends Controller
             }
         }
         if (! empty($emptySections)) {
-            return back()->withInput()->with('error',
-                'Every selected section must have at least one criteria item checked. Missing criteria for: ' . implode(', ', $emptySections));
+            return back()->withInput()->with(
+                'error',
+                'Every selected section must have at least one criteria item checked. Missing criteria for: ' . implode(', ', $emptySections)
+            );
         }
 
 

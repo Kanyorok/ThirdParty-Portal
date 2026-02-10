@@ -2061,7 +2061,7 @@ class TenderController extends Controller
                     'tender_id' => $tender->Id,
                     'filename' => $uploadedFile->getClientOriginalName(),
                     'size' => $uploadedFile->getSize(),
-                    'mime' => $uploadedFile->getMimeType()
+                    'mime' => $uploadedFile->getMimeType(),
                 ]);
 
                 $document = $tender->newDocument(
@@ -2074,7 +2074,7 @@ class TenderController extends Controller
                 // Fix for 0KB file size issue (Module Level)
                 if ($document->current && $document->current->Size === 0) {
                     $document->current->update([
-                        'Size' => $uploadedFile->getSize()
+                        'Size' => $uploadedFile->getSize(),
                     ]);
                     Log::info('Fixed 0KB file size for document', ['id' => $document->Id, 'size' => $uploadedFile->getSize()]);
                 }
@@ -2083,7 +2083,7 @@ class TenderController extends Controller
                 Log::info('Document attached successfully', [
                     'tender_id' => $tender->Id,
                     'filename' => $uploadedFile->getClientOriginalName(),
-                    'document_id' => $document->Id
+                    'document_id' => $document->Id,
                 ]);
             } catch (\Exception $e) {
                 $failedCount++;

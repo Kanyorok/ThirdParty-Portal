@@ -136,7 +136,7 @@ class PrequalificationEvaluationController extends Controller
 
             return back()->with('error', "Round $roundId not found. Please provide a valid RoundID.");
         }
-        
+
         // Get applications that are Pending (no result) OR Passed (re-run)
         // effectively anyone who hasn't failed explicitly
         $targetApps = PrequalificationApplication::with('result')

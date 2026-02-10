@@ -20,7 +20,7 @@ class RFQSectionController extends Controller
     {
         // Order newest first and paginate so the view shows a pager
         $rfqs = RFQ::withCount(['activeSections as sections_count', 'criteria'])
-            ->with(['activeSections' => function($query) {
+            ->with(['activeSections' => function ($query) {
                 $query->select('RFQID', 'Weight', 'IsActive');
             }])
             ->whereIn('Status', ['Approved', 'Ap', 'AP', 'Pub', 'Published'])

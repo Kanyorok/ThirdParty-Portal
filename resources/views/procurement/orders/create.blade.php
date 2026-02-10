@@ -156,15 +156,9 @@
                 </div>
             </div>
 
-            <!-- Common LPO and Date -->
+            <!-- Common LPO (Hidden) and Date -->
             <div class="row mb-4">
-                <div class="col-md-6">
-                    <label>LPO Number <span class="text-danger">*</span></label>
-                    <input type="text" name="LPONo" class="form-control @error('LPONo') is-invalid @enderror" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
-                    @error('LPONo')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                </div>
+                <input type="hidden" name="LPONo" value="{{ old('LPONo', uniqid('LPO-')) }}"/>
                 <div class="col-md-6">
                     <label>Date <span class="text-danger">*</span></label>
                     <input type="date" class="form-control poDate @error('pODate') is-invalid @enderror" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required/>

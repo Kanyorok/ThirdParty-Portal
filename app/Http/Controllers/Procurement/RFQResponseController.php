@@ -176,9 +176,9 @@ class RFQResponseController extends Controller
     public function edit($id)
     {
         $rfqResponse = RFQResponse::with(['rfq.evaluations', 'items'])->findOrFail($id);
-        
+
         if ($rfqResponse->rfq && $rfqResponse->rfq->evaluations()->exists()) {
-             return redirect()->back()->with('error', 'Cannot edit response: Quotation Evaluation has already been created for this RFQ.');
+            return redirect()->back()->with('error', 'Cannot edit response: Quotation Evaluation has already been created for this RFQ.');
         }
 
         $rfqs = RFQ::all();
@@ -198,9 +198,9 @@ class RFQResponseController extends Controller
         ]);
 
         $rfqResponse = RFQResponse::findOrFail($id);
-        
+
         if ($rfqResponse->rfq && $rfqResponse->rfq->evaluations()->exists()) {
-             return redirect()->back()->with('error', 'Cannot update response: Quotation Evaluation has already been created for this RFQ.');
+            return redirect()->back()->with('error', 'Cannot update response: Quotation Evaluation has already been created for this RFQ.');
         }
 
         DB::transaction(function () use ($request, $rfqResponse) {
@@ -226,9 +226,9 @@ class RFQResponseController extends Controller
     public function destroy($id)
     {
         $rfqResponse = RFQResponse::findOrFail($id);
-        
+
         if ($rfqResponse->rfq && $rfqResponse->rfq->evaluations()->exists()) {
-             return redirect()->back()->with('error', 'Cannot delete response: Quotation Evaluation has already been created for this RFQ.');
+            return redirect()->back()->with('error', 'Cannot delete response: Quotation Evaluation has already been created for this RFQ.');
         }
 
         $rfqResponse->delete();

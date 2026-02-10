@@ -381,9 +381,10 @@ class PurchaseOrderController extends Controller
             }
 
             // Prepare redirect response first
+            $orderNo = $poResult['order_no'] ?? '';
             $redirectResponse = redirect()
                 ->route('purchaseOrder.show', $poId)
-                ->with('success', 'Purchase Order created successfully');
+                ->with('success', "Purchase Order created successfully. LPO Number: {$orderNo}");
 
             // Initialize approval workflow for the newly created PO (after preparing response)
             try {
@@ -622,15 +623,9 @@ class PurchaseOrderController extends Controller
             $orderInfo = $this->orderService->fetchOrderDetails($id);
             $lineInfo = $this->orderService->fetchOrderLineDetails($id);
 
-            // Fetch payment term description
-            $paymentTermRow = DB::table('t_CodeDetails')
-                ->where('CodeID', 'PaymentTerm')
-                ->first();
-            $paymentTerms = $paymentTermRow->Description ?? null;
-
             return view(
                 'procurement.orders.approval',
-                compact('orderInfo', 'lineInfo', 'paymentTerms')
+                compact('orderInfo', 'lineInfo')
             );
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             Log::warning("Unauthorized access to Order approval ID: {$id}", [

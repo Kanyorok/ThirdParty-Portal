@@ -44,9 +44,9 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>Order No</th>
+                <th>LPO No</th>
                 <th>Order Date</th>
-                  <th>LPO No</th>
+                  <th>Reference No</th>
                 <th>Priority</th>
                 <th>Order Amount</th>
                 <th>Order Lines</th>
