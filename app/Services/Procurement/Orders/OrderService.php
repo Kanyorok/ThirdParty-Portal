@@ -433,13 +433,21 @@ class OrderService
             }
 
         } elseif ($sourceType === 'PLAN') {
+            // Consistent logic with getDirectPlanItems
             $directMethod = DB::table('t_CodeDetails')
-               ->where('CodeID', 'ProcurementMethod')
-               ->where(function ($q) {
-                   $q->where('Description', 'LIKE', '%Direct Purchase%')
-                     ->orWhere('Value', 'Like', '%D%');
-               })
-               ->value('ID');
+                ->where('CodeID', 'ProcurementMethod')
+                ->where(function ($q) {
+                    $q->where('Description', 'LIKE', 'Direct Purchase%')
+                      ->orWhere('Description', 'LIKE', 'Direct Procurement%');
+                })
+                ->value('ID');
+
+            if (! $directMethod) {
+                $directMethod = DB::table('t_CodeDetails')
+                   ->where('CodeID', 'ProcurementMethod')
+                   ->where('Description', 'Direct')
+                   ->value('ID');
+            }
 
             $originalItems = DB::table('t_PlanLineItem')
                 ->where('PlanID', $sourceId)

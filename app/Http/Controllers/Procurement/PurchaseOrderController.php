@@ -687,6 +687,11 @@ class PurchaseOrderController extends Controller
             $order = Order::findOrFail($id);
             $this->authorize('approve', $order);
 
+            // Handle rejection delegation
+            if ($request->input('action') === 'reject') {
+                return $this->reject($request, $id);
+            }
+
             // Maker-Checker Rule: Prevent self-approval
             if ($order->CreatedBy == auth()->id()) {
                 Log::warning('Maker-checker violation: User attempted to approve own PO', [

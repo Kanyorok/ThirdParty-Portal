@@ -85,7 +85,7 @@
                                     </button>
 
                                     <form action="{{ route('rfqresponses.destroy', $response->Id) }}" method="POST"
-                                          class="d-inline" onsubmit="return confirm('Are you sure?')">
+                                          class="d-inline" onsubmit="return confirm('Are you sure you want to delete this response?')">
                                         @csrf
                                         @method('DELETE')
                                         <button class="btn btn-sm btn-danger">Delete</button>

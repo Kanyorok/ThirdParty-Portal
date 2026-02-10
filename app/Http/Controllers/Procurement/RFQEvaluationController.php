@@ -527,11 +527,11 @@ class RFQEvaluationController extends Controller
                         continue;
                     }
 
-                    $score = (int)$scoreData['Score'];
+                    $score = (float)$scoreData['Score'];
 
-                    // Enforce max score of 10 and min score of 1
-                    if ($score < 1 || $score > 10) {
-                        throw new \Exception("Score for Supplier ID $supplierId and Criteria ID $criteriaId must be between 1 and 10.");
+                    // Enforce max score of 10 and min score of 0.1 (or 0 if allowed)
+                    if ($score < 0 || $score > 10) {
+                        throw new \Exception("Score for Supplier ID $supplierId and Criteria ID $criteriaId must be between 0 and 10.");
                     }
 
                     RFQSupplierResponseEvaluation::create([
@@ -603,11 +603,11 @@ class RFQEvaluationController extends Controller
 
         try {
             foreach ($request->Evaluations as $evalId => $data) {
-                $score = (int)($data['Score'] ?? 0);
+                $score = (float)($data['Score'] ?? 0);
 
                 // Enforce score range
-                if ($score < 1 || $score > 10) {
-                    throw new \Exception("Score must be between 1 and 10.");
+                if ($score < 0 || $score > 10) {
+                    throw new \Exception("Score must be between 0 and 10.");
                 }
 
                 RFQSupplierResponseEvaluation::where('Id', $evalId)

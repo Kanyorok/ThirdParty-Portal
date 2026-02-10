@@ -65,51 +65,7 @@
             </div>
         </div>
 
-        <!-- RFQ Selection -->
-        <div class="row mb-4 source-rfq d-none">
-            <div class="col-md-4">
-                <label>Reference Number (RFQ) <span class="text-danger">*</span></label>
-                <select class="form-control refNo @error('refNo') is-invalid @enderror" name="refNo" id="refNo">
-                    <option selected disabled>Select RFQ</option>
-                    @foreach($awardedRfqs as $ar)
-                    @php
-                    $rfqNumber = trim((string)($ar->RFQNumber ?? ''));
-                    $isConvertedId = in_array($ar->Id, $convertedRFQIds ?? []);
-                    $isUsedRef = in_array($rfqNumber, $usedReferenceNumbers ?? []);
-                    @endphp
-                    {{-- Skip RFQs that are already converted by id or by reference number in ExtOrdNum --}}
-                    @if($isConvertedId || $isUsedRef)
-                    @continue
-                    @endif
-                    <option value="{{ $ar->RFQNumber }}"
-                        data-rfq-id="{{ $ar->Id }}"
-                        data-supplier-id="{{ $ar->ThirdPartyId ?? $ar->SupplierId }}"
-                        data-thirdparty-id="{{ $ar->ThirdPartyId ?? 0 }}"
-                        data-supplier-legacy-id="{{ $ar->SupplierId }}"
-                        data-supplier-name="{{ $ar->SupplierName ?? '' }}"
-                        data-address="{{ $ar->Address ?? '' }}">{{ $ar->RFQNumber }}</option>
-                    @endforeach
-                    {{-- Only awarded RFQs must be listed (no non-awarded options) --}}
-                </select>
-                @error('refNo')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-            </div>
-            <div class="col-md-4">
-                <label>LPO Number <span class="text-danger">*</span></label>
-                <input type="text" name="LPONo" class="form-control @error('LPONo') is-invalid @enderror" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required />
-                @error('LPONo')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-            </div>
-            <div class="col-md-4">
-                <label>Date <span class="text-danger">*</span></label>
-                <input type="date" class="form-control poDate @error('pODate') is-invalid @enderror" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required />
-                @error('pODate')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-            </div>
-        </div>
+
 
             <!-- Consolidated Document & Supplier Row -->
             <div class="row mb-4 supplier-row">
@@ -128,11 +84,13 @@
                                 @if($isConvertedId || $isUsedRef)
                                     @continue
                                 @endif
-                                <option value="{{ $ar->RFQNumber }}"
+                                <option value="{{ $ar->RFQNumber }}-{{ $ar->ThirdPartyId ?? 0 }}"
+                                        data-rfq-no="{{ $ar->RFQNumber }}"
                                         data-rfq-id="{{ $ar->Id }}"
                                         data-supplier-id="{{ $ar->SupplierId }}"
                                         data-thirdparty-id="{{ $ar->ThirdPartyId ?? 0 }}"
-                                        data-supplier-name="{{ $ar->SupplierName ?? '' }}">{{ $ar->RFQNumber }}</option>
+                                        data-supplier-name="{{ $ar->SupplierName ?? '' }}"
+                                        data-address="{{ $ar->Address ?? '' }}">{{ $ar->RFQNumber }} - {{ $ar->SupplierName ?? '' }}</option>
                             @endforeach
                         </select>
                         @error('refNo')
@@ -433,16 +391,27 @@ function populateItems(items) {
         $tr.append(`<td class="line-no">${idx + 1}.</td>`);
 
         // Create item input field
+        // Create item input field
         const $itemTd = $('<td class="text-start"/>');
-        const $inputItem = $('<input type="text" class="form-control form-control-sm itemCode" name="itemCode[]" placeholder="Item (code/name)" required/>');
-        if (it.itemCode) {
-            $inputItem.val(it.itemCode);
-        }
-        $itemTd.append($inputItem);
+        
+        // Determine ID and Display Code
+        // Prioritize itemId (new), fall back to itemCode (old/legacy)
+        const idVal = it.itemId || it.itemCode || ''; 
+        const displayVal = it.itemCode || it.itemName || ''; 
+
+        // Hidden Input for Submission (Name=itemCode[], Value=ID)
+        const $hiddenId = $('<input type="hidden" name="itemCode[]">').val(idVal).addClass('itemCode');
+
+        // Visible Input for Display (Value=Code String)
+        const $inputItem = $('<input type="text" class="form-control form-control-sm" placeholder="Item (code/name)" required readonly/>');
+        $inputItem.val(displayVal);
+
+        $itemTd.append($hiddenId).append($inputItem);
         $tr.append($itemTd);
 
-        // Item description
-        const itemDescription = it.description || it.itemName || '';
+        // Item Name (Displayed in "itemDescription" textarea as per user requirement)
+        // User requested: "in the ItemName fireld it fetches the itemDescription of the ItemName" -> implying it SHOULD be Name
+        const itemDescription = it.itemName || ''; 
         $tr.append(`<td class="text-start"><textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="5" readonly style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0;resize:none;">${itemDescription}</textarea></td>`);
 
         // Quantity field with max validation
@@ -565,7 +534,7 @@ function applySourceMode() {
                     $ref.append(`<option value="${uniqueVal}"
                                     data-rfq-no="${ar.RFQNumber}"
                                     data-rfq-id="${ar.Id}"
-                                    data-supplier-legacy-id="${supplierLegacyId}"
+                                    data-supplier-id="${supplierLegacyId}"
                                     data-thirdparty-id="${thirdPartyId}"
                                     data-supplier-name="${supplierName}"
                                     data-address="${address}"

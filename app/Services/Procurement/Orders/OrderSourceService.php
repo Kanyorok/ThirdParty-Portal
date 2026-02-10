@@ -90,7 +90,8 @@ class OrderSourceService
             ->leftJoin('t_Pricing as ip', 'i.Id', '=', 'ip.ItemID')
             ->where('ti.TenderID', $tenderId)
             ->select(
-                'i.Id as itemCode',
+                'i.Id as itemId', // Alias as itemId
+                'i.ItemCode as itemCode', // Actual String Code
                 'i.ItemName as itemName',
                 'ti.QtyToTender as quantity',
                 DB::raw('COALESCE(ip.ActualPrice, 0) as unitPrice'),
@@ -103,7 +104,7 @@ class OrderSourceService
         $ordered = $this->orderService->getOrderedQuantities('TENDER', $tenderId);
 
         return $items->map(function ($item) use ($ordered) {
-            $prev = $ordered[$item->itemCode] ?? 0;
+            $prev = $ordered[$item->itemId] ?? 0;
             $item->quantity = max(0, $item->quantity - $prev);
             $item->lineTotal = $item->quantity * $item->unitPrice;
 
@@ -150,7 +151,8 @@ class OrderSourceService
                 })
                 ->where('rl.RFQId', $contract->RFQId)
                 ->select(
-                    'i.Id as itemCode',
+                    'i.Id as itemId',
+                    'i.ItemCode as itemCode',
                     'i.ItemName as itemName',
                     'rl.Quantity as quantity',
                     DB::raw('COALESCE(ri.QuotedPrice, 0) as unitPrice'),
@@ -165,8 +167,8 @@ class OrderSourceService
             $orderedRFQ = $this->orderService->getOrderedQuantities('RFQ', $contract->RFQId);
 
             return $items->map(function ($item) use ($orderedContract, $orderedRFQ) {
-                $prevContract = $orderedContract[$item->itemCode] ?? 0;
-                $prevRFQ = $orderedRFQ[$item->itemCode] ?? 0;
+                $prevContract = $orderedContract[$item->itemId] ?? 0;
+                $prevRFQ = $orderedRFQ[$item->itemId] ?? 0;
                 $item->quantity = max(0, $item->quantity - $prevContract - $prevRFQ);
                 $item->lineTotal = $item->quantity * $item->unitPrice;
 
@@ -186,7 +188,7 @@ class OrderSourceService
                 $orderedContract = $this->orderService->getOrderedQuantities('CONTRACT', $contractId);
 
                 return $items->map(function ($item) use ($orderedContract) {
-                    $prev = $orderedContract[$item->itemCode] ?? 0;
+                    $prev = $orderedContract[$item->itemId] ?? 0; // Use itemId
                     $item->quantity = max(0, $item->quantity - $prev);
                     $item->lineTotal = $item->quantity * $item->unitPrice;
 
@@ -340,7 +342,8 @@ class OrderSourceService
             ->where('pli.ProcurementMethod', $directMethod)
             ->whereNull('pli.DeletedOn')
             ->select(
-                'i.Id as itemCode',
+                'i.Id as itemId',
+                'i.ItemCode as itemCode',
                 'i.ItemName as itemName',
                 'pli.MergedQty as quantity',
                 DB::raw('COALESCE(i.ItemPrice, 0) as unitPrice'),
@@ -354,12 +357,13 @@ class OrderSourceService
         $ordered = $this->orderService->getOrderedQuantities('PLAN', $planId);
 
         return $items->map(function ($item) use ($ordered) {
-            $code = $item->itemCode;
+            $code = $item->itemId;
             $prev = $ordered[$code] ?? 0;
             $remaining = max(0, $item->quantity - $prev);
 
             return [
-                'itemCode' => $code,
+                'itemId' => $code, // ID
+                'itemCode' => $item->itemCode, // String
                 'itemName' => $item->itemName,
                 'description' => $item->description ?? $item->itemName,
                 'quantity' => $remaining,
@@ -380,7 +384,8 @@ class OrderSourceService
             ->leftJoin('t_RequisitionLines as rql', 'rl.RequisitionLineId', '=', 'rql.Id')
             ->where('rl.RFQId', $rfqId)
             ->select(
-                'i.Id as itemCode',
+                'i.Id as itemId', // Alias as itemId for clarity
+                'i.ItemCode as itemCode', // Fetch actual string code
                 'i.ItemName as itemName', // Use Master Name
                 'rl.Quantity as quantity',
                 'i.ItemDescription as description', // Fixed column name
@@ -410,7 +415,7 @@ class OrderSourceService
         $ordered = $this->orderService->getOrderedQuantities('RFQ', $rfqId);
 
         return $items->map(function ($item) use ($ordered, $quotedPrices) {
-            $code = $item->itemCode;
+            $code = $item->itemId; // Use ID for tracking ordered quantities
             $prev = $ordered[$code] ?? 0;
             $remaining = max(0, $item->quantity - $prev);
 
@@ -419,7 +424,8 @@ class OrderSourceService
             $price = (float)$item->reqUnitPrice;
 
             return [
-                'itemCode' => $code,
+                'itemId' => $item->itemId,
+                'itemCode' => $item->itemCode,
                 'itemName' => $item->itemName,
                 'description' => $item->description ?? $item->itemName,
                 'quantity' => $remaining,

@@ -113,6 +113,7 @@
                         <span class="btn btn-outline-secondary btn-sm disabled" aria-disabled="true" title="This PO was rejected">Approve</span>
                       @else
                         <a href="{{ route('purchaseOrder.approval', $item->Id) }}" class="btn btn-success btn-sm">Approve</a>
+                        <button type="button" class="btn btn-outline-danger btn-sm reject-order" data-id="{{ $item->Id }}" data-total="{{ $totalIncl ?? 0 }}">Reject</button>
                       @endif
                     </td>
                 </tr>
@@ -154,6 +155,39 @@
     </div>
   </div>
 
+  <!-- Reject Modal -->
+  <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title" id="rejectModalLabel">Reject Purchase Order</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form id="rejectForm" action="" method="POST">
+                  @csrf
+                  <div class="modal-body">
+                      <input type="hidden" name="document_type" value="purchase_order">
+                      <input type="hidden" name="order_total" id="rejectOrderTotal" value="0">
+                      <input type="hidden" name="action" value="reject">
+                      <div class="mb-3">
+                          <label for="rejection_reason" class="form-label">Reason for rejection</label>
+                          <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="3" placeholder="Provide a brief reason" required></textarea>
+                      </div>
+                      <div class="alert alert-warning">
+                          This will send the P.O back to the previous workflow step.
+                      </div>
+                  </div>
+                  <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                      <button type="submit" class="btn btn-danger">
+                          <i class="fas fa-times"></i> Confirm Reject
+                      </button>
+                  </div>
+              </form>
+          </div>
+      </div>
+  </div>
+
 @endsection
 
 @push('scripts')
@@ -189,6 +223,26 @@
     // Initial attach on full page load
     $(function() {
       initOrdersPage();
+
+      // Handler for Reject button
+      $(document).on('click', '.reject-order', function(e) {
+          e.preventDefault();
+          var id = $(this).data('id');
+          var total = $(this).data('total');
+          
+          // Construct action URL: Replace placeholder with ID
+          // Assuming route is like /procurement/purchaseOrder/{id}/approve
+          // adaptable if route('purchaseOrder.approve', ':id') pattern works
+          var url = "{{ route('purchaseOrder.approve', ':id') }}".replace(':id', id);
+          
+          $('#rejectForm').attr('action', url);
+          $('#rejectOrderTotal').val(total);
+          
+          // Clear previous reason
+          $('#rejection_reason').val('');
+          
+          $('#rejectModal').modal('show');
+      });
     });
 
     // Re-run when partial content is loaded via fragment navigation
