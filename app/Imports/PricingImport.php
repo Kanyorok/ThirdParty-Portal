@@ -26,7 +26,6 @@ class PricingImport implements ToCollection
             }
 
             if (count($row) < 8) {
-
                 continue;
             }
 
@@ -36,7 +35,6 @@ class PricingImport implements ToCollection
             $item = ItemMasterList::where('ItemCode', $itemCode)->first();
 
             if (! $item) {
-
                 continue;
             }
 

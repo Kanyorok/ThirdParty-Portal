@@ -114,7 +114,6 @@ class PriceManagementImport implements ToModel, WithHeadingRow
                 $priceChanged = ((float) $existingPrice->ActualPrice) != $actualPrice;
 
                 if ($priceChanged) {
-
                     $existingPrice->DeletedOn = now();
                     $existingPrice->DeletedBy = Auth::id();
                     $existingPrice->save();
@@ -147,7 +146,6 @@ class PriceManagementImport implements ToModel, WithHeadingRow
                     DB::commit();
 
                     return null;
-
                 } else {
                     $hasOtherChanges = false;
 
@@ -218,7 +216,6 @@ class PriceManagementImport implements ToModel, WithHeadingRow
                 ->log('Price imported via Excel');
 
             return $newPrice;
-
         } catch (\Throwable $e) {
             DB::rollBack();
             $this->skipped++;

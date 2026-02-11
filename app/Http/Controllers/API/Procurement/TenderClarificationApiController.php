@@ -138,7 +138,6 @@ class TenderClarificationApiController extends Controller
                 'debug' => $e->getTraceAsString(),
             ], 500);
         }
-
     }
 
     public function getClarifications(Request $request): JsonResponse
@@ -254,7 +253,6 @@ class TenderClarificationApiController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
-
     }
 
     /**
@@ -336,6 +334,5 @@ class TenderClarificationApiController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
-
     }
 }

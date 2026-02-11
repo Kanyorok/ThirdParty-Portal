@@ -27,10 +27,12 @@ class CRDBAuthMiddleware
             abort(Response::HTTP_NOT_FOUND);
         }
         $source = $request->header('x-source');
-        if (! is_string($source) || ! in_array($source, [
+        if (
+            ! is_string($source) || ! in_array($source, [
             SystemIntegrationEnum::CRDB->value,
             IntegrationsEnum::CRDB->value,
-        ], true)) {
+            ], true)
+        ) {
             return $this->_fail('client: no source');
         }
         $bearerToken = $request->bearerToken();

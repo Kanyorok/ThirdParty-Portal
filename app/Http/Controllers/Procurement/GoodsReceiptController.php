@@ -187,7 +187,6 @@ class GoodsReceiptController extends Controller
                     'CreatedBy' => Auth::id(),
                     'ModifiedBy' => Auth::id(),
                 ]);
-
             }
 
             DB::commit();
@@ -365,7 +364,6 @@ class GoodsReceiptController extends Controller
                 'error' => false,
                 'message' => 'GRN Posted Successfully',
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error posting GRN: ' . $e->getMessage());
