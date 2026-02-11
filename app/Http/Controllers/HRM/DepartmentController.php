@@ -31,13 +31,13 @@ class DepartmentController extends Controller
     {
         if ($request->ajax()) {
             try {
-                return Datatables::of(Department::query()->select('*'))->addIndexColumn()
+                return Datatables::of(Department::with(['head'])->withCount('employees')->select('*'))->addIndexColumn()
                     ->addColumn('action', function (Department $department) {
                         return '<button type="button" data-click_url="' . route('departments.show', [$department->DepartmentID]) . '" data-summary_title="department details" class="btn btn-info btn-sm click-summary-data"><i class="fas fa-eye"></i> details</button>';
                     })->addColumn('employees_count', function (Department $department) {
-                        return number_format(0);
+                        return number_format($department->employees_count);
                     })->addColumn('hod', function (Department $department) {
-                        return "-";
+                        return $department->head ? $department->head->Name : '-';
                     })->editColumn('DepartmentID', function (Department $department) {
                         return Str::upper($department->DepartmentID);
                     })->rawColumns(['action',])->make();
