@@ -4,12 +4,12 @@
 
 @section('content')
 <div class="container bg-white shadow rounded p-4">
-    <h4 class="mb-4"> Transfer Receipt</h4>
+    <h4 class="mb-4">Transfer Receipt</h4>
     <div class="p-3 mb-4 rounded" style="background: linear-gradient(90deg,#e8f6ff,#f0f9ff); border: 1px solid #d0eaf8;">
         <div class="d-flex align-items-start">
             <i class="fas fa-info-circle me-2 fs-4 text-primary"></i>
             <div>
-                <div><i>Ensure you have an active main store set for your branch, All items will be received into your branch's main store.</i></div>
+                <div><i>Ensure you have an active main store set for your branch. All items will be received into your branch's main store.</i></div>
             </div>
         </div>
     </div>
@@ -35,27 +35,21 @@
                         <tbody>
                             @foreach($transfers as $transfer)
                                 @php
-                                    $hasAllocations = false;
-                                    foreach ($transfer->items as $item) {
-                                        if (!empty($item->BatchAllocation)) {
-                                            $hasAllocations = true;
-                                            break;
-                                        }
-                                    }
+                                    $isHQ = $transfer->fromBranch && $transfer->fromBranch->IsHQ;
                                 @endphp
                                 <tr>
                                     <td>{{ $transfer->TransferID }}</td>
-                                    <td>{{ $transfer->TransferDate}}</td>
+                                    <td>{{ $transfer->TransferDate }}</td>
                                     <td>{{ $transfer->fromBranch->Name ?? 'N/A' }}</td>
                                     <td>{{ $transfer->items->count() }}</td>
                                     <td>
-                                        @if($hasAllocations)
-                                            <span class="badge bg-success">
-                                                <i class="fas fa-check"></i> Specific GRN Allocations
-                                            </span>
-                                        @else
+                                        @if($isHQ)
                                             <span class="badge bg-info">
                                                 <i class="fas fa-sort-amount-down"></i> FIFO Allocation
+                                            </span>
+                                        @else
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check"></i> Specific GRN Allocations
                                             </span>
                                         @endif
                                     </td>
@@ -162,36 +156,42 @@
     </div>
 </div>
 
-<div class="modal fade" id="allocationModal" tabindex="-1">
+<div class="modal fade" id="allocationModal" tabindex="-1" aria-labelledby="allocationModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">GRN Batch Allocations</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="allocationModalLabel">GRN Batch Allocations</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
                     <strong>Item:</strong> <span id="modalItemName"></span><br>
-                    <strong>Dispatched Quantity:</strong> <span id="modalDispatchedQty"></span>
+                    <strong>Dispatched Quantity:</strong> <span id="modalDispatchedQty"></span><br>
+                    <strong>Allocation Type:</strong> <span id="modalAllocationType" class="badge"></span>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-bordered">
                         <thead>
                             <tr>
                                 <th>GRN ID</th>
+                                <th>Source</th>
                                 <th>Unit Price</th>
                                 <th>Allocated Quantity</th>
                                 <th>Total Value</th>
-                                <th>Age (Days)</th>
                             </tr>
                         </thead>
                         <tbody id="allocationBody"></tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="2" class="text-end"><strong>Total:</strong></td>
+                                <td colspan="3" class="text-end"><strong>Total:</strong></td>
                                 <td><strong id="totalAllocatedQty">0</strong></td>
                                 <td><strong id="totalAllocatedValue">0.00</strong></td>
-                                <td></td>
+                            </tr>
+                            <tr>
+                                <td colspan="6" class="small text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    <span id="allocationFootNote"></span>
+                                </td>
                             </tr>
                         </tfoot>
                     </table>
@@ -210,6 +210,14 @@
     let selectedTransferId = null;
     let transferItems = [];
     let mainStore = null;
+    let isTransferFromHQ = false;
+    let allocationModal = null; 
+    $(document).ready(function() {
+        const modalElement = document.getElementById('allocationModal');
+        if (modalElement) {
+            allocationModal = new bootstrap.Modal(modalElement);
+        }
+    });
 
     function selectTransfer(transferId) {
         selectedTransferId = transferId;
@@ -217,15 +225,27 @@
         $('#itemsBody').html('<tr><td colspan="8" class="text-center"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading transfer details...</td></tr>');
         
         fetch("{{ route('transactionsreceipts.get-transfer-items', '') }}/" + transferId)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.error) {
                     alert(data.error);
                     return;
                 }
                 
-                transferItems = data.items;
+                transferItems = data.items || [];
                 mainStore = data.main_store;
+                isTransferFromHQ = data.is_hq || false; 
+                
+                console.log('Transfer data loaded:', {
+                    itemsCount: transferItems.length,
+                    isHQ: isTransferFromHQ,
+                    mainStore: mainStore
+                });
                 
                 $('#transferId').val(transferId);
                 
@@ -235,21 +255,42 @@
                 
                 $('#itemsBody').empty();
                 
-                let hasSpecificAllocations = false;
-                let fifoAllocations = false;
-                
-                data.items.forEach((item, index) => {
+                transferItems.forEach((item, index) => {
                     const hasAllocations = item.batch_allocation && item.batch_allocation.length > 0;
-                    if (hasAllocations) {
-                        hasSpecificAllocations = true;
-                    } else if (item.allocation_type === 'fifo') {
-                        fifoAllocations = true;
-                    }
-                    
                     const storeName = item.main_store ? item.main_store.StoreName : 'Main Store';
                     const storeId = item.main_store ? item.main_store.Id : '';
                     
-                    $('#itemsBody').append(`
+                    let allocationButton = '';
+                    if (hasAllocations) {
+                        const batchCount = item.batch_allocation.length;
+                        if (isTransferFromHQ) {
+                            allocationButton = `
+                                <button type="button" 
+                                        class="btn btn-sm btn-info view-allocation-btn" 
+                                        data-index="${index}">
+                                    <i class="fas fa-layer-group"></i> View FIFO (${batchCount})
+                                </button>
+                                <div class="small text-muted mt-1">
+                                    <i class="fas fa-robot"></i> Auto-allocated
+                                </div>
+                            `;
+                        } else {
+                            allocationButton = `
+                                <button type="button" 
+                                        class="btn btn-sm btn-success view-allocation-btn" 
+                                        data-index="${index}">
+                                    <i class="fas fa-check-circle"></i> View Batches (${batchCount})
+                                </button>
+                                <div class="small text-muted mt-1">
+                                    <i class="fas fa-hand-pointer"></i> User-selected
+                                </div>
+                            `;
+                        }
+                    } else {
+                        allocationButton = `<span class="text-muted small">No batches</span>`;
+                    }
+                    
+                    const row = `
                         <tr>
                             <td>
                                 ${item.item.ItemName}
@@ -259,16 +300,16 @@
                                 <input type="hidden" name="items[${index}][dispatched_qty]" value="${item.DispatchedQty}">
                                 <input type="hidden" name="items[${index}][store_id]" value="${storeId}">
                             </td>
-                            <td>${item.DispatchedQty}</td>
+                            <td>${item.DispatchedQty} ${item.UOMCode || ''}</td>
                             <td>
                                 <input type="text" 
-                                       class="form-control" 
+                                       class="form-control form-control-sm" 
                                        value="${storeName}" 
                                        readonly>
                             </td>
                             <td>
                                 <input type="number" 
-                                       class="form-control received-qty" 
+                                       class="form-control form-control-sm received-qty" 
                                        name="items[${index}][received_qty]"
                                        value="${item.DispatchedQty}"
                                        min="0"
@@ -278,7 +319,7 @@
                             </td>
                             <td>
                                 <input type="number" 
-                                       class="form-control damaged-qty" 
+                                       class="form-control form-control-sm damaged-qty" 
                                        name="items[${index}][damaged_qty]"
                                        value="0"
                                        min="0"
@@ -287,97 +328,174 @@
                             </td>
                             <td>
                                 <input type="number" 
-                                       class="form-control discrepancy-qty" 
-                                       name="items[${index}][discrepancy_qty]"
+                                       class="form-control form-control-sm discrepancy-qty" 
                                        value="0"
                                        readonly
                                        style="background-color: #f8f9fa;"
                                        data-index="${index}">
                             </td>
                             <td>
-                                ${hasAllocations ? 
-                                    `<button type="button" class="btn btn-sm btn-info" onclick="showAllocations(${index})">
-                                        <i class="fas fa-layer-group"></i> View Allocations
-                                    </button>` :
-                                    `<span class="text-muted">FIFO Allocation</span>`
-                                }
+                                ${allocationButton}
                             </td>
                             <td>
                                 <input type="text" 
-                                       class="form-control" 
+                                       class="form-control form-control-sm" 
                                        name="items[${index}][remarks]"
-                                       placeholder="Item remarks">
+                                       placeholder="Optional">
                             </td>
                         </tr>
-                    `);
+                    `;
+                    
+                    $('#itemsBody').append(row);
                 });
                 
                 let infoText = '';
-                if (hasSpecificAllocations) {
-                    infoText = 'This transfer has specific GRN batch allocations. Costs will be tracked per batch.';
-                } else if (fifoAllocations) {
-                    infoText = 'This transfer will use FIFO (First-In-First-Out) allocation from source.';
+                if (isTransferFromHQ) {
+                    infoText = '<strong>FIFO Allocation:</strong> This transfer is from Headquarters. Batches were automatically allocated using First-In-First-Out method during approval.';
                 } else {
-                    infoText = 'This transfer has no specific allocations and will use default costing.';
+                    infoText = '<strong>Manual Selection:</strong> This transfer has specific GRN batches that were manually selected by the sender during transfer creation.';
                 }
                 
-                $('#allocationInfoText').text(infoText);
+                $('#allocationInfoText').html(infoText);
                 $('#allocationInfo').show();
                 
                 $('#receiptFormContainer').show();
                 $('html, body').animate({
-                    scrollTop: $('#receiptFormContainer').offset().top
+                    scrollTop: $('#receiptFormContainer').offset().top - 20
                 }, 500);
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to load transfer details.');
+                console.error('Error loading transfer:', error);
+                alert('Failed to load transfer details. Please try again.');
+                $('#itemsBody').html('<tr><td colspan="8" class="text-center text-danger">Error loading transfer details</td></tr>');
             });
     }
 
+    $(document).on('click', '.view-allocation-btn', function(e) {
+        e.preventDefault();
+        const index = $(this).data('index');
+        console.log('View allocations clicked for index:', index);
+        showAllocations(index);
+    });
+
     function showAllocations(index) {
+        console.log('showAllocations called with index:', index);
+        console.log('Total items:', transferItems.length);
+        
+        if (index < 0 || index >= transferItems.length) {
+            console.error('Invalid index:', index);
+            alert('Error: Invalid item index');
+            return;
+        }
+        
         const item = transferItems[index];
+        console.log('Item data:', item);
+        
         const allocations = item.batch_allocation || [];
+        console.log('Allocations:', allocations);
+        
+        if (allocations.length === 0) {
+            alert('No batch allocations found for this item');
+            return;
+        }
         
         $('#modalItemName').text(item.item.ItemName);
-        $('#modalDispatchedQty').text(item.DispatchedQty);
+        $('#modalDispatchedQty').text(item.DispatchedQty + ' ' + (item.UOMCode || ''));
+        
+        const allocationTypeBadge = $('#modalAllocationType');
+        if (isTransferFromHQ) {
+            allocationTypeBadge.text('FIFO Allocation').removeClass().addClass('badge bg-info');
+        } else {
+            allocationTypeBadge.text('Manual Selection').removeClass().addClass('badge bg-success');
+        }
         
         $('#allocationBody').empty();
         
         let totalQty = 0;
         let totalValue = 0;
+        let procCount = 0;
+        let trfCount = 0;
         
         allocations.forEach(allocation => {
-            const value = allocation.unit_price * allocation.quantity;
-            totalQty += allocation.quantity;
+            const quantity = parseFloat(allocation.quantity) || 0;
+            const unitPrice = parseFloat(allocation.unit_price) || 0;
+            const value = unitPrice * quantity;
+            
+            totalQty += quantity;
             totalValue += value;
             
-            const ageDays = allocation.age_days || 'N/A';
+            const sourceType = allocation.source_type || 'procurement';
             
-            $('#allocationBody').append(`
+            let sourceBadge = '';
+            if (sourceType === 'transfer') {
+                sourceBadge = '<span class="badge bg-info">TRF</span>';
+                trfCount++;
+            } else {
+                sourceBadge = '<span class="badge bg-success">PROC</span>';
+                procCount++;
+            }
+            
+            const grnId = allocation.grn_id || 'N/A';
+            const sourceNote = sourceType === 'transfer' ? 
+                '<br><small class="text-muted">From previous transfer</small>' : 
+                '<br><small class="text-muted">Original procurement</small>';
+            
+            const row = `
                 <tr>
-                    <td>${allocation.grn_id}</td>
-                    <td>${allocation.unit_price.toFixed(2)}</td>
-                    <td>${allocation.quantity}</td>
-                    <td>${value.toFixed(2)}</td>
-                    <td>${ageDays}</td>
+                    <td>${grnId}${sourceNote}</td>
+                    <td>${sourceBadge}</td>
+                    <td class="text-end">${unitPrice.toFixed(2)}</td>
+                    <td class="text-end">${quantity.toFixed(2)}</td>
+                    <td class="text-end">${value.toFixed(2)}</td>
                 </tr>
-            `);
+            `;
+            
+            $('#allocationBody').append(row);
         });
         
-        $('#totalAllocatedQty').text(totalQty);
+        $('#totalAllocatedQty').text(totalQty.toFixed(2));
         $('#totalAllocatedValue').text(totalValue.toFixed(2));
         
-        new bootstrap.Modal('#allocationModal').show();
+        let footNote = '';
+        if (isTransferFromHQ) {
+            footNote = `FIFO: System automatically selected ${allocations.length} oldest batch(es) during approval.`;
+        } else {
+            if (procCount > 0 && trfCount > 0) {
+                footNote = `Mixed sources: ${procCount} from procurement, ${trfCount} from transfers.`;
+            } else if (procCount > 0) {
+                footNote = `All ${procCount} batch(es) from original procurement.`;
+            } else if (trfCount > 0) {
+                footNote = `All ${trfCount} batch(es) from previous transfers.`;
+            }
+        }
+        $('#allocationFootNote').text(footNote);
+        
+        if (allocationModal) {
+            console.log('Showing modal...');
+            allocationModal.show();
+        } else {
+            console.error('Modal instance not initialized');
+            const modalElement = document.getElementById('allocationModal');
+            if (modalElement) {
+                allocationModal = new bootstrap.Modal(modalElement);
+                allocationModal.show();
+            } else {
+                alert('Error: Modal element not found');
+            }
+        }
     }
 
     function cancelReceipt() {
-        selectedTransferId = null;
-        transferItems = [];
-        mainStore = null;
-        $('#receiptFormContainer').hide();
-        $('#allocationInfo').hide();
-        $('#storeInfo').text('');
+        if (confirm('Are you sure you want to cancel? All entered data will be lost.')) {
+            selectedTransferId = null;
+            transferItems = [];
+            mainStore = null;
+            isTransferFromHQ = false;
+            $('#receiptFormContainer').hide();
+            $('#allocationInfo').hide();
+            $('#storeInfo').text('');
+            $('#itemsBody').empty();
+        }
     }
 
     function updateDiscrepancy(index) {
@@ -461,4 +579,40 @@
         this.submit();
     });
 </script>
+@endpush
+
+@push('styles')
+<style>
+    .badge {
+        font-size: 0.85em;
+        padding: 0.4em 0.7em;
+    }
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+    .received-qty:focus, .damaged-qty:focus {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    }
+    .discrepancy-qty {
+        font-weight: 600;
+    }
+    #allocationModal .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    .batch-badge {
+        font-size: 0.7em;
+        padding: 0.2em 0.4em;
+        margin-left: 0.3em;
+    }
+    .view-allocation-btn {
+        cursor: pointer;
+    }
+    .view-allocation-btn:hover {
+        transform: scale(1.05);
+        transition: transform 0.2s;
+    }
+</style>
 @endpush

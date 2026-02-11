@@ -135,18 +135,25 @@ class GoodsReceiptController extends Controller
             'SupplierID' => 'required',
         ]);
 
-        // Get a valid default store
-        $defaultStoreId = DB::connection('sqlsrv')->table('t_Stores')->where('Id', 1)->exists() ? 1 : DB::connection('sqlsrv')->table('t_Stores')->value('Id');
+        // Get HQ Branch
+        $hqBranch = Branch::where('IsHQ', 1)->first();
 
-        // If no stores exist, return error - cannot create GRN without a valid store
-        if (! $defaultStoreId) {
+        if (! $hqBranch) {
             return back()->withErrors([
-                'error' => 'Cannot create GRN: No stores are configured in the system. Please create at least one store before creating goods receipts.',
+                'error' => 'Cannot create GRN: No HQ branch is configured in the system.',
             ])->withInput();
         }
 
-        // Get HQ Branch
-        $hqBranch = Branch::where('IsHQ', 1)->first();
+        // Get default store for HQ branch
+        $defaultStore = $this->getDefaultStoreForBranch($hqBranch->Id);
+
+        if (! $defaultStore) {
+            return back()->withErrors([
+                'error' => 'Cannot create GRN: No active main store found for HQ branch. Please create a store before creating goods receipts.',
+            ])->withInput();
+        }
+
+        $defaultStoreId = $defaultStore->Id;
 
         DB::beginTransaction();
 
@@ -375,6 +382,7 @@ class GoodsReceiptController extends Controller
         $store = Store::where('BranchID', $branchId)
             ->where('Status', true)
             ->where('IsMainStore', true)
+            ->whereNull('DeletedOn')
             ->first();
 
         return $store;

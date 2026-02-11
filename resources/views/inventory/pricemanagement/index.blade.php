@@ -19,10 +19,26 @@
             </div>
         @endif
 
+        @if(session('warning'))
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                {{ session('warning') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         @if(session('error'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="fas fa-exclamation-circle me-2"></i>
-                {{ session('error') }}
+                {!! session('error') !!}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error_details'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-list me-2"></i>
+                {!! session('error_details') !!}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
@@ -152,8 +168,17 @@
                     <input class="form-control" type="file" name="file" accept=".csv,.xlsx,.xls" required>
                 </div>
                 <div class="alert alert-info small">
-                    Ensure your file has headers: <code>ItemCode, UOMCode, Price, EffectiveFrom, EffectiveTo, Currency,
-                        IsDefault</code>
+                    <strong>File Format:</strong> Ensure your file has these headers:<br>
+                    <code>PriceID, ItemCode, ItemName, UOM, ActualPrice, CurrencyCode, IsDefault</code>
+                    <br><br>
+                    <strong>Notes:</strong>
+                    <ul class="mb-0">
+                        <li>ItemName is for reference only (system matches by ItemCode)</li>
+                        <li>UOM should be the UOM code (e.g., "PCS", "KG")</li>
+                        <li>CurrencyCode should be a valid currency code (e.g., "KES", "USD")</li>
+                        <li>IsDefault should be "Yes" or "No"</li>
+                        <li>If ActualPrice changes, a new version will be created and the old one soft-deleted</li>
+                    </ul>
                     <br>
                     <a href="{{ route('pricemanagement.sample') }}" class="btn btn-sm btn-outline-primary mt-2">
                         📥 Download Template

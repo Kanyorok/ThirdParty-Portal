@@ -40,11 +40,18 @@
                         @php
                             $sourceType = $hold->sourceDetail->Description ?? '';
                             $sourceDocumentId = $hold->source_document_id ?? $hold->SourceID ?? 'N/A';
+                            $itemName = $hold->item->ItemName ?? '';
                             
+                            // Format: SourceID - ItemName (SourceType)
+                            // Example: SA/20251114/0004 - HP Elitebook (stockadjustment)
+                            $displayText = $sourceDocumentId;
+                            if ($itemName) {
+                                $displayText .= ' - ' . $itemName;
+                            }
                             if ($sourceType) {
-                                $displayText = $sourceDocumentId . ' (' . $sourceType . ')';
-                            } else {
-                                $displayText = $sourceDocumentId;
+                                // Convert to lowercase without spaces for consistency
+                                $formattedSourceType = strtolower(str_replace(' ', '', $sourceType));
+                                $displayText .= ' (' . $formattedSourceType . ')';
                             }
                         @endphp
                         <option value="{{ $hold->Id }}" 
@@ -57,7 +64,7 @@
                                 data-sourceid="{{ $sourceDocumentId }}"
                                 data-store="{{ $hold->store->StoreName ?? '' }}"
                                 data-defect="{{ $hold->defectDetail->Description ?? $hold->Reason }}"
-                                data-itemname="{{ $hold->item->ItemName ?? '' }}"
+                                data-itemname="{{ $itemName }}"
                                 {{ old('InventoryHoldID') == $hold->Id ? 'selected' : '' }}>
                             {{ $displayText }}
                         </option>
@@ -212,12 +219,6 @@
     document.getElementById('disposeBtn').addEventListener('click', function () {
         if (confirm('Are you sure you want to dispose this item? This action cannot be undone.')) {
             submitAction('dispose');
-        }
-    });
-
-    document.getElementById('repairBtn')?.addEventListener('click', function () {
-        if (confirm('Mark this item for repair?')) {
-            submitAction('repair');
         }
     });
 

@@ -14,6 +14,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Throwable;
 
 class TransactionApprovalController extends Controller
 {
@@ -34,9 +35,9 @@ class TransactionApprovalController extends Controller
     public function index(Request $request)
     {
 
-        $transactionType = $request->get('transaction_type', 'Stock Transfer');
-        $fromDate = $request->get('from_date');
-        $toDate = $request->get('to_date');
+        $transactionType = $request->query('transaction_type', 'Stock Transfer');
+        $fromDate = $request->query('from_date');
+        $toDate = $request->query('to_date');
 
         $currentBranch = $request->user()->branch;
         if (! $currentBranch instanceof Branch) {
@@ -96,7 +97,7 @@ class TransactionApprovalController extends Controller
     public function show($id, Request $request)
     {
 
-        $transactionType = $request->get('transaction_type');
+        $transactionType = $request->query('transaction_type');
 
         if ($transactionType === 'Stock Transfer') {
             $record = TransactionTransfer::with([
@@ -235,7 +236,7 @@ class TransactionApprovalController extends Controller
                 } finally {
                     optional($lock)->release();
                 }
-            } catch (Exception $e) {
+            } catch (Throwable $e) {
 
                 $errorMessage = $this->getErrorMessage($e);
 
@@ -243,6 +244,7 @@ class TransactionApprovalController extends Controller
                     return response()->json([
                         'success' => false,
                         'error' => $errorMessage,
+                        'debug' => $e->getMessage(),
                     ], 400);
                 }
 
@@ -312,7 +314,7 @@ class TransactionApprovalController extends Controller
                 } finally {
                     optional($lock)->release();
                 }
-            } catch (Exception $e) {
+            } catch (Throwable $e) {
 
                 $errorMessage = $this->getErrorMessage($e);
 
@@ -405,7 +407,7 @@ class TransactionApprovalController extends Controller
                 } finally {
                     optional($lock)->release();
                 }
-            } catch (Exception $e) {
+            } catch (Throwable $e) {
 
                 $errorMessage = $this->getErrorMessage($e);
 
@@ -490,6 +492,7 @@ class TransactionApprovalController extends Controller
                     return response()->json([
                         'success' => false,
                         'error' => $errorMessage,
+                        'debug' => $e->getMessage(),
                     ], 400);
                 }
 

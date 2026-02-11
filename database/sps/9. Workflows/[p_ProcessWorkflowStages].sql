@@ -1,9 +1,4 @@
-/****** Object:  StoredProcedure [dbo].[p_ProcessWorkflowStages]    Script Date: 29/12/2025 12:54:22 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-ALTER   PROCEDURE [dbo].[p_ProcessWorkflowStages]
+CREATE OR ALTER PROCEDURE [dbo].[p_ProcessWorkflowStages]
  @PermissionId BIGINT = NULL
 AS
 BEGIN

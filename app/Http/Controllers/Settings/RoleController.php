@@ -89,7 +89,19 @@ class RoleController extends Controller
             return in_array($perm->name, $enumPermissions);
         });
 
-        return view('settings.roles.create', compact('dynamicPermissions'));
+        // Get distinct Job Titles from t_Employees, excluding those already used as role names
+        $existingRoleNames = Role::pluck('name')->map(fn ($n) => strtolower($n))->toArray();
+        $jobTitles = DB::table('t_Employees')
+            ->select('JobTitle')
+            ->distinct()
+            ->whereNotNull('JobTitle')
+            ->where('JobTitle', '!=', '')
+            ->orderBy('JobTitle')
+            ->pluck('JobTitle')
+            ->filter(fn ($title) => ! in_array(strtolower($title), $existingRoleNames))
+            ->values();
+
+        return view('settings.roles.create', compact('dynamicPermissions', 'jobTitles'));
     }
 
     public function store(RoleRequest $request): JsonResponse
