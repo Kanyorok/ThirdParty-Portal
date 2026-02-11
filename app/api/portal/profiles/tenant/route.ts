@@ -7,13 +7,13 @@ export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return NextResponse.json({ error: "Not Authorized" }, { status: 401 })
   }
 
   const accessToken = (session as any).accessToken as string | undefined
 
   if (!accessToken) {
-    return NextResponse.json({ error: "No access token" }, { status: 401 })
+    return NextResponse.json({ error: "Access token not provided!" }, { status: 401 })
   }
 
   try {
@@ -21,8 +21,6 @@ export async function POST(request: NextRequest) {
 
     const apiUrl = getApiUrl()
     const requestUrl = `${apiUrl}/api/v1/portal/profiles/tenant`
-
-    console.log("[Create Tenant] Request URL:", requestUrl)
 
     const response = await fetch(requestUrl, {
       method: "POST",
@@ -50,8 +48,6 @@ export async function POST(request: NextRequest) {
       profile: data.data,
     })
   } catch (error) {
-    console.error("[Create Tenant] Request failed:", error)
-
     const isConfigError = error instanceof Error && error.message.includes("API URL is not configured")
 
     return NextResponse.json(

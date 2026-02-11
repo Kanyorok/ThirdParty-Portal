@@ -10,7 +10,7 @@ export async function GET(_request: NextRequest) {
     if (!session?.user) {
       return NextResponse.json({
         error: "Unauthorized",
-        message: "Please sign in to view profiles",
+        message: "Please sign in to view your profiles",
         profiles: []
       }, { status: 401 })
     }

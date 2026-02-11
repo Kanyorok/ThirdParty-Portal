@@ -28,7 +28,6 @@ export default function ApplicationPageClient() {
                 onOpenChange={handleOpenChange}
                 defaultRoundId={roundId}
             >
-                <></>
             </ApplicationForm>
         </div>
     )

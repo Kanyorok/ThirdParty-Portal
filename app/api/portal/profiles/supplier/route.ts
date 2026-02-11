@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   const accessToken = (session as any).accessToken as string | undefined
 
   if (!accessToken) {
-    return NextResponse.json({ error: "No access token" }, { status: 401 })
+    return NextResponse.json({ error: "Access token not present" }, { status: 401 })
   }
 
   try {

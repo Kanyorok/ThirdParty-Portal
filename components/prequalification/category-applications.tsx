@@ -58,10 +58,10 @@ const buildCategoryStatus = (status: string | undefined) => {
         normalized === "S"
             ? "SUBMITTED"
             : normalized === "V"
-            ? "APPROVED"
-            : normalized === "P"
-            ? "UNDER_REVIEW"
-            : normalized
+                ? "APPROVED"
+                : normalized === "P"
+                    ? "UNDER_REVIEW"
+                    : normalized
     const key = expanded
     return STATUS_THEME[key] ?? STATUS_THEME.NOT_APPLIED
 }
@@ -140,7 +140,7 @@ export default function CategoryApplications({ round, className }: CategoryAppli
                     <div className="space-y-2">
                         <p className="font-semibold text-slate-900">Description</p>
                         <p className="text-sm leading-relaxed text-slate-600">
-                            {round.description ?? "Description is being curated. Check back soon for more context."}
+                            {round.description ?? "Description coming. Check back soon for more context."}
                         </p>
                     </div>
                     <div className="space-y-2">
@@ -148,7 +148,7 @@ export default function CategoryApplications({ round, className }: CategoryAppli
                         <p className="text-sm leading-relaxed text-slate-600">
                             {round.howToApply ??
                                 instructions ??
-                                "Use the e-procurement portal to submit each category with the requested documentation and fee."}
+                                "Submit each category with the requested documentation."}
                         </p>
                     </div>
                 </div>
@@ -232,7 +232,7 @@ export default function CategoryApplications({ round, className }: CategoryAppli
                         className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-blue-600 px-5 py-3 text-[13px] font-semibold text-white shadow-lg shadow-emerald-500/40 transition-all hover:scale-[1.01] hover:shadow-emerald-500/60 sm:w-auto"
                         onClick={startApplication}
                     >
-                        Start application
+                        Click to Apply
                     </Button>
                 </DialogFooter>
             </DialogContent>

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react"
 import { UserNav } from "@/components/layout/user-nav"
-import { ThemeToggle } from "./theme-toggle"
+import { ThemeToggle } from "@/components/common/theme-toggle"
 import { NotificationsPopover } from "@/components/notifications/notifications-popover"
 import { cn } from "@/lib/utils"
 
