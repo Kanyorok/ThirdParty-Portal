@@ -45,10 +45,9 @@ class NewThirdPartyRequest extends FormRequest
         }
 
         try {
-            $formatted = (string) (new PhoneNumber($value, $country->CountryCode))->formatE164();
-            $this->merge([$field => $formatted]);
+            $this->merge([$field =>(string) (new PhoneNumber($value, $country->CountryCode))->formatE164()]);
         } catch (\Throwable) {
-            //
+            // @lambo
         }
     }
 
@@ -76,7 +75,7 @@ class NewThirdPartyRequest extends FormRequest
                 (new Phone())->countryField('Country'),
                 Rule::unique('t_ThirdParties', 'Phone')->whereNull('DeletedOn'),
             ],
-            'PhysicalAddress' => ['nullable', 'string', 'max:200'],
+            'PhysicalAddress' => ['nullable', 'string', 'max:200'], // TODO: update this to use locality@
             'types' => ['required', 'array', 'min:1'],
             'logo' => ['nullable', Rule::imageFile()->max(9000)],
             'createUser' => ['boolean'],
@@ -167,7 +166,7 @@ class NewThirdPartyRequest extends FormRequest
         }
     }
 
-    public function getLogo(): ?UploadedFile
+    public function getLogo(): ?UploadedFile // TODO: include this implementation
     {
         return $this->file('logo');
     }
