@@ -254,7 +254,7 @@ class PurchaseOrderController extends Controller
 
             // Extract main PO data
             $supplier = $validated['supplier'];
-            $poDate = $validated['pODate'];
+            $poDate = $validated['Date'];
             $rfqNo = $validated['refNo'] ?? null;
             $priority = $validated['priority'] ?? null;
             $terms = $validated['terms'];

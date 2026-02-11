@@ -62,6 +62,7 @@
                     </div>
                 </div>
                 <input type="hidden" name="SourceId" id="SourceId" />
+                <input type="hidden" name="refNo" id="hiddenRefNo" />
             </div>
         </div>
 
@@ -73,7 +74,7 @@
                     <!-- RFQ Selection -->
                     <div class="source-rfq d-none mb-3">
                         <label>Reference Number (RFQ) <span class="text-danger">*</span></label>
-                        <select class="form-control refNo @error('refNo') is-invalid @enderror" name="refNo" id="refNo">
+                        <select class="form-control refNo @error('refNo') is-invalid @enderror" id="refNo">
                             <option selected disabled>Select RFQ</option>
                             @foreach($awardedRfqs as $ar)
                                 @php
@@ -158,11 +159,11 @@
 
             <!-- Common LPO (Hidden) and Date -->
             <div class="row mb-4">
-                <input type="hidden" name="LPONo" value="{{ old('LPONo', uniqid('LPO-')) }}"/>
+                {{-- <input type="hidden" name="LPONo" value="{{ old('LPONo', uniqid('LPO-')) }}"/> --}}
                 <div class="col-md-6">
                     <label>Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control poDate @error('pODate') is-invalid @enderror" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required/>
-                    @error('pODate')
+                    <input type="text" class="form-control Date @error('Date') is-invalid @enderror" name="Date" id="Date" value="{{ old('Date', now()->format('Y-m-d')) }}" required/>
+                    @error('Date')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
@@ -311,6 +312,14 @@
 @endsection
 @section('scripts')
 <script>
+
+     flatpickr('#Date', {
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'd-m-Y',
+            allowInput:true,
+            minDate: 'today',
+        });
     // Fixed JavaScript for Purchase Order Form
 
 // Prepare RFQ responses for JS (for supplier filtering)
@@ -660,6 +669,11 @@ $(document).on('change', '#refNo', function () {
     
     console.log('RFQ Selected:', {selectedRFQNo, rfqId, supplierId, awardedThirdPartyId, matchThirdPartyId});
     
+    // Set hidden Ref No
+    if (selectedRFQNo) {
+        $('#hiddenRefNo').val(selectedRFQNo);
+    }
+
     if (!isNaN(rfqId)) {
         $('#SourceId').val(rfqId);
     } else {
@@ -725,6 +739,12 @@ $(document).on('change', '#tenderNo', function() {
     const supplierName = opt.data('supplier-name') || '';
     const address = opt.data('address') || '';
 
+    // Set hidden Ref No
+    const tenderNo = $(this).val();
+    if (tenderNo) {
+        $('#hiddenRefNo').val(tenderNo);
+    }
+
     if (!isNaN(tenderId)) {
         $('#SourceId').val(tenderId);
     } else {
@@ -763,6 +783,12 @@ $(document).on('change', '#contractRef', function() {
     const supplierId = parseInt(opt.data('supplier-id'));
     const supplierName = opt.data('supplier-name') || '';
     const address = opt.data('address') || '';
+
+    // Set hidden Ref No
+    const contractRef = $(this).val();
+    if (contractRef) {
+        $('#hiddenRefNo').val(contractRef);
+    }
 
     if (!isNaN(contractId)) {
         $('#SourceId').val(contractId);
@@ -1105,6 +1131,10 @@ $(document).on('change', '#directPlanSelect', function() {
     const val = $(this).val();
     if (val) {
         $('#SourceId').val(val);
+        // Set hidden Ref No for Plan
+        const text = $(this).find('option:selected').text();
+        $('#hiddenRefNo').val(text);
+
         populateItems([]);
         const $planSel = $(this);
         $planSel.prop('disabled', true);
