@@ -25,6 +25,15 @@
             </div>
         @endif
 
+        @if(session('warning'))
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                {!! session('warning') !!}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+
         @if(session('error'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="fas fa-exclamation-circle me-2"></i>
@@ -38,6 +47,16 @@
                 <h5 class="alert-heading"><i class="fas fa-times-circle me-2"></i>Import Errors</h5>
                 <div class="import-errors" style="max-height: 300px; overflow-y: auto;">
                     {!! session('error_details') !!}
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('success_details'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <h5 class="alert-heading"><i class="fas fa-check-circle me-2"></i>Import Success</h5>
+                <div class="import-success" style="max-height: 300px; overflow-y: auto;">
+                    {!! session('success_details') !!}
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -80,6 +99,22 @@
                             </a>
                         </div>
                     </form>
+
+                    <div class="alert alert-info alert-dismissible fade show mt-3 mb-0" role="alert">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-info-circle-fill me-2 mt-1" style="font-size: 1.25rem;"></i>
+                            <div class="flex-grow-1">
+                                <strong>Important Information:</strong>
+                                <p class="mb-2 mt-1">When updating/editing items using Bulk Upload:</p>
+                                <ul class="mb-0">
+                                    <li>The system <strong>skips Items that are in use</strong> (items with stock, transfers, receipts, or requisitions)</li>
+                                    <li>The system <strong>skips Inactive Items</strong></li>
+                                    <li>You will receive a detailed report showing which items were updated, created, or skipped</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                 </div>
             </div>
 
@@ -138,7 +173,6 @@
                                             <i class="bi bi-eye"></i>
                                         </a>
 
-                                        {{-- Edit Button (Disabled if in use) --}}
                                         @if($isInUse)
                                             <button class="btn btn-secondary btn-sm" 
                                                     disabled
@@ -254,7 +288,6 @@
 .bi { font-size: 0.875rem; color: white; }
 .badge { font-size: 0.75em; padding: 0.35em 0.65em; }
 
-/* In Use Badge Style */
 .in-use-badge {
     background-color: #4680ff !important;
     color: #ffffff !important;
@@ -269,5 +302,27 @@
 }
 
 .table-responsive { border-radius: 0.375rem; }
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+.alert-info .bi-info-circle-fill {
+    color: #0c5460;
+}
+
+.alert-info strong {
+    color: #0a3a42;
+}
+
+.alert-info ul {
+    padding-left: 1.5rem;
+}
+
+.alert-info ul li {
+    margin-bottom: 0.25rem;
+}
 </style>
 @endsection

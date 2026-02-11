@@ -11,6 +11,7 @@ use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Services\Inventory\PriceManagementService;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class PriceManagementController extends Controller
@@ -41,16 +42,18 @@ class PriceManagementController extends Controller
     public function create()
     {
         $this->authorize('create', PriceManagement::class);
+
         $items = ItemMasterList::all();
         $uoms = UnitOfMeasure::all();
         $currencies = Currency::all();
 
-        return view('inventory.pricemanagement.create', compact('items', 'uoms', 'currencies'));
+        return view('inventory.pricemanagement.index', compact('items', 'uoms', 'currencies'));
     }
 
     public function store(PriceManagementRequest $request)
     {
         $this->authorize('create', PriceManagement::class);
+
         $this->priceService->create($request->validated());
 
         return redirect()->route('pricemanagement.index')
@@ -61,6 +64,7 @@ class PriceManagementController extends Controller
     {
         $price = PriceManagement::findOrFail($id);
         $this->authorize('update', PriceManagement::class);
+
         $items = ItemMasterList::all();
         $uoms = UnitOfMeasure::all();
         $currencies = Currency::all();
@@ -93,6 +97,7 @@ class PriceManagementController extends Controller
     {
         $price = PriceManagement::findOrFail($id);
         $this->authorize('destroy', PriceManagement::class);
+
         $this->priceService->delete($price);
 
         return redirect()->route('pricemanagement.index')
@@ -101,19 +106,72 @@ class PriceManagementController extends Controller
 
     public function downloadSampleTemplate()
     {
-        return Excel::download(new PriceManagementExport(), 'price_management_sample.xlsx');
+        return Excel::download(
+            new PriceManagementExport(), 
+            'PriceManagement_' . now()->format('Y-m-d_His') . '.xlsx'
+        );
     }
 
-    public function importPricing(PriceManagementRequest $request)
+    public function importPricing(Request $request)
     {
         $this->authorize('update', PriceManagement::class);
 
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,csv',
+            'file' => 'required|file|mimes:xlsx,csv,xls|max:2048',
         ]);
 
-        Excel::import(new PriceManagementImport(), $request->file('file'));
+        try {
+            $import = new PriceManagementImport();
 
-        return back()->with('success', 'Pricing data imported successfully!');
+            Excel::import($import, $request->file('file'));
+
+            $processed = $import->getProcessedCount();
+            $created = $import->getCreatedCount();
+            $updated = $import->getUpdatedCount();
+            $skipped = $import->getSkippedCount();
+            $errors = $import->getErrors();
+
+            $successMessage = "Import completed! Processed: {$processed} rows. ";
+            $successMessage .= "Created: {$created} new prices. ";
+            $successMessage .= "Updated: {$updated} existing prices. ";
+            
+            if ($skipped > 0) {
+                $successMessage .= "Skipped: {$skipped} rows.";
+            }
+
+            if (!empty($errors)) {
+                $errorMessage = "<strong>Some rows had errors:</strong><br>";
+                
+                foreach (array_slice($errors, 0, 20) as $error) {
+                    $errorMessage .= "• {$error}<br>";
+                }
+                
+                if (count($errors) > 20) {
+                    $errorMessage .= "<br>... and " . (count($errors) - 20) . " more errors.";
+                }
+
+                return back()
+                    ->with('warning', $successMessage)
+                    ->with('error_details', $errorMessage);
+            }
+
+            return back()->with('success', $successMessage);
+
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $errors = collect($e->failures())->map(function ($failure) {
+                $row = $failure->row();
+                $errors = implode(', ', $failure->errors());
+                return "Row {$row}: {$errors}";
+            })->implode('<br>');
+
+            return back()->with('error', "Validation errors:<br>{$errors}");
+
+        } catch (\Exception $e) {
+            $errorMessage = config('app.debug')
+                ? "Import failed: " . $e->getMessage()
+                : "Import failed. Please check the file format and try again.";
+
+            return back()->with('error', $errorMessage);
+        }
     }
 }
