@@ -8,6 +8,7 @@ use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Currency;
 use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Finance\FinanceVoucher;
+use App\Models\Procurement\ContractPenaltyEvent;
 use App\Models\ThirdParies\Supplier;
 use FacebookAds\Object\FinanceObject;
 use Illuminate\Http\Request;
@@ -65,8 +66,22 @@ class PaymentVoucherController extends Controller
         $lastId = FinanceVoucher::max('Id') + 1;
         $VoucherNo = 'VCN-' . $year .'-'. str_pad($lastId, 6,'0', STR_PAD_LEFT);
         $invoices=[];
+        $contractExceptions = [];
         $data=FinanceInvoiceEntry::with('currency:Id,Code')
-                ->select('Id', 'InvoiceNumber','SupplierID','CurrencyID', 'InvoiceAmount')
+                ->select(
+                    'Id',
+                    'InvoiceNumber',
+                    'SupplierID',
+                    'CurrencyID',
+                    'InvoiceAmount',
+                    'InvoiceSourceType',
+                    'ContractSourceType',
+                    'ContractSourceID',
+                    'MilestoneEligibilityStatus',
+                    'IsOnHold',
+                    'HoldReason',
+                    'PenaltySuggestedAmount'
+                )
                 ->where('ApprovalStatus', 'posted')
                 ->get();
         foreach ($data as $value) {
@@ -79,6 +94,22 @@ class PaymentVoucherController extends Controller
             if($balance<=0){
                 continue;
             }
+
+            $isContract = strtoupper((string) ($value->InvoiceSourceType ?? 'PO')) === 'CONTRACT';
+            $hasMilestoneHold = $isContract && ((bool) $value->IsOnHold || strtolower((string) ($value->MilestoneEligibilityStatus ?? 'pending')) === 'pending');
+            if ($hasMilestoneHold) {
+                $contractExceptions[] = [
+                    'Id' => $value->Id,
+                    'InvoiceNumber' => $value->InvoiceNumber,
+                    'HoldReason' => $value->HoldReason ?: 'Milestone acceptance pending.',
+                    'PenaltySuggestedAmount' => (float) ($value->PenaltySuggestedAmount ?? 0),
+                    'ContractSourceType' => $value->ContractSourceType,
+                    'ContractSourceID' => $value->ContractSourceID,
+                    'Balance' => $balance,
+                    'CurrencyCode' => $value->currency->Code ?? 'KES',
+                ];
+                continue;
+            }
             $invoices[]=[
                 'Id'=>$value->Id,
                 'InvoiceNumber'=>$value->InvoiceNumber,
@@ -87,7 +118,8 @@ class PaymentVoucherController extends Controller
                 'CurrencyID'=>$value->CurrencyID,
                 'InvoiceAmount'=>$value->InvoiceAmount,
                 'CurrencyCode'=>$value->currency->Code,
-                'Balance'=>$balance
+                'Balance'=>$balance,
+                'InvoiceSourceType' => $value->InvoiceSourceType ?? 'PO',
             ];
         }
         $paymentMethods=CodeDetail::where('CodeID', 'PaymentMethod')->get();
@@ -99,6 +131,7 @@ class PaymentVoucherController extends Controller
             'paymentMethods',
             'paymentTypes',
             'paymentFrequencies',
+            'contractExceptions',
         ));
     }
 
@@ -118,6 +151,12 @@ class PaymentVoucherController extends Controller
 
         //Check if the Voucher amt exceeds the Invoice Balance and return back with an error
         $invoice=FinanceInvoiceEntry::find($validated['InvoiceNo']);
+        if (strtoupper((string) ($invoice->InvoiceSourceType ?? 'PO')) === 'CONTRACT') {
+            $isPending = strtolower((string) ($invoice->MilestoneEligibilityStatus ?? 'pending')) === 'pending';
+            if ((bool) $invoice->IsOnHold || $isPending) {
+                return back()->with('error', 'This contract invoice is on hold due to milestone conditions. Resolve exception before voucher creation.');
+            }
+        }
         $invoiceAmt=$invoice->InvoiceAmount;
         $amtPaidOnInvoice=FinanceVoucher::where('InvoiceNo', $invoice->Id)->where('ApprovalStatus','posted')->sum('TotalAmount');
         $balance=$invoiceAmt-$amtPaidOnInvoice;
@@ -458,6 +497,86 @@ class PaymentVoucherController extends Controller
         $voucher->save();
 
         return redirect()->route('paymentvoucher.index')->with('error', 'Voucher Rejected.');
+    }
+
+    public function applyContractPenalty(Request $request, int $invoiceId)
+    {
+        $this->authorize(PermissionEnum::PaymentVoucherUpdate, FinanceVoucher::class);
+
+        $invoice = FinanceInvoiceEntry::findOrFail($invoiceId);
+        if (strtoupper((string) ($invoice->InvoiceSourceType ?? 'PO')) !== 'CONTRACT') {
+            return back()->with('error', 'Penalty can only be applied to contract invoices.');
+        }
+        if (!(bool) $invoice->IsOnHold && strtolower((string) ($invoice->MilestoneEligibilityStatus ?? '')) !== 'pending') {
+            return back()->with('error', 'This invoice is not on a milestone hold.');
+        }
+
+        $validated = $request->validate([
+            'penalty_amount' => 'nullable|numeric|min:0',
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $penaltyAmount = (float) ($validated['penalty_amount'] ?? $invoice->PenaltySuggestedAmount ?? 0);
+        if ($penaltyAmount <= 0) {
+            return back()->with('error', 'Penalty amount must be greater than zero.');
+        }
+
+        ContractPenaltyEvent::create([
+            'FinanceInvoiceID' => $invoice->Id,
+            'ComputedAmount' => (float) ($invoice->PenaltySuggestedAmount ?? 0),
+            'AppliedAmount' => $penaltyAmount,
+            'Status' => 'Applied',
+            'ActionBy' => Auth::id(),
+            'ActionOn' => now(),
+            'Reason' => $validated['reason'] ?? 'Penalty applied during voucher selection.',
+        ]);
+
+        $invoice->update([
+            'IsOnHold' => false,
+            'MilestoneEligibilityStatus' => 'Waived',
+            'HoldReason' => 'Released after penalty application.',
+            'HoldSetBy' => Auth::id(),
+            'HoldSetOn' => now(),
+        ]);
+
+        return back()->with('success', 'Penalty applied and invoice released for payment.');
+    }
+
+    public function waiveContractHold(Request $request, int $invoiceId)
+    {
+        $this->authorize(PermissionEnum::PaymentVoucherUpdate, FinanceVoucher::class);
+
+        $invoice = FinanceInvoiceEntry::findOrFail($invoiceId);
+        if (strtoupper((string) ($invoice->InvoiceSourceType ?? 'PO')) !== 'CONTRACT') {
+            return back()->with('error', 'Waiver is only available for contract invoices.');
+        }
+        if (!(bool) $invoice->IsOnHold && strtolower((string) ($invoice->MilestoneEligibilityStatus ?? '')) !== 'pending') {
+            return back()->with('error', 'This invoice is not on a milestone hold.');
+        }
+
+        $validated = $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        ContractPenaltyEvent::create([
+            'FinanceInvoiceID' => $invoice->Id,
+            'ComputedAmount' => (float) ($invoice->PenaltySuggestedAmount ?? 0),
+            'AppliedAmount' => 0,
+            'Status' => 'Waived',
+            'ActionBy' => Auth::id(),
+            'ActionOn' => now(),
+            'Reason' => $validated['reason'],
+        ]);
+
+        $invoice->update([
+            'IsOnHold' => false,
+            'MilestoneEligibilityStatus' => 'Waived',
+            'HoldReason' => 'Milestone hold waived: ' . $validated['reason'],
+            'HoldSetBy' => Auth::id(),
+            'HoldSetOn' => now(),
+        ]);
+
+        return back()->with('success', 'Contract hold waived and invoice released.');
     }
 
     public function destroy($id)

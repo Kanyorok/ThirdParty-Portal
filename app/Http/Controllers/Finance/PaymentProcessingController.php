@@ -19,7 +19,7 @@ class PaymentProcessingController extends Controller
     {
         $this->authorize(PermissionEnum::PaymentProcessingView, FinanceVoucher::class);
 
-        $query = FinanceVoucher::with('invoice:Id,InvoiceNumber')
+        $query = FinanceVoucher::with('invoice:Id,InvoiceNumber,InvoiceSourceType,IsOnHold,HoldReason')
             ->select('Id', 'VoucherNo', 'InvoiceNo', 'TotalAmount', 'PaymentMethod',
                 'ApprovalStatus','PaymentType', 'Description','Status','IsProcessed')
             ->where('ApprovalStatus', 'posted');
@@ -70,7 +70,12 @@ class PaymentProcessingController extends Controller
     {
         $this->authorize(PermissionEnum::PaymentProcessingView, FinanceVoucher::class);
 
-        $voucher = FinanceVoucher::with('invoice.supplier')->findOrFail($id);
+        $voucher = FinanceVoucher::with([
+            'invoice.supplier',
+            'invoice.thirdParty',
+            'invoice.currency',
+            'invoice.contractPenaltyEvents',
+        ])->findOrFail($id);
         $amtPaidOnInvoice=FinanceVoucher::where('InvoiceNo', $voucher->InvoiceNo)->where('ApprovalStatus','posted')->sum('TotalAmount');
 
         return view('finance.accountspayable.paymentprocessing.show', compact('voucher', 'amtPaidOnInvoice'));
@@ -113,6 +118,13 @@ class PaymentProcessingController extends Controller
                 $isScheduled=false;
                 if($voucher->PaymentType==='Scheduled'){
                     $isScheduled=true;
+                }
+
+                if (strtoupper((string) ($invoice->InvoiceSourceType ?? 'PO')) === 'CONTRACT') {
+                    $isPending = strtolower((string) ($invoice->MilestoneEligibilityStatus ?? 'pending')) === 'pending';
+                    if ((bool) $invoice->IsOnHold || $isPending) {
+                        return back()->with('error', 'Contract invoice is on hold due to milestone conditions. Resolve exception before payment processing.');
+                    }
                 }
 
                 // Guard: already posted?

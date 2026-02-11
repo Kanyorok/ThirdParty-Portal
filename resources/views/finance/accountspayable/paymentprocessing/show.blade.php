@@ -24,6 +24,12 @@
                     <span class="text-muted">{{ $voucher->invoice->InvoiceNumber ?? 'N/A' }}</span>
                 </div>
                 <div class="col-md-6">
+                    <strong>Invoice Mode:</strong>
+                    <span class="badge {{ strtoupper(($voucher->invoice?->InvoiceSourceType ?? 'PO')) === 'CONTRACT' ? 'bg-info text-dark' : 'bg-secondary' }}">
+                        {{ strtoupper($voucher->invoice?->InvoiceSourceType ?? 'PO') }}
+                    </span>
+                </div>
+                <div class="col-md-6">
                     <strong>Payment Method:</strong>
                     <span>{{ $voucher->PaymentMethod ?? 'N/A' }}</span>
                 </div>
@@ -41,6 +47,13 @@
                     {{ ucfirst($voucher->IsProcessed?'Processed':'Pending Processing') }}
                 </span>
                 </div>
+                @if(($voucher->invoice?->IsOnHold ?? false))
+                    <div class="col-md-12 mt-2">
+                        <div class="alert alert-danger py-2 mb-0">
+                            <strong>Exception:</strong> {{ $voucher->invoice?->HoldReason ?? 'Contract milestone hold' }}
+                        </div>
+                    </div>
+                @endif
             </div>
 
             {{-- Supplier / Payee Info --}}
@@ -111,8 +124,36 @@
                 </div>
             @endif
 
+            @if(($voucher->invoice?->contractPenaltyEvents ?? collect())->count() > 0)
+                <div class="mt-4">
+                    <h6 class="text-muted mb-2">Penalty Events</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Status</th>
+                                <th class="text-end">Computed</th>
+                                <th class="text-end">Applied</th>
+                                <th>Reason</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach($voucher->invoice?->contractPenaltyEvents ?? [] as $event)
+                                <tr>
+                                    <td>{{ $event->Status }}</td>
+                                    <td class="text-end">{{ number_format($event->ComputedAmount ?? 0, 2) }}</td>
+                                    <td class="text-end">{{ number_format($event->AppliedAmount ?? 0, 2) }}</td>
+                                    <td>{{ $event->Reason ?? '—' }}</td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+
             {{-- Approve / Reject Buttons --}}
-            @if(!$voucher->IsProcessed)
+            @if(!$voucher->IsProcessed && !($voucher->invoice?->IsOnHold ?? false))
                 <div class="mt-4 d-flex gap-3">
                     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal">
                         <i class="fas fa-check-circle me-1"></i> Process Voucher
@@ -120,6 +161,10 @@
                     {{--                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">--}}
                     {{--                        <i class="fas fa-times-circle me-1"></i> Reject--}}
                     {{--                    </button>--}}
+                </div>
+            @elseif(!$voucher->IsProcessed && ($voucher->invoice?->IsOnHold ?? false))
+                <div class="alert alert-warning mt-4 mb-0">
+                    This voucher cannot be processed while the linked contract invoice is on hold.
                 </div>
             @endif
         </div>

@@ -31,6 +31,53 @@
                     </div>
                 @endif
 
+                @if(!empty($contractExceptions))
+                    <div class="card border-warning mb-3">
+                        <div class="card-header bg-warning-subtle">
+                            <strong>Contract Invoice Exceptions (On Hold)</strong>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered mb-0">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>Invoice</th>
+                                        <th>Reason</th>
+                                        <th class="text-end">Penalty Suggestion</th>
+                                        <th class="text-end">Balance</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    @foreach($contractExceptions as $ex)
+                                        <tr>
+                                            <td>{{ $ex['InvoiceNumber'] }}</td>
+                                            <td>{{ $ex['HoldReason'] }}</td>
+                                            <td class="text-end">{{ $ex['CurrencyCode'] }} {{ number_format($ex['PenaltySuggestedAmount'] ?? 0, 2) }}</td>
+                                            <td class="text-end">{{ $ex['CurrencyCode'] }} {{ number_format($ex['Balance'] ?? 0, 2) }}</td>
+                                            <td>
+                                                <div class="d-flex gap-1">
+                                                    <form action="{{ route('paymentvoucher.contracts.apply-penalty', $ex['Id']) }}" method="POST">
+                                                        @csrf
+                                                        <input type="hidden" name="penalty_amount" value="{{ $ex['PenaltySuggestedAmount'] ?? 0 }}">
+                                                        <button class="btn btn-sm btn-outline-danger">Apply Penalty + Release</button>
+                                                    </form>
+                                                    <form action="{{ route('paymentvoucher.contracts.waive-hold', $ex['Id']) }}" method="POST">
+                                                        @csrf
+                                                        <input type="hidden" name="reason" value="Milestone hold waived at voucher stage">
+                                                        <button class="btn btn-sm btn-outline-secondary">Waive Hold</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <form id="paymentVoucherForm" action="{{ route('paymentvoucher.store') }}" method="POST">
                     @csrf
                     <input type="hidden" id="VoucherNo" name="VoucherNo" value="{{ $VoucherNo }}">
@@ -47,7 +94,7 @@
                                             data-amount="{{ (float) $invoice['Balance'] }}"
                                             data-currency="{{ $invoice['CurrencyCode'] }}"
                                         @selected(old('InvoiceNo') == $invoice['Id'])>
-                                        {{ $invoice['InvoiceNumber'] }}
+                                        [{{ strtoupper($invoice['InvoiceSourceType'] ?? 'PO') }}] {{ $invoice['InvoiceNumber'] }}
                                         - {{ $invoice['CurrencyCode'] }} {{ number_format($invoice['InvoiceAmount'], 2) }}
                                     </option>
                                 @endforeach

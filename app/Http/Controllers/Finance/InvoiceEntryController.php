@@ -404,6 +404,14 @@ class InvoiceEntryController extends Controller
                     return back()->with('error', "Invoice $invoice->InvoiceNumber is already posted.");
                 }
 
+                if (strtoupper((string) ($invoice->InvoiceSourceType ?? 'PO')) === 'CONTRACT') {
+                    $isPending = strtolower((string) ($invoice->MilestoneEligibilityStatus ?? 'pending')) === 'pending';
+                    if ((bool) $invoice->IsOnHold || $isPending) {
+                        $reason = $invoice->HoldReason ?: 'Contract milestones are not yet accepted/waived.';
+                        return back()->with('error', "Invoice $invoice->InvoiceNumber is on hold. {$reason}");
+                    }
+                }
+
                 // Build payload for TransactionService (service does idempotency)
                 $payload = [
                     'ModuleID'          => $MODULE_ID,

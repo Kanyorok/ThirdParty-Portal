@@ -91,8 +91,72 @@
 
                 <div class="card-body p-3">
 
-                    <!-- STEP 1: Search Supplier -->
                     <div class="border rounded-3 p-3 mb-3">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label">Invoice Source Type <span class="text-danger">*</span></label>
+                                <select id="InvoiceSourceType" name="InvoiceSourceType" class="form-select" required>
+                                    <option value="PO" @selected(old('InvoiceSourceType', 'PO') === 'PO')>Normal Purchase Invoice (3-Way Match)</option>
+                                    <option value="CONTRACT" @selected(old('InvoiceSourceType') === 'CONTRACT')>Contract Invoice (Milestone Match)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="small text-muted" id="sourceTypeHelp">
+                                    PO invoices follow normal PO-GRN-Invoice matching. Contract invoices are validated against accepted/waived milestones.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="contractBlock" class="border rounded-3 p-3 mb-3 d-none">
+                        <h6 class="mb-3 text-muted">
+                            <i class="fas fa-file-signature text-info me-2"></i> Contract Milestone Selection
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Contract <span class="text-danger">*</span></label>
+                                <select id="ContractSelector" class="form-select">
+                                    <option value="">-- Select contract --</option>
+                                    @foreach(($contractOptions ?? []) as $contractOption)
+                                        <option value="{{ $contractOption['type'] }}:{{ $contractOption['id'] }}"
+                                            @selected(old('ContractSourceType') . ':' . old('ContractSourceID') === ($contractOption['type'] . ':' . $contractOption['id']))>
+                                            [{{ strtoupper($contractOption['type']) }}] {{ $contractOption['reference'] }} - {{ $contractOption['title'] }} ({{ $contractOption['supplier'] }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <input type="hidden" id="ContractSourceType" name="ContractSourceType" value="{{ old('ContractSourceType') }}">
+                                <input type="hidden" id="ContractSourceID" name="ContractSourceID" value="{{ old('ContractSourceID') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-light mb-0 py-2">
+                                    <small>
+                                        Select one or more milestones to be billed by this invoice. Only accepted/waived milestones are fully eligible.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="contractMilestonesWrap" class="mt-3 d-none">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered align-middle">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 50px;" class="text-center">Bill</th>
+                                        <th>Milestone</th>
+                                        <th>Status</th>
+                                        <th>Checklist</th>
+                                        <th>Due</th>
+                                        <th class="text-end">Value</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="contractMilestoneRows"></tbody>
+                                </table>
+                            </div>
+                            <div id="contractEligibilityHint" class="small text-muted"></div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 1: Search Supplier -->
+                    <div id="supplierStepBlock" class="border rounded-3 p-3 mb-3">
                         <div class="row g-2 align-items-end">
                             <div class="col-md-7">
                                 <label class="form-label text-muted">Search Supplier (Reg No./Email/Phone/Name)</label>
@@ -399,8 +463,18 @@
             // API endpoints (hoisted so all handlers can access)
             const quickSearchUrl = '{{ route('finance.invoiceentry-v2.api.suppliers.quick-search') }}';
             const findSupplierUrl = '{{ route('finance.invoiceentry-v2.api.suppliers.search') }}';
+            const contractMilestonesBaseUrl = '{{ url('finance/invoiceentry-v2/api/contracts') }}';
 
             // Elements
+            const sourceTypeSelect = document.getElementById('InvoiceSourceType');
+            const supplierStepBlock = document.getElementById('supplierStepBlock');
+            const contractBlock = document.getElementById('contractBlock');
+            const contractSelector = document.getElementById('ContractSelector');
+            const contractSourceTypeInput = document.getElementById('ContractSourceType');
+            const contractSourceIdInput = document.getElementById('ContractSourceID');
+            const contractMilestonesWrap = document.getElementById('contractMilestonesWrap');
+            const contractMilestoneRows = document.getElementById('contractMilestoneRows');
+            const contractEligibilityHint = document.getElementById('contractEligibilityHint');
             const supplierSelect = (typeof window.$ !== 'undefined') ? window.$('#supplierSelect') : null;
             const supplierCard = document.getElementById('supplierCard');
             const ordersBlock = document.getElementById('ordersBlock');
@@ -451,6 +525,122 @@
                 // Update current currency reference
                 if (currency) {
                     currentCurrency = currency;
+                }
+            }
+
+            function badgeForMilestoneStatus(status) {
+                if (status === 'Accepted') return 'bg-success';
+                if (status === 'Waived') return 'bg-secondary';
+                if (status === 'Submitted') return 'bg-info';
+                if (status === 'Rejected') return 'bg-danger';
+                if (status === 'In Progress') return 'bg-warning text-dark';
+                return 'bg-light text-dark';
+            }
+
+            function clearContractMilestones() {
+                if (contractMilestoneRows) {
+                    contractMilestoneRows.innerHTML = '';
+                }
+                if (contractMilestonesWrap) {
+                    contractMilestonesWrap.classList.add('d-none');
+                }
+                if (contractEligibilityHint) {
+                    contractEligibilityHint.textContent = '';
+                }
+            }
+
+            function resetContractModeFields() {
+                if (contractSourceTypeInput) contractSourceTypeInput.value = '';
+                if (contractSourceIdInput) contractSourceIdInput.value = '';
+                if (contractSelector) contractSelector.value = '';
+                clearContractMilestones();
+            }
+
+            async function loadContractMilestones(contractType, contractId) {
+                clearContractMilestones();
+                if (!contractType || !contractId) return;
+
+                try {
+                    const response = await fetch(`${contractMilestonesBaseUrl}/${contractType}/${contractId}/milestones`, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    const payload = await response.json();
+                    const milestones = payload?.milestones || [];
+
+                    if (!milestones.length) {
+                        if (contractMilestonesWrap) contractMilestonesWrap.classList.remove('d-none');
+                        if (contractMilestoneRows) {
+                            contractMilestoneRows.innerHTML = '<tr><td colspan="6" class="text-muted">No milestones found for this contract.</td></tr>';
+                        }
+                        return;
+                    }
+
+                    let eligibleCount = 0;
+                    const rows = milestones.map((m) => {
+                        const eligible = !!m.Eligible;
+                        if (eligible) eligibleCount++;
+                        const valueLabel = (m.ValueType === 'PERCENT')
+                            ? `${parseFloat(m.ValuePercent || 0).toFixed(2)}%`
+                            : `${window.currencyConfig?.symbol || 'KSh'} ${parseFloat(m.ValueAmount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+                        return `
+                            <tr>
+                                <td class="text-center">
+                                    <input class="form-check-input contract-milestone-check" type="checkbox" name="MilestoneIDs[]" value="${m.Id}" ${eligible ? 'checked' : ''}>
+                                </td>
+                                <td><strong>M${m.MilestoneNo}</strong> - ${m.Title}</td>
+                                <td><span class="badge ${badgeForMilestoneStatus(m.Status)}">${m.Status}</span></td>
+                                <td>${m.RequiredChecklistFulfilled}/${m.RequiredChecklistTotal}</td>
+                                <td>${m.PlannedDueDate || '-'}</td>
+                                <td class="text-end">${valueLabel}</td>
+                            </tr>
+                        `;
+                    });
+
+                    if (contractMilestoneRows) contractMilestoneRows.innerHTML = rows.join('');
+                    if (contractMilestonesWrap) contractMilestonesWrap.classList.remove('d-none');
+                    if (contractEligibilityHint) {
+                        contractEligibilityHint.textContent = `${eligibleCount} of ${milestones.length} milestones are currently eligible (Accepted/Waived + checklist complete).`;
+                    }
+                } catch (error) {
+                    if (contractMilestonesWrap) contractMilestonesWrap.classList.remove('d-none');
+                    if (contractMilestoneRows) {
+                        contractMilestoneRows.innerHTML = '<tr><td colspan="6" class="text-danger">Failed to load milestones.</td></tr>';
+                    }
+                }
+            }
+
+            function setInvoiceMode(mode) {
+                const isContract = mode === 'CONTRACT';
+                const amountValidation = document.getElementById('amountValidation');
+                const amountInput = document.getElementById('Amount');
+                const submitBtn = document.getElementById('btnSubmit');
+
+                if (supplierStepBlock) supplierStepBlock.classList.toggle('d-none', isContract);
+                if (contractBlock) contractBlock.classList.toggle('d-none', !isContract);
+                if (ordersBlock) ordersBlock.classList.add('d-none');
+                if (grnsBlock) grnsBlock.classList.add('d-none');
+                if (document.getElementById('matchingStatusBlock')) {
+                    document.getElementById('matchingStatusBlock').classList.add('d-none');
+                }
+
+                if (isContract) {
+                    resetSupplierView();
+                    invoiceDetailsBlock.classList.remove('d-none');
+                    submitSection.classList.remove('d-none');
+                    document.getElementById('POReference').value = '';
+                    document.getElementById('GRNReference').value = '';
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-file-signature me-2"></i> Create Contract Invoice';
+                        submitBtn.className = 'btn btn-primary btn-lg px-5';
+                    }
+                } else {
+                    resetContractModeFields();
+                    invoiceDetailsBlock.classList.add('d-none');
+                    submitSection.classList.add('d-none');
+                    if (amountValidation) amountValidation.classList.add('d-none');
+                    if (amountInput) amountInput.classList.remove('is-invalid');
                 }
             }
 
@@ -1260,6 +1450,37 @@
             // Initialize supplier Select2
             initializeSupplierSelect();
 
+            if (sourceTypeSelect) {
+                sourceTypeSelect.addEventListener('change', function () {
+                    setInvoiceMode(this.value);
+                });
+                setInvoiceMode(sourceTypeSelect.value);
+            }
+
+            if (contractSelector) {
+                contractSelector.addEventListener('change', function () {
+                    const selected = this.value || '';
+                    if (!selected.includes(':')) {
+                        if (contractSourceTypeInput) contractSourceTypeInput.value = '';
+                        if (contractSourceIdInput) contractSourceIdInput.value = '';
+                        clearContractMilestones();
+                        return;
+                    }
+
+                    const [contractType, contractId] = selected.split(':');
+                    if (contractSourceTypeInput) contractSourceTypeInput.value = contractType;
+                    if (contractSourceIdInput) contractSourceIdInput.value = contractId;
+                    loadContractMilestones(contractType, contractId);
+                });
+
+                if ((sourceTypeSelect?.value || '').toUpperCase() === 'CONTRACT' && (contractSelector.value || '').includes(':')) {
+                    const [contractType, contractId] = contractSelector.value.split(':');
+                    if (contractSourceTypeInput) contractSourceTypeInput.value = contractType;
+                    if (contractSourceIdInput) contractSourceIdInput.value = contractId;
+                    loadContractMilestones(contractType, contractId);
+                }
+            }
+
             // PO related event listeners
             const viewSelectedPOBtn = document.getElementById('viewSelectedPO');
             if (viewSelectedPOBtn) {
@@ -1329,6 +1550,28 @@
 
             // Comprehensive 3-way matching validation
             function validate3WayMatching() {
+                const sourceType = (sourceTypeSelect?.value || 'PO').toUpperCase();
+                if (sourceType === 'CONTRACT') {
+                    if (!contractSourceTypeInput?.value || !contractSourceIdInput?.value) {
+                        showNotification('Please select a contract for this contract invoice.', 'error');
+                        return false;
+                    }
+
+                    const selectedMilestones = document.querySelectorAll('input[name="MilestoneIDs[]"]:checked');
+                    if (!selectedMilestones.length) {
+                        showNotification('Please select at least one milestone to bill.', 'error');
+                        return false;
+                    }
+
+                    const amountInput = document.getElementById('Amount');
+                    const enteredAmount = parseFloat(amountInput?.value || '0');
+                    if (!enteredAmount || enteredAmount <= 0) {
+                        showNotification('Please enter a valid invoice amount.', 'error');
+                        return false;
+                    }
+
+                    return true;
+                }
 
                 // Check if PO is selected
                 if (!selectedPO) {

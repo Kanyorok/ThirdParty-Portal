@@ -123,6 +123,18 @@ class TenderAward extends Model
         return $this->hasMany(\App\Models\Procurement\Order::class, 'AwardRef', 'Id');
     }
 
+    public function milestones(): HasMany
+    {
+        return $this->hasMany(ContractMilestone::class, 'ContractSourceID', 'Id')
+            ->where('ContractSourceType', 'tender');
+    }
+
+    public function penaltyRules(): HasMany
+    {
+        return $this->hasMany(ContractPenaltyRule::class, 'ContractSourceID', 'Id')
+            ->where('ContractSourceType', 'tender');
+    }
+
     // Scopes
     public function scopePending($query)
     {
