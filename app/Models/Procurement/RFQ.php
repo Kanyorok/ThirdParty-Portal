@@ -116,6 +116,14 @@ class RFQ extends Model
     }
 
     /**
+     * Relationship to Active RFQ Sections
+     */
+    public function activeSections()
+    {
+        return $this->hasMany(RFQSection::class, 'RFQID', 'Id')->where('IsActive', true);
+    }
+
+    /**
      * Relationship to RFQ Criteria
      */
     public function criteria()
@@ -227,5 +235,19 @@ class RFQ extends Model
     {
         return in_array(strtolower($this->Status), ['re', 'rejected']);
     }
-    // In App\Models\Procurement\RFQ.php
+
+    /**
+     * Relationship to RFQ Evaluations
+     */
+    public function evaluations()
+    {
+        return $this->hasMany(RFQEvaluation::class, 'RFQId', 'Id');
+    }
+
+    public function activeTenderCommittees()
+    {
+        return $this->hasMany(TenderCommittee::class, 'ReferenceId', 'Id')
+            ->where('CommitteeType', 'rfq')
+            ->where('IsActive', true);
+    }
 }

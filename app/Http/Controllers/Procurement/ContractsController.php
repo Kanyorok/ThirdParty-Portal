@@ -136,6 +136,17 @@ class ContractsController extends Controller
                         $award->tender->Title = $rfq->Subject;
                     }
                     $award->winningSupplier = $award->supplier;
+
+                    // Fix: If AwardedAmount is missing, try to get it from the RFQ Response
+                    if (empty($award->AwardedAmount) || $award->AwardedAmount <= 0) {
+                        $response = \App\Models\Procurement\RFQResponse::where('RFQId', $award->RFQId)
+                            ->where('SupplierId', $award->SupplierId)
+                            ->first();
+
+                        if ($response) {
+                            $award->AwardedAmount = $response->TotalPayable;
+                        }
+                    }
                 }
             } else {
                 $award = TenderAward::with(['tender', 'winningSupplier'])

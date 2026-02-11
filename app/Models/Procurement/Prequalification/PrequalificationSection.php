@@ -37,7 +37,8 @@ class PrequalificationSection extends Model
 
     public function masterSection(): BelongsTo
     {
-        return $this->belongsTo(Section::class, 'SectionId', 'Id');
+        return $this->belongsTo(Section::class, 'SectionId', 'Id')
+                    ->isActive();
     }
 
     public function criteria(): HasMany

@@ -22,7 +22,7 @@
                     @endforeach
                 </select>
                 <button type="submit" class="btn btn-sm btn-success">
-                    <i class="fas fa-check-double me-1"></i> Bulk Prequalify (Passed)
+                    <i class="fas fa-check-double me-1"></i> Bulk Prequalify
                 </button>
             </form>
         </div>
@@ -178,14 +178,20 @@ $(document).ready(function() {
                 
                 let html = '';
                 
-                // Edit button (only if no decision yet)
-                if (!row.decision) {
+                // Evaluate button logic:
+                // Only enable if evaluation is allowed (i.e. Supplier is Prequalified)
+                // If decision exists, showing edit button (yellow) is fine, but maybe stick to same logic
+                if (row.evaluation_allowed) {
                     html += `<a href="${evalUrl}" class="btn btn-sm btn-warning text-dark me-1" title="Evaluate">
                         <i class="fas fa-edit"></i>
                     </a>`;
+                } else {
+                    html += `<button class="btn btn-sm btn-warning text-dark me-1" title="Supplier must be prequalified first" disabled>
+                        <i class="fas fa-edit"></i>
+                    </button>`;
                 }
                 
-                // Prequalify button logic
+                // Prequalify button logic (Reverse of Evaluate)
                 if (row.prequalify_allowed) {
                     html += `<form method="POST" action="${prequalifyUrl}" class="d-inline preq-form">
                         <input type="hidden" name="_token" value="${TOKEN}">

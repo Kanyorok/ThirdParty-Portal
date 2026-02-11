@@ -350,4 +350,11 @@ class Tender extends Model
             default => 'secondary',
         };
     }
+
+    public function activeTenderCommittees()
+    {
+        return $this->hasMany(TenderCommittee::class, 'ReferenceId', 'Id')
+            ->where('CommitteeType', 'tender')
+            ->where('IsActive', true);
+    }
 }

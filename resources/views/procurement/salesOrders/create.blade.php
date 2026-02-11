@@ -48,8 +48,14 @@
                 <input type="text" class="form-control" value="{{ uniqid('LSO-') }}" readonly />
             </div>
             <div class="col-md-4">
-                <label>Date</label>
-                <input type="date" class="form-control" />
+                <label for="Date" class="form-label">Date</label>
+                <input type="date" name="Date" id="Date" value="{{ old('Date') }}" min="{{ now()->toDateString() }}" class="form-control @error('Date') is-invalid @enderror" required>
+
+                @error('Date')
+                <div class="invalid-feedback">
+                    <span class="text-danger">{{ $message }}</span>
+                </div>
+                @enderror
             </div>
             <div class="col-md-4">
                 <label>Reference Number</label>
@@ -145,6 +151,13 @@
 @endsection
 @section('scripts')
     <script>
+        flatpickr('#Date', {
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'd-m-Y',
+            allowInput:true,
+            minDate: 'today',
+        });
         let rowCount = 1;
 
         document.getElementById('add-row').addEventListener('click', function () {

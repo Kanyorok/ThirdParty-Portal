@@ -19,7 +19,7 @@ class RFQResponseController extends Controller
     public function index()
     {
         $this->authorize('viewAny', RFQResponse::class);
-        $rfqResponses = RFQResponse::with(['rfq', 'items', 'items.uom'])->latest()->paginate(10);
+        $rfqResponses = RFQResponse::with(['rfq.evaluations', 'items', 'items.uom'])->latest()->paginate(10);
 
         return view('procurement.rfqresponses.index', compact('rfqResponses'));
     }
@@ -175,7 +175,12 @@ class RFQResponseController extends Controller
 
     public function edit($id)
     {
-        $rfqResponse = RFQResponse::with(['rfq', 'items'])->findOrFail($id);
+        $rfqResponse = RFQResponse::with(['rfq.evaluations', 'items'])->findOrFail($id);
+
+        if ($rfqResponse->rfq && $rfqResponse->rfq->evaluations()->exists()) {
+            return redirect()->back()->with('error', 'Cannot edit response: Quotation Evaluation has already been created for this RFQ.');
+        }
+
         $rfqs = RFQ::all();
 
         return view('procurement.rfqresponses.edit', compact('rfqResponse', 'rfqs'));
@@ -193,6 +198,10 @@ class RFQResponseController extends Controller
         ]);
 
         $rfqResponse = RFQResponse::findOrFail($id);
+
+        if ($rfqResponse->rfq && $rfqResponse->rfq->evaluations()->exists()) {
+            return redirect()->back()->with('error', 'Cannot update response: Quotation Evaluation has already been created for this RFQ.');
+        }
 
         DB::transaction(function () use ($request, $rfqResponse) {
             $rfqResponse->update([
@@ -217,6 +226,11 @@ class RFQResponseController extends Controller
     public function destroy($id)
     {
         $rfqResponse = RFQResponse::findOrFail($id);
+
+        if ($rfqResponse->rfq && $rfqResponse->rfq->evaluations()->exists()) {
+            return redirect()->back()->with('error', 'Cannot delete response: Quotation Evaluation has already been created for this RFQ.');
+        }
+
         $rfqResponse->delete();
 
         return redirect()->route('rfqresponses.index')->with('success', 'RFQ Response deleted successfully.');

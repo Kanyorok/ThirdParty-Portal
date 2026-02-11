@@ -150,6 +150,22 @@
             }
 
             form.addEventListener('submit', function (e) {
+                // Check every visible section has at least one criteria checked
+                const emptySections = [];
+                form.querySelectorAll('#sectionsTable > tbody').forEach(tbody => {
+                    if (tbody.classList.contains('removed')) return;
+                    const sectionName = tbody.querySelector('.section-row .fw-bold')?.textContent?.trim() || 'Unknown';
+                    const checked = tbody.querySelectorAll('.criteria-row input[type="checkbox"]:checked');
+                    if (checked.length === 0) {
+                        emptySections.push(sectionName);
+                    }
+                });
+                if (emptySections.length > 0) {
+                    e.preventDefault();
+                    alert('Every selected section must have at least one criteria item checked.\n\nMissing criteria for:\n• ' + emptySections.join('\n• '));
+                    return;
+                }
+
                 const total = calcTotal();
                 if (Math.abs(total - 100) < 0.001) {
                     // Already fine

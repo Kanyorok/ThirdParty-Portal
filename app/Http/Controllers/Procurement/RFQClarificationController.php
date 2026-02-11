@@ -41,7 +41,7 @@ class RFQClarificationController extends Controller
 
         $rows = RFQClarification::query()
             ->join('t_RFQ as r', 'r.Id', '=', 't_RFQClarifications.RFQId')
-            ->where('r.Status', 'Approved')
+            ->where('r.Status', 'Pub')
             ->when($rfqId > 0, fn ($x) => $x->where('t_RFQClarifications.RFQId', $rfqId))
             ->when($answered === 'yes', fn ($x) => $x->whereNotNull('t_RFQClarifications.Answer'))
             ->when($answered === 'no', fn ($x) => $x->whereNull('t_RFQClarifications.Answer'))
