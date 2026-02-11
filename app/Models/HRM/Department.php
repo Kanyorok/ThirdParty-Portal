@@ -34,6 +34,11 @@ class Department extends Model
         return $this->belongsTo(User::class, 'DeputyHeadId', 'Id')->withTrashed();
     }
 
+    public function employees()
+    {
+        return $this->hasMany(Employee::class, 'DepartmentId', 'Id');
+    }
+
     public static function getPrimaryKey(): string
     {
         return 'DepartmentID';
