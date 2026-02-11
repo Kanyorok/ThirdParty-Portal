@@ -4,6 +4,7 @@ namespace App\Http\Controllers\HRM;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\HRM\DepartmentRequest;
+use App\Models\Auth\User;
 use App\Models\HRM\Department;
 use App\Services\HRM\DepartmentService;
 use Exception;
@@ -31,13 +32,13 @@ class DepartmentController extends Controller
     {
         if ($request->ajax()) {
             try {
-                return Datatables::of(Department::query()->select('*'))->addIndexColumn()
+                return Datatables::of(Department::with(['head'])->withCount('employees'))->addIndexColumn()
                     ->addColumn('action', function (Department $department) {
                         return '<button type="button" data-click_url="' . route('departments.show', [$department->DepartmentID]) . '" data-summary_title="department details" class="btn btn-info btn-sm click-summary-data"><i class="fas fa-eye"></i> details</button>';
                     })->addColumn('employees_count', function (Department $department) {
-                        return number_format(0);
+                        return number_format($department->employees_count);
                     })->addColumn('hod', function (Department $department) {
-                        return "-";
+                        return $department->head ? $department->head->Name : '-';
                     })->editColumn('DepartmentID', function (Department $department) {
                         return Str::upper($department->DepartmentID);
                     })->rawColumns(['action',])->make();
@@ -57,11 +58,21 @@ class DepartmentController extends Controller
     {
         try {
             return DB::transaction(function () use ($request) {
-                $dpt = DepartmentService::create(
+                $service = DepartmentService::create(
                     name: $request->string('Name')->trim()->toString(),
                     actor: $request->user(),
                     description: $request->string('Description')->trim()->toString()
-                )->department;
+                );
+
+                if ($request->filled('HeadId')) {
+                    $service->setHOD(User::find($request->input('HeadId')), $request->user());
+                }
+
+                if ($request->filled('DeputyHeadId')) {
+                    $service->setDeputyHOD(User::find($request->input('DeputyHeadId')), $request->user());
+                }
+
+                $dpt = $service->department;
 
                 return $this->succeeded($dpt->DepartmentID . ' created successfully.');
             });
@@ -78,7 +89,9 @@ class DepartmentController extends Controller
      */
     public function create(): View
     {
-        return view('hrms.department.create');
+        $users = User::orderBy('Name')->get();
+
+        return view('hrms.department.create', ['users' => $users]);
     }
 
     /**
@@ -86,7 +99,9 @@ class DepartmentController extends Controller
      */
     public function show(Department $department)
     {
-        return view('hrms.department.show', ['department' => $department]);
+        $users = User::orderBy('Name')->get();
+
+        return view('hrms.department.show', ['department' => $department, 'users' => $users]);
     }
 
     /**
@@ -101,6 +116,24 @@ class DepartmentController extends Controller
                     'Description' => $request->string('Description')->trim()->toString(),
                     'ModifiedBy' => $request->user()->Id,
                 ]);
+
+                $service = new DepartmentService($department);
+
+                if ($request->has('HeadId')) {
+                    // Update HOD if present (even if null to clear? implementation assumed non-nullable/selection required based on UI, but code handles find returning null if ID is invalid, though validation should catch it. If ID is null, find returns null, setHOD type hint requires User. So we need to check filled)
+                    // If the user wants to clear HOD, they might send null. My setHOD requires User.
+                    // The UI normally sends an ID or empty.
+                    // If I look at the screenshot, "Select HOD" suggests valid selection.
+                    if ($request->filled('HeadId')) {
+                        $service->setHOD(User::find($request->input('HeadId')), $request->user());
+                    }
+                }
+
+                if ($request->has('DeputyHeadId')) {
+                    if ($request->filled('DeputyHeadId')) {
+                        $service->setDeputyHOD(User::find($request->input('DeputyHeadId')), $request->user());
+                    }
+                }
 
                 activity()->causedBy($request->user())->performedOn($department)->event('update')->log('updated department ' . $department->DepartmentID);
 
@@ -135,6 +168,6 @@ class DepartmentController extends Controller
             Log::error($e);
         }
 
-        return $this->errored('update department failed.');
+        return $this->errored('delete department failed.');
     }
 }

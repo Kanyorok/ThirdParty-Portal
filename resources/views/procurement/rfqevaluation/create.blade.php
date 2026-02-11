@@ -386,7 +386,7 @@
                     formHtml += `<tr>
                                         <td>${name}</td>
                                         <td>10</td>
-                                        <td><input type="number" name="Evaluations[${response.SupplierId}][${critId}][Score]" class="form-control score-input" min="1" max="10" required data-supplier-id="${response.SupplierId}" data-section-id="${sectionId}" data-criteria-id="${critId}"></td>
+                                        <td><input type="number" name="Evaluations[${response.SupplierId}][${critId}][Score]" class="form-control score-input" min="0" max="10" step="0.01" required data-supplier-id="${response.SupplierId}" data-section-id="${sectionId}" data-criteria-id="${critId}"></td>
                                         <td><input type="text" name="Evaluations[${response.SupplierId}][${critId}][Comments]" class="form-control"></td>
                                     </tr>`;
                   });

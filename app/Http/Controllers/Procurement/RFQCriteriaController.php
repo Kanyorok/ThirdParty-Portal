@@ -76,6 +76,23 @@ class RFQCriteriaController extends Controller
             return back()->withInput()->with('error', 'Section weights must total 100.00. Current total: ' . number_format($totalWeight, 2));
         }
 
+        // Validate every active section has at least one criteria item selected
+        $emptySections = [];
+        foreach (array_keys($weights) as $sectionId) {
+            // Check if sectionId exists in criterias array AND has at least one item
+            if (! isset($criterias[$sectionId]) || empty($criterias[$sectionId])) {
+                $name = DB::table('t_Sections')->where('Id', $sectionId)->value('SectionName') ?? "Section #{$sectionId}";
+                $emptySections[] = $name;
+            }
+        }
+        if (! empty($emptySections)) {
+            return back()->withInput()->with(
+                'error',
+                'Every selected section must have at least one criteria item checked. Missing criteria for: ' . implode(', ', $emptySections)
+            );
+        }
+
+
         DB::beginTransaction();
 
         try {

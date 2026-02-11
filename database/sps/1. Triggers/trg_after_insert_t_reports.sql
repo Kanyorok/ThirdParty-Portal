@@ -62,5 +62,4 @@ BEGIN
                 END
 
 END;
-go
 

@@ -52,12 +52,13 @@ class PrequalificationRoundController extends Controller
     {
         $this->authorize('create', PrequalificationRound::class);
 
-        $masterSections = Section::with('criteria')->isActive()->get();
+        $activeSections = Section::with('criteria')->isActive()->get();
         $prequalificationRound = new PrequalificationRound();
+
 
         return view(
             'procurement.suppliers.prequalification.prequalification-rounds.create',
-            compact('masterSections', 'prequalificationRound')
+            compact('activeSections', 'prequalificationRound')
         );
     }
 
@@ -77,7 +78,8 @@ class PrequalificationRoundController extends Controller
             'prequalificationCriteria.masterCriteria',
             'applications.supplier',
         ]);
-        $masterSections = Section::with('criteria')->get();
+        $masterSections = Section::isActive()
+                                 ->with('criteria')->get();
 
         return view('procurement.suppliers.prequalification.prequalification-rounds.show', compact('prequalificationRound', 'masterSections'));
     }
@@ -86,12 +88,12 @@ class PrequalificationRoundController extends Controller
     {
         $this->authorize('update', $prequalificationRound);
 
-        $masterSections = Section::with('criteria')->get();
+        $activeSections = Section::with('criteria')->isActive()->get();
         $prequalificationRound->load(['prequalificationSections', 'prequalificationCriteria']);
 
         return view('procurement.suppliers.prequalification.prequalification-rounds.edit', [
             'prequalificationRound' => $prequalificationRound,
-            'masterSections' => $masterSections,
+            'activeSections' => $activeSections,
         ]);
     }
 

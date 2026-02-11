@@ -1375,14 +1375,14 @@ class AwardsController extends Controller
                         "Procurement Department<br>" .
                         config('app.name');
 
-                $to = [[$name => $email]];
+                $to = [['Name' => $email]]; // CRMEmailService expects [['Name' => 'Email']] or [['Name' => 'Email']] logic
 
                 $service = \App\Services\CRMEmailService::createRaw(
                     Auth::user(),
                     $subject,
                     $body,
                     $to,
-                    'ThirdParty',
+                    'ThirdParties', // Correct Morph Class
                     (string)$thirdParty->Id,
                     [],
                     [],
@@ -1437,14 +1437,14 @@ class AwardsController extends Controller
                             config('app.name');
 
                     try {
-                        $to = [[$name => $email]];
+                        $to = [['Name' => $email]];
 
                         $service = \App\Services\CRMEmailService::createRaw(
                             Auth::user(),
                             $subject,
                             $body,
                             $to,
-                            'ThirdParty',
+                            'ThirdParties', // Correct Morph Class
                             (string)$thirdParty->Id,
                             [],
                             [],
@@ -1495,14 +1495,14 @@ class AwardsController extends Controller
                         "Procurement Department<br>" .
                         config('app.name');
 
-                $to = [[$name => $email]];
+                $to = [['Name' => $email]];
 
                 $service = \App\Services\CRMEmailService::createRaw(
                     Auth::user(),
                     $subject,
                     $body,
                     $to,
-                    'ThirdParty',
+                    'ThirdParties', // Correct Morph Class
                     (string)$thirdParty->Id,
                     [],
                     [],

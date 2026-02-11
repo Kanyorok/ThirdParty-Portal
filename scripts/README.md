@@ -1,8 +1,41 @@
-# 🛠️ **Licensing Scripts Directory**
+# 🛠️ **BR_ERP Scripts Directory**
 
-This directory contains command-line tools for managing the enterprise licensing system.
+This directory contains command-line tools for managing licensing, workflows, and system administration.
 
 ## 📁 **Available Scripts**
+
+### **🔄 Workflow Management** (NEW!)
+
+**Make your approval workflows portable and reusable!**
+
+- **`export_workflows.php`** - Export all workflow configurations to JSON
+  ```bash
+  php scripts/export_workflows.php [output_file.json]
+  ```
+
+- **`import_workflows.php`** - Import workflows into any database
+  ```bash
+  php scripts/import_workflows.php <input_file.json> [--force]
+  ```
+
+- **`quick_workflow_transfer.php`** - Interactive wizard for workflow transfer
+  ```bash
+  php scripts/quick_workflow_transfer.php
+  ```
+
+- **`workflow_manager.bat`** - Windows GUI menu (double-click to run)
+- **`workflow_manager.sh`** - Linux/Mac GUI menu
+  ```bash
+  ./scripts/workflow_manager.sh
+  ```
+
+📖 **Documentation:**
+- [`WORKFLOW_QUICK_START.md`](WORKFLOW_QUICK_START.md) - Get started in 5 minutes
+- [`WORKFLOW_EXPORT_IMPORT_GUIDE.md`](WORKFLOW_EXPORT_IMPORT_GUIDE.md) - Complete guide
+
+---
+
+## 📁 **Licensing Scripts**
 
 ### **🔑 Key Generation**
 - **`generate_vendor_keys.php`** - Generate Ed25519 key pair for signing licenses

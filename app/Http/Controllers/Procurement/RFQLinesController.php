@@ -57,7 +57,11 @@ class RFQLinesController extends Controller
                 && $line->item->category->Id == $request->ItemCategoryId;
 
             // Check if this exact RequisitionLine is already used in RFQ lines
-            $existsInRFQLines = RFQLine::where('RequisitionLineId', $line->Id)->exists();
+            $existsInRFQLines = RFQLine::where('RequisitionLineId', $line->Id)
+    ->whereHas('rfq', function ($query) {
+        $query->whereIn('Status', ['Ap', 'Pe']);
+    })
+    ->exists();
 
             // Exclude if already associated
             return $isInCategory && ! $existsInRFQLines;
@@ -127,15 +131,27 @@ class RFQLinesController extends Controller
             $categories = DB::table('t_RequisitionLines as rl')
                 ->join('t_Items as i', 'rl.Item', '=', 'i.Id')
                 ->join('t_ItemCategories as ic', 'i.Category', '=', 'ic.Id')
-                ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
                 ->where('rl.RequisitionID', $requisitionId)
                 ->whereNull('rl.DeletedOn')
                 ->whereNull('i.DeletedOn')
                 ->whereNull('ic.DeletedOn')
-                ->whereNull('rfql.Id') // Only get categories not already in RFQ
-                ->select('ic.Id', 'ic.Name')
-                ->distinct()
-                ->get();
+
+
+                // Exclude lines that are already in ACTIVE RFQs
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('t_RFQLines as rfql')
+                    ->join('t_RFQ as rfq', 'rfql.RFQId', '=', 'rfq.Id')
+                    ->whereColumn('rfql.RequisitionLineId', 'rl.Id')
+                    ->whereNull('rfq.DeletedOn')
+                    ->whereIn('rfq.Status', ['Approved', 'Pending']);
+
+            })
+
+            ->select('ic.Id', 'ic.Name')
+            ->distinct()
+            ->get();
+
 
             Log::info('Categories fetched', [
                 'requisitionId' => $requisitionId,

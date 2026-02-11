@@ -28,23 +28,25 @@ class DepartmentService
 
     public function setHOD(User $hod, User $actor): static
     {
-        /*$this->department->update([
+        $this->department->update([
             'HeadId' => $hod->Id,
             'ModifiedBy' => $actor->Id,
         ]);
 
-        activity()->causedBy($actor)->performedOn($this->department)->event('update')->log('set a hod ('.$hod->UserID.') to department '.$this->department->DepartmentID);*/
+        activity()->causedBy($actor)->performedOn($this->department)->event('update')->log('set a hod (' . $hod->Id . ') to department ' . $this->department->DepartmentID);
+
         return $this;
     }
 
     public function setDeputyHOD(User $user, User $actor): static
     {
-        /*$this->department->update([
+        $this->department->update([
             'DeputyHeadId' => $user->Id,
             'ModifiedBy' => $actor->Id,
         ]);
 
-        activity()->causedBy($actor)->performedOn($this->department)->event('update')->log('set a deputy hod ('.$d->UserID.') to department '.$this->department->DepartmentID);*/
+        activity()->causedBy($actor)->performedOn($this->department)->event('update')->log('set a deputy hod (' . $user->Id . ') to department ' . $this->department->DepartmentID);
+
         return $this;
     }
 

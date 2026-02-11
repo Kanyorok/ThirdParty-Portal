@@ -31,7 +31,8 @@ class Criteria extends Model
 
     public function section(): BelongsTo
     {
-        return $this->belongsTo(Section::class, 'SectionID', 'Id');
+        return $this->belongsTo(Section::class, 'SectionID', 'Id')
+                    ->active();
     }
 
     public static function getPrimaryKey(): string

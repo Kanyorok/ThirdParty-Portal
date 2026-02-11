@@ -40,7 +40,7 @@
                   @endif
                 </a>
               </td>
-              <td>{{ $rfq->sections->sum('Weight') ?? 0 }}%</td>
+              <td>{{ $rfq->activeSections->sum('Weight') ?? 0 }}%</td>
               <td>
                 <a href="{{ route('rfqcriterias.show', $rfq->Id) }}" class="btn btn-sm btn-outline-primary">Setup
                   Criteria</a>

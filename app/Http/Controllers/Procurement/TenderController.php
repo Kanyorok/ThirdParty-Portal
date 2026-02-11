@@ -960,7 +960,7 @@ class TenderController extends Controller
             elseif ($crudType == 'updateQty') {
                 // 1. Validation
                 $validated = $request->validate([
-                    'item_id' => 'required|integer|exists:t_TenderItems,Id',
+                    'item_id' => 'required|integer|exists:t_TenderItems,id',
                     'QtyToTender' => 'required|numeric|min:0.01',
                 ]);
 
@@ -1043,7 +1043,7 @@ class TenderController extends Controller
                 DB::beginTransaction();
 
                 try {
-                    $tenderSupplier = TenderSupplier::findOrFail($request->supplier_id);
+                    $tenderSupplier = TenderSupplier::findOrFail($request->tender_supplier_id);
                     $tenderSupplier->delete();
 
                     DB::commit();
@@ -2057,24 +2057,34 @@ class TenderController extends Controller
             }
 
             try {
-                // Log::info('Attempting to attach document', [
-                //     'tender_id' => $tender->Id,
-                //     'filename' => $uploadedFile->getClientOriginalName(),
-                //     'size' => $uploadedFile->getSize(),
-                //     'mime' => $uploadedFile->getMimeType()
+                Log::info('Attempting to attach document', [
+                    'tender_id' => $tender->Id,
+                    'filename' => $uploadedFile->getClientOriginalName(),
+                    'size' => $uploadedFile->getSize(),
+                    'mime' => $uploadedFile->getMimeType(),
+                ]);
 
-                $test = $tender->newDocument(
+                $document = $tender->newDocument(
                     ModulesEnum::Procurement,
                     $uploadedFile,
                     [PermissionEnum::TenderWrite->value],
                     Auth::user()
                 );
 
+                // Fix for 0KB file size issue (Module Level)
+                if ($document->current && $document->current->Size === 0) {
+                    $document->current->update([
+                        'Size' => $uploadedFile->getSize(),
+                    ]);
+                    Log::info('Fixed 0KB file size for document', ['id' => $document->Id, 'size' => $uploadedFile->getSize()]);
+                }
+
                 $uploadedCount++;
-                // Log::info('Document attached successfully', [
-                //     'tender_id' => $tender->Id,
-                //     'filename' => $uploadedFile->getClientOriginalName(),
-                //     'full_log' => $test
+                Log::info('Document attached successfully', [
+                    'tender_id' => $tender->Id,
+                    'filename' => $uploadedFile->getClientOriginalName(),
+                    'document_id' => $document->Id,
+                ]);
             } catch (\Exception $e) {
                 $failedCount++;
                 Log::error('Failed to attach document to tender', [

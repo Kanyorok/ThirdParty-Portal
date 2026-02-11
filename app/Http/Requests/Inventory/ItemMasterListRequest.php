@@ -27,7 +27,7 @@ class ItemMasterListRequest extends FormRequest
             'Document.*' => 'nullable|file|max:2048',
             'ItemDescription' => 'required|string',
             'Status' => 'nullable|exists:t_CodeDetails,ID',
-            'ItemPrice' => 'nullable|string',
+            'ItemPrice' => 'nullable|exists:t_Pricing,Id',
             'remove_image' => 'nullable|boolean',
         ];
 
