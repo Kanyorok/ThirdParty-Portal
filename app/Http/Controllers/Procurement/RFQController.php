@@ -85,13 +85,19 @@ class RFQController extends Controller
                      ->where('cd.CodeId', '=', 'RequisitionStatus');
             })
             ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
-            ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
             ->leftJoin('t_ConsolidatedProcurementPlan as cpp', 'r.PlanRef', '=', 'cpp.PlanID')
             ->where('cd.Description', 'Approved')
             ->where('cd.IsActive', 1)
             ->whereNull('cd.DeletedOn')
             ->whereNull('r.DeletedOn')
-            ->whereNull('rfql.Id')
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('t_RFQLines as existing_rfql')
+                    ->join('t_RFQ as existing_rfq', 'existing_rfql.RFQId', '=', 'existing_rfq.Id')
+                    ->whereColumn('existing_rfql.RequisitionLineId', 'rl.Id')
+                    ->whereNull('existing_rfq.DeletedOn')
+                    ->whereNotIn('existing_rfq.Status', ['Re', 'Rejected', 'RE']);
+            })
             ->select(
                 'r.Id',
                 'r.RequisitionNo',
@@ -130,13 +136,19 @@ class RFQController extends Controller
                 ->where('cd.CodeId', '=', 'RequisitionStatus');
             })
             ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
-            ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
             ->leftJoin('t_ConsolidatedProcurementPlan as cpp', 'r.PlanRef', '=', 'cpp.PlanID')
             ->where('cd.Description', 'Approved')
             ->where('cd.IsActive', 1)
             ->whereNull('cd.DeletedOn')
             ->whereNull('r.DeletedOn') // Also check requisition not deleted
-            ->whereNull('rfql.Id') // Requisition line not already in an RFQ
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('t_RFQLines as existing_rfql')
+                    ->join('t_RFQ as existing_rfq', 'existing_rfql.RFQId', '=', 'existing_rfq.Id')
+                    ->whereColumn('existing_rfql.RequisitionLineId', 'rl.Id')
+                    ->whereNull('existing_rfq.DeletedOn')
+                    ->whereNotIn('existing_rfq.Status', ['Re', 'Rejected', 'RE']);
+            })
             ->select(
                 'r.Id',
                 'r.RequisitionNo',
@@ -203,7 +215,58 @@ class RFQController extends Controller
         ]);
 
         return redirect()->route('rfqs.show', $rfq->Id)
-            ->with('success', 'RFQ created successfully and submitted for approval.');
+            ->with('success', 'RFQ created successfully.');
+    }
+
+    /**
+     * Submit the RFQ for approval (Workflow).
+     */
+    public function submit(Request $request, $id)
+    {
+        $rfq = RFQ::findOrFail($id);
+        $this->authorize('create', $rfq);
+
+        Log::info('Submit for approval request received', [
+            'rfq_id' => $rfq->Id,
+            'rfq_number' => $rfq->RFQNumber,
+            'current_status' => $rfq->Status,
+            'user_id' => Auth::user()->Id,
+            'user_name' => Auth::user()->Name,
+        ]);
+
+        // Check if RFQ has at least one line item
+        if ($rfq->rfqLines()->count() < 1) {
+            Log::warning('Submit blocked - no line items', [
+                'rfq_id' => $rfq->Id,
+            ]);
+
+            return redirect()->back()->with('error', 'Cannot submit an RFQ without any items. Please add at least one RFQ line.');
+        }
+
+        // Check if RFQ is already submitted (Has pending approvals)
+        $pendingApprovals = $this->workflowService->getPendingApprovals($rfq);
+        if (count($pendingApprovals) > 0) {
+            return redirect()->back()->with('error', 'RFQ is already submitted for approval.');
+        }
+
+
+        // Use Workflow Service to submit for approval
+        $result = $this->workflowService->submitRFQ($rfq, Auth::user(), 'Submitted via UI');
+
+        // Refresh to get updated status
+        $rfq->refresh();
+
+        Log::info('Submit for approval completed', [
+            'rfq_id' => $rfq->Id,
+            'result' => $result,
+            'new_status' => $rfq->Status,
+        ]);
+
+        if ($result) {
+            return redirect()->back()->with('success', 'RFQ submitted for Approval successfully.');
+        } else {
+            return redirect()->back()->with('error', 'Failed to submit RFQ for approval. Please check workflow configuration.');
+        }
     }
 
     /**
@@ -672,7 +735,7 @@ class RFQController extends Controller
                 'categories' => $categories,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Failed to fetch requisition categories: ' . $e->getMessage());
+            Log::error('Failed to fetch requisition categories: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,

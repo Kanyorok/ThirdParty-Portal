@@ -2,7 +2,10 @@
 
 namespace App\Exports;
 
+use App\Models\Core\Currency;
 use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\PriceManagement;
+use App\Models\Inventory\UnitOfMeasure;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -10,33 +13,70 @@ class PriceManagementExport implements FromArray, WithHeadings
 {
     public function array(): array
     {
-        $items = ItemMasterList::with('price', 'uom')->get();
+        $prices = PriceManagement::with(['item', 'uom', 'currency'])
+            ->whereNull('DeletedOn')
+            ->orderBy('PriceID')
+            ->get();
 
-        return $items->map(function ($item) {
-            return [
-                // Format PriceID on the fly from price->Id
-                isset($item->Id) ? 'PR-' . str_pad($item->Id, 5, '0', STR_PAD_LEFT) : '-',
-                $item->Id ?? '-',
-                $item->ItemCode ?? '-',
-                $item->uom?->Code ?? '-',
-                $item->price->ActualPrice ?? '0.00',
-                $item->price->CurrencyCode ?? '-',
+        $data = [];
 
-
+        foreach ($prices as $price) {
+            $data[] = [
+                $price->PriceID ?? '',
+                $price->item?->ItemCode ?? '',
+                $price->item?->ItemName ?? '',
+                $price->uom?->Code ?? '',
+                $price->ActualPrice ?? '0.00',
+                $price->currency?->Code ?? 'KES',
+                $price->IsDefault ? 'Yes' : 'No',
             ];
-        })->toArray();
+        }
+
+        $data[] = [];
+        $data[] = ['--- REFERENCE DATA (Do not modify this section) ---'];
+        $data[] = [];
+
+        $data[] = ['--- Available Items ---'];
+        $items = ItemMasterList::with('uom')
+            ->whereNull('DeletedOn')
+            ->orderBy('ItemCode')
+            ->get();
+        foreach ($items as $item) {
+            $data[] = [
+                'ItemCode: ' . $item->ItemCode,
+                'ItemName: ' . $item->ItemName,
+                'UOM: ' . ($item->uom?->Code ?? 'N/A'),
+            ];
+        }
+        $data[] = [];
+
+        $data[] = ['--- Available Units of Measure (UOM) ---'];
+        foreach (UnitOfMeasure::where('Active', 1)->orderBy('Code')->get() as $uom) {
+            $data[] = ['UOM: ' . $uom->Code];
+        }
+        $data[] = [];
+
+        $data[] = ['--- Available Currencies ---'];
+        foreach (Currency::orderBy('Code')->get() as $currency) {
+            $data[] = [
+                'Currency: ' . $currency->Code,
+                'Name: ' . $currency->Name,
+            ];
+        }
+
+        return $data;
     }
 
     public function headings(): array
     {
         return [
             'PriceID',
-            'ItemID',
             'ItemCode',
+            'ItemName',
             'UOM',
             'ActualPrice',
             'CurrencyCode',
-
+            'IsDefault',
         ];
     }
 }

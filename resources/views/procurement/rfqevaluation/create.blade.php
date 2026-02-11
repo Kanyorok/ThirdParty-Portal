@@ -125,7 +125,7 @@
 
       <!-- Action Buttons -->
       <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Submit</button>
         <a href="{{ route('evaluations.index') }}" class="btn btn-danger">Cancel</a>
       </div>
     </form>
@@ -142,8 +142,15 @@
       const committeeMemberInput = document.querySelector('[name="CommitteeMember"]');
       const userIdInput = document.querySelector('[name="UserID"]');
       const form = document.getElementById('evaluationForm');
+      const confirmCheckbox = document.getElementById('confirmCheck');
+      const submitBtn = document.getElementById('submitBtn');
       // Holds per-supplier mapping of section weights and criteria ids for computing weighted totals
       const sectionMap = {};
+
+      // Toggle submit button based on checkbox
+      confirmCheckbox.addEventListener('change', function() {
+        submitBtn.disabled = !this.checked;
+      });
 
       // Custom validation for form submission
       form.addEventListener('submit', function(event) {
@@ -389,6 +396,7 @@
                               <tfoot>
                                 <tr class="bg-light">
                                   <td colspan="4" class="text-end">
+                                    <span class="me-3">Total Score: <strong class="supplier-raw-score" data-supplier-id="${response.SupplierId}">0/0</strong></span>
                                     Total Weighted Score: <strong class="supplier-total" data-supplier-id="${response.SupplierId}">0.00</strong>%
                                   </td>
                                 </tr>
@@ -402,6 +410,9 @@
                 const computeSupplierTotal = (supplierId) => {
                   const mapping = sectionMap[supplierId] || {};
                   let totalWeighted = 0;
+                  let totalRawScore = 0;
+                  let totalMaxScore = 0;
+
                   Object.keys(mapping).forEach(secId => {
                     const { weight, criteriaIds } = mapping[secId];
                     if (!criteriaIds.length) return;
@@ -409,15 +420,25 @@
                     criteriaIds.forEach(cId => {
                       const input = document.querySelector(`input.score-input[name="Evaluations[${supplierId}][${cId}][Score]"]`);
                       const val = parseFloat(input?.value);
-                      if (!isNaN(val)) sectionSum += val;
+                      if (!isNaN(val)) {
+                          sectionSum += val;
+                      }
                     });
+                    
                     const maxTotal = criteriaIds.length * 10;
+                    totalRawScore += sectionSum;
+                    totalMaxScore += maxTotal;
+
                     if (maxTotal > 0) {
                       totalWeighted += (sectionSum / maxTotal) * weight;
                     }
                   });
+                  
                   const totalEl = document.querySelector(`.supplier-total[data-supplier-id="${supplierId}"]`);
                   if (totalEl) totalEl.textContent = `${totalWeighted.toFixed(2)}%`;
+                  
+                  const rawEl = document.querySelector(`.supplier-raw-score[data-supplier-id="${supplierId}"]`);
+                  if (rawEl) rawEl.textContent = `${totalRawScore}/${totalMaxScore}`;
                 };
 
                 // Bind events for this supplier inputs

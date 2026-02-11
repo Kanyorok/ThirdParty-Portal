@@ -24,6 +24,8 @@ class TransactionTransfer extends Model
 
 
     protected $fillable = [
+        'TransferId',
+        'TransferID',
         'TransferDate',
         'RequisitionId',
         'RequisitionType',

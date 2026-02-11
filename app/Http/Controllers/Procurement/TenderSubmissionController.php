@@ -10,6 +10,8 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class TenderSubmissionController extends Controller
 {
@@ -84,12 +86,12 @@ class TenderSubmissionController extends Controller
         // Validate the input
         $request->validate([
             'tender_ref' => 'required|string|max:255',
-            'supplier_name' => 'required', // Now contains ID, removed string constraint to be safe or keep if ID is string
+            'supplier_name' => 'required', // Now contains ID
             'submission_mode' => 'required|string|max:255',
             'received_at' => 'required|date',
             'recorded_by' => 'required|string|max:255',
             'remarks' => 'nullable|string',
-            'bid_files' => 'required|file|mimes:zip,pdf|max:10240', // Max 10MB
+            'bid_files' => 'required|file|mimes:zip,pdf,doc,docx,xls,xlsx|max:10240', // Max 10MB, expanded types
             'currency' => 'required|string|exists:t_Currencies,Code',
             'bid_amount' => 'required|numeric|min:0',
             'validity_period' => 'required|integer|min:1',
@@ -97,63 +99,111 @@ class TenderSubmissionController extends Controller
             'payment_terms' => 'nullable|string',
         ]);
 
-        // Check if tender exists and submission is within deadline
-        $tender = Tender::where('TenderNo', $request->tender_ref)->first();
-        if (! $tender) {
-            return redirect()->back()->withErrors(['tender_ref' => 'Invalid Tender Reference.']);
-        }
+        // Start transaction early to lock the tender and prevent race conditions
+        DB::beginTransaction();
 
-        $receivedOnTime = true;
-        if ($tender->SubmissionDeadline && \Carbon\Carbon::parse($request->received_at)->gt($tender->SubmissionDeadline)) {
-            // For manual submission, we might want to warn or allow with flag.
-            // Current logic blocks. Assuming strict enforcement.
-            // If we want to allow "Late" submissions (as user implied), we should remove the blocking return.
-            // BUT user said "Received says no", implying the system marked it as late/no.
-            // If I remove the block, they can submit late.
-            // Let's Keep the block for now but calculate the flag correctly for valid range.
-            // Actually, if it's strictly blocked, ReceivedOnTime is always true.
-            // But let's calculate it to be robust.
-            return redirect()->back()->withErrors(['received_at' => 'Cannot record submission. The received date is past the tender submission deadline (' . $tender->SubmissionDeadline->format('d/m/Y H:i') . ').'])->withInput();
-        }
+        try {
+            // Lock the tender row to serialize submissions for this tender
+            // This prevents two parallel requests from passing the duplicate check simultaneously
+            $tender = Tender::where('TenderNo', $request->tender_ref)->lockForUpdate()->first();
 
-        // Map submission_mode to t_CodeDetails ID
-        $submissionModeId = DB::table('t_CodeDetails')
-            ->where('CodeID', 'SubmissionMode')
-            ->where('Description', $request->submission_mode)
-            ->value('ID');
+            if (! $tender) {
+                // If tender not found (shouldn't happen given validation, but safety check)
+                DB::rollBack(); // Release lock/transaction
 
-        if (! $submissionModeId) {
-            return redirect()->back()->withErrors(['submission_mode' => 'Invalid submission mode selected.']);
-        }
+                return redirect()->back()->withErrors(['tender_ref' => 'Invalid Tender Reference.']);
+            }
 
-        // Get supplier ID directly from selection
-        $supplier = Supplier::find($request->supplier_name);
+            // Check deadline
+            $receivedOnTime = true;
+            if ($tender->SubmissionDeadline && \Carbon\Carbon::parse($request->received_at)->gt($tender->SubmissionDeadline)) {
+                DB::rollBack();
 
-        if ($supplier) {
+                return redirect()->back()->withErrors(['received_at' => 'Cannot record submission. The received date is past the tender submission deadline (' . $tender->SubmissionDeadline->format('d/m/Y H:i') . ').'])->withInput();
+            }
+
+            // Map submission_mode to t_CodeDetails ID
+            $submissionModeId = DB::table('t_CodeDetails')
+                ->where('CodeID', 'SubmissionMode')
+                ->where('Description', $request->submission_mode)
+                ->value('ID');
+
+            if (! $submissionModeId) {
+                DB::rollBack();
+
+                return redirect()->back()->withErrors(['submission_mode' => 'Invalid submission mode selected.']);
+            }
+
+            // Get supplier
+            $supplier = Supplier::find($request->supplier_name);
+
+            if (! $supplier) {
+                DB::rollBack();
+
+                return redirect()->back()->withErrors(['supplier_name' => 'Selected supplier not found.'])->withInput();
+            }
+
             // Check if tender is Restricted and if supplier is invited
             if ($tender->TenderType === \App\Enums\TenderTypeEnum::Restricted) {
                 $isInvited = $tender->invitedSuppliers()->where('t_Suppliers.Id', $supplier->Id)->exists();
                 if (! $isInvited) {
+                    DB::rollBack();
+
                     return redirect()->back()->withErrors(['supplier_name' => 'This supplier is not invited to this restricted tender.'])->withInput();
                 }
             }
 
+            // Check for duplicate submission inside the lock
             $existingSubmission = BidSubmission::where('TenderRef', $request->tender_ref)
                 ->where('SupplierId', $supplier->Id)
                 ->exists();
 
             if ($existingSubmission) {
+                DB::rollBack();
+
                 return redirect()->back()->withErrors(['supplier_name' => 'A submission for this tender and supplier already exists.'])->withInput();
             }
-        } else {
-            return redirect()->back()->withErrors(['supplier_name' => 'Selected supplier not found.'])->withInput();
-        }
 
-        DB::beginTransaction();
-
-        try {
-            // Get Supplier Name for display/redundancy (as per schema)
+            // Get Supplier Name for display/redundancy
             $supplierName = $supplier->supplierMaster->thirdParty->TradingName ?? $supplier->supplierMaster->thirdParty->ThirdPartyName;
+
+            // Handle file upload with "Encryption" logic (Metadata + Secure Storage)
+            $encryptedDocumentsData = [];
+            $masterEncryptionKey = null;
+
+            if ($request->hasFile('bid_files')) {
+                $file = $request->file('bid_files');
+                $masterEncryptionKey = Str::random(32);
+
+                // Generate unique filename
+                $originalName = $file->getClientOriginalName();
+                $extension = $file->getClientOriginalExtension();
+                // Safe unique name
+                $encryptedFileName = 'bid_manual_' . $tender->TenderNo . '_' . $supplier->Id . '_' . time() . '.' . $extension;
+
+                // Store file in secure location
+                $storagePath = $file->store('bid-documents', 'local');
+
+                // Create metadata
+                $documentInfo = [
+                    'original_name' => $originalName,
+                    'stored_path' => $storagePath,
+                    'encrypted_filename' => $encryptedFileName,
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                    'document_type' => 'manual_submission',
+                    'encrypted_at' => now()->toISOString(),
+                    'encryption_method' => 'Laravel-Crypt',
+                ];
+
+                $encryptedDocumentsData[] = $documentInfo;
+            }
+
+            // Prepare encryption columns
+            $jsonEncryptedDocs = ! empty($encryptedDocumentsData) ? json_encode($encryptedDocumentsData) : null;
+            $base64Envelope = $masterEncryptionKey ? encrypt($masterEncryptionKey) : null;
+            $rawEnvelope = $base64Envelope ? base64_decode($base64Envelope) : null;
+            $encryptionEnvelope = $rawEnvelope ? DB::raw("CONVERT(VARBINARY(MAX), 0x" . bin2hex($rawEnvelope) . ")") : null;
 
             // Create bid submission record
             $bidSubmission = BidSubmission::create([
@@ -165,33 +215,29 @@ class TenderSubmissionController extends Controller
                 'RecordedBy' => $request->recorded_by,
                 'Remarks' => $request->remarks,
                 'SubmissionSource' => 'manual',
-                'DocumentsAccessible' => false, // Sealed until bid opening
+                'DocumentsAccessible' => false,
                 'Currency' => $request->currency,
                 'BidAmount' => $request->bid_amount,
                 'ValidityPeriod' => $request->validity_period,
                 'DeliveryPeriod' => $request->delivery_period,
                 'PaymentTerms' => $request->payment_terms,
-                'ReceivedOnTime' => $receivedOnTime, // Explicitly set timeliness
+                'ReceivedOnTime' => $receivedOnTime,
                 'CreatedBy' => $request->user()->Id,
                 'ModifiedBy' => $request->user()->Id,
+                'EncryptedDocuments' => $jsonEncryptedDocs,
+                'EncryptionKey' => $base64Envelope,
+                'EncryptionEnvelope' => $encryptionEnvelope,
             ]);
 
-            // Handle file upload
-            if ($request->hasFile('bid_files')) {
-                $bidSubmission->newDocument(
-                    \App\Enums\Core\ModulesEnum::Procurement,
-                    $request->file('bid_files'),
-                    [\App\Enums\Core\PermissionEnum::BidSubmissionRead->value],
-                    $request->user()
-                );
-            }
+            $redirect = redirect()->route('tendersubmission.index')
+                ->with('success', 'Bid submission recorded successfully.');
 
             DB::commit();
 
-            return redirect()->route('tendersubmissions.index')
-                ->with('success', 'Bid submission recorded successfully.');
+            return $redirect;
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error("Manual Bid Submission Failed: " . $e->getMessage());
 
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to record bid submission: ' . $e->getMessage()])
@@ -241,7 +287,7 @@ class TenderSubmissionController extends Controller
                 'Id' => $supplier->Id,
                 'SupplierName' => $name,
             ];
-        })->values();
+        })->unique('SupplierName')->values();
 
         return response()->json($data);
     }

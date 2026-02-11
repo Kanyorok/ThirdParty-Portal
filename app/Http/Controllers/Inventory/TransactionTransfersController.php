@@ -82,43 +82,50 @@ class TransactionTransfersController extends Controller
     }
 
     public function store(TransactionTransferRequest $request)
-    {
-        $this->authorize('create', TransactionTransfer::class);
+{
+    $this->authorize('create', TransactionTransfer::class);
 
-        $validatedData = $request->validated();
-        $items = $validatedData['items'] ?? [];
-        unset($validatedData['items']);
+    $validatedData = $request->validated();
+    $items = $validatedData['items'] ?? [];
+    unset($validatedData['items']);
 
-        DB::beginTransaction();
+    // Add HQ flag to data
+    $currentUser = $request->user();
+    $currentBranch = $currentUser->branch;
+    $isHQ = $currentBranch && $currentBranch->IsHQ;
+    
+    $validatedData['is_hq'] = $isHQ;
 
-        try {
-            $transfer = $this->service->createTransfer($validatedData);
-            $this->service->createTransferItems($transfer, $items);
+    DB::beginTransaction();
 
-            DB::commit();
-
-            $message = 'Transfer created successfully.';
-
-            return redirect()
-                ->route('transactionstransfers.index')
-                ->with('success', $message);
-        } catch (Throwable $e) {
-            DB::rollBack();
-
-            $errorMessage = 'Error creating transfer: ' . $e->getMessage();
-
-            return redirect()
-                ->back()
-                ->withInput()
-                ->with('error', $errorMessage);
+    try {
+        $transfer = $this->service->createTransfer($validatedData);
+        
+        // Modify items to add HQ flag
+        foreach ($items as &$item) {
+            $item['is_hq'] = $isHQ;
         }
+        
+        $this->service->createTransferItems($transfer, $items);
+
+        DB::commit();
+
+        $message = 'Transfer created successfully.';
+
+        return redirect()
+            ->route('transactionstransfers.index')
+            ->with('success', $message);
+    } catch (Throwable $e) {
+        DB::rollBack();
+
+        $errorMessage = 'Error creating transfer: ' . $e->getMessage();
 
         return redirect()
             ->back()
             ->withInput()
             ->with('error', $errorMessage);
     }
-
+}
     public function show($Id)
     {
         $this->authorize('view', TransactionTransfer::class);

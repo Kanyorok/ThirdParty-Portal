@@ -178,9 +178,10 @@ class TenderEvaluationController extends Controller
                 }
             }
 
-            // Delete existing scores for this member
+            // Delete existing scores for this member AND this supplier/bid
             TenderCommitteeEvaluation::where('TenderID', $tender->Id)
                 ->where('MemberID', $committeeMember->Id)
+                ->where('SupplierId', $bid->SupplierId)
                 ->delete();
 
             // Create new evaluation records
@@ -200,6 +201,7 @@ class TenderEvaluationController extends Controller
                     'MemberID' => $memberId, // Use multiple fallbacks to ensure we get the ID
                     'SectionID' => $sectionId,
                     'CriteriaID' => $criteriaId,
+                    'SupplierId' => $bid->SupplierId, // Explicitly link to the Bid/Supplier
                     'Score' => $score,
                     'MaxScore' => 10,
                     'IsActive' => true,

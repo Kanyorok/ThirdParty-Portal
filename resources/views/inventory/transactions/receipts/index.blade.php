@@ -89,9 +89,7 @@
                             <td>
                                 @php
                                     $hasDiscrepancy = $receipt->items->some(function ($item) {
-                                        $dispatched = optional($item->transferItem)->DispatchedQty ?? 0;
-                                        $received = $item->ReceivedQty ?? 0;
-                                        return $dispatched !== $received;
+                                        return $item->Discrepancy != 0;
                                     });
                                 @endphp
                                 {{ $hasDiscrepancy ? 'Yes' : 'No' }}

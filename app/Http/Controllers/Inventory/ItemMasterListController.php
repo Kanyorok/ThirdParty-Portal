@@ -73,79 +73,117 @@ class ItemMasterListController extends Controller
         ]);
     }
 
-    public function import(Request $request)
-    {
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv',
-        ]);
+  public function import(Request $request)
+{
+    $request->validate([
+        'file' => 'required|mimes:xlsx,xls,csv',
+    ]);
 
-        try {
-            $import = new ItemMasterListImport();
+    try {
+        $import = new ItemMasterListImport();
 
-            Excel::import($import, $request->file('file'));
+        Excel::import($import, $request->file('file'));
 
-            $sheets = $import->sheets();
-            $itemsSheet = $sheets['Items'] ?? null;
+        $processed = $import->getProcessedCount();
+        $created = $import->getCreatedCount();
+        $updated = $import->getUpdatedCount();
+        $skipped = $import->getSkippedCount();
+        $errors = $import->getErrors();
 
-            if (! $itemsSheet) {
-                foreach ($sheets as $sheetName => $sheet) {
-                    if (strtolower($sheetName) === 'items') {
-                        $itemsSheet = $sheet;
-
-                        break;
-                    }
-                }
-
-                if (! $itemsSheet) {
-                    throw new \Exception('Could not find the Items sheet in the import file.');
-                }
-            }
-
-            $processed = $itemsSheet->getProcessedCount();
-            $created = $itemsSheet->getCreatedCount();
-            $updated = $itemsSheet->getUpdatedCount();
-            $skipped = $itemsSheet->getSkippedCount();
-            $errors = $itemsSheet->getErrors();
-
-            $successMessage = "Import completed! Processed: {$processed} rows. Created: {$created} new items. Updated: {$updated} existing items. ";
-            if ($skipped > 0) {
-                $successMessage .= "Skipped: {$skipped} rows.";
-            }
-
-            if (! empty($errors)) {
-                $errorMessage = "<strong>Some rows had errors:</strong><br>";
-                foreach (array_slice($errors, 0, 20) as $error) {
-                    $errorMessage .= "• {$error}<br>";
-                }
-                if (count($errors) > 20) {
-                    $errorMessage .= "<br>... and " . (count($errors) - 20) . " more errors.";
-                }
-
-                return back()->with('warning', $successMessage)->with('error_details', $errorMessage);
-            }
-
-            return back()->with('success', $successMessage);
-        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-            $errors = collect($e->failures())->map(function ($failure) {
-                $row = $failure->row();
-                $errors = implode(', ', $failure->errors());
-
-                return "Row {$row}: {$errors}";
-            })->implode('<br>');
-
-            return back()->with('error', "Validation errors:<br>{$errors}");
-        } catch (\Exception $e) {
-            $errorMessage = config('app.debug')
-                ? "Import failed: " . $e->getMessage()
-                : "Import failed. Please check the file format and try again.";
-
-            return back()->with('error', $errorMessage);
+        $successMessage = "Import completed! ";
+        $successMessage .= "Processed: {$processed} rows. ";
+        
+        if ($created > 0) {
+            $successMessage .= "Created: {$created} new items. ";
         }
-    }
+        
+        if ($updated > 0) {
+            $successMessage .= "Updated: {$updated} existing items. ";
+        }
+        
+        if ($skipped > 0) {
+            $successMessage .= "Skipped: {$skipped} rows. ";
+        }
 
+        $importResult = [
+            'message' => $successMessage,
+            'summary' => [
+                'processed' => $processed,
+                'created' => $created,
+                'updated' => $updated,
+                'skipped' => $skipped,
+            ],
+            'errors' => $errors,
+            'warnings' => []
+        ];
+
+        if (!empty($errors)) {
+            $errorMessage = "<strong>Some rows had errors:</strong><br>";
+            
+            foreach (array_slice($errors, 0, 20) as $error) {
+                $errorMessage .= "• {$error}<br>";
+            }
+            
+            if (count($errors) > 20) {
+                $errorMessage .= "<br>... and " . (count($errors) - 20) . " more errors.";
+            }
+
+            return redirect()->route('itemmaster.index')
+                ->with('import_result', $importResult)
+                ->with('error_details', $errorMessage);
+        }
+
+        return redirect()->route('itemmaster.index')
+            ->with('import_result', $importResult);
+
+    } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+        $errors = collect($e->failures())->map(function ($failure) {
+            $row = $failure->row();
+            $errors = implode(', ', $failure->errors());
+            return "Row {$row}: {$errors}";
+        })->toArray();
+
+        $importResult = [
+            'message' => "Import failed due to validation errors.",
+            'summary' => [
+                'processed' => 0,
+                'created' => 0,
+                'updated' => 0,
+                'skipped' => count($errors),
+            ],
+            'errors' => $errors,
+            'warnings' => []
+        ];
+
+        return redirect()->route('itemmaster.index')
+            ->with('import_result', $importResult);
+
+    } catch (\Exception $e) {
+        $importResult = [
+            'message' => config('app.debug')
+                ? "Import failed: " . $e->getMessage()
+                : "Import failed. Please check the file format and try again.",
+            'summary' => [
+                'processed' => 0,
+                'created' => 0,
+                'updated' => 0,
+                'skipped' => 0,
+            ],
+            'errors' => ["General error: " . $e->getMessage()],
+            'warnings' => []
+        ];
+
+        return redirect()->route('itemmaster.index')
+            ->with('import_result', $importResult);
+    }
+}
+    
     public function export()
     {
-        return Excel::download(new ItemMasterListExport(), 'ItemMasterList.xlsx');
+        return Excel::download(
+            new ItemMasterListExport(), 
+            'ItemMasterList_' . now()->format('Y-m-d_His') . '.xlsx'
+        );
     }
 
     public function store(ItemMasterListRequest $request)
@@ -155,6 +193,7 @@ class ItemMasterListController extends Controller
         $validated = $request->validated();
         $document = $request->file('Document');
         $image = $request->file('ImageUpload');
+        
         $validated['Status'] = CodeDetail::where('CodeID', 'ItemStatus')
             ->where('Description', 'Active')
             ->value('Id');
@@ -220,7 +259,6 @@ class ItemMasterListController extends Controller
 
         if ($request->has('remove_image') && $request->input('remove_image') == '1') {
             if ($item->ImageId) {
-                // @phpstan-ignore-next-line - Image model is deprecated but still functional
                 \App\Models\DMS\Image::destroy($item->ImageId);
                 $item->ImageId = null;
             }

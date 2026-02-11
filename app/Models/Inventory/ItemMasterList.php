@@ -58,7 +58,7 @@ class ItemMasterList extends Model
         'Status' => 'integer',
         'ImageId' => 'integer',
         'ItemDescription' => 'string',
-        'ItemPrice' => 'string',
+        'ItemPrice' => 'integer',
         'CreatedBy' => 'integer',
         'ModifiedBy' => 'integer',
         'DeletedBy' => 'integer',
