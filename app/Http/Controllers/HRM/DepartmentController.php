@@ -89,7 +89,8 @@ class DepartmentController extends Controller
      */
     public function create(): View
     {
-        return view('hrms.department.create');
+        $users = User::orderBy('Name')->get();
+        return view('hrms.department.create', ['users' => $users]);
     }
 
     /**
@@ -97,7 +98,8 @@ class DepartmentController extends Controller
      */
     public function show(Department $department)
     {
-        return view('hrms.department.show', ['department' => $department]);
+        $users = User::orderBy('Name')->get();
+        return view('hrms.department.show', ['department' => $department, 'users' => $users]);
     }
 
     /**
