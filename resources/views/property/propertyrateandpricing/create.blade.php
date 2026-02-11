@@ -5,166 +5,167 @@
 
 <div class="container py-4">
 
-    {{-- Validation Errors --}}
-    @if ($errors->any())
-        <div class="alert alert-danger shadow-sm">
-            <ul class="mb-0 ps-3">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <form action="{{ route('propertyrateandpricing.store') }}" method="POST">
-        @csrf
-
-        <div class="card shadow-sm border-0">
-
-            <div class="card-body">
-
-                {{-- SECTION: Property Structure --}}
-                <h6 class="text-uppercase text-muted fw-semibold mb-3 border-bottom pb-2">
-                    Property Structure
-                </h6>
-
-                <div class="row g-3 mb-4">
-                    <div class="col-md-3">
-                        <label class="form-label">Property <span class="text-danger">*</span></label>
-                        <select name="PropertyId" id="property-select" class="form-select" required>
-                            <option value="">-- Select Property --</option>
-                            @foreach ($property as $item)
-                                <option value="{{ $item->Id }}">{{ $item->PropertyName }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">Block <span class="text-danger">*</span></label>
-                        <select name="BlockId" id="block-select" class="form-select" required>
-                            <option value="">-- Select Block --</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">Floor <span class="text-danger">*</span></label>
-                        <select name="FloorId" id="floor-select" class="form-select" required>
-                            <option value="">-- Select Floor --</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">Unit <span class="text-danger">*</span></label>
-                        <select name="UnitId" id="unit-select" class="form-select" required>
-                            <option value="">-- Select Unit --</option>
-                        </select>
-                    </div>
-                </div>
-
-                {{-- SECTION: Monthly Charges --}}
-                <h6 class="text-uppercase text-muted fw-semibold mb-3 border-bottom pb-2">
-                    Monthly Charges
-                </h6>
-
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label">Rent Amount <span class="text-danger">*</span></label>
-                        <input type="number" name="Rent" class="form-control" placeholder="e.g. 50,000" required>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Parking Fee <span class="text-danger">*</span></label>
-                        <input type="number" name="ParkingFee" class="form-control" placeholder="e.g. 3,000" required>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Service Charge <span class="text-danger">*</span></label>
-                        <input type="number" name="ServiceCharge" class="form-control" placeholder="e.g. 2,000" required>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Other Charges <span class="text-danger">*</span></label>
-                        <input type="number" name="OtherCharges" class="form-control" placeholder="e.g. 1,000" required>
-                    </div>
-                </div>
-
-                {{-- SECTION: Deposit & Tax --}}
-                <h6 class="text-uppercase text-muted fw-semibold mb-3 border-bottom pb-2">
-                    Deposit & Tax
-                </h6>
-
-                <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <label class="form-label">Deposit Amount <span class="text-danger">*</span></label>
-                        <input type="number" name="DepositAmount" id="DepositAmount" class="form-control" placeholder="e.g. 60,000" required>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Currency <span class="text-danger">*</span></label>
-                        <select class="form-select" name="CurrencyId" required>
-                            <option value="">-- Select Currency --</option>
-                            @foreach($currencies as $cur)
-                                <option value="{{ $cur->Id }}">{{ $cur->Code }} ({{ $cur->Symbol }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Tax Rule <span class="text-danger">*</span></label>
-                        <select class="form-select" name="TaxId" required>
-                            <option value="">-- Select Tax --</option>
-                            @foreach($Taxes as $tax)
-                                <option value="{{ $tax->Id }}">
-                                    {{ $tax->taxType->TaxTypeName }} ({{ $tax->Rate }}%)
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                {{-- SECTION: Total Summary --}}
-                <div class="card bg-light border-success mb-4">
-                    <div class="card-body">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <small class="text-muted text-uppercase">Total Payable</small>
-                                <h3 class="fw-bold text-success mb-0">
-                                    <span id="totalAmount">0.00</span>
-                                </h3>
-                                <small class="text-muted">
-                                    (Monthly Charges + Deposit)
-                                </small>
-                            </div>
-
-                            <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                                <p class="mb-1">
-                                    <strong>Monthly Charges:</strong>
-                                    <span id="monthlyCharges">0.00</span>
-                                </p>
-                                <p class="mb-0">
-                                    <strong>Deposit:</strong>
-                                    <span id="displayDeposit">0.00</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Actions --}}
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
-                    <a href="{{ route('propertyrateandpricing.index') }}" class="btn btn-outline-secondary">Back</a>
-                    <button type="submit"
-                            class="btn btn-success px-4"
-                            onclick="this.disabled=true; this.innerText='Saving...'; this.form.submit();">
-                        <i class="bi bi-check-circle me-1"></i>
-                        Save Pricing
-                    </button>
-                </div>
-
-            </div>
-        </div>
-
-    </form>
+@if ($errors->any())
+<div class="alert alert-danger shadow-sm">
+    <ul class="mb-0">
+        @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+        @endforeach
+    </ul>
 </div>
+@endif
+
+<form action="{{ route('propertyrateandpricing.store') }}" method="POST">
+@csrf
+
+<div class="card shadow border-0">
+<div class="card-body">
+
+{{-- PROPERTY STRUCTURE --}}
+<h6 class="text-muted text-uppercase fw-semibold border-bottom pb-2 mb-3">Property Structure</h6>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <label class="form-label">Property *</label>
+        <select name="PropertyId" id="property-select" class="form-select" required>
+            <option value="">Select Property</option>
+            @foreach ($property as $item)
+                <option value="{{ $item->Id }}">{{ $item->PropertyName }}</option>
+            @endforeach
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Block *</label>
+        <select name="BlockId" id="block-select" class="form-select" required></select>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Floor *</label>
+        <select name="FloorId" id="floor-select" class="form-select" required></select>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Unit *</label>
+        <select name="UnitId" id="unit-select" class="form-select" required></select>
+    </div>
+</div>
+
+{{-- MONTHLY CHARGES --}}
+<h6 class="text-muted text-uppercase fw-semibold border-bottom pb-2 mb-3">Monthly Charges</h6>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <label>Rent</label>
+        <input type="number" class="form-control charge" name="Rent" required>
+    </div>
+    <div class="col-md-3">
+        <label>Parking</label>
+        <input type="number" class="form-control charge" name="ParkingFee" required>
+    </div>
+    <div class="col-md-3">
+        <label>Service Charge</label>
+        <input type="number" class="form-control charge" name="ServiceCharge" required>
+    </div>
+    <div class="col-md-3">
+        <label>Other Charges</label>
+        <input type="number" class="form-control charge" name="OtherCharges" required>
+    </div>
+</div>
+
+{{-- TAX & DEPOSIT --}}
+<h6 class="text-muted text-uppercase fw-semibold border-bottom pb-2 mb-3">Tax & Deposit</h6>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <label>Deposit</label>
+        <input type="number" id="deposit" name="DepositAmount" class="form-control" required>
+    </div>
+
+    <div class="col-md-4">
+        <label>Currency</label>
+        <select class="form-select" name="CurrencyId" required>
+            <option value="">Select Currency</option>
+            @foreach($currencies as $cur)
+                <option value="{{ $cur->Id }}">{{ $cur->Code }} ({{ $cur->Symbol }})</option>
+            @endforeach
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <label>Tax</label>
+        <select id="taxRate" class="form-select" required>
+            <option value="0">Select Tax</option>
+            @foreach($Taxes as $tax)
+                <option value="{{ $tax->Rate }}">
+                    {{ $tax->taxType->TaxTypeName }} ({{ $tax->Rate }}%)
+                </option>
+            @endforeach
+        </select>
+        <input type="hidden" name="TaxId" id="TaxIdHidden">
+    </div>
+</div>
+
+{{-- TOTAL SUMMARY --}}
+<div class="card bg-light border-success">
+<div class="card-body">
+
+<div class="row">
+
+<div class="col-md-6">
+    <small class="text-muted">MONTHLY (INCL TAX)</small>
+    <h3 class="fw-bold text-success" id="monthlyTotal">0.00</h3>
+</div>
+
+<div class="col-md-6 text-md-end">
+    <p>Subtotal: <strong id="subtotal">0.00</strong></p>
+    <p>Tax: <strong id="taxAmount">0.00</strong></p>
+    <p>Deposit: <strong id="depositDisplay">0.00</strong></p>
+    <hr>
+    <h4>Total Payable: <strong id="grandTotal">0.00</strong></h4>
+</div>
+
+</div>
+</div>
+</div>
+
+<div class="mt-4 d-flex justify-content-between">
+    <a href="{{ route('propertyrateandpricing.index') }}" class="btn btn-outline-secondary">Back</a>
+    <button class="btn btn-success px-4">Save Pricing</button>
+</div>
+
+</div>
+</div>
+</form>
+</div>
+
+{{-- CALCULATION SCRIPT --}}
+<script>
+function calc() {
+    let subtotal = 0;
+    document.querySelectorAll('.charge').forEach(i => subtotal += Number(i.value || 0));
+
+    let taxRate = Number(document.getElementById('taxRate').value);
+    let tax = subtotal * taxRate / 100;
+    let deposit = Number(document.getElementById('deposit').value || 0);
+
+    let monthlyWithTax = subtotal + tax;
+    let grandTotal = monthlyWithTax + deposit;
+
+    document.getElementById('subtotal').innerText = subtotal.toFixed(2);
+    document.getElementById('taxAmount').innerText = tax.toFixed(2);
+    document.getElementById('monthlyTotal').innerText = monthlyWithTax.toFixed(2);
+    document.getElementById('depositDisplay').innerText = deposit.toFixed(2);
+    document.getElementById('grandTotal').innerText = grandTotal.toFixed(2);
+}
+
+document.querySelectorAll('.charge, #deposit, #taxRate')
+    .forEach(el => el.addEventListener('input', calc));
+
+document.getElementById('taxRate').addEventListener('change', e => {
+    document.getElementById('TaxIdHidden').value = e.target.selectedIndex;
+    calc();
+});
+</script>
 
 @endsection

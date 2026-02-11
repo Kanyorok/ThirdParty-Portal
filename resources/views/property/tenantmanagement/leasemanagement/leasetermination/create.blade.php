@@ -12,18 +12,6 @@
             <div class="card-header bg-light fw-bold">Termination Details</div>
             <div class="card-body">
 
-                {{-- Global Validation Errors --}}
-                @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <strong>Please fix the following errors:</strong>
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
                 <!-- Lease Selection -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
@@ -111,18 +99,16 @@
                            multiple
                            required>
 
-                    <small class="text-muted d-block mb-1">
+                    <small class="text-muted d-block mt-1 mb-2">
                         Allowed: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB each
                     </small>
 
-                    {{-- Error for the entire Document field --}}
                     @error('Document')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
 
-                    {{-- Error for each file inside Document[] --}}
                     @error('Document.*')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
 

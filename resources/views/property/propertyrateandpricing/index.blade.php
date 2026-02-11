@@ -32,7 +32,7 @@
             @else
 
             <div class="table-responsive">
-                <table class="table table-striped table-bordered align-middle">
+                <table class="table table-striped table-bordered align-middle" id="propertyrate">
                     <thead class="table-light">
                         <tr>
                             <th>#</th>
@@ -100,5 +100,20 @@
     </div>
 
 </div>
+@section('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#propertyrate').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true
+            });
+        });
+    </script>
+@endsection
 
 @endsection

@@ -101,15 +101,6 @@ class PropertyLeaseTerminationService
                     'ModifiedBy' => $user->Id,
                 ]);
 
-
-            // // Availability of the property Unit
-            // $unit = PropertyUnit::findOrFail($LeaseID->Unit);
-            // $unit->update([
-            //     'IsRentable' => 1,   // Unit can now be rented again
-            //     'CurrentStatus' => 1,   // Status = Available
-            //     'ModifiedBy' => $user->Id,
-            // ]);
-
             activity()
                 ->causedBy($user->Id)
                 ->performedOn($termination)
