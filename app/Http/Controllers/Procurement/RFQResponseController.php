@@ -29,36 +29,49 @@ class RFQResponseController extends Controller
         $this->authorize('create', RFQResponse::class);
 
         // Include both Approved and Published RFQs
-        // Include both Approved and Published RFQs
-        // Status values: 'Ap'/'AP'/'Approved' for approved, 'Pub'/'Published' for published
-        // AND check SubmissionDeadline
-        $rfqs = RFQ::whereIn('Status', ['Ap', 'AP', 'Approved', 'Pub', 'Published'])
+        // Filter out RFQs where Evaluation has started (exists in t_RFQEvaluations)
+        $rfqs = RFQ::whereIn('Status', [ 'Pub', 'Published'])
             ->where(function ($query) {
                 $query->whereNull('SubmissionDeadline')
                       ->orWhere('SubmissionDeadline', '>=', now());
             })
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                      ->from('t_RFQEvaluations')
+                      ->whereColumn('t_RFQEvaluations.RFQId', 't_RFQ.Id')
+                      ->whereNull('t_RFQEvaluations.DeletedOn');
+            })
             ->select('Id', 'RFQNumber', 'Comments', 'Status')
             ->get();
+
+        // Further filter: Exclude RFQs where all invited suppliers have already responded
+        $rfqs = $rfqs->filter(function ($rfq) {
+            // Count invited suppliers
+            $invitedCount = DB::table('t_RFQ_Supplier')->where('RFQId', $rfq->Id)->count();
+
+            // If no private invitations, assumed open or handled differently.
+            // If there ARE invitations, we check if everyone responded.
+            if ($invitedCount > 0) {
+                $responseCount = RFQResponse::where('RFQId', $rfq->Id)
+                   ->whereNull('DeletedOn')
+                   ->count();
+
+                // If all invited (or more/equal) have responded, hide this RFQ
+                if ($responseCount >= $invitedCount) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
 
         $currencies = Currency::query()
             ->orderByRaw("CASE WHEN Symbol = 'Ksh' THEN 0 ELSE 1 END")
             ->orderBy('Name')
             ->get(['Id', 'Name', 'Code', 'Symbol']);
 
-        $suppliers = Supplier::with('supplierMaster.party')
-            ->whereNull('DeletedOn')
-            ->where('Active_Status', 1)
-            ->whereHas('supplierMaster.party', function ($query) {
-                $query->whereNull('DeletedOn');
-            })
-            ->get()
-            ->map(function ($supplier) {
-                return [
-                    'Id' => $supplier->Id,
-                    'SupplierName' => $supplier->supplierMaster->party->TradingName
-                        ?? $supplier->supplierMaster->party->ThirdPartyName,
-                ];
-            });
+        // Suppliers are loaded via AJAX based on RFQ selection, so pass empty list initially
+        $suppliers = collect();
 
         return view('procurement.rfqresponses.create', compact('rfqs', 'suppliers', 'currencies'));
     }
@@ -242,6 +255,15 @@ class RFQResponseController extends Controller
             $query->join('t_RFQ_Supplier as p', 'p.SupplierId', '=', 's.Id')
                   ->where('p.RFQId', $rfqId);
         }
+
+        // Filter out suppliers who have already responded to this RFQ
+        $query->whereNotExists(function ($q) use ($rfqId) {
+            $q->select(DB::raw(1))
+              ->from('t_RFQResponse')
+              ->whereColumn('t_RFQResponse.SupplierId', 's.Id')
+              ->where('t_RFQResponse.RFQId', $rfqId)
+              ->whereNull('t_RFQResponse.DeletedOn');
+        });
 
         $suppliers = $query->select(
             's.Id',

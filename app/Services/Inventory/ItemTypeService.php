@@ -2,13 +2,13 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\Inventory\ItemType;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\ItemType;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\Core\Approval\CodeDetail;
 
 class ItemTypeService
 {
@@ -39,6 +39,7 @@ class ItemTypeService
         $user = Auth::user();
 
         DB::beginTransaction();
+
         try {
             $wasActive = $itemType->Active == 1;
             $wasInactive = $itemType->Active == 0;
@@ -82,17 +83,19 @@ class ItemTypeService
                 ->log($logMessage);
 
             DB::commit();
+
             return $itemType;
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Error updating item type: ' . $e->getMessage());
+
             throw $e;
         }
     }
 
     /**
      * Check if item type has related items (active or inactive)
-     * 
+     *
      * @param ItemType $itemType
      * @param string $checkType 'active' or 'inactive'
      * @return array
@@ -103,11 +106,11 @@ class ItemTypeService
             ->whereNull('DeletedOn');
 
         if ($checkType === 'active') {
-            $query->whereHas('status', function($q) {
+            $query->whereHas('status', function ($q) {
                 $q->where('Description', 'Active');
             });
         } else {
-            $query->whereHas('status', function($q) {
+            $query->whereHas('status', function ($q) {
                 $q->where('Description', 'Inactive');
             });
         }
@@ -117,38 +120,39 @@ class ItemTypeService
         return [
             'hasItems' => $relatedItems->count() > 0,
             'count' => $relatedItems->count(),
-            'items' => $relatedItems
+            'items' => $relatedItems,
         ];
     }
 
     /**
      * Disable all active items related to an item type
-     * 
+     *
      * @param ItemType $itemType
      * @return int Number of items disabled
      */
     protected function disableRelatedItems(ItemType $itemType): int
     {
         $user = Auth::user();
-        
+
         $inactiveStatusId = CodeDetail::where('CodeID', 'ItemStatus')
             ->where('Description', 'Inactive')
             ->value('Id');
 
-        if (!$inactiveStatusId) {
+        if (! $inactiveStatusId) {
             Log::warning('Inactive status not found in CodeDetail table');
+
             throw new \Exception('Inactive status configuration not found');
         }
 
         $affectedRows = ItemMasterList::where('ItemType', $itemType->Id)
             ->whereNull('DeletedOn')
-            ->whereHas('status', function($query) {
+            ->whereHas('status', function ($query) {
                 $query->where('Description', 'Active');
             })
             ->update([
                 'Status' => $inactiveStatusId,
                 'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => Carbon::now()
+                'ModifiedOn' => Carbon::now(),
             ]);
 
         activity()
@@ -162,32 +166,33 @@ class ItemTypeService
 
     /**
      * Enable all inactive items related to an item type
-     * 
+     *
      * @param ItemType $itemType
      * @return int Number of items enabled
      */
     protected function enableRelatedItems(ItemType $itemType): int
     {
         $user = Auth::user();
-        
+
         $activeStatusId = CodeDetail::where('CodeID', 'ItemStatus')
             ->where('Description', 'Active')
             ->value('Id');
 
-        if (!$activeStatusId) {
+        if (! $activeStatusId) {
             Log::warning('Active status not found in CodeDetail table');
+
             throw new \Exception('Active status configuration not found');
         }
 
         $affectedRows = ItemMasterList::where('ItemType', $itemType->Id)
             ->whereNull('DeletedOn')
-            ->whereHas('status', function($query) {
+            ->whereHas('status', function ($query) {
                 $query->where('Description', 'Inactive');
             })
             ->update([
                 'Status' => $activeStatusId,
                 'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => Carbon::now()
+                'ModifiedOn' => Carbon::now(),
             ]);
 
         activity()

@@ -9,7 +9,6 @@ use Illuminate\Validation\Validator;
 
 class StockAdjustmentRequest extends FormRequest
 {
-    
     public function authorize(): bool
     {
 

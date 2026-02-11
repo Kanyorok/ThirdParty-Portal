@@ -5,7 +5,6 @@ namespace App\Policies\Inventory;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 
-
 class ItemMasterListPolicy
 {
     public function viewAny(User $user): bool
@@ -32,5 +31,4 @@ class ItemMasterListPolicy
     {
         return $user->can(PermissionEnum::MasterListDelete->value);
     }
-
 }

@@ -21,15 +21,15 @@ class RFQSectionController extends Controller
         // Order newest first and paginate so the view shows a pager
         $rfqs = RFQ::withCount(['sections', 'criteria'])
             ->with('sections')
+            ->whereIn('Status', ['Approved', 'Ap', 'AP', 'Pub', 'Published'])
             ->orderByDesc('Id')
             ->paginate(10);
         // Use Sections maintained at tendering settings (t_Sections)
         $sections = Section::isActive()->get();
         // Only include RFQs that don't have any active sections assigned yet
         $rfqList = RFQ::select('Id', 'RFQNumber', 'Comments')
-            ->whereDoesntHave('sections', function ($query) {
-                $query->where('IsActive', true);
-            })
+            ->whereIn('Status', ['Pub','Published'])
+            ->whereDoesntHave('sections')
             ->get();
 
         return view('procurement.rfqcriteriasetup.rfqevaluations', compact('rfqs', 'sections', 'rfqList'));

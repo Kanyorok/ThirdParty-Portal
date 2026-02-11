@@ -299,6 +299,9 @@ Route::middleware(['module:300000'])->group(function () {
     Route::post('/rfqs/{rfq}/publish', [RFQController::class, 'publish'])
         ->middleware(\App\Http\Middleware\CanAction::class . ':approve,rfqs')
         ->name('rfqs.publish');
+    Route::post('/rfqs/{rfq}/submit', [RFQController::class, 'submit'])
+        ->middleware(\App\Http\Middleware\CanAction::class . ':write,rfqs')
+        ->name('rfqs.submit');
 
     // RFQLines Routes
     Route::get('/rfq/{rfqId}/lines/create', [RFQLinesController::class, 'create'])->name('rfqlines.create');

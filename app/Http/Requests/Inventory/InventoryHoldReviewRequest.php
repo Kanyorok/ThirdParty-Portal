@@ -7,7 +7,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class InventoryHoldReviewRequest extends FormRequest
 {
- 
     public function authorize(): bool
     {
         return true;

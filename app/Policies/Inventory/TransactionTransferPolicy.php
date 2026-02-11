@@ -7,7 +7,6 @@ use App\Models\Auth\User;
 
 class TransactionTransferPolicy
 {
-   
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::TransactionTransferView->value);

@@ -7,7 +7,6 @@ use App\Models\Auth\User;
 
 class UnitOfMeasurePolicy
 {
- 
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::UOMView->value);

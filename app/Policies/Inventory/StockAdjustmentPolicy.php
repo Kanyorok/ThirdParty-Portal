@@ -5,15 +5,12 @@ namespace App\Policies\Inventory;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 
-
 class StockAdjustmentPolicy
 {
-    
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::StockAdjustmentView->value);
     }
-
 
     public function view(User $user): bool
     {
@@ -24,7 +21,6 @@ class StockAdjustmentPolicy
     {
         return $user->can(PermissionEnum::StockAdjustmentCreate->value);
     }
-
 
     public function update(User $user): bool
     {
@@ -40,7 +36,6 @@ class StockAdjustmentPolicy
     {
         return $user->can(PermissionEnum::StockAdjustmentUpdate->value);
     }
-
 
     public function approve(User $user): bool
     {

@@ -8,7 +8,6 @@ use App\Models\Inventory\StockItem;
 
 class StockItemPolicy
 {
-   
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::StockItemView->value);

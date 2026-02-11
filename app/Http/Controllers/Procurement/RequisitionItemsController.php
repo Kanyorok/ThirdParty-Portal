@@ -52,10 +52,12 @@ class RequisitionItemsController extends Controller
 
             // If we have a plan, get plan-specific items with availability
             if ($planRef) {
-                $items = $this->getPlanAvailableItems($planRef);
+                // PASS REQUISITION ID to filter duplicates
+                $items = $this->getPlanAvailableItems($planRef, $requisitionId);
 
                 Log::info('Plan items result', [
                     'plan_id' => $planRef,
+                    'requisition_id' => $requisitionId,
                     'count' => $items->count(),
                 ]);
             } else {
@@ -276,11 +278,12 @@ class RequisitionItemsController extends Controller
         }
     }
 
-    private function getPlanAvailableItems($planId)
+    private function getPlanAvailableItems($planId, $requisitionId = null)
     {
         try {
             Log::info('Fetching plan items', [
                 'plan_id' => $planId,
+                'requisition_id' => $requisitionId,
             ]);
 
             $rfqMethodId = DB::table('t_CodeDetails')
@@ -321,14 +324,34 @@ class RequisitionItemsController extends Controller
             $availableItems = $items->map(function ($item) {
                 $usedQty = DB::table('t_RequisitionLines')
                     ->where('PlanLineRef', $item->LineItemID)
+                    ->whereNull('DeletedOn') // Sum used quantity from ALL requisitions (including deleted ones? No, usually active ones)
                     ->sum('Quantity') ?? 0;
 
                 $item->UsedQuantity = $usedQty;
                 $item->AvailableQuantity = $item->PlanQuantity - $usedQty;
 
                 return $item;
-            })->filter(function ($item) {
-                return $item->AvailableQuantity > 0;
+            })->filter(function ($item) use ($requisitionId) {
+                // Logic 1: Must have available quantity
+                if ($item->AvailableQuantity <= 0) {
+                    return false;
+                }
+
+                // Logic 2: DUPLICATE CHECK
+                // If this item is already in THIS requisition, exclude it
+                if ($requisitionId) {
+                    $existsInThisReq = DB::table('t_RequisitionLines')
+                        ->where('RequisitionID', $requisitionId)
+                        ->where('PlanLineRef', $item->LineItemID)
+                        ->whereNull('DeletedOn')
+                        ->exists();
+
+                    if ($existsInThisReq) {
+                        return false;
+                    }
+                }
+
+                return true;
             })->values();
 
             Log::info('Plan items query executed', [
@@ -545,6 +568,22 @@ class RequisitionItemsController extends Controller
             $actor = $request->user();
             if (! $actor) {
                 return response()->json(['message' => 'Unauthorized'], 401);
+            }
+
+            // DUPLICATE CHECK ON SUBMISSION
+            if (! empty($validatedData['LineItemID'])) {
+                $exists = DB::table('t_RequisitionLines')
+                    ->where('RequisitionID', $validatedData['RequisitionID'])
+                    ->where('PlanLineRef', $validatedData['LineItemID'])
+                    ->whereNull('DeletedOn')
+                    ->exists();
+
+                if ($exists) {
+                    return response()->json([
+                        'message' => 'This plan item has already been added to this requisition.',
+                        'error' => 'Duplicate item',
+                    ], 400);
+                }
             }
 
             $requisitionAddLines = $this->service->addRequisitionLines(

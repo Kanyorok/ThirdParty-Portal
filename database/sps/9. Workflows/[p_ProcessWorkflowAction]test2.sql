@@ -8,11 +8,22 @@ CREATE or ALTER   PROCEDURE [dbo].[p_ProcessWorkflowAction]
     @StatusColumn NVARCHAR(100) = 'Status',
     @StatusID BIGINT,
     @StatusValueToSet NVARCHAR(50) = NULL,
-    @Amount DECIMAL(20,4) = NULL  -- OPTIONAL - Only for AMT workflows
+    @Amount DECIMAL(20,4) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
     
+    -- ==========================================================================================
+    -- RESTRICTION: CSADM user provided check
+    -- Prevent CSADM from performing any workflow actions
+    -- ==========================================================================================
+    IF EXISTS (SELECT 1 FROM t_Users WHERE Id = @UserID AND UserID = 'CSADM')
+    BEGIN
+        SELECT 'ERROR' AS Status, 'The CSADM user is restricted from performing workflow actions.' AS Message;
+        RETURN;
+    END
+    -- ==========================================================================================
+
     DECLARE 
         @StageID NVARCHAR(200),
         @StageIDAsInt BIGINT,
@@ -81,7 +92,9 @@ BEGIN
         RETURN;
     END
 
-    -- Get workflow stage info from pending
+    -- ========================================
+    -- CRITICAL: GET STAGE INFO AND CHECK PENDING FIRST
+    -- ========================================
     SELECT TOP 1 
         @StageID = p.Stage,
         @WorkFlowID = ws.WorkFlowID,
@@ -97,42 +110,28 @@ BEGIN
       AND p.UserId = @UserID
       AND p.DeletedOn IS NULL;
 
+    -- ❌ CRITICAL CHECK: User must have a pending record for THIS stage
     IF @StageID IS NULL
     BEGIN
-        SELECT 'ERROR' AS Status, 'No pending approval found for this user or already actioned' AS Message;
+        SELECT 'ERROR' AS Status, 
+               'No pending approval found for this user. You may have already acted on this, or you do not have permission to approve this stage.' AS Message;
         RETURN;
     END
 
     SET @StageIDAsInt = CAST(@StageID AS BIGINT);
 
-    PRINT '';
-    PRINT 'STAGE INFO:';
-    PRINT '  StageID: ' + @StageID + ' | StageName: ' + ISNULL(@StageName, 'N/A');
-    PRINT '  WorkflowType: ' + ISNULL(@WorkflowType, 'NULL') + ' | ConfiguredCount: ' + CAST(@ConfiguredCount AS NVARCHAR(10));
-
     -- ========================================
-    -- GET EFFECTIVE PERMISSION
+    -- GET EFFECTIVE PERMISSION (FOR AMT TIERS)
     -- ========================================
-    SET @EffectivePermissionId = @WorkflowStagePermission; -- Default
+    SET @EffectivePermissionId = @WorkflowStagePermission;
 
-    -- Only apply AMT tier logic if:
-    -- 1. Workflow type is AMT
-    -- 2. Amount is provided (not NULL)
-    -- 3. Amount is greater than 0
-    -- 4. Tiers are configured for this stage
     IF @WorkflowType = 'AMT' AND @Amount IS NOT NULL AND @Amount > 0
     BEGIN
-        -- Check if tiers exist
         IF EXISTS (
             SELECT 1 FROM t_WorkFlowLimits 
             WHERE WorkFlowStageId = @StageIDAsInt AND DeletedOn IS NULL
         )
         BEGIN
-            PRINT '';
-            PRINT '--- AMT WORKFLOW WITH TIERS DETECTED ---';
-            PRINT 'Finding tier for amount: ' + CAST(@Amount AS NVARCHAR(30));
-            
-            -- Get the tier permission
             SELECT TOP 1 
                 @EffectivePermissionId = PermissionId,
                 @TierMaxAmount = MaxAmount,
@@ -141,62 +140,50 @@ BEGIN
 
             IF @EffectivePermissionId IS NULL
                 SET @EffectivePermissionId = @WorkflowStagePermission;
-
-            PRINT '  Tier Permission ID: ' + CAST(@EffectivePermissionId AS NVARCHAR(20));
-            PRINT '  Tier Max Amount: ' + ISNULL(CAST(@TierMaxAmount AS NVARCHAR(30)), 'N/A');
-            PRINT '  Selection Type: ' + @LimitType;
-        END
-        ELSE
-        BEGIN
-            PRINT '';
-            PRINT 'AMT workflow but NO TIERS configured - using default stage permission';
-        END
-    END
-    ELSE
-    BEGIN
-        PRINT '';
-        IF @WorkflowType = 'AMT' AND @Amount IS NULL
-        BEGIN
-            PRINT 'AMT workflow but NO AMOUNT provided - using default stage permission';
-        END
-        ELSE IF @WorkflowType = 'AMT' AND @Amount = 0
-        BEGIN
-            PRINT 'AMT workflow but amount is ZERO - using default stage permission';
-        END
-        ELSE
-        BEGIN
-            PRINT 'Standard workflow (not AMT) - using default stage permission';
         END
     END
 
-    -- PERMISSION CHECK
-    SELECT TOP 1 @permissionName = name FROM t_Permissions WHERE id = @EffectivePermissionId;
+    -- ========================================
+    -- ✅ CRITICAL: VERIFY USER HAS THE REQUIRED PERMISSION
+    -- ========================================
+    SELECT TOP 1 @permissionName = name 
+    FROM t_Permissions 
+    WHERE id = @EffectivePermissionId;
 
-    IF @permissionName IS NOT NULL
+    -- Check if user has this specific permission
+    IF @EffectivePermissionId IS NOT NULL
     BEGIN
         SELECT @UserHasPermissions = CASE 
             WHEN EXISTS (
-                SELECT 1 FROM [t_Users] u
-                WHERE u.Id = @UserID AND u.DeletedOn IS NULL
-                  AND EXISTS (
-                      SELECT 1 FROM [t_ModelRoles] mr
-                      INNER JOIN [t_RolePermissions] rp ON mr.role_id = rp.role_id
-                      INNER JOIN [t_Permissions] p ON rp.permission_id = p.id
-                      WHERE mr.model_id = u.Id AND mr.model_type = 'UserID' AND p.name = @permissionName
-                  )
+                SELECT 1 FROM dbo.f_getUserWithPermission(@EffectivePermissionId)
+                WHERE Id = @UserID
             ) THEN 1 ELSE 0 END;
     END
 
+    -- ❌ BLOCK if user doesn't have permission
     IF @UserHasPermissions = 0
     BEGIN
+        -- Remove the invalid pending entry (shouldn't exist)
+        UPDATE dbo.t_WorkFlowPending
+        SET DeletedBy = @SystemUserId, 
+            DeletedOn = GETDATE(), 
+            ModifiedBy = @SystemUserId, 
+            ModifiedOn = GETDATE()
+        WHERE Source = @Source 
+          AND SourceID = @SourceID 
+          AND Stage = @StageID
+          AND UserId = @UserID 
+          AND DeletedOn IS NULL;
+        
         SELECT 'ERROR' AS Status, 
-               'User does not have required permissions: ' + ISNULL(@permissionName, 'N/A') AS Message;
+               'Permission Denied: You do not have the required permission to approve this stage. Required: ' + 
+               ISNULL(@permissionName, 'Unknown') + ' (ID: ' + CAST(@EffectivePermissionId AS NVARCHAR(20)) + ')' AS Message;
         RETURN;
     END
 
-    PRINT 'Permission check: PASSED (' + ISNULL(@permissionName, 'N/A') + ')';
-
-    -- Prevent duplicate actions
+    -- ========================================
+    -- PREVENT DUPLICATE ACTIONS
+    -- ========================================
     IF EXISTS (
         SELECT 1 FROM t_WorkFlowHistory
         WHERE Source = @Source AND SourceID = @SourceID 
@@ -213,9 +200,6 @@ BEGIN
     SELECT @PendingCountBEFOREDelete = COUNT(*)
     FROM dbo.t_WorkFlowPending
     WHERE Source = @Source AND SourceID = @SourceID AND Stage = @StageID AND DeletedOn IS NULL;
-
-    PRINT '';
-    PRINT 'BEFORE ACTION: Pending entries: ' + CAST(@PendingCountBEFOREDelete AS NVARCHAR(10));
 
     -- Mark user's pending as deleted
     UPDATE dbo.t_WorkFlowPending
@@ -242,23 +226,17 @@ BEGIN
              ELSE NULL END
     );
 
-    PRINT '   History entry created';
-
     -- ========================================
     -- HANDLE REJECTION
     -- ========================================
     IF @IsRejectionAction = 1
     BEGIN
-        PRINT '';
-        PRINT '=== PROCESSING REJECTION ===';
-        
         -- Delete all remaining pending entries
         UPDATE dbo.t_WorkFlowPending
         SET DeletedBy = @UserID, DeletedOn = GETDATE(), ModifiedBy = @UserID, ModifiedOn = GETDATE()
         WHERE Source = @Source AND SourceID = @SourceID AND DeletedOn IS NULL;
 
         DECLARE @RejectedStatusValue NVARCHAR(50) = COALESCE(@StatusValueToSet, @StatusValue);
-        PRINT '  Updating source table status to: ' + @RejectedStatusValue;
         
         DECLARE @UpdateRejectSQL NVARCHAR(MAX) = N'
             UPDATE ' + QUOTENAME(@Source) + '
@@ -303,9 +281,6 @@ BEGIN
     -- ========================================
     IF @IsApprovalAction = 1
     BEGIN
-        PRINT '';
-        PRINT '=== PROCESSING APPROVAL ===';
-        
         SELECT @RemainingPendingCount = COUNT(*)
         FROM dbo.t_WorkFlowPending
         WHERE Source = @Source AND SourceID = @SourceID AND Stage = @StageID AND DeletedOn IS NULL;
@@ -324,44 +299,20 @@ BEGIN
           AND EXISTS (SELECT 1 FROM dbo.f_getUserWithPermission(@EffectivePermissionId) WHERE Id = u.Id)
           AND u.Id <> ISNULL(@SubmitterId, 0);
 
-        PRINT 'COUNTS:';
-        PRINT '  Remaining pending: ' + CAST(@RemainingPendingCount AS NVARCHAR(10));
-        PRINT '  Current approved: ' + CAST(@CurrentApprovedCount AS NVARCHAR(10));
-        PRINT '  Total eligible: ' + CAST(@TotalEligibleUsers AS NVARCHAR(10));
-
         -- DETERMINE REQUIRED APPROVALS
         IF @WorkflowType = 'ALL'
-        BEGIN
             SET @TotalApprovalsRequired = @TotalEligibleUsers;
-            PRINT '  Type ALL: Requires all ' + CAST(@TotalApprovalsRequired AS NVARCHAR(10));
-        END
         ELSE IF @WorkflowType = 'MAJ'
-        BEGIN
             SET @TotalApprovalsRequired = (@TotalEligibleUsers / 2) + 1;
-            PRINT '  Type MAJ: Requires ' + CAST(@TotalApprovalsRequired AS NVARCHAR(10)) + ' of ' + CAST(@TotalEligibleUsers AS NVARCHAR(10));
-        END
         ELSE IF @WorkflowType = 'CNT' OR @WorkflowType = 'AMT'
-        BEGIN
             SET @TotalApprovalsRequired = @ConfiguredCount;
-            PRINT '  Type ' + @WorkflowType + ': Requires ' + CAST(@TotalApprovalsRequired AS NVARCHAR(10));
-        END
         ELSE
-        BEGIN
             SET @TotalApprovalsRequired = @ConfiguredCount;
-            PRINT '  Type UNKNOWN: Requires ' + CAST(@TotalApprovalsRequired AS NVARCHAR(10));
-        END
-
-        PRINT '';
-        PRINT 'COMPLETION CHECK:';
-        PRINT '  Approved (' + CAST(@CurrentApprovedCount AS NVARCHAR(10)) + ') >= Required (' + CAST(@TotalApprovalsRequired AS NVARCHAR(10)) + ')? ' + 
-              CASE WHEN @CurrentApprovedCount >= @TotalApprovalsRequired THEN 'YES ✓' ELSE 'NO ✗' END;
 
         -- Check if stage is complete
         IF @CurrentApprovedCount >= @TotalApprovalsRequired
         BEGIN
             SET @StageCompleted = 1;
-            PRINT '';
-            PRINT 'STAGE COMPLETE!';
 
             -- Delete remaining pending
             UPDATE dbo.t_WorkFlowPending
@@ -375,10 +326,6 @@ BEGIN
               AND StatusId = @StatusID
               AND DeletedOn IS NULL;
         END
-        ELSE
-        BEGIN
-            PRINT 'Stage NOT complete - waiting for more approvals';
-        END
     END
 
     -- Check for pending in ANY stage
@@ -387,10 +334,6 @@ BEGIN
             SELECT 1 FROM dbo.t_WorkFlowPending
             WHERE Source = @Source AND SourceID = @SourceID AND DeletedOn IS NULL
         ) THEN 1 ELSE 0 END;
-
-    PRINT '';
-    PRINT 'Pending in ANY stage: ' + CAST(@HasPendingApprovals AS NVARCHAR(10));
-    PRINT 'FINAL: StageCompleted=' + CAST(@StageCompleted AS NVARCHAR(10)) + ', HasPending=' + CAST(@HasPendingApprovals AS NVARCHAR(10));
 
     -- Send email
     SELECT @UserEmail = Email FROM t_Users WHERE Id = @UserID;

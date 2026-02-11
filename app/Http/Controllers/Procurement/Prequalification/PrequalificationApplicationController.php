@@ -346,9 +346,26 @@ class PrequalificationApplicationController extends Controller
                 // Compute round-level eligibility helpers (day-level; today is applicable)
                 $now = now()->startOfDay();
                 $windowOpen = (! $round->StartDate || $round->StartDate <= $now) && (! $round->EndDate || $round->EndDate >= $now);
-                $statusValue = is_object($round->Status) && property_exists($round->Status, 'value') ? $round->Status->value : (string) $round->Status;
-                $statusOpen = strtolower((string) $statusValue) === 'open' || (defined('App\\Enums\\Procurement\\PrequalificationRoundEnum::Open') && (string) $statusValue === (string) \App\Enums\Procurement\PrequalificationRoundEnum::Open->value);
-                $isClosed = (string) $statusValue === (string) \App\Enums\Procurement\PrequalificationRoundEnum::Closed->value;
+                $statusEnum = $round->Status instanceof PrequalificationRoundEnum
+                    ? $round->Status
+                    : PrequalificationRoundEnum::tryFrom((string) $round->Status);
+
+                if (! $statusEnum) {
+                    $statusLookup = [
+                        'open' => PrequalificationRoundEnum::Open,
+                        'o' => PrequalificationRoundEnum::Open,
+                        'closed' => PrequalificationRoundEnum::Closed,
+                        'cl' => PrequalificationRoundEnum::Closed,
+                        'draft' => PrequalificationRoundEnum::Draft,
+                        'expired' => PrequalificationRoundEnum::Expired,
+                        'e' => PrequalificationRoundEnum::Expired,
+                    ];
+                    $statusKey = strtolower((string) $round->Status);
+                    $statusEnum = $statusLookup[$statusKey] ?? $statusEnum;
+                }
+
+                $statusOpen = $statusEnum === PrequalificationRoundEnum::Open;
+                $isClosed = $statusEnum === PrequalificationRoundEnum::Closed;
                 $isExpired = $round->EndDate && $round->EndDate < $now;
                 $hasCategories = $cats->count() > 0;
                 $roundAppsCount = $applications->where('RoundID', $roundId)->count();
@@ -786,9 +803,18 @@ class PrequalificationApplicationController extends Controller
         // but generally should enforce status. Let's enforce standard rules for now.
         $now = now();
         $isClosed = $round->Status === PrequalificationRoundEnum::Closed;
-        // Allow if Draft? Probably not.
+        $isDraft = $round->Status === PrequalificationRoundEnum::Draft;
+        $isExpired = $round->Status === PrequalificationRoundEnum::Expired || ($round->EndDate && $round->EndDate < $now->startOfDay());
+
         if ($isClosed) {
             return back()->withInput()->with('error', 'Applications are closed for this round.');
+        }
+
+        if ($isExpired) {
+            return back()->withInput()->with('error', 'Applications cannot be submitted for an expired round.');
+        }
+        if ($isDraft) {
+            return back()->withInput()->with('error', 'Applications cannot be submitted for a draft round.');
         }
 
         // Check Max Vendors
@@ -812,7 +838,7 @@ class PrequalificationApplicationController extends Controller
                     'RoundID' => $roundId,
                     'SupplierID' => $supplierId,
                     'CategoryID' => $cid,
-                    'Status' => PrequalificationApplicationEnum::Submitted,
+                    'Status' => PrequalificationApplicationEnum::Submitted->value,
                     'SubmittedOn' => now(),
                     'CreatedBy' => Auth::id(),
                 ]);

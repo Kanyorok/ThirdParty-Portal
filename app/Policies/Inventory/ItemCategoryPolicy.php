@@ -8,7 +8,6 @@ use App\Models\Inventory\ItemCategories;
 
 class ItemCategoryPolicy
 {
-
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::ItemCategoryView->value);
@@ -24,18 +23,15 @@ class ItemCategoryPolicy
         return $user->can(PermissionEnum::ItemCategoryCreate->value);
     }
 
-
     public function update(User $user, ItemCategories $Category): bool
     {
         return $user->can(PermissionEnum::ItemCategoryUpdate->value);
     }
 
-
     public function destroy(User $user, ItemCategories $Category): bool
     {
         return $user->can(PermissionEnum::ItemCategoryDelete->value);
     }
-
 
     public function edit(User $user): bool
     {

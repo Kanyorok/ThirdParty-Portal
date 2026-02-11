@@ -15,7 +15,8 @@ class RFQCriteriaController extends Controller
 {
     public function show($rfqId)
     {
-        $rfq = RFQ::findOrFail($rfqId);
+        $rfq = RFQ::where('Id', $rfqId)
+            ->whereIn('Status', ['Pub', 'Published'])->firstOrFail();
 
         // Get active assigned RFQ sections with their criteria
         $rfqSections = RFQSection::with(['section.criteria'])

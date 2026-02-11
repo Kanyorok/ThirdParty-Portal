@@ -28,6 +28,13 @@ class PrequalificationRoundController extends Controller
     public function index(Request $request): View
     {
         $this->authorize('viewAny', PrequalificationRound::class);
+
+        // Auto-expire rounds that have passed their EndDate
+        // We check for rounds that are 'Open' AND EndDate < Today
+        PrequalificationRound::where('Status', \App\Enums\Procurement\PrequalificationRoundEnum::Open)
+            ->whereDate('EndDate', '<', now()->startOfDay())
+            ->update(['Status' => \App\Enums\Procurement\PrequalificationRoundEnum::Expired]);
+
         // Allow optionally including soft-deleted (archived) rounds via ?include_deleted=1
         $includeDeleted = (bool) $request->query('include_deleted', false);
 
@@ -106,6 +113,28 @@ class PrequalificationRoundController extends Controller
         });
 
         return redirect()->route('prequalification.prequalification-rounds.index')->with('success', 'Prequalification round deleted successfully.');
+    }
+
+    public function publish(PrequalificationRound $prequalificationRound): RedirectResponse
+    {
+        $this->authorize('update', $prequalificationRound);
+
+        if ($prequalificationRound->Status !== \App\Enums\Procurement\PrequalificationRoundEnum::Draft) {
+            return redirect()->back()->with('error', 'Only draft rounds can be published.');
+        }
+
+        $now = now();
+        if ($prequalificationRound->EndDate && $prequalificationRound->EndDate < $now) {
+            return redirect()->back()->with('error', 'Cannot publish an expired round.');
+        }
+
+        $prequalificationRound->update([
+            'Status' => \App\Enums\Procurement\PrequalificationRoundEnum::Open,
+            'ModifiedBy' => Auth::id(),
+            'ModifiedOn' => $now,
+        ]);
+
+        return redirect()->back()->with('success', 'Prequalification round published (opened) successfully.');
     }
 
     private function processRound($request, ?PrequalificationRound $prequalificationRound = null): RedirectResponse

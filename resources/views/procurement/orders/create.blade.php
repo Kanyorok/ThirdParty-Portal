@@ -130,11 +130,9 @@
                                 @endif
                                 <option value="{{ $ar->RFQNumber }}"
                                         data-rfq-id="{{ $ar->Id }}"
-                                        data-supplier-id="{{ $ar->ThirdPartyId ?? $ar->SupplierId }}"
+                                        data-supplier-id="{{ $ar->SupplierId }}"
                                         data-thirdparty-id="{{ $ar->ThirdPartyId ?? 0 }}"
-                                        data-supplier-legacy-id="{{ $ar->SupplierId }}"
-                                        data-supplier-name="{{ $ar->SupplierName ?? '' }}"
-                                        data-address="{{ $ar->Address ?? '' }}">{{ $ar->RFQNumber }}</option>
+                                        data-supplier-name="{{ $ar->SupplierName ?? '' }}">{{ $ar->RFQNumber }}</option>
                             @endforeach
                         </select>
                         @error('refNo')
@@ -454,13 +452,13 @@ function populateItems(items) {
             <small class="text-muted d-block" style="font-size: 0.75rem;">Available: ${maxQty}</small>
         </td>`);
         
-        $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" required value="${it.unitPrice ?? ''}"></td>`);
+        $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" required value="${it.unitPrice ?? ''}" readonly></td>`);
         
         // Tax Dropdown
         const taxOptions = buildTaxOptions(it.tax || '');
         $tr.append(`<td class="text-start"><select class="form-control form-control-sm tax" name="tax[]">${taxOptions}</select></td>`);
         
-        $tr.append('<td class="text-start"><input type="number" class="form-control form-control-sm discount" name="discount[]" step="any"></td>');
+        $tr.append('<td class="text-start"><input type="number" class="form-control form-control-sm discount" name="discount[]" step="any" min="0" oninput="validity.valid||(value=\'\');"></td>');
 
         const lineTotal = (+it.quantity || 0) * (+it.unitPrice || 0);
         $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm line-total" name="lineTotal[]" step="any" readonly value="${lineTotal.toFixed(2)}"></td>`);
@@ -693,11 +691,11 @@ $(document).on('change', '#refNo', function () {
     const rfqOption = $(this).find('option:selected');
     const selectedRFQNo = rfqOption.data('rfq-no');
     const rfqId = parseInt(rfqOption.data('rfq-id'));
-    const supplierLegacyId = parseInt(rfqOption.data('supplier-legacy-id'));
+    const supplierId = parseInt(rfqOption.data('supplier-id'));
     const awardedThirdPartyId = parseInt(rfqOption.data('thirdparty-id'));
     const matchThirdPartyId = Number.isFinite(awardedThirdPartyId) ? awardedThirdPartyId : NaN;
     
-    console.log('RFQ Selected:', {selectedRFQNo, rfqId, supplierLegacyId, awardedThirdPartyId, matchThirdPartyId});
+    console.log('RFQ Selected:', {selectedRFQNo, rfqId, supplierId, awardedThirdPartyId, matchThirdPartyId});
     
     if (!isNaN(rfqId)) {
         $('#SourceId').val(rfqId);
@@ -705,11 +703,11 @@ $(document).on('change', '#refNo', function () {
         $('#SourceId').val('');
     }
 
-    if (Number.isFinite(supplierLegacyId)) {
+    if (Number.isFinite(supplierId)) {
         const awardResp = rfqResponses.find(r => (r.RFQNumber === selectedRFQNo) && (parseInt(r.SupplierId) === matchThirdPartyId));
         const fallbackName = rfqOption.data('supplier-name') || '';
         const fallbackAddress = rfqOption.data('address') || '';
-        const displayName = awardResp ? (awardResp.TradingName || awardResp.SupplierName || awardResp.Name) : (fallbackName || `Supplier #${supplierLegacyId}`);
+        const displayName = awardResp ? (awardResp.TradingName || awardResp.SupplierName || awardResp.Name) : (fallbackName || `Supplier #${supplierId}`);
         const address = awardResp ? (awardResp.Address || awardResp.TradingAddress || '') : fallbackAddress;
         $('input[name="address"]').val(address);
         
@@ -717,10 +715,10 @@ $(document).on('change', '#refNo', function () {
             $('<input>').attr({
                 type: 'hidden',
                 name: 'supplier',
-                value: String(supplierLegacyId)
+                value: String(supplierId)
             }).appendTo('#purchaseOrdersForm');
         } else {
-            $("input[name='supplier']").val(String(supplierLegacyId));
+            $("input[name='supplier']").val(String(supplierId));
         }
 
         // Fetch RFQ items
@@ -1056,13 +1054,13 @@ $(document).on('click', '#add-row', function() {
                 <input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" step="any" required>
             </td>
             <td class="text-start">
-                <input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" required>
+                <input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" required readonly>
             </td>
             <td class="text-start">
                 <select class="form-control form-control-sm tax" name="tax[]">${taxOptions}</select>
             </td>
             <td class="text-start">
-                <input type="number" class="form-control form-control-sm discount" name="discount[]" step="any">
+                <input type="number" class="form-control form-control-sm discount" name="discount[]" step="any" min="0" oninput="validity.valid||(value='');">
             </td>
             <td class="text-start">
                 <input type="number" class="form-control form-control-sm line-total" name="lineTotal[]" step="any" readonly>

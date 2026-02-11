@@ -2,13 +2,12 @@
 
 namespace App\Http\Requests\Inventory;
 
+use App\Models\Inventory\Store;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Models\Inventory\Store;
 
 class StoreRequest extends FormRequest
 {
-    
     public function authorize(): bool
     {
         return true;
@@ -21,7 +20,8 @@ class StoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        $storeId = $this->route('Id'); 
+        $storeId = $this->route('Id');
+
         return [
             'StoreName' => [
                 'required',
