@@ -223,6 +223,23 @@ class TransactionReceiptsController extends Controller
             $item = $transferItem->item;
             $batchAllocations = json_decode($transferItem->BatchAllocation, true) ?? [];
 
+            $enrichedAllocations = collect($batchAllocations)->map(function ($allocation) {
+                $ledger = StockGRNLedger::find($allocation['ledger_id']);
+                if ($ledger) {
+                    return [
+                        'ledger_id' => $allocation['ledger_id'],
+                        'quantity' => $allocation['quantity'],
+                        'grn_id' => $ledger->GRNID,
+                        'unit_price' => (float) $ledger->UnitPrice,
+                        'age_days' => now()->diffInDays(\Carbon\Carbon::parse($ledger->ReceivedDate)),
+                        'source_type' => $ledger->SourceType ?? 'procurement',
+                        'goods_receipt_id' => $ledger->GoodsReceiptId,
+                    ];
+                }
+
+                return $allocation;
+            })->toArray();
+
             return [
                 'Item' => $item->Id,
                 'DispatchedQty' => $transferItem->DispatchedQty,
@@ -241,8 +258,8 @@ class TransactionReceiptsController extends Controller
                 'UOM' => $item->UOM,
                 'UOMCode' => $item->uom?->Code ?? 'N/A',
                 'PriceID' => $item->price?->Id ?? null,
-                'batch_allocation' => $batchAllocations,
-                'allocation_type' => ! empty($batchAllocations) ? 'specific' : 'fifo',
+                'batch_allocation' => $enrichedAllocations,
+                'allocation_type' => ! empty($enrichedAllocations) ? 'specific' : 'fifo',
             ];
         });
 
@@ -251,6 +268,7 @@ class TransactionReceiptsController extends Controller
             'from_branch' => $branchId,
             'transfer_id' => $transfer->TransferId,
             'main_store' => $mainStore,
+            'is_hq' => $transfer->fromBranch && $transfer->fromBranch->IsHQ,
         ]);
     }
 }

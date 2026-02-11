@@ -48,9 +48,9 @@
                 <tbody>
                 @forelse ($receipt->items as $index => $item)
                     @php
-                        $dispatchedQty = $item->transferItem->DispatchedQty ?? 0;
+                        $dispatchedQty = $item->DispatchedQty ?? 0;
                         $receivedQty = $item->ReceivedQty ?? 0;
-                        $discrepancy = $dispatchedQty - $receivedQty;
+                        $discrepancy = $item->Discrepancy ?? ($dispatchedQty - $receivedQty);
                     @endphp
                     <tr>
                         <td>{{ $index + 1 }}</td>

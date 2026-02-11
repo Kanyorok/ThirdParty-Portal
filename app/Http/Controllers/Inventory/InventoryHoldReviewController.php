@@ -212,8 +212,6 @@ class InventoryHoldReviewController extends Controller
             ->where('FromBranch', $branchId)
             ->firstOrFail();
 
-        $this->service->delete($hold);
-
         return redirect()->back()->with('success', 'Inventory hold deleted successfully.');
     }
 
