@@ -1,11 +1,10 @@
-USE [BR_ERP]
-GO
+
 /****** Object:  StoredProcedure [dbo].[p_ProcessWorkflowPendingTest1]    Script Date: 31/12/2025 17:06:40 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-ALTER   PROCEDURE [dbo].[p_ProcessWorkflowPendingTest1]
+CREATE OR ALTER   PROCEDURE [dbo].[p_ProcessWorkflowPendingTest1]
 AS
 BEGIN
     SET NOCOUNT ON;

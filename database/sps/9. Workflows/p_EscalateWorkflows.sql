@@ -1,7 +1,6 @@
-USE [BR_ERP]
-GO
 
-ALTER PROCEDURE [dbo].[p_EscalateWorkflows]
+
+CREATE OR ALTER PROCEDURE [dbo].[p_EscalateWorkflows]
 AS
 BEGIN
     SET NOCOUNT ON;

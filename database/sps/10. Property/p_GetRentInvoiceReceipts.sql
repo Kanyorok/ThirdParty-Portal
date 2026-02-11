@@ -30,4 +30,4 @@ BEGIN
     WHERE FinInv.ModuleID = 500000
       AND FinRec.Status = @ReceiptStatus;
 END;
-GO
+
