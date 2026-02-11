@@ -300,10 +300,10 @@ class UserService
 
     private function createResetURL(): string
     {
-        return url(route('password.reset', [
-            'token' => Password::createToken($this->user),
-            'email' => $this->user->Email,
-        ], false));
+        $token = Password::createToken($this->user);
+        $email = urlencode($this->user->Email);
+        
+        return config('app.frontend_url') . '/reset-password?token=' . $token . '&email=' . $email;
     }
 
     public function hideUsers(\Illuminate\Database\Query\Builder|Builder $query, string $ClientID = 'ClientID'): \Illuminate\Database\Query\Builder|Builder
