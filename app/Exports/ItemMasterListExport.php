@@ -3,10 +3,10 @@
 namespace App\Exports;
 
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemType;
-use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\UnitOfMeasure;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -101,7 +101,7 @@ class ItemMasterListExport implements FromArray, WithHeadings
             ->whereHas('status', fn ($q) => $q->where('Description', 'Active'))
             ->orderBy('Name')
             ->get();
-        
+
         foreach ($categories as $cat) {
             $parentName = $cat->parent?->Name ?? '(Main Category)';
             $data[] = [

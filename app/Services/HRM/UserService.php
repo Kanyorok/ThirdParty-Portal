@@ -115,6 +115,7 @@ class UserService
             ->addColumn('action', function (User $user) use ($extra) {
                 if (array_key_exists('action_team', $extra)) {
                     $destroyRoute = route('team-users.destroy', [$extra['action_team'], $user->UserID]);
+
                     return '<button type="button"  data-action="' . $destroyRoute .
                         '" data-name="' . $user->Name .
                         '" class="btn btn-danger btn-sm modal-trash-team-users"><i class="fas fa-trash"></i></button>';

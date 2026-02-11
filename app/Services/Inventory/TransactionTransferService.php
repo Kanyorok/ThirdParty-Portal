@@ -200,7 +200,7 @@ class TransactionTransferService
 
         try {
             $transfer = TransactionTransfer::with('items')->findOrFail($id);
-            
+
             $user = Auth::user();
             $isHQ = $user->branch && $user->branch->IsHQ;
 
@@ -252,7 +252,7 @@ class TransactionTransferService
                     ->orderBy('Id', 'asc')
                     ->get();
 
-                $totalAvailable = (float) $availableBatches->sum(fn($b) => (float) $b->RemainingQTY);
+                $totalAvailable = (float) $availableBatches->sum(fn ($b) => (float) $b->RemainingQTY);
                 if ($totalAvailable < (float) $item->DispatchedQty) {
                     throw new Exception("Insufficient GRN batches for Item {$item->Item}. Available: {$totalAvailable}, Required: {$item->DispatchedQty}");
                 }
@@ -343,7 +343,7 @@ class TransactionTransferService
                 $transactionTypeId = CodeDetail::where('CodeID', 'Source')
                     ->where('Description', 'Transaction Transfer')->value('ID');
 
-                if (!$transactionTypeId) {
+                if (! $transactionTypeId) {
                     throw new Exception("Transaction type not found for 'Transaction Transfer' in CodeDetail");
                 }
 
@@ -373,6 +373,7 @@ class TransactionTransferService
                                 ($isHQ ? ' using FIFO' : ' using selected GRN batches') .
                                 ' | Allocations: ' . collect($allocations)->map(function ($a) {
                                     $ledger = StockGRNLedger::find($a['ledger_id']);
+
                                     return ($ledger ? $ledger->GRNID : 'GRN-' . $a['ledger_id']) . ' (' . $a['quantity'] . ')';
                                 })->implode(', '),
                     'CreatedBy' => $user->Id,
@@ -386,7 +387,7 @@ class TransactionTransferService
                 $sourceId = CodeDetail::where('CodeID', 'Source')
                     ->where('Description', 'Transaction Transfer')->value('ID');
 
-                if (!$reasonId || !$sourceId) {
+                if (! $reasonId || ! $sourceId) {
                     throw new Exception("Required CodeDetails not found - Reason: {$reasonId}, Source: {$sourceId}");
                 }
 
@@ -401,6 +402,7 @@ class TransactionTransferService
                     'Remarks' => $item->Remarks . ' | Allocations: ' .
                                 collect($allocations)->map(function ($a) {
                                     $ledger = StockGRNLedger::find($a['ledger_id']);
+
                                     return ($ledger ? $ledger->GRNID : 'GRN-' . $a['ledger_id']) . ' (' . $a['quantity'] . ')';
                                 })->implode(', '),
                     'CreatedBy' => $user->Id,
@@ -441,6 +443,7 @@ class TransactionTransferService
             DB::commit();
         } catch (Throwable $th) {
             DB::rollBack();
+
             throw $th;
         }
     }
@@ -452,7 +455,7 @@ class TransactionTransferService
             ->where('IsMainStore', true)
             ->whereNull('DeletedOn')
             ->first();
-            
+
 
         if (! $store) {
             throw new Exception("No active store found for branch {$branchId}");

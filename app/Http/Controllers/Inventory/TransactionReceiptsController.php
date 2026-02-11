@@ -236,6 +236,7 @@ class TransactionReceiptsController extends Controller
                         'goods_receipt_id' => $ledger->GoodsReceiptId,
                     ];
                 }
+
                 return $allocation;
             })->toArray();
 

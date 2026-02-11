@@ -2,8 +2,8 @@
 
 namespace App\Models\Inventory;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Auth\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InterBranchRequisitionItem extends Model

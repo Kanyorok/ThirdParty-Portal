@@ -7,8 +7,6 @@ use App\Models\Core\Branch;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Inventory\InterBranchRequisitionItem;
-use App\Models\Inventory\TransactionTransfer;
 use Illuminate\Support\Facades\DB;
 
 class InterBranchRequisition extends Model

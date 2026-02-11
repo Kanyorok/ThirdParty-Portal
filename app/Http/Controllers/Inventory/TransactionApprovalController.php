@@ -11,11 +11,10 @@ use App\Services\Inventory\StockAdjustmentService;
 use App\Services\Inventory\TransactionTransferService;
 use App\Services\Workflow\ApprovalWorkflow;
 use Exception;
-use Throwable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-
+use Throwable;
 
 class TransactionApprovalController extends Controller
 {

@@ -3,10 +3,10 @@
 namespace App\Imports;
 
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemType;
-use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\UnitOfMeasure;
 use Illuminate\Support\Facades\Auth;
@@ -28,35 +28,38 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
 
         try {
             $this->processed++;
-            $rowNumber = $this->processed + 1; 
+            $rowNumber = $this->processed + 1;
             $row = array_map(fn ($v) => is_string($v) ? trim($v) : $v, $row);
-            
+
             if (isset($row['itemcode']) && str_starts_with($row['itemcode'], '---')) {
                 DB::rollBack();
+
                 return null;
             }
-            
+
             if (empty($row['itemcode']) && empty($row['itemname'])) {
                 DB::rollBack();
+
                 return null;
             }
 
             $requiredColumns = [
-                'itemcode', 'itemname', 'itemtype', 'uom', 
+                'itemcode', 'itemname', 'itemtype', 'uom',
                 'inventorytype', 'category',
             ];
-            
+
             foreach ($requiredColumns as $col) {
-                if (!array_key_exists($col, $row)) {
+                if (! array_key_exists($col, $row)) {
                     throw new \Exception("The uploaded file is missing required column: {$col}");
                 }
             }
 
             $validationErrors = $this->validateRequiredFields($row, $rowNumber);
-            if (!empty($validationErrors)) {
+            if (! empty($validationErrors)) {
                 $this->skipped++;
                 $this->errors = array_merge($this->errors, $validationErrors);
                 DB::rollBack();
+
                 return null;
             }
 
@@ -67,15 +70,16 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
             $inventoryType = $row['inventorytype'];
             $category = $row['category'];
 
-            $itemTypeRecord = ItemType::whereHas('type', function($q) use ($itemType) {
+            $itemTypeRecord = ItemType::whereHas('type', function ($q) use ($itemType) {
                 $q->where('Description', $itemType);
             })->where('Active', 1)->first();
-            
-            if (!$itemTypeRecord) {
+
+            if (! $itemTypeRecord) {
                 $errorMsg = "Row {$rowNumber}: Invalid Item Type '{$itemType}'";
                 $this->skipped++;
                 $this->errors[] = $errorMsg;
                 DB::rollBack();
+
                 return null;
             }
             $itemTypeId = $itemTypeRecord->Id;
@@ -83,31 +87,33 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
             $uomRecord = UnitOfMeasure::where('Code', $uom)
                 ->where('Active', 1)
                 ->first();
-            if (!$uomRecord) {
+            if (! $uomRecord) {
                 $errorMsg = "Row {$rowNumber}: Invalid UOM '{$uom}'";
                 $this->skipped++;
                 $this->errors[] = $errorMsg;
                 DB::rollBack();
+
                 return null;
             }
             $uomId = $uomRecord->Id;
 
-            $inventoryTypeRecord = InventoryType::whereHas('type', function($q) use ($inventoryType) {
+            $inventoryTypeRecord = InventoryType::whereHas('type', function ($q) use ($inventoryType) {
                 $q->where('Description', $inventoryType);
             })->where('Status', 1)->first();
-            
-            if (!$inventoryTypeRecord) {
+
+            if (! $inventoryTypeRecord) {
                 $errorMsg = "Row {$rowNumber}: Invalid Inventory Type '{$inventoryType}'";
                 $this->skipped++;
                 $this->errors[] = $errorMsg;
                 DB::rollBack();
+
                 return null;
             }
             $inventoryTypeId = $inventoryTypeRecord->Id;
 
             $statusValue = $row['status'] ?? 'Active';
             $statusId = $this->lookupCodeDetailId('ItemStatus', $statusValue);
-            if (!$statusId) {
+            if (! $statusId) {
                 $statusId = $this->getDefaultStatusId();
             }
 
@@ -117,12 +123,13 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
             $parentCategoryName = $row['parentcategory'] ?? null;
 
             $categoryId = $this->findCategoryId($categoryName, $parentCategoryName);
-            if (!$categoryId) {
+            if (! $categoryId) {
                 $parentText = $parentCategoryName ? " with parent '{$parentCategoryName}'" : "";
                 $errorMsg = "Row {$rowNumber}: Category '{$categoryName}'{$parentText} not found";
                 $this->skipped++;
                 $this->errors[] = $errorMsg;
                 DB::rollBack();
+
                 return null;
             }
 
@@ -133,9 +140,10 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
                     $this->skipped++;
                     $this->errors[] = "Row {$rowNumber}: Item '{$itemCode}' is currently in use and cannot be updated via import";
                     DB::rollBack();
+
                     return null;
                 }
-                
+
                 $existingItem->BarCode = $row['barcode'] ?? $existingItem->BarCode;
                 $existingItem->ItemName = $itemName;
                 $existingItem->ItemType = $itemTypeId;
@@ -144,17 +152,17 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
                 $existingItem->Category = $categoryId;
                 $existingItem->Status = $statusId;
                 $existingItem->ItemDescription = $row['itemdescription'] ?? $existingItem->ItemDescription;
-                
-                if (!empty($row['itemprice']) && $priceId !== null) {
+
+                if (! empty($row['itemprice']) && $priceId !== null) {
                     $existingItem->ItemPrice = $priceId;
                 }
-                
+
                 $existingItem->ModifiedBy = Auth::id();
                 $existingItem->ModifiedOn = now();
-                
+
                 $existingItem->save();
                 $this->updated++;
-                
+
                 activity()
                     ->causedBy(Auth::user())
                     ->performedOn($existingItem)
@@ -162,6 +170,7 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
                     ->log('Item updated via Excel import');
 
                 DB::commit();
+
                 return null;
             }
 
@@ -181,7 +190,7 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
                 'ModifiedOn' => now(),
             ];
 
-            if (!empty($row['itemprice']) && $priceId !== null) {
+            if (! empty($row['itemprice']) && $priceId !== null) {
                 $newItemData['ItemPrice'] = $priceId;
             }
 
@@ -205,7 +214,7 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
             $rowNumber = $this->processed + 1;
             $errorMsg = "Row {$rowNumber}: " . $e->getMessage();
             $this->errors[] = $errorMsg;
-            
+
             return null;
         }
     }
@@ -262,7 +271,7 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
 
         $price = PriceManagement::where('ActualPrice', $numericValue)->first();
 
-        if (!$price) {
+        if (! $price) {
             $price = PriceManagement::create([
                 'ActualPrice' => $numericValue,
                 'Description' => 'Imported price',
@@ -285,7 +294,7 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
         $query = ItemCategories::where('Name', $categoryName)
             ->whereHas('status', fn ($q) => $q->where('Description', 'Active'));
 
-        if (!empty($parentCategoryName) && $parentCategoryName !== '-' && $parentCategoryName !== '') {
+        if (! empty($parentCategoryName) && $parentCategoryName !== '-' && $parentCategoryName !== '') {
             $query->whereHas('parent', function ($q) use ($parentCategoryName) {
                 $q->where('Name', $parentCategoryName);
             });
@@ -294,6 +303,7 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
         }
 
         $category = $query->first();
+
         return $category ? $category->Id : null;
     }
 
@@ -333,6 +343,6 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
 
     public function hasErrors(): bool
     {
-        return !empty($this->errors);
+        return ! empty($this->errors);
     }
 }
