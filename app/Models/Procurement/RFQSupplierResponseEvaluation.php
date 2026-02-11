@@ -69,7 +69,7 @@ class RFQSupplierResponseEvaluation extends Model
 
     public function rfqCriteria()
     {
-        return $this->hasOne(RFQCriteria::class, 'CriteriaID', 'CriteriaId')
+        return $this->hasOne(RFQCriteria::class, 'id', 'CriteriaId')
             ->where(function ($query) {
                 if ($this->rfqEvaluation) {
                     $query->where('RFQID', $this->rfqEvaluation->RFQId);
@@ -79,6 +79,6 @@ class RFQSupplierResponseEvaluation extends Model
 
     public function rfqCriteriaUnscoped()
     {
-        return $this->belongsTo(RFQCriteria::class, 'CriteriaId', 'CriteriaID');
+        return $this->belongsTo(RFQCriteria::class, 'CriteriaId', 'id');
     }
 }
