@@ -26,7 +26,16 @@
                         @else {{ $rfq->Status }} @endif
                     </span>
                 </p>
-                <p><strong>RFQ Reject Remarks:</strong> {{ $rfq->Remarks }}</p>
+                @php
+                    $displayedRejectReason = $rfq->Remarks;
+                    if (empty($displayedRejectReason) && in_array($rfq->Status, ['Rejected', 'Re', 'RE'])) {
+                        $lastRejection = $history->where('Action', 'Rejected')->first();
+                        if ($lastRejection) {
+                            $displayedRejectReason = $lastRejection->Notes;
+                        }
+                    }
+                @endphp
+                <p><strong>RFQ Reject Remarks:</strong> {{ $displayedRejectReason }}</p>
 
             </div>
         </div>
@@ -357,6 +366,8 @@
         </div>
     </div>
 </div>
+@endsection
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const categoryDropdown = document.getElementById('categoryDropdown');
@@ -375,8 +386,8 @@ document.addEventListener('DOMContentLoaded', function() {
     categoryDropdown.innerHTML = '<option value="">Loading categories...</option>';
     categoryDropdown.disabled = true;
 
-    // Use Laravel's route helper to generate the correct URL
-    // Use Laravel's route helper to generate the correct URL
+    // Use Laravel\'s route helper to generate the correct URL
+    // Use Laravel\'s route helper to generate the correct URL
     const url = `{{ route('rfq-lines.requisition.categories', ':requisitionId') }}`.replace(':requisitionId', requisitionId);
     
 
@@ -431,7 +442,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+@endpush
 
+@push('scripts')
 <script>
     function printRFQ() {
         const printContainer = document.getElementById('supplierQuotationsPrint');
@@ -582,7 +595,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 </script>
-@section('scripts')
+@endpush
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Handle Submit for Approval Form
@@ -633,4 +647,4 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 </script>
-@endsection
+@endpush

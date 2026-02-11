@@ -139,7 +139,7 @@ class SupplierController extends Controller
 
         $query = SupplierMaster::query()
             ->with('party')
-            ->where('IsPrequalified', true)
+            // ->where('IsPrequalified', true)
             ->where('ApprovalStatus', \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved);
 
         if (! empty($term)) {

@@ -218,6 +218,6 @@ class ThirdPartyService extends ThirdPartiesService
 
     public static function getType(): ThirdPartyType
     {
-        throw new RuntimeException('Generic ThirdPartyService does not have a single type.');
+        throw new RuntimeException('No types available.');
     }
 }
