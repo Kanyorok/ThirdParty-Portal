@@ -352,7 +352,7 @@ class UserService
         $token = Password::createToken($this->user);
         $email = urlencode($this->user->Email);
 
-        return config('app.frontend_url') . '/reset-password?token=' . $token . '&email=' . $email;
+        return config('app.url') . '/reset-password/' . $token . '?email=' . $email;
     }
 
     public function hideUsers(
