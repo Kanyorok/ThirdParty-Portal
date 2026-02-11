@@ -65,6 +65,26 @@
                             <p id="Description_error" class="invalid-feedback d-none error col-12"
                                role="alert"></p>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label text-info" for="updateHeadId">Head of Department (HOD)</label>
+                            <select class="form-control" id="updateHeadId" name="HeadId">
+                                <option value="">Select HOD</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->Id }}" {{ $department->HeadId == $user->Id ? 'selected' : '' }}>{{ $user->Name }}</option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">Select the employee who will head this department</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="updateDeputyHeadId">Deputy Head of Department</label>
+                            <select class="form-control" id="updateDeputyHeadId" name="DeputyHeadId">
+                                <option value="">Select Deputy HOD</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->Id }}" {{ $department->DeputyHeadId == $user->Id ? 'selected' : '' }}>{{ $user->Name }}</option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">Optional: Select the deputy head for this department</small>
+                        </div>
                         <hr>
                         <div class="mt-4">
                             <button type="button" class="btn btn-secondary float-start"
@@ -106,6 +126,9 @@
 
 <script>
     $(function () {
+        $('#updateHeadId').select2({ dropdownParent: $('#departmentActionModel'), placeholder: 'Select HOD', allowClear: true });
+        $('#updateDeputyHeadId').select2({ dropdownParent: $('#departmentActionModel'), placeholder: 'Select Deputy HOD', allowClear: true });
+
         $('form#trashDepartmentForm').submit(async function (e) {
             e.preventDefault();
             if (await saveForm($(this), $('#trashDepartmentBtn'), false, true, true)) {

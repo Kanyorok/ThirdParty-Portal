@@ -33,6 +33,10 @@
             $currentBranch = auth()->user()->branch ?? null;
             $isHQ = $currentBranch && $currentBranch->IsHQ;
         @endphp
+        
+        <!-- Hidden field for HQ status -->
+        <input type="hidden" name="is_hq" id="is_hq" value="{{ $isHQ ? '1' : '0' }}">
+        
         <div class="alert alert-primary mb-4">
             <div class="d-flex align-items-center">
                 <i class="fas fa-building me-2"></i>
@@ -63,7 +67,6 @@
                         <strong>Approval Process:</strong> Transfers require approval based on configured workflow rules.
                         Ensure that approval groups and workflow configurations are properly set up for your organization.
                     </div>
-
                 </div>
             </div>
         </div>
@@ -398,10 +401,10 @@
             const grnBatchInfo = document.getElementById('grnBatchInfo');
             const grnBatchInfoText = document.getElementById('grnBatchInfoText');
             const grnWarning = document.getElementById('grnWarning');
+            const isHQ = document.getElementById('is_hq').value === '1';
 
             let selectedType = '';
             let currentBatches = {};
-            let isHQ = {{ $isHQ ? 'true' : 'false' }};
 
             if (isHQ) {
                 grnBatchInfoText.textContent = 'You are logged in as Headquarters. Transfers will use FIFO (First-In-First-Out) automatically from available GRN batches.';
@@ -424,16 +427,16 @@
                     requisitionInfoText.innerHTML = '<i class="fas fa-info-circle me-1"></i> Showing interbranch requisitions where your branch is the <strong>From Branch</strong>';
                     requisitionInfoText.className = 'text-info';
                 } else if (selectedType === 'procurement') {
-                    @if($isHQ)
+                    if (isHQ) {
                         requisitionInfoText.innerHTML = '<i class="fas fa-info-circle me-1"></i> Showing procurement requisitions from HQ';
                         requisitionInfoText.className = 'text-info';
-                    @else
+                    } else {
                         requisitionInfoText.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> <strong class="text-danger">Procurement transfers are only available when logged into Headquarters.</strong>';
                         requisitionInfoText.className = 'text-danger';
                         requisitionIdSelect.innerHTML = '<option value="">Not available for non-HQ branches</option>';
                         requisitionIdSelect.disabled = true;
                         return;
-                    @endif
+                    }
                 } else {
                     requisitionInfoText.innerHTML = 'Select a requisition type first';
                     requisitionInfoText.className = 'text-muted';
@@ -522,7 +525,8 @@
                 requisitionIdHidden.value = id;
                 const detailsUrl = requisitionDetailsBaseUrl.replace('PLACEHOLDER', id) + `?type=${selectedType}`;
 
-                itemsBody.innerHTML = '<tr><td colspan="' + (isHQ ? '8' : '9') + '" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading items and checking GRN availability...</td></tr>';
+                const colSpan = isHQ ? '8' : '9';
+                itemsBody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading items and checking GRN availability...</td></tr>`;
 
                 fetch(detailsUrl)
                     .then(response => {
@@ -613,7 +617,7 @@
                             
                             checkAllItemsGRNAvailability(data.items);
                         } else {
-                            itemsBody.innerHTML = '<tr><td colspan="' + (isHQ ? '8' : '9') + '" class="text-center text-muted py-4">No items found for this requisition</td></tr>';
+                            itemsBody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center text-muted py-4">No items found for this requisition</td></tr>`;
                         }
 
                         transferDetails.style.display = 'block';
@@ -621,7 +625,7 @@
                     .catch(error => {
                         console.error('Error loading requisition details:', error);
                         requisitionIdHidden.value = '';
-                        itemsBody.innerHTML = '<tr><td colspan="' + (isHQ ? '8' : '9') + '" class="text-center text-danger py-4">Failed to load requisition items</td></tr>';
+                        itemsBody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center text-danger py-4">Failed to load requisition items</td></tr>`;
                     });
             });
 
@@ -654,6 +658,7 @@
                     return;
                 }
 
+                // Only validate batch allocation for non-HQ users
                 if (!isHQ) {
                     const allocationInputs = document.querySelectorAll('input[name*="batch_allocation"]');
                     let hasInvalidAllocation = false;
@@ -669,11 +674,18 @@
                             return;
                         }
                         
-                        const allocation = JSON.parse(input.value || '[]');
-                        const allocatedQty = allocation.reduce((sum, batch) => sum + parseFloat(batch.quantity), 0);
-                        
-                        if (Math.abs(allocatedQty - dispatchedQty) > 0.001) {
-                            alert(`Item ${index + 1}: Allocated quantity (${allocatedQty}) must equal dispatched quantity (${dispatchedQty})`);
+                        try {
+                            const allocation = JSON.parse(input.value || '[]');
+                            const allocatedQty = allocation.reduce((sum, batch) => sum + parseFloat(batch.quantity), 0);
+                            
+                            if (Math.abs(allocatedQty - dispatchedQty) > 0.001) {
+                                alert(`Item ${index + 1}: Allocated quantity (${allocatedQty}) must equal dispatched quantity (${dispatchedQty})`);
+                                hasInvalidAllocation = true;
+                                e.preventDefault();
+                                return;
+                            }
+                        } catch (parseError) {
+                            alert(`Item ${index + 1}: Invalid batch allocation data`);
                             hasInvalidAllocation = true;
                             e.preventDefault();
                             return;
@@ -696,12 +708,12 @@
                 }
             });
 
-            @if($currentBranch && !$currentBranch->IsHQ)
+            if (!isHQ) {
                 const procurementOption = requisitionTypeSelect.querySelector('option[value="procurement"]');
                 if (procurementOption) {
                     procurementOption.disabled = true;
                 }
-            @endif
+            }
         });
 
         function checkGRNAvailability(index, itemId) {
@@ -715,16 +727,26 @@
                     const dispatchedInput = document.getElementById('dispatchedQty' + index);
                     
                     if (data.batches && data.batches.length > 0) {
-                        batchBtn.disabled = false;
-                        batchBtn.classList.remove('btn-secondary');
-                        batchBtn.classList.add('btn-outline-info');
-                        dispatchedInput.disabled = false;
+                        // Only modify batchBtn if it exists (for non-HQ)
+                        if (batchBtn) {
+                            batchBtn.disabled = false;
+                            batchBtn.classList.remove('btn-secondary');
+                            batchBtn.classList.add('btn-outline-info');
+                        }
+                        if (dispatchedInput) {
+                            dispatchedInput.disabled = false;
+                        }
                     } else {
-                        batchBtn.disabled = true;
-                        batchBtn.classList.remove('btn-outline-info');
-                        batchBtn.classList.add('btn-secondary');
-                        dispatchedInput.disabled = true;
-                        dispatchedInput.value = 0;
+                        // Only modify batchBtn if it exists
+                        if (batchBtn) {
+                            batchBtn.disabled = true;
+                            batchBtn.classList.remove('btn-outline-info');
+                            batchBtn.classList.add('btn-secondary');
+                        }
+                        if (dispatchedInput) {
+                            dispatchedInput.disabled = true;
+                            dispatchedInput.value = 0;
+                        }
                         
                         showError(`Item has no GRN ledger entries at your branch. Cannot transfer without GRN tracking.`);
                     }
@@ -735,6 +757,7 @@
         }
 
         function checkAllItemsGRNAvailability(items) {
+            const isHQ = document.getElementById('is_hq').value === '1';
             let allItemsHaveGRN = true;
             
             items.forEach((item, index) => {
@@ -749,18 +772,30 @@
                         const itemRow = document.getElementById('itemRow' + index);
                         
                         if (data.batches && data.batches.length > 0) {
-                            batchBtn.disabled = false;
-                            batchBtn.classList.remove('btn-secondary');
-                            batchBtn.classList.add('btn-outline-info');
-                            dispatchedInput.disabled = false;
-                            itemRow.classList.remove('table-warning');
+                            if (batchBtn) {
+                                batchBtn.disabled = false;
+                                batchBtn.classList.remove('btn-secondary');
+                                batchBtn.classList.add('btn-outline-info');
+                            }
+                            if (dispatchedInput) {
+                                dispatchedInput.disabled = false;
+                            }
+                            if (itemRow) {
+                                itemRow.classList.remove('table-warning');
+                            }
                         } else {
-                            batchBtn.disabled = true;
-                            batchBtn.classList.remove('btn-outline-info');
-                            batchBtn.classList.add('btn-secondary');
-                            dispatchedInput.disabled = true;
-                            dispatchedInput.value = 0;
-                            itemRow.classList.add('table-warning');
+                            if (batchBtn) {
+                                batchBtn.disabled = true;
+                                batchBtn.classList.remove('btn-outline-info');
+                                batchBtn.classList.add('btn-secondary');
+                            }
+                            if (dispatchedInput) {
+                                dispatchedInput.disabled = true;
+                                dispatchedInput.value = 0;
+                            }
+                            if (itemRow) {
+                                itemRow.classList.add('table-warning');
+                            }
                             allItemsHaveGRN = false;
                         }
                         
@@ -775,6 +810,7 @@
         }
 
         window.validateQuantity = function (input, maxQty, index) {
+            const isHQ = document.getElementById('is_hq').value === '1';
             const value = parseFloat(input.value);
             if (value > maxQty) {
                 input.setCustomValidity(`Quantity cannot exceed ${maxQty}`);
@@ -790,11 +826,15 @@
                 if (!isHQ) {
                     const allocationInput = document.getElementById('batchAllocation' + index);
                     if (allocationInput && allocationInput.value) {
-                        const allocation = JSON.parse(allocationInput.value);
-                        const allocatedQty = allocation.reduce((sum, batch) => sum + parseFloat(batch.quantity), 0);
-                        if (allocatedQty !== value) {
-                            showError(`Allocated quantity (${allocatedQty}) does not match dispatched quantity (${value}). Please update GRN batch selection.`);
-                            return false;
+                        try {
+                            const allocation = JSON.parse(allocationInput.value);
+                            const allocatedQty = allocation.reduce((sum, batch) => sum + parseFloat(batch.quantity), 0);
+                            if (Math.abs(allocatedQty - value) > 0.001) {
+                                showError(`Allocated quantity (${allocatedQty}) does not match dispatched quantity (${value}). Please update GRN batch selection.`);
+                                return false;
+                            }
+                        } catch (e) {
+                            console.error('Error parsing allocation:', e);
                         }
                     }
                 }
@@ -806,6 +846,12 @@
         let currentModalIndex = null;
 
         function showGRNBatches(index, itemId, itemName, requiredQty) {
+            const isHQ = document.getElementById('is_hq').value === '1';
+            if (isHQ) {
+                showError('HQ users do not need to select GRN batches. FIFO will be used automatically.');
+                return;
+            }
+            
             currentModalIndex = index;
             const modal = new bootstrap.Modal(document.getElementById('grnBatchModal'));
             document.getElementById('modalItemName').textContent = itemName;
@@ -958,20 +1004,24 @@
             const qtyInput = document.querySelector(`.allocate-qty[data-index="${index}"]`);
             const batchRow = document.getElementById(`batchRow${index}`);
             
-            if (checkbox.checked) {
-                qtyInput.disabled = false;
-                qtyInput.focus();
-                batchRow.classList.add('selected');
+            if (checkbox && checkbox.checked) {
+                if (qtyInput) qtyInput.disabled = false;
+                if (batchRow) batchRow.classList.add('selected');
             } else {
-                qtyInput.disabled = true;
-                qtyInput.value = 0;
-                batchRow.classList.remove('selected');
+                if (qtyInput) {
+                    qtyInput.disabled = true;
+                    qtyInput.value = 0;
+                }
+                if (batchRow) batchRow.classList.remove('selected');
                 updateAllocation(index);
             }
             updateAllocationSummary();
         }
 
         function toggleAllBatchSelection() {
+            const isHQ = document.getElementById('is_hq').value === '1';
+            if (isHQ) return;
+            
             const checkboxes = document.querySelectorAll('.batch-checkbox');
             const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
             
@@ -1001,6 +1051,9 @@
         }
 
         function clearAllSelections() {
+            const isHQ = document.getElementById('is_hq').value === '1';
+            if (isHQ) return;
+            
             document.querySelectorAll('.batch-checkbox').forEach(checkbox => {
                 checkbox.checked = false;
                 const index = checkbox.getAttribute('data-index');
@@ -1167,6 +1220,21 @@
             bootstrap.Modal.getInstance(document.getElementById('grnBatchModal')).hide();
             
             showError('GRN batch selection saved successfully.');
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('ajax-error');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.classList.remove('d-none');
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    errorDiv.classList.add('d-none');
+                }, 5000);
+            } else {
+                alert(message);
+            }
         }
     </script>
 @endpush
