@@ -66,7 +66,7 @@ class UserService
             return new self($user);
         }
         $user = User::create([
-            'UserID' => self::_ID($employee->FirstName, $employee->LastName),
+            'UserID' => self::generateUserID($employee->FirstName, $employee->LastName),
             'Name' => $employee->full_name,
             'Email' => $employee->Email,
             'Phone' => $employee->Phone,
@@ -78,14 +78,17 @@ class UserService
             'ModifiedBy' => $actor->Id,
         ]);
 
-        activity()->causedBy($actor)->performedOn($user)->event('create')->log('Created user account ' . $user->UserID . ' for employee ' . $employee->EmployeeID);
+        activity()->causedBy($actor)->performedOn($user)->event('create')->log(
+            'Created user account ' . $user->UserID . ' for employee ' . $employee->EmployeeID
+        );
 
         return new self($user);
     }
 
-    protected static function _ID(string $FirstName, string $Surname): string
+    protected static function generateUserID(string $FirstName, string $Surname): string
     {
-        $baseId = Str::of($FirstName)->trim()->substr(0, 1) . Str::of($Surname)->trim()->slug('')->upper()->toString();
+        $baseId = Str::of($FirstName)->trim()->substr(0, 1) .
+            Str::of($Surname)->trim()->slug('')->upper()->toString();
         $number = 0;
         do {
             $userId = $number === 0 ? Str::of($baseId) : Str::of($baseId . $number);
@@ -104,10 +107,17 @@ class UserService
             $query->with($with);
         }
 
-        return Datatables::of($query->where('t_Users.UserID', '!=', SystemHelper::ID)->lock('WITH(NOLOCK)')->select('*'))
+        return Datatables::of(
+            $query->where('t_Users.UserID', '!=', SystemHelper::ID)
+                ->lock('WITH(NOLOCK)')
+                ->select('*')
+        )
             ->addColumn('action', function (User $user) use ($extra) {
                 if (array_key_exists('action_team', $extra)) {
-                    return '<button type="button"  data-action="' . route('team-users.destroy', [$extra['action_team'], $user->UserID]) . '" data-name="' . $user->Name . '" class="btn btn-danger btn-sm modal-trash-team-users"><i class="fas fa-trash"></i></button>';
+                    $destroyRoute = route('team-users.destroy', [$extra['action_team'], $user->UserID]);
+                    return '<button type="button"  data-action="' . $destroyRoute .
+                        '" data-name="' . $user->Name .
+                        '" class="btn btn-danger btn-sm modal-trash-team-users"><i class="fas fa-trash"></i></button>';
                 }
 
                 return '
@@ -210,7 +220,13 @@ class UserService
         if ($pullImages) {
             $str = (new CBSService())->getClientImage($this->user->ClientID);
             if (! empty($str)) {
-                $this->user->setFromContent(base64_decode($str), SystemHelper::user(), ExtensionsEnum::Jpeg->getMimeType(), $this->user->ClientID . '.' . ExtensionsEnum::Jpeg->value, 'ImageId');
+                $this->user->setFromContent(
+                    base64_decode($str),
+                    SystemHelper::user(),
+                    ExtensionsEnum::Jpeg->getMimeType(),
+                    $this->user->ClientID . '.' . ExtensionsEnum::Jpeg->value,
+                    'ImageId'
+                );
             }
         }
 
@@ -224,8 +240,17 @@ class UserService
         return ($user instanceof BRUser) ? $user : null;
     }
 
-    public function update(string $UserID, string $Name, string $Email, string $Phone, GenderEnum $Gender, User $actor, string $Signature = '', string $Notes = '', $branch = null): static
-    {
+    public function update(
+        string $UserID,
+        string $Name,
+        string $Email,
+        string $Phone,
+        GenderEnum $Gender,
+        User $actor,
+        string $Signature = '',
+        string $Notes = '',
+        $branch = null
+    ): static {
         $originalBranchNumericId = $this->user->BranchId ?? null;
         $email_change = ($this->user->Email === $Email) ? null : $this->user->Email;
         $this->user->update([
@@ -259,22 +284,38 @@ class UserService
         }
 
         if (! is_null($email_change)) {
-            $this->sendEmail(
-                'Email Changed in Crm',
-                '<div><p>Hello ' . $this->user->Name . ' </p><p>Your email has been changed from <b>' . $email_change . '</b> to <b>' . $this->user->Email . '</b> </p><p>if this was a mistake, contact support</p></div>',
-                [[$Name => $email_change]]
-            );
+            $oldEmailRecipient = [[$Name => $email_change]];
+            $emailBody = '<div><p>Hello ' . $this->user->Name . ' </p>' .
+                '<p>Your email has been changed from <b>' . $email_change . '</b> to <b>' .
+                $this->user->Email . '</b> </p>' .
+                '<p>if this was a mistake, contact support</p></div>';
+
+            $this->sendEmail('Email Changed in Crm', $emailBody, $oldEmailRecipient);
         }
 
         return $this;
     }
 
-    public function sendEmail(string $subject, string $body, array $cc = [], bool|null $immediate = false, EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal, $email = null): ?CRMEmailService
-    {
+    public function sendEmail(
+        string $subject,
+        string $body,
+        array $cc = [],
+        bool|null $immediate = false,
+        EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal,
+        $email = null
+    ): ?CRMEmailService {
         if (SystemHelper::isSystem($this->user)) {
             return null;
         }
-        $service = CRMEmailService::createUser($this->user, $subject, $body, SystemHelper::user(), $cc, $priorityEnum, $email);
+        $service = CRMEmailService::createUser(
+            $this->user,
+            $subject,
+            $body,
+            SystemHelper::user(),
+            $cc,
+            $priorityEnum,
+            $email
+        );
         if (is_null($immediate)) {
             return $service;
         }
@@ -289,32 +330,45 @@ class UserService
         }
         $body = '<div><p>Hello ' . $this->user->Name . '</p>';
         $body .= ($this->user->Linked) ?
-            '<p>An account has been created for you in ' . config('app.name') . ' use your Core banking password to <a href="' . route('login') . '">login</a></p>' :
-            '<p>An account has been created for you in ' . config('app.name') . ' use your UserID is <b>' . $this->user->UserID . '</b> </p> <p>click this link to <a href="' . $this->createResetURL() . '"> create your password</a></p>';
+            '<p>An account has been created for you in ' . config('app.name') .
+            ' use your Core banking password to <a href="' . route('login') . '">login</a></p>' :
+            '<p>An account has been created for you in ' . config('app.name') .
+            ' use your UserID is <b>' . $this->user->UserID . '</b> </p>' .
+            ' <p>click this link to <a href="' . $this->createResetURL() . '"> create your password</a></p>';
         $body .= '</div>';
 
-        $this->sendEmail('New account created in ' . config('app.name'), $body, priorityEnum: EmailPriorityEnum::Important);
+        $this->sendEmail(
+            'New account created in ' . config('app.name'),
+            $body,
+            priorityEnum: EmailPriorityEnum::Important
+        );
 
         return $this;
     }
 
     private function createResetURL(): string
     {
-        return url(route('password.reset', [
-            'token' => Password::createToken($this->user),
-            'email' => $this->user->Email,
-        ], false));
+        $token = Password::createToken($this->user);
+        $email = urlencode($this->user->Email);
+
+        return config('app.frontend_url') . '/reset-password?token=' . $token . '&email=' . $email;
     }
 
-    public function hideUsers(\Illuminate\Database\Query\Builder|Builder $query, string $ClientID = 'ClientID'): \Illuminate\Database\Query\Builder|Builder
-    {
+    public function hideUsers(
+        \Illuminate\Database\Query\Builder|Builder $query,
+        string $ClientID = 'ClientID'
+    ): \Illuminate\Database\Query\Builder|Builder {
         if ($this->isManager()) {
             return $query;
         }
 
         return $query->where(function ($query) use ($ClientID) {
-            $query->whereNotIn($ClientID, User::whereNotNull('ClientID')->where('ClientID', '!=', $this->user->ClientID)->select('t_Users.ClientID'))
-                ->whereNotIn($ClientID, Board::query()->select('t_BoardMembers.ClientID'));
+            $query->whereNotIn(
+                $ClientID,
+                User::whereNotNull('ClientID')
+                    ->where('ClientID', '!=', $this->user->ClientID)
+                    ->select('t_Users.ClientID')
+            )->whereNotIn($ClientID, Board::query()->select('t_BoardMembers.ClientID'));
         });
     }
 
@@ -325,11 +379,14 @@ class UserService
 
     public function sendPasswordResetNotification(): static
     {
-        $this->sendEmail(
-            'Reset Password Notification',
-            '<p>You are receiving this email because we received a password reset request for your account.</p><a  href="' . $this->createResetURL() . '">Reset Password</a>
-                    <p>This password reset link will expire in 60 minutes. <br> If you did not request a password reset, no further action is required.</p>'
-        );
+        $resetLink = '<a href="' . $this->createResetURL() . '">Reset Password</a>';
+        $emailBody = '<p>You are receiving this email because we received ' .
+            'a password reset request for your account.</p>' .
+            $resetLink .
+            '<p>This password reset link will expire in 60 minutes. <br>' .
+            ' If you did not request a password reset, no further action is required.</p>';
+
+        $this->sendEmail('Reset Password Notification', $emailBody);
 
         return $this;
     }
@@ -346,9 +403,15 @@ class UserService
                     'DeletedBy' => $actor->Id,
                 ])->save(['timestamps' => false]);
 
-                activity()->causedBy($actor)->performedOn($this->user)->event('delete')->log('Deleted user account ' . $this->user->UserID);
+                activity()->causedBy($actor)->performedOn($this->user)->event('delete')->log(
+                    'Deleted user account ' . $this->user->UserID
+                );
 
-                $this->sendEmail('account deleted', '<p>Hello ' . $this->user->Name . '<br>Your account has just been deleted <br> If you have any questions or concerns, feel free to reach out to our support team </p>');
+                $deleteEmailBody = '<p>Hello ' . $this->user->Name . '<br>' .
+                    'Your account has just been deleted <br>' .
+                    ' If you have any questions or concerns, feel free to reach out to our support team </p>';
+
+                $this->sendEmail('account deleted', $deleteEmailBody);
             });
         } catch (Throwable | ErroredException $e) {
             Log::error('Error delete user ' . $e->getMessage());
