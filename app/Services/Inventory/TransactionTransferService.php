@@ -310,7 +310,6 @@ class TransactionTransferService
 
                         $remainingQty -= $allocatedQty;
                     }
-
                 }
 
                 $itemCost = 0;

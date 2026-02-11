@@ -238,7 +238,8 @@ class PropertyUnitController extends Controller
         return Excel::download(
             new class () implements
                 \Maatwebsite\Excel\Concerns\FromArray,
-                \Maatwebsite\Excel\Concerns\WithHeadings {
+                \Maatwebsite\Excel\Concerns\WithHeadings
+            {
                 public function array(): array
                 {
                     return [

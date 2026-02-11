@@ -156,7 +156,6 @@ class PriceManagementController extends Controller
             }
 
             return back()->with('success', $successMessage);
-
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             $errors = collect($e->failures())->map(function ($failure) {
                 $row = $failure->row();
@@ -166,7 +165,6 @@ class PriceManagementController extends Controller
             })->implode('<br>');
 
             return back()->with('error', "Validation errors:<br>{$errors}");
-
         } catch (\Exception $e) {
             $errorMessage = config('app.debug')
                 ? "Import failed: " . $e->getMessage()

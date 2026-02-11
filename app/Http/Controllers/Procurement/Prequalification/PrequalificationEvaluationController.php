@@ -108,7 +108,6 @@ class PrequalificationEvaluationController extends Controller
 
             return response()->json(['data' => $data]);
         } catch (\Throwable $e) {
-
             return response()->json(['data' => [], 'error' => 'Failed to load data'], 200);
         }
     }
@@ -124,8 +123,6 @@ class PrequalificationEvaluationController extends Controller
         // Validate round existence before proceeding to avoid FK violations
         $round = \App\Models\Procurement\Prequalification\PrequalificationRound::find($roundId);
         if (! $round) {
-
-
             if (request()->expectsJson()) {
                 return response()->json([
                     'status' => 'error',
@@ -215,7 +212,6 @@ class PrequalificationEvaluationController extends Controller
                         'CreatedOn' => $now,
                     ]);
                 } catch (\Throwable $e) {
-
                 }
 
                 // Set application status to Prequalified for the same triplet
@@ -223,7 +219,6 @@ class PrequalificationEvaluationController extends Controller
                     PrequalificationApplication::where('ApplicationID', $app->ApplicationID)
                         ->update(['Status' => PrequalificationApplicationEnum::Prequalified]);
                 } catch (\Throwable $e) {
-
                 }
             }
         });
@@ -246,7 +241,6 @@ class PrequalificationEvaluationController extends Controller
         // Validate round existence before proceeding to avoid FK violations
         $round = \App\Models\Procurement\Prequalification\PrequalificationRound::find($roundId);
         if (! $round) {
-
             if (request()->expectsJson()) {
                 return response()->json([
                     'status' => 'error',
