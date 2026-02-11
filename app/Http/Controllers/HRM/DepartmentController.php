@@ -90,6 +90,7 @@ class DepartmentController extends Controller
     public function create(): View
     {
         $users = User::orderBy('Name')->get();
+
         return view('hrms.department.create', ['users' => $users]);
     }
 
@@ -99,6 +100,7 @@ class DepartmentController extends Controller
     public function show(Department $department)
     {
         $users = User::orderBy('Name')->get();
+
         return view('hrms.department.show', ['department' => $department, 'users' => $users]);
     }
 
@@ -123,7 +125,7 @@ class DepartmentController extends Controller
                     // The UI normally sends an ID or empty.
                     // If I look at the screenshot, "Select HOD" suggests valid selection.
                     if ($request->filled('HeadId')) {
-                         $service->setHOD(User::find($request->input('HeadId')), $request->user());
+                        $service->setHOD(User::find($request->input('HeadId')), $request->user());
                     }
                 }
 

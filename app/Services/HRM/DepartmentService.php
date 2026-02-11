@@ -34,6 +34,7 @@ class DepartmentService
         ]);
 
         activity()->causedBy($actor)->performedOn($this->department)->event('update')->log('set a hod (' . $hod->Id . ') to department ' . $this->department->DepartmentID);
+
         return $this;
     }
 
@@ -45,6 +46,7 @@ class DepartmentService
         ]);
 
         activity()->causedBy($actor)->performedOn($this->department)->event('update')->log('set a deputy hod (' . $user->Id . ') to department ' . $this->department->DepartmentID);
+
         return $this;
     }
 

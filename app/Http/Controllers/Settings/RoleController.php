@@ -98,7 +98,7 @@ class RoleController extends Controller
             ->where('JobTitle', '!=', '')
             ->orderBy('JobTitle')
             ->pluck('JobTitle')
-            ->filter(fn ($title) => !in_array(strtolower($title), $existingRoleNames))
+            ->filter(fn ($title) => ! in_array(strtolower($title), $existingRoleNames))
             ->values();
 
         return view('settings.roles.create', compact('dynamicPermissions', 'jobTitles'));
