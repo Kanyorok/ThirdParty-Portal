@@ -97,22 +97,39 @@
             font-size: 0.9rem;
         }
 
-        /* Match Bootstrap form-select look */
-        .select2-container .select2-selection--single {
+        /* Keep GL Select2 stable inside table cells */
+        .je-table td.col-gl .select2-container {
+            max-width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        /* Match Bootstrap form-select look without changing table layout */
+        .je-table td.col-gl .select2-container .select2-selection--single {
             height: calc(2.25rem + 2px); /* same as Bootstrap form-select */
-            padding: 0.375rem 0.75rem;
+            display: flex;
+            align-items: center;
+            padding: 0 2rem 0 0.75rem;
             font-size: 1rem;
             border: 1px solid #ced4da;
             border-radius: 0.375rem;
             background-color: #fff;
         }
 
-        /* Remove the extra arrow style */
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 100%;
+        .je-table td.col-gl .select2-container .select2-selection--single .select2-selection__rendered {
+            width: 100%;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.25rem !important;
+        }
+
+        .je-table td.col-gl .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 1.5rem;
             top: 50%;
             transform: translateY(-50%);
-            right: 0.75rem;
+            right: 0.5rem;
         }
 
     </style>
@@ -271,6 +288,32 @@
             const postBtn = document.getElementById('postBtn');
             const balanceStatus = document.getElementById('balanceStatus');
 
+            const select2Options = {
+                placeholder: 'Select GL',
+                width: '100%',
+                dropdownAutoWidth: false,
+                templateResult: function (data) {
+                    if (!data.id) return data.text;
+                    const $option = $(data.element);
+                    const code = $option.data('code') || '';
+                    const name = $option.data('name') || '';
+                    return $('<div><strong>' + code + '</strong> <small class="text-muted">(' + name + ')</small></div>');
+                },
+                // Use plain text in the selected control to avoid expanding table cells.
+                templateSelection: function (data) {
+                    if (!data.id) return data.text;
+                    const $option = $(data.element);
+                    const code = $option.data('code') || '';
+                    const name = $option.data('name') || '';
+                    return code && name ? (code + ' (' + name + ')') : data.text;
+                }
+            };
+
+            function initGlSelect2() {
+                if (!(window.jQuery && $.fn.select2)) return;
+                $('.gl-account-select').select2(select2Options);
+            }
+
             function updateLineNumbers() {
                 if (!body) return;
                 const rows = body.querySelectorAll('tr');
@@ -321,12 +364,7 @@
                         if (el.tagName === 'TEXTAREA') el.value = '';
                     });
                     body.appendChild(clone);
-                    if (window.jQuery && $.fn.select2) {
-                        $('.gl-account-select').select2({
-                            placeholder: 'Select GL',
-                            width: '100%'
-                        });
-                    }
+                    initGlSelect2();
                     updateLineNumbers();
                     calculateTotals();
                 });
@@ -345,40 +383,7 @@
             calculateTotals();
             updateLineNumbers();
 
-            if (window.jQuery && $.fn.select2) {
-                $('.gl-account-select').select2({
-                    placeholder: 'Select GL',
-                    width: '100%'
-                });
-            }
+            initGlSelect2();
         })();
-
-        if (window.jQuery && $.fn.select2) {
-            $('.gl-account-select').select2({
-                placeholder: 'Select GL',
-                width: '100%',
-                dropdownAutoWidth: true,
-                templateResult: function (data) {
-                    if (!data.id) return data.text;
-
-                    let $option = $(data.element);
-                    return $(
-                        '<div><strong>' + $option.data('code') + '</strong> ' +
-                        '<small class="text-muted">(' + $option.data('name') + ')</small></div>'
-                    );
-                },
-                templateSelection: function (data) {
-                    if (!data.id) return data.text;
-
-                    let $option = $(data.element);
-                    return $(
-                        '<div><strong>' + $option.data('code') + '</strong> ' +
-                        '<small>(' + $option.data('name') + ')</small></div>'
-                    );
-                }
-            });
-        }
-
-
     </script>
 @endsection

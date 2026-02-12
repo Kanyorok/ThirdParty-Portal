@@ -225,6 +225,11 @@ class RecurrentJournalController extends Controller
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerUpdate, FinanceJournalEntry::class);
         $journalEntry = FinanceJournalEntry::with('journalLines', 'recurringJournals')->findOrFail($id);
+        $approvalStatus = strtolower((string) $journalEntry->ApprovalStatus);
+        if (in_array($approvalStatus, ['posted', 'rejected'], true)) {
+            return redirect()->route('recurrentjournal.show', $journalEntry->Id)
+                ->with('error', 'Posted or rejected recurring journals cannot be edited.');
+        }
         $gls = FinanceGLAccounts::select('Id', 'GLName', 'GLCode')->get();
         $branches = Branch::select('Id', 'Name')->get();
         $departments = Department::select('Id', 'Name')->get();
@@ -237,6 +242,11 @@ class RecurrentJournalController extends Controller
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerUpdate, FinanceJournalEntry::class);
         $journalEntry = FinanceJournalEntry::with('journalLines', 'recurringJournals')->findOrFail($id);
+        $approvalStatus = strtolower((string) $journalEntry->ApprovalStatus);
+        if (in_array($approvalStatus, ['posted', 'rejected'], true)) {
+            return redirect()->route('recurrentjournal.show', $journalEntry->Id)
+                ->with('error', 'Posted or rejected recurring journals cannot be edited.');
+        }
 
         // Normalize entries with optional LineId[] for diff
         $entries = [];
@@ -357,6 +367,11 @@ class RecurrentJournalController extends Controller
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerDelete, FinanceJournalEntry::class);
         $entry = FinanceJournalEntry::with('recurringJournals')->findOrFail($id);
+        $approvalStatus = strtolower((string) $entry->ApprovalStatus);
+        if (in_array($approvalStatus, ['posted', 'rejected'], true)) {
+            return redirect()->route('recurrentjournal.index')
+                ->with('error', 'Posted or rejected recurring journals cannot be deleted.');
+        }
         DB::transaction(function () use ($entry) {
             FinanceJournalLines::where('JournalEntryId', $entry->Id)->delete();
             \App\Models\Finance\RecurrentJournal::where('JournalEntryId', $entry->Id)->delete();
