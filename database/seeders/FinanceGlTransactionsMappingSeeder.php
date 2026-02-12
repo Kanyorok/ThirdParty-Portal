@@ -38,7 +38,7 @@ class FinanceGlTransactionsMappingSeeder extends Seeder
                 ->where('CreditGLAccountID', $creditCode)
                 ->exists();
 
-            if (! $exists) {
+            if (!$exists) {
                 DB::table('t_FinanceGlTransactionsMapping')->insert([
                     'ModuleID' => $moduleId,
                     'TransactionTypeID' => $transactionTypeId,

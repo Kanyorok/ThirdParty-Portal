@@ -44,7 +44,7 @@ class FinanceTransactionTypesSeeder extends Seeder
         foreach ($transactionTypes as $type) {
             $exists = DB::table('t_FinanceTransactionTypes')->where('Code', $type['Code'])->exists();
 
-            if (! $exists) {
+            if (!$exists) {
                 DB::table('t_FinanceTransactionTypes')->insert([
                     'Code' => $type['Code'],
                     'Name' => $type['Name'],
