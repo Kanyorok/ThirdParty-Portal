@@ -1,14 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { format } from "date-fns"
 import {
-    Building2,
-    Paperclip,
-    MessageSquare,
     ArrowUpRight,
+    Building2,
+    CheckCircle,
     Loader2,
+    MessageSquare,
+    Paperclip,
     Timer
 } from "lucide-react"
 
@@ -16,6 +17,8 @@ import { cn } from "@/lib/utils"
 import { parseSubmissionDeadline } from "@/lib/deadline"
 import { Badge } from "@/components/common/badge"
 import { Button } from "@/components/common/button"
+
+type AnyRecord = Record<string, any>
 
 type RFQPayload = {
     rfq: {

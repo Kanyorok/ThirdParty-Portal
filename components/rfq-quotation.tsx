@@ -9,6 +9,7 @@ import {
   ArrowUpRight,
   Check,
   ChevronsUpDown,
+  CheckCircle,
   EllipsisVertical,
   Eye,
   Loader2,
@@ -30,6 +31,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/common/card"
@@ -103,6 +105,15 @@ type SelectedDocument = {
   version?: string | number | null
   source: "dms" | "upload"
   uploading?: boolean
+}
+
+type SubmissionSummary = {
+  pricedLines: number
+  totalLines: number
+  totalAmount: number
+  currency: string
+  documents: number
+  submittedAt: string
 }
 
 type AttachmentActionsMenuProps = {
@@ -620,6 +631,9 @@ export function RfqQuotation() {
     }
   }, [rfqId])
 
+  const rfqDetailPath = `/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}`
+  const rfqQuotationPath = `${rfqDetailPath}/quotation`
+
   const [payload, setPayload] = useState<RfqPayload | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -665,9 +679,44 @@ export function RfqQuotation() {
   const [dmsPickerSelected, setDmsPickerSelected] = useState<Record<string, boolean>>({})
   const uploadInputRef = useRef<HTMLInputElement | null>(null)
   const tmpUploadSeq = useRef(0)
+  const redirectTimeoutRef = useRef<number | null>(null)
+
+  const [submissionSummary, setSubmissionSummary] = useState<SubmissionSummary | null>(null)
 
   const draftKey = `rfq-quote:${normalizedRfqId}`
   const saveTimer = useRef<number | null>(null)
+
+  const goToRfq = useCallback(() => {
+    if (redirectTimeoutRef.current !== null && typeof window !== "undefined") {
+      window.clearTimeout(redirectTimeoutRef.current)
+      redirectTimeoutRef.current = null
+    }
+    router.push(rfqDetailPath)
+  }, [rfqDetailPath, router])
+
+  const scheduleRedirectToRfq = useCallback(() => {
+    if (typeof window === "undefined") return
+    if (redirectTimeoutRef.current !== null) {
+      window.clearTimeout(redirectTimeoutRef.current)
+    }
+    redirectTimeoutRef.current = window.setTimeout(goToRfq, 4200)
+  }, [goToRfq])
+
+  useEffect(() => {
+    setSubmissionSummary(null)
+    if (redirectTimeoutRef.current !== null && typeof window !== "undefined") {
+      window.clearTimeout(redirectTimeoutRef.current)
+      redirectTimeoutRef.current = null
+    }
+  }, [normalizedRfqId])
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && redirectTimeoutRef.current !== null) {
+        window.clearTimeout(redirectTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const rfq = useMemo(() => {
     const p: AnyRecord | null = payload as any
@@ -772,6 +821,13 @@ export function RfqQuotation() {
     isSubmittedStatus(supplierResponse?.status) || clientLocked === "submitted"
   const isLocked = lockedByDeadline || lockedByRfqStatus || lockedByStatus
   const clarificationsLocked = lockedByDeadline || lockedByRfqStatus || lockedByStatus
+  const submittedAtDate = submissionSummary
+    ? new Date(submissionSummary.submittedAt)
+    : null
+  const formattedSubmissionTimestamp =
+    submittedAtDate && Number.isFinite(submittedAtDate.getTime())
+      ? format(submittedAtDate, "PP p")
+      : null
 
   useEffect(() => {
     let cancelled = false
@@ -1297,13 +1353,28 @@ export function RfqQuotation() {
         return
       }
 
+      const summaryCurrency =
+        quoteCurrency ||
+        String(rfq?.currency ?? rfq?.Currency ?? rfq?.currencyCode ?? "").trim()
+      const summaryData: SubmissionSummary = {
+        pricedLines: totals.filledCount,
+        totalLines: totals.totalLines,
+        totalAmount: totals.grandTotal,
+        currency: summaryCurrency,
+        documents: quoteDocuments.length,
+        submittedAt: new Date().toISOString(),
+      }
+      setSubmissionSummary(summaryData)
+      setClientLocked("submitted")
+      setSubmitDialogOpen(false)
+
       toast.success("Quotation submitted", {
         description: "Submitted successfully. Redirecting you back to the RFQ…",
       })
       try {
         window.localStorage.removeItem(draftKey)
       } catch { }
-      router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}`)
+      scheduleRedirectToRfq()
     } catch (e: any) {
       toast.error("Request failed", {
         description: e?.message || "Please check your connection and try again.",
@@ -1876,6 +1947,55 @@ export function RfqQuotation() {
           </div>
         </div>
       </header>
+
+      {submissionSummary ? (
+        <Card className="rounded-2xl border border-emerald-200 bg-emerald-50/70 shadow-none">
+          <CardHeader className="flex flex-col gap-2 border-b border-emerald-200/70 px-6 py-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-emerald-600" />
+              <CardTitle className="text-base font-semibold">Quotation submitted</CardTitle>
+            </div>
+            <CardDescription className="text-sm text-muted-foreground">
+              We captured your totals and will redirect you back to the RFQ shortly.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-6 py-5">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1">
+                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Lines priced</p>
+                <p className="text-lg font-semibold tabular-nums">
+                  {submissionSummary.pricedLines}/{submissionSummary.totalLines}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Total payable</p>
+                <p className="text-lg font-semibold">{toMoney(submissionSummary.totalAmount, submissionSummary.currency)}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Attachments</p>
+                <p className="text-lg font-semibold tabular-nums">{submissionSummary.documents}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Submitted</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {formattedSubmissionTimestamp ?? "Just now"}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="border-t border-emerald-200/70 px-6 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <Button variant="outline" size="sm" onClick={goToRfq} className="gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                View RFQ
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Redirecting automatically in a few seconds…
+              </p>
+            </div>
+          </CardFooter>
+        </Card>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <main className="lg:col-span-8">
