@@ -554,17 +554,27 @@
 
             let documentsHtml = '';
             if (documents && documents.length > 0) {
-                documentsHtml = documents.map(doc => `
-                <tr>
-                    <td><i class="fas fa-file"></i> ${doc.filename}</td>
-                    <td>${doc.size}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary" onclick="viewDocument(${submissionInfo.id}, '${doc.id}')">
+                documentsHtml = documents.map(doc => {
+                    let actionHtml = '';
+                    if (doc.document_id) {
+                        // DMS document — use embed-preview modal
+                        const previewUrl = `/dms/document/${doc.document_id}/embed-preview`;
+                        actionHtml = `<span class="btn btn-sm btn-outline-primary modal-preview-document"
+                            title="${doc.filename}"
+                            data-url="${previewUrl}"
+                            id="document-${doc.document_id}">
                             <i class="fas fa-eye"></i> View
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+                        </span>`;
+                    } else {
+                        actionHtml = `<span class="badge bg-secondary">🔒 Sealed</span>`;
+                    }
+                    return `
+                    <tr>
+                        <td><i class="fas fa-file-alt text-primary me-2"></i> ${doc.filename}</td>
+                        <td>${doc.size}</td>
+                        <td>${actionHtml}</td>
+                    </tr>`;
+                }).join('');
             } else {
                 documentsHtml = '<tr><td colspan="3" class="text-center text-muted">No documents found</td></tr>';
             }
@@ -691,8 +701,6 @@
             showDetailedCheck(bidId);
         }
     </script>
-@endsection
 
-@section('scripts')
-    @include('snippets.actions.preview-files')
+@include('snippets.actions.preview-files')
 @endsection

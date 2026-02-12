@@ -28,6 +28,7 @@ class TenderResponseController extends Controller
             ->get();
 
 
+
         $suppliers = Supplier::with('supplierMaster.thirdParty')
             ->whereNull('DeletedOn')
             ->get()

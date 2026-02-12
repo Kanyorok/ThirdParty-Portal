@@ -185,32 +185,41 @@ class TenderSubmissionController extends Controller
             $encryptedDocumentsData = [];
             $masterEncryptionKey = null;
 
+            $documentService = null;
+
             if ($request->hasFile('bid_files')) {
                 $file = $request->file('bid_files');
                 $masterEncryptionKey = Str::random(32);
 
-                // Generate unique filename
-                $originalName = $file->getClientOriginalName();
-                $extension = $file->getClientOriginalExtension();
-                // Safe unique name
-                $encryptedFileName = 'bid_manual_' . $tender->TenderNo . '_' . $supplier->Id . '_' . time() . '.' . $extension;
+                try {
+                    // Create DMS Document
+                    $documentService = \App\Services\DMS\DocumentService::createUpload(
+                        \App\Services\DMS\RepositoryService::module(\App\Enums\Core\ModulesEnum::Procurement),
+                        $file,
+                        $request->user(),
+                        false
+                    );
 
-                // Store file in secure location
-                $storagePath = $file->store('bid-documents', 'local');
+                    $dmsDocument = $documentService->document;
 
-                // Create metadata
-                $documentInfo = [
-                    'original_name' => $originalName,
-                    'stored_path' => $storagePath,
-                    'encrypted_filename' => $encryptedFileName,
-                    'file_size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                    'document_type' => 'manual_submission',
-                    'encrypted_at' => now()->toISOString(),
-                    'encryption_method' => 'Laravel-Crypt',
-                ];
+                    // Create metadata
+                    $documentInfo = [
+                        'document_id' => $dmsDocument->DocumentId, // Critical for preview
+                        'original_name' => $file->getClientOriginalName(),
+                        'stored_path' => $dmsDocument->current->FilePath, // Use DMS path
+                        'encrypted_filename' => $dmsDocument->current->Name,
+                        'file_size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                        'document_type' => 'manual_submission',
+                        'encrypted_at' => now()->toISOString(),
+                        'encryption_method' => 'Laravel-Crypt',
+                    ];
 
-                $encryptedDocumentsData[] = $documentInfo;
+                    $encryptedDocumentsData[] = $documentInfo;
+
+                } catch (\Exception $e) {
+                    throw $e;
+                }
             }
 
             // Prepare encryption columns
@@ -242,6 +251,12 @@ class TenderSubmissionController extends Controller
                 'EncryptionKey' => $base64Envelope,
                 'EncryptionEnvelope' => $encryptionEnvelope,
             ]);
+
+            // faster attachment
+            if ($documentService) {
+                // Use getPrimaryKey() to match the morphMap key
+                $documentService->attach(\App\Models\Procurement\BidSubmission::getPrimaryKey(), $bidSubmission->Id, $request->user());
+            }
 
             $redirect = redirect()->route('tendersubmission.index')
                 ->with('success', 'Bid submission recorded successfully.');

@@ -465,6 +465,7 @@ class AppServiceProvider extends ServiceProvider
             PlanLineItem::getPrimaryKey() => PlanLineItem::class,
             \App\Models\Procurement\TenderAward::getPrimaryKey() => \App\Models\Procurement\TenderAward::class,
             \App\Models\Procurement\RFQAward::getPrimaryKey() => \App\Models\Procurement\RFQAward::class,
+            \App\Models\Procurement\BidSubmission::getPrimaryKey() => \App\Models\Procurement\BidSubmission::class,
 
             //iINVENTORY
             ItemMasterList::getPrimaryKey() => ItemMasterList::class,
