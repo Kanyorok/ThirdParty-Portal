@@ -41,6 +41,7 @@ class NewThirdPartyRequest extends FormRequest
             'customer_MaritalStatus' => 'user_MaritalStatus',
             'customer_Occupation' => 'user_Occupation',
             'customer_Gender' => 'user_Gender',
+            'tenant_Remarks' => 'user_Remarks',
         ];
 
         foreach ($customerToUserFields as $customerField => $userField) {
@@ -122,13 +123,12 @@ class NewThirdPartyRequest extends FormRequest
                 Rule::requiredIf($isTenant),
                 'string',
                 'max:500',
-                'string',
-                'max:500',
             ],
             'customer_Gender' => ['nullable'],
             'customer_DateOfBirth' => ['nullable'],
             'customer_MaritalStatus' => ['nullable'],
             'customer_Occupation' => ['nullable'],
+            'tenant_Remarks' => ['nullable'],
         ];
     }
 
