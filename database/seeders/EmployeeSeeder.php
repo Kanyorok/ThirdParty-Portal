@@ -8,6 +8,7 @@ use App\Models\Core\Branch;
 use App\Models\HRM\Department;
 use App\Services\BR\BREncryption;
 use App\Services\HR\EmployeeService;
+use App\Services\HRM\UserService;
 use Illuminate\Database\Seeder;
 use RuntimeException;
 use Spatie\Permission\Models\Role;
@@ -49,14 +50,17 @@ class EmployeeSeeder extends Seeder
         ], $actor);
 
         // Create user account for the employee
-        $userService = $employeeService->createUserAccount($actor);
-        $user = $userService->user;
+        $hrUserService = $employeeService->createUserAccount($actor);
+        $user = $hrUserService->user;
 
-        // Update user details
-        $user->update([
-            'UserID' => 'CSADM',
-            'Password' => BREncryption::hashUser($user, '2')
-        ]);
+        // Assign role to user at the branch (required for login)
+        $hrmUserService = new UserService($user);
+        $hrmUserService->setRole($role, $branch, $actor);
+
+        // Update UserID first, then hash password with the correct UserID
+        $user->update(['UserID' => 'CSADM']);
+        $user->refresh();
+        $user->update(['Password' => BREncryption::hashUser($user, '2')]);
 
 
     }
