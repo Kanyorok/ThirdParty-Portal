@@ -13,6 +13,7 @@ use App\Http\Controllers\DMS\Files\DocumentTagsController;
 use App\Http\Controllers\DMS\Files\DocumentUploadController;
 use App\Http\Controllers\DMS\Files\TrashDocumentController;
 use App\Http\Controllers\DMS\LegalHold\DocumentLegalHoldController;
+use App\Http\Controllers\DMS\Files\DocumentLegalHoldController as FileLegalHoldController;
 use App\Http\Controllers\DMS\LegalHold\LegalHoldController;
 use App\Http\Controllers\DMS\Repo\RepositoryController;
 use App\Http\Controllers\DMS\Repo\RepositoryMoveController;
@@ -31,6 +32,7 @@ Route::middleware(['module:700000'])->namespace('DMS')->prefix('dms')->group(fun
     Route::get('bulk-upload', DocumentUploadController::class)->name('files.upload');
     Route::prefix('document/{document}')->group(function () {
         //mark for validation -> ()
+        Route::get('legal-holds', FileLegalHoldController::class)->name('file.legal-holds');
         Route::get('activities', DocumentActivityController::class)->name('file.activities');
         Route::get('embed-preview', DocumentPreviewController::class)->name('file.embed-preview');
         Route::get('preview', [DocumentActionsController::class, 'preview'])->name('file.preview');

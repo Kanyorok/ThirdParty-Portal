@@ -121,10 +121,10 @@
                             Actions
                         </button>
                         <div class="dropdown-menu" style="">
-                            @if($file->ext()->canSign())
+                            {{--@if($file->ext()->canSign())
                                 <a class="dropdown-item" href="javascript:void(0)"><i class="fas fa-check"></i> Mark for
                                     Validation</a>
-                            @endif
+                            @endif--}}
                             @if(!$file->ext()->canCheckOut())
                                 <a class="dropdown-item action-download-file" href="javascript:void(0)"><i
                                         class="fas fa-download"></i> Download</a>
@@ -218,7 +218,10 @@
                                                     onclick="fetchFilePermissionsTableTable()">
                                     Permissions & Sharing
                                 </a></li>
-                            <li class="nav-item"><a class="nav-link" href="#tab-activities" data-bs-toggle="tab"
+                            <li class="nav-item"><a class="nav-link" href="#tab-legal-holds" data-bs-toggle="tab"
+                                                    role="tab" aria-selected="false" onclick="fetchLegalHoldsTable()"
+                                >Legal Holds</a></li>
+                                <li class="nav-item"><a class="nav-link" href="#tab-activities" data-bs-toggle="tab"
                                                     role="tab" aria-selected="false" onclick="fetchActivitiesTable()"
                                 >Activities</a></li>
                         </ul>
@@ -237,8 +240,9 @@
                             </h4>
                         </div>
                         <div class="card-body">
+                            <div class="table-responsive">
                             <table id="filePermissionsTable"
-                                   class="table table-striped no-footer dtr-inline w-100 table-responsive">
+                                   class="table table-striped no-footer dtr-inline w-100 ">
                                 <thead>
                                 <tr>
                                     <th>No.</th>
@@ -249,7 +253,7 @@
                                 </tr>
                                 </thead>
                                 <tbody></tbody>
-                            </table>
+                            </table></div>
                         </div>
                     </div>
                 </div>
@@ -272,8 +276,9 @@
                                 </h4>
                             </div>
                             <div class="card-body">
+                                <div class="table-responsive">
                                 <table id="fileCheckOutsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                       class="table table-striped dataTable no-footer dtr-inline w-100 ">
                                     <thead>
                                     <tr>
                                         <th>No.</th>
@@ -284,7 +289,7 @@
                                     </tr>
                                     </thead>
                                     <tbody></tbody>
-                                </table>
+                                </table></div>
                             </div>
                         </div>
                     </div>
@@ -292,8 +297,9 @@
                 <div class="tab-pane m-2" id="tab-activities" role="tabpanel">
                     <div class="card">
                         <div class="card-body">
+                            <div class="table-responsive">
                             <table id="fileActivitiesTable"
-                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 ">
                                 <thead>
                                 <tr>
                                     <th>No.</th>
@@ -304,13 +310,32 @@
                                 </tr>
                                 </thead>
                                 <tbody></tbody>
-                            </table>
+                            </table></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane m-2" id="tab-legal-holds" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="LegalHoldsTable"
+                                       class="table table-striped dataTable no-footer dtr-inline w-100 ">
+                                    <thead>
+                                    <tr>
+                                        <th>Ref</th>
+                                        <th>Name</th>
+                                        <th>Start</th>
+                                        <th>Status</th>
+                                        <th>actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-
         </div>
     </div>
     <div class="modal fade" id="fileActionModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -890,6 +915,43 @@
                 });
             } else {
                 $('#filePermissionsTable').DataTable().ajax.reload();
+            }
+        }
+
+        function fetchLegalHoldsTable() {
+            if (!$.fn.DataTable.isDataTable('#LegalHoldsTable')) {
+                $('#LegalHoldsTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    responsive: true,
+                    //"order": [[6, 'desc']],
+                    "columnDefs": [
+                        {"className": "text-center", "targets": [2]}
+                    ],
+                    ajax: {
+                        url: '{{ route('file.legal-holds',[$file->DocumentId]) }}',
+                        error: function (request) {
+                            if (request.status === 400 && request.responseJSON.message) {
+                                nWarning(request.responseJSON.message);
+                            } else {
+                                codeNotify(request.status);
+                            }
+                        }
+                    },
+                    columns: [
+                        {data: "Ref", name: 'Ref'},
+                        {data: 'Name', name: 'Name'},
+                        {data: 'CreatedOn', name: 'CreatedOn'},
+                        {data: 'Status', name: 'Status'},
+                        {data: 'action', name: 'action', orderable: false, searchable: false},
+                    ], "oLanguage": {
+                        "sEmptyTable": "no Legal Holds found here"
+                    }
+                }).on('error', function () {
+                    nWarning("an issue occurred while loading Legal Holds.");
+                });
+            } else {
+                $('#LegalHoldsTable').DataTable().ajax.reload();
             }
         }
     </script>

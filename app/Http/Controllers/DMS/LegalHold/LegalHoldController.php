@@ -9,6 +9,7 @@ use App\Models\Auth\User;
 use App\Models\DMS\DMSTags;
 use App\Models\DMS\Document;
 use App\Models\DMS\LegalHold;
+use App\Traits\Controller\LegalHoldTrait;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,6 +21,7 @@ use Yajra\DataTables\DataTables;
 
 class LegalHoldController extends Controller
 {
+    use LegalHoldTrait;
     public function __construct()
     {
         $this->middleware('ajax')->except(['index', 'create', 'show']);
@@ -32,26 +34,8 @@ class LegalHoldController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         $this->authorize('viewAny', LegalHold::class);
-        if ($request->ajax()) {
-            return Datatables::of(LegalHold::query()->lock('WITH(NOLOCK)')->withCount('documents'))->addIndexColumn()
-                ->addColumn('action', function (LegalHold $legalHold) {
-                    return '<a  href="' . route('legal-hold.show', [$legalHold->Ref]) . '"  class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</button>';
-                })->editColumn('documents_count', function ($legalHold) {
-                    return number_format($legalHold->documents_count);
-                })->editColumn('CreatedOn', function (LegalHold $legalHold) {
-                    return $legalHold->CreatedOn?->format('F d, Y h:i A');
-                })->editColumn('Status', function (LegalHold $legalHold) {
-                    return match ($legalHold->Status->value) {
-                        LegalHoldStatusEnum::Active->value => '<span class="badge rounded-pill bg-success">Active</span>',
-                        LegalHoldStatusEnum::Canceled->value => '<details><summary><span class="badge rounded-pill bg-warning text-dark">Canceled</span></summary>
-                            <p>Cancelled On: ' . $legalHold->ReleasedOn?->format('F d, Y h:i A') . '</p></details>',
-                        LegalHoldStatusEnum::Released->value => '<details><summary><span class="badge rounded-pill bg-primary">Released</span></summary>
-                            <p>Released On: ' . $legalHold->ReleasedOn?->format('F d, Y h:i A') . '</p></details>',
-                    };
-                })->rawColumns(['action', 'Status'])->make();
-        }
+        return (!$request->ajax()) ? view('dms.legal-hold.index'): $this->getLegalHolds(query: LegalHold::query(), counts: ['documents']);
 
-        return view('dms.legal-hold.index');
     }
 
     /**
