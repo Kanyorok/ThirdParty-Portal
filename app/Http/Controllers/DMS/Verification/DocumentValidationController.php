@@ -34,11 +34,11 @@ class DocumentValidationController extends Controller
             });
 
             try {
-                return Datatables::of($query->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
+                return Datatables::of($query->lock('WITH(NOLOCK)')->with('type')->select('*'))->addIndexColumn()
                     ->addColumn('action', function (DocumentValidation $documentValidation) {
                         return '<a href="' . route('dms.validation.show', $documentValidation->ValidationId) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</a>';
                     })->editColumn('Type', function (DocumentValidation $documentValidation) {
-                        return $documentValidation->Type->description();
+                        return $documentValidation->type->Name;
                     })->addColumn('Stage', function (DocumentValidation $documentValidation) {
 
                         if (is_null($documentValidation->DocumentId)) {
@@ -63,7 +63,7 @@ class DocumentValidationController extends Controller
      */
     public function show($documentValidationId)
     {
-        $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->with(['attributes', 'creator'])->first();
+        $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->with(['properties', 'creator','document'])->first();
         if (! $documentValidation instanceof DocumentValidation) {
             return redirect()->back()->with('error', 'Invalid validation provided');
         }
@@ -81,13 +81,24 @@ class DocumentValidationController extends Controller
      */
     public function approve(Request $request, $documentValidationId): JsonResponse
     {
-        $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->whereNull('ApprovedBy')->first();
+        $actor = $request->user();
+        $documentValidation = DocumentValidation::query()->user($actor)->where('ValidationId', $documentValidationId)->whereNull('ApprovedBy')->with('document')->first();
         if (! $documentValidation instanceof DocumentValidation) {
-            return $this->errored('Invalid validation provided');
+            return $this->errored('Invalid validation provided or cannot validate');
         }
 
-        $actor = $request->user();
+        try {
+            DB::transaction(function () use ($documentValidation, $actor) {
 
+            });
+        }catch (\Exception | \Throwable $e) {
+            Log::error('Error validating document: ' . $e->getMessage());
+        }
+
+        return $this->errored('Unexpected error, try again later');
+
+
+        /*
         try {
             $ApiCred = APICredential::query()->where('Integration', IntegrationsEnum::DMSCoreBanking->value)->latest('Id')->first();
             if (! $ApiCred instanceof APICredential) {
@@ -147,7 +158,7 @@ class DocumentValidationController extends Controller
             Log::error('Error validating document: ' . $e->getMessage());
 
             return $this->errored('Unexpected error, try again later');
-        }
+        }*/
     }
 
     /**

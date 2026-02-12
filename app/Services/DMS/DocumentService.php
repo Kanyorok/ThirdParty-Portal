@@ -196,19 +196,7 @@ class DocumentService extends PermissionsService
     /**
      * @throws ErroredException
      */
-    private static function _create(
-        Repository $repository,
-        User $actor,
-        DisksEnum $disk,
-        string $name,
-        ExtensionsEnum $extension,
-        string $path,
-        int $sizeInBytes,
-        string $checksum,
-        CategoryMaster $category = null,
-        bool $copyPermissions = true,
-        Collection $properties = null
-    ): DocumentService {
+    private static function _create(Repository $repository, User $actor, DisksEnum $disk, string $name, ExtensionsEnum $extension, string $path, int $sizeInBytes, string $checksum, CategoryMaster $category = null, bool $copyPermissions = true, Collection $properties = null): DocumentService {
         try {
             return DB::transaction(static function () use ($path, $checksum, $properties, $sizeInBytes, $disk, $category, $extension, $repository, $name, $actor, $copyPermissions) {
                 $document = Document::create([
@@ -541,7 +529,6 @@ class DocumentService extends PermissionsService
 
     private function _tagsHtml(): string
     {
-
         return '';
     }
 

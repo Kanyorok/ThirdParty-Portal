@@ -14,6 +14,7 @@ use App\Http\Controllers\DMS\Files\DocumentUploadController;
 use App\Http\Controllers\DMS\Files\TrashDocumentController;
 use App\Http\Controllers\DMS\LegalHold\DocumentLegalHoldController;
 use App\Http\Controllers\DMS\Files\DocumentLegalHoldController as FileLegalHoldController;
+use App\Http\Controllers\DMS\Files\DocumentValidationController as FileValidationController;
 use App\Http\Controllers\DMS\LegalHold\LegalHoldController;
 use App\Http\Controllers\DMS\Repo\RepositoryController;
 use App\Http\Controllers\DMS\Repo\RepositoryMoveController;
@@ -37,6 +38,7 @@ Route::middleware(['module:700000'])->namespace('DMS')->prefix('dms')->group(fun
         Route::get('embed-preview', DocumentPreviewController::class)->name('file.embed-preview');
         Route::get('preview', [DocumentActionsController::class, 'preview'])->name('file.preview');
         Route::put('file-visibility', [DocumentPermissionController::class, 'visibility'])->name('file.visibility');
+        Route::resource('file-validation', FileValidationController::class)->only(['index', 'store']);
         Route::resource('file-move', DocumentMoveController::class)->only(['index', 'store']);
         Route::resource('file-download', DocumentDownloadController::class)->only(['index', 'store']);
         Route::resource('document-checkouts', DocumentCheckOutController::class)->only(['index', 'store', 'update', 'destroy']);

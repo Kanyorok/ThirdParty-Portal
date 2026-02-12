@@ -95,7 +95,7 @@
     <script>
         $(function () {
             fetchFilePreview();
-            ``
+
             $("#file").change(function () {
                 $('.file-change').removeClass('d-none');
             });
@@ -152,7 +152,6 @@
             });
             @endif
         }
-
 
     </script>
 @endsection

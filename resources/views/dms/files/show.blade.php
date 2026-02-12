@@ -121,10 +121,13 @@
                             Actions
                         </button>
                         <div class="dropdown-menu" style="">
-                            {{--@if($file->ext()->canSign())
-                                <a class="dropdown-item" href="javascript:void(0)"><i class="fas fa-check"></i> Mark for
+                            @if($file->ext()->canSign())
+                                <a class="dropdown-item click-summary-data" href="javascript:void(0)"
+                                   data-summary_title='<i class="fas fa-tags"></i> Update File Tags'
+                                   data-click_url='{{ route('file-validation.store',[$file->DocumentId]) }}'
+                                  ><i class="fas fa-check"></i> Request for
                                     Validation</a>
-                            @endif--}}
+                            @endif
                             @if(!$file->ext()->canCheckOut())
                                 <a class="dropdown-item action-download-file" href="javascript:void(0)"><i
                                         class="fas fa-download"></i> Download</a>
