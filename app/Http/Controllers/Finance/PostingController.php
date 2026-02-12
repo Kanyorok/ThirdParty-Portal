@@ -45,15 +45,7 @@ class PostingController extends Controller
         try {
             $journal = FinanceJournalEntry::findOrFail($validated['journalID']);
 
-            // TEMPORARY: workflow authorization is bypassed until workflow integration is completed
-            // if (
-            //     in_array($validated['action_type'], ['approve', 'reject'], true)
-            //     && ! $this->workflowService->canApproveModel($journal, Auth::user())
-            // ) {
-            //     DB::rollBack();
-            //
-            //     return back()->with('fail', 'You are not authorized to approve this journal entry.');
-            // }
+            // TEMPORARY: workflow authorization is bypassed until workflow integration is completed.
 
             if ($validated['action_type'] === 'reject') {
                 // TEMPORARY: bypass workflow reject and persist decision directly
