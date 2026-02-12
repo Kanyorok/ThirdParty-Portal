@@ -1382,7 +1382,7 @@ class AwardsController extends Controller
                     $subject,
                     $body,
                     $to,
-                    'ThirdParties', // Correct Morph Class
+                    \App\Models\ThirdParty\ThirdParties::class, // Correct Morph Class
                     (string)$thirdParty->Id,
                     [],
                     [],
@@ -1444,7 +1444,7 @@ class AwardsController extends Controller
                             $subject,
                             $body,
                             $to,
-                            'ThirdParties', // Correct Morph Class
+                            \App\Models\ThirdParty\ThirdParties::class, // Correct Morph Class
                             (string)$thirdParty->Id,
                             [],
                             [],
@@ -1502,7 +1502,7 @@ class AwardsController extends Controller
                     $subject,
                     $body,
                     $to,
-                    'ThirdParties', // Correct Morph Class
+                    \App\Models\ThirdParty\ThirdParties::class, // Correct Morph Class
                     (string)$thirdParty->Id,
                     [],
                     [],
