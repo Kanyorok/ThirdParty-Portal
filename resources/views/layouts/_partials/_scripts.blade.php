@@ -141,14 +141,49 @@
             }
             } // End if (offcanvasElement)
             
-            @if (session('success'))
-                nSuccess('{!! session('success') !!} ');
-            @elseif (session('status'))
-                nSuccess('{!! session('status') !!} ');
+            const flashToast = (type, message) => {
+                const show = () => {
+                    try {
+                        // Ensure notifier exists before trying to show a toast
+                        if (!window.notyf && window.Notyf) {
+                            window.notyf = new window.Notyf();
+                        }
+
+                        if (type === 'success' && typeof nSuccess === 'function') nSuccess(message);
+                        if (type === 'error' && typeof nError === 'function') nError(message);
+                        if (type === 'warning' && typeof nWarning === 'function') nWarning(message);
+                    } catch (e) {
+                    }
+                };
+
+                if (document.readyState === 'complete') {
+                    show();
+                } else {
+                    window.addEventListener('load', show, { once: true });
+                }
+            };
+
+            @php
+                $toastSuccess = session()->pull('success');
+                $toastStatus = session()->pull('status');
+                $toastFail = session()->pull('fail');
+                $toastError = session()->pull('error');
+                $toastWarning = session()->pull('warning');
+            @endphp
+
+            @if ($toastSuccess)
+                flashToast('success', @json($toastSuccess));
+            @elseif ($toastStatus)
+                flashToast('success', @json($toastStatus));
             @endif
-            @if(session('fail')) nError('{!!  session('fail') !!}');
+            @if($toastFail)
+                flashToast('error', @json($toastFail));
             @endif
-            @if(session('warning')) nWarning('{!!  session('warning') !!}');
+            @if($toastError)
+                flashToast('error', @json($toastError));
+            @endif
+            @if($toastWarning)
+                flashToast('warning', @json($toastWarning));
             @endif
             $(document).on("click", ".clear-balance", (function () {
                 "**********" === $(this).html() ? $(this).html($(this).data("bal")) : $(this).html("**********")

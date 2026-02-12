@@ -366,6 +366,11 @@ class JournalEntryController extends Controller
         $this->authorize(PermissionEnum::FinanceGeneralLedgerUpdate, FinanceJournalEntry::class);
 
         $journalEntry = FinanceJournalEntry::with('journalLines')->findOrFail($id);
+        $approvalStatus = strtolower((string) $journalEntry->ApprovalStatus);
+        if (in_array($approvalStatus, ['posted', 'rejected'], true)) {
+            return redirect()->route('journalentry.show', $journalEntry->Id)
+                ->with('error', 'Posted or rejected journal entries cannot be edited.');
+        }
         $gls = FinanceGLAccounts::select('Id', 'GLName', 'GLCode')->get();
         $branches = Branch::select('Id', 'Name')->get();
         $departments = Department::select('Id', 'Name')->get();
@@ -378,6 +383,11 @@ class JournalEntryController extends Controller
         $this->authorize(PermissionEnum::FinanceGeneralLedgerUpdate, FinanceJournalEntry::class);
 
         $journalEntry = FinanceJournalEntry::with('journalLines')->findOrFail($id);
+        $approvalStatus = strtolower((string) $journalEntry->ApprovalStatus);
+        if (in_array($approvalStatus, ['posted', 'rejected'], true)) {
+            return redirect()->route('journalentry.show', $journalEntry->Id)
+                ->with('error', 'Posted or rejected journal entries cannot be edited.');
+        }
 
         // Normalize incoming arrays to entries and include optional line_id for diffing
         $entries = [];
@@ -498,6 +508,11 @@ class JournalEntryController extends Controller
         $this->authorize(PermissionEnum::FinanceGeneralLedgerDelete, FinanceJournalEntry::class);
 
         $entry = FinanceJournalEntry::findOrFail($id);
+        $approvalStatus = strtolower((string) $entry->ApprovalStatus);
+        if (in_array($approvalStatus, ['posted', 'rejected'], true)) {
+            return redirect()->route('journalentry.index')
+                ->with('error', 'Posted or rejected journal entries cannot be deleted.');
+        }
         DB::transaction(function () use ($entry) {
             FinanceJournalLines::where('JournalEntryId', $entry->Id)->delete();
             $entry->delete();
