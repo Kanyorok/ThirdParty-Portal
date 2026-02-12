@@ -133,6 +133,64 @@
                                               placeholder="Any special conditions, penalties, or additional requirements">{{ old('special_conditions', $award->SpecialConditions ?? '') }}</textarea>
                                 </div>
 
+                                <div class="card border mb-3">
+                                    <div class="card-header bg-light">
+                                        <strong>Penalty Rule (for missed/unaccepted milestones)</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-md-3">
+                                                <label class="form-label">Penalty Type</label>
+                                                <select name="penalty_type" class="form-select">
+                                                    <option value="">-- None --</option>
+                                                    <option value="PER_DAY_DELAY" @selected(old('penalty_type', $penaltyRule->PenaltyType ?? null) === 'PER_DAY_DELAY')>Per Day Delay</option>
+                                                    <option value="PERCENT" @selected(old('penalty_type', $penaltyRule->PenaltyType ?? null) === 'PERCENT')>Percent</option>
+                                                    <option value="FIXED" @selected(old('penalty_type', $penaltyRule->PenaltyType ?? null) === 'FIXED')>Fixed</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Rate</label>
+                                                <input type="number" step="0.0001" min="0" name="penalty_rate" class="form-control" value="{{ old('penalty_rate', $penaltyRule->Rate ?? null) }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Grace Days</label>
+                                                <input type="number" min="0" name="grace_days" class="form-control" value="{{ old('grace_days', $penaltyRule->GraceDays ?? 0) }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Cap Amount</label>
+                                                <input type="number" step="0.01" min="0" name="cap_amount" class="form-control" value="{{ old('cap_amount', $penaltyRule->CapAmount ?? null) }}">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Apply Method</label>
+                                                <select name="apply_method" class="form-select">
+                                                    <option value="DEDUCT_FROM_PAYMENT" @selected(old('apply_method', $penaltyRule->ApplyMethod ?? 'DEDUCT_FROM_PAYMENT') === 'DEDUCT_FROM_PAYMENT')>Deduct From Payment</option>
+                                                    <option value="DEBIT_NOTE" @selected(old('apply_method', $penaltyRule->ApplyMethod ?? null) === 'DEBIT_NOTE')>Debit Note</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Cap Percent</label>
+                                                <input type="number" step="0.0001" min="0" name="cap_percent" class="form-control" value="{{ old('cap_percent', $penaltyRule->CapPercent ?? null) }}">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check mt-4">
+                                                    <input class="form-check-input" type="checkbox" value="1" id="requires_approval_to_apply" name="requires_approval_to_apply" @checked(old('requires_approval_to_apply', $penaltyRule->RequiresApprovalToApply ?? false))>
+                                                    <label class="form-check-label" for="requires_approval_to_apply">
+                                                        Approval required to apply
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check mt-4">
+                                                    <input class="form-check-input" type="checkbox" value="1" id="requires_approval_to_waive" name="requires_approval_to_waive" @checked(old('requires_approval_to_waive', $penaltyRule->RequiresApprovalToWaive ?? true))>
+                                                    <label class="form-check-label" for="requires_approval_to_waive">
+                                                        Approval required to waive
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Action Buttons -->
                                 <div class="row">
                                     <div class="col-md-12 text-end">

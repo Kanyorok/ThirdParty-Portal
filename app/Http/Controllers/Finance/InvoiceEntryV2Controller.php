@@ -5,8 +5,13 @@ namespace App\Http\Controllers\Finance;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Finance\APInvoiceMilestone;
 use App\Models\Finance\FinanceInvoiceEntry;
+use App\Models\Procurement\ContractMilestone;
+use App\Models\Procurement\ContractPenaltyRule;
+use App\Models\Procurement\RFQAward;
 use App\Models\Procurement\Supplier;
+use App\Models\Procurement\TenderAward;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Currency;
@@ -90,8 +95,56 @@ class InvoiceEntryV2Controller extends Controller
 
         // Get default currency (ID 56 if exists, otherwise first available)
         $defaultCurrency = $this->getDefaultCurrency();
+        $contractOptions = $this->buildContractOptions();
 
-        return view('finance.accountspayable.invoiceentry.create-v2', compact('paymentMethods', 'defaultCurrency'));
+        return view('finance.accountspayable.invoiceentry.create-v2', compact('paymentMethods', 'defaultCurrency', 'contractOptions'));
+    }
+
+    public function getContracts()
+    {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
+        return response()->json($this->buildContractOptions());
+    }
+
+    public function getContractMilestones(string $type, int $id)
+    {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
+
+        if (!in_array($type, ['tender', 'rfq'], true)) {
+            return response()->json(['error' => 'Invalid contract type.'], 422);
+        }
+
+        $milestones = ContractMilestone::with('checklistItems')
+            ->where('ContractSourceType', $type)
+            ->where('ContractSourceID', $id)
+            ->orderBy('MilestoneNo')
+            ->get()
+            ->map(function ($m) {
+                $requiredTotal = $m->checklistItems->where('Required', true)->count();
+                $requiredDone = $m->checklistItems->where('Required', true)->where('IsFulfilled', true)->count();
+                $eligible = $m->Status === 'Waived'
+                    || ($m->Status === 'Accepted' && $requiredTotal === $requiredDone);
+
+                return [
+                    'Id' => $m->Id,
+                    'MilestoneNo' => $m->MilestoneNo,
+                    'Title' => $m->Title,
+                    'Status' => $m->Status,
+                    'PlannedDueDate' => $m->PlannedDueDate ? $m->PlannedDueDate->format('Y-m-d') : null,
+                    'ValueType' => $m->ValueType,
+                    'ValuePercent' => $m->ValuePercent,
+                    'ValueAmount' => $m->ValueAmount,
+                    'RequiredChecklistTotal' => $requiredTotal,
+                    'RequiredChecklistFulfilled' => $requiredDone,
+                    'Eligible' => $eligible,
+                ];
+            });
+
+        return response()->json([
+            'contract_type' => $type,
+            'contract_id' => $id,
+            'milestones' => $milestones,
+        ]);
     }
 
     public function show($id)
@@ -555,7 +608,132 @@ class InvoiceEntryV2Controller extends Controller
     public function store(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
+        $sourceType = strtoupper((string) $request->input('InvoiceSourceType', 'PO'));
+
         try {
+            DB::beginTransaction();
+
+            if ($sourceType === 'CONTRACT') {
+                $validated = $request->validate([
+                    'InvoiceSourceType' => 'required|in:PO,CONTRACT',
+                    'ContractSourceType' => 'required|in:tender,rfq',
+                    'ContractSourceID' => 'required|integer',
+                    'MilestoneIDs' => 'required|array|min:1',
+                    'MilestoneIDs.*' => 'required|integer|exists:t_ContractMilestones,Id',
+                    'InvoiceNumber' => 'required|string|max:255',
+                    'InvoiceDate' => 'required|date',
+                    'DueDate' => 'required|date',
+                    'Amount' => 'required|numeric|min:0.01',
+                    'Description' => 'nullable|string',
+                    'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
+                    'TaxID' => 'nullable|exists:t_FinanceTaxRuleConfiguration,Id',
+                    'CurrencyID' => 'nullable|exists:t_Currencies,Id',
+                    'ExchangeRate' => 'nullable|numeric|min:0.0001',
+                ]);
+
+                $contractType = strtolower($validated['ContractSourceType']);
+                $contractId = (int) $validated['ContractSourceID'];
+                $milestoneIds = array_values(array_unique(array_map('intval', $validated['MilestoneIDs'] ?? [])));
+
+                $party = $this->resolveContractParty($contractType, $contractId);
+                if (!$party) {
+                    throw ValidationException::withMessages([
+                        'ContractSourceID' => 'Could not resolve the contract supplier for this contract.',
+                    ]);
+                }
+
+                $milestones = ContractMilestone::with('checklistItems')
+                    ->where('ContractSourceType', $contractType)
+                    ->where('ContractSourceID', $contractId)
+                    ->whereIn('Id', $milestoneIds)
+                    ->orderBy('MilestoneNo')
+                    ->get();
+
+                if ($milestones->count() !== count($milestoneIds)) {
+                    throw ValidationException::withMessages([
+                        'MilestoneIDs' => 'One or more selected milestones do not belong to this contract.',
+                    ]);
+                }
+
+                $eligibility = $this->evaluateContractEligibility($contractType, $contractId, $milestones, (float) $validated['Amount']);
+                $tax = $this->computeTax((float) $validated['Amount'], $validated['TaxID'] ?? null);
+                [$fallbackPoId, $fallbackGrnId] = $this->resolveFallbackReferences();
+
+                if ($fallbackPoId === null || $fallbackGrnId === null) {
+                    throw ValidationException::withMessages([
+                        'ContractSourceID' => 'Cannot create contract invoice because fallback PO/GRN references are missing.',
+                    ]);
+                }
+
+                $invoice = FinanceInvoiceEntry::create([
+                    'SupplierID' => $party['supplier_ref'],
+                    'ThirdPartyID' => $party['third_party_id'],
+                    'POId' => $fallbackPoId,
+                    'POReference' => $fallbackPoId,
+                    'GRNId' => $fallbackGrnId,
+                    'GRNReference' => $fallbackGrnId,
+                    'InvoiceNumber' => $validated['InvoiceNumber'],
+                    'InvoiceDate' => $validated['InvoiceDate'],
+                    'DueDate' => $validated['DueDate'],
+                    'InvoiceAmount' => (float) $validated['Amount'],
+                    'TaxAmount' => $tax['TaxAmount'],
+                    'TaxPercentage' => $tax['TaxPercentage'],
+                    'Description' => $validated['Description'] ?? null,
+                    'TaxID' => $validated['TaxID'] ?? null,
+                    'TotalAmount' => $tax['TotalAmount'],
+                    'CurrencyID' => $validated['CurrencyID'] ?? 56,
+                    'ExchangeRate' => $validated['ExchangeRate'] ?? 1.0,
+                    'Status' => 'Draft',
+                    'InvoiceSourceType' => 'CONTRACT',
+                    'ContractSourceType' => $contractType,
+                    'ContractSourceID' => $contractId,
+                    'MilestoneEligibilityStatus' => $eligibility['eligible'] ? 'Eligible' : 'Pending',
+                    'IsOnHold' => !$eligibility['eligible'],
+                    'HoldReason' => $eligibility['hold_reason'],
+                    'HoldSetBy' => !$eligibility['eligible'] ? Auth::id() : null,
+                    'HoldSetOn' => !$eligibility['eligible'] ? now() : null,
+                    'PenaltySuggestedAmount' => $eligibility['penalty_suggested_amount'],
+                    'CreatedBy' => Auth::id(),
+                    'CreatedOn' => now(),
+                    'ModifiedBy' => Auth::id(),
+                    'ModifiedOn' => now(),
+                ]);
+
+                $count = max(1, $milestones->count());
+                $baseAllocation = round(((float) $validated['Amount']) / $count, 2);
+                $allocatedTotal = 0.0;
+                foreach ($milestones as $index => $milestone) {
+                    $amount = $index === ($count - 1)
+                        ? round(((float) $validated['Amount']) - $allocatedTotal, 2)
+                        : $baseAllocation;
+                    $allocatedTotal += $amount;
+
+                    APInvoiceMilestone::create([
+                        'FinanceInvoiceID' => $invoice->Id,
+                        'MilestoneID' => $milestone->Id,
+                        'BilledAmount' => $amount,
+                    ]);
+                }
+
+                if ($request->hasFile('attachment')) {
+                    $invoice->newDocument(
+                        ModulesEnum::Finance,
+                        $request->file('attachment'),
+                        [PermissionEnum::FinanceAccountsPayableCreate, PermissionEnum::FinanceAccountsPayableView],
+                        Auth::user()
+                    );
+                }
+
+                DB::commit();
+
+                $flashKey = $eligibility['eligible'] ? 'success' : 'warning';
+                $message = $eligibility['eligible']
+                    ? 'Contract invoice created successfully.'
+                    : 'Contract invoice created and placed on hold: ' . $eligibility['hold_reason'];
+
+                return redirect()->route('invoiceentry.show', $invoice->Id)->with($flashKey, $message);
+            }
+
             $validated = $request->validate([
                 'ThirdPartyID' => 'required|exists:t_ThirdParties,Id',
                 'SupplierID' => 'required|exists:t_Suppliers,Id',
@@ -569,101 +747,280 @@ class InvoiceEntryV2Controller extends Controller
                 'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
                 'TaxID' => 'nullable|exists:t_FinanceTaxRuleConfiguration,Id',
                 'CurrencyID' => 'nullable|exists:t_Currencies,Id',
-                'ExchangeRate' => 'nullable|numeric',
+                'ExchangeRate' => 'nullable|numeric|min:0.0001',
             ]);
 
-            DB::beginTransaction();
+            $tax = $this->computeTax((float) $validated['Amount'], $validated['TaxID'] ?? null);
 
-            //Calculate Tax Amount and get Tax Percentage
-            $taxAmount = 0;
-            $taxPercentage = 0.0;
-            if ($validated['TaxID']) {
-                $taxConfig = FinanceTaxRuleConfiguration::find($validated['TaxID']);
-                if ($taxConfig) {
-                    $taxPercentage = (float)$taxConfig->Rate;
-                    $taxAmount = round($validated['Amount'] * ($taxPercentage / 100), 2);
-                }
+            $grnReferenceId = DB::table('t_GoodsReceipts')
+                ->where('GRNID', $validated['GRNReference'])
+                ->value('id');
+
+            if (!$grnReferenceId) {
+                $grnReferenceId = DB::table('t_GoodsReceipts')->value('id');
             }
 
+            if (!$grnReferenceId) {
+                throw ValidationException::withMessages([
+                    'GRNReference' => 'No valid GRN reference could be resolved for invoice creation.',
+                ]);
+            }
+
+            $poAmount = (function () use ($validated) {
+                if (!empty($validated['POReference'])) {
+                    $order = DB::table('t_Orders')->where('Id', (int) $validated['POReference'])->first();
+                    if ($order) {
+                        $excl = (float) ($order->OrdTotExcl ?? 0);
+                        $taxPct = (float) ($order->TaxPercentage ?? 0);
+                        return $excl + ($excl * ($taxPct / 100));
+                    }
+                }
+                return (float) $validated['Amount'];
+            })();
+
             $invoice = FinanceInvoiceEntry::create([
-                //'ThirdPartyID' => $validated['ThirdPartyID'], // Store in correct field for relationship
-                'SupplierID' => $validated['ThirdPartyID'], // Also store SupplierID separately if needed
-                'POId' => $validated['POReference'], // This is actually the PO ID from the form
-                'POReference'=>  $validated['POReference'],
-                'GRNId' => 1,//$validated['GRNReference'], //Set to one to avoid data type conversion since with po we can get the grn
-                'GRNReference'=>1,//$validated['GRNReference'],
+                'SupplierID' => $validated['ThirdPartyID'],
+                'POId' => (int) $validated['POReference'],
+                'POReference' => (int) $validated['POReference'],
+                'GRNId' => (int) $grnReferenceId,
+                'GRNReference' => (int) $grnReferenceId,
                 'InvoiceNumber' => $validated['InvoiceNumber'],
                 'InvoiceDate' => $validated['InvoiceDate'],
                 'DueDate' => $validated['DueDate'],
-                // Store inclusive amount for posting/approval
-                'InvoiceAmount' => (function() use ($validated) {
-                    // Calculate based on PO if available
-                    if (!empty($validated['POReference'])) {
-                        $order = DB::table('t_Orders')->where('Id', (int)$validated['POReference'])->first();
-                        if ($order) {
-                            $excl = (float)($order->OrdTotExcl ?? 0);
-                            $taxPct = (float)($order->TaxPercentage ?? 0);
-                            $taxAmt = $excl * ($taxPct / 100);
-                            return $excl + $taxAmt;
-                        }
-                    }
-                    // Fallback to form amount (assumed inclusive if no PO logic)
-                    return (float)$validated['Amount'];
-                })(),
-                'TaxAmount' => $taxAmount,
-                'TaxPercentage' => $taxPercentage ?? 0.0,
-                'Description' => $validated['Description'],
-                'TaxID' => 1,//$validated['TaxID'] ?? 1,
-                'TotalAmount' => (function() use ($validated) {
-                    if (!empty($validated['POReference'])) {
-                        $order = DB::table('t_Orders')->where('Id', (int)$validated['POReference'])->first();
-                        if ($order) {
-                            $excl = (float)($order->OrdTotExcl ?? 0);
-                            $taxPct = (float)($order->TaxPercentage ?? 0);
-                            $taxAmt = $excl * ($taxPct / 100);
-                            return $excl + $taxAmt;
-                        }
-                    }
-                    return (float)$validated['Amount'];
-                })(),
-                'CurrencyID' => $validated['CurrencyID'] ?? 56, // Set to default currency
-                'ExchangeRate' => $validated['ExchangeRate'] ?? 1.0, // Set exchange rate to 1
+                'InvoiceAmount' => (float) $poAmount,
+                'TaxAmount' => $tax['TaxAmount'],
+                'TaxPercentage' => $tax['TaxPercentage'],
+                'Description' => $validated['Description'] ?? null,
+                'TaxID' => $validated['TaxID'] ?? null,
+                'TotalAmount' => (float) $poAmount,
+                'CurrencyID' => $validated['CurrencyID'] ?? 56,
+                'ExchangeRate' => $validated['ExchangeRate'] ?? 1.0,
                 'Status' => 'Draft',
+                'InvoiceSourceType' => 'PO',
+                'ContractSourceType' => null,
+                'ContractSourceID' => null,
+                'MilestoneEligibilityStatus' => null,
+                'IsOnHold' => false,
+                'HoldReason' => null,
+                'HoldSetBy' => null,
+                'HoldSetOn' => null,
+                'PenaltySuggestedAmount' => 0,
                 'CreatedBy' => Auth::id(),
                 'CreatedOn' => now(),
                 'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now()
+                'ModifiedOn' => now(),
             ]);
 
-            //File Upload
             if ($request->hasFile('attachment')) {
                 $invoice->newDocument(
-                    ModulesEnum::Finance, // or ModulesEnum::INVOICE if you have it
+                    ModulesEnum::Finance,
                     $request->file('attachment'),
-                    [PermissionEnum::FinanceAccountsPayableCreate, PermissionEnum::FinanceAccountsPayableView], // Permissions
+                    [PermissionEnum::FinanceAccountsPayableCreate, PermissionEnum::FinanceAccountsPayableView],
                     Auth::user()
                 );
             }
 
             DB::commit();
 
-            Log::info('Invoice V2 created successfully', ['invoice_id' => $invoice->Id]);
+            Log::info('Invoice V2 created successfully', ['invoice_id' => $invoice->Id, 'source_type' => 'PO']);
 
             return redirect()->route('invoiceentry.show', $invoice->Id)
                 ->with('success', 'Invoice created successfully');
-
-        }catch(\Throwable $th){
-            return $th->getMessage();
-        }
-        catch (ValidationException $e) {
+        } catch (ValidationException $e) {
             DB::rollBack();
-            Log::error('Validation error creating invoice: ', $e->errors());
+            Log::error('Validation error creating invoice', ['errors' => $e->errors()]);
             return back()->withErrors($e->errors())->withInput();
-        } catch (\Exception $e) {
+        } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error('Error creating invoice: ' . $e->getMessage());
-            return back()->with('error', 'Failed to create invoice: ' . $e->getMessage())->withInput();
+            Log::error('Error creating invoice', ['error' => $th->getMessage()]);
+            return back()->with('error', 'Failed to create invoice: ' . $th->getMessage())->withInput();
         }
+    }
+
+    private function buildContractOptions()
+    {
+        $tenderContracts = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
+            ->whereIn('ContractStatus', ['Approved', 'Executed'])
+            ->get()
+            ->map(function ($award) {
+                return [
+                    'type' => 'tender',
+                    'id' => $award->Id,
+                    'reference' => $award->ContractRef ?: ('TENDER-CONTRACT-' . $award->Id),
+                    'title' => $award->tender?->Title ?? 'Tender Contract',
+                    'supplier' => $this->resolveSupplierNameById((int) ($award->WinningSupplierID ?? 0)),
+                    'value' => (float) ($award->ContractValue ?? 0),
+                    'status' => $award->ContractStatus,
+                ];
+            });
+
+        $rfqContracts = RFQAward::with(['rfq', 'supplier.supplierMaster.party'])
+            ->whereIn('ContractStatus', ['Approved', 'Executed'])
+            ->get()
+            ->map(function ($award) {
+                return [
+                    'type' => 'rfq',
+                    'id' => $award->Id,
+                    'reference' => $award->ContractRef ?: ('RFQ-CONTRACT-' . $award->Id),
+                    'title' => $award->rfq?->Subject ?? 'RFQ Contract',
+                    'supplier' => $this->resolveSupplierNameById((int) ($award->SupplierId ?? 0)),
+                    'value' => (float) ($award->ContractValue ?? 0),
+                    'status' => $award->ContractStatus,
+                ];
+            });
+
+        return $tenderContracts
+            ->merge($rfqContracts)
+            ->sortBy('reference')
+            ->values();
+    }
+
+    private function resolveContractParty(string $type, int $contractId): ?array
+    {
+        if ($type === 'tender') {
+            $award = TenderAward::find($contractId);
+            if (!$award) {
+                return null;
+            }
+            $supplierId = (int) ($award->WinningSupplierID ?? 0);
+        } else {
+            $award = RFQAward::find($contractId);
+            if (!$award) {
+                return null;
+            }
+            $supplierId = (int) ($award->SupplierId ?? 0);
+        }
+
+        if ($supplierId <= 0) {
+            return null;
+        }
+
+        $thirdPartyId = DB::table('t_Suppliers')
+            ->where('Id', $supplierId)
+            ->value('ThirdPartyID');
+
+        // Keep backward compatibility with existing AP behavior where SupplierID stores ThirdPartyID.
+        $supplierRef = (int) ($thirdPartyId ?: $supplierId);
+
+        return [
+            'supplier_id' => $supplierId,
+            'third_party_id' => (int) ($thirdPartyId ?: $supplierRef),
+            'supplier_ref' => $supplierRef,
+        ];
+    }
+
+    private function evaluateContractEligibility(string $contractType, int $contractId, $milestones, float $invoiceAmount): array
+    {
+        $reasons = [];
+        $eligible = true;
+        $penaltySuggested = 0.0;
+        $today = now()->startOfDay();
+
+        $contractRule = ContractPenaltyRule::where('ContractSourceType', $contractType)
+            ->where('ContractSourceID', $contractId)
+            ->whereNull('MilestoneID')
+            ->where('IsActive', true)
+            ->latest('Id')
+            ->first();
+
+        foreach ($milestones as $milestone) {
+            $requiredTotal = $milestone->checklistItems->where('Required', true)->count();
+            $requiredDone = $milestone->checklistItems->where('Required', true)->where('IsFulfilled', true)->count();
+            $isAccepted = in_array($milestone->Status, ['Accepted', 'Waived'], true);
+            $isWaived = $milestone->Status === 'Waived';
+
+            if (!$isAccepted || (!$isWaived && $requiredTotal !== $requiredDone)) {
+                $eligible = false;
+                $reasons[] = "M{$milestone->MilestoneNo} - {$milestone->Title} not accepted/complete.";
+            }
+
+            $rule = ContractPenaltyRule::where('ContractSourceType', $contractType)
+                ->where('ContractSourceID', $contractId)
+                ->where('MilestoneID', $milestone->Id)
+                ->where('IsActive', true)
+                ->latest('Id')
+                ->first() ?: $contractRule;
+
+            if ($rule && $milestone->PlannedDueDate) {
+                $graceDays = (int) ($rule->GraceDays ?? 0);
+                $dueDate = \Carbon\Carbon::parse($milestone->PlannedDueDate)->addDays($graceDays)->startOfDay();
+                if ($today->greaterThan($dueDate) && !$isAccepted) {
+                    $delayDays = $dueDate->diffInDays($today);
+                    $penaltySuggested += $this->computeMilestonePenalty($rule, $delayDays, $invoiceAmount);
+                }
+            }
+        }
+
+        return [
+            'eligible' => $eligible,
+            'hold_reason' => $eligible ? null : implode(' ', $reasons),
+            'penalty_suggested_amount' => round($penaltySuggested, 2),
+        ];
+    }
+
+    private function computeMilestonePenalty(ContractPenaltyRule $rule, int $delayDays, float $invoiceAmount): float
+    {
+        $base = 0.0;
+        if ($rule->PenaltyType === 'PER_DAY_DELAY') {
+            $base = ((float) $rule->Rate) * $delayDays;
+        } elseif ($rule->PenaltyType === 'PERCENT') {
+            $base = $invoiceAmount * (((float) $rule->Rate) / 100);
+        } else {
+            $base = (float) ($rule->Rate ?? 0);
+        }
+
+        if (!empty($rule->CapAmount)) {
+            $base = min($base, (float) $rule->CapAmount);
+        }
+        if (!empty($rule->CapPercent)) {
+            $capPercentAmount = $invoiceAmount * (((float) $rule->CapPercent) / 100);
+            $base = min($base, $capPercentAmount);
+        }
+
+        return max(0, $base);
+    }
+
+    private function computeTax(float $amount, $taxId): array
+    {
+        $taxAmount = 0.0;
+        $taxPercentage = 0.0;
+
+        if (!empty($taxId)) {
+            $taxConfig = FinanceTaxRuleConfiguration::find($taxId);
+            if ($taxConfig) {
+                $taxPercentage = (float) $taxConfig->Rate;
+                $taxAmount = round($amount * ($taxPercentage / 100), 2);
+            }
+        }
+
+        return [
+            'TaxAmount' => $taxAmount,
+            'TaxPercentage' => $taxPercentage,
+            'TotalAmount' => round($amount + $taxAmount, 2),
+        ];
+    }
+
+    private function resolveFallbackReferences(): array
+    {
+        $poId = DB::table('t_Orders')->orderBy('Id')->value('Id');
+        $grnId = DB::table('t_GoodsReceipts')->orderBy('id')->value('id');
+
+        return [$poId ? (int) $poId : null, $grnId ? (int) $grnId : null];
+    }
+
+    private function resolveSupplierNameById(int $supplierId): string
+    {
+        if ($supplierId <= 0) {
+            return 'N/A';
+        }
+
+        $row = DB::table('t_Suppliers as s')
+            ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+            ->where('s.Id', $supplierId)
+            ->selectRaw("COALESCE(tp.TradingName, tp.ThirdPartyName, 'N/A') as SupplierName")
+            ->first();
+
+        return $row->SupplierName ?? 'N/A';
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\ContractPenaltyRule;
 use App\Models\Procurement\TenderAward;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\RFQAward;
@@ -177,6 +178,14 @@ class ContractsController extends Controller
             'payment_terms' => 'required|string',
             'delivery_terms' => 'nullable|string',
             'special_conditions' => 'nullable|string',
+            'penalty_type' => 'nullable|in:PER_DAY_DELAY,PERCENT,FIXED',
+            'penalty_rate' => 'nullable|numeric|min:0',
+            'grace_days' => 'nullable|integer|min:0',
+            'cap_amount' => 'nullable|numeric|min:0',
+            'cap_percent' => 'nullable|numeric|min:0',
+            'apply_method' => 'nullable|in:DEDUCT_FROM_PAYMENT,DEBIT_NOTE',
+            'requires_approval_to_apply' => 'nullable|boolean',
+            'requires_approval_to_waive' => 'nullable|boolean',
         ]);
 
         DB::beginTransaction();
@@ -220,6 +229,8 @@ class ContractsController extends Controller
                     'SpecialConditions' => $request->special_conditions,
                     'ModifiedBy' => Auth::id(),
                 ]);
+
+                $this->upsertPenaltyRule($type, (int) $award->Id, $request);
 
                 DB::commit();
 
@@ -269,7 +280,9 @@ class ContractsController extends Controller
             $canApprove = false;
         }
 
-        return view('procurement.contracts.contractcreation.show', compact('contract', 'type', 'history', 'canApprove'));
+        $penaltyRule = $this->getActivePenaltyRule($type, (int) $contract->Id);
+
+        return view('procurement.contracts.contractcreation.show', compact('contract', 'type', 'history', 'canApprove', 'penaltyRule'));
     }
 
     /**
@@ -297,7 +310,9 @@ class ContractsController extends Controller
                 ->findOrFail($id);
         }
 
-        return view('procurement.contracts.contractcreation.edit', compact('award', 'type'));
+        $penaltyRule = $this->getActivePenaltyRule($type, (int) $award->Id);
+
+        return view('procurement.contracts.contractcreation.edit', compact('award', 'type', 'penaltyRule'));
     }
 
     /**
@@ -314,6 +329,14 @@ class ContractsController extends Controller
             'payment_terms' => 'required|string',
             'delivery_terms' => 'nullable|string',
             'special_conditions' => 'nullable|string',
+            'penalty_type' => 'nullable|in:PER_DAY_DELAY,PERCENT,FIXED',
+            'penalty_rate' => 'nullable|numeric|min:0',
+            'grace_days' => 'nullable|integer|min:0',
+            'cap_amount' => 'nullable|numeric|min:0',
+            'cap_percent' => 'nullable|numeric|min:0',
+            'apply_method' => 'nullable|in:DEDUCT_FROM_PAYMENT,DEBIT_NOTE',
+            'requires_approval_to_apply' => 'nullable|boolean',
+            'requires_approval_to_waive' => 'nullable|boolean',
         ]);
 
         $award = null;
@@ -332,6 +355,8 @@ class ContractsController extends Controller
             'SpecialConditions' => $request->special_conditions,
             'ModifiedBy' => Auth::id(),
         ]);
+
+        $this->upsertPenaltyRule($type, (int) $award->Id, $request);
 
         return redirect()->route('contracts.show', ['id' => $id, 'type' => $type])
             ->with('success', 'Contract updated successfully.');
@@ -525,6 +550,46 @@ class ContractsController extends Controller
         $year = date('Y');
         $sequence = str_pad(($award->Id ?? rand(1, 999)), 3, '0', STR_PAD_LEFT);
         return "CONTRACT/PROC/{$year}/{$sequence}";
+    }
+
+    protected function getActivePenaltyRule(string $type, int $contractId): ?ContractPenaltyRule
+    {
+        return ContractPenaltyRule::where('ContractSourceType', $type)
+            ->where('ContractSourceID', $contractId)
+            ->whereNull('MilestoneID')
+            ->where('IsActive', true)
+            ->latest('Id')
+            ->first();
+    }
+
+    protected function upsertPenaltyRule(string $type, int $contractId, Request $request): void
+    {
+        if (!$request->filled('penalty_type')) {
+            ContractPenaltyRule::where('ContractSourceType', $type)
+                ->where('ContractSourceID', $contractId)
+                ->whereNull('MilestoneID')
+                ->update(['IsActive' => false]);
+            return;
+        }
+
+        ContractPenaltyRule::updateOrCreate(
+            [
+                'ContractSourceType' => $type,
+                'ContractSourceID' => $contractId,
+                'MilestoneID' => null,
+            ],
+            [
+                'PenaltyType' => $request->input('penalty_type'),
+                'Rate' => $request->input('penalty_rate'),
+                'GraceDays' => (int) $request->input('grace_days', 0),
+                'CapAmount' => $request->input('cap_amount'),
+                'CapPercent' => $request->input('cap_percent'),
+                'ApplyMethod' => $request->input('apply_method', 'DEDUCT_FROM_PAYMENT'),
+                'RequiresApprovalToApply' => (bool) $request->boolean('requires_approval_to_apply'),
+                'RequiresApprovalToWaive' => (bool) $request->boolean('requires_approval_to_waive'),
+                'IsActive' => true,
+            ]
+        );
     }
 
     /**

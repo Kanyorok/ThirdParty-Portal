@@ -8,6 +8,7 @@ use App\Models\DMS\Document;
 use App\Models\DMS\DocumentRelation;
 use App\Models\Procurement\GoodsReceipt;
 use App\Models\Procurement\Order;
+use App\Models\Procurement\ContractPenaltyEvent;
 use App\Models\ThirdParies\Supplier;
 use App\Models\ThirdParty\ThirdParties;
 use App\Traits\Model\DocumentsTrait;
@@ -43,6 +44,15 @@ class FinanceInvoiceEntry extends Model
         'TaxAmount',
         'TaxPercentage',
         'TotalAmount',
+        'InvoiceSourceType',
+        'ContractSourceType',
+        'ContractSourceID',
+        'MilestoneEligibilityStatus',
+        'IsOnHold',
+        'HoldReason',
+        'HoldSetBy',
+        'HoldSetOn',
+        'PenaltySuggestedAmount',
         'DueDate',
         'Amount', // Added for v2 compatibility
         'DueDate', // Added for v2 functionality
@@ -57,6 +67,9 @@ class FinanceInvoiceEntry extends Model
         'TaxPercentage' => 'float',
         'TotalAmount' => 'float',
         'ExchangeRate' => 'float',
+        'IsOnHold' => 'boolean',
+        'PenaltySuggestedAmount' => 'float',
+        'HoldSetOn' => 'datetime',
     ];
 
     public static function getPrimaryKey() : string
@@ -116,5 +129,15 @@ class FinanceInvoiceEntry extends Model
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+    }
+
+    public function milestoneAllocations()
+    {
+        return $this->hasMany(APInvoiceMilestone::class, 'FinanceInvoiceID', 'Id');
+    }
+
+    public function contractPenaltyEvents()
+    {
+        return $this->hasMany(ContractPenaltyEvent::class, 'FinanceInvoiceID', 'Id');
     }
 }

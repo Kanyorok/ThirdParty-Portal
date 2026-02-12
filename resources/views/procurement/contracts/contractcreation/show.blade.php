@@ -288,6 +288,22 @@
                                 </div>
                             </div>
                         @endif
+
+                        <div class="mt-3">
+                            <h6 class="text-primary">🚨 Penalty Rule</h6>
+                            <div class="bg-light p-3 rounded">
+                                @if(!empty($penaltyRule))
+                                    <div><strong>Type:</strong> {{ $penaltyRule->PenaltyType }}</div>
+                                    <div><strong>Rate:</strong> {{ $penaltyRule->Rate ?? 'N/A' }}</div>
+                                    <div><strong>Grace Days:</strong> {{ $penaltyRule->GraceDays }}</div>
+                                    <div><strong>Cap Amount:</strong> {{ $penaltyRule->CapAmount ?? 'N/A' }}</div>
+                                    <div><strong>Cap Percent:</strong> {{ $penaltyRule->CapPercent ?? 'N/A' }}</div>
+                                    <div><strong>Apply Method:</strong> {{ $penaltyRule->ApplyMethod }}</div>
+                                @else
+                                    <span class="text-muted">No penalty rule configured.</span>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 </div>
 

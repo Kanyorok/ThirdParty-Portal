@@ -4,6 +4,7 @@ namespace App\Models\Procurement;
 use App\Models\Core\Approval\WorkflowHistory;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RFQAward extends Model
@@ -65,6 +66,18 @@ class RFQAward extends Model
         return $this->belongsTo(\App\Models\ThirdParies\Supplier::class, 'SupplierId', 'Id');
     }
 
+    public function milestones(): HasMany
+    {
+        return $this->hasMany(ContractMilestone::class, 'ContractSourceID', 'Id')
+            ->where('ContractSourceType', 'rfq');
+    }
+
+    public function penaltyRules(): HasMany
+    {
+        return $this->hasMany(ContractPenaltyRule::class, 'ContractSourceID', 'Id')
+            ->where('ContractSourceType', 'rfq');
+    }
+
      /**
      * Workflow history relationship
      */
@@ -110,5 +123,4 @@ class RFQAward extends Model
         return !empty($this->ContractStatus);
     }
 }
-
 
