@@ -606,10 +606,18 @@ class DocumentService extends PermissionsService
         return $this;
     }
 
-    public function summaryList(): string
+    public function summaryList(bool $withTrash= false, bool $refreshOnDelete = false): string
     {
+        $parameters = [];
+        if ($withTrash) {
+            $parameters = ['trash' => 'yes'];
+            if ($refreshOnDelete) {
+                $parameters['trashRefresh'] = 'yes';
+            }
+        }
+
         return '<span class="btn btn-outline-info modal-preview-document" title="' . $this->document->Name . '"
-                        data-url="' . route('file.embed-preview', [$this->document->DocumentId]) . '" id="document-' . $this->document->DocumentId . '">
+                        data-url="' .  route('file.embed-preview', array_merge([$this->document->DocumentId], $parameters)) . '" id="document-' . $this->document->DocumentId . '">
                     ' . $this->document->ext()?->getIcon() . "&nbsp;" . Str::limit(explode(".", $this->document->Name)[0], 10) . '.' . $this->document->ext()?->value . '</span>';
     }
 

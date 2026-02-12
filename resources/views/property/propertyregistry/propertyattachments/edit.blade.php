@@ -54,7 +54,7 @@
                 <label class="form-label">Upload File<span class="text-danger">*</span></label>
                 <input type="file" name="file[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx">
                 <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB</small>
-                
+
             </div>
         </div>
 
@@ -70,7 +70,6 @@
                   <span class="text-muted">No documents attached.</span>
               @endforelse
           </div>
-
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <a href="{{ route('attachments.index') }}" class="btn btn-secondary">Cancel</a>
                 <button type="submit" class="btn btn-primary"
