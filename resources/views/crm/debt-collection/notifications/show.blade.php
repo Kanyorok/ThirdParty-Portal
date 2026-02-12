@@ -66,18 +66,20 @@
                         </div>
                     @endif
                     <div class="tab-pane m-2" id="tab-0" role="tabpanel">
-                        <table id="MessagesTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>SMS ID</th>
-                                <th>Loan</th>
-                                <th>Dated</th>
-                                <th>actions</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table id="MessagesTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 ">
+                                <thead>
+                                <tr>
+                                    <th>SMS ID</th>
+                                    <th>Loan</th>
+                                    <th>Dated</th>
+                                    <th>actions</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
