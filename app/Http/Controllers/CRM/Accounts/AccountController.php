@@ -88,6 +88,6 @@ class AccountController extends Controller
         }
 
 
-        return view('crm.accounts.show', compact('account',));
+        return view('crm.accounts.show', compact('account', ));
     }
 }

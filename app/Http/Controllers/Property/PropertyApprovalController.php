@@ -163,13 +163,13 @@ class PropertyApprovalController extends Controller
         }
 
         // Availability of the property Unit
-            $unit = PropertyUnit::findOrFail($termination->lease->Unit);
-            $unit->update([
-                'IsRentable' => 1,   // Unit can now be rented again
-                'CurrentStatus' => 1,   // Status = Available
-                'ModifiedBy' => $user->Id,
-                'ModifiedOn' => now(),
-            ]);
+        $unit = PropertyUnit::findOrFail($termination->lease->Unit);
+        $unit->update([
+            'IsRentable' => 1,   // Unit can now be rented again
+            'CurrentStatus' => 1,   // Status = Available
+            'ModifiedBy' => $user->Id,
+            'ModifiedOn' => now(),
+        ]);
 
 
         return redirect()->route('propertyapproval.index')->with('success', 'Termination approved successfully.');

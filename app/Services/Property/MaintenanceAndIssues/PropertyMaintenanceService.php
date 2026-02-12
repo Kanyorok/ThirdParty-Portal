@@ -58,14 +58,14 @@ class PropertyMaintenanceService
                 'ModifiedBy' => $user->Id,
             ]);
 
-        if ($document) {
-            $maintenancerequest->newDocument(
-                ModulesEnum::Property,
-                $document,
-                [PermissionEnum::PropertyMaintenanceRequestView->value],
-                $user
-            );
-        }
+            if ($document) {
+                $maintenancerequest->newDocument(
+                    ModulesEnum::Property,
+                    $document,
+                    [PermissionEnum::PropertyMaintenanceRequestView->value],
+                    $user
+                );
+            }
 
             activity()->causedBy($user->Id)->performedOn($maintenancerequest)->event('create')->log("Added Property Unit {$maintenancerequest->Id}.");
 

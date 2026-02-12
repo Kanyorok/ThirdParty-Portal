@@ -317,8 +317,7 @@ class PropertyRegistryController extends Controller
         return Excel::download(
             new class () implements
                 FromArray,
-                WithHeadings
-            {
+                WithHeadings {
                 public function array(): array
                 {
                     return [

@@ -58,6 +58,7 @@ class PropertyAttachmentsController extends Controller
     public function show($id)
     {
         $propertyattachments = PropertyAttachments::findOrFail($id);
+
         return view('property.propertyregistry.propertyattachments.show', compact('propertyattachments'));
     }
 
