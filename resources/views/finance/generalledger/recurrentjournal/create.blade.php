@@ -1,15 +1,12 @@
 @extends('layouts.app')
-@section('title', 'Journal Entry')
-
+@section('title',' Recurring Journal')
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
-        /* Select2 full-width */
         .select2-container {
             width: 100% !important;
         }
 
-        /* Table base */
         .je-table {
             min-width: 1700px;
             border-collapse: separate;
@@ -21,7 +18,7 @@
             white-space: nowrap;
         }
 
-        /* Sticky headers + columns (disabled per request) */
+        /* sticky disabled */
         .je-sticky {
             position: static;
             background: #fff;
@@ -41,7 +38,7 @@
             z-index: auto;
         }
 
-        /* Column widths */
+        /* column widths */
         .je-table th.col-gl, .je-table td.col-gl {
             min-width: 360px;
         }
@@ -73,7 +70,7 @@
             text-align: center;
         }
 
-        /* Inputs and selects spacing */
+        /* inputs */
         .je-table .form-select,
         .je-table .form-control,
         .je-table textarea {
@@ -81,13 +78,11 @@
             font-size: 0.875rem;
         }
 
-        /* Narration textarea height */
         .narration-input {
             min-height: 60px;
             resize: vertical;
         }
 
-        /* Totals section */
         .totals-box {
             display: flex;
             justify-content: space-between;
@@ -105,7 +100,7 @@
 
         /* Match Bootstrap form-select look without changing table layout */
         .je-table td.col-gl .select2-container .select2-selection--single {
-            height: calc(2.25rem + 2px); /* same as Bootstrap form-select */
+            height: calc(2.25rem + 2px);
             display: flex;
             align-items: center;
             padding: 0 2rem 0 0.75rem;
@@ -131,52 +126,66 @@
             transform: translateY(-50%);
             right: 0.5rem;
         }
-
     </style>
 @endsection
-
 @section('content')
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-
-
-    <div class="container mt-0">
-        <div class="card shadow rounded-4">
-            <div class="card-header bg-light py-2 px-3 d-flex align-items-center">
-                <h6 class="mb-0 text-muted">
-                    <i class="fab fa-wpforms text-info me-1"></i> Journal Entry
-                </h6>
+    <div class="container mt-4">
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
+        @endif
 
+        <div class="card shadow rounded-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-sync-alt text-info me-2"></i>
+                    Recurring Journal
+                </h5>
+            </div>
             <div class="card-body">
-                <form method="POST" action="{{route('journalentry.store')}}" id="journalForm">
+                <form method="POST" action="{{route('recurrentjournal.store')}}" id="recurringJournalForm">
                     @csrf
                     @method('POST')
 
-                    {{-- Journal Header --}}
-                    <div class="row mb-4 g-3">
+                    {{-- Header --}}
+                    <div class="row mb-4">
                         <div class="col-md-4">
-                            <label class="form-label">Journal Date</label>
-                            <input type="date" name="JournalDate" class="form-control"
-                                   value="{{ date('Y-m-d') }}" required>
+                            <label class="form-label">Start Date</label>
+                            <input type="date" name="StartDate" class="form-control" value="{{ date('Y-m-d') }}" required>
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-4">
+                            <label class="form-label">Cut-off Date</label>
+                            <input type="date" name="CuttOffDate" class="form-control" value="{{ date('Y-m-d') }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Frequency</label>
+                            <select name="Frequency" class="form-select" required>
+                                <option value="">-- Select --</option>
+                                @forelse($paymentFrequency as $pf)
+                                    <option value="{{$pf->Value}}">{{$pf->Description}}</option>
+                                @empty
+                                    <option disabled selected>No records found</option>
+                                @endforelse
+
+                            </select>
+                        </div>
+                        <div class="col-md-4 mt-3">
+                            <label class="form-label">Reference Name</label>
+                            <input type="text" name="ReferenceName" class="form-control" placeholder="e.g., Monthly Rent" required>
+                        </div>
+                        <div class="col-md-8 mt-3">
                             <label class="form-label">Description</label>
-                            <input type="text" name="Description" class="form-control"
-                                   placeholder="e.g., Loan Disbursement">
+                            <input type="text" name="Description" class="form-control" placeholder="Optional">
                         </div>
                     </div>
 
-                    {{-- Journal Lines --}}
-                    <h5 class="border-bottom pb-2 mb-3 text-primary">🧾 Journal Lines</h5>
+                    {{-- Recurring Lines --}}
+                    <h5 class="border-bottom pb-2 mb-3 text-primary">📋 Recurring Journal Lines</h5>
 
                     <div class="table-responsive mb-3">
                         <table class="table table-bordered align-middle table-sm je-table">
@@ -189,25 +198,22 @@
                                 <th class="col-drcr">DR / CR</th>
                                 <th class="col-amount">Amount</th>
                                 <th class="col-narr">Narration</th>
-                                <th class="col-action">Action</th>
+                                <th class="col-action text-center">Action</th>
                             </tr>
                             </thead>
-                            <tbody id="journalBody">
-                            @for ($i = 0; $i < 2; $i++)
+                            <tbody id="recurringBody">
+                            @for ($i = 0; $i < 3; $i++)
                                 <tr>
-                                    <td class="line-number je-sticky je-sticky-col">{{ $i + 1 }}</td>
+                                    <td class="je-sticky je-sticky-col">{{ $i + 1 }}</td>
                                     <td class="col-gl je-sticky je-sticky-gl">
-                                        <select name="GLAccount[]" class="form-select gl-account-select p-2" required>
-                                            <option value="" class="p-2" selected disabled>Select GL</option>
+                                        <select name="GLAccount[]" class="form-select gl-account-select" required>
+                                            <option value="" selected disabled>Select GL</option>
                                             @foreach($gls as $gl)
-                                                <option value="{{ $gl->Id }}"
-                                                        data-code="{{ $gl->GLCode }}"
-                                                        data-name="{{ $gl->GLName }}">
-                                                    {{ $gl->GLCode }} ({{ $gl->GLName }})
+                                                <option value="{{$gl->Id}}" data-code="{{$gl->GLCode}}"
+                                                        data-name="{{$gl->GLName}}">{{$gl->GLCode}} ({{$gl->GLName}})
                                                 </option>
                                             @endforeach
                                         </select>
-
                                     </td>
                                     <td class="col-branch">
                                         <select name="Branch[]" class="form-select" required>
@@ -237,9 +243,8 @@
                                         <textarea name="Narration[]" class="form-control narration-input"
                                                   placeholder="Narration"></textarea>
                                     </td>
-                                    <td class="col-action">
-                                        <button type="button" class="btn btn-sm btn-outline-danger remove-line"
-                                                title="Remove">
+                                    <td class="col-action text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-line" title="Remove">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </td>
@@ -250,9 +255,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <button type="button" id="addRow" class="btn btn-outline-primary btn-sm">
-                            + Add Line
-                        </button>
+                        <button type="button" id="addRow" class="btn btn-outline-primary btn-sm">+ Add Line</button>
                     </div>
 
                     <div class="totals-box alert alert-info">
@@ -260,17 +263,12 @@
                             <strong>Total Debit:</strong> <span id="totalDr">0.00</span> &nbsp;
                             <strong>Total Credit:</strong> <span id="totalCr">0.00</span>
                         </div>
-                        <span id="balanceStatus" class="badge bg-warning text-dark fw-bold px-3 py-2">
-                            Unbalanced
-                        </span>
+                        <span id="balanceStatus" class="badge bg-warning text-dark">Unbalanced</span>
                     </div>
 
                     <div class="d-flex justify-content-end gap-2">
-                        <a href="{{route('journalentry.index')}}" class="btn btn-secondary">Back</a>
-                        <button class="btn btn-success" id="postBtn" type="submit"
-                                onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit();}">
-                            Save Journal
-                        </button>
+                        <a href="{{route('recurrentjournal.index')}}" class="btn btn-secondary">Back</a>
+                        <button class="btn btn-success" id="saveBtn" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit();}">Save Recurring Journal</button>
                     </div>
                 </form>
             </div>
@@ -282,10 +280,10 @@
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script>
         (function () {
-            const body = document.getElementById('journalBody');
+            const recurringBody = document.getElementById('recurringBody');
             const totalDr = document.getElementById('totalDr');
             const totalCr = document.getElementById('totalCr');
-            const postBtn = document.getElementById('postBtn');
+            const saveBtn = document.getElementById('saveBtn');
             const balanceStatus = document.getElementById('balanceStatus');
 
             const select2Options = {
@@ -299,7 +297,6 @@
                     const name = $option.data('name') || '';
                     return $('<div><strong>' + code + '</strong> <small class="text-muted">(' + name + ')</small></div>');
                 },
-                // Use plain text in the selected control to avoid expanding table cells.
                 templateSelection: function (data) {
                     if (!data.id) return data.text;
                     const $option = $(data.element);
@@ -314,22 +311,12 @@
                 $('.gl-account-select').select2(select2Options);
             }
 
-            function updateLineNumbers() {
-                if (!body) return;
-                const rows = body.querySelectorAll('tr');
-                rows.forEach((row, index) => {
-                    const lineNumberCell = row.querySelector('.line-number');
-                    if (lineNumberCell) lineNumberCell.textContent = index + 1;
-                });
-            }
-
-            function calculateTotals() {
-                if (!body || !totalDr || !totalCr || !balanceStatus || !postBtn) return;
+            function calculateRecurringTotals() {
                 let debit = 0, credit = 0, valid = true;
-                [...body.rows].forEach(row => {
-                    const gl = row.querySelector('select[name="GLAccount[]"]')?.value;
-                    const drcr = row.querySelector('select[name="DRCR[]"]')?.value;
-                    const amt = parseFloat(row.querySelector('input[name="Amount[]"]')?.value || 0);
+                [...recurringBody.rows].forEach(row => {
+                    const gl = row.querySelector('select[name="GLAccount[]"]').value;
+                    const drcr = row.querySelector('select[name="DRCR[]"]').value;
+                    const amt = parseFloat(row.querySelector('input[name="Amount[]"]').value) || 0;
                     if (!gl || !drcr || amt <= 0) valid = false;
                     if (drcr === 'DR') debit += amt; else if (drcr === 'CR') credit += amt;
                 });
@@ -338,50 +325,50 @@
                 if (debit === credit && debit > 0 && valid) {
                     balanceStatus.className = 'badge bg-success';
                     balanceStatus.textContent = 'Balanced';
-                    postBtn.disabled = false;
+                    saveBtn.disabled = false;
                 } else {
                     balanceStatus.className = 'badge bg-danger';
                     balanceStatus.textContent = 'Unbalanced / Invalid';
-                    postBtn.disabled = true;
+                    saveBtn.disabled = true;
                 }
             }
 
-            document.addEventListener('input', calculateTotals);
-            document.addEventListener('change', calculateTotals);
-
-            const addRowBtn = document.getElementById('addRow');
-            if (addRowBtn) {
-                addRowBtn.addEventListener('click', () => {
-                    if (window.jQuery && $.fn.select2) {
-                        $('.gl-account-select').select2('destroy');
-                    }
-                    const firstRow = body?.querySelector('tr');
-                    if (!firstRow) return;
-                    const clone = firstRow.cloneNode(true);
-                    clone.querySelectorAll('input, select, textarea').forEach(el => {
-                        if (el.tagName === 'INPUT') el.value = '';
-                        if (el.tagName === 'SELECT') el.selectedIndex = 0;
-                        if (el.tagName === 'TEXTAREA') el.value = '';
-                    });
-                    body.appendChild(clone);
-                    initGlSelect2();
-                    updateLineNumbers();
-                    calculateTotals();
+            function updateRowNumbers() {
+                [...recurringBody.rows].forEach((row, index) => {
+                    row.cells[0].textContent = index + 1;
                 });
             }
 
-            if (body) {
-                body.addEventListener('click', function (e) {
-                    if (e.target.closest && e.target.closest('.remove-line') && body.rows.length > 1) {
-                        e.target.closest('tr').remove();
-                        updateLineNumbers();
-                        calculateTotals();
-                    }
-                });
-            }
+            document.addEventListener('input', calculateRecurringTotals);
+            document.addEventListener('change', calculateRecurringTotals);
 
-            calculateTotals();
-            updateLineNumbers();
+            document.getElementById('addRow').addEventListener('click', () => {
+                if (window.jQuery && $.fn.select2) {
+                    $('.gl-account-select').select2('destroy');
+                }
+                const firstRow = recurringBody.querySelector('tr');
+                const clone = firstRow.cloneNode(true);
+                clone.querySelectorAll('input, select, textarea').forEach(el => {
+                    if (el.tagName === 'INPUT') el.value = '';
+                    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+                    if (el.tagName === 'TEXTAREA') el.value = '';
+                });
+                recurringBody.appendChild(clone);
+                initGlSelect2();
+                updateRowNumbers();
+                calculateRecurringTotals();
+            });
+
+            recurringBody.addEventListener('click', function (e) {
+                if (e.target.closest('.remove-line') && recurringBody.rows.length > 1) {
+                    e.target.closest('tr').remove();
+                    updateRowNumbers();
+                    calculateRecurringTotals();
+                }
+            });
+
+            updateRowNumbers();
+            calculateRecurringTotals();
 
             initGlSelect2();
         })();
