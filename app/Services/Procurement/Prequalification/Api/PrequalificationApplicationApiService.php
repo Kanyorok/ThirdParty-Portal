@@ -16,8 +16,9 @@ use Illuminate\Http\Request;
 
 class PrequalificationApplicationApiService
 {
-    public function __construct(private PrequalificationService $prequalificationService)
-    {
+    public function __construct(
+        private PrequalificationService $prequalificationService,
+    ) {
     }
 
     public function resolveSupplierContext(?AuthenticatableContract $user): array
@@ -63,75 +64,98 @@ class PrequalificationApplicationApiService
             ? $this->prequalificationService->getSupplierCategories($context['thirdPartyId'])
             : collect();
         $roundItemCategoryMap = $this->prequalificationService->getRoundItemCategoryMap($roundIds);
-        $categoriesByRound = $this->prequalificationService->buildCategoriesByRound($roundIds, $supplierCategories, $roundItemCategoryMap);
+        $categoriesByRound = $this->prequalificationService->buildCategoriesByRound(
+            $roundIds,
+            $supplierCategories,
+            $roundItemCategoryMap,
+        );
         $applications = $context['supplierId']
             ? $this->prequalificationService->getSupplierApplications($context['supplierId'], $roundIds)
             : collect();
-        $applicationsByKey = $applications->keyBy(fn (PrequalificationApplication $application) => "{$application->RoundID}:{$application->CategoryID}");
+        $applicationsByKey = $applications->keyBy(
+            fn (PrequalificationApplication $application) => "{$application->RoundID}:{$application->CategoryID}",
+        );
 
-        $mapped = $paginator->getCollection()->map(function (PrequalificationRound $round) use ($categoriesByRound, $applicationsByKey, $context) {
-            $roundCategories = $categoriesByRound->get($round->RoundID, collect());
+        $mapped = $paginator->getCollection()->map(
+            function (PrequalificationRound $round) use ($categoriesByRound, $applicationsByKey, $context) {
+                $roundCategories = $categoriesByRound->get($round->RoundID, collect());
 
-            $categories = $roundCategories->map(function ($category) use ($round, $applicationsByKey) {
-                $key = "{$round->RoundID}:{$category->SupplierCategoryID}";
-                $application = $applicationsByKey->get($key);
+                $categories = $roundCategories->map(
+                    function ($category) use ($round, $applicationsByKey) {
+                        $key = "{$round->RoundID}:{$category->SupplierCategoryID}";
+                        $application = $applicationsByKey->get($key);
+
+                        return [
+                            'id' => (int) $category->SupplierCategoryID,
+                            'name' => $category->CategoryName,
+                            'hasApplied' => (bool) $application,
+                            'status' => $application
+                                ? ($application->Status->value ?? PrequalificationApplicationEnum::Submitted->value)
+                                : 'NOT_APPLIED',
+                            'applicationId' => $application ? (string) $application->ApplicationID : null,
+                        ];
+                    },
+                );
+
+                $eligibility = $this->prequalificationService->validateRoundEligibility($round);
+                $hasUnapplied = $categories->contains(
+                    fn ($category) => ! ($category['hasApplied'] ?? false),
+                );
+                $hasCategories = $categories->isNotEmpty();
+
+                $dateNow = now()->startOfDay();
+                $isExpired = $round->EndDate && $round->EndDate < $dateNow;
+
+                $appliedCategories = $categories->where('hasApplied', true)->values();
+                $availableCategories = $categories->where('hasApplied', false)->values();
 
                 return [
-                    'id' => (int) $category->SupplierCategoryID,
-                    'name' => $category->CategoryName,
-                    'hasApplied' => (bool) $application,
-                    'status' => $application
-                        ? ($application->Status->value ?? PrequalificationApplicationEnum::Submitted->value)
-                        : 'NOT_APPLIED',
-                    'applicationId' => $application ? (string) $application->ApplicationID : null,
+                    'id' => (int) $round->RoundID,
+                    'title' => $round->Title,
+                    'description' => $round->Description,
+                    'startDate' => $round->StartDate?->format('Y-m-d'),
+                    'endDate' => $round->EndDate?->format('Y-m-d'),
+                    'maxVendors' => $round->MaxVendors,
+                    'categories' => $categories->values(),
+                    'appliedCategories' => $appliedCategories,
+                    'availableCategories' => $availableCategories,
+                    'categoryCount' => $categories->count(),
+                    'unappliedCount' => $categories->where('hasApplied', false)->count(),
+                    'status' => $this->buildStatusPayload($round, $isExpired),
+                    'supplierEligible' => (bool) $context['eligible'],
+                    'eligibility' => [
+                        'eligible' => (bool) $eligibility['eligible'],
+                        'reason' => $eligibility['reason'],
+                    ],
+                    'canApply' => $context['eligible']
+                        && $eligibility['eligible']
+                        && $hasCategories
+                        && $hasUnapplied
+                        && ! $isExpired,
+                    'isExpired' => $isExpired,
                 ];
-            });
-
-            $eligibility = $this->prequalificationService->validateRoundEligibility($round);
-            $hasUnapplied = $categories->contains(fn ($category) => ! ($category['hasApplied'] ?? false));
-            $hasCategories = $categories->isNotEmpty();
-
-            $dateNow = now()->startOfDay();
-            $isExpired = $round->EndDate && $round->EndDate < $dateNow;
-
-            $appliedCategories = $categories->where('hasApplied', true)->values();
-            $availableCategories = $categories->where('hasApplied', false)->values();
-
-            return [
-                'id' => (int) $round->RoundID,
-                'title' => $round->Title,
-                'description' => $round->Description,
-                'startDate' => $round->StartDate?->format('Y-m-d'),
-                'endDate' => $round->EndDate?->format('Y-m-d'),
-                'maxVendors' => $round->MaxVendors,
-                'categories' => $categories->values(),
-                'appliedCategories' => $appliedCategories,
-                'availableCategories' => $availableCategories,
-                'categoryCount' => $categories->count(),
-                'unappliedCount' => $categories->where('hasApplied', false)->count(),
-                'status' => $this->buildStatusPayload($round, $isExpired),
-                'supplierEligible' => (bool) $context['eligible'],
-                'eligibility' => [
-                    'eligible' => (bool) $eligibility['eligible'],
-                    'reason' => $eligibility['reason'],
-                ],
-                'canApply' => $context['eligible'] && $eligibility['eligible'] && $hasCategories && $hasUnapplied && ! $isExpired,
-                'isExpired' => $isExpired,
-            ];
-        });
+            },
+        );
 
         $paginator->setCollection($mapped->values());
 
         return $paginator;
     }
 
-    public function submitApplications(StorePrequalificationApplicationRequest $request, array $context, int $actorId): array
-    {
+    public function submitApplications(
+        StorePrequalificationApplicationRequest $request,
+        array $context,
+        int $actorId,
+    ): array {
         if (! $context['supplierId']) {
             return [];
         }
 
-        $categoryIds = array_values(array_unique(array_filter($request->validated('category_ids') ?? [])));
+        $categoryIds = array_values(
+            array_unique(
+                array_filter($request->validated('category_ids') ?? []),
+            ),
+        );
 
         return $this->prequalificationService->createApplications(
             $request->validated('round_id'),
@@ -160,8 +184,10 @@ class PrequalificationApplicationApiService
         ];
     }
 
-    private function resolveStatusEnum(PrequalificationRound $round, bool $isExpired): ?PrequalificationRoundEnum
-    {
+    private function resolveStatusEnum(
+        PrequalificationRound $round,
+        bool $isExpired,
+    ): ?PrequalificationRoundEnum {
         if ($isExpired) {
             return PrequalificationRoundEnum::Expired;
         }
