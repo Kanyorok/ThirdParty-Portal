@@ -737,39 +737,51 @@ class AwardsController extends Controller
 
 
 
-            $creator = \App\Models\Auth\User::find($award->CreatedBy);
-            if ($creator && $creator->Email) {
-                try {
-                    $refNumber = $type === 'tender' ? ($award->tender->TenderNo ?? 'N/A') : ($award->rfq->RFQNumber ?? 'N/A');
-                    $subject = ucfirst($type) . ' Award Approved: ' . $refNumber;
-                    $body = "<p>The " . strtoupper($type) . " award for <strong>" . $refNumber . "</strong> has been approved.</p>";
-                    $to = [[$creator->Name => $creator->Email]];
+            DB::commit();
 
-                    $service = \App\Services\CRMEmailService::createRaw(
-                        Auth::user(),
-                        $subject,
-                        $body,
-                        $to,
-                        null,
-                        null,
-                        [],
-                        [],
-                        \App\Enums\EmailPriorityEnum::Normal
-                    );
-                    $service->send(true);
-                } catch (\Exception $e) {
-                    Log::error("Failed to send approval email: " . $e->getMessage());
-                }
-            }
 
-            // 2. Notify Suppliers
-            if ($type === 'tender') {
-                $this->notifySuccessfulBidder($award);
-                if ($award->NotifyUnsuccessfulBidders) {
-                    $this->notifyUnsuccessfulBidders($award);
+            try {
+                // 1. Notify Creator
+                $creator = \App\Models\Auth\User::find($award->CreatedBy);
+                if ($creator && $creator->Email) {
+                    try {
+                        $refNumber = $type === 'tender' ? ($award->tender->TenderNo ?? 'N/A') : ($award->rfq->RFQNumber ?? 'N/A');
+                        $subject = ucfirst($type) . ' Award Approved: ' . $refNumber;
+                        $body = "<p>The " . strtoupper($type) . " award for <strong>" . $refNumber . "</strong> has been approved.</p>";
+                        $to = [[$creator->Name => $creator->Email]];
+
+                        $service = \App\Services\CRMEmailService::createRaw(
+                            Auth::user(),
+                            $subject,
+                            $body,
+                            $to,
+                            null,
+                            null,
+                            [],
+                            [],
+                            \App\Enums\EmailPriorityEnum::Normal
+                        );
+                        $service->send(true);
+                    } catch (\Throwable $e) {
+                        Log::error("Failed to send approval email: " . $e->getMessage());
+                    }
                 }
-            } else {
-                $this->notifySuccessfulRFQBidders($award);
+
+                // 2. Notify Suppliers
+                if ($type === 'tender') {
+                    $this->notifySuccessfulBidder($award);
+                    if ($award->NotifyUnsuccessfulBidders) {
+                        $this->notifyUnsuccessfulBidders($award);
+                    }
+                } else {
+                    $this->notifySuccessfulRFQBidders($award);
+                }
+            } catch (\Throwable $e) {
+                // Log major notification failure but do NOT fail the request as the transaction is committed
+                Log::error("Post-approval notification error: " . $e->getMessage());
+
+                return redirect()->route('procawards.index')
+                    ->with('success', ucfirst($type) . ' Award approved successfully, but some notifications may not have been sent.');
             }
 
             activity()
@@ -782,7 +794,7 @@ class AwardsController extends Controller
                 ])
                 ->log(ucfirst($type) . ' Award approved: Award ID ' . $award->Id);
 
-            DB::commit();
+
 
             return redirect()->route('procawards.index')
                 ->with('success', ucfirst($type) . ' Award approved successfully.');
@@ -1360,7 +1372,14 @@ class AwardsController extends Controller
                 return;
             }
 
-            $thirdParty = $winningSupplier->supplierMaster->thirdParty;
+            $thirdParty = $winningSupplier->supplierMaster ? $winningSupplier->supplierMaster->thirdParty : null;
+
+            if (! $thirdParty) {
+                Log::warning("ThirdParty record not found for winning supplier ID {$award->WinningSupplierID}");
+
+                return;
+            }
+
             $contactUser = $thirdParty->users ? $thirdParty->users->first() : null;
             $email = $contactUser ? $contactUser->Email : ($thirdParty->Email ?? null);
             $name = $contactUser ? $contactUser->Name : ($thirdParty->ThirdPartyName ?? 'Valued Supplier');
@@ -1394,7 +1413,7 @@ class AwardsController extends Controller
                 Log::warning("No email found for winning supplier ID {$award->WinningSupplierID}");
             }
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error("Failed to notify successful bidder: " . $e->getMessage());
         }
     }
@@ -1418,6 +1437,11 @@ class AwardsController extends Controller
             foreach ($unsuccessfulBidders as $bidder) {
                 // Get supplier primary contact
                 $supplier = $bidder->supplier; // t_Suppliers
+
+                if (! $supplier || ! $supplier->supplierMaster || ! $supplier->supplierMaster->thirdParty) {
+                    continue;
+                }
+
                 $thirdParty = $supplier->supplierMaster->thirdParty; // SupplierMaster -> ThirdParty
 
                 // Try to find a user/contact to email
@@ -1458,7 +1482,7 @@ class AwardsController extends Controller
                     }
                 }
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error("Failed to notify unsuccessful bidders: " . $e->getMessage());
         }
     }
@@ -1480,7 +1504,14 @@ class AwardsController extends Controller
                 return;
             }
 
-            $thirdParty = $winningSupplier->supplierMaster->thirdParty;
+            $thirdParty = $winningSupplier->supplierMaster ? $winningSupplier->supplierMaster->thirdParty : null;
+
+            if (! $thirdParty) {
+                Log::warning("ThirdParty record not found for winning supplier ID {$award->SupplierId}");
+
+                return;
+            }
+
             $contactUser = $thirdParty->users ? $thirdParty->users->first() : null;
             $email = $contactUser ? $contactUser->Email : ($thirdParty->Email ?? null);
             $name = $contactUser ? $contactUser->Name : ($thirdParty->ThirdPartyName ?? 'Valued Supplier');
@@ -1514,7 +1545,7 @@ class AwardsController extends Controller
                 Log::warning("No email found for winning supplier ID {$award->SupplierId}");
             }
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error("Failed to notify successful RFQ bidder: " . $e->getMessage());
         }
     }

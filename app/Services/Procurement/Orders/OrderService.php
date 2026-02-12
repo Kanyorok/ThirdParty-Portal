@@ -322,7 +322,7 @@ class OrderService
                 t_Items.Id as ItemID,
                 t_Items.ItemName,
                 COALESCE(cd.Description, CAST(t_Items.ItemType AS NVARCHAR(50))) as ItemTypeName,
-                t_Items.ItemDescription as Description,
+                t_Items.ItemDescription as ItemDescription,
                 t_OrderLines.LineTotal
             '))
             ->get();

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\Tender;
 use App\Models\ThirdParies\Supplier;
@@ -33,6 +34,19 @@ class TenderSubmissionController extends Controller
     {
         $this->authorize(\App\Enums\Core\PermissionEnum::BidSubmissionWrite->value);
         $currencies = \App\Models\Core\Currency::all();
+
+        $paymentTerms = CodeDetail::query()
+                ->where('CodeID', 'PaymentTerm')
+                ->orderBy('DisplayOrder')
+                ->get(['ID', 'Description']);
+
+        if ($paymentTerms->isEmpty()) {
+            $paymentTerms = DB::table('t_CodeDetails')
+                ->whereIn(DB::raw('RTRIM(LTRIM(CodeID))'), ['PaymentTerm', 'PaymentTerms'])
+                ->orderBy('DisplayOrder')
+                ->select('ID', 'Description')
+                ->get();
+        }
         // Exclude tenders that already have submissions & filter by Published status
         $tenders = Tender::select('Id', 'TenderNo', 'Title', 'TenderType', 'SubmissionDeadline')
             ->where('Status', \App\Enums\TenderStatusEnum::Published->value)
@@ -66,7 +80,7 @@ class TenderSubmissionController extends Controller
             ->where('CodeID', 'SubmissionMode')
             ->get(['ID', 'Description']);
 
-        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes', 'currencies'));
+        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes', 'currencies', 'paymentTerms'));
     }
 
     public function view($Id)
