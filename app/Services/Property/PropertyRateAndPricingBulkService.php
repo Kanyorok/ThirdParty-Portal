@@ -191,7 +191,6 @@ class PropertyRateAndPricingBulkService
 
                 $results['successful']++;
                 $results['created_pricings'][] = $pricing->Id;
-
             } catch (Exception $e) {
                 $results['failed']++;
                 $results['errors'][] = [

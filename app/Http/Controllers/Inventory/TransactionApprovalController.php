@@ -115,7 +115,6 @@ class TransactionApprovalController extends Controller
 
             $user = Auth::user();
             $canApprove = $this->workflow->canApproveModel($record, $user);
-
         } elseif ($transactionType === 'Stock Adjustment') {
             $record = StockAdjustment::with([
                 'branch', 'creator', 'items.item',
@@ -132,8 +131,6 @@ class TransactionApprovalController extends Controller
 
             $user = Auth::user();
             $canApprove = $this->workflow->canApproveModel($record, $user);
-
-
         } else {
             $record = TransactionTransfer::with([
                 'fromBranch', 'toBranch', 'creator', 'items.item',
@@ -237,7 +234,6 @@ class TransactionApprovalController extends Controller
                     optional($lock)->release();
                 }
             } catch (Throwable $e) {
-
                 $errorMessage = $this->getErrorMessage($e);
 
                 if ($request->ajax() || $request->wantsJson()) {
@@ -315,7 +311,6 @@ class TransactionApprovalController extends Controller
                     optional($lock)->release();
                 }
             } catch (Throwable $e) {
-
                 $errorMessage = $this->getErrorMessage($e);
 
                 if ($request->ajax() || $request->wantsJson()) {
@@ -408,7 +403,6 @@ class TransactionApprovalController extends Controller
                     optional($lock)->release();
                 }
             } catch (Throwable $e) {
-
                 $errorMessage = $this->getErrorMessage($e);
 
                 if ($request->ajax() || $request->wantsJson()) {
@@ -485,7 +479,6 @@ class TransactionApprovalController extends Controller
                     optional($lock)->release();
                 }
             } catch (Exception $e) {
-
                 $errorMessage = $this->getErrorMessage($e);
 
                 if ($request->ajax() || $request->wantsJson()) {

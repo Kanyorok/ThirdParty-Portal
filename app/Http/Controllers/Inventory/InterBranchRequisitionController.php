@@ -472,9 +472,11 @@ class InterBranchRequisitionController extends Controller
         $subcategoryId = $request->get('subcategory_id');
         $fromBranchId = $request->get('from_branch_id');
 
-        if ((! is_null($subcategoryId) && ! is_numeric($subcategoryId)) ||
+        if (
+            (! is_null($subcategoryId) && ! is_numeric($subcategoryId)) ||
             (! is_null($categoryId) && ! is_numeric($categoryId)) ||
-            (! is_null($fromBranchId) && ! is_numeric($fromBranchId))) {
+            (! is_null($fromBranchId) && ! is_numeric($fromBranchId))
+        ) {
             return response()->json(['message' => 'Invalid input provided.', 'items' => []]);
         }
 

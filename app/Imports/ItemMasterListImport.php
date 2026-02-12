@@ -207,7 +207,6 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
                 ->log('Item imported via Excel');
 
             return $newItem;
-
         } catch (\Throwable $e) {
             DB::rollBack();
             $this->skipped++;

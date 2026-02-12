@@ -73,8 +73,8 @@ class PropertyLeaseScheduleController extends Controller
         try {
             $this->authorize(PermissionEnum::PropertyLeaseScheduleCreate, PropertyLeaseSchedule::class);
             $validated = $request->validated();
-            $leaseId = (int)$validated['LeaseId'];
-            $paymentFrequencyId = (int)$validated['PaymentFrequency'];
+            $leaseId = $validated['LeaseId'];
+            $paymentFrequencyId = $validated['PaymentFrequency'];
 
             // Use the lease ID to get the full lease
             $lease = PropertyNewLease::findOrFail($leaseId);

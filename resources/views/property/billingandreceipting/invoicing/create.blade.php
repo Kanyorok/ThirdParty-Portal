@@ -153,7 +153,21 @@
         document.querySelectorAll('.amount').forEach(el => {
             total += parseFloat(el.value || 0);
         });
-        document.querySelector('input[name="TotalAmount"]').value = total.toFixed(2);
+        
+        // Get the selected tax rate
+        const taxSelect = document.querySelector('select[name="Tax"]');
+        let taxRate = 0;
+        if (taxSelect.selectedIndex > 0) {
+            const taxText = taxSelect.options[taxSelect.selectedIndex].text;
+            const taxMatch = taxText.match(/(\d+(?:\.\d+)?)\s*%/);
+            if (taxMatch) {
+                taxRate = parseFloat(taxMatch[1]);
+            }
+        }
+        
+        // Apply formula: total * ((tax/100) + 1)
+        const finalAmount = total * ((taxRate / 100) + 1);
+        document.querySelector('input[name="TotalAmount"]').value = finalAmount.toFixed(2);
     }
 
     // Auto-fill on lease selection
@@ -168,6 +182,9 @@
 
     // Recalculate when any amount changes
     document.querySelectorAll('.amount').forEach(el => el.addEventListener('input', calculateTotal));
+    
+    // Recalculate when tax changes
+    document.querySelector('select[name="Tax"]').addEventListener('change', calculateTotal);
 
     // Format on submit
     document.querySelector('form').addEventListener('submit', function () {

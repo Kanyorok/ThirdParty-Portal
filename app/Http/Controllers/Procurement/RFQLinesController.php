@@ -58,10 +58,10 @@ class RFQLinesController extends Controller
 
             // Check if this exact RequisitionLine is already used in RFQ lines
             $existsInRFQLines = RFQLine::where('RequisitionLineId', $line->Id)
-    ->whereHas('rfq', function ($query) {
-        $query->whereIn('Status', ['Ap', 'Pe']);
-    })
-    ->exists();
+            ->whereHas('rfq', function ($query) {
+                $query->whereIn('Status', ['Ap', 'Pe']);
+            })
+            ->exists();
 
             // Exclude if already associated
             return $isInCategory && ! $existsInRFQLines;
@@ -145,7 +145,6 @@ class RFQLinesController extends Controller
                     ->whereColumn('rfql.RequisitionLineId', 'rl.Id')
                     ->whereNull('rfq.DeletedOn')
                     ->whereIn('rfq.Status', ['Approved', 'Pending']);
-
             })
 
             ->select('ic.Id', 'ic.Name')

@@ -135,7 +135,6 @@ class ItemMasterListController extends Controller
 
             return redirect()->route('itemmaster.index')
                 ->with('import_result', $importResult);
-
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             $errors = collect($e->failures())->map(function ($failure) {
                 $row = $failure->row();
@@ -158,7 +157,6 @@ class ItemMasterListController extends Controller
 
             return redirect()->route('itemmaster.index')
                 ->with('import_result', $importResult);
-
         } catch (\Exception $e) {
             $importResult = [
                 'message' => config('app.debug')

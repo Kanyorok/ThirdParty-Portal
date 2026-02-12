@@ -3,12 +3,6 @@
 
 @section('content')
 
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <strong>Please fix the errors below.</strong>
-    </div>
-@endif
-
 @if (session('error'))
     <script>alert("{{ session('error') }}");</script>
 @endif
@@ -18,7 +12,7 @@
         @csrf
 
         <div class="card shadow">
-            <div class="card-header bg-light fw-bold">Generate Billing Periods</div>
+            <div class="card-header bg-primary fw-bold">Generate Billing Periods</div>
 
             <div class="card-body">
 
@@ -49,118 +43,123 @@
                             @endforeach
                         </select>
                         @error('LeaseId')
-                            <div class="text-danger small">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <!-- Lease Number Display -->
-                    <div class="col-md-6">
-                        <label class="form-label">Lease Number<span class="text-danger">*</span></label>
-                        <input type="text" id="lease-display" class="form-control" readonly>
-                    </div>
-
-                    <!-- Payment Frequency -->
-                    <div class="col-md-6">
-                        <label class="form-label">Payment Frequency<span class="text-danger">*</span></label>
-                        <input type="text" id="frequency-display" class="form-control" readonly>
-                        <input type="hidden" name="PaymentFrequency" id="frequency-id">
-                        @error('PaymentFrequency')
-                            <div class="text-danger small">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <!-- Tenant -->
-                    <div class="col-md-6">
-                        <label class="form-label">Tenant<span class="text-danger">*</span></label>
-                        <input type="text" id="tenant-display" class="form-control" readonly>
-                        <input type="hidden" name="TenantId" id="tenant-id">
-                        @error('TenantId')
-                            <div class="text-danger small">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <!-- Property -->
-                    <div class="col-md-6">
-                        <label class="form-label">Property<span class="text-danger">*</span></label>
-                        <input type="text" id="property-display" class="form-control" readonly>
-                        <input type="hidden" name="PropertyId" id="property-id">
-                        @error('PropertyId')
-                            <div class="text-danger small">{{ $message }}</div>
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
 
-                <!-- Dates & Charges -->
-                <div class="row g-3 mb-3">
+                <!-- Lease Details (Hidden until lease selected) -->
+                <div id="lease-details" class="d-none">
+                    <div class="row g-3 mb-3">
+                        <!-- Lease Number Display -->
+                        <div class="col-md-6">
+                            <label class="form-label">Lease Number<span class="text-danger">*</span></label>
+                            <input type="text" id="lease-display" class="form-control" readonly>
+                        </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Start Date<span class="text-danger">*</span></label>
-                        <input type="date" name="StartDate"
-                               value="{{ old('StartDate', '2025-05-01') }}"
-                               class="form-control @error('StartDate') is-invalid @enderror" required>
-                        @error('StartDate')
-                            <div class="text-danger small">{{ $message }}</div>
-                        @enderror
+                        <!-- Payment Frequency -->
+                        <div class="col-md-6">
+                            <label class="form-label">Payment Frequency<span class="text-danger">*</span></label>
+                            <input type="text" id="frequency-display" class="form-control" readonly>
+                            <input type="hidden" name="PaymentFrequency" id="frequency-id">
+                            @error('PaymentFrequency')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <!-- Tenant -->
+                        <div class="col-md-6">
+                            <label class="form-label">Tenant<span class="text-danger">*</span></label>
+                            <input type="text" id="tenant-display" class="form-control" readonly>
+                            <input type="hidden" name="TenantId" id="tenant-id">
+                            @error('TenantId')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <!-- Property -->
+                        <div class="col-md-6">
+                            <label class="form-label">Property<span class="text-danger">*</span></label>
+                            <input type="text" id="property-display" class="form-control" readonly>
+                            <input type="hidden" name="PropertyId" id="property-id">
+                            @error('PropertyId')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">End Date<span class="text-danger">*</span></label>
-                        <input type="date" name="EndDate"
-                               value="{{ old('EndDate', '2026-04-30') }}"
-                               class="form-control @error('EndDate') is-invalid @enderror" required>
-                        @error('EndDate')
-                            <div class="text-danger small">{{ $message }}</div>
-                        @enderror
+                    <!-- Dates & Charges -->
+                    <div class="row g-3 mb-3">
+
+                        <div class="col-md-4">
+                            <label class="form-label">Start Date<span class="text-danger">*</span></label>
+                            <input type="date" name="StartDate"
+                                   value="{{ old('StartDate') }}"
+                                   class="form-control @error('StartDate') is-invalid @enderror" required>
+                            @error('StartDate')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">End Date<span class="text-danger">*</span></label>
+                            <input type="date" name="EndDate"
+                                   value="{{ old('EndDate') }}"
+                                   class="form-control @error('EndDate') is-invalid @enderror" required>
+                            @error('EndDate')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Base Rent<span class="text-danger">*</span></label>
+                            <input type="number" name="BaseRent"
+                                   class="form-control @error('BaseRent') is-invalid @enderror"
+                                   id="baserent" value="{{ old('BaseRent') }}" required>
+                            @error('BaseRent')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Base Rent<span class="text-danger">*</span></label>
-                        <input type="number" name="BaseRent"
-                               class="form-control @error('BaseRent') is-invalid @enderror"
-                               id="baserent" value="{{ old('BaseRent', 25000) }}" required>
-                        @error('BaseRent')
-                            <div class="text-danger small">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Service Charge<span class="text-danger">*</span></label>
+                            <input type="number" name="ServiceCharge"
+                                   class="form-control @error('ServiceCharge') is-invalid @enderror"
+                                   id="servicecharge" value="{{ old('ServiceCharge') }}" required>
+                            @error('ServiceCharge')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
 
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Service Charge<span class="text-danger">*</span></label>
-                        <input type="number" name="ServiceCharge"
-                               class="form-control @error('ServiceCharge') is-invalid @enderror"
-                               id="servicecharge" value="{{ old('ServiceCharge', 15000) }}" required>
-                        @error('ServiceCharge')
-                            <div class="text-danger small">{{ $message }}</div>
-                        @enderror
-                    </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Parking Fee<span class="text-danger">*</span></label>
+                            <input type="number" name="ParkingFee"
+                                   class="form-control @error('ParkingFee') is-invalid @enderror"
+                                   id="parkingfee" value="{{ old('ParkingFee') }}" required>
+                            @error('ParkingFee')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Parking Fee<span class="text-danger">*</span></label>
-                        <input type="number" name="ParkingFee"
-                               class="form-control @error('ParkingFee') is-invalid @enderror"
-                               id="parkingfee" value="{{ old('ParkingFee', 2000) }}" required>
-                        @error('ParkingFee')
-                            <div class="text-danger small">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Other Charges<span class="text-danger">*</span></label>
-                        <input type="number" name="OtherCharges"
+                        <div class="col-md-4">
+                            <label class="form-label">Other Charges<span class="text-danger">*</span></label>
+                            <input type="number" name="OtherCharges"
                                class="form-control @error('OtherCharges') is-invalid @enderror"
-                               id="othercharges" value="{{ old('OtherCharges', 0) }}" required>
-                        @error('OtherCharges')
-                            <div class="text-danger small">{{ $message }}</div>
-                        @enderror
+                               id="othercharges" value="{{ old('OtherCharges') }}" required>
+                            @error('OtherCharges')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
-                </div>
 
-                <!-- Total -->
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Total Amount</label>
-                        <input type="number" id="total-amount" class="form-control" readonly>
+                    <!-- Total -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Total Amount</label>
+                            <input type="number" id="total-amount" class="form-control" readonly>
+                        </div>
                     </div>
                 </div>
 
@@ -182,8 +181,20 @@
 
 <!-- JS -->
 <script>
+    // Show/Hide lease details section
+    const leaseDetailsDiv = document.getElementById('lease-details');
+    
     // Auto-fill lease details
     document.getElementById('lease-select').addEventListener('change', function() {
+
+        if (!this.value) {
+            // Hide details if no lease selected
+            leaseDetailsDiv.classList.add('d-none');
+            return;
+        }
+        
+        // Show details when lease is selected
+        leaseDetailsDiv.classList.remove('d-none');
 
         const selected = this.options[this.selectedIndex];
 
