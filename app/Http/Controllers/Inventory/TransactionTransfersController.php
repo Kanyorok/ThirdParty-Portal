@@ -89,10 +89,23 @@ class TransactionTransfersController extends Controller
         $items = $validatedData['items'] ?? [];
         unset($validatedData['items']);
 
+        // Add HQ flag to data
+        $currentUser = $request->user();
+        $currentBranch = $currentUser->branch;
+        $isHQ = $currentBranch && $currentBranch->IsHQ;
+
+        $validatedData['is_hq'] = $isHQ;
+
         DB::beginTransaction();
 
         try {
             $transfer = $this->service->createTransfer($validatedData);
+
+            // Modify items to add HQ flag
+            foreach ($items as &$item) {
+                $item['is_hq'] = $isHQ;
+            }
+
             $this->service->createTransferItems($transfer, $items);
 
             DB::commit();
@@ -112,11 +125,6 @@ class TransactionTransfersController extends Controller
                 ->withInput()
                 ->with('error', $errorMessage);
         }
-
-        return redirect()
-            ->back()
-            ->withInput()
-            ->with('error', $errorMessage);
     }
 
     public function show($Id)

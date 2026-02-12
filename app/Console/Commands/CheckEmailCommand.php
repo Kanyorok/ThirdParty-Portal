@@ -56,7 +56,7 @@ class CheckEmailCommand extends Command
                 $emailConfig?->Incoming?->username, // Username for the before configured mailbox
                 $emailConfig?->Incoming?->password, // Password for the before configured username
                 null,
-                "US-ASCII" //'UTF-8',
+                "UTF-8" //'UTF-8',
             ); //SE_UID, "US-ASCII")
         } catch (ConnectionException | InvalidParameterException | Exception $e) {
             SystemHelper::notifyAdmin('Issue with fetch mail: ' . $e->getMessage());
@@ -114,9 +114,9 @@ class CheckEmailCommand extends Command
                         'To' => $this->_flipAddresses($email->to),
                         'CC' => $this->_flipAddresses($email->cc),
                         'ReferenceId' => $ref,
-                        'Subject' => $email->subject,
-                        'Body' => (empty($email->textHtml)) ? $email->textPlain : $this->processEmailBody($email->textHtml),
-                        'Text' => Str::of($email->textPlain)->trim()->value(),
+                        'Subject' => $this->cleanString($email->subject),
+                        'Body' => (empty($email->textHtml)) ? $this->cleanString($email->textPlain) : $this->cleanString($this->processEmailBody($email->textHtml)),
+                        'Text' => Str::of($this->cleanString($email->textPlain))->trim()->value(),
                         'CreatedBy' => $actor->Id,
                         'ModifiedBy' => $actor->Id,
                         'Dated' => $dated,
@@ -414,5 +414,12 @@ class CheckEmailCommand extends Command
         $content = count($matches) ? $matches[1] : $html;
 
         return trim(preg_replace('/style="[^"]*-webkit-[^"]*"/i', '', $content));
+    }
+
+    private function cleanString($string): array|string|null
+    {
+        // 1. Convert to UTF-8 and ignore invalid characters
+        //    '//IGNORE' silently discards characters that cannot be represented in the target charset
+        return iconv('UTF-8', 'UTF-8//IGNORE', $string);
     }
 }

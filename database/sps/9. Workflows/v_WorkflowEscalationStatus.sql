@@ -1,4 +1,4 @@
-CREATE VIEW dbo.v_WorkflowEscalationStatus
+CREATE OR ALTER VIEW dbo.v_WorkflowEscalationStatus
 AS
 SELECT
     wp.Id,
@@ -24,8 +24,8 @@ SELECT
         THEN 'RECENTLY ESCALATED'
         ELSE 'WITHIN LIMIT'
     END AS EscalationStatus
-FROM dbo.t_WorkFlowPendingTest wp
-INNER JOIN dbo.t_WorkFlowStagesTest ws
+FROM dbo.t_WorkFlowPending wp
+INNER JOIN dbo.t_WorkFlowStages ws
     ON wp.Stage = ws.Id
 WHERE
     wp.DeletedBy IS NULL

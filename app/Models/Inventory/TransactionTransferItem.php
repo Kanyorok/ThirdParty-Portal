@@ -26,6 +26,7 @@ class TransactionTransferItem extends Model
         'DispatchedQty',
         'UnitCost',
         'UOM',
+        'BatchAllocation',
         'Remarks',
         'CreatedBy',
         'CreatedOn',

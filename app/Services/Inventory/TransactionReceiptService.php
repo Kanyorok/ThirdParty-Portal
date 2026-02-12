@@ -265,7 +265,20 @@ class TransactionReceiptService
         if (empty($batchAllocations)) {
             $allocations = $this->allocateFIFOFromSource($transferItem, $storeId, $branchId, $receivedQty);
         } else {
-            $allocations = $batchAllocations;
+            $allocations = collect($batchAllocations)->map(function ($allocation) {
+                $ledger = StockGRNLedger::find($allocation['ledger_id']);
+                if ($ledger) {
+                    return [
+                        'ledger_id' => $allocation['ledger_id'],
+                        'quantity' => $allocation['quantity'],
+                        'grn_id' => $ledger->GRNID,
+                        'goods_receipt_id' => $ledger->GoodsReceiptId,
+                        'unit_price' => (float) $ledger->UnitPrice,
+                    ];
+                }
+
+                return $allocation;
+            })->toArray();
         }
 
         $totalAllocated = 0;
@@ -364,8 +377,15 @@ class TransactionReceiptService
         $totalQty = 0;
 
         foreach ($batchAllocations as $allocation) {
-            $totalCost += $allocation['unit_price'] * $allocation['quantity'];
-            $totalQty += $allocation['quantity'];
+            $unitPrice = $allocation['unit_price'] ?? null;
+            if ($unitPrice === null && isset($allocation['ledger_id'])) {
+                $ledger = StockGRNLedger::find($allocation['ledger_id']);
+                $unitPrice = $ledger ? (float) $ledger->UnitPrice : 0;
+            }
+
+            $quantity = $allocation['quantity'] ?? 0;
+            $totalCost += $unitPrice * $quantity;
+            $totalQty += $quantity;
         }
 
         return $totalQty > 0 ? $totalCost / $totalQty : 0;
@@ -380,7 +400,15 @@ class TransactionReceiptService
         }
 
         return collect($batchAllocations)->map(function ($allocation) {
-            return $allocation['grn_id'] . ' (' . $allocation['quantity'] . ')';
+            $grnId = $allocation['grn_id'] ?? null;
+            if ($grnId === null && isset($allocation['ledger_id'])) {
+                $ledger = StockGRNLedger::find($allocation['ledger_id']);
+                $grnId = $ledger ? $ledger->GRNID : 'Unknown';
+            }
+
+            $quantity = $allocation['quantity'] ?? 0;
+
+            return ($grnId ?? 'Unknown') . ' (' . $quantity . ')';
         })->implode(', ');
     }
 

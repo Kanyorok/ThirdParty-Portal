@@ -845,7 +845,6 @@
                         responsive: true
                     });
                     
-                    // Add custom styling to the length menu for better visibility
                     $('.dataTables_length').addClass('mb-2');
                     $('.dataTables_filter').addClass('mb-2');
                 }

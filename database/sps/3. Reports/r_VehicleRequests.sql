@@ -54,7 +54,7 @@ BEGIN
              JOIN t_CodeDetails AS s ON s.Value = r.Status AND s.CodeID = 'VehicleRequestStatus'
     WHERE (
               @Status IS NULL
-                  OR Status = 'ALL'
+                  OR @Status = 'ALL'
                   OR s.Description IN (SELECT LTRIM(RTRIM(value))
                                        FROM STRING_SPLIT(@Status, ','))
               )
