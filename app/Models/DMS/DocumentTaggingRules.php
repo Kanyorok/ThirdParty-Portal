@@ -11,25 +11,24 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DocumentTaggingRules extends Model
 {
-    use SoftDeletes;
-    use UserActorTrait;
+    use SoftDeletes, UserActorTrait;
 
-    public const CREATED_AT = 'CreatedOn';
-    public const UPDATED_AT = 'ModifiedOn';
-    public const DELETED_AT = 'DeletedOn';
+    public const string CREATED_AT = 'CreatedOn';
+    public const string UPDATED_AT = 'ModifiedOn';
+    public const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_DMSTaggingRules';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
         "TagId", "Content", "Comparison", "Value",
-        'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy'
     ];
 
     protected $casts = [
         'Content' => ContentEnum::class,
         'Comparison' => StringComparisonEnum::class,
-        'TagId' => 'integer',
+        'TagId' => 'integer'
     ];
 
     public static function getPrimaryKey(): string

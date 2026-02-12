@@ -11,12 +11,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DocumentAttribute extends Model
 {
-    use SoftDeletes;
-    use UserActorTrait;
+    use SoftDeletes, UserActorTrait;
 
-    public const CREATED_AT = 'CreatedOn';
-    public const UPDATED_AT = 'ModifiedOn';
-    public const DELETED_AT = 'DeletedOn';
+    public const string CREATED_AT = 'CreatedOn';
+    public const string UPDATED_AT = 'ModifiedOn';
+    public const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_DocumentAttributes';
     protected $primaryKey = 'Id';
