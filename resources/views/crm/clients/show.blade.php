@@ -29,6 +29,33 @@ u@php use App\Services\BR\ClientService; @endphp
             font-style: normal;
         }
 
+        /* Prevent horizontal overflow on client view */
+        #mainBodyContent > .row {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .col-md-8, .col-xxl-9 {
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .col-md-8 .card-body,
+        .col-xxl-9 .card-body {
+            overflow-x: auto;
+        }
+
+        .col-md-8 .dataTables_wrapper,
+        .col-xxl-9 .dataTables_wrapper {
+            width: 100% !important;
+            overflow-x: auto;
+        }
+
+        .col-md-8 table,
+        .col-xxl-9 table {
+            width: 100% !important;
+        }
+
     </style>
 @endsection
 @section('breadcrumbs')

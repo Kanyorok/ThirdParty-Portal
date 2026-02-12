@@ -378,7 +378,7 @@
                                     </tr>`;
 
                   sectionGroup.forEach(criterion => {
-                    const critId = criterion.CriteriaID;
+                    const critId = criterion.id;
                     const name = criterion.criteria?.CriteriaName || 'Unnamed';
                     const maxScore = parseFloat(criterion.MaxScore).toFixed(2);
                     sectionMap[response.SupplierId][sectionId].criteriaIds.push(critId);
