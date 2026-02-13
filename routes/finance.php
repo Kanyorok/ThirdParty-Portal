@@ -175,6 +175,7 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     Route::resource('incomestatement', IncomeStatementController::class);
 
     // Newly appended resource routes
+    Route::get('chartofaccounts/gl-sync', [ChartOfAccountsController::class, 'glSync'])->name('chartofaccounts.glsync');
     Route::resource('coasegment', COASegmentController::class);
     Route::resource('chartofaccounts', ChartOfAccountsController::class);
     Route::resource('gldynamic', GLDynamicController::class);

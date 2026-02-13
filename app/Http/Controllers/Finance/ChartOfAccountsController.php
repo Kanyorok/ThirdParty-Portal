@@ -11,6 +11,7 @@ use App\Models\Core\Currency;
 use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceGLSubAccountTypes;
 use App\Models\Finance\FinanceGLTypeGroup;
+use App\Models\Finance\FinanceSyncGLAccount;
 use App\Models\Finance\GLBranch;
 use App\Models\Finance\SegmentOrder;
 use Couchbase\QueryException;
@@ -79,12 +80,25 @@ class ChartOfAccountsController extends Controller
             ->orderBy('Id')
             ->get();
 
+        $allowThirdPartyPosting = filter_var(
+            env('ALLOW_THIRD_PARTY_FINANCE_POSTING', false),
+            FILTER_VALIDATE_BOOLEAN
+        );
+
         return view('finance.chartofaccounts.chartofaccounts.index', compact(
             'charts',
             'glOrders',
             'glTypes',
-            'glTypeGroups'
+            'glTypeGroups',
+            'allowThirdPartyPosting'
         ));
+    }
+
+    public function glSync()
+    {
+        $this->authorize(PermissionEnum::FinanceCOAView, FinanceGLAccounts::class);
+
+        return view('finance.chartofaccounts.chartofaccounts.gl_sync');
     }
 
     public function create()
@@ -340,14 +354,14 @@ class ChartOfAccountsController extends Controller
 
     public function hierarchy()
     {
-        $accounts = DB::table('t_GLAccounts')->orderBy('GLCode')->get();
+        $accounts = FinanceSyncGLAccount::orderBy('GLCode')->get();
 
         return view('finance.chartofaccounts.chartofaccounts.account_hierarchy', compact('accounts'));
     }
 
     public function show($code)
     {
-        $account = DB::table('t_GLAccounts')->where('GLCode', $code)->first();
+        $account = FinanceSyncGLAccount::where('GLCode', $code)->first();
 
         if (! $account) {
             abort(404, 'Account not found.');
