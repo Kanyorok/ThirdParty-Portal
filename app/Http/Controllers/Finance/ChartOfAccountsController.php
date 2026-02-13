@@ -110,20 +110,23 @@ class ChartOfAccountsController extends Controller
         $syncCount = FinanceSyncGLAccount::count();
         $lastSyncedAt = FinanceSyncGLAccount::max('ModifiedOn');
         $syncedGlsQuery = FinanceSyncGLAccount::query()
+            ->leftJoin('t_Currencies as currencies', 'currencies.Id', '=', 't_FinanceSyncGLAccounts.CurrencyID')
             ->select([
-                'Id',
-                'GLCode',
-                'GLName',
-                'Description',
-                'GLAccountTypeID',
-                'GLTypeGroupIDValue',
-                'GLSubAccountTypeIDValue',
-                'BranchID',
-                'Source',
-                'SourceTable',
-                'IsActive',
-                'CreatedOn',
-                'ModifiedOn',
+                't_FinanceSyncGLAccounts.Id',
+                't_FinanceSyncGLAccounts.GLCode',
+                't_FinanceSyncGLAccounts.GLName',
+                't_FinanceSyncGLAccounts.Description',
+                't_FinanceSyncGLAccounts.GLAccountTypeID',
+                't_FinanceSyncGLAccounts.GLTypeGroupIDValue',
+                't_FinanceSyncGLAccounts.GLSubAccountTypeIDValue',
+                't_FinanceSyncGLAccounts.BranchID',
+                't_FinanceSyncGLAccounts.Source',
+                't_FinanceSyncGLAccounts.SourceTable',
+                't_FinanceSyncGLAccounts.IsActive',
+                't_FinanceSyncGLAccounts.CurrencyID',
+                'currencies.Code as CurrencyCode',
+                't_FinanceSyncGLAccounts.CreatedOn',
+                't_FinanceSyncGLAccounts.ModifiedOn',
             ]);
 
         if ($searchGL !== '') {
@@ -134,7 +137,7 @@ class ChartOfAccountsController extends Controller
         }
 
         $syncedGls = $syncedGlsQuery
-            ->orderBy('GLCode')
+            ->orderBy('t_FinanceSyncGLAccounts.GLCode')
             ->paginate(40)
             ->withQueryString();
 
@@ -328,6 +331,11 @@ class ChartOfAccountsController extends Controller
 
     public function create()
     {
+        $allowThirdPartyPosting = filter_var(
+            env('ALLOW_THIRD_PARTY_FINANCE_POSTING', false),
+            FILTER_VALIDATE_BOOLEAN
+        );
+
         $accountTypes = CodeDetail::select('CodeID', 'Value', 'Description')->where('CodeID', 'GLAccountType')->get();
         $typeGroups = FinanceGLTypeGroup::select('Id', 'Description')->get();
         $subAccountTypes = FinanceGLSubAccountTypes::select('Id', 'Description', 'GLTypeGroupId')->get();
@@ -339,7 +347,8 @@ class ChartOfAccountsController extends Controller
             'typeGroups',
             'subAccountTypes',
             'allGLAccounts',
-            'currencies'
+            'currencies',
+            'allowThirdPartyPosting'
         ));
     }
 
@@ -359,7 +368,12 @@ class ChartOfAccountsController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $allowThirdPartyPosting = filter_var(
+            env('ALLOW_THIRD_PARTY_FINANCE_POSTING', false),
+            FILTER_VALIDATE_BOOLEAN
+        );
+
+        $rules = [
             //'GLCode'             => 'required|string',
             'GLName' => [
                 'required',
@@ -374,7 +388,21 @@ class ChartOfAccountsController extends Controller
             'GLSubAccountTypeID' => 'required|exists:t_FinanceGLSubAccountTypes,Id',
             'Description' => 'required|string|max:255',
             'IsActive' => 'nullable|boolean',
-        ]);
+        ];
+
+        $rules['MappedGLCode'] = $allowThirdPartyPosting
+            ? [
+                'required',
+                'string',
+                'max:255',
+                Rule::exists('t_FinanceSyncGLAccounts', 'GLCode')
+                    ->where(function ($query) use ($request) {
+                        $query->where('CurrencyID', $request->input('Currency'));
+                    }),
+            ]
+            : ['nullable', 'string', 'max:255'];
+
+        $validated = $request->validate($rules);
 
         DB::beginTransaction();
 
@@ -403,6 +431,7 @@ class ChartOfAccountsController extends Controller
                 //'ParentGLID'         => $validated['ParentGLID'] ?? null,
                 'Description' => $validated['Description'],
                 'CurrencyID' => $validated['Currency'],
+                'MappedGLCode' => $allowThirdPartyPosting ? ($validated['MappedGLCode'] ?? null) : null,
                 'CreatedBy' => Auth::Id(),
                 'ModifiedBy' => Auth::Id(),
             ]);
@@ -475,6 +504,40 @@ class ChartOfAccountsController extends Controller
 
             return back()->with('error', 'Failed to create General Ledger Account:' . $th->getMessage());
         }
+    }
+
+    public function searchMappedGlAccounts(Request $request)
+    {
+        $this->authorize(PermissionEnum::FinanceCOACreate, FinanceGLAccounts::class);
+
+        $q = trim((string) $request->input('q', ''));
+        $currencyId = (int) $request->input('currency_id', 0);
+
+        if ($currencyId <= 0 || mb_strlen($q) < 2) {
+            return response()->json(['results' => []]);
+        }
+
+        $results = FinanceSyncGLAccount::query()
+            ->where(function ($query) use ($q) {
+                $query->where('GLCode', 'like', '%' . $q . '%')
+                    ->orWhere('GLName', 'like', '%' . $q . '%');
+            })
+            ->where('CurrencyID', $currencyId)
+            ->select('GLCode', 'GLName')
+            ->orderBy('GLCode')
+            ->limit(25)
+            ->get()
+            ->map(function ($gl) {
+                return [
+                    'id' => $gl->GLCode,
+                    'text' => trim($gl->GLCode . ' (' . ($gl->GLName ?? '-') . ')'),
+                    'code' => $gl->GLCode,
+                    'name' => $gl->GLName,
+                ];
+            })
+            ->values();
+
+        return response()->json(['results' => $results]);
     }
 
     public function edit($id)

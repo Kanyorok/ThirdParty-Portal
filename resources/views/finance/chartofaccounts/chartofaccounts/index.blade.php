@@ -139,6 +139,9 @@
                                         @endif
                                     </a>
                                 </th>
+                                @if(!empty($allowThirdPartyPosting))
+                                    <th scope="col">MappedGL</th>
+                                @endif
                                 <th scope="col">
                                     <a href="{{ route('chartofaccounts.index', array_merge(request()->query(), ['sort_by' => 'GLAccountTypeID', 'sort_direction' => request('sort_direction') == 'asc' && request('sort_by') == 'GLAccountTypeID' ? 'desc' : 'asc'])) }}" class="text-decoration-none text-dark">
                                         GL Type
@@ -171,6 +174,9 @@
                                     <td>{{ $charts->firstItem() + $loop->index }}</td>
                                     <td>{{ $item->GLName ?? '-' }}</td>
                                     <td>{{ $item->GLCode ?? '-' }}</td>
+                                    @if(!empty($allowThirdPartyPosting))
+                                        <td>{{ $item->MappedGLCode ?? '-' }}</td>
+                                    @endif
                                     <td>{{ $item->GLAccountTypeID ?? '-' }}</td>
                                     <td>{{ $item->typeGroup->Description ?? '-' }}</td>
                                     <td>{{ $item->subAccount->Description ?? '-' }}</td>

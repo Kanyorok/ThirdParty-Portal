@@ -4,6 +4,60 @@
 
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+    <style>
+        .gl-modal-header {
+            background: linear-gradient(135deg, #0dcaf0, #0d6efd);
+            color: #fff;
+        }
+
+        .gl-detail-card {
+            border: 1px solid #e9ecef;
+            border-radius: 0.75rem;
+            background: #f8f9fa;
+            height: 100%;
+        }
+
+        .gl-detail-card .card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #495057;
+            margin-bottom: 0.75rem;
+        }
+
+        .gl-detail-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            border-bottom: 1px dashed #dee2e6;
+            padding: 0.35rem 0;
+            font-size: 0.875rem;
+        }
+
+        .gl-detail-row:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .gl-detail-key {
+            color: #6c757d;
+            white-space: nowrap;
+        }
+
+        .gl-detail-val {
+            color: #212529;
+            font-weight: 600;
+            text-align: right;
+            word-break: break-word;
+        }
+
+        .gl-detail-highlight {
+            border: 1px solid #dbeafe;
+            border-radius: 0.75rem;
+            background: #f0f9ff;
+            padding: 0.9rem;
+            margin-top: 0.75rem;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -194,6 +248,8 @@
                                             data-source="{{ $gl->Source ?? '' }}"
                                             data-source-table="{{ $gl->SourceTable ?? '' }}"
                                             data-is-active="{{ (int) (bool) $gl->IsActive }}"
+                                            data-currency-id="{{ $gl->CurrencyID ?? '' }}"
+                                            data-currency-code="{{ $gl->CurrencyCode ?? '' }}"
                                             data-created-on="{{ optional($gl->CreatedOn)->toDateTimeString() }}"
                                             data-modified-on="{{ optional($gl->ModifiedOn)->toDateTimeString() }}"
                                         >
@@ -253,26 +309,89 @@
     <div class="modal fade" id="glDetailsModal" tabindex="-1" aria-labelledby="glDetailsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="glDetailsModalLabel">GL Details</h5>
+                <div class="modal-header gl-modal-header">
+                    <h5 class="modal-title fw-bold" id="glDetailsModalLabel">
+                        <i class="fas fa-file-invoice-dollar me-2"></i>GL Details
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-md-6"><strong>GL Code:</strong> <span id="detailGLCode">-</span></div>
-                        <div class="col-md-6"><strong>GL Name:</strong> <span id="detailGLName">-</span></div>
-                        <div class="col-md-6"><strong>Account Type:</strong> <span id="detailGLAccountTypeID">-</span></div>
-                        <div class="col-md-6"><strong>Type Group:</strong> <span id="detailGLTypeGroupIDValue">-</span></div>
-                        <div class="col-md-6"><strong>Sub Account Type:</strong> <span id="detailGLSubAccountTypeIDValue">-</span></div>
-                        <div class="col-md-6"><strong>Branch ID:</strong> <span id="detailBranchID">-</span></div>
-                        <div class="col-md-6"><strong>Source:</strong> <span id="detailSource">-</span></div>
-                        <div class="col-md-6"><strong>Is Active:</strong> <span id="detailIsActive">-</span></div>
-                        <div class="col-md-12"><strong>Description:</strong> <span id="detailDescription">-</span></div>
-                        <div class="col-md-12"><strong>Source Table:</strong> <span id="detailSourceTable">-</span></div>
-                        <div class="col-md-6"><strong>Created On:</strong> <span id="detailCreatedOn">-</span></div>
-                        <div class="col-md-6"><strong>Modified On:</strong> <span id="detailModifiedOn">-</span></div>
+                        <div class="col-md-6">
+                            <div class="gl-detail-card card p-3">
+                                <div class="card-title">Account Identity</div>
+                                <div class="gl-detail-row">
+                                    <span class="gl-detail-key">GL Code</span>
+                                    <span class="gl-detail-val" id="detailGLCode">-</span>
+                                </div>
+                                <div class="gl-detail-row">
+                                    <span class="gl-detail-key">GL Name</span>
+                                    <span class="gl-detail-val" id="detailGLName">-</span>
+                                </div>
+                                <div class="gl-detail-row">
+                                    <span class="gl-detail-key">Account Type</span>
+                                    <span class="gl-detail-val" id="detailGLAccountTypeID">-</span>
+                                </div>
+                                <div class="gl-detail-row">
+                                    <span class="gl-detail-key">Type Group</span>
+                                    <span class="gl-detail-val" id="detailGLTypeGroupIDValue">-</span>
+                                </div>
+                                <div class="gl-detail-row">
+                                    <span class="gl-detail-key">Sub Account Type</span>
+                                    <span class="gl-detail-val" id="detailGLSubAccountTypeIDValue">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="gl-detail-card card p-3">
+                                <div class="card-title">Source & Status</div>
+                                <div class="gl-detail-row">
+                                    <span class="gl-detail-key">Source</span>
+                                    <span class="gl-detail-val" id="detailSource">-</span>
+                                </div>
+                                <div class="gl-detail-row">
+                                    <span class="gl-detail-key">Currency</span>
+                                    <span class="gl-detail-val" id="detailCurrency">-</span>
+                                </div>
+                                <div class="gl-detail-row">
+                                    <span class="gl-detail-key">Branch ID</span>
+                                    <span class="gl-detail-val" id="detailBranchID">-</span>
+                                </div>
+                                <div class="gl-detail-row">
+                                    <span class="gl-detail-key">Status</span>
+                                    <span class="gl-detail-val" id="detailIsActive">-</span>
+                                </div>
+                                <div class="gl-detail-row">
+                                    <span class="gl-detail-key">Created On</span>
+                                    <span class="gl-detail-val" id="detailCreatedOn">-</span>
+                                </div>
+                                <div class="gl-detail-row">
+                                    <span class="gl-detail-key">Modified On</span>
+                                    <span class="gl-detail-val" id="detailModifiedOn">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="gl-detail-highlight">
+                                <div class="mb-1"><strong>Description</strong></div>
+                                <div class="small text-dark" id="detailDescription">-</div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="gl-detail-highlight">
+                                <div class="mb-1"><strong>Source Table</strong></div>
+                                <div class="small text-dark" id="detailSourceTable">-</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="copyGlCodeBtn">
+                        <i class="fas fa-copy me-1"></i>Copy GL Code
+                    </button>
+                </div>
+                <input type="hidden" id="detailGLCodeRaw" value="">
             </div>
         </div>
     </div>
@@ -344,6 +463,8 @@
             const startSyncForm = document.getElementById('startSyncForm');
             const startSyncSubmitBtn = document.getElementById('startSyncSubmitBtn');
             const confirmSyncModalEl = document.getElementById('confirmSyncModal');
+            const copyGlCodeBtn = document.getElementById('copyGlCodeBtn');
+            const detailGLCodeRaw = document.getElementById('detailGLCodeRaw');
             const detailFieldIds = [
                 'GLCode',
                 'GLName',
@@ -517,6 +638,8 @@
                         BranchID: button.dataset.branchId || '',
                         Source: button.dataset.source || '',
                         SourceTable: button.dataset.sourceTable || '',
+                        CurrencyID: button.dataset.currencyId || '',
+                        CurrencyCode: button.dataset.currencyCode || '',
                         CreatedOn: button.dataset.createdOn || '',
                         ModifiedOn: button.dataset.modifiedOn || '',
                         IsActive: button.dataset.isActive === '1',
@@ -531,10 +654,42 @@
 
                     const activeEl = document.getElementById('detailIsActive');
                     if (activeEl) {
-                        activeEl.textContent = data.IsActive ? 'Yes' : 'No';
+                        activeEl.innerHTML = data.IsActive
+                            ? '<span class="badge bg-success">Active</span>'
+                            : '<span class="badge bg-danger">Inactive</span>';
+                    }
+
+                    const currencyEl = document.getElementById('detailCurrency');
+                    if (currencyEl) {
+                        const code = data.CurrencyCode || '';
+                        const id = data.CurrencyID || '';
+                        currencyEl.textContent = code && id ? (code + ' (' + id + ')') : (code || id || '-');
+                    }
+
+                    if (detailGLCodeRaw) {
+                        detailGLCodeRaw.value = data.GLCode || '';
                     }
                 });
             });
+
+            if (copyGlCodeBtn && detailGLCodeRaw) {
+                copyGlCodeBtn.addEventListener('click', async function () {
+                    const code = detailGLCodeRaw.value || '';
+                    if (!code) {
+                        return;
+                    }
+
+                    try {
+                        await navigator.clipboard.writeText(code);
+                        copyGlCodeBtn.innerHTML = '<i class="fas fa-check me-1"></i>Copied';
+                        setTimeout(function () {
+                            copyGlCodeBtn.innerHTML = '<i class="fas fa-copy me-1"></i>Copy GL Code';
+                        }, 1200);
+                    } catch (error) {
+                        console.error('Copy failed', error);
+                    }
+                });
+            }
         });
     </script>
 @endsection

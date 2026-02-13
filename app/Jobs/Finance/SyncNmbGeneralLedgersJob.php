@@ -384,6 +384,12 @@ class SyncNmbGeneralLedgersJob implements ShouldQueue
             $isActive = true;
         }
 
+        $currencyValue = $this->pick($row, ['currencyID', 'CurrencyID', 'currencyId', 'CurrencyId']);
+        $currencyId = is_numeric($currencyValue) ? (int) $currencyValue : 141;
+        if ($currencyId <= 0) {
+            $currencyId = 141;
+        }
+
         return [
             'GLCode' => (string) $glCode,
             'GLName' => (string) ($this->pick($row, ['gLName', 'GLName', 'glName']) ?? ''),
@@ -403,7 +409,7 @@ class SyncNmbGeneralLedgersJob implements ShouldQueue
             'GLDigits' => null,
             'Description' => (string) ($this->pick($row, ['description', 'Description']) ?? ''),
             'IsActive' => $isActive ? 1 : 0,
-            'CurrencyID' => 56,
+            'CurrencyID' => $currencyId,
             'Source' => (string) ($this->pick($row, ['source', 'Source']) ?? 'NIMBLE'),
             'SourceTable' => (string) ($this->pick($row, ['sourceTable', 'SourceTable']) ?? ''),
             'IsSynced' => 1,
