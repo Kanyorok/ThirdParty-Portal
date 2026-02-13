@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\Tender;
+use App\Models\Procurement\TenderInvitation;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -157,13 +158,25 @@ class TenderSubmissionController extends Controller
                 return redirect()->back()->withErrors(['supplier_name' => 'Selected supplier not found.'])->withInput();
             }
 
-            // Check if tender is Restricted and if supplier is invited
+            // For Restricted tenders: supplier must be invited AND have accepted the invitation
             if ($tender->TenderType === \App\Enums\TenderTypeEnum::Restricted) {
                 $isInvited = $tender->invitedSuppliers()->where('t_Suppliers.Id', $supplier->Id)->exists();
                 if (! $isInvited) {
                     DB::rollBack();
 
                     return redirect()->back()->withErrors(['supplier_name' => 'This supplier is not invited to this restricted tender.'])->withInput();
+                }
+
+                // Check if supplier has accepted the tender invitation
+                $hasAcceptedInvitation = TenderInvitation::where('TenderId', $tender->Id)
+                    ->where('SupplierId', $supplier->Id)
+                    ->where('ResponseStatus', TenderInvitation::STATUS_ACCEPTED)
+                    ->exists();
+
+                if (! $hasAcceptedInvitation) {
+                    DB::rollBack();
+
+                    return redirect()->back()->withErrors(['supplier_name' => 'This supplier has not accepted the tender invitation. Please record their acceptance first.'])->withInput();
                 }
             }
 
@@ -295,9 +308,15 @@ class TenderSubmissionController extends Controller
 
         $query = Supplier::query();
 
-        // If Restricted, only show invited suppliers
+        // For Restricted tenders: only show invited suppliers who have ACCEPTED the invitation
         if ($tender->TenderType === \App\Enums\TenderTypeEnum::Restricted) {
-            $query->whereIn('Id', $tender->invitedSuppliers()->pluck('t_Suppliers.Id'));
+            $acceptedSupplierIds = TenderInvitation::where('TenderId', $tender->Id)
+                ->where('ResponseStatus', TenderInvitation::STATUS_ACCEPTED)
+                ->pluck('SupplierId')
+                ->toArray();
+
+            $query->whereIn('Id', $acceptedSupplierIds)
+                  ->whereIn('Id', $tender->invitedSuppliers()->pluck('t_Suppliers.Id'));
         }
 
         // Exclude suppliers who have already submitted

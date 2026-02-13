@@ -18,10 +18,10 @@
                 <td>{{ $doc['size'] ?? 'N/A' }}</td>
                 <td>
                     @if(isset($doc['dms_document']) && $doc['dms_document'])
-                        {{-- DMS-backed document - use embed-preview modal --}}
+                        {{-- DMS-backed document - use bid-responsiveness route for preview --}}
                         <span class="btn btn-sm btn-outline-primary modal-preview-document"
                               title="{{ $doc['filename'] }}"
-                              data-url="{{ route('file.embed-preview', [$doc['dms_document']->DocumentId]) }}"
+                              data-url="{{ url('/procurement/bid-responsiveness/' . $bidId . '/document/' . $doc['dms_document']->DocumentId) }}"
                               id="document-{{ $doc['dms_document']->DocumentId }}">
                             <i class="fas fa-eye"></i> View
                         </span>
@@ -29,7 +29,7 @@
                         {{-- DMS document ID exists but document wasn't loaded --}}
                         <span class="btn btn-sm btn-outline-primary modal-preview-document"
                               title="{{ $doc['filename'] }}"
-                              data-url="{{ route('file.embed-preview', [$doc['document_id']]) }}">
+                              data-url="{{ url('/procurement/bid-responsiveness/' . $bidId . '/document/' . $doc['document_id']) }}">
                             <i class="fas fa-eye"></i> View
                         </span>
                     @elseif($doc['can_view'] ?? false)
@@ -51,6 +51,3 @@
     <span class="text-muted">No documents attached.</span>
 </div>
 @endif
-
-{{-- Include preview modal functionality --}}
-@include('snippets.actions.preview-files')

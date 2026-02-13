@@ -61,6 +61,24 @@
         </div>
 
         <!-- Evaluation Sections -->
+        @if($tenderSections->isEmpty())
+            <div class="alert alert-warning" role="alert">
+                <h5 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> No Evaluation Criteria Configured</h5>
+                <p class="mb-2">
+                    No evaluation sections or criteria have been set up for this tender yet.
+                    Before committee members can evaluate bids, an administrator must configure the evaluation framework.
+                </p>
+                <hr>
+                <p class="mb-0">
+                    <strong>What to do:</strong> Go to
+                    <a href="{{ route('tender-criteria', $tender->Id) }}" class="alert-link">
+                        Evaluation Criteria Setup
+                    </a>
+                    to add sections and criteria for this tender.
+                </p>
+            </div>
+        @endif
+
         @foreach($tenderSections as $tenderSection)
             @php
                 $section = $tenderSection->sections; // Access actual Section model with criteria

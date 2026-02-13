@@ -557,8 +557,8 @@
                 documentsHtml = documents.map(doc => {
                     let actionHtml = '';
                     if (doc.document_id) {
-                        // DMS document — use embed-preview modal
-                        const previewUrl = `/dms/document/${doc.document_id}/embed-preview`;
+                        // Use bid-responsiveness route (procurement permissions, not DMS)
+                        const previewUrl = `/procurement/bid-responsiveness/${submissionInfo.id}/document/${doc.document_id}`;
                         actionHtml = `<span class="btn btn-sm btn-outline-primary modal-preview-document"
                             title="${doc.filename}"
                             data-url="${previewUrl}"
@@ -702,5 +702,89 @@
         }
     </script>
 
-@include('snippets.actions.preview-files')
 @endsection
+
+@section('scripts')
+{{-- Preview modal markup (from snippets.actions.preview-files but without the script) --}}
+<div class="modal fade" id="previewDocumentModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">..</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="onboarding-content with-gradient" id="previewDocumentContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        var $previewModal = $('#previewDocumentModal');
+        var $bidModal = $('#bidDetailsModal');
+        var pendingPreview = null;
+
+        // Unified click handler for .modal-preview-document
+        $(document).on('click', '.modal-preview-document', function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            var title = $(this).attr('title') || 'Document';
+            var url = $(this).data('url');
+            if (!url) return;
+
+            // If bid details modal is open, close it first then open preview
+            if ($bidModal.length && $bidModal.hasClass('show')) {
+                pendingPreview = { url: url, title: title };
+                $bidModal.modal('hide');
+                return;
+            }
+
+            // Normal case: no stacked modal, just open preview directly
+            openPreview(url, title);
+        });
+
+        // When bid details modal finishes closing, open the queued preview
+        if ($bidModal.length) {
+            $bidModal.on('hidden.bs.modal', function () {
+                if (!pendingPreview) return;
+                var info = pendingPreview;
+                pendingPreview = null;
+                openPreview(info.url, info.title);
+            });
+        }
+
+        // When preview modal is closed, reopen the bid details modal
+        $previewModal.on('hidden.bs.modal', function () {
+            if ($bidModal.length) {
+                var $body = $bidModal.find('.modal-body');
+                if ($body.length && $.trim($body.html())) {
+                    $bidModal.modal('show');
+                }
+            }
+        });
+
+        function openPreview(url, title) {
+            $previewModal.find('.modal-title').text('File: ' + title);
+            $('#previewDocumentContent').removeClass('d-none')
+                .html('<div class="text-center my-4"><div class="spinner-grow text-secondary me-2" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+            $previewModal.modal('show');
+
+            $.get(url, function (data) {
+                $('#previewDocumentContent').html(data);
+            }).fail(function (jqXHR) {
+                var msg = 'Failed to load preview';
+                if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                    msg = jqXHR.responseJSON.message;
+                } else if (jqXHR.responseText) {
+                    msg = jqXHR.responseText.substring(0, 200);
+                }
+                $('#previewDocumentContent').html('<div class="alert alert-danger m-3">Error: ' + msg + '</div>');
+            });
+        }
+    });
+</script>
+@endsection
+

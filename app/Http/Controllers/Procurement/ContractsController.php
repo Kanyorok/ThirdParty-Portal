@@ -564,7 +564,9 @@ class ContractsController extends Controller
         $award = null;
 
         if ($type === 'rfq') {
-            $award = RFQAward::where('Id', $awardId)->first();
+            $award = RFQAward::where('Id', $awardId)
+                ->where('AwardStatus', 'Approved')
+                ->first();
         } else {
             $award = TenderAward::where('Id', $awardId)
                 ->where('AwardStatus', 'Approved')

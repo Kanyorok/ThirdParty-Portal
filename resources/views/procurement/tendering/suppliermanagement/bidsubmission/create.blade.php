@@ -50,6 +50,7 @@
                             @error('supplier_name')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                            <div class="form-text text-muted">Only suppliers who have accepted the tender invitation will appear here.</div>
                         </div>
                     </div>
                 </div>

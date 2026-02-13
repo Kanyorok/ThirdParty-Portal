@@ -3,13 +3,18 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQAward;
+use App\Models\Procurement\RFQCommitteeMember;
+use App\Models\Procurement\RFQCriteria;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQResponse;
+use App\Models\Procurement\RFQSupplierResponseEvaluation;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderAward;
 use App\Models\Procurement\TenderCommitteeEvaluation;
+use App\Models\Procurement\TenderCommitteeMember;
 use App\Models\Procurement\TenderSupplier;
 use App\Services\Procurement\TenderScoringService;
 use App\Services\Workflow\ApprovalWorkflow;
@@ -321,6 +326,14 @@ class AwardsController extends Controller
             $evaluationData = $this->getConsolidatedScores($id);
         }
 
+        // Check evaluation completeness (for both tenders and RFQs)
+        $evaluationCompleteness = ['is_complete' => true];
+        if ($type === 'tender') {
+            $evaluationCompleteness = $this->checkEvaluationCompleteness($id);
+        } elseif ($type === 'rfq') {
+            $evaluationCompleteness = $this->checkRFQEvaluationCompleteness($id);
+        }
+
         // Get workflow history if award exists
         $workflowHistory = [];
         if ($existingAward) {
@@ -337,6 +350,7 @@ class AwardsController extends Controller
             'tender',
             'existingAward',
             'evaluationData',
+            'evaluationCompleteness',
             'type',
             'availableItems',
             'canApprove',
@@ -442,6 +456,19 @@ class AwardsController extends Controller
                     return redirect()->back()->with('error', 'An active award already exists for this RFQ.');
                 }
 
+                // Gate: All committee members must have completed evaluations for all supplier responses
+                $completeness = $this->checkRFQEvaluationCompleteness($id);
+                if (! $completeness['is_complete']) {
+                    $msg = 'Cannot create award: Not all evaluations are complete. '
+                         . $completeness['members_completed'] . ' of ' . $completeness['total_members']
+                         . ' committee members have finished evaluating all ' . $completeness['total_bids'] . ' supplier response(s).';
+                    if (! empty($completeness['pending_members'])) {
+                        $msg .= ' Pending: ' . implode(', ', $completeness['pending_members']) . '.';
+                    }
+
+                    return redirect()->back()->with('error', $msg);
+                }
+
                 $award = RFQAward::create([
                     'RFQId' => $id,
                     'SupplierId' => $request->winning_supplier_id,
@@ -475,6 +502,19 @@ class AwardsController extends Controller
 
                 if ($hasActiveAward) {
                     return redirect()->back()->with('error', 'An active award already exists for this tender.');
+                }
+
+                // Gate: All committee members must have completed evaluations for all bids
+                $completeness = $this->checkEvaluationCompleteness($id);
+                if (! $completeness['is_complete']) {
+                    $msg = 'Cannot create award: Not all evaluations are complete. '
+                         . $completeness['members_completed'] . ' of ' . $completeness['total_members']
+                         . ' committee members have finished evaluating all ' . $completeness['total_bids'] . ' bid(s).';
+                    if (! empty($completeness['pending_members'])) {
+                        $msg .= ' Pending: ' . implode(', ', $completeness['pending_members']) . '.';
+                    }
+
+                    return redirect()->back()->with('error', $msg);
                 }
 
                 // Create award in Pending status
@@ -1551,34 +1591,179 @@ class AwardsController extends Controller
     }
 
     /**
-     * Approve an RFQ Award (workflow-integrated approval)
-     * This handles the approval of RFQ awards that were created with Pending status
+     * Check if all committee members have completed evaluations for all bids of a tender.
+     *
+     * Returns an array with:
+     *   - is_complete (bool)
+     *   - total_members, members_completed
+     *   - total_bids
+     *   - pending_members (array of names)
      */
-    /*
-    * DEPRECATED: Merged into submitForApproval
-    *
-    public function submitRfqForApproval(Request $request)
+    protected function checkEvaluationCompleteness(int $tenderId): array
     {
-       // ...
-    }
-    */
+        $tender = Tender::find($tenderId);
+        if (! $tender) {
+            return ['is_complete' => false, 'total_members' => 0, 'members_completed' => 0, 'total_bids' => 0, 'pending_members' => []];
+        }
 
-    /*
-    * DEPRECATED: Logic merged into approveRfq
-    *
-    public function approveRfqAward(Request $request)
+
+        $members = TenderCommitteeMember::where(function ($q) use ($tenderId) {
+            $q->where('TenderID', $tenderId)
+              ->orWhereHas('committee', function ($cq) use ($tenderId) {
+                  $cq->where('ReferenceId', $tenderId);
+              });
+        })
+            ->where('IsActive', 1)
+            ->where(function ($q) {
+                $q->whereNull('Response')->orWhere('Response', 1);
+            })
+            ->with('user')
+            ->get();
+
+        $totalMembers = $members->count();
+
+        if ($totalMembers === 0) {
+            return ['is_complete' => false, 'total_members' => 0, 'members_completed' => 0, 'total_bids' => 0, 'pending_members' => ['No committee members assigned']];
+        }
+
+        //  Get responsive bids (suppliers) for this tender
+        $responsiveBids = BidSubmission::where('TenderRef', $tender->TenderNo)
+            ->where('IsResponsive', true)
+            ->whereIn('BidStatus', ['responsive', 'evaluated'])
+            ->get();
+
+        $totalBids = $responsiveBids->count();
+
+        if ($totalBids === 0) {
+            return ['is_complete' => false, 'total_members' => $totalMembers, 'members_completed' => 0, 'total_bids' => 0, 'pending_members' => ['No responsive bids found']];
+        }
+
+        // Get active criteria count for this tender
+        $totalCriteria = DB::table('t_TenderCriteria')
+            ->where('TenderID', $tenderId)
+            ->where('IsActive', true)
+            ->count();
+
+        if ($totalCriteria === 0) {
+            return ['is_complete' => false, 'total_members' => $totalMembers, 'members_completed' => 0, 'total_bids' => $totalBids, 'pending_members' => ['No evaluation criteria defined']];
+        }
+
+        $supplierIds = $responsiveBids->pluck('SupplierId')->unique()->values();
+        $requiredPerMember = $totalCriteria * $supplierIds->count(); // criteria × bids
+
+        $pendingMembers = [];
+        $membersCompleted = 0;
+
+        foreach ($members as $member) {
+            $actualCount = TenderCommitteeEvaluation::where('TenderID', $tenderId)
+                ->where('MemberID', $member->Id)
+                ->whereIn('SupplierId', $supplierIds)
+                ->count();
+
+            if ($actualCount >= $requiredPerMember) {
+                $membersCompleted++;
+            } else {
+                $memberName = $member->user->Name ?? ('Member #' . $member->Id);
+                $pendingMembers[] = $memberName;
+            }
+        }
+
+        return [
+            'is_complete' => $membersCompleted >= $totalMembers,
+            'total_members' => $totalMembers,
+            'members_completed' => $membersCompleted,
+            'total_bids' => $totalBids,
+            'pending_members' => $pendingMembers,
+        ];
+    }
+
+    /**
+     * Check if all committee members have completed evaluations for all supplier responses of an RFQ.
+     *
+     * Returns the same structure as checkEvaluationCompleteness().
+     */
+    protected function checkRFQEvaluationCompleteness(int $rfqId): array
     {
-       // ... (Merged into approveRfq)
-    }
-    */
+        $rfq = RFQ::find($rfqId);
+        if (! $rfq) {
+            return ['is_complete' => false, 'total_members' => 0, 'members_completed' => 0, 'total_bids' => 0, 'pending_members' => []];
+        }
 
-    /*
-    * DEPRECATED: Logic merged into reject
-    *
-    public function rejectRfqAward(Request $request)
-    {
-       // ... (Merged into reject)
-    }
-    */
+        // 1. Get all active committee members for this RFQ
+        $members = RFQCommitteeMember::where('RFQID', $rfqId)
+            ->where('IsActive', 1)
+            ->where(function ($q) {
+                $q->whereNull('Response')->orWhere('Response', 1);
+            })
+            ->get();
 
+        $totalMembers = $members->count();
+
+        if ($totalMembers === 0) {
+            return ['is_complete' => false, 'total_members' => 0, 'members_completed' => 0, 'total_bids' => 0, 'pending_members' => ['No committee members assigned']];
+        }
+
+        // 2. Get suppliers who have responded to this RFQ
+        $supplierIds = RFQResponse::where('RFQId', $rfqId)
+            ->pluck('SupplierId')
+            ->unique()
+            ->values();
+
+        $totalBids = $supplierIds->count();
+
+        if ($totalBids === 0) {
+            return ['is_complete' => false, 'total_members' => $totalMembers, 'members_completed' => 0, 'total_bids' => 0, 'pending_members' => ['No supplier responses found']];
+        }
+
+        // 3. Get active criteria count for this RFQ
+        $totalCriteria = RFQCriteria::where('RFQID', $rfqId)
+            ->where('IsActive', true)
+            ->count();
+
+        if ($totalCriteria === 0) {
+            return ['is_complete' => false, 'total_members' => $totalMembers, 'members_completed' => 0, 'total_bids' => $totalBids, 'pending_members' => ['No evaluation criteria defined']];
+        }
+
+        // 4. For each member, check if they have evaluated every supplier on every criterion
+        //    RFQ evaluations use a two-level structure:
+        //    RFQEvaluation (parent, per member) -> RFQSupplierResponseEvaluation (child, per supplier/criteria)
+        $requiredPerMember = $totalCriteria * $totalBids; // criteria × suppliers
+
+        $pendingMembers = [];
+        $membersCompleted = 0;
+
+        foreach ($members as $member) {
+            // Find the evaluation record(s) for this member
+            $evaluationIds = RFQEvaluation::where('RFQId', $rfqId)
+                ->where('UserCode', $member->UserID)
+                ->pluck('Id');
+
+            if ($evaluationIds->isEmpty()) {
+                $memberName = $member->user->Name ?? $member->committee_member_name ?? ('Member #' . $member->Id);
+                $pendingMembers[] = $memberName;
+
+                continue;
+            }
+
+            // Count actual supplier/criteria evaluation records
+            $actualCount = RFQSupplierResponseEvaluation::whereIn('RFQEvaluationId', $evaluationIds)
+                ->whereIn('SupplierId', $supplierIds)
+                ->count();
+
+            if ($actualCount >= $requiredPerMember) {
+                $membersCompleted++;
+            } else {
+                $memberName = $member->user->Name ?? $member->committee_member_name ?? ('Member #' . $member->Id);
+                $pendingMembers[] = $memberName;
+            }
+        }
+
+        return [
+            'is_complete' => $membersCompleted >= $totalMembers,
+            'total_members' => $totalMembers,
+            'members_completed' => $membersCompleted,
+            'total_bids' => $totalBids,
+            'pending_members' => $pendingMembers,
+        ];
+    }
 }
