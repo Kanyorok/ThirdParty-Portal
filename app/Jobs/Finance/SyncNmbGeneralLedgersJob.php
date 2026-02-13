@@ -10,6 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -39,7 +40,7 @@ class SyncNmbGeneralLedgersJob implements ShouldQueue
         try {
             $syncRun->update([
                 'Status' => 'running',
-                'Message' => 'Starting NMB GL sync.',
+                'Message' => 'Starting Nimble GL sync (staging mode).',
                 'SyncError' => null,
                 'StartedAt' => $syncRun->StartedAt ?? now(),
                 'ModifiedBy' => $userId,
@@ -53,7 +54,7 @@ class SyncNmbGeneralLedgersJob implements ShouldQueue
             $consumerSecret = env('CRDB_NMB_CONSUMER_SECRET');
 
             if (! $loginUrl || ! $baseUrl || ! $consumerKey || ! $consumerSecret || ! $bankId) {
-                throw new RuntimeException('Missing NMB credentials in environment configuration.');
+                throw new RuntimeException('Missing Nimble credentials in environment configuration.');
             }
 
             $accessToken = $this->getNmbAccessToken($loginUrl, $consumerKey, $consumerSecret);
@@ -66,7 +67,8 @@ class SyncNmbGeneralLedgersJob implements ShouldQueue
             $recordsSynced = 0;
             $totalRecords = null;
             $seenCursors = [];
-            $snapshotCleared = false;
+
+            DB::table('t_FinanceSyncGLAccountsStaging')->truncate();
 
             while (true) {
                 $page++;
@@ -81,28 +83,23 @@ class SyncNmbGeneralLedgersJob implements ShouldQueue
                 );
 
                 if (! $response->successful()) {
-                    throw new RuntimeException('NMB GL sync API failed with HTTP ' . $response->status() . '.');
+                    throw new RuntimeException('Nimble GL sync API failed with HTTP ' . $response->status() . '.');
                 }
 
                 $payload = $response->json();
                 if (! is_array($payload)) {
-                    throw new RuntimeException('NMB GL sync API returned invalid JSON payload.');
+                    throw new RuntimeException('Nimble GL sync API returned invalid JSON payload.');
                 }
 
                 $status = strtoupper((string) Arr::get($payload, 'Status', ''));
                 $code = (int) Arr::get($payload, 'Code', 0);
                 if (! in_array($status, ['00', '000', 'OK'], true) || $code !== 200) {
-                    throw new RuntimeException('NMB GL sync API returned non-success status payload.');
+                    throw new RuntimeException('Nimble GL sync API returned non-success status payload.');
                 }
 
                 $rows = Arr::get($payload, 'Data', []);
                 if (! is_array($rows)) {
                     $rows = [];
-                }
-
-                if (! $snapshotCleared) {
-                    FinanceSyncGLAccount::truncate();
-                    $snapshotCleared = true;
                 }
 
                 $now = now();
@@ -116,7 +113,7 @@ class SyncNmbGeneralLedgersJob implements ShouldQueue
                 if (! empty($preparedRows)) {
                     // SQL Server has a strict parameter limit; write in smaller batches.
                     foreach (array_chunk($preparedRows, 50) as $batch) {
-                        FinanceSyncGLAccount::upsert(
+                        DB::table('t_FinanceSyncGLAccountsStaging')->upsert(
                             $batch,
                             ['GLCode'],
                             [
@@ -157,7 +154,7 @@ class SyncNmbGeneralLedgersJob implements ShouldQueue
 
                 $syncRun->update([
                     'Status' => 'running',
-                    'Message' => 'Synced page ' . $page . '.',
+                    'Message' => 'Staged page ' . $page . '.',
                     'RecordsSynced' => $recordsSynced,
                     'TotalRecords' => $totalRecords,
                     'CurrentPage' => $page,
@@ -191,23 +188,101 @@ class SyncNmbGeneralLedgersJob implements ShouldQueue
             }
 
             $syncRun->update([
+                'Status' => 'running',
+                'Message' => 'Applying staged snapshot.',
+                'ModifiedBy' => $userId,
+                'ModifiedOn' => now(),
+            ]);
+
+            DB::transaction(function () {
+                FinanceSyncGLAccount::truncate();
+
+                DB::table('t_FinanceSyncGLAccounts')->insertUsing(
+                    [
+                        'GLCode',
+                        'GLName',
+                        'GLAccountTypeID',
+                        'GLTypeGroupID',
+                        'GLSubAccountTypeID',
+                        'ParentGLID',
+                        'NormalBalance',
+                        'IsControlAccount',
+                        'IsPostingAccount',
+                        'CBSAccountCode',
+                        'BranchID',
+                        'GLAccountTypeValue',
+                        'GLTypeGroupIDValue',
+                        'GLTypeGroupValue',
+                        'GLSubAccountTypeIDValue',
+                        'GLDigits',
+                        'Description',
+                        'IsActive',
+                        'CurrencyID',
+                        'Source',
+                        'SourceTable',
+                        'IsSynced',
+                        'CreatedBy',
+                        'CreatedOn',
+                        'ModifiedBy',
+                        'ModifiedOn',
+                        'DeletedBy',
+                        'DeletedOn',
+                    ],
+                    DB::table('t_FinanceSyncGLAccountsStaging')->select(
+                        'GLCode',
+                        'GLName',
+                        'GLAccountTypeID',
+                        'GLTypeGroupID',
+                        'GLSubAccountTypeID',
+                        'ParentGLID',
+                        'NormalBalance',
+                        'IsControlAccount',
+                        'IsPostingAccount',
+                        'CBSAccountCode',
+                        'BranchID',
+                        'GLAccountTypeValue',
+                        'GLTypeGroupIDValue',
+                        'GLTypeGroupValue',
+                        'GLSubAccountTypeIDValue',
+                        'GLDigits',
+                        'Description',
+                        'IsActive',
+                        'CurrencyID',
+                        'Source',
+                        'SourceTable',
+                        'IsSynced',
+                        'CreatedBy',
+                        'CreatedOn',
+                        'ModifiedBy',
+                        'ModifiedOn',
+                        'DeletedBy',
+                        'DeletedOn'
+                    )
+                );
+            });
+
+            $appliedCount = FinanceSyncGLAccount::count();
+
+            DB::table('t_FinanceSyncGLAccountsStaging')->truncate();
+
+            $syncRun->update([
                 'Status' => 'completed',
-                'Message' => 'NMB GL sync completed successfully.',
+                'Message' => 'Nimble GL sync completed successfully. Snapshot applied.',
                 'CompletedAt' => now(),
-                'RecordsSynced' => $recordsSynced,
+                'RecordsSynced' => $appliedCount,
                 'TotalRecords' => $totalRecords ?? $recordsSynced,
                 'ModifiedBy' => $userId,
                 'ModifiedOn' => now(),
             ]);
         } catch (\Throwable $e) {
-            Log::error('NMB GL sync job failed', [
+            Log::error('Nimble GL sync job failed', [
                 'syncRunId' => $this->syncRunId,
                 'message' => $e->getMessage(),
             ]);
 
             $syncRun->update([
                 'Status' => 'failed',
-                'Message' => 'NMB GL sync failed: ' . mb_substr($e->getMessage(), 0, 300),
+                'Message' => 'Nimble GL sync failed: ' . mb_substr($e->getMessage(), 0, 300),
                 'SyncError' => $e->getMessage(),
                 'CompletedAt' => now(),
                 'ModifiedBy' => $userId,
@@ -227,12 +302,12 @@ class SyncNmbGeneralLedgersJob implements ShouldQueue
             ]);
 
         if (! $response->successful()) {
-            throw new RuntimeException('NMB login failed with HTTP ' . $response->status() . '.');
+            throw new RuntimeException('Nimble login failed with HTTP ' . $response->status() . '.');
         }
 
         $body = $response->json();
         if (! is_array($body)) {
-            throw new RuntimeException('NMB login returned invalid JSON payload.');
+            throw new RuntimeException('Nimble login returned invalid JSON payload.');
         }
 
         $accessToken = Arr::get($body, 'AccessToken')
@@ -245,7 +320,7 @@ class SyncNmbGeneralLedgersJob implements ShouldQueue
         $statusOk = in_array($statusCode, ['000', '00', 'OK'], true);
 
         if (! $accessToken || ! $success || ! $statusOk) {
-            throw new RuntimeException('NMB login did not return a valid access token.');
+            throw new RuntimeException('Nimble login did not return a valid access token.');
         }
 
         return (string) $accessToken;

@@ -105,8 +105,56 @@ class ChartOfAccountsController extends Controller
             FILTER_VALIDATE_BOOLEAN
         );
 
+        $searchGL = trim((string) request('gl_account', ''));
+
         $syncCount = FinanceSyncGLAccount::count();
         $lastSyncedAt = FinanceSyncGLAccount::max('ModifiedOn');
+        $syncedGlsQuery = FinanceSyncGLAccount::query()
+            ->select([
+                'Id',
+                'GLCode',
+                'GLName',
+                'Description',
+                'GLAccountTypeID',
+                'GLTypeGroupIDValue',
+                'GLSubAccountTypeIDValue',
+                'BranchID',
+                'Source',
+                'SourceTable',
+                'IsActive',
+                'CreatedOn',
+                'ModifiedOn',
+            ]);
+
+        if ($searchGL !== '') {
+            $syncedGlsQuery->where(function ($query) use ($searchGL) {
+                $query->where('GLCode', $searchGL)
+                    ->orWhere('GLName', 'like', '%' . $searchGL . '%');
+            });
+        }
+
+        $syncedGls = $syncedGlsQuery
+            ->orderBy('GLCode')
+            ->paginate(40)
+            ->withQueryString();
+
+        $selectedGlOption = null;
+        if ($searchGL !== '') {
+            $selectedGl = FinanceSyncGLAccount::query()
+                ->where('GLCode', $searchGL)
+                ->orWhere('GLName', 'like', '%' . $searchGL . '%')
+                ->select('GLCode', 'GLName')
+                ->orderBy('GLCode')
+                ->first();
+
+            if ($selectedGl) {
+                $selectedGlOption = [
+                    'id' => $selectedGl->GLCode,
+                    'text' => trim($selectedGl->GLCode . ' (' . ($selectedGl->GLName ?? '-') . ')'),
+                ];
+            }
+        }
+
         $activeSync = FinanceGLSyncRun::whereIn('Status', ['pending', 'running'])
             ->orderBy('Id', 'desc')
             ->first();
@@ -116,9 +164,42 @@ class ChartOfAccountsController extends Controller
             'allowThirdPartyPosting',
             'syncCount',
             'lastSyncedAt',
+            'syncedGls',
+            'selectedGlOption',
             'activeSync',
             'latestSync'
         ));
+    }
+
+    public function searchSyncedGlAccounts(Request $request)
+    {
+        $this->authorize(PermissionEnum::FinanceCOAView, FinanceGLAccounts::class);
+
+        $q = trim((string) $request->input('q', ''));
+        if (mb_strlen($q) < 2) {
+            return response()->json(['results' => []]);
+        }
+
+        $results = FinanceSyncGLAccount::query()
+            ->where(function ($query) use ($q) {
+                $query->where('GLCode', 'like', '%' . $q . '%')
+                    ->orWhere('GLName', 'like', '%' . $q . '%');
+            })
+            ->select('GLCode', 'GLName')
+            ->orderBy('GLCode')
+            ->limit(25)
+            ->get()
+            ->map(function ($gl) {
+                return [
+                    'id' => $gl->GLCode,
+                    'text' => trim($gl->GLCode . ' (' . ($gl->GLName ?? '-') . ')'),
+                    'code' => $gl->GLCode,
+                    'name' => $gl->GLName,
+                ];
+            })
+            ->values();
+
+        return response()->json(['results' => $results]);
     }
 
     public function startThirdPartySync(Request $request)
