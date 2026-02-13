@@ -4,8 +4,6 @@ namespace App\Services\Inventory;
 
 use App\Enums\Inventory\Transfers;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\Core\PendingWorkflow;
-use App\Models\Core\Workflow;
 use App\Models\Inventory\InventoryHold;
 use App\Models\Inventory\InventoryHoldReview;
 use App\Models\Inventory\StockItem;
@@ -133,30 +131,6 @@ class InventoryHoldReviewService
                     'ModifiedOn' => now(),
                 ]);
             }
-
-            Workflow::create([
-                'Source' => 'TransactionTransfer',
-                'SourceID' => $newTransfer->Id,
-                'Stage' => Transfers::InTransit->label(),
-                'Status' => Transfers::InTransit->value,
-                'Notes' => 'Return transfer initiated from InventoryHold #' . $hold->Id,
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => now(),
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now(),
-            ]);
-
-            PendingWorkflow::updateOrCreate(
-                ['Source' => 'TransactionTransfer', 'SourceID' => $newTransfer->Id],
-                [
-                    'Stage' => Transfers::InTransit->label(),
-                    'UserId' => Auth::id(),
-                    'CreatedBy' => Auth::id(),
-                    'CreatedOn' => now(),
-                    'ModifiedBy' => Auth::id(),
-                    'ModifiedOn' => now(),
-                ]
-            );
 
             InventoryHoldReview::create([
                 'InventoryHoldID' => $hold->Id,

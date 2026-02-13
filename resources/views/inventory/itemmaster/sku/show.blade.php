@@ -69,13 +69,6 @@
 
             <div class="d-flex gap-2 mt-3">
                 <a href="{{ route('sku.index') }}" class="btn btn-secondary">Back</a>
-                <a href="{{ route('sku.edit', $item->Id) }}" class="btn btn-warning">Edit SKU</a>
-                <form action="{{ route('sku.destroy', $item->Id) }}" method="POST"
-                      onsubmit="return confirm('⚠️ Are you sure you want to delete this SKU?');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete SKU</button>
-                </form>
             </div>
         </div>
     </div>

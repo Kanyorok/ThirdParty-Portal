@@ -9,6 +9,7 @@ use App\Models\Inventory\TransactionTransfer;
 use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Core\Branch;
 
 class Requisitions extends Model
 {
@@ -139,5 +140,10 @@ class Requisitions extends Model
             'SourceID', // The morph id column
             'Id'        // Local key
         );
+    }
+
+    public function requestingBranch()
+    {
+        return $this->belongsTo(Branch::class, 'BranchID', 'Id');
     }
 }

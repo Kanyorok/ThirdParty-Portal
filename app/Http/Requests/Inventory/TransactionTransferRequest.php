@@ -37,35 +37,34 @@ class TransactionTransferRequest extends FormRequest
         }
     }
 
-public function rules()
-{
-    $rules = [
-        'RequisitionType' => 'required|string|in:interbranch,procurement',
-        'TransferDate' => 'required|date',
-        'TransferredBy' => 'required|string',
-        'FromBranch' => 'nullable|exists:t_Branches,Id',
-        'ToBranch' => 'required|exists:t_Branches,Id',
+    public function rules()
+    {
+        $rules = [
+            'RequisitionType' => 'required|string|in:interbranch,procurement',
+            'TransferDate'    => 'required|date',
+            'TransferredBy'   => 'required|string',
+            'FromBranch'      => 'nullable|exists:t_Branches,Id',
+            'ToBranch'        => 'required|exists:t_Branches,Id',
 
-        'items' => 'required|array|min:1',
-        'items.*.item' => 'required|exists:t_Items,Id',
-        'items.*.unit_cost' => 'required|numeric|min:0',
-        'items.*.uom' => 'required|exists:t_UOM,Id',
-        'items.*.approved_qty' => 'required|numeric|min:1',
-        'items.*.dispatched_qty' => 'required|numeric|min:0',
-        'items.*.remarks' => 'nullable|string|max:255',
-    ];
+            'items'                         => 'required|array|min:1',
+            'items.*.item'                 => 'required|exists:t_Items,Id',
+            'items.*.unit_cost'            => 'required|numeric|min:0',
+            'items.*.uom'                 => 'required|exists:t_UOM,Id',
+            'items.*.approved_qty'        => 'required|numeric|min:1',
+            'items.*.dispatched_qty'      => 'required|numeric|min:0',
+            'items.*.remarks'             => 'nullable|string|max:255',
+            'items.*.batch_allocation'    => 'nullable|array',
+            'items.*.batch_allocation.*.ledger_id' => 'required_with:items.*.batch_allocation|exists:t_StockGRNLedger,Id',
+            'items.*.batch_allocation.*.quantity'  => 'required_with:items.*.batch_allocation|numeric|min:0',
+        ];
 
+        // ✅ FIXED: procurement requisitions come from t_Requisitions, not t_GoodsReceipts
+        if ($this->input('RequisitionType') === 'procurement') {
+            $rules['RequisitionId'] = 'required|exists:t_Requisitions,Id';
+        } else {
+            $rules['RequisitionId'] = 'required|exists:t_InterBranchRequisition,Id';
+        }
 
-    $rules['items.*.batch_allocation'] = 'nullable|array';
-    $rules['items.*.batch_allocation.*.ledger_id'] = 'required|exists:t_StockGRNLedger,Id';
-    $rules['items.*.batch_allocation.*.quantity'] = 'required|numeric|min:0';
-
-    if ($this->input('RequisitionType') === 'procurement') {
-        $rules['RequisitionId'] = 'required|exists:t_GoodsReceipts,Id';
-    } else {
-        $rules['RequisitionId'] = 'required|exists:t_InterBranchRequisition,Id';
+        return $rules;
     }
-
-    return $rules;
-}
 }

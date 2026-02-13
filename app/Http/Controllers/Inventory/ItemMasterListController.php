@@ -73,110 +73,115 @@ class ItemMasterListController extends Controller
         ]);
     }
 
-  public function import(Request $request)
-{
-    $request->validate([
-        'file' => 'required|mimes:xlsx,xls,csv',
-    ]);
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv',
+        ]);
 
-    try {
-        $import = new ItemMasterListImport();
+        try {
+            $import = new ItemMasterListImport();
 
-        Excel::import($import, $request->file('file'));
+            Excel::import($import, $request->file('file'));
 
-        $processed = $import->getProcessedCount();
-        $created = $import->getCreatedCount();
-        $updated = $import->getUpdatedCount();
-        $skipped = $import->getSkippedCount();
-        $errors = $import->getErrors();
+            $processed = $import->getProcessedCount();
+            $created = $import->getCreatedCount();
+            $updated = $import->getUpdatedCount();
+            $skipped = $import->getSkippedCount();
+            $errors = $import->getErrors();
 
-        $successMessage = "Import completed! ";
-        $successMessage .= "Processed: {$processed} rows. ";
-        
-        if ($created > 0) {
-            $successMessage .= "Created: {$created} new items. ";
-        }
-        
-        if ($updated > 0) {
-            $successMessage .= "Updated: {$updated} existing items. ";
-        }
-        
-        if ($skipped > 0) {
-            $successMessage .= "Skipped: {$skipped} rows. ";
-        }
-
-        $importResult = [
-            'message' => $successMessage,
-            'summary' => [
-                'processed' => $processed,
-                'created' => $created,
-                'updated' => $updated,
-                'skipped' => $skipped,
-            ],
-            'errors' => $errors,
-            'warnings' => []
-        ];
-
-        if (!empty($errors)) {
-            $errorMessage = "<strong>Some rows had errors:</strong><br>";
+            $successParts = [];
             
-            foreach (array_slice($errors, 0, 20) as $error) {
-                $errorMessage .= "• {$error}<br>";
+            if ($created > 0) {
+                $successParts[] = "Created: {$created} new item" . ($created > 1 ? 's' : '');
             }
             
-            if (count($errors) > 20) {
-                $errorMessage .= "<br>... and " . (count($errors) - 20) . " more errors.";
+            if ($updated > 0) {
+                $successParts[] = "Updated: {$updated} existing item" . ($updated > 1 ? 's' : '');
+            }
+            
+            if ($skipped > 0) {
+                $successParts[] = "Skipped: {$skipped} row" . ($skipped > 1 ? 's' : '') . " (empty/invalid data)";
+            }
+
+            if (empty($successParts)) {
+                $successMessage = "No changes were made. All rows were either empty or unchanged.";
+            } else {
+                $successMessage = "Import completed! " . implode('. ', $successParts) . '.';
+            }
+
+            $importResult = [
+                'message' => $successMessage,
+                'summary' => [
+                    'processed' => $processed,
+                    'created' => $created,
+                    'updated' => $updated,
+                    'skipped' => $skipped,
+                ],
+                'errors' => $errors,
+                'warnings' => []
+            ];
+
+            if (!empty($errors)) {
+                $errorMessage = "<strong>Critical errors encountered:</strong><br>";
+                
+                foreach (array_slice($errors, 0, 20) as $error) {
+                    $errorMessage .= "• {$error}<br>";
+                }
+                
+                if (count($errors) > 20) {
+                    $errorMessage .= "<br>... and " . (count($errors) - 20) . " more errors.";
+                }
+
+                return redirect()->route('itemmaster.index')
+                    ->with('import_result', $importResult)
+                    ->with('error_details', $errorMessage);
             }
 
             return redirect()->route('itemmaster.index')
-                ->with('import_result', $importResult)
-                ->with('error_details', $errorMessage);
+                ->with('import_result', $importResult);
+
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $errors = collect($e->failures())->map(function ($failure) {
+                $row = $failure->row();
+                $errors = implode(', ', $failure->errors());
+                return "Row {$row}: {$errors}";
+            })->toArray();
+
+            $importResult = [
+                'message' => "Import failed due to validation errors.",
+                'summary' => [
+                    'processed' => 0,
+                    'created' => 0,
+                    'updated' => 0,
+                    'skipped' => count($errors),
+                ],
+                'errors' => $errors,
+                'warnings' => []
+            ];
+
+            return redirect()->route('itemmaster.index')
+                ->with('import_result', $importResult);
+
+        } catch (\Exception $e) {
+            $importResult = [
+                'message' => config('app.debug')
+                    ? "Import failed: " . $e->getMessage()
+                    : "Import failed. Please check the file format and try again.",
+                'summary' => [
+                    'processed' => 0,
+                    'created' => 0,
+                    'updated' => 0,
+                    'skipped' => 0,
+                ],
+                'errors' => [config('app.debug') ? $e->getMessage() : "System error occurred"],
+                'warnings' => []
+            ];
+
+            return redirect()->route('itemmaster.index')
+                ->with('import_result', $importResult);
         }
-
-        return redirect()->route('itemmaster.index')
-            ->with('import_result', $importResult);
-
-    } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-        $errors = collect($e->failures())->map(function ($failure) {
-            $row = $failure->row();
-            $errors = implode(', ', $failure->errors());
-            return "Row {$row}: {$errors}";
-        })->toArray();
-
-        $importResult = [
-            'message' => "Import failed due to validation errors.",
-            'summary' => [
-                'processed' => 0,
-                'created' => 0,
-                'updated' => 0,
-                'skipped' => count($errors),
-            ],
-            'errors' => $errors,
-            'warnings' => []
-        ];
-
-        return redirect()->route('itemmaster.index')
-            ->with('import_result', $importResult);
-
-    } catch (\Exception $e) {
-        $importResult = [
-            'message' => config('app.debug')
-                ? "Import failed: " . $e->getMessage()
-                : "Import failed. Please check the file format and try again.",
-            'summary' => [
-                'processed' => 0,
-                'created' => 0,
-                'updated' => 0,
-                'skipped' => 0,
-            ],
-            'errors' => ["General error: " . $e->getMessage()],
-            'warnings' => []
-        ];
-
-        return redirect()->route('itemmaster.index')
-            ->with('import_result', $importResult);
     }
-}
     
     public function export()
     {
