@@ -78,7 +78,7 @@
                                                name="Evaluations[{{ $eval->Id }}][Score]" 
                                                value="{{ $eval->Score }}" 
                                                class="form-control score-input" 
-                                               min="1" max="10" required>
+                                               min="0" max="10" step="0.01" required>
                                     </td>
                                     <td>
                                         <input type="text" 

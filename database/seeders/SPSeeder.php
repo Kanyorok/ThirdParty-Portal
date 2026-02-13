@@ -37,7 +37,13 @@ class SPSeeder extends Seeder
                     } catch (FileNotFoundException $e) {
                         continue;
                     }
-                    DB::unprepared($sql);
+                    echo "Processing: " . $file->getPathname() . PHP_EOL;
+                    $statements = preg_split('/^GO\s*$/m', $sql);
+                    foreach ($statements as $statement) {
+                        if (trim($statement) !== '') {
+                            DB::unprepared($statement);
+                        }
+                    }
                 }
             }
         }

@@ -474,15 +474,19 @@ class SupplierRFQController extends Controller
                 }
             }
 
-            $systemUserId = (int)($user->Id ?? 0);
-            if ($systemUserId <= 0) {
-                $systemUser = DB::table('t_Users')->select('Id')->first();
-                $systemUserId = (int)($systemUser?->Id ?? 1);
-                Log::warning('postClarification: missing user Id, using fallback system user', [
-                    'thirdPartyId' => $user->ThirdPartyId ?? null,
-                    'systemUserId' => $systemUserId,
-                ]);
+            // Third-party users have Ids from t_ThirdPartyUsers, NOT t_Users.
+            // CreatedBy/ModifiedBy reference t_Users.Id, so we must verify the Id exists there.
+            $candidateId = (int)($user->Id ?? 0);
+            $systemUserId = null;
+
+            if ($candidateId > 0) {
+                $existsInUsers = DB::table('t_Users')->where('Id', $candidateId)->exists();
+                if ($existsInUsers) {
+                    $systemUserId = $candidateId;
+                }
             }
+
+            // Column is nullable, so null is safe when no matching t_Users row exists
 
             RFQClarification::create([
                 'RFQId' => $validated['rfqId'],

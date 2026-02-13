@@ -3,10 +3,10 @@
 namespace App\Imports;
 
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemType;
-use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\UnitOfMeasure;
 use Illuminate\Support\Facades\Auth;

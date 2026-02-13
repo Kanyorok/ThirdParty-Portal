@@ -14,7 +14,7 @@
             <div class="card-body">
                 @include('procurement.suppliers.prequalification.prequalification-rounds._form', [
                 'prequalificationRound' => $prequalificationRound,
-                'masterSections' => $masterSections
+                'masterSections' => $activeSections
                 ])
             </div>
         </div>

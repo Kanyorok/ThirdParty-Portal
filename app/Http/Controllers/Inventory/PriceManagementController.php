@@ -107,7 +107,7 @@ class PriceManagementController extends Controller
     public function downloadSampleTemplate()
     {
         return Excel::download(
-            new PriceManagementExport(), 
+            new PriceManagementExport(),
             'PriceManagement_' . now()->format('Y-m-d_His') . '.xlsx'
         );
     }
@@ -155,7 +155,7 @@ class PriceManagementController extends Controller
                 foreach (array_slice($errors, 0, 20) as $error) {
                     $errorMessage .= "• {$error}<br>";
                 }
-                
+
                 if (count($errors) > 20) {
                     $errorMessage .= "<br>... and " . (count($errors) - 20) . " more errors.";
                 }
@@ -165,16 +165,15 @@ class PriceManagementController extends Controller
                     ->with('error_details', $errorMessage);
             }
             return back()->with('success', $successMessage);
-
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             $errors = collect($e->failures())->map(function ($failure) {
                 $row = $failure->row();
                 $errors = implode(', ', $failure->errors());
+
                 return "Row {$row}: {$errors}";
             })->implode('<br>');
 
             return back()->with('error', "Validation errors:<br>{$errors}");
-
         } catch (\Exception $e) {
             $errorMessage = config('app.debug')
                 ? "Import failed: " . $e->getMessage()

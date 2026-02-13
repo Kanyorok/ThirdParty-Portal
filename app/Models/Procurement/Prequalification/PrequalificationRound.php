@@ -81,6 +81,7 @@ class PrequalificationRound extends Model
     public function sections(): HasMany
     {
         return $this->prequalificationSections();
+
     }
 
     /**

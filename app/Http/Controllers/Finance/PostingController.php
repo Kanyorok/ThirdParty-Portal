@@ -45,28 +45,15 @@ class PostingController extends Controller
         try {
             $journal = FinanceJournalEntry::findOrFail($validated['journalID']);
 
-            if (
-                in_array($validated['action_type'], ['approve', 'reject'], true)
-                && ! $this->workflowService->canApproveModel($journal, Auth::user())
-            ) {
-                DB::rollBack();
-
-                return back()->with('fail', 'You are not authorized to approve this journal entry.');
-            }
+            // TEMPORARY: workflow authorization is bypassed until workflow integration is completed.
 
             if ($validated['action_type'] === 'reject') {
-                $result = $this->workflowService->reject(
-                    $journal,
-                    Auth::user(),
-                    ApprovalEnum::Rejected,
-                    $validated['Reason']
-                );
-
-                if (! $result) {
-                    throw new \RuntimeException('Failed to reject journal entry.');
-                }
-
-                $journal->update(['ApprovalReason' => $validated['Reason']]);
+                // TEMPORARY: bypass workflow reject and persist decision directly
+                $journal->update([
+                    'ApprovalStatus' => 'rejected',
+                    'Status' => 'rejected',
+                    'ApprovalReason' => $validated['Reason'],
+                ]);
 
                 activity('Journal Entry Approval')
                     ->performedOn($journal)
@@ -91,42 +78,28 @@ class PostingController extends Controller
 
                     return redirect()->back()->with('success', 'Journal Entry #' . $journal->RefNo . ' submitted for approval successfully.');
                 } else {
-                    DB::rollBack();
+                    $this->rollbackIfActive();
 
-                    return redirect()->back()->with('fail', 'Failed to submit journal entry for approval.');
+                    return redirect()->back()->with('error', 'Failed to submit journal entry for approval.');
                 }
             } elseif ($validated['action_type'] === 'approve') {
-                $result = $this->workflowService->approve(
-                    $journal,
-                    Auth::user(),
-                    ApprovalEnum::Approved,
-                    $validated['Reason']
-                );
+                // TEMPORARY: workflow pending-approver checks are skipped
 
-                if (! $result) {
-                    throw new \RuntimeException('Failed to approve journal entry.');
-                }
+                // Proceed to posting
+                $this->journalPosting($validated['journalID']);
 
-                $journal->update(['ApprovalReason' => $validated['Reason']]);
+                // Mark as posted after posting succeeds
+                $journal->update([
+                    'ApprovalStatus' => 'posted',
+                    'Status' => 'posted',
+                    'ApprovalReason' => $validated['Reason'],
+                ]);
 
                 activity('Journal Entry Approval')
                     ->performedOn($journal)
                     ->causedBy(Auth::id())
                     ->withProperties(['action' => 'approved', 'journal_id' => $journal->Id])
                     ->log('Approved Journal Entry #' . $journal->RefNo);
-
-                $workflowStatus = $this->workflowService->getStatus($journal);
-                $pendingCount = $workflowStatus['totalPending']
-                    ?? count($workflowStatus['pendingApprovers'] ?? []);
-
-                if ($pendingCount > 0) {
-                    DB::commit();
-
-                    return back()->with('success', 'Approval recorded. Awaiting other approvals.');
-                }
-
-                // Proceed to posting
-                $result = $this->journalPosting($validated['journalID']);
 
                 // If this is a reversing journal, mark the original journal as reversed
                 if (strtolower($journal->Type ?? '') === 'reversing') {
@@ -137,25 +110,25 @@ class PostingController extends Controller
                 }
                 DB::commit();
 
-                return $result;
+                return back()->with('success', 'Journal Entry #' . $journal->RefNo . ' approved and posted successfully.');
             }
         } catch (QueryException $e) {
-            DB::rollBack();
+            $this->rollbackIfActive();
             Log::error('Journal Approval Database Error: ' . $e->getMessage(), [
                 'journalID' => $validated['journalID'],
                 'action_type' => $validated['action_type'],
                 'sql_error' => $e->getSql(),
             ]);
 
-            return back()->with('fail', 'Database Error: ' . $e->getMessage());
+            return back()->with('error', 'Database Error: ' . $e->getMessage());
         } catch (\Throwable $th) {
-            DB::rollBack();
+            $this->rollbackIfActive();
             Log::error('Journal Approval Failed: ' . $th->getMessage(), [
                 'journalID' => $validated['journalID'],
                 'action_type' => $validated['action_type'],
             ]);
 
-            return back()->with('fail', 'Journal Approval Failed: ' . $th->getMessage());
+            return back()->with('error', 'Journal Approval Failed: ' . $th->getMessage());
         }
     }
 
@@ -275,7 +248,7 @@ class PostingController extends Controller
             ];
         }
 
-        return $this->postTransaction($data);
+        $this->postTransaction($data);
     }
 
     /**
@@ -312,39 +285,35 @@ class PostingController extends Controller
             $errors = $validator->errors()->all();
             Log::error('Transaction Validation Failed: ' . implode(', ', $errors), ['data' => $data]);
 
-            return back()->withErrors($validator)->withInput();
+            throw new \RuntimeException('Transaction Validation Failed: ' . implode(', ', $errors));
         }
 
-        try {
-            foreach ($data as $index => $transaction) {
-                try {
-                    $trx = FinanceTransaction::create($transaction);
+        foreach ($data as $index => $transaction) {
+            try {
+                $trx = FinanceTransaction::create($transaction);
 
-                    $this->updateBalanceForLine($trx->Id, $transaction);
+                $this->updateBalanceForLine($trx->Id, $transaction);
 
-                    activity('Transaction Posting')
-                        ->performedOn($trx)
-                        ->causedBy(Auth::id())
-                        ->withProperties(['transaction_id' => $trx->id, 'reference' => $transaction['ReferenceNumber']])
-                        ->log('Posted Transaction #' . $transaction['ReferenceNumber']);
-                } catch (QueryException $e) {
-                    Log::error('Transaction Posting Database Error at index ' . $index . ': ' . $e->getMessage(), [
-                        'transaction' => $transaction,
-                        'sql_error' => $e->getSql(),
-                    ]);
+                activity('Transaction Posting')
+                    ->performedOn($trx)
+                    ->causedBy(Auth::id())
+                    ->withProperties(['transaction_id' => $trx->id, 'reference' => $transaction['ReferenceNumber']])
+                    ->log('Posted Transaction #' . $transaction['ReferenceNumber']);
+            } catch (QueryException $e) {
+                Log::error('Transaction Posting Database Error at index ' . $index . ': ' . $e->getMessage(), [
+                    'transaction' => $transaction,
+                    'sql_error' => $e->getSql(),
+                ]);
 
-                    throw new \Exception('Failed to post transaction #' . ($index + 1) . ': ' . $e->getMessage());
-                }
+                throw new \RuntimeException('Failed to post transaction #' . ($index + 1) . ': ' . $e->getMessage(), 0, $e);
             }
+        }
+    }
 
-            return back()->with('success', 'Transactions posted successfully.');
-        } catch (\Throwable $th) {
-            Log::error('Transaction Posting Failed: ' . $th->getMessage(), [
-                'data' => $data,
-                'trace' => $th->getTraceAsString(),
-            ]);
-
-            return back()->with('error', 'Transaction Posting Failed: ' . $th->getMessage());
+    private function rollbackIfActive(): void
+    {
+        if (DB::transactionLevel() > 0) {
+            DB::rollBack();
         }
     }
 

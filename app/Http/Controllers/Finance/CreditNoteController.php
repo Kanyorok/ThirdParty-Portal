@@ -86,7 +86,6 @@ class CreditNoteController extends Controller
         DB::beginTransaction();
 
         try {
-
             if ($request->NoteType == 'Credit') {
                 $notes = FinanceCDNotes::create([
                     'NoteType' => 'credit',

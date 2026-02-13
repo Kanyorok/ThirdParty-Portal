@@ -81,11 +81,11 @@ class PrequalificationEvaluationController extends Controller
                 $supplierActive = (bool)($supplierRow?->Active_Status);   // flag on t_Suppliers
                 $decision = $res?->Decision;
 
-                // Hide prequalify button if:
-                // 1. Supplier is already prequalified for this category, OR
-                // 2. Supplier has NOT been evaluated yet (no decision)
-                $hasBeenEvaluated = ! is_null($decision);
-                $prequalifyAllowed = ! $categoryPrequalified && $hasBeenEvaluated;
+                // NEW LOGIC: Prequalify THEN Evaluate
+                // 1. Prequalify is allowed if NOT yet prequalified.
+                // 2. Evaluation is allowed ONLY IF prequalified.
+                $prequalifyAllowed = ! $categoryPrequalified;
+                $evaluationAllowed = $categoryPrequalified;
 
                 return [
                     'application_no' => $app->applicationNo,
@@ -99,22 +99,22 @@ class PrequalificationEvaluationController extends Controller
                     'supplier_id' => $partyId,
                     'round_id' => $app->RoundID,
                     'category_id' => $app->CategoryID,
-                    'is_prequalified' => ! $prequalifyAllowed, // kept for backward compatibility but now means 'button hidden'
+                    'is_prequalified' => ! $prequalifyAllowed, // kept for backward compatibility
                     'category_prequalified' => $categoryPrequalified,
                     'supplier_active' => $supplierActive,
                     'prequalify_allowed' => $prequalifyAllowed,
+                    'evaluation_allowed' => $evaluationAllowed,
                 ];
             });
 
             return response()->json(['data' => $data]);
         } catch (\Throwable $e) {
-
             return response()->json(['data' => [], 'error' => 'Failed to load data'], 200);
         }
     }
 
     /**
-     * Bulk prequalify suppliers for a round (Decision == Passed)
+     * Bulk prequalify suppliers for a round (Decision == Passed OR Pending)
      */
     public function bulkPrequalify(int $roundId): RedirectResponse|\Illuminate\Http\JsonResponse
     {
@@ -124,8 +124,6 @@ class PrequalificationEvaluationController extends Controller
         // Validate round existence before proceeding to avoid FK violations
         $round = \App\Models\Procurement\Prequalification\PrequalificationRound::find($roundId);
         if (! $round) {
-
-
             if (request()->expectsJson()) {
                 return response()->json([
                     'status' => 'error',
@@ -135,22 +133,27 @@ class PrequalificationEvaluationController extends Controller
 
             return back()->with('error', "Round $roundId not found. Please provide a valid RoundID.");
         }
-        // Get applications with passed decision
-        $passedApps = PrequalificationApplication::with('result')
+
+        // Get applications that are Pending (no result) OR Passed (re-run)
+        // effectively anyone who hasn't failed explicitly
+        $targetApps = PrequalificationApplication::with('result')
             ->where('RoundID', $roundId)
-            ->whereHas('result', fn ($q) => $q->where('Decision', 'Passed'))
+            ->where(function ($query) {
+                $query->doesntHave('result') // Pending
+                      ->orWhereHas('result', fn ($q) => $q->where('Decision', 'Passed')); // Passed
+            })
             ->get();
 
-        if ($passedApps->isEmpty()) {
+        if ($targetApps->isEmpty()) {
             if (request()->expectsJson()) {
-                return response()->json(['status' => 'warning', 'message' => 'No passed applications to prequalify.']);
+                return response()->json(['status' => 'warning', 'message' => 'No eligible applications to prequalify.']);
             }
 
-            return back()->with('warning', 'No passed applications to prequalify.');
+            return back()->with('warning', 'No eligible applications to prequalify.');
         }
 
-        DB::transaction(function () use ($passedApps, $roundId, $now, $userId) {
-            foreach ($passedApps as $app) {
+        DB::transaction(function () use ($targetApps, $roundId, $now, $userId) {
+            foreach ($targetApps as $app) {
                 // Create category-specific prequalification record
                 DB::table('t_PrequalificationRoundSupplierCategory')->updateOrInsert(
                     [
@@ -210,12 +213,11 @@ class PrequalificationEvaluationController extends Controller
                         'PreviousProgress' => $prevProgress,
                         'NewProgress' => 100.00,
                         'ChangedBy' => $userId,
-                        'Notes' => 'Bulk prequalification approved',
+                        'Notes' => 'Bulk prequalification processed',
                         'CreatedBy' => $userId,
                         'CreatedOn' => $now,
                     ]);
                 } catch (\Throwable $e) {
-
                 }
 
                 // Set application status to Prequalified for the same triplet
@@ -223,13 +225,12 @@ class PrequalificationEvaluationController extends Controller
                     PrequalificationApplication::where('ApplicationID', $app->ApplicationID)
                         ->update(['Status' => PrequalificationApplicationEnum::Prequalified]);
                 } catch (\Throwable $e) {
-
                 }
             }
         });
 
         if (request()->expectsJson()) {
-            return response()->json(['status' => 'success', 'message' => 'Suppliers prequalified successfully for this round.', 'count' => $passedApps->count()]);
+            return response()->json(['status' => 'success', 'message' => 'Suppliers prequalified successfully for this round.', 'count' => $targetApps->count()]);
         }
 
         return back()->with('success', 'Suppliers prequalified successfully for this round.');
@@ -246,7 +247,6 @@ class PrequalificationEvaluationController extends Controller
         // Validate round existence before proceeding to avoid FK violations
         $round = \App\Models\Procurement\Prequalification\PrequalificationRound::find($roundId);
         if (! $round) {
-
             if (request()->expectsJson()) {
                 return response()->json([
                     'status' => 'error',

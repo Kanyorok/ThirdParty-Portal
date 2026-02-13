@@ -36,7 +36,7 @@ class PropertyNewLeaseController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::PropertyNewLeaseView, PropertyNewLease::class);
-        $newleases = PropertyNewLease::with(['tenant', 'property'])->get();
+        $newleases = PropertyNewLease::with(['tenant', 'property'])->orderBy('Id', 'desc')->get();
 
         if (request()->wantsJson()) {
             return response()->json($newleases);
@@ -222,6 +222,7 @@ class PropertyNewLeaseController extends Controller
         $TaxId = FinanceTaxRuleConfiguration::findOrFail($data['TaxId']);
         $user = auth()->user();
 
+        // Update the lease record once
         $this->service->update(
             lease: $lease,
             PropertyID: $property,
@@ -243,27 +244,15 @@ class PropertyNewLeaseController extends Controller
             TaxId: $TaxId,
         );
 
+        // Handle document uploads separately
         foreach ($request->file('Document', []) as $uploadedFile) {
-            $this->service->update(
-                lease: $lease,
-                PropertyID: $property,
-                BlockID: $block,
-                FloorID: $floor,
-                Unit: $unit,
-                StartDate: new \DateTime($data['StartDate']),
-                EndDate: new \DateTime($data['EndDate']),
-                PaymentFrequency: $frequency,
-                MonthlyRent: (float)$data['MonthlyRent'],
-                Deposit: (float)$data['Deposit'],
-                ServiceCharge: (float)$data['ServiceCharge'],
-                ParkingFee: (float)$data['ParkingFee'],
-                OtherCharges: (float)$data['OtherCharges'],
-                DueDay: (int)$data['DueDay'],
-                SpecialTerms: $data['SpecialTerms'] ?? '',
-                user: $user,
-                CurrencyId: $CurrencyId,
-                TaxId: $TaxId,
-                document: $uploadedFile
+            $lease->newDocumentFromContent(
+                module: ModulesEnum::Property,
+                extension: ExtensionsEnum::Pdf,
+                fileName: "Lease_Document_{$lease->LeaseNumber}_" . time() . ".pdf",
+                content: file_get_contents($uploadedFile),
+                actor: $user,
+                permissions: [PermissionEnum::PropertyNewLeaseView->value]
             );
         }
 

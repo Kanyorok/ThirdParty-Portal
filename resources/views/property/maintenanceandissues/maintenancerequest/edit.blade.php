@@ -95,12 +95,6 @@
 
                 {{-- Request Details --}}
                 <div class="row">
-                    {{-- <div class="col-md-4 mb-3">
-                        <label class="form-label">Reported By<span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="ReportedBy" placeholder="Optional"
-                               value="{{ old('ReportedBy', $maintenancerequest->ReportedBy) }}" required>
-                    </div> --}}
-
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Reported By<span class="text-danger">*</span></label>
                         <select class="form-select" name="ReportedBy" required>
@@ -143,8 +137,8 @@
                 {{-- Issue Description --}}
 
                 <div class="mb-3">
-                    <label class="form-label">Issue Description</label>
-                    <textarea name="IssueDescription" class="form-control" rows="3" placeholder="Optional">{{ old('IssueDescription', $maintenancerequest->IssueDescription) }}</textarea>
+                    <label class="form-label">Issue Description <span class="text-danger">*</span></label>
+                    <textarea name="IssueDescription" class="form-control" rows="3" placeholder="Optional" required>{{ old('IssueDescription', $maintenancerequest->IssueDescription) }}</textarea>
                 </div>
 
                 <!-- Document Upload -->

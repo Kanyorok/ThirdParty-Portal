@@ -62,54 +62,11 @@
                     </div>
                 </div>
                 <input type="hidden" name="SourceId" id="SourceId" />
+                <input type="hidden" name="refNo" id="hiddenRefNo" />
             </div>
         </div>
 
-        <!-- RFQ Selection -->
-        <div class="row mb-4 source-rfq d-none">
-            <div class="col-md-4">
-                <label>Reference Number (RFQ) <span class="text-danger">*</span></label>
-                <select class="form-control refNo @error('refNo') is-invalid @enderror" name="refNo" id="refNo">
-                    <option selected disabled>Select RFQ</option>
-                    @foreach($awardedRfqs as $ar)
-                    @php
-                    $rfqNumber = trim((string)($ar->RFQNumber ?? ''));
-                    $isConvertedId = in_array($ar->Id, $convertedRFQIds ?? []);
-                    $isUsedRef = in_array($rfqNumber, $usedReferenceNumbers ?? []);
-                    @endphp
-                    {{-- Skip RFQs that are already converted by id or by reference number in ExtOrdNum --}}
-                    @if($isConvertedId || $isUsedRef)
-                    @continue
-                    @endif
-                    <option value="{{ $ar->RFQNumber }}"
-                        data-rfq-id="{{ $ar->Id }}"
-                        data-supplier-id="{{ $ar->ThirdPartyId ?? $ar->SupplierId }}"
-                        data-thirdparty-id="{{ $ar->ThirdPartyId ?? 0 }}"
-                        data-supplier-legacy-id="{{ $ar->SupplierId }}"
-                        data-supplier-name="{{ $ar->SupplierName ?? '' }}"
-                        data-address="{{ $ar->Address ?? '' }}">{{ $ar->RFQNumber }}</option>
-                    @endforeach
-                    {{-- Only awarded RFQs must be listed (no non-awarded options) --}}
-                </select>
-                @error('refNo')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-            </div>
-            <div class="col-md-4">
-                <label>LPO Number <span class="text-danger">*</span></label>
-                <input type="text" name="LPONo" class="form-control @error('LPONo') is-invalid @enderror" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required />
-                @error('LPONo')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-            </div>
-            <div class="col-md-4">
-                <label>Date <span class="text-danger">*</span></label>
-                <input type="date" class="form-control poDate @error('pODate') is-invalid @enderror" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required />
-                @error('pODate')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-            </div>
-        </div>
+
 
             <!-- Consolidated Document & Supplier Row -->
             <div class="row mb-4 supplier-row">
@@ -117,7 +74,7 @@
                     <!-- RFQ Selection -->
                     <div class="source-rfq d-none mb-3">
                         <label>Reference Number (RFQ) <span class="text-danger">*</span></label>
-                        <select class="form-control refNo @error('refNo') is-invalid @enderror" name="refNo" id="refNo">
+                        <select class="form-control refNo @error('refNo') is-invalid @enderror" id="refNo">
                             <option selected disabled>Select RFQ</option>
                             @foreach($awardedRfqs as $ar)
                                 @php
@@ -128,11 +85,13 @@
                                 @if($isConvertedId || $isUsedRef)
                                     @continue
                                 @endif
-                                <option value="{{ $ar->RFQNumber }}"
+                                <option value="{{ $ar->RFQNumber }}-{{ $ar->ThirdPartyId ?? 0 }}"
+                                        data-rfq-no="{{ $ar->RFQNumber }}"
                                         data-rfq-id="{{ $ar->Id }}"
                                         data-supplier-id="{{ $ar->SupplierId }}"
                                         data-thirdparty-id="{{ $ar->ThirdPartyId ?? 0 }}"
-                                        data-supplier-name="{{ $ar->SupplierName ?? '' }}">{{ $ar->RFQNumber }}</option>
+                                        data-supplier-name="{{ $ar->SupplierName ?? '' }}"
+                                        data-address="{{ $ar->Address ?? '' }}">{{ $ar->RFQNumber }} - {{ $ar->SupplierName ?? '' }}</option>
                             @endforeach
                         </select>
                         @error('refNo')
@@ -198,19 +157,13 @@
                 </div>
             </div>
 
-            <!-- Common LPO and Date -->
+            <!-- Common LPO (Hidden) and Date -->
             <div class="row mb-4">
-                <div class="col-md-6">
-                    <label>LPO Number <span class="text-danger">*</span></label>
-                    <input type="text" name="LPONo" class="form-control @error('LPONo') is-invalid @enderror" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
-                    @error('LPONo')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                </div>
+                {{-- <input type="hidden" name="LPONo" value="{{ old('LPONo', uniqid('LPO-')) }}"/> --}}
                 <div class="col-md-6">
                     <label>Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control poDate @error('pODate') is-invalid @enderror" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required/>
-                    @error('pODate')
+                    <input type="text" class="form-control Date @error('Date') is-invalid @enderror" name="Date" id="Date" value="{{ old('Date', now()->format('Y-m-d')) }}" required/>
+                    @error('Date')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
@@ -359,6 +312,14 @@
 @endsection
 @section('scripts')
 <script>
+
+     flatpickr('#Date', {
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'd-m-Y',
+            allowInput:true,
+            minDate: 'today',
+        });
     // Fixed JavaScript for Purchase Order Form
 
 // Prepare RFQ responses for JS (for supplier filtering)
@@ -433,16 +394,27 @@ function populateItems(items) {
         $tr.append(`<td class="line-no">${idx + 1}.</td>`);
 
         // Create item input field
+        // Create item input field
         const $itemTd = $('<td class="text-start"/>');
-        const $inputItem = $('<input type="text" class="form-control form-control-sm itemCode" name="itemCode[]" placeholder="Item (code/name)" required/>');
-        if (it.itemCode) {
-            $inputItem.val(it.itemCode);
-        }
-        $itemTd.append($inputItem);
+        
+        // Determine ID and Display Code
+        // Prioritize itemId (new), fall back to itemCode (old/legacy)
+        const idVal = it.itemId || it.itemCode || ''; 
+        const displayVal = it.itemCode || it.itemName || ''; 
+
+        // Hidden Input for Submission (Name=itemCode[], Value=ID)
+        const $hiddenId = $('<input type="hidden" name="itemCode[]">').val(idVal).addClass('itemCode');
+
+        // Visible Input for Display (Value=Code String)
+        const $inputItem = $('<input type="text" class="form-control form-control-sm" placeholder="Item (code/name)" required readonly/>');
+        $inputItem.val(displayVal);
+
+        $itemTd.append($hiddenId).append($inputItem);
         $tr.append($itemTd);
 
-        // Item description
-        const itemDescription = it.description || it.itemName || '';
+        // Item Name (Displayed in "itemDescription" textarea as per user requirement)
+        // User requested: "in the ItemName fireld it fetches the itemDescription of the ItemName" -> implying it SHOULD be Name
+        const itemDescription = it.itemName || ''; 
         $tr.append(`<td class="text-start"><textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="5" readonly style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0;resize:none;">${itemDescription}</textarea></td>`);
 
         // Quantity field with max validation
@@ -565,7 +537,7 @@ function applySourceMode() {
                     $ref.append(`<option value="${uniqueVal}"
                                     data-rfq-no="${ar.RFQNumber}"
                                     data-rfq-id="${ar.Id}"
-                                    data-supplier-legacy-id="${supplierLegacyId}"
+                                    data-supplier-id="${supplierLegacyId}"
                                     data-thirdparty-id="${thirdPartyId}"
                                     data-supplier-name="${supplierName}"
                                     data-address="${address}"
@@ -697,6 +669,11 @@ $(document).on('change', '#refNo', function () {
     
     console.log('RFQ Selected:', {selectedRFQNo, rfqId, supplierId, awardedThirdPartyId, matchThirdPartyId});
     
+    // Set hidden Ref No
+    if (selectedRFQNo) {
+        $('#hiddenRefNo').val(selectedRFQNo);
+    }
+
     if (!isNaN(rfqId)) {
         $('#SourceId').val(rfqId);
     } else {
@@ -762,6 +739,12 @@ $(document).on('change', '#tenderNo', function() {
     const supplierName = opt.data('supplier-name') || '';
     const address = opt.data('address') || '';
 
+    // Set hidden Ref No
+    const tenderNo = $(this).val();
+    if (tenderNo) {
+        $('#hiddenRefNo').val(tenderNo);
+    }
+
     if (!isNaN(tenderId)) {
         $('#SourceId').val(tenderId);
     } else {
@@ -800,6 +783,12 @@ $(document).on('change', '#contractRef', function() {
     const supplierId = parseInt(opt.data('supplier-id'));
     const supplierName = opt.data('supplier-name') || '';
     const address = opt.data('address') || '';
+
+    // Set hidden Ref No
+    const contractRef = $(this).val();
+    if (contractRef) {
+        $('#hiddenRefNo').val(contractRef);
+    }
 
     if (!isNaN(contractId)) {
         $('#SourceId').val(contractId);
@@ -1142,6 +1131,10 @@ $(document).on('change', '#directPlanSelect', function() {
     const val = $(this).val();
     if (val) {
         $('#SourceId').val(val);
+        // Set hidden Ref No for Plan
+        const text = $(this).find('option:selected').text();
+        $('#hiddenRefNo').val(text);
+
         populateItems([]);
         const $planSel = $(this);
         $planSel.prop('disabled', true);

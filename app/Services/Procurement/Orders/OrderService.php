@@ -16,7 +16,6 @@ class OrderService
      */
     public function __construct()
     {
-
     }
 
     public static function addPO($supplier, $poDate, $rfqNo, $priority, $terms, User $actor, $taxId = null)
@@ -46,10 +45,14 @@ class OrderService
                     throw new \Exception('Stored procedure executed but PO ID was not returned.');
                 }
 
+                // Fetch the generated OrderNo
+                $orderNo = DB::table('t_Orders')->where('Id', $poId)->value('OrderNo');
+
                 return [
                     'status' => 'success',
                     'message' => 'Order successfully created.',
                     'po_id' => $poId,
+                    'order_no' => $orderNo,
                 ];
             });
 
@@ -346,7 +349,7 @@ class OrderService
     /**
      * Helper to get previously ordered quantities for a source
      */
-    public function getOrderedQuantities($sourceType, $sourceId)
+    public static function getOrderedQuantities($sourceType, $sourceId)
     {
         // Must use explicit select for groupBy to work correctly in strict mode
         // and pluck to work with correct keys.
@@ -365,10 +368,10 @@ class OrderService
     /**
      * Check if a source document is fully exhausted (all items ordered)
      */
-    public function isSourceExhausted($sourceType, $sourceId)
+    public static function isSourceExhausted($sourceType, $sourceId)
     {
         // 1. Get previously ordered quantities
-        $orderedQuantities = $this->getOrderedQuantities($sourceType, $sourceId);
+        $orderedQuantities = self::getOrderedQuantities($sourceType, $sourceId);
 
         // 2. Get original source quantities based on type
         $originalItems = collect([]);
@@ -394,8 +397,8 @@ class OrderService
                    ->select('i.Id as itemCode', 'ti.QtyToTender as Quantity')
                    ->get();
 
-                $orderedTender = $this->getOrderedQuantities('TENDER', $contract->TenderID);
-                $orderedContract = $this->getOrderedQuantities('CONTRACT', $sourceId);
+                $orderedTender = self::getOrderedQuantities('TENDER', $contract->TenderID);
+                $orderedContract = self::getOrderedQuantities('CONTRACT', $sourceId);
 
                 // Merge used quantities
                 $orderedQuantities = [];
@@ -408,7 +411,6 @@ class OrderService
             } else {
                 return false;
             }
-
         } elseif ($sourceType === 'CONTRACT-RFQ') {
             $rfqContract = DB::table('t_RFQAward')->where('Id', $sourceId)->first();
             if ($rfqContract && $rfqContract->RFQId) {
@@ -417,8 +419,8 @@ class OrderService
                    ->select('ItemId as itemCode', 'Quantity')
                    ->get();
 
-                $orderedRFQ = $this->getOrderedQuantities('RFQ', $rfqContract->RFQId);
-                $orderedContract = $this->getOrderedQuantities('CONTRACT-RFQ', $sourceId);
+                $orderedRFQ = self::getOrderedQuantities('RFQ', $rfqContract->RFQId);
+                $orderedContract = self::getOrderedQuantities('CONTRACT-RFQ', $sourceId);
 
                 // Merge used quantities
                 $orderedQuantities = [];
@@ -431,15 +433,22 @@ class OrderService
             } else {
                 return false;
             }
-
         } elseif ($sourceType === 'PLAN') {
+            // Consistent logic with getDirectPlanItems
             $directMethod = DB::table('t_CodeDetails')
-               ->where('CodeID', 'ProcurementMethod')
-               ->where(function ($q) {
-                   $q->where('Description', 'LIKE', '%Direct Purchase%')
-                     ->orWhere('Value', 'Like', '%D%');
-               })
-               ->value('ID');
+                ->where('CodeID', 'ProcurementMethod')
+                ->where(function ($q) {
+                    $q->where('Description', 'LIKE', 'Direct Purchase%')
+                      ->orWhere('Description', 'LIKE', 'Direct Procurement%');
+                })
+                ->value('ID');
+
+            if (! $directMethod) {
+                $directMethod = DB::table('t_CodeDetails')
+                   ->where('CodeID', 'ProcurementMethod')
+                   ->where('Description', 'Direct Purchase')
+                   ->value('ID');
+            }
 
             $originalItems = DB::table('t_PlanLineItem')
                 ->where('PlanID', $sourceId)

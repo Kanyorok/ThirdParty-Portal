@@ -43,7 +43,7 @@ class AwardsController extends Controller
             ->get()
             ->map(function ($award) {
                 $status = $award->AwardStatus;
-                $statusClass = match($status) {
+                $statusClass = match ($status) {
                     'Pending' => 'bg-warning text-dark',
                     'Approved' => 'bg-success',
                     'Rejected' => 'bg-danger',
@@ -100,7 +100,7 @@ class AwardsController extends Controller
             ->get()
             ->map(function ($award) {
                 $status = $award->AwardStatus ?: 'Pending';
-                $statusClass = match($status) {
+                $statusClass = match ($status) {
                     'Pending' => 'bg-warning text-dark',
                     'Submitted for Approval' => 'bg-info text-dark',
                     'Under Review' => 'bg-primary',
@@ -432,7 +432,6 @@ class AwardsController extends Controller
             $id = $request->tender_id;
 
             if ($type === 'rfq') {
-
                 // Check if active award exists
                 $hasActiveAward = RFQAward::where('RFQId', $id)
                     ->whereIn('AwardStatus', ['Pending', 'Approved', 'Submitted for Approval', 'Under Review'])
@@ -465,9 +464,7 @@ class AwardsController extends Controller
 
                 return redirect()->route('awards.unified', ['id' => $id, 'type' => 'rfq'])
                    ->with('success', 'RFQ award created successfully. Please submit for approval if needed.');
-
             } else {
-
                 // Check if active award exists
                 $hasActiveAward = TenderAward::where('TenderID', $id)
                     ->whereIn('AwardStatus', ['Pending', 'Approved', 'Submitted for Approval', 'Under Review'])
@@ -507,7 +504,6 @@ class AwardsController extends Controller
                 return redirect()->route('awards.unified', ['id' => $id, 'type' => 'tender'])
                     ->with('success', 'Tender award created successfully. Please review and submit for approval.');
             }
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Award creation error: ' . $e->getMessage());
@@ -580,7 +576,6 @@ class AwardsController extends Controller
 
             return redirect()->route('procawards.index') // Or back?
                 ->with('success', ucfirst($type) . ' Award submitted for approval successfully.');
-
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Award Submit Error: ' . $e->getMessage());
@@ -786,7 +781,6 @@ class AwardsController extends Controller
 
             return redirect()->route('procawards.index')
                 ->with('success', ucfirst($type) . ' Award approved successfully.');
-
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error("--- APPROVE AWARD ERROR --- " . $th->getMessage());
@@ -935,7 +929,6 @@ class AwardsController extends Controller
 
             return redirect()->route('procawards.index')
                 ->with('success', ucfirst($type) . ' Award rejected successfully.');
-
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error("--- REJECT AWARD ERROR --- " . $th->getMessage());
@@ -997,7 +990,6 @@ class AwardsController extends Controller
             DB::commit();
 
             return back()->with('success', 'Award cancelled successfully.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Award cancel error: ' . $e->getMessage());
@@ -1375,14 +1367,14 @@ class AwardsController extends Controller
                         "Procurement Department<br>" .
                         config('app.name');
 
-                $to = [[$name => $email]];
+                $to = [['Name' => $email]]; // CRMEmailService expects [['Name' => 'Email']] or [['Name' => 'Email']] logic
 
                 $service = \App\Services\CRMEmailService::createRaw(
                     Auth::user(),
                     $subject,
                     $body,
                     $to,
-                    'ThirdParty',
+                    \App\Models\ThirdParty\ThirdParties::class, // Correct Morph Class
                     (string)$thirdParty->Id,
                     [],
                     [],
@@ -1393,7 +1385,6 @@ class AwardsController extends Controller
             } else {
                 Log::warning("No email found for winning supplier ID {$award->WinningSupplierID}");
             }
-
         } catch (\Exception $e) {
             Log::error("Failed to notify successful bidder: " . $e->getMessage());
         }
@@ -1437,14 +1428,14 @@ class AwardsController extends Controller
                             config('app.name');
 
                     try {
-                        $to = [[$name => $email]];
+                        $to = [['Name' => $email]];
 
                         $service = \App\Services\CRMEmailService::createRaw(
                             Auth::user(),
                             $subject,
                             $body,
                             $to,
-                            'ThirdParty',
+                            \App\Models\ThirdParty\ThirdParties::class, // Correct Morph Class
                             (string)$thirdParty->Id,
                             [],
                             [],
@@ -1495,14 +1486,14 @@ class AwardsController extends Controller
                         "Procurement Department<br>" .
                         config('app.name');
 
-                $to = [[$name => $email]];
+                $to = [['Name' => $email]];
 
                 $service = \App\Services\CRMEmailService::createRaw(
                     Auth::user(),
                     $subject,
                     $body,
                     $to,
-                    'ThirdParty',
+                    \App\Models\ThirdParty\ThirdParties::class, // Correct Morph Class
                     (string)$thirdParty->Id,
                     [],
                     [],
@@ -1513,7 +1504,6 @@ class AwardsController extends Controller
             } else {
                 Log::warning("No email found for winning supplier ID {$award->SupplierId}");
             }
-
         } catch (\Exception $e) {
             Log::error("Failed to notify successful RFQ bidder: " . $e->getMessage());
         }
@@ -1549,5 +1539,4 @@ class AwardsController extends Controller
        // ... (Merged into reject)
     }
     */
-
 }

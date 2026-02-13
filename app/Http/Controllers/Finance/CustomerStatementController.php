@@ -102,7 +102,6 @@ class CustomerStatementController extends Controller
                     'more' => ($page * $perPage) < $total,
                 ],
             ]);
-
         } catch (\Throwable $e) {
             $this->safeLog('error', 'Select2 ThirdParties lookup failed', [
                 'q' => $search,

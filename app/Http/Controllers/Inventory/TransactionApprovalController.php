@@ -11,11 +11,10 @@ use App\Services\Inventory\StockAdjustmentService;
 use App\Services\Inventory\TransactionTransferService;
 use App\Services\Workflow\ApprovalWorkflow;
 use Exception;
-use Throwable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-
+use Throwable;
 
 class TransactionApprovalController extends Controller
 {
@@ -116,7 +115,6 @@ class TransactionApprovalController extends Controller
 
             $user = Auth::user();
             $canApprove = $this->workflow->canApproveModel($record, $user);
-
         } elseif ($transactionType === 'Stock Adjustment') {
             $record = StockAdjustment::with([
                 'branch', 'creator', 'items.item',
@@ -133,8 +131,6 @@ class TransactionApprovalController extends Controller
 
             $user = Auth::user();
             $canApprove = $this->workflow->canApproveModel($record, $user);
-
-
         } else {
             $record = TransactionTransfer::with([
                 'fromBranch', 'toBranch', 'creator', 'items.item',
@@ -238,7 +234,6 @@ class TransactionApprovalController extends Controller
                     optional($lock)->release();
                 }
             } catch (Throwable $e) {
-
                 $errorMessage = $this->getErrorMessage($e);
 
                 if ($request->ajax() || $request->wantsJson()) {
@@ -316,7 +311,6 @@ class TransactionApprovalController extends Controller
                     optional($lock)->release();
                 }
             } catch (Throwable $e) {
-
                 $errorMessage = $this->getErrorMessage($e);
 
                 if ($request->ajax() || $request->wantsJson()) {
@@ -409,7 +403,6 @@ class TransactionApprovalController extends Controller
                     optional($lock)->release();
                 }
             } catch (Throwable $e) {
-
                 $errorMessage = $this->getErrorMessage($e);
 
                 if ($request->ajax() || $request->wantsJson()) {
@@ -486,7 +479,6 @@ class TransactionApprovalController extends Controller
                     optional($lock)->release();
                 }
             } catch (Exception $e) {
-
                 $errorMessage = $this->getErrorMessage($e);
 
                 if ($request->ajax() || $request->wantsJson()) {

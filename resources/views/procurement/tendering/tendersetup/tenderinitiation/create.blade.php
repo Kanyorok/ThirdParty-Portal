@@ -151,8 +151,7 @@
                 <th>Planned Qty</th>
                 <th>Qty to Tender</th>
                 <th>Specs</th>
-                <th>PR Ref (optional)</th>
-                <th></th>
+            <th></th>
               </tr>
             </thead>
             <tbody name="plan_items">
@@ -169,7 +168,6 @@
               <th>Item Description</th>
               <th>Qty</th>
               <th>Specs</th>
-              <th>PR Ref (optional)</th>
               <th></th>
             </tr>
           </thead>
@@ -403,11 +401,6 @@
                name="plan_items[${compositeKey}][specs]">
       </td>
       <td>
-        <input type="text" class="form-control form-control-sm" 
-               name="plan_items[${compositeKey}][pr_ref]" 
-               placeholder="Optional">
-      </td>
-      <td>
         <button type="button" class="btn btn-sm btn-outline-danger remove-row">Remove</button>
       </td>
       <input type="hidden" name="plan_items[${compositeKey}][item_id]" value="${itemId}">
@@ -476,11 +469,6 @@
       <td>
         <input type="file" class="form-control form-control-sm"
                name="manual_items[${key}][specs]">
-      </td>
-      <td>
-        <input type="text" class="form-control form-control-sm"
-               name="manual_items[${key}][pr_ref]" 
-               placeholder="Optional">
       </td>
       <td>
         <button type="button" class="btn btn-sm btn-outline-danger remove-row">Remove</button>

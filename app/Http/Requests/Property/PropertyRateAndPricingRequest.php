@@ -23,14 +23,14 @@ class PropertyRateAndPricingRequest extends FormRequest
     {
         return [
             'PropertyId' => ['required', 'exists:t_PropertyRegistry,Id'],
-            'BlockId' => ['nullable', 'exists:t_PropertyBlock,Id'],
-            'FloorId' => ['nullable', 'exists:t_PropertyFloor,Id'],
-            'UnitId' => ['nullable', 'exists:t_PropertyUnit,Id'],
+            'BlockId' => ['required', 'exists:t_PropertyBlock,Id'],
+            'FloorId' => ['required', 'exists:t_PropertyFloor,Id'],
+            'UnitId' => ['required', 'exists:t_PropertyUnit,Id'],
             'Rent' => ['required', 'numeric', 'min:1'],
-            'ParkingFee' => ['nullable', 'numeric', 'min:0'],
-            'ServiceCharge' => ['nullable', 'numeric', 'min:0'],
-            'OtherCharges' => ['nullable', 'numeric', 'min:0'],
-            'DepositAmount' => ['nullable', 'numeric', 'min:0'],
+            'ParkingFee' => ['required', 'numeric', 'min:0'],
+            'ServiceCharge' => ['required', 'numeric', 'min:0'],
+            'OtherCharges' => ['required', 'numeric', 'min:0'],
+            'DepositAmount' => ['required', 'numeric', 'min:0'],
             'CurrencyId' => [
                 'required',
                 'exists:t_Currencies,Id',

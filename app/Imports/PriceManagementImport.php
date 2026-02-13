@@ -25,13 +25,14 @@ class PriceManagementImport implements ToModel, WithHeadingRow
 
         try {
             $this->processed++;
-            $rowNumber = $this->processed + 1; 
+            $rowNumber = $this->processed + 1;
 
             $row = array_map(fn ($v) => is_string($v) ? trim($v) : $v, $row);
 
             if (isset($row['priceid']) && preg_match('/^[-=]+$/', $row['priceid'])) {
                 $this->processed--; 
                 DB::rollBack();
+
                 return null;
             }
 
@@ -46,6 +47,7 @@ class PriceManagementImport implements ToModel, WithHeadingRow
             if (!$hasAnyData) {
                 $this->processed--; 
                 DB::rollBack();
+
                 return null;
             }
 
@@ -64,7 +66,7 @@ class PriceManagementImport implements ToModel, WithHeadingRow
             }
 
             $requiredColumns = ['itemcode', 'actualprice'];
-            
+
             foreach ($requiredColumns as $col) {
                 if (!array_key_exists($col, $row)) {
                     throw new \Exception("File format error: Missing required column '{$col}'. Please use the template.");
@@ -72,9 +74,10 @@ class PriceManagementImport implements ToModel, WithHeadingRow
             }
 
             $validationErrors = $this->validateRequiredFields($row, $rowNumber);
-            if (!empty($validationErrors)) {
+            if (! empty($validationErrors)) {
                 $this->skipped++;
                 DB::rollBack();
+
                 return null;
             }
 
@@ -89,28 +92,31 @@ class PriceManagementImport implements ToModel, WithHeadingRow
             if (!$item) {
                 $this->skipped++;
                 DB::rollBack();
+
                 return null;
             }
             $uomId = $this->resolveUomId($uomCode, $item);
             if (!$uomId) {
                 $this->skipped++;
                 DB::rollBack();
+
                 return null;
             }
             $currency = Currency::where('Code', $currencyCode)->first();
             if (!$currency) {
                 $this->skipped++;
                 DB::rollBack();
+
                 return null;
             }
             $existingPrice = null;
-            if (!empty($priceId)) {
+            if (! empty($priceId)) {
                 $existingPrice = PriceManagement::where('PriceID', $priceId)
                     ->whereNull('DeletedOn')
                     ->first();
             }
 
-            if (!$existingPrice) {
+            if (! $existingPrice) {
                 $existingPrice = PriceManagement::where('ItemID', $item->Id)
                     ->where('UOM', $uomId)
                     ->whereNull('DeletedOn')
@@ -125,7 +131,7 @@ class PriceManagementImport implements ToModel, WithHeadingRow
                     $existingPrice->DeletedBy = Auth::id();
                     $existingPrice->save();
                     $newPrice = new PriceManagement([
-                        'PriceID' => $existingPrice->PriceID, 
+                        'PriceID' => $existingPrice->PriceID,
                         'ItemID' => $item->Id,
                         'UOM' => $uomId,
                         'ActualPrice' => $actualPrice,
@@ -149,8 +155,8 @@ class PriceManagementImport implements ToModel, WithHeadingRow
                         ->log("Price updated via Excel import (new version created)");
 
                     DB::commit();
-                    return null;
 
+                    return null;
                 } else {
                     $hasOtherChanges = false;
 
@@ -177,17 +183,19 @@ class PriceManagementImport implements ToModel, WithHeadingRow
                             ->log('Price metadata updated via Excel import');
 
                         DB::commit();
+
                         return null;
                     } else {
                         $this->processed--; 
                         DB::commit();
+
                         return null;
                     }
                 }
             }
 
             $newPrice = new PriceManagement([
-                'PriceID' => $priceId, 
+                'PriceID' => $priceId,
                 'ItemID' => $item->Id,
                 'UOM' => $uomId,
                 'ActualPrice' => $actualPrice,
@@ -218,7 +226,6 @@ class PriceManagementImport implements ToModel, WithHeadingRow
                 ->log('Price imported via Excel');
 
             return $newPrice;
-
         } catch (\Throwable $e) {
             DB::rollBack();
             $this->skipped++;
@@ -242,7 +249,6 @@ class PriceManagementImport implements ToModel, WithHeadingRow
         }
     }
 
-
     private function validateRequiredFields(array $row, int $rowNumber): array
     {
         $errors = [];
@@ -261,7 +267,6 @@ class PriceManagementImport implements ToModel, WithHeadingRow
         return $errors;
     }
 
-    
     private function parseBoolean($value): int
     {
         if (is_bool($value)) {
@@ -270,14 +275,13 @@ class PriceManagementImport implements ToModel, WithHeadingRow
         if (is_numeric($value)) {
             return ((int)$value) ? 1 : 0;
         }
-        
+
         $normalized = strtolower(trim((string)$value));
         $truthy = ['1', 'true', 'yes', 'y', 'on', '✓', 'check', 'checked'];
-        
+
         return in_array($normalized, $truthy, true) ? 1 : 0;
     }
 
-   
     private function resolveUomId($uomInput, ItemMasterList $item): ?int
     {
         if ($uomInput !== null && $uomInput !== '' && $uomInput !== '-') {
@@ -331,6 +335,6 @@ class PriceManagementImport implements ToModel, WithHeadingRow
 
     public function hasErrors(): bool
     {
-        return !empty($this->errors);
+        return ! empty($this->errors);
     }
 }

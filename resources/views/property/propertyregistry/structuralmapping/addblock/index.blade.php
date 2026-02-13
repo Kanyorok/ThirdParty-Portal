@@ -8,10 +8,10 @@
 @section('content')
 <div class="container mt-4">
 
-    <!-- Header -->
+
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <small>This screen displays a list of all Blocks per properties.</small>
+            <small>This screen displays a list of all registered property blocks.</small>
         </div>
 
         <div class="d-flex gap-2">
@@ -24,11 +24,6 @@
             </a>
         </div>
     </div>
-
-
-    <p class="text-muted">
-        <small>This screen displays a list of all registered property blocks.</small>
-    </p>
 
     @if($blocks->count())
         <div class="card shadow-sm">

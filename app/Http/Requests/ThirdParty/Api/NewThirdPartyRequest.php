@@ -34,6 +34,21 @@ class NewThirdPartyRequest extends FormRequest
 
         $this->formatPhoneField('Phone', $country);
         $this->formatPhoneField('user_Phone', $country);
+
+        // Map customer_ prefixed fields to user_ prefixed fields when user_ versions are missing
+        $customerToUserFields = [
+            'customer_DateOfBirth' => 'user_DateOfBirth',
+            'customer_MaritalStatus' => 'user_MaritalStatus',
+            'customer_Occupation' => 'user_Occupation',
+            'customer_Gender' => 'user_Gender',
+            'tenant_Remarks' => 'user_Remarks',
+        ];
+
+        foreach ($customerToUserFields as $customerField => $userField) {
+            if (! $this->filled($userField) && $this->filled($customerField)) {
+                $this->merge([$userField => $this->input($customerField)]);
+            }
+        }
     }
 
     private function formatPhoneField(string $field, Country $country): void
@@ -45,9 +60,9 @@ class NewThirdPartyRequest extends FormRequest
         }
 
         try {
-            $formatted = (string) (new PhoneNumber($value, $country->CountryCode))->formatE164();
-            $this->merge([$field => $formatted]);
+            $this->merge([$field => (string) (new PhoneNumber($value, $country->CountryCode))->formatE164()]);
         } catch (\Throwable) {
+            // @lambo
         }
     }
 
@@ -75,7 +90,7 @@ class NewThirdPartyRequest extends FormRequest
                 (new Phone())->countryField('Country'),
                 Rule::unique('t_ThirdParties', 'Phone')->whereNull('DeletedOn'),
             ],
-            'PhysicalAddress' => ['nullable', 'string', 'max:200'],
+            'PhysicalAddress' => ['nullable', 'string', 'max:200'], // TODO: update this to use locality@
             'types' => ['required', 'array', 'min:1'],
             'logo' => ['nullable', Rule::imageFile()->max(9000)],
             'createUser' => ['boolean'],
@@ -109,6 +124,11 @@ class NewThirdPartyRequest extends FormRequest
                 'string',
                 'max:500',
             ],
+            'customer_Gender' => ['nullable'],
+            'customer_DateOfBirth' => ['nullable'],
+            'customer_MaritalStatus' => ['nullable'],
+            'customer_Occupation' => ['nullable'],
+            'tenant_Remarks' => ['nullable'],
         ];
     }
 
@@ -166,7 +186,7 @@ class NewThirdPartyRequest extends FormRequest
         }
     }
 
-    public function getLogo(): ?UploadedFile
+    public function getLogo(): ?UploadedFile // TODO: include this implementation
     {
         return $this->file('logo');
     }

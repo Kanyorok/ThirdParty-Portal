@@ -276,6 +276,7 @@ class TransactionReceiptService
                         'unit_price' => (float) $ledger->UnitPrice,
                     ];
                 }
+
                 return $allocation;
             })->toArray();
         }
@@ -381,7 +382,7 @@ class TransactionReceiptService
                 $ledger = StockGRNLedger::find($allocation['ledger_id']);
                 $unitPrice = $ledger ? (float) $ledger->UnitPrice : 0;
             }
-            
+
             $quantity = $allocation['quantity'] ?? 0;
             $totalCost += $unitPrice * $quantity;
             $totalQty += $quantity;
@@ -404,8 +405,9 @@ class TransactionReceiptService
                 $ledger = StockGRNLedger::find($allocation['ledger_id']);
                 $grnId = $ledger ? $ledger->GRNID : 'Unknown';
             }
-            
+
             $quantity = $allocation['quantity'] ?? 0;
+
             return ($grnId ?? 'Unknown') . ' (' . $quantity . ')';
         })->implode(', ');
     }

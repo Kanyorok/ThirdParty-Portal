@@ -88,20 +88,37 @@
             font-size: 0.9rem;
         }
 
-        .select2-container .select2-selection--single {
+        .je-table td.col-gl .select2-container {
+            max-width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        .je-table td.col-gl .select2-container .select2-selection--single {
             height: calc(2.25rem + 2px);
-            padding: 0.375rem 0.75rem;
+            display: flex;
+            align-items: center;
+            padding: 0 2rem 0 0.75rem;
             font-size: 1rem;
             border: 1px solid #ced4da;
             border-radius: 0.375rem;
             background-color: #fff;
         }
 
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 100%;
+        .je-table td.col-gl .select2-container .select2-selection--single .select2-selection__rendered {
+            width: 100%;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.25rem !important;
+        }
+
+        .je-table td.col-gl .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 1.5rem;
             top: 50%;
             transform: translateY(-50%);
-            right: 0.75rem;
+            right: 0.5rem;
         }
     </style>
 @endsection
@@ -254,68 +271,115 @@
 @endsection
 
 @section('scripts')
+    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script>
-        const body = document.getElementById('journalBody');
-        const totalDr = document.getElementById('totalDr');
-        const totalCr = document.getElementById('totalCr');
-        const postBtn = document.getElementById('postBtn');
-        const balanceStatus = document.getElementById('balanceStatus');
+        (function () {
+            const body = document.getElementById('journalBody');
+            const totalDr = document.getElementById('totalDr');
+            const totalCr = document.getElementById('totalCr');
+            const postBtn = document.getElementById('postBtn');
+            const balanceStatus = document.getElementById('balanceStatus');
 
-        function updateLineNumbers() {
-            const rows = body.querySelectorAll('tr');
-            rows.forEach((row, index) => {
-                const lineNumberCell = row.querySelector('.line-number');
-                if (lineNumberCell) {
-                    lineNumberCell.textContent = index + 1;
+            const select2Options = {
+                placeholder: 'Select GL',
+                width: '100%',
+                dropdownAutoWidth: false,
+                templateResult: function (data) {
+                    if (!data.id) return data.text;
+                    const $option = $(data.element);
+                    const code = $option.data('code') || '';
+                    const name = $option.data('name') || '';
+                    return $('<div><strong>' + code + '</strong> <small class="text-muted">(' + name + ')</small></div>');
+                },
+                templateSelection: function (data) {
+                    if (!data.id) return data.text;
+                    const $option = $(data.element);
+                    const code = $option.data('code') || '';
+                    const name = $option.data('name') || '';
+                    return code && name ? (code + ' (' + name + ')') : data.text;
                 }
-            });
-        }
+            };
 
-        function calculateTotals() {
-            let debit = 0, credit = 0, valid = true;
-            [...body.rows].forEach(row => {
-                const gl = row.querySelector('select[name="GLAccount[]"]').value;
-                const drcr = row.querySelector('select[name="DRCR[]"]').value;
-                const amt = parseFloat(row.querySelector('input[name="Amount[]"]').value || 0);
-                if (!gl || !drcr || amt <= 0) valid = false;
-                if (drcr === 'DR') debit += amt; else if (drcr === 'CR') credit += amt;
-            });
-            totalDr.textContent = debit.toFixed(2);
-            totalCr.textContent = credit.toFixed(2);
-            if (debit === credit && debit > 0 && valid) {
-                balanceStatus.className = 'badge bg-success';
-                balanceStatus.textContent = 'Balanced';
-                postBtn.disabled = false;
-            } else {
-                balanceStatus.className = 'badge bg-danger';
-                balanceStatus.textContent = 'Unbalanced / Invalid';
-                postBtn.disabled = true;
+            function initGlSelect2() {
+                if (!(window.jQuery && $.fn.select2)) return;
+                $('.gl-account-select').select2(select2Options);
             }
-        }
 
-        document.addEventListener('input', calculateTotals);
-        document.addEventListener('change', calculateTotals);
-        document.getElementById('addRow').addEventListener('click', () => {
-            const firstRow = body.querySelector('tr');
-            const clone = firstRow.cloneNode(true);
-            clone.querySelectorAll('input, select').forEach(el => {
-                if (el.tagName === 'INPUT') el.value = '';
-                if (el.tagName === 'SELECT') el.selectedIndex = 0;
-            });
-            const hiddenId = clone.querySelector('input[name="LineId[]"]');
-            if (hiddenId) hiddenId.value = '';
-            body.appendChild(clone);
-            updateLineNumbers();
+            function updateLineNumbers() {
+                if (!body) return;
+                const rows = body.querySelectorAll('tr');
+                rows.forEach((row, index) => {
+                    const lineNumberCell = row.querySelector('.line-number');
+                    if (lineNumberCell) {
+                        lineNumberCell.textContent = index + 1;
+                    }
+                });
+            }
+
+            function calculateTotals() {
+                if (!body || !totalDr || !totalCr || !balanceStatus || !postBtn) return;
+                let debit = 0, credit = 0, valid = true;
+                [...body.rows].forEach(row => {
+                    const gl = row.querySelector('select[name="GLAccount[]"]')?.value;
+                    const drcr = row.querySelector('select[name="DRCR[]"]')?.value;
+                    const amt = parseFloat(row.querySelector('input[name="Amount[]"]')?.value || 0);
+                    if (!gl || !drcr || amt <= 0) valid = false;
+                    if (drcr === 'DR') debit += amt; else if (drcr === 'CR') credit += amt;
+                });
+                totalDr.textContent = debit.toFixed(2);
+                totalCr.textContent = credit.toFixed(2);
+                if (debit === credit && debit > 0 && valid) {
+                    balanceStatus.className = 'badge bg-success';
+                    balanceStatus.textContent = 'Balanced';
+                    postBtn.disabled = false;
+                } else {
+                    balanceStatus.className = 'badge bg-danger';
+                    balanceStatus.textContent = 'Unbalanced / Invalid';
+                    postBtn.disabled = true;
+                }
+            }
+
+            document.addEventListener('input', calculateTotals);
+            document.addEventListener('change', calculateTotals);
+
+            const addRowBtn = document.getElementById('addRow');
+            if (addRowBtn) {
+                addRowBtn.addEventListener('click', () => {
+                    if (window.jQuery && $.fn.select2) {
+                        $('.gl-account-select').select2('destroy');
+                    }
+
+                    const firstRow = body?.querySelector('tr');
+                    if (!firstRow) return;
+                    const clone = firstRow.cloneNode(true);
+                    clone.querySelectorAll('input, select, textarea').forEach(el => {
+                        if (el.tagName === 'INPUT') el.value = '';
+                        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+                        if (el.tagName === 'TEXTAREA') el.value = '';
+                    });
+                    const hiddenId = clone.querySelector('input[name="LineId[]"]');
+                    if (hiddenId) hiddenId.value = '';
+
+                    body.appendChild(clone);
+                    initGlSelect2();
+                    updateLineNumbers();
+                    calculateTotals();
+                });
+            }
+
+            if (body) {
+                body.addEventListener('click', function (e) {
+                    if (e.target.closest('.remove-line') && body.rows.length > 1) {
+                        e.target.closest('tr').remove();
+                        updateLineNumbers();
+                        calculateTotals();
+                    }
+                });
+            }
+
             calculateTotals();
-        });
-        body.addEventListener('click', function (e) {
-            if (e.target.closest('.remove-line') && body.rows.length > 1) {
-                e.target.closest('tr').remove();
-                updateLineNumbers();
-                calculateTotals();
-            }
-        });
-        calculateTotals();
-        updateLineNumbers();
+            updateLineNumbers();
+            initGlSelect2();
+        })();
     </script>
 @endsection

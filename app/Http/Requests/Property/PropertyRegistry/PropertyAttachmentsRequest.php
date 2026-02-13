@@ -21,12 +21,14 @@ class PropertyAttachmentsRequest extends FormRequest
      */
     public function rules(): array
     {
+        $fileRequired = $this->isMethod('put') || $this->isMethod('patch') ? 'nullable' : 'required';
+
         return [
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
             'DocumentTitle' => 'required|string|max:100',
             'DocumentType' => 'required|exists:t_CodeDetails,ID',
             'Description' => 'nullable|string|max:255',
-            'file' => 'required|array',
+            'file' => $fileRequired . '|array',
             'file.*' => 'file|max:25000',
         ];
     }

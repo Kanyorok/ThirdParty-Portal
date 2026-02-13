@@ -1,0 +1,197 @@
+{
+    "exported_at": "2026-02-11 12:59:48",
+    "version": "1.0",
+    "description": "BR_ERP Approval Workflows Export",
+    "data": {
+        "workflow_types": [
+            {
+                "TypeID": "AMT",
+                "Name": "Amount-Based Approval"
+            },
+            {
+                "TypeID": "MAJ",
+                "Name": "Majority Approval"
+            },
+            {
+                "TypeID": "ALL",
+                "Name": "All Must Approve"
+            },
+            {
+                "TypeID": "CNT",
+                "Name": "Count-Based Approval"
+            }
+        ],
+        "workflows": [
+            {
+                "Name": "Dept needs",
+                "Source": "t_Departments",
+                "FinalStage": "",
+                "Description": "Dept needs",
+                "Stages": []
+            }
+        ],
+        "code_details": [
+            {
+                "CodeID": "TenderApprovalStatus",
+                "Description": "PENDING",
+                "Value": "P",
+                "DisplayOrder": 1,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "TenderApprovalStatus",
+                "Description": "APPROVED",
+                "Value": "A",
+                "DisplayOrder": 2,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "TenderApprovalStatus",
+                "Description": "REJECTED",
+                "Value": "R",
+                "DisplayOrder": 3,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ThirdPartyApprovalStatus",
+                "Description": "Pending",
+                "Value": "P",
+                "DisplayOrder": 1,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ThirdPartyApprovalStatus",
+                "Description": "Approved",
+                "Value": "A",
+                "DisplayOrder": 2,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ThirdPartyApprovalStatus",
+                "Description": "Rejected",
+                "Value": "R",
+                "DisplayOrder": 3,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ThirdPartyApprovalStatus",
+                "Description": "Submitted",
+                "Value": "U",
+                "DisplayOrder": 4,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ThirdPartyApprovalStatus",
+                "Description": "Suspended",
+                "Value": "S",
+                "DisplayOrder": 5,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ApprovalStatus",
+                "Description": "Approved",
+                "Value": "A",
+                "DisplayOrder": 1,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ApprovalStatus",
+                "Description": "Rejected",
+                "Value": "R",
+                "DisplayOrder": 2,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ApprovalStatus",
+                "Description": "Pending",
+                "Value": "P",
+                "DisplayOrder": 3,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ApprovalStatus",
+                "Description": "Submitted",
+                "Value": "S",
+                "DisplayOrder": 4,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ApprovalStatus",
+                "Description": "Draft",
+                "Value": "dr",
+                "DisplayOrder": 5,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ApprovalStatus",
+                "Description": "Posted",
+                "Value": "ps",
+                "DisplayOrder": 6,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ApprovalStatus",
+                "Description": "Cancelled",
+                "Value": "Ca",
+                "DisplayOrder": 7,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ApprovalStatus",
+                "Description": "Completed",
+                "Value": "Co",
+                "DisplayOrder": 8,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ApprovalStatus",
+                "Description": "Ongoing",
+                "Value": "Og",
+                "DisplayOrder": 9,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ApprovalStatus",
+                "Description": "Scheduled",
+                "Value": "Sc",
+                "DisplayOrder": 10,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ApprovalStatus",
+                "Description": "Available",
+                "Value": "av",
+                "DisplayOrder": 11,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ApprovalStatus",
+                "Description": "OnTrip",
+                "Value": "ot",
+                "DisplayOrder": 12,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ApprovalStatus",
+                "Description": "AssignedTrip",
+                "Value": "at",
+                "DisplayOrder": 13,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ApprovalWorkFlowDocument",
+                "Description": "Requisition",
+                "Value": "PR",
+                "DisplayOrder": 62,
+                "IsActive": 1
+            },
+            {
+                "CodeID": "ApprovalWorkFlowDocument",
+                "Description": "Purchase Order",
+                "Value": "PO",
+                "DisplayOrder": 63,
+                "IsActive": 1
+            }
+        ]
+    }
+}

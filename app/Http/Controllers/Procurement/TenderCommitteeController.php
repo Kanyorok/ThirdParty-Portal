@@ -252,55 +252,36 @@ class TenderCommitteeController extends Controller
     public function getReferences($type)
     {
         if ($type === 'tender') {
-            // Get IDs of tenders with existing committees
-            $tendersWithCommittee = TenderCommittee::whereNotNull('ReferenceId')
-                ->where('CommitteeType', 'tender')
-                ->pluck('ReferenceId')
-                ->toArray();
-
-            // Also check for legacy TenderID field
-            $tendersWithLegacyCommittee = TenderCommittee::whereNotNull('TenderID')
-                ->pluck('TenderID')
-                ->toArray();
-
-            $excludedTenderIds = array_unique(array_merge($tendersWithCommittee, $tendersWithLegacyCommittee));
-
             // Get IDs of tenders where evaluation has started
             $tendersWithEvaluation = TenderCommitteeEvaluation::whereNotNull('TenderID')
                 ->distinct()
                 ->pluck('TenderID')
                 ->toArray();
 
-            // Combine all excluded IDs
-            $allExcludedIds = array_unique(array_merge($excludedTenderIds, $tendersWithEvaluation));
-
             $data = Tender::select('Id', 'TenderNo as RefNo', 'Title')
-                ->whereNotIn('Id', $allExcludedIds)
+                ->whereDoesntHave('activeTenderCommittees')
+                ->whereNotIn('Id', $tendersWithEvaluation)
                 ->get();
         } elseif ($type === 'rfq') {
-            // Get IDs of RFQs with existing committees
-            $rfqsWithCommittee = RFQCommittee::whereNotNull('RFQID')
-                ->pluck('RFQID')
-                ->toArray();
-
-            // Also check TenderCommittee for RFQ type entries
-            $rfqsWithTenderCommittee = TenderCommittee::whereNotNull('ReferenceId')
-                ->where('CommitteeType', 'rfq')
-                ->pluck('ReferenceId')
-                ->toArray();
-
-            $excludedRfqIds = array_unique(array_merge($rfqsWithCommittee, $rfqsWithTenderCommittee));
-
             // Get IDs of RFQs where evaluation has started
             $rfqsWithEvaluation = RFQEvaluation::whereNotNull('RFQId')
                 ->distinct()
                 ->pluck('RFQId')
                 ->toArray();
 
-            // Combine all excluded IDs
-            $allExcludedIds = array_unique(array_merge($excludedRfqIds, $rfqsWithEvaluation));
+            // Check for committees in both tables
+            // 1. RFQCommittee table (legacy/parallel?)
+            $rfqsWithLegacyCommittee = RFQCommittee::where('IsActive', true)
+                ->pluck('RFQID')
+                ->toArray();
+
+            // 2. TenderCommittee table (new/unified?)
+            // We use the relationship we just added to RFQ model
+
+            $allExcludedIds = array_unique(array_merge($rfqsWithLegacyCommittee, $rfqsWithEvaluation));
 
             $data = RFQ::select('Id', 'RFQNumber as RefNo')
+                ->whereDoesntHave('activeTenderCommittees')
                 ->whereNotIn('Id', $allExcludedIds)
                 ->get();
         } else {
