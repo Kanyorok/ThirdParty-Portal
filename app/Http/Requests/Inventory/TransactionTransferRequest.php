@@ -58,7 +58,6 @@ class TransactionTransferRequest extends FormRequest
             'items.*.batch_allocation.*.quantity'  => 'required_with:items.*.batch_allocation|numeric|min:0',
         ];
 
-        // ✅ FIXED: procurement requisitions come from t_Requisitions, not t_GoodsReceipts
         if ($this->input('RequisitionType') === 'procurement') {
             $rules['RequisitionId'] = 'required|exists:t_Requisitions,Id';
         } else {
