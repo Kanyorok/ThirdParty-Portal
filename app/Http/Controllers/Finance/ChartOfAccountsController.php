@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Finance;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Jobs\Finance\SyncNmbGeneralLedgersJob;
 use App\Models\Auth\ModelRole;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Branch;
 use App\Models\Core\Currency;
 use App\Models\Finance\FinanceGLAccounts;
+use App\Models\Finance\FinanceGLSyncRun;
 use App\Models\Finance\FinanceGLSubAccountTypes;
 use App\Models\Finance\FinanceGLTypeGroup;
 use App\Models\Finance\FinanceSyncGLAccount;
@@ -98,7 +100,149 @@ class ChartOfAccountsController extends Controller
     {
         $this->authorize(PermissionEnum::FinanceCOAView, FinanceGLAccounts::class);
 
-        return view('finance.chartofaccounts.chartofaccounts.gl_sync');
+        $allowThirdPartyPosting = filter_var(
+            env('ALLOW_THIRD_PARTY_FINANCE_POSTING', false),
+            FILTER_VALIDATE_BOOLEAN
+        );
+
+        $syncCount = FinanceSyncGLAccount::count();
+        $lastSyncedAt = FinanceSyncGLAccount::max('ModifiedOn');
+        $activeSync = FinanceGLSyncRun::whereIn('Status', ['pending', 'running'])
+            ->orderBy('Id', 'desc')
+            ->first();
+        $latestSync = FinanceGLSyncRun::orderBy('Id', 'desc')->first();
+
+        return view('finance.chartofaccounts.chartofaccounts.gl_sync', compact(
+            'allowThirdPartyPosting',
+            'syncCount',
+            'lastSyncedAt',
+            'activeSync',
+            'latestSync'
+        ));
+    }
+
+    public function startThirdPartySync(Request $request)
+    {
+        $this->authorize(PermissionEnum::FinanceCOAView, FinanceGLAccounts::class);
+        $request->validate([
+            'page_size' => 'nullable|integer|min:1|max:5000',
+        ]);
+
+        $allowThirdPartyPosting = filter_var(
+            env('ALLOW_THIRD_PARTY_FINANCE_POSTING', false),
+            FILTER_VALIDATE_BOOLEAN
+        );
+
+        if (!$allowThirdPartyPosting) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Third-party GL sync is disabled. Set ALLOW_THIRD_PARTY_FINANCE_POSTING=true to enable.',
+                ], 422);
+            }
+
+            return back()->with('error', 'Third-party GL sync is disabled. Set ALLOW_THIRD_PARTY_FINANCE_POSTING=true to enable.');
+        }
+
+        $userId = Auth::id() ?? 1;
+        $pageSize = max(1, min(5000, (int) $request->input('page_size', 1000)));
+
+        $activeSync = FinanceGLSyncRun::whereIn('Status', ['pending', 'running'])
+            ->orderBy('Id', 'desc')
+            ->first();
+
+        if ($activeSync) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A GL sync is already running. Please wait for it to complete.',
+                    'syncRunId' => $activeSync->Id,
+                ], 409);
+            }
+
+            return back()->with('error', 'A GL sync is already running. Please wait for it to complete.');
+        }
+
+        $now = now();
+        $syncRun = FinanceGLSyncRun::create([
+            'Source' => 'NIMBLE',
+            'Status' => 'pending',
+            'Message' => 'Sync queued.',
+            'RecordsSynced' => 0,
+            'RecordsFailed' => 0,
+            'TotalRecords' => null,
+            'CurrentPage' => 0,
+            'PageSize' => $pageSize,
+            'LastCursor' => null,
+            'StartedAt' => $now,
+            'CreatedBy' => $userId,
+            'CreatedOn' => $now,
+            'ModifiedBy' => $userId,
+            'ModifiedOn' => $now,
+        ]);
+
+        $useQueueWorker = filter_var(
+            env('FINANCE_GL_SYNC_USE_QUEUE_WORKER', false),
+            FILTER_VALIDATE_BOOLEAN
+        );
+
+        if ($useQueueWorker) {
+            SyncNmbGeneralLedgersJob::dispatch($syncRun->Id)->onConnection('database');
+        } else {
+            // Fallback for environments without a running queue worker.
+            SyncNmbGeneralLedgersJob::dispatch($syncRun->Id)->afterResponse();
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'GL sync started in background.',
+                'syncRunId' => $syncRun->Id,
+                'dispatchMode' => $useQueueWorker ? 'queue_worker' : 'after_response',
+            ]);
+        }
+
+        return back()
+            ->with('success', 'GL sync started in background.')
+            ->with('active_sync_id', $syncRun->Id);
+    }
+
+    public function getThirdPartySyncProgress(int $syncRunId)
+    {
+        $this->authorize(PermissionEnum::FinanceCOAView, FinanceGLAccounts::class);
+
+        $syncRun = FinanceGLSyncRun::find($syncRunId);
+        if (! $syncRun) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sync run not found.',
+            ], 404);
+        }
+
+        $totalRecords = (int) ($syncRun->TotalRecords ?? 0);
+        $syncedRecords = (int) ($syncRun->RecordsSynced ?? 0);
+        $percentage = $totalRecords > 0
+            ? min(100, round(($syncedRecords / $totalRecords) * 100, 1))
+            : null;
+
+        return response()->json([
+            'success' => true,
+            'id' => $syncRun->Id,
+            'status' => $syncRun->Status,
+            'message' => $syncRun->Message,
+            'recordsSynced' => $syncedRecords,
+            'recordsFailed' => (int) ($syncRun->RecordsFailed ?? 0),
+            'totalRecords' => $totalRecords,
+            'currentPage' => (int) ($syncRun->CurrentPage ?? 0),
+            'pageSize' => (int) ($syncRun->PageSize ?? 1000),
+            'lastCursor' => $syncRun->LastCursor,
+            'percentage' => $percentage,
+            'isComplete' => $syncRun->Status === 'completed',
+            'isFailed' => $syncRun->Status === 'failed',
+            'error' => $syncRun->SyncError,
+            'completedAt' => optional($syncRun->CompletedAt)->toDateTimeString(),
+            'startedAt' => optional($syncRun->StartedAt)->toDateTimeString(),
+        ]);
     }
 
     public function create()

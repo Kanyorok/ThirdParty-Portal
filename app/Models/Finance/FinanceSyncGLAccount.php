@@ -38,6 +38,8 @@ class FinanceSyncGLAccount extends Model
         'Description',
         'IsActive',
         'CurrencyID',
+        'Source',
+        'SourceTable',
         'IsSynced',
 
         'CreatedBy',

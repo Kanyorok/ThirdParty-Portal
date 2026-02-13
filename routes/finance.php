@@ -176,6 +176,8 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
 
     // Newly appended resource routes
     Route::get('chartofaccounts/gl-sync', [ChartOfAccountsController::class, 'glSync'])->name('chartofaccounts.glsync');
+    Route::post('chartofaccounts/gl-sync', [ChartOfAccountsController::class, 'startThirdPartySync'])->name('chartofaccounts.glsync.start');
+    Route::get('chartofaccounts/gl-sync/progress/{syncRunId}', [ChartOfAccountsController::class, 'getThirdPartySyncProgress'])->name('chartofaccounts.glsync.progress');
     Route::resource('coasegment', COASegmentController::class);
     Route::resource('chartofaccounts', ChartOfAccountsController::class);
     Route::resource('gldynamic', GLDynamicController::class);
