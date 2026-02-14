@@ -9,8 +9,8 @@ use App\Models\Core\Branch;
 use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceJournalLines;
-use App\Models\Finance\FinanceSyncGLAccount;
 use App\Models\HRM\Department;
+use App\Services\Finance\ThirdPartyTransactionPostingService;
 use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,10 +20,15 @@ use Illuminate\Support\Facades\Log;
 class JournalEntryController extends Controller
 {
     protected $workflowService;
+    protected $thirdPartyPostingService;
 
-    public function __construct(ApprovalWorkflow $workflowService)
+    public function __construct(
+        ApprovalWorkflow $workflowService,
+        ThirdPartyTransactionPostingService $thirdPartyPostingService
+    )
     {
         $this->workflowService = $workflowService;
+        $this->thirdPartyPostingService = $thirdPartyPostingService;
     }
 
     public function index(Request $request)
@@ -314,84 +319,31 @@ class JournalEntryController extends Controller
 
     private function getThirdPartyPostingIssues(FinanceJournalEntry $journalEntry): array
     {
-        $issues = [];
         $lines = $journalEntry->journalLines ?? collect();
-
         if ($lines->isEmpty()) {
             return ['Journal has no lines to post.'];
         }
 
-        $glIds = $lines->pluck('GLAccountID')->filter()->map(fn ($id) => (int) $id)->unique()->values();
-        $branchIds = $lines->pluck('BranchID')->filter()->map(fn ($id) => (int) $id)->unique()->values();
+        $payload = $lines->map(function ($line) use ($journalEntry) {
+            $isDebit = isset($line->IsDebit) ? (bool) $line->IsDebit : ((float) ($line->Debit ?? 0) > 0);
+            $rawAmount = isset($line->Amount) && $line->Amount !== null
+                ? abs((float) $line->Amount)
+                : abs((float) ($isDebit ? ($line->Debit ?? 0) : ($line->Credit ?? 0)));
 
-        $glAccounts = FinanceGLAccounts::query()
-            ->whereIn('Id', $glIds)
-            ->select('Id', 'GLCode', 'MappedGLCode')
-            ->get()
-            ->keyBy('Id');
+            return [
+                'TransactionDate' => $journalEntry->Date,
+                'ReferenceNumber' => $journalEntry->RefNo,
+                'GLAccountID' => $line->GLAccountID,
+                'BranchID' => $line->BranchID,
+                'DepartmentID' => $line->DepartmentID,
+                'DRCR' => $isDebit ? 'DR' : 'CR',
+                'Amount' => $rawAmount,
+                'Narration' => $line->Narration,
+                'SystemDescription' => 'Journal Entry #' . $journalEntry->RefNo,
+            ];
+        })->all();
 
-        $branchCodes = Branch::query()
-            ->whereIn('Id', $branchIds)
-            ->pluck('BranchID', 'Id');
-
-        $mappedCodes = $glAccounts
-            ->pluck('MappedGLCode')
-            ->filter(fn ($code) => trim((string) $code) !== '')
-            ->map(fn ($code) => trim((string) $code))
-            ->unique()
-            ->values();
-
-        $nimbleAccounts = FinanceSyncGLAccount::query()
-            ->whereIn('GLCode', $mappedCodes)
-            ->select('GLCode', 'GLName', 'IsActive', 'IsPostingAccount', 'SourceTable')
-            ->get()
-            ->keyBy('GLCode');
-
-        foreach ($lines as $index => $line) {
-            $lineNo = $index + 1;
-            $gl = $glAccounts->get((int) $line->GLAccountID);
-            $glCode = $gl->GLCode ?? ('ID ' . $line->GLAccountID);
-
-            if (empty($line->BranchID)) {
-                $issues[] = "Line {$lineNo} ({$glCode}): Branch is required.";
-            } else {
-                $branchCode = trim((string) ($branchCodes[(int) $line->BranchID] ?? ''));
-                if ($branchCode === '' || $branchCode === '000') {
-                    $issues[] = "Line {$lineNo} ({$glCode}): Branch mapping is invalid (resolved as \"{$branchCode}\").";
-                }
-            }
-
-            if (! $gl) {
-                $issues[] = "Line {$lineNo}: ERP GL account is missing.";
-                continue;
-            }
-
-            $mappedCode = trim((string) ($gl->MappedGLCode ?? ''));
-            if ($mappedCode === '') {
-                $issues[] = "Line {$lineNo} ({$glCode}): Mapped Nimble GL is missing.";
-                continue;
-            }
-
-            $nimbleGl = $nimbleAccounts->get($mappedCode);
-            if (! $nimbleGl) {
-                $issues[] = "Line {$lineNo} ({$glCode}): Mapped Nimble GL {$mappedCode} was not found in synced GL list.";
-                continue;
-            }
-
-            if ((int) ($nimbleGl->IsActive ?? 1) !== 1) {
-                $issues[] = "Line {$lineNo} ({$glCode}): Mapped Nimble GL {$mappedCode} is inactive.";
-            }
-
-            if ((int) ($nimbleGl->IsPostingAccount ?? 1) !== 1) {
-                $issues[] = "Line {$lineNo} ({$glCode}): Mapped Nimble GL {$mappedCode} is not a posting GL.";
-            }
-
-            if (stripos((string) ($nimbleGl->SourceTable ?? ''), 'GLInterface') !== false) {
-                $issues[] = "Line {$lineNo} ({$glCode}): Mapped Nimble GL {$mappedCode} appears attached to GL Interface and may reject posting.";
-            }
-        }
-
-        return array_values(array_unique($issues));
+        return $this->thirdPartyPostingService->collectValidationIssues($payload);
     }
 
     private function getCantApproveReason(array $sources, string|int $sourceId, $user): ?string
