@@ -9,6 +9,7 @@ use App\Models\Core\Branch;
 use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceJournalLines;
+use App\Models\Finance\FinanceSyncGLAccount;
 use App\Models\HRM\Department;
 use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\Request;
@@ -290,6 +291,14 @@ class JournalEntryController extends Controller
             ];
         }
 
+        $allowThirdPartyPosting = filter_var(
+            env('ALLOW_THIRD_PARTY_FINANCE_POSTING', false),
+            FILTER_VALIDATE_BOOLEAN
+        );
+        $thirdPartyPostingIssues = $allowThirdPartyPosting
+            ? $this->getThirdPartyPostingIssues($journalEntry)
+            : [];
+
         return view('finance.generalledger.journalentry.show', compact(
             'journalEntry',
             'canApprove',
@@ -297,8 +306,92 @@ class JournalEntryController extends Controller
             'cantApproveReason',
             'workflowHistory',
             'pendingApprovers',
-            'postedBy'
+            'postedBy',
+            'allowThirdPartyPosting',
+            'thirdPartyPostingIssues'
         ));
+    }
+
+    private function getThirdPartyPostingIssues(FinanceJournalEntry $journalEntry): array
+    {
+        $issues = [];
+        $lines = $journalEntry->journalLines ?? collect();
+
+        if ($lines->isEmpty()) {
+            return ['Journal has no lines to post.'];
+        }
+
+        $glIds = $lines->pluck('GLAccountID')->filter()->map(fn ($id) => (int) $id)->unique()->values();
+        $branchIds = $lines->pluck('BranchID')->filter()->map(fn ($id) => (int) $id)->unique()->values();
+
+        $glAccounts = FinanceGLAccounts::query()
+            ->whereIn('Id', $glIds)
+            ->select('Id', 'GLCode', 'MappedGLCode')
+            ->get()
+            ->keyBy('Id');
+
+        $branchCodes = Branch::query()
+            ->whereIn('Id', $branchIds)
+            ->pluck('BranchID', 'Id');
+
+        $mappedCodes = $glAccounts
+            ->pluck('MappedGLCode')
+            ->filter(fn ($code) => trim((string) $code) !== '')
+            ->map(fn ($code) => trim((string) $code))
+            ->unique()
+            ->values();
+
+        $nimbleAccounts = FinanceSyncGLAccount::query()
+            ->whereIn('GLCode', $mappedCodes)
+            ->select('GLCode', 'GLName', 'IsActive', 'IsPostingAccount', 'SourceTable')
+            ->get()
+            ->keyBy('GLCode');
+
+        foreach ($lines as $index => $line) {
+            $lineNo = $index + 1;
+            $gl = $glAccounts->get((int) $line->GLAccountID);
+            $glCode = $gl->GLCode ?? ('ID ' . $line->GLAccountID);
+
+            if (empty($line->BranchID)) {
+                $issues[] = "Line {$lineNo} ({$glCode}): Branch is required.";
+            } else {
+                $branchCode = trim((string) ($branchCodes[(int) $line->BranchID] ?? ''));
+                if ($branchCode === '' || $branchCode === '000') {
+                    $issues[] = "Line {$lineNo} ({$glCode}): Branch mapping is invalid (resolved as \"{$branchCode}\").";
+                }
+            }
+
+            if (! $gl) {
+                $issues[] = "Line {$lineNo}: ERP GL account is missing.";
+                continue;
+            }
+
+            $mappedCode = trim((string) ($gl->MappedGLCode ?? ''));
+            if ($mappedCode === '') {
+                $issues[] = "Line {$lineNo} ({$glCode}): Mapped Nimble GL is missing.";
+                continue;
+            }
+
+            $nimbleGl = $nimbleAccounts->get($mappedCode);
+            if (! $nimbleGl) {
+                $issues[] = "Line {$lineNo} ({$glCode}): Mapped Nimble GL {$mappedCode} was not found in synced GL list.";
+                continue;
+            }
+
+            if ((int) ($nimbleGl->IsActive ?? 1) !== 1) {
+                $issues[] = "Line {$lineNo} ({$glCode}): Mapped Nimble GL {$mappedCode} is inactive.";
+            }
+
+            if ((int) ($nimbleGl->IsPostingAccount ?? 1) !== 1) {
+                $issues[] = "Line {$lineNo} ({$glCode}): Mapped Nimble GL {$mappedCode} is not a posting GL.";
+            }
+
+            if (stripos((string) ($nimbleGl->SourceTable ?? ''), 'GLInterface') !== false) {
+                $issues[] = "Line {$lineNo} ({$glCode}): Mapped Nimble GL {$mappedCode} appears attached to GL Interface and may reject posting.";
+            }
+        }
+
+        return array_values(array_unique($issues));
     }
 
     private function getCantApproveReason(array $sources, string|int $sourceId, $user): ?string

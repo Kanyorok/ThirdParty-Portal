@@ -384,6 +384,12 @@ class SyncNmbGeneralLedgersJob implements ShouldQueue
             $isActive = true;
         }
 
+        $postingValue = $this->pick($row, ['isPostingAccount', 'IsPostingAccount', 'postingAccount', 'PostingAccount']);
+        $isPostingAccount = filter_var($postingValue, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        if ($isPostingAccount === null) {
+            $isPostingAccount = true;
+        }
+
         $currencyValue = $this->pick($row, ['currencyID', 'CurrencyID', 'currencyId', 'CurrencyId']);
         $currencyId = is_numeric($currencyValue) ? (int) $currencyValue : 141;
         if ($currencyId <= 0) {
@@ -399,7 +405,7 @@ class SyncNmbGeneralLedgersJob implements ShouldQueue
             'ParentGLID' => null,
             'NormalBalance' => null,
             'IsControlAccount' => 0,
-            'IsPostingAccount' => 1,
+            'IsPostingAccount' => $isPostingAccount ? 1 : 0,
             'CBSAccountCode' => null,
             'BranchID' => (string) ($this->pick($row, ['bankID', 'BankID']) ?? ''),
             'GLAccountTypeValue' => (string) ($this->pick($row, ['gLAccountTypeName', 'GLAccountTypeName']) ?? ''),

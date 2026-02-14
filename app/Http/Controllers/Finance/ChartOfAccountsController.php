@@ -508,7 +508,11 @@ class ChartOfAccountsController extends Controller
 
     public function searchMappedGlAccounts(Request $request)
     {
-        $this->authorize(PermissionEnum::FinanceCOACreate, FinanceGLAccounts::class);
+        $user = Auth::user();
+        $canCreate = $user?->can(PermissionEnum::FinanceCOACreate, FinanceGLAccounts::class);
+        $canUpdate = $user?->can(PermissionEnum::FinanceCOAUpdate, FinanceGLAccounts::class);
+
+        abort_unless($canCreate || $canUpdate, 403);
 
         $q = trim((string) $request->input('q', ''));
         $currencyId = (int) $request->input('currency_id', 0);
@@ -543,6 +547,11 @@ class ChartOfAccountsController extends Controller
     public function edit($id)
     {
         $this->authorize(PermissionEnum::FinanceCOAUpdate, FinanceGLAccounts::class);
+        $allowThirdPartyPosting = filter_var(
+            env('ALLOW_THIRD_PARTY_FINANCE_POSTING', false),
+            FILTER_VALIDATE_BOOLEAN
+        );
+
         $gl = FinanceGLAccounts::with('typeGroup:Id,Description', 'subAccount:Id,Description')->find($id);
         if (! $gl) {
             return redirect()->route('chartofaccounts.index')->with('error', 'GL Account not found.');
@@ -556,6 +565,27 @@ class ChartOfAccountsController extends Controller
         $subTypeID = $gl->GLTypeGroupID;
 
         $currencies = Currency::select('Id', 'Code')->get();
+        $mappedGlCode = old('MappedGLCode', $gl->MappedGLCode);
+        $mappedGlOption = null;
+
+        if ($allowThirdPartyPosting && !empty($mappedGlCode)) {
+            $mappedGl = FinanceSyncGLAccount::query()
+                ->where('GLCode', $mappedGlCode)
+                ->select('GLCode', 'GLName')
+                ->first();
+
+            if ($mappedGl) {
+                $mappedGlOption = [
+                    'id' => $mappedGl->GLCode,
+                    'text' => trim($mappedGl->GLCode . ' (' . ($mappedGl->GLName ?? '-') . ')'),
+                ];
+            } else {
+                $mappedGlOption = [
+                    'id' => $mappedGlCode,
+                    'text' => $mappedGlCode,
+                ];
+            }
+        }
 
         return view('finance.chartofaccounts.chartofaccounts.edit', compact(
             'accountTypes',
@@ -565,14 +595,21 @@ class ChartOfAccountsController extends Controller
             'gl',
             'typeID',
             'subTypeID',
-            'currencies'
+            'currencies',
+            'allowThirdPartyPosting',
+            'mappedGlOption'
         ));
     }
 
     public function update(Request $request, $id)
     {
         $this->authorize(PermissionEnum::FinanceCOAUpdate, FinanceGLAccounts::class);
-        $validated = $request->validate([
+        $allowThirdPartyPosting = filter_var(
+            env('ALLOW_THIRD_PARTY_FINANCE_POSTING', false),
+            FILTER_VALIDATE_BOOLEAN
+        );
+
+        $rules = [
             'GLName' => [
                 'required',
                 'string',
@@ -587,7 +624,21 @@ class ChartOfAccountsController extends Controller
             'GLSubAccountTypeID' => 'required|exists:t_FinanceGLSubAccountTypes,Id',
             'Description' => 'required|string|max:255',
             'IsActive' => 'nullable|boolean',
-        ]);
+        ];
+
+        $rules['MappedGLCode'] = $allowThirdPartyPosting
+            ? [
+                'required',
+                'string',
+                'max:255',
+                Rule::exists('t_FinanceSyncGLAccounts', 'GLCode')
+                    ->where(function ($query) use ($request) {
+                        $query->where('CurrencyID', $request->input('Currency'));
+                    }),
+            ]
+            : ['nullable', 'string', 'max:255'];
+
+        $validated = $request->validate($rules);
 
         DB::beginTransaction();
 
@@ -600,7 +651,7 @@ class ChartOfAccountsController extends Controller
             $GLSubAccountTypeIDValue = FinanceGLSubAccountTypes::where('Id', $validated['GLSubAccountTypeID'])->pluck('SegmentValue')->first();
             $GLDigits = SegmentOrder::where('SegmentType', 'GLDigits')->pluck('Description')->first();
 
-            $gl = FinanceGLAccounts::where('Id', $id)->update([
+            $updateData = [
                 'GLName' => $validated['GLName'],
                 'GLAccountTypeID' => $validated['GLAccountTypeID'],
                 'GLTypeGroupID' => $validated['GLTypeGroupID'],
@@ -613,7 +664,13 @@ class ChartOfAccountsController extends Controller
                 'Description' => $validated['Description'],
                 'IsActive' => $validated['IsActive'],
                 'ModifiedBy' => Auth::id(),
-            ]);
+            ];
+
+            if ($allowThirdPartyPosting) {
+                $updateData['MappedGLCode'] = $validated['MappedGLCode'] ?? null;
+            }
+
+            $gl = FinanceGLAccounts::where('Id', $id)->update($updateData);
 
             //Update the GlCode for the updated GL
             $GLCode = $this->insertGLCodeFor($id);
