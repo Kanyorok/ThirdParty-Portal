@@ -6,9 +6,16 @@
         <div class="card shadow-sm rounded-3" style="margin: 0.5rem;">
             <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 text-info">📚 General Ledgers</h5>
-                <a href="{{ route('chartofaccounts.create') }}" class="btn btn-info btn-sm p-2">
-                    <i class="fas fa-plus me-1"></i> Add New Account
-                </a>
+                <div class="d-flex gap-2">
+                    @if(!empty($allowThirdPartyPosting))
+                        <a href="{{ route('chartofaccounts.glsync') }}" class="btn btn-warning btn-sm p-2">
+                            <i class="fas fa-sync-alt me-1"></i> Sync GL
+                        </a>
+                    @endif
+                    <a href="{{ route('chartofaccounts.create') }}" class="btn btn-info btn-sm p-2">
+                        <i class="fas fa-plus me-1"></i> Add New Account
+                    </a>
+                </div>
             </div>
 
             <!-- Filter Section -->
@@ -132,6 +139,9 @@
                                         @endif
                                     </a>
                                 </th>
+                                @if(!empty($allowThirdPartyPosting))
+                                    <th scope="col">MappedGL</th>
+                                @endif
                                 <th scope="col">
                                     <a href="{{ route('chartofaccounts.index', array_merge(request()->query(), ['sort_by' => 'GLAccountTypeID', 'sort_direction' => request('sort_direction') == 'asc' && request('sort_by') == 'GLAccountTypeID' ? 'desc' : 'asc'])) }}" class="text-decoration-none text-dark">
                                         GL Type
@@ -164,6 +174,9 @@
                                     <td>{{ $charts->firstItem() + $loop->index }}</td>
                                     <td>{{ $item->GLName ?? '-' }}</td>
                                     <td>{{ $item->GLCode ?? '-' }}</td>
+                                    @if(!empty($allowThirdPartyPosting))
+                                        <td>{{ $item->MappedGLCode ?? '-' }}</td>
+                                    @endif
                                     <td>{{ $item->GLAccountTypeID ?? '-' }}</td>
                                     <td>{{ $item->typeGroup->Description ?? '-' }}</td>
                                     <td>{{ $item->subAccount->Description ?? '-' }}</td>

@@ -6,7 +6,7 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class FinanceGLAccounts extends Model
+class FinanceSyncGLAccount extends Model
 {
     use SoftDeletes;
     use UserActorTrait;
@@ -15,11 +15,11 @@ class FinanceGLAccounts extends Model
     public const UPDATED_AT = 'ModifiedOn';
     public const DELETED_AT = 'DeletedOn';
 
-    protected $table = 't_FinanceGLAccounts';
+    protected $table = 't_FinanceSyncGLAccounts';
     protected $primaryKey = 'Id';
+
     protected $fillable = [
         'GLCode',
-        'MappedGLCode',
         'GLName',
         'GLAccountTypeID',
         'GLTypeGroupID',
@@ -37,6 +37,10 @@ class FinanceGLAccounts extends Model
         'GLDigits',
         'Description',
         'IsActive',
+        'CurrencyID',
+        'Source',
+        'SourceTable',
+        'IsSynced',
 
         'CreatedBy',
         'CreatedOn',
@@ -45,7 +49,7 @@ class FinanceGLAccounts extends Model
         'DeletedBy',
     ];
 
-    protected $cast = [
+    protected $casts = [
         'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
@@ -53,12 +57,12 @@ class FinanceGLAccounts extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'FinanceGLAccountsId';
+        return 'FinanceSyncGLAccountsId';
     }
 
     public function parent()
     {
-        return $this->belongsTo(FinanceGLAccounts::class, 'ParentGLID');
+        return $this->belongsTo(self::class, 'ParentGLID');
     }
 
     public function subAccount()
