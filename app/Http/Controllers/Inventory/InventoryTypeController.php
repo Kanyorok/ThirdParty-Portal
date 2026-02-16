@@ -69,7 +69,6 @@ class InventoryTypeController extends Controller
         $type = InventoryType::findOrFail($id);
         $this->authorize('update', $type);
 
-        // Determine what type of check to perform (active or inactive items)
         $checkType = $request->query('check_type', 'active');
 
         $result = $this->service->checkRelatedItems($type, $checkType);
@@ -84,8 +83,6 @@ class InventoryTypeController extends Controller
 
         $disableRelatedItems = $request->input('disable_related_items', false) == '1';
         $enableRelatedItems = $request->input('enable_related_items', false) == '1';
-
-        // Check what action is being performed
         $wasActive = $type->Status == 1;
         $wasInactive = $type->Status == 0;
         $willBeActive = $request->input('Status') == 1;
@@ -93,8 +90,6 @@ class InventoryTypeController extends Controller
 
         try {
             $this->service->update($type, $request->validated(), $disableRelatedItems, $enableRelatedItems);
-
-            // Provide specific success message based on action
             if ($wasActive && $willBeInactive && $disableRelatedItems) {
                 return redirect()
                     ->route('inventorytype.index')

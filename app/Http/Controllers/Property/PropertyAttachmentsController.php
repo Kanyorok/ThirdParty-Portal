@@ -18,7 +18,7 @@ class PropertyAttachmentsController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::PropertyAttachmentsView, PropertyAttachments::class);
-        $propertyattachments = PropertyAttachments::all();
+        $propertyattachments = PropertyAttachments::orderBy('Id', 'desc')->get();
 
         return view('property.propertyregistry.propertyattachments.index', compact('propertyattachments'));
     }
@@ -53,6 +53,13 @@ class PropertyAttachmentsController extends Controller
         }
 
         return redirect()->route('attachments.index')->with('success', 'Property attachment created successfully');
+    }
+
+    public function show($id)
+    {
+        $propertyattachments = PropertyAttachments::findOrFail($id);
+
+        return view('property.propertyregistry.propertyattachments.show', compact('propertyattachments'));
     }
 
     public function edit($Id)

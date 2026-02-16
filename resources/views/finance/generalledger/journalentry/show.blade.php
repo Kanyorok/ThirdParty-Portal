@@ -1,5 +1,27 @@
 ﻿@extends('layouts.app')
 
+@section('page-alerts')
+    @if(session('page_error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="fw-semibold mb-1">Journal posting failed</div>
+            <div>{{ session('page_error') }}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(!empty($allowThirdPartyPosting) && !empty($thirdPartyPostingIssues))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <div class="fw-semibold mb-1">Cannot approve yet: Nimble posting checks failed</div>
+            <ul class="mb-0 ps-3">
+                @foreach($thirdPartyPostingIssues as $issue)
+                    <li>{{ $issue }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+@endsection
+
 @section('styles')
     <style>
         .je-table { min-width: 1100px; }
@@ -471,7 +493,7 @@
         <div class="journal-header">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <h1 class="journal-title">ðŸ“˜ Journal Entry Details</h1>
+                    <h1 class="journal-title">Journal Entry Details</h1>
                     <p class="journal-subtitle">Reference: {{ $journalEntry->RefNo }}</p>
                 </div>
                 <div class="status-badge">
@@ -668,11 +690,12 @@
                 </div>
 
                 {{-- Action Buttons --}}
-                @if(($hasPendingApprovals ?? false) && !$canApprove && !empty($cantApproveReason))
-                    <div class="alert alert-warning mt-4 no-print" role="alert">
-                        {{ $cantApproveReason }}
-                    </div>
-                @endif
+                @php
+                    $approvalStatus = strtolower((string)($journalEntry->ApprovalStatus ?? ''));
+                    $entryStatus = strtolower((string)($journalEntry->Status ?? ''));
+                    $isDraftForApproval = in_array($approvalStatus, ['', 'draft'], true) || $entryStatus === 'draft';
+                    $hasThirdPartyPostingIssues = !empty($allowThirdPartyPosting) && !empty($thirdPartyPostingIssues);
+                @endphp
 
                 <div class="mt-4 d-flex justify-content-between align-items-center no-print">
                     <a href="{{ route('journalentry.index') }}" class="btn btn-outline-secondary">
@@ -680,24 +703,20 @@
                     </a>
 
                     <div class="d-flex gap-3">
-                        @if((!($hasPendingApprovals ?? false)) && ($journalEntry->ApprovalStatus=='draft' || empty($journalEntry->ApprovalStatus)))
-                            {{-- <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionRejectModal" data-action="reject">
-                                <i class="fas fa-times-circle me-1"></i> Reject
-                            </button> --}}
-                            <button class="btn btn-outline-success" data-bs-toggle="modal"
-                                    data-bs-target="#submitForApprovalModal" data-action="submitForApproval">
-                                <i class="fas fa-paper-plane me-1"></i> Submit for Approval
-                            </button>
-                        @endif
-
-                        @if(($hasPendingApprovals ?? false) && $canApprove)
+                        @if($isDraftForApproval)
                             <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionRejectModal" data-action="reject">
                                 <i class="fas fa-times-circle me-1"></i> Reject
                             </button>
-                            <button class="btn btn-outline-success" data-bs-toggle="modal"
-                                    data-bs-target="#actionApproveModal" data-action="approve">
-                                <i class="fas fa-check-circle me-1"></i> Approve
-                            </button>
+                            @if($hasThirdPartyPostingIssues)
+                                <button class="btn btn-outline-secondary" type="button" disabled title="Fix Nimble checks shown at top before approving.">
+                                    <i class="fas fa-ban me-1"></i> Approve blocked
+                                </button>
+                            @else
+                                <button class="btn btn-outline-success" data-bs-toggle="modal"
+                                        data-bs-target="#actionApproveModal" data-action="approve">
+                                    <i class="fas fa-check-circle me-1"></i> Approve
+                                </button>
+                            @endif
                         @endif
                     </div>
                 </div>
@@ -706,45 +725,7 @@
     </div>
 
 
-    {{-- Submit for Approval Modal --}}
-    <div class="modal fade" id="submitForApprovalModal" tabindex="-1" aria-labelledby="actionModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="POST" action="{{ route('journalApproval', $journalEntry->Id) }}">
-                @csrf
-                @method('Post')
-                <input type="hidden" name="action_type" value="submitForApproval" id="actionType">
-                <input type="hidden" name="journalID" value="{{ $journalEntry->Id}}" id="actionType">
-                <div class="modal-content rounded-4 shadow">
-                    <div class="modal-header bg-light border-0">
-                        <h5 class="modal-title text-success" id="actionModalLabel">Confirm Submission for Approval</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="reason" class="form-label">Reason</label>
-
-                            <textarea class="form-control" name="Reason" id="reason" rows="3" required
-                                      placeholder="Enter reason here..."></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer border-0">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button class="btn btn-success" id="postBtn" type="submit"
-                                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
-
-                                Submit for Approval
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    {{-- End Submit for Approval Modal --}}
-
-
-    @if(($hasPendingApprovals ?? false) && $canApprove)
+    @if($isDraftForApproval && !$hasThirdPartyPostingIssues)
         {{-- Approve Modal --}}
         <div class="modal fade" id="actionApproveModal" tabindex="-1" aria-labelledby="actionModalLabel"
              aria-hidden="true">
@@ -812,7 +793,3 @@
         </div>
     @endif
 @endsection
-
-
-
-

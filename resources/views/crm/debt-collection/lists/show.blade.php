@@ -66,23 +66,26 @@
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="loansTab" role="tabpanel">
-                        <table id="productsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                            <thead>
-                            <tr>
-                                <th>AccountId</th>
-                                <th>Client</th>
-                                <th>Status</th>
-                                <th>Balance</th>
-                                <th>Arrears Days</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table id="productsTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100">
+                                <thead>
+                                <tr>
+                                    <th>AccountId</th>
+                                    <th>Client</th>
+                                    <th>Status</th>
+                                    <th>Balance</th>
+                                    <th>Arrears Days</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
                     <div class="tab-pane" id="campaignsTab" role="tabpanel">
-                        <table id="campaignTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                        <div class="table-responsive">
+                            <table id="campaignTable"
+                               class="table table-striped dataTable no-footer dtr-inline w-100">
                             <thead>
                             <tr>
                                 <th>#</th>
@@ -95,6 +98,7 @@
                             </thead>
                             <tbody></tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
             </div>

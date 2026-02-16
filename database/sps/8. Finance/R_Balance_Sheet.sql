@@ -1,0 +1,11 @@
+CREATE OR ALTER PROCEDURE [dbo].[R_Balance_Sheet]
+(
+    @REPORTDATE DATE = NULL,
+    @BRANCHES NVARCHAR(MAX) = NULL
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT 1 AS BalanceSheetPlaceholder;
+END
+GO

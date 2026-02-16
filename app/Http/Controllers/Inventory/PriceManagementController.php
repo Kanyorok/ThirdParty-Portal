@@ -130,17 +130,27 @@ class PriceManagementController extends Controller
             $updated = $import->getUpdatedCount();
             $skipped = $import->getSkippedCount();
             $errors = $import->getErrors();
+            $successParts = [];
 
-            $successMessage = "Import completed! Processed: {$processed} rows. ";
-            $successMessage .= "Created: {$created} new prices. ";
-            $successMessage .= "Updated: {$updated} existing prices. ";
-
-            if ($skipped > 0) {
-                $successMessage .= "Skipped: {$skipped} rows.";
+            if ($created > 0) {
+                $successParts[] = "Created: {$created} new price" . ($created > 1 ? 's' : '');
             }
 
+            if ($updated > 0) {
+                $successParts[] = "Updated: {$updated} existing price" . ($updated > 1 ? 's' : '');
+            }
+
+            if ($skipped > 0) {
+                $successParts[] = "Skipped: {$skipped} row" . ($skipped > 1 ? 's' : '') . " (empty/invalid data)";
+            }
+
+            if (empty($successParts)) {
+                $successMessage = "No changes were made. All rows were either empty or unchanged.";
+            } else {
+                $successMessage = "Import completed! " . implode('. ', $successParts) . '.';
+            }
             if (! empty($errors)) {
-                $errorMessage = "<strong>Some rows had errors:</strong><br>";
+                $errorMessage = "<strong>Some rows had critical errors:</strong><br>";
 
                 foreach (array_slice($errors, 0, 20) as $error) {
                     $errorMessage .= "• {$error}<br>";
@@ -156,7 +166,6 @@ class PriceManagementController extends Controller
             }
 
             return back()->with('success', $successMessage);
-
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             $errors = collect($e->failures())->map(function ($failure) {
                 $row = $failure->row();
@@ -166,7 +175,6 @@ class PriceManagementController extends Controller
             })->implode('<br>');
 
             return back()->with('error', "Validation errors:<br>{$errors}");
-
         } catch (\Exception $e) {
             $errorMessage = config('app.debug')
                 ? "Import failed: " . $e->getMessage()

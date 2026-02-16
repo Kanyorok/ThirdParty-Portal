@@ -9,28 +9,49 @@ $kernel->bootstrap();
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-// 1. Generate new Keypair
+echo "--- License Generation Started ---\n";
+
+// 1. Fetch Instance GUID
+$instance = DB::table('t_Instance')->orderBy('Id')->first();
+if (!$instance || empty($instance->DbGuid)) {
+    die("ERROR: Could not find Instance GUID in t_Instance table.\n");
+}
+$dbGuid = $instance->DbGuid;
+echo "Using Instance GUID: " . $dbGuid . "\n";
+
+// 2. Generate new Keypair
 $keyPair = sodium_crypto_sign_keypair();
 $secretKey = sodium_crypto_sign_secretkey($keyPair);
 $publicKey = sodium_crypto_sign_publickey($keyPair);
 $publicKeyBase64 = base64_encode($publicKey);
 
-echo "----------------------------------------------------------------\n";
-echo "NEW LICENSING_PUBLIC_KEY_BASE64:\n";
-echo $publicKeyBase64 . "\n";
-echo "----------------------------------------------------------------\n";
-echo "IMPORTANT: You MUST update your .env file with this new key.\n";
-echo "----------------------------------------------------------------\n";
+echo "Generated Public Key: " . $publicKeyBase64 . "\n";
 
-// 2. Prepare Payload
-// User wanted "2026-03-31T23:59:59Z". In EAT (UTC+3), this shows as April 1st.
-// Adjusted to "2026-03-31T20:59:59Z" so it displays as "2026-03-31 23:59:59" in EAT.
+// 3. Update .env (Optional but recommended)
+$envPath = __DIR__ . '/.env';
+if (file_exists($envPath)) {
+    $envContent = file_get_contents($envPath);
+    // Replace existing key or add if missing
+    if (preg_match('/^LICENSING_PUBLIC_KEY_BASE64=.*$/m', $envContent)) {
+        $envContent = preg_replace('/^LICENSING_PUBLIC_KEY_BASE64=.*$/m', 'LICENSING_PUBLIC_KEY_BASE64=' . $publicKeyBase64, $envContent);
+    } else {
+        $envContent .= "\nLICENSING_PUBLIC_KEY_BASE64=" . $publicKeyBase64 . "\n";
+    }
+    file_put_contents($envPath, $envContent);
+    echo "Updated .env with new Public Key.\n";
+} else {
+    echo "WARNING: .env file not found at $envPath. You must update it manually.\n";
+}
+
+// 4. Prepare Payload
+// Expires: 2026-03-31 23:59:59 EAT (UTC+3) -> 20:59:59 UTC
 $expiresAt = "2026-03-31T20:59:59Z";
 
 $payloadData = [
-    "instance" => [ "db_guid" => "43099967-C472-401B-BDA4-F21754B59D83" ],
-    // Added 100000 as requested
-    "modules" => [200000, 100000, 300000, 400000, 1100000, 1000000, 700000, 9800000],
+    "instance" => [ "db_guid" => $dbGuid ],
+    "modules" => [
+        200000, 100000, 300000, 400000, 1100000, 1000000, 700000, 9800000, 9900000
+    ],
     "nonce" => 1,
     "expires_at" => $expiresAt
 ];
@@ -39,22 +60,33 @@ $jsonPayload = json_encode($payloadData);
 $signature = sodium_crypto_sign_detached($jsonPayload, $secretKey);
 $signatureBase64 = base64_encode($signature);
 
-// 3. Revoke old licenses
-// Schema uses 'Status' (1=active, 0=revoked)
+// 5. Revoke old licenses
+echo "Revoking old licenses...\n";
 DB::table('t_Licenses')->update(['Status' => 0]);
 
-// 4. Insert New License
-DB::table('t_Licenses')->insert([
-    'LicenseId' => (string) Str::uuid(),
-    'PayloadJson' => $jsonPayload,
-    'SignatureBase64' => $signatureBase64,
-    'PublicKeyId' => 'vendor-key-1', // Matching .env default
-    'Status' => 1, // Active
-    'CreatedOn' => now(),
-    // 'LastValidatedOn' => null
-]);
+// 6. Insert New License
+echo "Inserting new license...\n";
+try {
+    $inserted = DB::table('t_Licenses')->insert([
+        'LicenseId' => (string) Str::uuid(),
+        'PayloadJson' => $jsonPayload,
+        'SignatureBase64' => $signatureBase64,
+        'PublicKeyId' => 'vendor-key-1', 
+        'Status' => 1, // Active
+        'CreatedOn' => now(),
+        'LastValidatedOn' => null // Reset validation
+    ]);
+    
+    if ($inserted) {
+        echo "SUCCESS: License inserted successfully.\n";
+        echo "Valid for Instance: " . $dbGuid . "\n";
+        echo "Expires: " . $expiresAt . " (UTC)\n";
+    } else {
+        echo "ERROR: Insert query returned false.\n";
+    }
 
-echo "License inserted successfully into database.\n";
-echo "Modules: " . implode(', ', $payloadData['modules']) . "\n";
-echo "Expires (UTC): " . $payloadData['expires_at'] . "\n";
-echo "Expires (EAT): 2026-03-31 23:59:59\n";
+} catch (\Exception $e) {
+    echo "ERROR: Failed to insert license: " . $e->getMessage() . "\n";
+}
+
+echo "----------------------------------------------------------------\n";

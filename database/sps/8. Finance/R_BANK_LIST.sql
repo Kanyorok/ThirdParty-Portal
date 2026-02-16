@@ -1,0 +1,32 @@
+CREATE OR ALTER PROCEDURE R_BANK_LIST
+
+AS
+BEGIN
+	
+	SET NOCOUNT ON;
+
+	CREATE TABLE #LIST
+	(
+	BankName	VARCHAR(200),
+	ShortName	VARCHAR(100),
+	Country		VARCHAR(100),
+	Mobile		NVARCHAR(100),
+	Email		NVARCHAR(100),
+	Website		NVARCHAR(100)
+ )
+
+ INSERT INTO #LIST
+ SELECT
+	 BankName,
+	 ShortName,
+	C.Name,
+	 Phone,
+	 EmailID,
+	 Website
+ FROM t_Banks B
+ JOIN t_Countries C ON B.CountryID=C.Id
+ SELECT * FROM #LIST
+
+END
+GO 
+EXEC R_BANK_LIST

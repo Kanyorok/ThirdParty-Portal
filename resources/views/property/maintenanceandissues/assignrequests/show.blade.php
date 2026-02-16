@@ -109,7 +109,6 @@
                     <strong>{{ $assignment->ModifiedOn ? Carbon::parse($assignment->ModifiedOn)->format('d M Y') : '-' }}</strong>
             </div>
                 <div>
-                    <a href="{{ route('assignrequest.edit', $assignment->Id) }}" class="btn btn-sm btn-dark">Edit</a>
                     <a href="{{ route('assignrequest.index') }}" class="btn btn-sm btn-outline-dark">Back</a>
                 </div>
         </div>

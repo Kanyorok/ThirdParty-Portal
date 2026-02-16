@@ -133,4 +133,14 @@ class ItemMasterList extends Model
     {
         return $this->hasMany(InterBranchRequisitionItem::class, 'Item', 'Id');
     }
+
+    public function stores()
+    {
+        return $this->belongsToMany(
+            Store::class,
+            't_StockItems',   // pivot table
+            'ItemID',         // FK on pivot pointing to Item
+            'Store'         // FK on pivot pointing to Store
+        )->whereNull('t_StockItems.DeletedOn');
+    }
 }

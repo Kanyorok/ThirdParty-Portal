@@ -205,8 +205,6 @@ class BudgetPeriodController extends Controller
         $budget = Budget::find($id);
 
         return view('budgetandanalytics.budgetperiod.edit', compact('types', 'glSubtypes', 'glAccounts', 'budget'));
-
-
     }
 
     public function update(Request $request, $id)

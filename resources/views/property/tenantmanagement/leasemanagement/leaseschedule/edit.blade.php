@@ -24,7 +24,7 @@
         <div class="row g-3 mb-3">
             <!-- Lease Number (Read-only) -->
             <div class="col-md-6">
-                <label class="form-label">Lease Number</label>
+                <label class="form-label">Lease Number <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" value="{{ $leaseschedules->lease->LeaseNumber ?? '' }}"
                        readonly>
                 <input type="hidden" name="LeaseId" value="{{ $leaseschedules->LeaseNumber }}">
@@ -32,7 +32,7 @@
 
             <!-- Tenant -->
             <div class="col-md-6">
-                <label class="form-label">Tenant</label>
+                <label class="form-label">Tenant <span class="text-danger">*</span></label>
                 <input type="text" class="form-control"
                        value="{{ $leaseschedules->lease->tenant->thirdParty->ThirdPartyName ?? '' }}" readonly>
                 <input type="hidden" name="TenantId" value="{{ $leaseschedules->lease->tenant->Id ?? '' }}">
@@ -40,7 +40,7 @@
 
             <!-- Property -->
             <div class="col-md-6">
-                <label class="form-label">Property</label>
+                <label class="form-label">Property <span class="text-danger">*</span></label>
                 <input type="text" class="form-control"
                        value="{{ $leaseschedules->lease->property->PropertyName ?? '' }}" readonly>
                 <input type="hidden" name="PropertyId" value="{{ $leaseschedules->lease->property->Id ?? '' }}">
@@ -48,7 +48,7 @@
 
             <!-- Payment Frequency -->
             <div class="col-md-6">
-                <label class="form-label">Payment Frequency</label>
+                <label class="form-label">Payment Frequency <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" value="{{ $leaseschedules->lease->code->Description ?? '' }}"
                        readonly>
                 <input type="hidden" name="PaymentFrequency"
@@ -59,17 +59,17 @@
                 <!-- Financial Parameters -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
-                        <label class="form-label">Start Date</label>
+                        <label class="form-label">Start Date <span class="text-danger">*</span></label>
                         <input type="date" class="form-control" name="StartDate"
                                value="{{ old('StartDate', $leaseschedules->StartDate ? Carbon::parse($leaseschedules->StartDate)->format('Y-m-d') : '') }}">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">End Date</label>
+                        <label class="form-label">End Date <span class="text-danger">*</span></label>
                         <input type="date" class="form-control" name="EndDate"
                                value="{{ old('EndDate', $leaseschedules->EndDate ? Carbon::parse($leaseschedules->EndDate)->format('Y-m-d') : '') }}">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Base Rent per {{ $leaseschedules->lease->code->Description }}</label>
+                        <label class="form-label">Base Rent per {{ $leaseschedules->lease->code->Description }} <span class="text-danger">*</span></label>
                         <input type="number" class="form-control charge-input" name="BaseRent"
                                value="{{ old('BaseRent', $leaseschedules->BaseRent) }}">
                     </div>
@@ -77,19 +77,19 @@
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
-                        <label class="form-label">Service Charge</label>
+                        <label class="form-label">Service Charge <span class="text-danger">*</span></label>
                         <input type="number" class="form-control charge-input" name="ServiceCharge"
-                               value="{{ old('ServiceCharge', $leaseschedules->ServiceCharge) }}">
+                               value="{{ old('ServiceCharge', $leaseschedules->ServiceCharge) }}" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Parking Fee</label>
+                        <label class="form-label">Parking Fee <span class="text-danger">*</span></label>
                         <input type="number" class="form-control charge-input" name="ParkingFee"
-                               value="{{ old('ParkingFee', $leaseschedules->ParkingFee) }}">
+                               value="{{ old('ParkingFee', $leaseschedules->ParkingFee) }}" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Other Charges</label>
+                        <label class="form-label">Other Charges <span class="text-danger">*</span></label>
                         <input type="number" class="form-control charge-input" name="OtherCharges"
-                               value="{{ old('OtherCharges', $leaseschedules->OtherCharges) }}">
+                               value="{{ old('OtherCharges', $leaseschedules->OtherCharges) }}" required>
                     </div>
                 </div>
 

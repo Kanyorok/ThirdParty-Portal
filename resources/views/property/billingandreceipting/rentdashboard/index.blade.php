@@ -57,7 +57,7 @@
             @foreach($tenants as $tenant)
                 <option value="{{ $tenant->Id }}"
                     {{ request('tenant_id') == $tenant->Id ? 'selected' : '' }}>
-                    {{ $tenant->thirdParty->ThirdPartyName }}
+                    {{ $tenant->thirdParty->ThirdPartyName ?? 'No Name'}}
                 </option>
             @endforeach
         </select>

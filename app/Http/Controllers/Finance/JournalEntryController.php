@@ -10,6 +10,7 @@ use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceJournalLines;
 use App\Models\HRM\Department;
+use App\Services\Finance\ThirdPartyTransactionPostingService;
 use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,10 +20,14 @@ use Illuminate\Support\Facades\Log;
 class JournalEntryController extends Controller
 {
     protected $workflowService;
+    protected $thirdPartyPostingService;
 
-    public function __construct(ApprovalWorkflow $workflowService)
-    {
+    public function __construct(
+        ApprovalWorkflow $workflowService,
+        ThirdPartyTransactionPostingService $thirdPartyPostingService
+    ) {
         $this->workflowService = $workflowService;
+        $this->thirdPartyPostingService = $thirdPartyPostingService;
     }
 
     public function index(Request $request)
@@ -290,6 +295,14 @@ class JournalEntryController extends Controller
             ];
         }
 
+        $allowThirdPartyPosting = filter_var(
+            env('ALLOW_THIRD_PARTY_FINANCE_POSTING', false),
+            FILTER_VALIDATE_BOOLEAN
+        );
+        $thirdPartyPostingIssues = $allowThirdPartyPosting
+            ? $this->getThirdPartyPostingIssues($journalEntry)
+            : [];
+
         return view('finance.generalledger.journalentry.show', compact(
             'journalEntry',
             'canApprove',
@@ -297,8 +310,39 @@ class JournalEntryController extends Controller
             'cantApproveReason',
             'workflowHistory',
             'pendingApprovers',
-            'postedBy'
+            'postedBy',
+            'allowThirdPartyPosting',
+            'thirdPartyPostingIssues'
         ));
+    }
+
+    private function getThirdPartyPostingIssues(FinanceJournalEntry $journalEntry): array
+    {
+        $lines = $journalEntry->journalLines ?? collect();
+        if ($lines->isEmpty()) {
+            return ['Journal has no lines to post.'];
+        }
+
+        $payload = $lines->map(function ($line) use ($journalEntry) {
+            $isDebit = isset($line->IsDebit) ? (bool) $line->IsDebit : ((float) ($line->Debit ?? 0) > 0);
+            $rawAmount = isset($line->Amount) && $line->Amount !== null
+                ? abs((float) $line->Amount)
+                : abs((float) ($isDebit ? ($line->Debit ?? 0) : ($line->Credit ?? 0)));
+
+            return [
+                'TransactionDate' => $journalEntry->Date,
+                'ReferenceNumber' => $journalEntry->RefNo,
+                'GLAccountID' => $line->GLAccountID,
+                'BranchID' => $line->BranchID,
+                'DepartmentID' => $line->DepartmentID,
+                'DRCR' => $isDebit ? 'DR' : 'CR',
+                'Amount' => $rawAmount,
+                'Narration' => $line->Narration,
+                'SystemDescription' => 'Journal Entry #' . $journalEntry->RefNo,
+            ];
+        })->all();
+
+        return $this->thirdPartyPostingService->collectValidationIssues($payload);
     }
 
     private function getCantApproveReason(array $sources, string|int $sourceId, $user): ?string
@@ -366,6 +410,11 @@ class JournalEntryController extends Controller
         $this->authorize(PermissionEnum::FinanceGeneralLedgerUpdate, FinanceJournalEntry::class);
 
         $journalEntry = FinanceJournalEntry::with('journalLines')->findOrFail($id);
+        $approvalStatus = strtolower((string) $journalEntry->ApprovalStatus);
+        if (in_array($approvalStatus, ['posted', 'rejected'], true)) {
+            return redirect()->route('journalentry.show', $journalEntry->Id)
+                ->with('error', 'Posted or rejected journal entries cannot be edited.');
+        }
         $gls = FinanceGLAccounts::select('Id', 'GLName', 'GLCode')->get();
         $branches = Branch::select('Id', 'Name')->get();
         $departments = Department::select('Id', 'Name')->get();
@@ -378,6 +427,11 @@ class JournalEntryController extends Controller
         $this->authorize(PermissionEnum::FinanceGeneralLedgerUpdate, FinanceJournalEntry::class);
 
         $journalEntry = FinanceJournalEntry::with('journalLines')->findOrFail($id);
+        $approvalStatus = strtolower((string) $journalEntry->ApprovalStatus);
+        if (in_array($approvalStatus, ['posted', 'rejected'], true)) {
+            return redirect()->route('journalentry.show', $journalEntry->Id)
+                ->with('error', 'Posted or rejected journal entries cannot be edited.');
+        }
 
         // Normalize incoming arrays to entries and include optional line_id for diffing
         $entries = [];
@@ -498,6 +552,11 @@ class JournalEntryController extends Controller
         $this->authorize(PermissionEnum::FinanceGeneralLedgerDelete, FinanceJournalEntry::class);
 
         $entry = FinanceJournalEntry::findOrFail($id);
+        $approvalStatus = strtolower((string) $entry->ApprovalStatus);
+        if (in_array($approvalStatus, ['posted', 'rejected'], true)) {
+            return redirect()->route('journalentry.index')
+                ->with('error', 'Posted or rejected journal entries cannot be deleted.');
+        }
         DB::transaction(function () use ($entry) {
             FinanceJournalLines::where('JournalEntryId', $entry->Id)->delete();
             $entry->delete();

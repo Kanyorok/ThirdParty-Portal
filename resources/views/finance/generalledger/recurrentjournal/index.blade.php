@@ -227,18 +227,21 @@
                                        class="btn btn-sm btn-outline-info me-1" title="View Journal Lines">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    @php $isPosted = strtolower($recurring->ApprovalStatus ?? '') === 'posted'; @endphp
+                                    @php
+                                        $approvalStatus = strtolower($recurring->ApprovalStatus ?? '');
+                                        $isLocked = in_array($approvalStatus, ['posted', 'rejected'], true);
+                                    @endphp
                                     <a href="{{ route('recurrentjournal.edit', $recurring->Id) }}"
-                                       class="btn btn-sm btn-outline-warning me-1 {{ $isPosted ? 'disabled' : '' }}"
-                                       title="Edit" aria-disabled="{{ $isPosted ? 'true' : 'false' }}"
-                                       style="{{ $isPosted ? 'pointer-events:none; opacity:.65;' : '' }}">
+                                       class="btn btn-sm btn-outline-warning me-1 {{ $isLocked ? 'disabled' : '' }}"
+                                       title="Edit" aria-disabled="{{ $isLocked ? 'true' : 'false' }}"
+                                       style="{{ $isLocked ? 'pointer-events:none; opacity:.65;' : '' }}">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button type="button"
-                                            class="btn btn-sm btn-outline-danger custom-delete-btn {{ $isPosted ? 'disabled' : '' }}"
+                                            class="btn btn-sm btn-outline-danger custom-delete-btn {{ $isLocked ? 'disabled' : '' }}"
                                             title="Delete"
-                                            {{ $isPosted ? 'disabled' : '' }}
-                                            @if(!$isPosted)
+                                            {{ $isLocked ? 'disabled' : '' }}
+                                            @if(!$isLocked)
                                                 data-bs-toggle="modal"
                                             data-bs-target="#customDeleteConfirmModal"
                                             data-name="{{ $recurring->RefNo ?? ('#'.$recurring->Id) }}"
