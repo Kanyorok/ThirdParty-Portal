@@ -431,7 +431,7 @@ class AwardsController extends Controller
      */
     public function store(Request $request)
     {
-        Log::info('=== AWARD STORE START ===');
+
         Log::info('Request data:', $request->all());
 
         $type = $request->input('award_type', 'tender');
@@ -511,7 +511,7 @@ class AwardsController extends Controller
                 }
 
                 // Gate: All committee members must have completed evaluations
-                Log::info('Checking evaluation completeness...');
+
                 $completeness = $this->checkEvaluationCompleteness($id);
                 Log::info('Evaluation completeness:', $completeness);
 
