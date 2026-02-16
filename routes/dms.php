@@ -5,16 +5,16 @@ use App\Http\Controllers\DMS\Files\DocumentActivityController;
 use App\Http\Controllers\DMS\Files\DocumentCheckOutController;
 use App\Http\Controllers\DMS\Files\DocumentController;
 use App\Http\Controllers\DMS\Files\DocumentDownloadController;
+use App\Http\Controllers\DMS\Files\DocumentLegalHoldController as FileLegalHoldController;
 use App\Http\Controllers\DMS\Files\DocumentMoveController;
 use App\Http\Controllers\DMS\Files\DocumentPermissionController;
 use App\Http\Controllers\DMS\Files\DocumentPreviewController;
 use App\Http\Controllers\DMS\Files\DocumentRecentController;
 use App\Http\Controllers\DMS\Files\DocumentTagsController;
 use App\Http\Controllers\DMS\Files\DocumentUploadController;
+use App\Http\Controllers\DMS\Files\DocumentValidationController as FileValidationController;
 use App\Http\Controllers\DMS\Files\TrashDocumentController;
 use App\Http\Controllers\DMS\LegalHold\DocumentLegalHoldController;
-use App\Http\Controllers\DMS\Files\DocumentLegalHoldController as FileLegalHoldController;
-use App\Http\Controllers\DMS\Files\DocumentValidationController as FileValidationController;
 use App\Http\Controllers\DMS\LegalHold\LegalHoldController;
 use App\Http\Controllers\DMS\Repo\RepositoryController;
 use App\Http\Controllers\DMS\Repo\RepositoryMoveController;
@@ -71,8 +71,11 @@ Route::middleware(['module:700000'])->namespace('DMS')->prefix('dms')->group(fun
     });
     Route::resource('file-tags', TagController::class)->parameters(['file-tags' => 'd_m_s_tags'])->except('edit');
 
-    Route::resource('legal-hold/{d_m_s_legal_hold}/hold-files', DocumentLegalHoldController::class)->parameters(['hold-files' => 'document'])->except('edit');
-    Route::post('legal-hold/{dMSLegalHold}/release', [LegalHoldController::class, 'release'])->name('legal-hold.release');
+    Route::prefix('legal-hold/{d_m_s_legal_hold}')->namespace('LegalHold')->group(function () {
+        Route::get('activities', 'LegalHoldActivityController')->name('hold-files.activities');
+        Route::resource('hold-files', DocumentLegalHoldController::class)->parameters(['hold-files' => 'document'])->except('edit');
+        Route::post('release', [LegalHoldController::class, 'release'])->name('legal-hold.release');
+    });
     Route::resource('legal-hold', LegalHoldController::class)->parameters(['legal-hold' => 'dMSLegalHold'])->except('edit');
 
     Route::resource('document-trashed', TrashDocumentController::class)->parameters(['document-trashed' => 'document'])
