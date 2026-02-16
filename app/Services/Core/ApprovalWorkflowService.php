@@ -497,38 +497,18 @@ abstract class ApprovalWorkflowService
             // Start a SINGLE transaction for everything
             DB::beginTransaction();
 
-            // Prevent double submission -> Handle as "Restart" or "Self-Heal"
-            $existingSubmission = DB::table('t_WorkFlowHistory')
+            // Prevent double submission only when there are active pending approvers.
+            // History rows can remain with isApproved = null after transitions, so they are
+            // not reliable as a sole "already submitted" marker.
+            $hasActivePending = WorkflowPending::query()
                 ->where('Source', $table)
-                ->where('SourceID', (string)$sourceId)
-                ->where('isApproved', null)
+                ->where('SourceID', (string) $sourceId)
                 ->whereNull('DeletedOn')
-                ->first();
+                ->exists();
 
-            if ($existingSubmission) {
-                Log::warning("Found existing pending submission - restarting workflow", [
-                    'table' => $table,
-                    'sourceId' => $sourceId,
-                    'historyId' => $existingSubmission->Id,
-                ]);
-
-                // Soft-delete the stale/zombie history entry
-                DB::table('t_WorkFlowHistory')
-                    ->where('Id', $existingSubmission->Id)
-                    ->update([
-                        'DeletedOn' => now(),
-                        'DeletedBy' => $actor->Id,
-                        'Notes' => ($existingSubmission->Notes ?? '') . ' [Restarted]',
-                    ]);
-
-                // Also clean up any pending approvals to ensure clean slate
-                DB::table('t_WorkFlowPending')
-                    ->where('Source', $table)
-                    ->where('SourceID', (string)$sourceId)
-                    ->update([
-                        'DeletedOn' => now(),
-                        'DeletedBy' => $actor->Id,
-                    ]);
+            if ($hasActivePending) {
+                Log::warning("Already submitted (active pending exists)", ['table' => $table, 'sourceId' => $sourceId]);
+                throw new ErroredException("This item has already been submitted for approval");
             }
 
             // Get first stage

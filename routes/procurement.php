@@ -440,6 +440,8 @@ Route::middleware(['module:300000'])->group(function () {
     Route::resource('bidscores', BidScoreConsolidationController::class);
     Route::post('bidscores/{tenderId}/consolidate', [BidScoreConsolidationController::class, 'storeConsolidation'])
         ->name('bidscores.consolidate');
+    Route::post('bidscores/{tenderId}/evaluators/{memberId}/skip', [BidScoreConsolidationController::class, 'skipEvaluator'])
+        ->name('bidscores.skip-evaluator');
     Route::get('bidscores/{tenderId}/section-drilldown', [BidScoreConsolidationController::class, 'sectionDrilldown'])->name('bidscores.section-drilldown');
     Route::get('bidscores/{tenderId}/evaluator-drilldown', [BidScoreConsolidationController::class, 'evaluatorDrilldown'])->name('bidscores.evaluator-drilldown');
     Route::get('bidscores/{tenderId}/{supplierId}/drilldown', [BidScoreConsolidationController::class, 'show'])->name('bidscores.drilldown');

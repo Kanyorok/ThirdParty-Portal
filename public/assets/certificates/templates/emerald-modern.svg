@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1000" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="emerald" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1d8f74"/>
+      <stop offset="100%" stop-color="#0e4f46"/>
+    </linearGradient>
+    <linearGradient id="mint" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#c9f2e7"/>
+      <stop offset="100%" stop-color="#94d9c6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1400" height="1000" fill="#ffffff"/>
+  <rect x="22" y="22" width="1356" height="956" fill="none" stroke="#0e4f46" stroke-width="12"/>
+  <rect x="44" y="44" width="1312" height="912" fill="none" stroke="#94d9c6" stroke-width="3"/>
+  <path d="M0 190 C 250 80, 420 80, 700 190 C 980 300, 1160 300, 1400 190 L 1400 0 L 0 0 Z" fill="url(#emerald)"/>
+  <path d="M0 130 C 260 20, 430 20, 700 130 C 970 240, 1140 240, 1400 130" fill="none" stroke="url(#mint)" stroke-width="18"/>
+  <path d="M0 810 C 260 700, 430 700, 700 810 C 970 920, 1140 920, 1400 810 L 1400 1000 L 0 1000 Z" fill="url(#emerald)"/>
+  <path d="M0 870 C 260 760, 430 760, 700 870 C 970 980, 1140 980, 1400 870" fill="none" stroke="url(#mint)" stroke-width="18"/>
+</svg>

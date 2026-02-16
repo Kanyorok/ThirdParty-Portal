@@ -3,10 +3,16 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Models\Procurement\RFQ;
-use App\Models\Procurement\RFQAward;
-use App\Models\Procurement\Tender;
+use App\Models\Procurement\ContractMilestone;
+use App\Models\Procurement\ContractPenaltyRule;
 use App\Models\Procurement\TenderAward;
+use App\Models\Procurement\Tender;
+use App\Models\Procurement\RFQAward;
+use App\Models\Procurement\RFQ;
+use App\Models\Core\Approval\WorkflowHistory;
+use App\Models\Core\Approval\WorkflowPending;
+use App\Models\Finance\FinanceTaxRuleConfiguration;
+use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -99,6 +105,15 @@ class ContractsController extends Controller
         $perPage = 15;
         $offset = ($page - 1) * $perPage;
 
+        // Dashboard summary should use the full filtered dataset (not just current page slice).
+        $statusValues = $allContracts->pluck('ContractStatus')->map(fn ($value) => (string) $value);
+        $summary = [
+            'total' => $allContracts->count(),
+            'pending' => $statusValues->filter(fn ($status) => in_array($status, ['Draft Created', 'Dr', 'Under Review', 'rv'], true))->count(),
+            'active' => $statusValues->filter(fn ($status) => in_array($status, ['Approved', 'Ap', 'Contract Approved', 'Executed', 'Ex'], true))->count(),
+            'with_legal' => $statusValues->filter(fn ($status) => $status === 'Sent to Legal')->count(),
+        ];
+        
         $contracts = new \Illuminate\Pagination\LengthAwarePaginator(
             $allContracts->slice($offset, $perPage)->values(),
             $allContracts->count(),
@@ -107,7 +122,7 @@ class ContractsController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        return view('procurement.contracts.contractcreation.index', compact('contracts'))
+        return view('procurement.contracts.contractcreation.index', compact('contracts', 'summary'))
             ->with('filters', $request->only(['status_filter', 'search']));
     }
 
@@ -161,7 +176,9 @@ class ContractsController extends Controller
             }
         }
 
-        return view('procurement.contracts.contractcreation.create', compact('award', 'awardType'));
+        $taxRules = $this->getActiveTaxRules();
+
+        return view('procurement.contracts.contractcreation.create', compact('award', 'awardType', 'taxRules'));
     }
 
     /**
@@ -182,6 +199,7 @@ class ContractsController extends Controller
             'contract_title' => 'required|string|max:255',
             'contract_description' => 'required|string',
             'contract_value' => 'required|numeric|min:0',
+            'contract_tax_id' => 'nullable|exists:t_FinanceTaxRuleConfiguration,Id',
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after:start_date',
             'payment_terms' => 'required|string',
@@ -215,6 +233,7 @@ class ContractsController extends Controller
                 $award->update([
                     'ContractStatus' => 'Sent to Legal',
                     'ContractRequestRef' => $legalRequest['reference'] ?? null,
+                    'ContractTaxID' => $request->contract_tax_id,
                     'ModifiedBy' => Auth::id(),
                 ]);
 
@@ -231,6 +250,7 @@ class ContractsController extends Controller
                     'ContractStatus' => 'Draft Created',
                     'ContractRef' => $contractRef,
                     'ContractValue' => $request->contract_value,
+                    'ContractTaxID' => $request->contract_tax_id,
                     'ContractStartDate' => $request->start_date,
                     'ContractEndDate' => $request->end_date,
                     'PaymentTerms' => $request->payment_terms,
@@ -264,7 +284,7 @@ class ContractsController extends Controller
         $contract = null;
 
         if ($type === 'rfq') {
-            $contract = RFQAward::with(['supplier.supplierMaster.party'])
+            $contract = RFQAward::with(['supplier.supplierMaster.party', 'contractTaxRule.taxType'])
                 ->findOrFail($id);
 
             // Map RFQ to Tender structure for view
@@ -276,7 +296,7 @@ class ContractsController extends Controller
             }
             $contract->winningSupplier = $contract->supplier;
         } else {
-            $contract = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
+            $contract = TenderAward::with(['tender', 'winningSupplier.thirdParty', 'contractTaxRule.taxType'])
                 ->findOrFail($id);
         }
 
@@ -284,15 +304,34 @@ class ContractsController extends Controller
             $workflow = $this->getWorkflow($type);
             $history = $workflow->historyForModel($contract);
             $canApprove = $workflow->canApproveModel($contract, Auth::user());
+
+            // Branch-aware permissions may fail if LoginBranchId is missing in session.
+            // Fallback to the authenticated user's default branch for this approval check only.
+            if (!$canApprove && empty(session('LoginBranchId')) && Auth::check() && !empty(Auth::user()->BranchId)) {
+                session(['LoginBranchId' => (int) Auth::user()->BranchId]);
+                $canApprove = $workflow->canApproveModel($contract, Auth::user());
+            }
         } catch (\Exception $e) {
             \Log::error('Workflow data fetch error: ' . $e->getMessage());
             $history = collect();
             $canApprove = false;
         }
 
+        $hasPendingWorkflow = $this->hasActiveWorkflowPending($contract);
+
+        // Keep UI state consistent when a pending workflow exists but status is still draft.
+        if ($hasPendingWorkflow && in_array((string) $contract->ContractStatus, ['Draft Created', 'Dr'], true)) {
+            $contract->ContractStatus = 'Under Review';
+        }
+
+        // Recover stale state: status says under review but there is no active workflow pending assignee.
+        if (!$hasPendingWorkflow && in_array((string) $contract->ContractStatus, ['Under Review', 'rv'], true)) {
+            $contract->ContractStatus = 'Draft Created';
+        }
+
         $penaltyRule = $this->getActivePenaltyRule($type, (int) $contract->Id);
 
-        return view('procurement.contracts.contractcreation.show', compact('contract', 'type', 'history', 'canApprove', 'penaltyRule'));
+        return view('procurement.contracts.contractcreation.show', compact('contract', 'type', 'history', 'canApprove', 'penaltyRule', 'hasPendingWorkflow'));
     }
 
     /**
@@ -304,7 +343,7 @@ class ContractsController extends Controller
         $award = null;
 
         if ($type === 'rfq') {
-            $award = RFQAward::with(['supplier.supplierMaster.party'])
+            $award = RFQAward::with(['supplier.supplierMaster.party', 'contractTaxRule.taxType'])
                 ->findOrFail($id);
 
             // Map RFQ to Tender structure
@@ -316,13 +355,14 @@ class ContractsController extends Controller
             }
             $award->winningSupplier = $award->supplier;
         } else {
-            $award = TenderAward::with(['tender', 'winningSupplier'])
+            $award = TenderAward::with(['tender', 'winningSupplier', 'contractTaxRule.taxType'])
                 ->findOrFail($id);
         }
 
         $penaltyRule = $this->getActivePenaltyRule($type, (int) $award->Id);
+        $taxRules = $this->getActiveTaxRules();
 
-        return view('procurement.contracts.contractcreation.edit', compact('award', 'type', 'penaltyRule'));
+        return view('procurement.contracts.contractcreation.edit', compact('award', 'type', 'penaltyRule', 'taxRules'));
     }
 
     /**
@@ -334,6 +374,7 @@ class ContractsController extends Controller
 
         $request->validate([
             'contract_value' => 'required|numeric|min:0',
+            'contract_tax_id' => 'nullable|exists:t_FinanceTaxRuleConfiguration,Id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'payment_terms' => 'required|string',
@@ -358,6 +399,7 @@ class ContractsController extends Controller
 
         $award->update([
             'ContractValue' => $request->contract_value,
+            'ContractTaxID' => $request->contract_tax_id,
             'ContractStartDate' => $request->start_date,
             'ContractEndDate' => $request->end_date,
             'PaymentTerms' => $request->payment_terms,
@@ -378,15 +420,35 @@ class ContractsController extends Controller
     /**
      * Contract approval queue
      */
-    public function approvalQueue()
+    public function approvalQueue(Request $request)
     {
+        $pendingStatuses = ['Draft Created', 'Dr', 'Under Review', 'rv'];
+        $approvedStatuses = ['Approved', 'Ap', 'Contract Approved', 'Executed', 'Ex'];
+        $statusFilterMap = [
+            'Draft Created' => ['Draft Created', 'Dr'],
+            'Under Review' => ['Under Review', 'rv'],
+            'Approved' => ['Approved', 'Ap', 'Contract Approved', 'Executed', 'Ex'],
+        ];
+
+        // Summary cards (independent of list filter/pagination)
+        $pendingCount = TenderAward::whereIn('ContractStatus', $pendingStatuses)->count()
+            + RFQAward::whereIn('ContractStatus', $pendingStatuses)->count();
+        $approvedCount = TenderAward::whereIn('ContractStatus', $approvedStatuses)->count()
+            + RFQAward::whereIn('ContractStatus', $approvedStatuses)->count();
+        $totalCount = $pendingCount;
+
+        $selectedStatuses = $pendingStatuses;
+        if ($request->filled('status_filter') && isset($statusFilterMap[$request->input('status_filter')])) {
+            $selectedStatuses = $statusFilterMap[$request->input('status_filter')];
+        }
+
         $tenderContracts = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
-            ->whereIn('ContractStatus', ['Draft Created', 'rv', 'Under Review']) // Include 'rv' and legacy
+            ->whereIn('ContractStatus', $selectedStatuses)
             ->orderBy('CreatedOn', 'desc')
             ->get();
 
         $rfqContracts = RFQAward::with(['supplier.supplierMaster.party'])
-            ->whereIn('ContractStatus', ['Draft Created', 'rv', 'Under Review']) // Include 'rv' and legacy
+            ->whereIn('ContractStatus', $selectedStatuses)
             ->orderBy('CreatedOn', 'desc')
             ->get();
 
@@ -409,8 +471,29 @@ class ContractsController extends Controller
         // Merge and Sort
         $allContracts = $tenderContracts->merge($rfqContracts)->sortByDesc('CreatedOn');
 
+        if ($request->filled('search')) {
+            $search = strtolower($request->input('search'));
+            $allContracts = $allContracts->filter(function ($contract) use ($search) {
+                $ref = strtolower((string) ($contract->ContractRef ?? ''));
+                $title = strtolower((string) ($contract->tender?->Title ?? ''));
+                $tenderNo = strtolower((string) ($contract->tender?->TenderNo ?? ''));
+                $supplier = strtolower((string) (
+                    $contract->winningSupplier?->supplierMaster?->party?->TradingName
+                    ?? $contract->winningSupplier?->thirdParty?->TradingName
+                    ?? $contract->winningSupplier?->thirdParty?->Name
+                    ?? $contract->winningSupplier?->SupplierName
+                    ?? ''
+                ));
+
+                return str_contains($ref, $search)
+                    || str_contains($title, $search)
+                    || str_contains($tenderNo, $search)
+                    || str_contains($supplier, $search);
+            });
+        }
+
         // Manual Pagination
-        $page = request()->input('page', 1);
+        $page = $request->input('page', 1);
         $perPage = 15;
         $offset = ($page - 1) * $perPage;
 
@@ -419,10 +502,10 @@ class ContractsController extends Controller
             $allContracts->count(),
             $perPage,
             $page,
-            ['path' => request()->url(), 'query' => request()->query()]
+            ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        return view('procurement.contracts.contractcreation.approve_index', compact('contracts'));
+        return view('procurement.contracts.contractcreation.approve_index', compact('contracts', 'pendingCount', 'approvedCount', 'totalCount'));
     }
 
     protected $workflow;
@@ -461,6 +544,53 @@ class ContractsController extends Controller
             $award = TenderAward::findOrFail($id);
         }
 
+        // For tender contracts, milestones must be fully maintained before approval.
+        if ($type === 'tender') {
+            $milestones = ContractMilestone::query()
+                ->where('ContractSourceType', 'tender')
+                ->where('ContractSourceID', $award->Id)
+                ->withCount([
+                    'checklistItems',
+                    'checklistItems as required_checklist_count' => function ($q) {
+                        $q->where('Required', true);
+                    },
+                ])
+                ->orderBy('MilestoneNo')
+                ->get();
+
+            if ($milestones->isEmpty()) {
+                return redirect()->back()->with('error', 'Cannot approve contract: define at least one milestone first.');
+            }
+
+            $missingChecklist = $milestones->filter(fn ($m) => ((int) $m->checklist_items_count) === 0);
+            if ($missingChecklist->isNotEmpty()) {
+                $sample = $missingChecklist->pluck('MilestoneNo')->map(fn ($no) => 'M' . $no)->take(5)->implode(', ');
+                return redirect()->back()->with('error', "Cannot approve contract: add checklist items for {$sample}.");
+            }
+
+            $missingRequiredChecklist = $milestones->filter(fn ($m) => ((int) $m->required_checklist_count) === 0);
+            if ($missingRequiredChecklist->isNotEmpty()) {
+                $sample = $missingRequiredChecklist->pluck('MilestoneNo')->map(fn ($no) => 'M' . $no)->take(5)->implode(', ');
+                return redirect()->back()->with('error', "Cannot approve contract: each milestone must have at least one required checklist item. Missing in {$sample}.");
+            }
+
+            $contractValue = round(max(0, (float) ($award->ContractValue ?? 0)), 2);
+            $allocatedMilestoneValue = $this->calculateMilestoneCoverageTotal($milestones, $contractValue);
+            if (!$this->isAmountEqual($allocatedMilestoneValue, $contractValue)) {
+                $difference = round(abs($contractValue - $allocatedMilestoneValue), 2);
+                $direction = $allocatedMilestoneValue < $contractValue ? 'below' : 'above';
+                $actionHint = $allocatedMilestoneValue < $contractValue ? 'Add more milestone value' : 'Reduce milestone value';
+
+                return redirect()->back()->with(
+                    'error',
+                    'Cannot approve contract: milestone total (' . number_format($allocatedMilestoneValue, 2)
+                    . ') is ' . $direction . ' contract value (' . number_format($contractValue, 2)
+                    . ') by ' . number_format($difference, 2) . '. '
+                    . $actionHint . ' so the total matches exactly.'
+                );
+            }
+        }
+
         try {
             $workflow = $this->getWorkflow($type);
 
@@ -477,7 +607,7 @@ class ContractsController extends Controller
             // But workflow service usually handles it if column passed.
             // We keep specific field updates like user/time if workflow doesn't do it automatically for these specific custom fields.
             $award->update([
-               // 'ContractStatus' => 'Approved', // Workflow should handle this
+                'ContractStatus' => 'Approved',
                 'ContractApprovalRemarks' => $request->approval_remarks,
                 'ContractApprovedBy' => Auth::id(),
                 'ContractApprovedOn' => now(),
@@ -525,11 +655,16 @@ class ContractsController extends Controller
 
             // Log the rejection details in custom fields if needed
             // Workflow handles status and history.
-            \Log::info('Contract rejected', [
-               'award_id' => $id,
-               'award_type' => $type,
-               'rejection_reason' => $request->rejection_reason,
-               'rejected_by' => Auth::id(),
+             \Log::info('Contract rejected', [
+                'award_id' => $id,
+                'award_type' => $type,
+                'rejection_reason' => $request->rejection_reason,
+                'rejected_by' => Auth::id()
+            ]);
+
+            $award->update([
+                'ContractStatus' => 'Rejected',
+                'ModifiedBy' => Auth::id(),
             ]);
 
             return redirect()->route('contracts.approvalQueue')
@@ -566,6 +701,38 @@ class ContractsController extends Controller
         return "CONTRACT/PROC/{$year}/{$sequence}";
     }
 
+    private function calculateMilestoneCoverageTotal($milestones, float $contractValue): float
+    {
+        return round(
+            $milestones->sum(fn ($milestone) => $this->calculateMilestoneTargetAmount($milestone, $contractValue)),
+            2
+        );
+    }
+
+    private function calculateMilestoneTargetAmount(ContractMilestone $milestone, float $contractValue): float
+    {
+        if (strtoupper((string) $milestone->ValueType) === 'PERCENT') {
+            return round(max(0, $contractValue * ((float) ($milestone->ValuePercent ?? 0) / 100)), 2);
+        }
+
+        return round(max(0, (float) ($milestone->ValueAmount ?? 0)), 2);
+    }
+
+    private function isAmountEqual(float $first, float $second, float $tolerance = 0.01): bool
+    {
+        return abs($first - $second) <= $tolerance;
+    }
+
+    protected function getActiveTaxRules()
+    {
+        return FinanceTaxRuleConfiguration::query()
+            ->with('taxType:Id,TaxTypeName')
+            ->whereNull('DeletedOn')
+            ->where('Status', 1)
+            ->orderBy('Rate')
+            ->get(['Id', 'TaxTypeId', 'Rate']);
+    }
+
     protected function getActivePenaltyRule(string $type, int $contractId): ?ContractPenaltyRule
     {
         return ContractPenaltyRule::where('ContractSourceType', $type)
@@ -574,6 +741,29 @@ class ContractsController extends Controller
             ->where('IsActive', true)
             ->latest('Id')
             ->first();
+    }
+
+    private function hasActiveWorkflowPending($model): bool
+    {
+        $sources = collect([
+            method_exists($model, 'getTable') ? $model->getTable() : null,
+            method_exists($model, 'getMorphClass') ? $model->getMorphClass() : null,
+            get_class($model),
+        ])
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($sources)) {
+            return false;
+        }
+
+        return WorkflowPending::query()
+            ->whereIn('Source', $sources)
+            ->where('SourceID', (string) $model->getKey())
+            ->whereNull('DeletedOn')
+            ->exists();
     }
 
     protected function upsertPenaltyRule(string $type, int $contractId, Request $request): void
@@ -662,10 +852,63 @@ class ContractsController extends Controller
             $award = TenderAward::findOrFail($id);
         }
 
+        if ($type === 'tender') {
+            $milestones = ContractMilestone::query()
+                ->where('ContractSourceType', 'tender')
+                ->where('ContractSourceID', $award->Id)
+                ->orderBy('MilestoneNo')
+                ->get(['Id', 'MilestoneNo', 'ValueType', 'ValuePercent', 'ValueAmount']);
+
+            if ($milestones->isEmpty()) {
+                return redirect()->route('contracts.show', ['id' => $id, 'type' => $type])
+                    ->with('error', 'Cannot submit for review: define at least one milestone first.');
+            }
+
+            $contractValue = round(max(0, (float) ($award->ContractValue ?? 0)), 2);
+            $allocatedMilestoneValue = $this->calculateMilestoneCoverageTotal($milestones, $contractValue);
+            if (!$this->isAmountEqual($allocatedMilestoneValue, $contractValue)) {
+                $difference = round(abs($contractValue - $allocatedMilestoneValue), 2);
+                $direction = $allocatedMilestoneValue < $contractValue ? 'below' : 'above';
+                $actionHint = $allocatedMilestoneValue < $contractValue ? 'Add more milestone value' : 'Reduce milestone value';
+
+                return redirect()->route('contracts.show', ['id' => $id, 'type' => $type])->with(
+                    'error',
+                    'Cannot submit for review: milestone total (' . number_format($allocatedMilestoneValue, 2)
+                    . ') is ' . $direction . ' contract value (' . number_format($contractValue, 2)
+                    . ') by ' . number_format($difference, 2) . '. '
+                    . $actionHint . ' so the total matches exactly.'
+                );
+            }
+        }
+
+        $hasPendingWorkflow = $this->hasActiveWorkflowPending($award);
+
+        if ($hasPendingWorkflow) {
+            if (!in_array((string) $award->ContractStatus, ['Under Review', 'rv'], true)) {
+                $award->update([
+                    'ContractStatus' => 'Under Review',
+                    'ModifiedBy' => Auth::id(),
+                ]);
+            }
+
+            return redirect()->route('contracts.show', ['id' => $id, 'type' => $type])
+                ->with('warning', 'This contract is already under review.');
+        }
+
+        // Recover stale state so the contract can be re-submitted if pending assignees no longer exist.
+        if (in_array((string) $award->ContractStatus, ['Under Review', 'rv'], true)) {
+            $award->update([
+                'ContractStatus' => 'Draft Created',
+                'ModifiedBy' => Auth::id(),
+            ]);
+            $award->refresh();
+        }
+
         // Maker-Checker: Prevent re-submission if already under review or approved
         $allowedStatuses = ['Draft Created', 'Dr', 'Rejected', 'Re'];
-        if (! in_array($award->ContractStatus, $allowedStatuses)) {
-            return redirect()->back()->with('warning', 'This contract has already been submitted for approval.');
+        if (!in_array($award->ContractStatus, $allowedStatuses)) {
+             return redirect()->route('contracts.show', ['id' => $id, 'type' => $type])
+                 ->with('warning', 'This contract has already been submitted for approval.');
         }
 
         try {

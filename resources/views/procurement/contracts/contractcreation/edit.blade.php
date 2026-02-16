@@ -99,6 +99,22 @@
                                     </div>
                                 </div>
 
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Contract Tax Rule</label>
+                                        <select name="contract_tax_id" class="form-select">
+                                            <option value="">-- No tax --</option>
+                                            @foreach(($taxRules ?? []) as $taxRule)
+                                                <option value="{{ $taxRule->Id }}"
+                                                    @selected((string) old('contract_tax_id', $award->ContractTaxID ?? '') === (string) $taxRule->Id)>
+                                                    {{ $taxRule->taxType->TaxTypeName ?? 'Tax' }} ({{ number_format((float) $taxRule->Rate, 2) }}%)
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <small class="text-muted">Used as default tax rule for contract invoices.</small>
+                                    </div>
+                                </div>
+
                                 <!-- Contract Duration -->
                                 <div class="row mb-3">
                                     <div class="col-md-6">
@@ -190,6 +206,18 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                @if(($type ?? 'tender') === 'tender')
+                                    <div class="alert alert-info d-flex justify-content-between align-items-center">
+                                        <div class="me-3">
+                                            <strong>Milestones and checklist are managed in Contract Lifecycle Execution.</strong>
+                                            <div class="small mb-0">Use the button on the right to add milestones, add checklist items, and tick fulfillment.</div>
+                                        </div>
+                                        <a href="{{ route('contracts.lifecycle.execution', $award->Id) }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-list-check me-1"></i> Manage Milestones
+                                        </a>
+                                    </div>
+                                @endif
 
                                 <!-- Action Buttons -->
                                 <div class="row">

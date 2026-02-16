@@ -4,9 +4,11 @@ namespace App\Models\Procurement;
 
 use App\Models\Auth\User;
 use App\Models\Core\Approval\WorkflowHistory;
+use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RFQAward extends Model
@@ -46,6 +48,7 @@ class RFQAward extends Model
         'ContractStatus',
         'ContractRef',
         'ContractValue',
+        'ContractTaxID',
         'ContractRequestRef',
         'PaymentTerms',
         'DeliveryTerms',
@@ -65,6 +68,7 @@ class RFQAward extends Model
         'ApprovedOn' => 'datetime',
         'AwardedAmount' => 'decimal:2',
         'ContractValue' => 'decimal:2',
+        'ContractTaxID' => 'integer',
     ];
 
     public static function getPrimaryKey(): string
@@ -85,7 +89,19 @@ class RFQAward extends Model
 
     public function approvedByUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'ApprovedBy', 'Id');
+        return $this->hasMany(ContractMilestone::class, 'ContractSourceID', 'Id')
+            ->where('ContractSourceType', 'rfq');
+    }
+
+    public function penaltyRules(): HasMany
+    {
+        return $this->hasMany(ContractPenaltyRule::class, 'ContractSourceID', 'Id')
+            ->where('ContractSourceType', 'rfq');
+    }
+
+    public function contractTaxRule(): BelongsTo
+    {
+        return $this->belongsTo(FinanceTaxRuleConfiguration::class, 'ContractTaxID', 'Id');
     }
 
     /**
@@ -159,42 +175,5 @@ class RFQAward extends Model
     public function hasContract(): bool
     {
         return ! empty($this->ContractStatus) && $this->ContractStatus !== 'Pending Contract';
-    }
-
-    public function isContractReady(): bool
-    {
-        return $this->AwardStatus === self::STATUS_APPROVED && ! $this->hasContract();
-    }
-
-    // Methods
-    public function approve(User $user, ?string $remarks = null): void
-    {
-        $this->update([
-            'AwardStatus' => self::STATUS_APPROVED,
-            'ApprovedBy' => $user->Id,
-            'ApprovedOn' => now(),
-            'ApprovalRemarks' => $remarks,
-            'ModifiedBy' => $user->Id,
-        ]);
-    }
-
-    public function reject(User $user, string $remarks): void
-    {
-        $this->update([
-            'AwardStatus' => self::STATUS_REJECTED,
-            'ApprovedBy' => $user->Id,
-            'ApprovedOn' => now(),
-            'ApprovalRemarks' => $remarks,
-            'ModifiedBy' => $user->Id,
-        ]);
-    }
-
-    public function cancel(User $user, string $reason): void
-    {
-        $this->update([
-            'AwardStatus' => self::STATUS_CANCELLED,
-            'ApprovalRemarks' => $reason,
-            'ModifiedBy' => $user->Id,
-        ]);
     }
 }

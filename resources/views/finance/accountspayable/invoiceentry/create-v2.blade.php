@@ -54,6 +54,16 @@
             </ul>
         </div>
     @endif
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+    @if (session('warning'))
+        <div class="alert alert-warning">
+            {{ session('warning') }}
+        </div>
+    @endif
 
     <!-- Currency Configuration (hidden) -->
     <script>
@@ -62,6 +72,182 @@
             code: '{{ $defaultCurrency->Code ?? "KES" }}',
             id: {{ $defaultCurrency->Id ?? 56 }}
         };
+    </script>
+    <script>
+        // Lightweight mode toggle fallback so CONTRACT/PO sections switch even if
+        // advanced widgets fail to initialize. It also loads milestones/checklist.
+        (function () {
+            function bindInvoiceModeFallback() {
+                const sourceTypeSelect = document.getElementById('InvoiceSourceType');
+                const supplierStepBlock = document.getElementById('supplierStepBlock');
+                const contractBlock = document.getElementById('contractBlock');
+                const contractSelector = document.getElementById('ContractSelector');
+                const contractSourceTypeInput = document.getElementById('ContractSourceType');
+                const contractSourceIdInput = document.getElementById('ContractSourceID');
+                const contractMilestonesWrap = document.getElementById('contractMilestonesWrap');
+                const contractMilestoneRows = document.getElementById('contractMilestoneRows');
+                const contractEligibilityHint = document.getElementById('contractEligibilityHint');
+                if (!sourceTypeSelect || !supplierStepBlock || !contractBlock) {
+                    return;
+                }
+
+                if (sourceTypeSelect.dataset.simpleModeBound === '1') {
+                    return;
+                }
+
+                const apply = function () {
+                    const isContract = (sourceTypeSelect.value || '').toUpperCase() === 'CONTRACT';
+                    supplierStepBlock.classList.toggle('d-none', isContract);
+                    contractBlock.classList.toggle('d-none', !isContract);
+                };
+
+                const statusBadgeClass = function (status) {
+                    if (status === 'Accepted') return 'bg-success';
+                    if (status === 'Waived') return 'bg-secondary';
+                    if (status === 'Submitted') return 'bg-info';
+                    if (status === 'Rejected') return 'bg-danger';
+                    if (status === 'In Progress') return 'bg-warning text-dark';
+                    return 'bg-light text-dark';
+                };
+
+                const formatMoney = function (amount) {
+                    const symbol = window.currencyConfig?.symbol || 'KSh';
+                    const parsed = Number.parseFloat(amount || 0);
+                    const safe = Number.isFinite(parsed) ? parsed : 0;
+                    return `${symbol} ${safe.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                };
+
+                const renderChecklist = function (items) {
+                    const checklist = Array.isArray(items) ? items : [];
+                    if (!checklist.length) {
+                        return '<div class="small text-muted mt-1">No checklist items</div>';
+                    }
+
+                    const html = checklist.map(function (item) {
+                        const fulfilled = !!item.IsFulfilled;
+                        const required = !!item.Required;
+                        const badgeClass = fulfilled ? 'bg-success' : 'bg-warning text-dark';
+                        const requiredLabel = required ? 'Required' : 'Optional';
+                        const notes = item.Notes ? ` <span class="text-muted">(${item.Notes})</span>` : '';
+                        const icon = fulfilled ? 'fa-check-circle' : 'fa-circle';
+                        return `<li class="small mb-1"><i class="fas ${icon} me-1 text-muted"></i>${item.ItemDescription} <span class="badge ${badgeClass}">${fulfilled ? 'Done' : 'Pending'}</span> <span class="text-muted">[${requiredLabel}]</span>${notes}</li>`;
+                    }).join('');
+
+                    return `<ul class="mb-0 ps-3 mt-1">${html}</ul>`;
+                };
+
+                const renderMilestonesFallback = function (payload) {
+                    if (!contractMilestoneRows || !contractMilestonesWrap) return;
+                    const milestones = Array.isArray(payload?.milestones) ? payload.milestones : [];
+                    const totals = payload?.totals || {};
+
+                    contractMilestonesWrap.classList.remove('d-none');
+                    if (!milestones.length) {
+                        contractMilestoneRows.innerHTML = '<tr><td colspan="6" class="text-muted">No milestones found for this contract.</td></tr>';
+                        if (contractEligibilityHint) {
+                            contractEligibilityHint.textContent = 'No milestones configured for this contract.';
+                        }
+                        return;
+                    }
+
+                    let eligibleCount = 0;
+                    const rows = milestones.map(function (m) {
+                        const eligible = !!m.Eligible;
+                        if (eligible) eligibleCount++;
+                        const checklistHtml = renderChecklist(m.ChecklistItems);
+                        const billable = Number.parseFloat((m.BillableAmount ?? m.RemainingAmount ?? m.ValueAmount ?? 0));
+                        const totalValue = Number.parseFloat(m.ValueAmount || 0);
+                        const hasSplit = Math.abs((Number.isFinite(totalValue) ? totalValue : 0) - (Number.isFinite(billable) ? billable : 0)) > 0.009;
+                        const percentValue = Number.parseFloat(m.ValuePercent || 0);
+                        const valueHtml = `${formatMoney(billable)}`
+                            + (hasSplit ? `<div class="small text-muted">of ${formatMoney(totalValue)}</div>` : '')
+                            + (m.ValueType === 'PERCENT'
+                                ? `<div class="small text-muted">${Number.isFinite(percentValue) ? percentValue.toFixed(4) : '0.0000'}% of contract value</div>`
+                                : '');
+
+                        return `
+                            <tr>
+                                <td class="text-center">
+                                    <input class="form-check-input contract-milestone-check" type="checkbox" name="MilestoneIDs[]" value="${m.Id}" ${eligible ? 'checked' : ''}>
+                                </td>
+                                <td>
+                                    <strong>M${m.MilestoneNo}</strong> - ${m.Title}
+                                    ${checklistHtml}
+                                </td>
+                                <td><span class="badge ${statusBadgeClass(m.Status)}">${m.Status}</span></td>
+                                <td>${m.RequiredChecklistFulfilled}/${m.RequiredChecklistTotal}</td>
+                                <td>${m.PlannedDueDate || '-'}</td>
+                                <td class="text-end">${valueHtml}</td>
+                            </tr>
+                        `;
+                    });
+
+                    contractMilestoneRows.innerHTML = rows.join('');
+                    if (contractEligibilityHint) {
+                        const remainingTotal = Number.parseFloat(totals.remaining_total || 0);
+                        contractEligibilityHint.textContent = `${eligibleCount} of ${milestones.length} milestones are currently eligible (Accepted/Waived + checklist complete). Remaining billable total: ${formatMoney(remainingTotal)}.`;
+                    }
+                };
+
+                const loadMilestonesFallback = async function () {
+                    if (!contractSelector || !contractMilestoneRows || !contractMilestonesWrap) return;
+                    const selected = contractSelector.value || '';
+                    if (!selected.includes(':')) {
+                        if (contractMilestonesWrap) contractMilestonesWrap.classList.add('d-none');
+                        if (contractMilestoneRows) contractMilestoneRows.innerHTML = '';
+                        if (contractEligibilityHint) contractEligibilityHint.textContent = '';
+                        return;
+                    }
+
+                    const [contractType, contractId] = selected.split(':');
+                    if (contractSourceTypeInput) contractSourceTypeInput.value = contractType;
+                    if (contractSourceIdInput) contractSourceIdInput.value = contractId;
+
+                    contractMilestonesWrap.classList.remove('d-none');
+                    contractMilestoneRows.innerHTML = '<tr><td colspan="6" class="text-muted">Loading milestones...</td></tr>';
+                    if (contractEligibilityHint) contractEligibilityHint.textContent = '';
+
+                    try {
+                        const baseUrl = @json(url('finance/invoiceentry-v2/api/contracts'));
+                        const response = await fetch(`${baseUrl}/${contractType}/${contractId}/milestones`, {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        });
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+                        const payload = await response.json();
+                        renderMilestonesFallback(payload);
+                    } catch (error) {
+                        contractMilestoneRows.innerHTML = '<tr><td colspan="6" class="text-danger">Failed to load milestones/checklist.</td></tr>';
+                        if (contractEligibilityHint) contractEligibilityHint.textContent = '';
+                    }
+                };
+
+                sourceTypeSelect.addEventListener('change', apply);
+                if (contractSelector) {
+                    contractSelector.addEventListener('change', function () {
+                        const isContract = (sourceTypeSelect.value || '').toUpperCase() === 'CONTRACT';
+                        if (isContract) {
+                            loadMilestonesFallback();
+                        }
+                    });
+                }
+                sourceTypeSelect.dataset.simpleModeBound = '1';
+                apply();
+
+                if ((sourceTypeSelect.value || '').toUpperCase() === 'CONTRACT') {
+                    loadMilestonesFallback();
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', bindInvoiceModeFallback);
+            } else {
+                bindInvoiceModeFallback();
+            }
+
+            window.addEventListener('load', bindInvoiceModeFallback);
+        })();
     </script>
 
     <div class="container my-3">
@@ -119,6 +305,9 @@
                                     <option value="">-- Select contract --</option>
                                     @foreach(($contractOptions ?? []) as $contractOption)
                                         <option value="{{ $contractOption['type'] }}:{{ $contractOption['id'] }}"
+                                            data-tax-id="{{ $contractOption['tax_id'] ?? '' }}"
+                                            data-tax-name="{{ $contractOption['tax_name'] ?? '' }}"
+                                            data-tax-rate="{{ $contractOption['tax_rate'] ?? '' }}"
                                             @selected(old('ContractSourceType') . ':' . old('ContractSourceID') === ($contractOption['type'] . ':' . $contractOption['id']))>
                                             [{{ strtoupper($contractOption['type']) }}] {{ $contractOption['reference'] }} - {{ $contractOption['title'] }} ({{ $contractOption['supplier'] }})
                                         </option>
@@ -126,6 +315,7 @@
                                 </select>
                                 <input type="hidden" id="ContractSourceType" name="ContractSourceType" value="{{ old('ContractSourceType') }}">
                                 <input type="hidden" id="ContractSourceID" name="ContractSourceID" value="{{ old('ContractSourceID') }}">
+                                <div class="form-text" id="contractTaxHint"></div>
                             </div>
                             <div class="col-md-6">
                                 <div class="alert alert-light mb-0 py-2">
@@ -363,7 +553,7 @@
                         <input type="hidden" id="SupplierID" name="SupplierID" value="">
                         <input type="hidden" id="POReference" name="POReference" value="">
                         <input type="hidden" id="GRNReference" name="GRNReference" value="">
-                        <input type="hidden" id="TaxID" name="TaxID" value="1">
+                        <input type="hidden" id="TaxID" name="TaxID" value="{{ old('TaxID', '') }}">
                         <input type="hidden" id="TaxAmount" name="TaxAmount" value="">
                         <input type="hidden" id="TaxPercentage" name="TaxPercentage" value="">
                         <input type="hidden" id="InvoiceAmount" name="InvoiceAmount" value="">
@@ -456,10 +646,11 @@
         // Wait for both DOM and jQuery to be ready
         function initializeInvoiceEntry() {
             // Prevent double initialization
-            if (window.__invoiceEntryInit) {
+            if (window.__invoiceEntryInit === true || window.__invoiceEntryInit === 'initializing') {
                 return;
             }
-            window.__invoiceEntryInit = true;
+            window.__invoiceEntryInit = 'initializing';
+            try {
             // API endpoints (hoisted so all handlers can access)
             const quickSearchUrl = '{{ route('finance.invoiceentry-v2.api.suppliers.quick-search') }}';
             const findSupplierUrl = '{{ route('finance.invoiceentry-v2.api.suppliers.search') }}';
@@ -472,9 +663,11 @@
             const contractSelector = document.getElementById('ContractSelector');
             const contractSourceTypeInput = document.getElementById('ContractSourceType');
             const contractSourceIdInput = document.getElementById('ContractSourceID');
+            const contractTaxHint = document.getElementById('contractTaxHint');
             const contractMilestonesWrap = document.getElementById('contractMilestonesWrap');
             const contractMilestoneRows = document.getElementById('contractMilestoneRows');
             const contractEligibilityHint = document.getElementById('contractEligibilityHint');
+            const taxIdInput = document.getElementById('TaxID');
             const supplierSelect = (typeof window.$ !== 'undefined') ? window.$('#supplierSelect') : null;
             const supplierCard = document.getElementById('supplierCard');
             const ordersBlock = document.getElementById('ordersBlock');
@@ -491,6 +684,7 @@
             let currentSupplier = null;
             let currentOrders = [];
             let currentGRNs = [];
+            let currentContractMilestones = [];
             let selectedPO = null;
             let selectedGRN = null;
             let currentCurrency = window.currencyConfig;
@@ -538,6 +732,7 @@
             }
 
             function clearContractMilestones() {
+                currentContractMilestones = [];
                 if (contractMilestoneRows) {
                     contractMilestoneRows.innerHTML = '';
                 }
@@ -547,25 +742,106 @@
                 if (contractEligibilityHint) {
                     contractEligibilityHint.textContent = '';
                 }
+                if ((sourceTypeSelect?.value || '').toUpperCase() === 'CONTRACT') {
+                    const amountInput = document.getElementById('Amount');
+                    const expectedAmountEl = document.getElementById('expectedAmount');
+                    if (amountInput) amountInput.value = '';
+                    if (expectedAmountEl) expectedAmountEl.textContent = formatCurrency(0, currentCurrency);
+                    window.expectedInvoiceAmount = 0;
+                }
             }
 
             function resetContractModeFields() {
                 if (contractSourceTypeInput) contractSourceTypeInput.value = '';
                 if (contractSourceIdInput) contractSourceIdInput.value = '';
                 if (contractSelector) contractSelector.value = '';
+                if (taxIdInput) taxIdInput.value = '';
+                if (contractTaxHint) contractTaxHint.textContent = '';
                 clearContractMilestones();
+            }
+
+            function applySelectedContractTax() {
+                if (!contractSelector || !taxIdInput) return;
+
+                const selectedOption = contractSelector.options[contractSelector.selectedIndex];
+                const taxId = selectedOption?.dataset?.taxId || '';
+                const taxName = selectedOption?.dataset?.taxName || '';
+                const taxRate = selectedOption?.dataset?.taxRate || '';
+
+                taxIdInput.value = taxId;
+
+                if (contractTaxHint) {
+                    if (taxId) {
+                        const label = taxName ? `${taxName}` : 'Configured Tax Rule';
+                        const parsedRate = Number.parseFloat(taxRate);
+                        const rateLabel = Number.isFinite(parsedRate) ? ` (${parsedRate.toFixed(2)}%)` : '';
+                        contractTaxHint.textContent = `Tax rule from contract: ${label}${rateLabel}.`;
+                    } else {
+                        contractTaxHint.textContent = 'No tax rule configured on this contract.';
+                    }
+                }
+            }
+
+            function parseMilestoneAmount(milestone) {
+                const billableAmount = Number.parseFloat(
+                    milestone?.BillableAmount ?? milestone?.RemainingAmount ?? milestone?.ValueAmount ?? 0
+                );
+                return Number.isFinite(billableAmount) ? billableAmount : 0;
+            }
+
+            function sumSelectedMilestoneAmounts() {
+                if (!Array.isArray(currentContractMilestones) || currentContractMilestones.length === 0) {
+                    return 0;
+                }
+
+                const checkedIds = new Set(
+                    Array.from(document.querySelectorAll('input[name="MilestoneIDs[]"]:checked'))
+                        .map((el) => Number.parseInt(el.value, 10))
+                        .filter((id) => Number.isFinite(id))
+                );
+
+                return currentContractMilestones.reduce((sum, milestone) => {
+                    return checkedIds.has(Number.parseInt(milestone.Id, 10))
+                        ? sum + parseMilestoneAmount(milestone)
+                        : sum;
+                }, 0);
+            }
+
+            function syncContractMilestoneAmountToForm() {
+                const amountInput = document.getElementById('Amount');
+                const expectedAmountEl = document.getElementById('expectedAmount');
+                if (!amountInput || !expectedAmountEl) return;
+
+                const totalSelectedAmount = sumSelectedMilestoneAmounts();
+                window.expectedInvoiceAmount = totalSelectedAmount;
+
+                // Auto-fill default while keeping input fully editable by user.
+                amountInput.value = totalSelectedAmount > 0 ? totalSelectedAmount.toFixed(2) : '';
+                expectedAmountEl.textContent = formatCurrency(totalSelectedAmount, currentCurrency);
             }
 
             async function loadContractMilestones(contractType, contractId) {
                 clearContractMilestones();
                 if (!contractType || !contractId) return;
+                if (contractMilestonesWrap) contractMilestonesWrap.classList.remove('d-none');
+                if (contractMilestoneRows) {
+                    contractMilestoneRows.innerHTML = '<tr><td colspan="6" class="text-muted">Loading milestones...</td></tr>';
+                }
+                if (contractEligibilityHint) {
+                    contractEligibilityHint.textContent = '';
+                }
 
                 try {
                     const response = await fetch(`${contractMilestonesBaseUrl}/${contractType}/${contractId}/milestones`, {
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
                     });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
                     const payload = await response.json();
                     const milestones = payload?.milestones || [];
+                    const totals = payload?.totals || {};
+                    currentContractMilestones = milestones;
 
                     if (!milestones.length) {
                         if (contractMilestonesWrap) contractMilestonesWrap.classList.remove('d-none');
@@ -579,16 +855,41 @@
                     const rows = milestones.map((m) => {
                         const eligible = !!m.Eligible;
                         if (eligible) eligibleCount++;
-                        const valueLabel = (m.ValueType === 'PERCENT')
-                            ? `${parseFloat(m.ValuePercent || 0).toFixed(2)}%`
-                            : `${window.currencyConfig?.symbol || 'KSh'} ${parseFloat(m.ValueAmount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        const checklistItems = Array.isArray(m.ChecklistItems) ? m.ChecklistItems : [];
+                        const checklistHtml = checklistItems.length
+                            ? `<ul class="mb-0 ps-3 mt-1">` + checklistItems.map((item) => {
+                                const fulfilled = !!item.IsFulfilled;
+                                const required = !!item.Required;
+                                const badgeClass = fulfilled ? 'bg-success' : 'bg-warning text-dark';
+                                const requiredLabel = required ? 'Required' : 'Optional';
+                                const icon = fulfilled ? 'fa-check-circle' : 'fa-circle';
+                                const notes = item.Notes ? ` <span class="text-muted">(${item.Notes})</span>` : '';
+                                return `<li class="small mb-1"><i class=\"fas ${icon} me-1 text-muted\"></i>${item.ItemDescription} <span class=\"badge ${badgeClass}\">${fulfilled ? 'Done' : 'Pending'}</span> <span class=\"text-muted\">[${requiredLabel}]</span>${notes}</li>`;
+                            }).join('') + `</ul>`
+                            : '<div class="small text-muted mt-1">No checklist items</div>';
+                        const parsedTotalValue = Number.parseFloat(m.ValueAmount || 0);
+                        const parsedBillableValue = Number.parseFloat((m.BillableAmount ?? m.RemainingAmount ?? m.ValueAmount ?? 0));
+                        const totalValue = Number.isFinite(parsedTotalValue) ? parsedTotalValue : 0;
+                        const billableValue = Number.isFinite(parsedBillableValue) ? parsedBillableValue : 0;
+                        const hasRemainingSplit = Math.abs(totalValue - billableValue) > 0.009;
+                        const percentValue = Number.parseFloat(m.ValuePercent || 0);
+                        const valueLabel = `${window.currencyConfig?.symbol || 'KSh'} ${billableValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+                            + (hasRemainingSplit
+                                ? `<div class="small text-muted">of ${window.currencyConfig?.symbol || 'KSh'} ${totalValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`
+                                : '')
+                            + (m.ValueType === 'PERCENT'
+                                ? `<div class="small text-muted">${Number.isFinite(percentValue) ? percentValue.toFixed(4) : '0.0000'}% of contract value</div>`
+                                : '');
 
                         return `
                             <tr>
                                 <td class="text-center">
                                     <input class="form-check-input contract-milestone-check" type="checkbox" name="MilestoneIDs[]" value="${m.Id}" ${eligible ? 'checked' : ''}>
                                 </td>
-                                <td><strong>M${m.MilestoneNo}</strong> - ${m.Title}</td>
+                                <td>
+                                    <strong>M${m.MilestoneNo}</strong> - ${m.Title}
+                                    ${checklistHtml}
+                                </td>
                                 <td><span class="badge ${badgeForMilestoneStatus(m.Status)}">${m.Status}</span></td>
                                 <td>${m.RequiredChecklistFulfilled}/${m.RequiredChecklistTotal}</td>
                                 <td>${m.PlannedDueDate || '-'}</td>
@@ -600,9 +901,16 @@
                     if (contractMilestoneRows) contractMilestoneRows.innerHTML = rows.join('');
                     if (contractMilestonesWrap) contractMilestonesWrap.classList.remove('d-none');
                     if (contractEligibilityHint) {
-                        contractEligibilityHint.textContent = `${eligibleCount} of ${milestones.length} milestones are currently eligible (Accepted/Waived + checklist complete).`;
+                        const remainingTotal = Number.parseFloat(totals.remaining_total || 0);
+                        contractEligibilityHint.textContent = `${eligibleCount} of ${milestones.length} milestones are currently eligible (Accepted/Waived + checklist complete). Remaining billable total: ${formatCurrency(remainingTotal, currentCurrency)}.`;
                     }
+
+                    document.querySelectorAll('input[name="MilestoneIDs[]"]').forEach((checkbox) => {
+                        checkbox.addEventListener('change', syncContractMilestoneAmountToForm);
+                    });
+                    syncContractMilestoneAmountToForm();
                 } catch (error) {
+                    currentContractMilestones = [];
                     if (contractMilestonesWrap) contractMilestonesWrap.classList.remove('d-none');
                     if (contractMilestoneRows) {
                         contractMilestoneRows.innerHTML = '<tr><td colspan="6" class="text-danger">Failed to load milestones.</td></tr>';
@@ -630,6 +938,7 @@
                     submitSection.classList.remove('d-none');
                     document.getElementById('POReference').value = '';
                     document.getElementById('GRNReference').value = '';
+                    applySelectedContractTax();
                     if (submitBtn) {
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = '<i class="fas fa-file-signature me-2"></i> Create Contract Invoice';
@@ -1447,14 +1756,19 @@
                 selectedGRN = null;
             }
 
-            // Initialize supplier Select2
-            initializeSupplierSelect();
-
             if (sourceTypeSelect) {
                 sourceTypeSelect.addEventListener('change', function () {
                     setInvoiceMode(this.value);
                 });
                 setInvoiceMode(sourceTypeSelect.value);
+            }
+
+            // Initialize supplier Select2 after mode setup so contract mode is usable
+            // even if supplier search widgets fail to initialize.
+            try {
+                initializeSupplierSelect();
+            } catch (error) {
+                console.error('Supplier search initialization failed:', error);
             }
 
             if (contractSelector) {
@@ -1463,6 +1777,8 @@
                     if (!selected.includes(':')) {
                         if (contractSourceTypeInput) contractSourceTypeInput.value = '';
                         if (contractSourceIdInput) contractSourceIdInput.value = '';
+                        if (taxIdInput) taxIdInput.value = '';
+                        if (contractTaxHint) contractTaxHint.textContent = '';
                         clearContractMilestones();
                         return;
                     }
@@ -1470,6 +1786,7 @@
                     const [contractType, contractId] = selected.split(':');
                     if (contractSourceTypeInput) contractSourceTypeInput.value = contractType;
                     if (contractSourceIdInput) contractSourceIdInput.value = contractId;
+                    applySelectedContractTax();
                     loadContractMilestones(contractType, contractId);
                 });
 
@@ -1477,6 +1794,7 @@
                     const [contractType, contractId] = contractSelector.value.split(':');
                     if (contractSourceTypeInput) contractSourceTypeInput.value = contractType;
                     if (contractSourceIdInput) contractSourceIdInput.value = contractId;
+                    applySelectedContractTax();
                     loadContractMilestones(contractType, contractId);
                 }
             }
@@ -1654,6 +1972,12 @@
                     }
                 }
             });
+
+            window.__invoiceEntryInit = true;
+            } catch (error) {
+                console.error('Invoice entry initialization failed:', error);
+                window.__invoiceEntryInit = false;
+            }
         }
 
         // Initialize when DOM and scripts are ready

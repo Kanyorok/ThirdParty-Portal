@@ -259,6 +259,7 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
 
     Route::post('/paymentvoucher/{id}/approve', [PaymentVoucherController::class, 'approve'])->name('paymentvoucher.approve');
     Route::post('/paymentvoucher/{id}/reject', [PaymentVoucherController::class, 'reject'])->name('paymentvoucher.reject');
+    Route::get('/paymentvoucher/api/invoices/{invoiceId}/preview', [PaymentVoucherController::class, 'invoicePreview'])->name('paymentvoucher.invoice-preview');
     Route::post('/paymentvoucher/contracts/{invoiceId}/apply-penalty', [PaymentVoucherController::class, 'applyContractPenalty'])->name('paymentvoucher.contracts.apply-penalty');
     Route::post('/paymentvoucher/contracts/{invoiceId}/waive-hold', [PaymentVoucherController::class, 'waiveContractHold'])->name('paymentvoucher.contracts.waive-hold');
 
