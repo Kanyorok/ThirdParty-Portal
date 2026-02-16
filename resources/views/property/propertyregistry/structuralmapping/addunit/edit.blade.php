@@ -22,7 +22,7 @@
             @method('PUT')
 
             <div class="card shadow border-0 rounded-3">
-                <div class="card-header bg-light fw-bold">
+                <div class="card-header bg-primary fw-bold">
                     <i class="bi bi-door-open"></i> Unit Details
                 </div>
 

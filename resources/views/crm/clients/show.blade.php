@@ -29,6 +29,33 @@ u@php use App\Services\BR\ClientService; @endphp
             font-style: normal;
         }
 
+        /* Prevent horizontal overflow on client view */
+        #mainBodyContent > .row {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .col-md-8, .col-xxl-9 {
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .col-md-8 .card-body,
+        .col-xxl-9 .card-body {
+            overflow-x: auto;
+        }
+
+        .col-md-8 .dataTables_wrapper,
+        .col-xxl-9 .dataTables_wrapper {
+            width: 100% !important;
+            overflow-x: auto;
+        }
+
+        .col-md-8 table,
+        .col-xxl-9 table {
+            width: 100% !important;
+        }
+
     </style>
 @endsection
 @section('breadcrumbs')
@@ -503,20 +530,21 @@ u@php use App\Services\BR\ClientService; @endphp
                         <div class="card">
                             <div class="card-header"><h5>Relations - Next of Kin</h5></div>
                             <div class="card-body">
-                                <table id="relationsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>ClientID</th>
-                                        <th>Name</th>
-                                        <th>Relation</th>
-                                        <th>Type</th>
-                                        <th>Phone</th>
-                                        <th>Status</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="relationsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                        <thead>
+                                        <tr>
+                                            <th>ClientID</th>
+                                            <th>Name</th>
+                                            <th>Relation</th>
+                                            <th>Type</th>
+                                            <th>Phone</th>
+                                            <th>Status</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table></div>
                             </div>
                         </div>
 
@@ -525,19 +553,20 @@ u@php use App\Services\BR\ClientService; @endphp
                         <div class="card">
                             <div class="card-header"><h5>Portfolio: Client Accounts</h5></div>
                             <div class="card-body">
-                                <table id="accountsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>Product</th>
-                                        <th>Account ID</th>
-                                        <th>ClearBalance</th>
-                                        <th>Status</th>
-                                        <th>Last</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="accountsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                        <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Account ID</th>
+                                            <th>ClearBalance</th>
+                                            <th>Status</th>
+                                            <th>Last</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table></div>
                             </div>
                         </div>
                     </div>
@@ -545,18 +574,19 @@ u@php use App\Services\BR\ClientService; @endphp
                         <div class="card">
                             <div class="card-header"><h5>Private Notes</h5></div>
                             <div class="card-body">
-                                <table id="notesTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th class="w-50">Note</th>
-                                        <th>On</th>
-                                        <th>actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="notesTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th class="w-50">Note</th>
+                                            <th>On</th>
+                                            <th>actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table></div>
                             </div>
                         </div>
                     </div>
@@ -564,19 +594,20 @@ u@php use App\Services\BR\ClientService; @endphp
                         <div class="card">
                             <div class="card-header"><h5>discussions</h5></div>
                             <div class="card-body">
-                                <table id="discussionsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>From</th>
-                                        <th>Discussion</th>
-                                        <th>Dated</th>
-                                        <th>actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="discussionsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>From</th>
+                                            <th>Discussion</th>
+                                            <th>Dated</th>
+                                            <th>actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table></div>
                             </div>
                         </div>
                     </div>
@@ -584,19 +615,20 @@ u@php use App\Services\BR\ClientService; @endphp
                         <div class="card">
                             <div class="card-header"><h5>Call Logs</h5></div>
                             <div class="card-body">
-                                <table id="callsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>User</th>
-                                        <th>Status</th>
-                                        <th>Start</th>
-                                        <th>End</th>
-                                        <th>Duration</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="callsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                        <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Status</th>
+                                            <th>Start</th>
+                                            <th>End</th>
+                                            <th>Duration</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table></div>
                             </div>
                         </div>
                     </div>
@@ -604,19 +636,20 @@ u@php use App\Services\BR\ClientService; @endphp
                         <div class="card">
                             <div class="card-header"><h5>Schedule <small>Calls/Meetings ...</small></h5></div>
                             <div class="card-body">
-                                <table id="scheduleTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Type</th>
-                                        <th>Start</th>
-                                        <th>End</th>
-                                        <th>actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="scheduleTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Type</th>
+                                            <th>Start</th>
+                                            <th>End</th>
+                                            <th>actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table></div>
                             </div>
                         </div>
                     </div>
@@ -648,19 +681,20 @@ u@php use App\Services\BR\ClientService; @endphp
                                 </div>
                             </div>
                             <div class="card-body">
-                                <table id="ticketsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Title</th>
-                                        <th>Category</th>
-                                        <th>Priority</th>
-                                        <th>Dated</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="ticketsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Title</th>
+                                            <th>Category</th>
+                                            <th>Priority</th>
+                                            <th>Dated</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table></div>
                             </div>
                         </div>
                     </div>
@@ -668,18 +702,20 @@ u@php use App\Services\BR\ClientService; @endphp
                         <div class="card">
                             <div class="card-header"><h5>Emails <small>Incoming & Outgoing</small></h5></div>
                             <div class="card-body">
-                                <table id="EmailsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>Type</th>
-                                        <th>Subject</th>
-                                        <th>Dated</th>
-                                        <th>actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="EmailsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                        <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Subject</th>
+                                            <th>Dated</th>
+                                            <th>actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -687,18 +723,20 @@ u@php use App\Services\BR\ClientService; @endphp
                         <div class="card">
                             <div class="card-header"><h5>Messages <small>Incoming & Outgoing</small></h5></div>
                             <div class="card-body">
-                                <table id="MessagesTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>Type</th>
-                                        <th>Source</th>
-                                        <th>Dated</th>
-                                        <th>actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="MessagesTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                        <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Source</th>
+                                            <th>Dated</th>
+                                            <th>actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
 
@@ -707,19 +745,21 @@ u@php use App\Services\BR\ClientService; @endphp
                         <div class="card">
                             <div class="card-header"><h5>Meeting Appointments</h5></div>
                             <div class="card-body">
-                                <table id="AppointmentsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Title</th>
-                                        <th>Start</th>
-                                        <th>End</th>
-                                        <th>Status</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="AppointmentsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100 ">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Title</th>
+                                            <th>Start</th>
+                                            <th>End</th>
+                                            <th>Status</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -727,19 +767,21 @@ u@php use App\Services\BR\ClientService; @endphp
                         <div class="card">
                             <div class="card-header"><h5>Reviews</h5></div>
                             <div class="card-body">
-                                <table id="reviewsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>No.</th>
-                                        <th>Rate</th>
-                                        <th>Sentiment</th>
-                                        <th>Source</th>
-                                        <th>Dated</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="reviewsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100 ">
+                                        <thead>
+                                        <tr>
+                                            <th>No.</th>
+                                            <th>Rate</th>
+                                            <th>Sentiment</th>
+                                            <th>Source</th>
+                                            <th>Dated</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
 
@@ -761,19 +803,21 @@ u@php use App\Services\BR\ClientService; @endphp
                                 </div>
                             </div>
                             <div class="card-body">
-                                <table id="contactsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Label</th>
-                                        <th>Phone</th>
-                                        <th>Email</th>
-                                        <th>action</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="contactsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Label</th>
+                                            <th>Phone</th>
+                                            <th>Email</th>
+                                            <th>action</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>

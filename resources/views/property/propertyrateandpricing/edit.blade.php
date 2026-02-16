@@ -1,210 +1,188 @@
 @extends('layouts.app')
-
 @section('title', 'Edit Property Rate & Pricing')
 
 @section('content')
 
-<div class="container py-4" style="max-width: 1100px;">
+<div class="container py-4" style="max-width:1100px;">
 
-    {{-- Validation Errors --}}
-    @if ($errors->any())
-        <div class="alert alert-danger shadow-sm">
-            <ul class="mb-0 ps-3">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+{{-- ================= ERROR SUMMARY ================= --}}
+@if ($errors->any())
+<div class="alert alert-danger shadow-sm">
+    <ul class="mb-0 ps-3">
+        @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
 
-    <form action="{{ route('propertyrateandpricing.update', $pricing->Id) }}" method="POST">
-        @csrf
-        @method('PUT')
+<form action="{{ route('propertyrateandpricing.update', $pricing->Id) }}" method="POST">
+@csrf
+@method('PUT')
 
-        <div class="card shadow-sm border-0">
-            <div class="card-body">
+<div class="card shadow-sm border-0 rounded-4">
+<div class="card-body p-4">
 
-                {{-- SECTION: Property Information --}}
-                <h6 class="text-uppercase text-muted fw-semibold mb-3 border-bottom pb-2">
-                    Property Information
-                </h6>
+{{-- ================= PROPERTY STRUCTURE ================= --}}
+<h6 class="fw-semibold border-bottom pb-2 mb-3">Property Structure</h6>
 
-                <div class="row g-3 mb-4">
-                    <div class="col-md-3">
-                        <label class="form-label">Property</label>
-                        <div class="form-control bg-light fw-semibold">
-                            {{ $pricing->property->PropertyName ?? 'N/A' }}
-                        </div>
-                        <input type="hidden" name="PropertyId" value="{{ $pricing->PropertyId }}">
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">Block</label>
-                        <div class="form-control bg-light fw-semibold">
-                            {{ $pricing->block->BlockName ?? 'N/A' }}
-                        </div>
-                        <input type="hidden" name="BlockId" value="{{ $pricing->BlockId }}">
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">Floor</label>
-                        <div class="form-control bg-light fw-semibold">
-                            {{ $pricing->floor->FloorLabel ?? 'N/A' }}
-                        </div>
-                        <input type="hidden" name="FloorId" value="{{ $pricing->FloorId }}">
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">Unit</label>
-                        <div class="form-control bg-light fw-semibold">
-                            {{ $pricing->unit->UnitCode ?? 'N/A' }}
-                        </div>
-                        <input type="hidden" name="UnitId" value="{{ $pricing->UnitId }}">
-                    </div>
-                </div>
-
-                {{-- SECTION: Currency & Tax --}}
-                <h6 class="text-uppercase text-muted fw-semibold mb-3 border-bottom pb-2">
-                    Currency & Tax
-                </h6>
-
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label">Currency <span class="text-danger">*</span></label>
-                        <select class="form-select" name="CurrencyId" required>
-                            @foreach ($currencies as $cur)
-                                <option value="{{ $cur->Id }}" {{ $pricing->CurrencyId == $cur->Id ? 'selected' : '' }}>
-                                    {{ $cur->Code }} ({{ $cur->Symbol }})
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Tax Rule <span class="text-danger">*</span></label>
-                        <select class="form-select" name="TaxId" required>
-                            @foreach ($Taxes as $tax)
-                                <option value="{{ $tax->Id }}" {{ $pricing->TaxId == $tax->Id ? 'selected' : '' }}>
-                                    {{ $tax->taxType->TaxTypeName }} ({{ $tax->Rate }}%)
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                {{-- SECTION: Pricing --}}
-                <h6 class="text-uppercase text-muted fw-semibold mb-3 border-bottom pb-2">
-                    Pricing Details
-                </h6>
-
-                <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <label class="form-label">Rent <span class="text-danger">*</span></label>
-                        <input type="number" name="Rent" id="Rent" class="form-control"
-                               value="{{ $pricing->Rent }}" required>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Service Charge<span class="text-danger">*</span></label>
-                        <input type="number" name="ServiceCharge" id="ServiceCharge"
-                               class="form-control" value="{{ $pricing->ServiceCharge }}" required>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Parking Fee<span class="text-danger">*</span></label>
-                        <input type="number" name="ParkingFee" id="ParkingFee"
-                               class="form-control" value="{{ $pricing->ParkingFee }}" required>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Other Charges<span class="text-danger">*</span></label>
-                        <input type="number" name="OtherCharges" id="OtherCharges"
-                               class="form-control" value="{{ $pricing->OtherCharges }}" required>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Deposit Amount<span class="text-danger">*</span></label>
-                        <input type="number" name="DepositAmount" id="DepositAmount"
-                               class="form-control" value="{{ $pricing->DepositAmount }}" required>
-                    </div>
-                </div>
-
-                {{-- SECTION: Total Summary --}}
-                <div class="card bg-light border-success mb-4">
-                    <div class="card-body">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <small class="text-muted text-uppercase">Total Payable</small>
-                                <h3 class="fw-bold text-success mb-0">
-                                    <span id="totalAmount">0.00</span>
-                                </h3>
-                                <small class="text-muted">(Monthly Charges + Deposit)</small>
-                            </div>
-
-                            <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                                <p class="mb-1">
-                                    <strong>Monthly Charges:</strong>
-                                    <span id="monthlyCharges">0.00</span>
-                                </p>
-                                <p class="mb-0">
-                                    <strong>Deposit:</strong>
-                                    <span id="displayDeposit">0.00</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- ACTIONS (BOTTOM) --}}
-                <div class="d-flex justify-content-between align-items-center border-top pt-3">
-                    <a href="{{ route('propertyrateandpricing.index') }}"
-                       class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-1"></i>
-                        Back
-                    </a>
-
-                    <button type="submit" class="btn btn-primary px-4">
-                        <i class="bi bi-check-circle me-1"></i>
-                        Update Pricing
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    </form>
+<div class="row g-3 mb-4">
+@foreach([
+    'Property' => $pricing->property->PropertyName ?? 'N/A',
+    'Block' => $pricing->block->BlockName ?? 'N/A',
+    'Floor' => $pricing->floor->FloorLabel ?? 'N/A',
+    'Unit' => $pricing->unit->UnitCode ?? 'N/A'
+] as $label => $value)
+<div class="col-md-3">
+    <label class="form-label">{{ $label }}</label>
+    <div class="form-control bg-light fw-semibold">{{ $value }}</div>
+</div>
+@endforeach
 </div>
 
-{{-- TOTAL CALCULATION SCRIPT --}}
+<input type="hidden" name="PropertyId" value="{{ $pricing->PropertyId }}">
+<input type="hidden" name="BlockId" value="{{ $pricing->BlockId }}">
+<input type="hidden" name="FloorId" value="{{ $pricing->FloorId }}">
+<input type="hidden" name="UnitId" value="{{ $pricing->UnitId }}">
+
+{{-- ================= FINANCIAL SETTINGS ================= --}}
+<h6 class="fw-semibold border-bottom pb-2 mb-3">Financial Settings</h6>
+
+<div class="row g-3 mb-4">
+
+<div class="col-md-6">
+<label class="form-label">Currency</label>
+<select class="form-select" name="CurrencyId" required>
+@foreach ($currencies as $cur)
+<option value="{{ $cur->Id }}" {{ $pricing->CurrencyId==$cur->Id?'selected':'' }}>
+    {{ $cur->Code }} — {{ $cur->Symbol }}
+</option>
+@endforeach
+</select>
+</div>
+
+<div class="col-md-6">
+<label class="form-label">Tax</label>
+<select id="taxRate" class="form-select" required>
+@foreach ($Taxes as $tax)
+<option value="{{ $tax->Rate }}"
+        data-id="{{ $tax->Id }}"
+        {{ $pricing->TaxId==$tax->Id?'selected':'' }}>
+    {{ $tax->taxType->TaxTypeName }} ({{ $tax->Rate }}%)
+</option>
+@endforeach
+</select>
+<input type="hidden" name="TaxId" id="TaxIdHidden" value="{{ $pricing->TaxId }}">
+</div>
+
+</div>
+
+{{-- ================= CHARGES ================= --}}
+<h6 class="fw-semibold border-bottom pb-2 mb-3">Charges</h6>
+
+<div class="row g-3 mb-4">
+
+<div class="col-md-3">
+<label class="form-label">Rent</label>
+<input type="number" name="Rent" class="form-control charge" value="{{ $pricing->Rent }}" required>
+</div>
+
+<div class="col-md-3">
+<label class="form-label">Parking Fee</label>
+<input type="number" name="ParkingFee" class="form-control charge" value="{{ $pricing->ParkingFee }}">
+</div>
+
+<div class="col-md-3">
+<label class="form-label">Service Charge</label>
+<input type="number" name="ServiceCharge" class="form-control charge" value="{{ $pricing->ServiceCharge }}">
+</div>
+
+<div class="col-md-3">
+<label class="form-label">Other Charges</label>
+<input type="number" name="OtherCharges" class="form-control charge" value="{{ $pricing->OtherCharges }}">
+</div>
+
+<div class="col-md-4">
+<label class="form-label">Deposit Amount</label>
+<input type="number" id="deposit" name="DepositAmount" class="form-control" value="{{ $pricing->DepositAmount }}">
+</div>
+
+</div>
+
+{{-- ================= TOTAL SUMMARY ================= --}}
+<div class="card bg-light border-0 shadow-sm rounded-4 mb-4">
+<div class="card-body">
+
+<div class="row align-items-center">
+
+<div class="col-md-6">
+<small class="text-muted">MONTHLY (INCLUDING TAX)</small>
+<h2 class="fw-bold text-success mt-1" id="monthlyTotal">0.00</h2>
+</div>
+
+<div class="col-md-6 text-md-end small">
+<div>Subtotal: <strong id="subtotal">0.00</strong></div>
+<div>Tax: <strong id="taxAmount">0.00</strong></div>
+<div>Deposit: <strong id="depositDisplay">0.00</strong></div>
+<hr class="my-2">
+<div class="fs-6">
+Total Payable: <strong id="grandTotal">0.00</strong>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+{{-- ================= ACTIONS ================= --}}
+<div class="d-flex justify-content-between pt-3 border-top">
+<a href="{{ route('propertyrateandpricing.index') }}" class="btn btn-outline-secondary">
+Back
+</a>
+<button type="submit" class="btn btn-primary px-4">
+Update Pricing
+</button>
+</div>
+
+</div>
+</div>
+</form>
+</div>
+
+{{-- ================= CALCULATIONS ================= --}}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+function calculate() {
 
-    const rent = document.getElementById('Rent');
-    const parking = document.getElementById('ParkingFee');
-    const service = document.getElementById('ServiceCharge');
-    const other = document.getElementById('OtherCharges');
-    const deposit = document.getElementById('DepositAmount');
-
-    function calculateTotal() {
-        const r = parseFloat(rent.value) || 0;
-        const p = parseFloat(parking.value) || 0;
-        const s = parseFloat(service.value) || 0;
-        const o = parseFloat(other.value) || 0;
-        const d = parseFloat(deposit.value) || 0;
-
-        const monthly = r + p + s + o;
-        const total = monthly + d;
-
-        totalAmount.textContent = total.toLocaleString('en-US', { minimumFractionDigits: 2 });
-        monthlyCharges.textContent = monthly.toLocaleString('en-US', { minimumFractionDigits: 2 });
-        displayDeposit.textContent = d.toLocaleString('en-US', { minimumFractionDigits: 2 });
-    }
-
-    [rent, parking, service, other, deposit].forEach(i =>
-        i.addEventListener('input', calculateTotal)
-    );
-
-    calculateTotal();
+let subtotal = 0;
+document.querySelectorAll('.charge').forEach(i => {
+    subtotal += Number(i.value || 0);
 });
+
+let taxRate = Number(document.getElementById('taxRate').value || 0);
+let tax = subtotal * taxRate / 100;
+
+let deposit = Number(document.getElementById('deposit').value || 0);
+
+let monthlyWithTax = subtotal + tax;
+let grandTotal = monthlyWithTax + deposit;
+
+document.getElementById('subtotal').innerText = subtotal.toFixed(2);
+document.getElementById('taxAmount').innerText = tax.toFixed(2);
+document.getElementById('monthlyTotal').innerText = monthlyWithTax.toFixed(2);
+document.getElementById('depositDisplay').innerText = deposit.toFixed(2);
+document.getElementById('grandTotal').innerText = grandTotal.toFixed(2);
+}
+
+document.querySelectorAll('.charge, #deposit, #taxRate')
+.forEach(el => el.addEventListener('input', calculate));
+
+document.getElementById('taxRate').addEventListener('change', function () {
+let selected = this.options[this.selectedIndex];
+document.getElementById('TaxIdHidden').value = selected.dataset.id || '';
+calculate();
+});
+
+calculate();
 </script>
 
 @endsection

@@ -41,8 +41,8 @@ class InvoiceIntakeService
             'TaxAmount' => ['nullable', 'numeric'],
             'TaxPercentage' => ['nullable', 'numeric'],
             'InvoiceAmount' => ['nullable', 'numeric'],
-            'TotalAmount' => ['required', 'integer'],
-            'AmountPaid' => ['nullable', 'integer'],
+            'TotalAmount' => ['required', 'numeric'],
+            'AmountPaid' => ['nullable', 'numeric'],
             'IsPaid' => ['nullable', 'boolean'],
             'IsGenerated' => ['nullable', 'boolean'],
             'Status' => ['nullable', 'in:draft,queued,approved,posted,rejected'],
@@ -76,7 +76,7 @@ class InvoiceIntakeService
         // Compute IdempotencyKey if not provided
         $idk = $payload['IdempotencyKey'] ?? $this->computeIdempotencyKey($payload);
 
-        $lineSubtotal = array_sum(array_map(fn ($l) => (int)$l['Total'], $payload['lines']));
+        $lineSubtotal = array_sum(array_map(fn ($l) => (float)$l['Total'], $payload['lines']));
 
         $invoiceAmount = $payload['InvoiceAmount'] ?? (float)$lineSubtotal;
         $taxAmount = $payload['TaxAmount'] ?? 0.0;
@@ -98,7 +98,7 @@ class InvoiceIntakeService
         $effectiveTotal = $invoiceAmount - $taxAmount;
 
         if ($enforceHeaderTotalMatch) {
-            if ((int)$payload['TotalAmount'] !== (int)$lineSubtotal) {
+            if (abs((float)$payload['TotalAmount'] - (float)$lineSubtotal) > 0.01) {
                 return [
                     'message' => "Header TotalAmount does not match sum of lines.",
                     'request_id' => null,
@@ -106,7 +106,7 @@ class InvoiceIntakeService
             }
         }
 
-        $invoice = DB::transaction(function () use ($payload, $idk, $invoiceAmount, $taxAmount, $taxPercentage, $effectiveTotal) {
+        $persistInvoice = function () use ($payload, $idk, $invoiceAmount, $taxAmount, $taxPercentage, $effectiveTotal) {
             $now = Carbon::now();
 
             $header = [
@@ -124,10 +124,10 @@ class InvoiceIntakeService
                 'InvoiceRemarks' => $payload['InvoiceRemarks'] ?? null,
                 'TotalAmount' => round($invoiceAmount, 2),
                 'TaxAmount' => round($taxAmount, 2),
-                'InvoiceAmount' => (int)round($effectiveTotal),
+                'InvoiceAmount' => round($effectiveTotal, 2),
                 'TaxPercentage' => $taxPercentage !== null ? round($taxPercentage, 4) : null,
                 'TaxID' => $payload['TaxID'] ?? null,
-                'AmountPaid' => (int)($payload['AmountPaid'] ?? 0),
+                'AmountPaid' => round((float)($payload['AmountPaid'] ?? 0), 2),
                 'IsPaid' => (bool)($payload['IsPaid'] ?? false),
                 'IsGenerated' => (bool)($payload['IsGenerated'] ?? true),
                 'Status' => $payload['Status'] ?? 'draft',
@@ -172,7 +172,12 @@ class InvoiceIntakeService
             }
 
             return $invoice;
-        });
+        };
+
+        $connection = DB::connection();
+        $invoice = $connection->transactionLevel() > 0
+            ? $persistInvoice()
+            : $connection->transaction($persistInvoice);
 
         activity('finance.invoice.intake')
             ->causedBy($payload['CreatedBy'])

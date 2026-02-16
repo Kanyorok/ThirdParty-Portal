@@ -113,7 +113,7 @@ class PropertyFloorController extends Controller
         try {
             $floor = PropertyFloor::findOrFail($id);
 
-            $floor->update();
+            $floor->update($validated);
 
             DB::commit();
             activity()

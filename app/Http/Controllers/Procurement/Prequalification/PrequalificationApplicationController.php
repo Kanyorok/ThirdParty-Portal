@@ -853,7 +853,6 @@ class PrequalificationApplicationController extends Controller
 
             return redirect()->route('prequalification.prequalification-rounds.show', $round)
                 ->with('success', 'Application submitted successfully.');
-
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Manual prequalification application failed', ['error' => $e->getMessage()]);

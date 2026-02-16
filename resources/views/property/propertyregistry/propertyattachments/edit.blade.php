@@ -23,13 +23,9 @@
         <div class="row g-3 mb-3">
           <div class="col-md-6">
               <label class="form-label">Select Property<span class="text-danger">*</span></label>
-            <select name="PropertyID" class="form-select" required>
-              @foreach ($properties as $property)
-                <option value="{{ $property->Id }}" {{ $property->Id == old('PropertyID', $propertyattachments->PropertyID) ? 'selected' : '' }}>
-                  {{ $property->PropertyName }}
-                </option>
-              @endforeach
-            </select>
+            <!-- Display property name (user sees this) -->
+          <input type="text" class="form-control" value="{{ $propertyattachments->property->PropertyName }}" readonly>
+          <input type="hidden" name="PropertyID" value="{{ $propertyattachments->property->Id }}">
           </div>
           <div class="col-md-6">
               <label class="form-label">Document Title<span class="text-danger">*</span></label>
@@ -51,9 +47,9 @@
             </select>
           </div>
             <div class="col-md-6">
-                <label class="form-label">Upload File<span class="text-danger">*</span></label>
+                <label class="form-label">Upload File</label>
                 <input type="file" name="file[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx">
-                <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB</small>
+                <small class="text-muted d-block mb-1">Allowed file types: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB | Leave empty to keep existing documents</small>
                 
             </div>
         </div>

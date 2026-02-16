@@ -3,339 +3,289 @@
 @section('title', 'New Lease Agreement')
 
 @section('content')
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <strong class="d-block mb-2">Please fix the following errors:</strong>
-        <ul class="mb-0 ps-3">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
-
-
 <div class="container mt-4">
-    <form method="POST" action="{{ route('addlease.store') }}" enctype="multipart/form-data" id="leaseForm">
-        @csrf
 
-        <div class="card shadow-sm border-0 rounded-3">
-            <div class="card-header bg-white fw-bold py-3">
-                Lease Details
-            </div>
+<form method="POST" action="{{ route('addlease.store') }}" enctype="multipart/form-data">
+@csrf
 
-            <div class="card-body">
-                <h5 class="fw-bold border-bottom pb-2 mb-3">Tenant & Property Information</h5>
-
-                <div class="row g-3 mb-4">
-                    {{-- Tenant --}}
-                    <div class="col-md-6">
-                        <label class="form-label">Select Tenant <span class="text-danger">*</span></label>
-                        <select name="Tenant" class="form-select shadow-sm" required>
-                            <option value="">-- Select Tenant --</option>
-                            @foreach ($newtenants as $newtenant)
-                                <option value="{{ $newtenant->Id }}">
-                                    {{ $newtenant->thirdParty->ThirdPartyName ?? '-' }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Property --}}
-                    <div class="col-md-6">
-                        <label class="form-label">Select Property <span class="text-danger">*</span></label>
-                        <select name="PropertyID" id="property-select" class="form-select shadow-sm" required>
-                            <option value="">-- Select Property --</option>
-                            @foreach ($properties as $property)
-                                <option value="{{ $property->Id }}">
-                                    {{ $property->PropertyName ?? '-' }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <h5 class="fw-bold border-bottom pb-2 mb-3">Block / Floor / Unit</h5>
-
-                <div class="row g-3 mb-4">
-                    {{-- Block --}}
-                    <div class="col-md-4">
-                        <label class="form-label">Select Block <span class="text-danger">*</span></label>
-                        <select name="BlockID" id="block-select" class="form-select shadow-sm" required>
-                            <option value="">-- Select Block --</option>
-                        </select>
-                    </div>
-
-                    {{-- Floor --}}
-                    <div class="col-md-4">
-                        <label class="form-label">Select Floor <span class="text-danger">*</span></label>
-                        <select name="FloorID" id="floor-select" class="form-select shadow-sm" required>
-                            <option value="">-- Select Floor --</option>
-                        </select>
-                    </div>
-
-                    {{-- Unit --}}
-                    <div class="col-md-4">
-                        <label class="form-label">Select Unit <span class="text-danger">*</span></label>
-                        <select name="Unit" id="unit-select" class="form-select shadow-sm" required>
-                            <option value="">-- Select Unit --</option>
-                        </select>
-                    </div>
-                </div>
-
-                <h5 class="fw-bold border-bottom pb-2 mb-3">Lease Duration</h5>
-
-                <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <label class="form-label">Start Date <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control shadow-sm" name="StartDate" required>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">End Date <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control shadow-sm" name="EndDate" required>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Payment Frequency <span class="text-danger">*</span></label>
-                        <select class="form-select shadow-sm" name="PaymentFrequency" required>
-                            <option value="">-- Select Frequency --</option>
-                            @foreach ($codes as $code)
-                                <option value="{{ $code->ID }}">{{ $code->Description }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <h5 class="fw-bold border-bottom pb-2 mb-3">Financial Details</h5>
-
-                <div class="row g-3 mb-4">
-
-                    {{-- Currency --}}
-                    <div class="col-md-6">
-                        <label class="form-label">Currency <span class="text-danger">*</span></label>
-                        <select name="CurrencyId" class="form-select shadow-sm" required>
-                            <option value="">-- Select Currency --</option>
-                            @foreach ($Currencies as $currency)
-                                <option value="{{ $currency->Id }}">
-                                    {{ $currency->Code }} - {{ $currency->Symbol }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Tax --}}
-                    <div class="col-md-6">
-                        <label class="form-label">Tax Rule <span class="text-danger">*</span></label>
-                        <select name="TaxId" class="form-select shadow-sm" required>
-                            <option value="">-- Select Tax Rule --</option>
-                            @foreach ($taxtypes as $tax)
-                                <option value="{{ $tax->Id }}">
-                                    {{ $tax->taxType->TaxTypeName }} {{ $tax->Rate }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                {{-- Charges --}}
-                <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <label class="form-label">Rent <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control shadow-sm charge-field"
-                               name="MonthlyRent" required>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Deposit <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control shadow-sm"
-                               name="Deposit" required>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Service Charge <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control shadow-sm charge-field"
-                               name="ServiceCharge" required>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Parking Fee <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control shadow-sm charge-field"
-                               name="ParkingFee" required>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Other Charges <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control shadow-sm charge-field"
-                               name="OtherCharges" required>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Total Payable</label>
-                        <input type="number" class="form-control shadow-sm" id="TotalPayable" readonly>
-                    </div>
-                </div>
-
-                <h5 class="fw-bold border-bottom pb-2 mb-3">Payment Due Date</h5>
-
-                <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <label class="form-label">Due Day <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control shadow-sm"
-                               name="DueDay" min="1" max="28" required>
-                    </div>
-                </div>
-
-                <h5 class="fw-bold border-bottom pb-2 mb-3">Special Terms</h5>
-
-                <div class="mb-4">
-                    <textarea class="form-control shadow-sm" rows="3"
-                    name="SpecialTerms"></textarea>
-                </div>
-
-                <h5 class="fw-bold border-bottom pb-2 mb-3">Upload Documents</h5>
-
-                <div class="mb-4">
-                    <label class="form-label">Lease Documents <span class="text-danger">*</span></label>
-                    <input type="file" name="Document[]" class="form-control shadow-sm"
-                           accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" multiple required>
-                </div>
-
-                <div class="d-flex gap-3 justify-content-end">
-                    <a href="{{ route('addlease.index') }}" class="btn btn-outline-secondary px-4">Cancel</a>
-
-                    <button type="submit" class="btn btn-success px-4"
-                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
-                        Save Lease
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    </form>
+<div class="card shadow-sm border-0 rounded-3">
+<div class="card-header bg-primary fw-bold py-3">
+    Lease Details
 </div>
 
+<div class="card-body">
 
-{{-- ============================================================= --}}
-{{--  JAVASCRIPT (FULLY FIXED) --}}
-{{-- ============================================================= --}}
+{{-- ================= Tenant & Property ================= --}}
+
+<h5 class="fw-bold border-bottom pb-2 mb-3">Tenant & Property Information</h5>
+
+<div class="row g-3 mb-4">
+
+<div class="col-md-6">
+<label class="form-label">Tenant <span class="text-danger">*</span></label>
+<select name="Tenant" class="form-select @error('Tenant') is-invalid @enderror">
+<option value="">-- Select Tenant --</option>
+@foreach ($newtenants as $t)
+<option value="{{ $t->Id }}" {{ old('Tenant')==$t->Id?'selected':'' }}>
+{{ $t->thirdParty->ThirdPartyName ?? '-' }}
+</option>
+@endforeach
+</select>
+@error('Tenant')<div class="invalid-feedback">{{ $message }}</div>@enderror
+</div>
+
+<div class="col-md-6">
+<label class="form-label">Property <span class="text-danger">*</span></label>
+<select name="PropertyID" id="property-select"
+class="form-select @error('PropertyID') is-invalid @enderror">
+<option value="">-- Select Property --</option>
+@foreach ($properties as $p)
+<option value="{{ $p->Id }}" {{ old('PropertyID')==$p->Id?'selected':'' }}>
+{{ $p->PropertyName }}
+</option>
+@endforeach
+</select>
+@error('PropertyID')<div class="invalid-feedback">{{ $message }}</div>@enderror
+</div>
+
+</div>
+
+{{-- ================= Block / Floor / Unit ================= --}}
+
+<h5 class="fw-bold border-bottom pb-2 mb-3">Block / Floor / Unit</h5>
+
+<div class="row g-3 mb-4">
+
+<div class="col-md-4">
+<label class="form-label">Block <span class="text-danger">*</span></label>
+<select name="BlockID" id="block-select"
+class="form-select @error('BlockID') is-invalid @enderror">
+<option value="">-- Select Block --</option>
+</select>
+@error('BlockID')<div class="invalid-feedback">{{ $message }}</div>@enderror
+</div>
+
+<div class="col-md-4">
+<label class="form-label">Floor <span class="text-danger">*</span></label>
+<select name="FloorID" id="floor-select"
+class="form-select @error('FloorID') is-invalid @enderror">
+<option value="">-- Select Floor --</option>
+</select>
+@error('FloorID')<div class="invalid-feedback">{{ $message }}</div>@enderror
+</div>
+
+<div class="col-md-4">
+<label class="form-label">Unit <span class="text-danger">*</span></label>
+<select name="Unit" id="unit-select"
+class="form-select @error('Unit') is-invalid @enderror">
+<option value="">-- Select Unit --</option>
+</select>
+@error('Unit')<div class="invalid-feedback">{{ $message }}</div>@enderror
+</div>
+
+</div>
+
+{{-- ================= Lease Dates ================= --}}
+
+<h5 class="fw-bold border-bottom pb-2 mb-3">Lease Duration</h5>
+
+<div class="row g-3 mb-4">
+
+<div class="col-md-4">
+<label class="form-label">Start Date <span class="text-danger">*</span></label>
+<input type="date" name="StartDate"
+value="{{ old('StartDate') }}"
+class="form-control @error('StartDate') is-invalid @enderror">
+@error('StartDate')<div class="invalid-feedback">{{ $message }}</div>@enderror
+</div>
+
+<div class="col-md-4">
+<label class="form-label">End Date <span class="text-danger">*</span></label>
+<input type="date" name="EndDate"
+value="{{ old('EndDate') }}"
+class="form-control @error('EndDate') is-invalid @enderror">
+@error('EndDate')<div class="invalid-feedback">{{ $message }}</div>@enderror
+</div>
+
+<div class="col-md-4">
+<label class="form-label">Payment Frequency <span class="text-danger">*</span></label>
+<select name="PaymentFrequency"
+class="form-select @error('PaymentFrequency') is-invalid @enderror">
+<option value="">-- Select Frequency --</option>
+@foreach($codes as $c)
+<option value="{{ $c->ID }}" {{ old('PaymentFrequency')==$c->ID?'selected':'' }}>
+{{ $c->Description }}
+</option>
+@endforeach
+</select>
+@error('PaymentFrequency')<div class="invalid-feedback">{{ $message }}</div>@enderror
+</div>
+
+</div>
+
+{{-- ================= Financial ================= --}}
+
+<h5 class="fw-bold border-bottom pb-2 mb-3">Financial Details</h5>
+
+<div class="row g-3 mb-4">
+
+<div class="col-md-6">
+<label class="form-label">Currency <span class="text-danger">*</span></label>
+<select name="CurrencyId"
+class="form-select @error('CurrencyId') is-invalid @enderror">
+<option value="">-- Select Currency --</option>
+@foreach ($Currencies as $cur)
+<option value="{{ $cur->Id }}" {{ old('CurrencyId')==$cur->Id?'selected':'' }}>
+{{ $cur->Code }} - {{ $cur->Symbol }}
+</option>
+@endforeach
+</select>
+@error('CurrencyId')<div class="invalid-feedback">{{ $message }}</div>@enderror
+</div>
+
+<div class="col-md-6">
+<label class="form-label">Tax Rule <span class="text-danger">*</span></label>
+<select name="TaxId"
+class="form-select @error('TaxId') is-invalid @enderror">
+<option value="">-- Select Tax Rule --</option>
+@foreach ($taxtypes as $t)
+<option value="{{ $t->Id }}" {{ old('TaxId')==$t->Id?'selected':'' }}>
+{{ $t->taxType->TaxTypeName }} {{ $t->Rate }}
+</option>
+@endforeach
+</select>
+@error('TaxId')<div class="invalid-feedback">{{ $message }}</div>@enderror
+</div>
+
+</div>
+
+{{-- ================= Charges ================= --}}
+
+<div class="row g-3 mb-4">
+
+@php
+$fields = [
+'MonthlyRent'=>'Rent',
+'Deposit'=>'Deposit',
+'ServiceCharge'=>'Service Charge',
+'ParkingFee'=>'Parking Fee',
+'OtherCharges'=>'Other Charges'
+];
+@endphp
+
+@foreach($fields as $name=>$label)
+<div class="col-md-4">
+<label class="form-label">{{ $label }} <span class="text-danger">*</span></label>
+<input type="number" name="{{ $name }}"
+value="{{ old($name) }}"
+class="form-control charge-field @error($name) is-invalid @enderror">
+@error($name)<div class="invalid-feedback">{{ $message }}</div>@enderror
+</div>
+@endforeach
+
+<div class="col-md-4">
+<label class="form-label">Total Payable ((Exclusive of Deposit))</label>
+<input type="number" id="TotalPayable" class="form-control" readonly>
+</div>
+
+</div>
+
+{{-- ================= Due Day ================= --}}
+
+<h5 class="fw-bold border-bottom pb-2 mb-3">Payment Due Date</h5>
+
+<div class="col-md-4 mb-4">
+<input type="number" name="DueDay"
+value="{{ old('DueDay') }}"
+class="form-control @error('DueDay') is-invalid @enderror"
+min="1" max="28">
+@error('DueDay')<div class="invalid-feedback">{{ $message }}</div>@enderror
+</div>
+
+{{-- ================= Special Terms ================= --}}
+
+<h5 class="fw-bold border-bottom pb-2 mb-3">Special Terms</h5>
+
+<textarea name="SpecialTerms"
+class="form-control mb-3 @error('SpecialTerms') is-invalid @enderror"
+rows="3">{{ old('SpecialTerms') }}</textarea>
+
+@error('SpecialTerms')<div class="invalid-feedback mb-3">{{ $message }}</div>@enderror
+
+{{-- ================= Documents ================= --}}
+
+<h5 class="fw-bold border-bottom pb-2 mb-3">Upload Documents</h5>
+
+<input type="file" name="Document[]" multiple
+class="form-control mb-4 @error('Document') is-invalid @enderror">
+
+@error('Document')<div class="invalid-feedback mb-3">{{ $message }}</div>@enderror
+
+<div class="d-flex justify-content-between gap-3">
+<a href="{{ route('addlease.index') }}" class="btn btn-outline-secondary">Cancel</a>
+<button class="btn btn-success">Save Lease</button>
+</div>
+
+</div>
+</div>
+</form>
+</div>
+
+{{-- ================= JS ================= --}}
 
 <script>
 const routes = {
-    getBlocks: "{{ route('getblockbyproperty.lease', ['PropertyId' => '__ID__']) }}",
-    getFloors: "{{ route('getfloorbyblock.lease', ['BlockId' => '__ID__']) }}",
-    getUnits: "{{ route('getunitbyfloor.lease', ['FloorId' => '__ID__']) }}",
-    getPricing: "{{ route('getpricingunit.lease', ['UnitId' => '__ID__']) }}"
+getBlocks:"{{ route('getblockbyproperty.lease',['PropertyId'=>'__ID__']) }}",
+getFloors:"{{ route('getfloorbyblock.lease',['BlockId'=>'__ID__']) }}",
+getUnits:"{{ route('getunitbyfloor.lease',['FloorId'=>'__ID__']) }}",
+getPricing:"{{ route('getpricingunit.lease',['UnitId'=>'__ID__']) }}"
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded',()=>{
 
-    const propertySelect = document.getElementById('property-select');
-    const blockSelect = document.getElementById('block-select');
-    const floorSelect = document.getElementById('floor-select');
-    const unitSelect = document.getElementById('unit-select');
+const ps=document.getElementById('property-select'),
+bs=document.getElementById('block-select'),
+fs=document.getElementById('floor-select'),
+us=document.getElementById('unit-select');
 
-    const chargeFields = document.querySelectorAll('.charge-field');
-    const totalField = document.getElementById('TotalPayable');
+const charges=document.querySelectorAll('.charge-field');
+const total=document.getElementById('TotalPayable');
 
-    const rentInput = document.querySelector('input[name="MonthlyRent"]');
-    const depositInput = document.querySelector('input[name="Deposit"]');
-    const serviceInput = document.querySelector('input[name="ServiceCharge"]');
-    const parkingInput = document.querySelector('input[name="ParkingFee"]');
-    const otherInput = document.querySelector('input[name="OtherCharges"]');
+const reset=(el,label)=>el.innerHTML=`<option value="">-- ${label} --</option>`;
 
-    // ⚡ FIX: Correct selectors (select instead of input)
-    const taxInput = document.querySelector('select[name="TaxId"]');
-    const currencyInput = document.querySelector('select[name="CurrencyId"]');
+ps.addEventListener('change',()=>{
+reset(bs,'Select Block'); reset(fs,'Select Floor'); reset(us,'Select Unit');
+if(!ps.value) return;
+fetch(routes.getBlocks.replace('__ID__',ps.value))
+.then(r=>r.json()).then(d=>{
+d.forEach(b=>bs.innerHTML+=`<option value="${b.Id}">${b.BlockName}</option>`);
+});
+});
 
-    const resetOptions = (select, label) => {
-        select.innerHTML = `<option value="">-- ${label} --</option>`;
-    };
+bs.addEventListener('change',()=>{
+reset(fs,'Select Floor'); reset(us,'Select Unit');
+if(!bs.value) return;
+fetch(routes.getFloors.replace('__ID__',bs.value))
+.then(r=>r.json()).then(d=>{
+d.forEach(f=>fs.innerHTML+=`<option value="${f.Id}">${f.FloorLabel}</option>`);
+});
+});
 
-    // Load Blocks
-    propertySelect.addEventListener('change', function () {
-        resetOptions(blockSelect, 'Select Block');
-        resetOptions(floorSelect, 'Select Floor');
-        resetOptions(unitSelect, 'Select Unit');
+fs.addEventListener('change',()=>{
+reset(us,'Select Unit');
+if(!fs.value) return;
+fetch(routes.getUnits.replace('__ID__',fs.value))
+.then(r=>r.json()).then(d=>{
+d.forEach(u=>us.innerHTML+=`<option value="${u.Id}">${u.UnitCode}</option>`);
+});
+});
 
-        if (this.value) {
-            fetch(routes.getBlocks.replace('__ID__', this.value))
-                .then(res => res.json())
-                .then(blocks => {
-                    blocks.forEach(b =>
-                        blockSelect.insertAdjacentHTML('beforeend',
-                            `<option value="${b.Id}">${b.BlockName}</option>`)
-                    );
-                });
-        }
-    });
+const calc=()=>{
+let t=0; charges.forEach(i=>t+=parseFloat(i.value)||0);
+total.value=t;
+};
+charges.forEach(i=>i.addEventListener('input',calc));
 
-    // Load Floors
-    blockSelect.addEventListener('change', function () {
-        resetOptions(floorSelect, 'Select Floor');
-        resetOptions(unitSelect, 'Select Unit');
-
-        if (this.value) {
-            fetch(routes.getFloors.replace('__ID__', this.value))
-                .then(res => res.json())
-                .then(floors => {
-                    floors.forEach(f =>
-                        floorSelect.insertAdjacentHTML('beforeend',
-                            `<option value="${f.Id}">${f.FloorLabel}</option>`)
-                    );
-                });
-        }
-    });
-
-    // Load Units
-    floorSelect.addEventListener('change', function () {
-        resetOptions(unitSelect, 'Select Unit');
-
-        if (this.value) {
-            fetch(routes.getUnits.replace('__ID__', this.value))
-                .then(res => res.json())
-                .then(units => {
-                    units.forEach(u =>
-                        unitSelect.insertAdjacentHTML('beforeend',
-                            `<option value="${u.Id}">${u.UnitCode}</option>`)
-                    );
-                });
-        }
-    });
-
-    // Auto-fill pricing
-    unitSelect.addEventListener('change', function () {
-
-        if (!this.value) return;
-
-        fetch(routes.getPricing.replace('__ID__', this.value))
-            .then(res => res.json())
-            .then(p => {
-
-                if (!p) return;
-
-                rentInput.value = p.Rent ?? '';
-                depositInput.value = p.DepositAmount ?? '';
-                serviceInput.value = p.ServiceCharge ?? '';
-                parkingInput.value = p.ParkingFee ?? '';
-                otherInput.value = p.OtherCharges ?? '';
-
-                // ⚡ FIX: Now autopopulates correctly
-                taxInput.value = p.TaxId ?? '';
-                currencyInput.value = p.CurrencyId ?? '';
-
-                calculateTotal();
-            });
-    });
-
-    // Calculate total
-    const calculateTotal = () => {
-        let total = 0;
-        chargeFields.forEach(i => total += parseFloat(i.value) || 0);
-        totalField.value = total;
-    };
-
-    chargeFields.forEach(i => i.addEventListener('input', calculateTotal));
 });
 </script>
 

@@ -21,6 +21,11 @@ class TransactionService
     /** Target table (matches your migration) */
     protected string $txTable = 't_FinancialTransactions';
 
+    public function __construct(
+        protected ThirdPartyTransactionPostingService $thirdPartyPostingService
+    ) {
+    }
+
     /* ============================================================
      | Public API
      * ============================================================ */
@@ -134,6 +139,45 @@ class TransactionService
 
         // 9) Persist atomically
         return $this->persist($lines, ['batch' => $batch]);
+    }
+
+    /**
+     * Post fully prepared transaction lines (e.g. journal approval flow).
+     * Each line should include DRCR + Amount + GLAccountID + BranchID and core metadata.
+     */
+    public function postTransactionLines(array $lines, array $options = []): array
+    {
+        if (empty($lines)) {
+            throw new \InvalidArgumentException('No lines to post.');
+        }
+
+        $batch = $options['batch'] ?? $this->generateBatchNumber();
+        $externalIdempotencyKey = trim((string) ($options['external_idempotency_key'] ?? ''));
+        if ($externalIdempotencyKey === '') {
+            $externalIdempotencyKey = (string) Str::uuid();
+        }
+
+        $normalized = array_map(function (array $line) use ($externalIdempotencyKey) {
+            if (empty($line['IdempotencyKey'])) {
+                $line['IdempotencyKey'] = $externalIdempotencyKey;
+            }
+
+            if (array_key_exists('Amount', $line)) {
+                $line['Amount'] = abs((float) $line['Amount']);
+            }
+
+            return $line;
+        }, $lines);
+
+        $normalized = $this->ensureAuditAndBatch($normalized, $batch);
+        $this->validateLines($normalized);
+        $this->assertBalanced($normalized);
+
+        return $this->persist($normalized, [
+            'batch' => $batch,
+            'sync_third_party' => (bool) ($options['sync_third_party'] ?? false),
+            'external_idempotency_key' => $externalIdempotencyKey,
+        ]);
     }
 
     /**
@@ -349,7 +393,8 @@ class TransactionService
         $batch = $options['batch'] ?? null;
         $ids = [];
 
-        DB::transaction(function () use ($lines, $batch, &$ids) {
+        DB::transaction(function () use ($lines, $batch, $options, &$ids) {
+            $postedLines = [];
             foreach ($lines as $line) {
                 // Ensure Amount sign convention: DR -> negative, CR -> positive
                 $isDebit = array_key_exists('IsDebit', $line)
@@ -362,9 +407,18 @@ class TransactionService
                 // 1) insert one line, get its ID
                 $trxId = DB::table($this->txTable)->insertGetId($storageLine);
                 $ids[] = $trxId;
+                $postedLines[] = $storageLine + ['Id' => $trxId];
 
                 // 2) update balances for that line (use abs amount internally)
                 $this->updateBalanceForLine($trxId, $storageLine);
+            }
+
+            $syncThirdParty = (bool) ($options['sync_third_party'] ?? false);
+            if ($syncThirdParty && $this->thirdPartyPostingService->isEnabled()) {
+                $this->thirdPartyPostingService->postTransactions(
+                    $postedLines,
+                    $options['external_idempotency_key'] ?? null
+                );
             }
 
             // 3) audit

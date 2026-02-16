@@ -306,7 +306,6 @@ class PurchaseOrderController extends Controller
                         }
                     }
                 } catch (\Exception $e) {
-
                 }
             }
 
@@ -1127,26 +1126,26 @@ class PurchaseOrderController extends Controller
             // Use t_Suppliers as the source of active status
             // Correct logic: t_Suppliers -> t_SupplierMaster -> t_ThirdParties
             $suppliers = DB::table('t_Suppliers as s')
-    ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
-    ->join('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
-    ->where('s.Active_Status', 1)
-    ->whereNull('s.DeletedOn')
-    ->groupBy(
-        'sm.Id',
-        'tp.Id',
-        'tp.TradingName',
-        'tp.ThirdPartyName',
-        'tp.PhysicalAddress'
-    )
-    ->select(
-        DB::raw('MIN(s.Id) as SupplierId'),
-        'sm.Id as SupplierMasterId',
-        'tp.Id as ThirdPartyId',
-        DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName, '') as SupplierName"),
-        DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
-    )
-    ->orderBy('SupplierName')
-    ->get();
+            ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+            ->join('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
+            ->where('s.Active_Status', 1)
+            ->whereNull('s.DeletedOn')
+            ->groupBy(
+                'sm.Id',
+                'tp.Id',
+                'tp.TradingName',
+                'tp.ThirdPartyName',
+                'tp.PhysicalAddress'
+            )
+            ->select(
+                DB::raw('MIN(s.Id) as SupplierId'),
+                'sm.Id as SupplierMasterId',
+                'tp.Id as ThirdPartyId',
+                DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName, '') as SupplierName"),
+                DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
+            )
+            ->orderBy('SupplierName')
+            ->get();
 
             return response()->json([
                 'success' => true,

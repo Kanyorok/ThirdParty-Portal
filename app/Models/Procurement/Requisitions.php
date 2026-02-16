@@ -5,6 +5,7 @@ namespace App\Models\Procurement;
 use App\Enums\WorkflowStatus;
 use App\Models\Core\Approval\WorkflowHistory;
 use App\Models\Core\Approval\WorkflowPending;
+use App\Models\Core\Branch;
 use App\Models\Inventory\TransactionTransfer;
 use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 use App\Traits\Model\UserActorTrait;
@@ -139,5 +140,10 @@ class Requisitions extends Model
             'SourceID', // The morph id column
             'Id'        // Local key
         );
+    }
+
+    public function requestingBranch()
+    {
+        return $this->belongsTo(Branch::class, 'BranchID', 'Id');
     }
 }

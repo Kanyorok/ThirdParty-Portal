@@ -326,7 +326,6 @@ class BudgetReallocationController extends Controller
             // Helper to insert pending monthly limits
             $insertLimits = function (array $arr, BudgetLine $line, int $reallocId, $ledgerID) use ($validated, $months) {
                 foreach ($arr as $idx => $val) {
-
                     $month = $months[(int)$idx] ?? null;
 
                     $erpLedgerId = BudgetLinesGLAccount::where('BudgetLineID', $line->Id)->pluck('BudgetGLAccountID')->first();

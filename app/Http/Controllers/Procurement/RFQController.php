@@ -652,7 +652,6 @@ class RFQController extends Controller
                 'supplier_count' => $suppliers->count(),
                 'suppliers' => $suppliers->toArray(),
             ]);
-
         }
 
         return view('procurement.rfqs.show', compact('rfq', 'suppliers', 'rfqResponses', 'canApprove', 'history', 'pendingApprovals'));

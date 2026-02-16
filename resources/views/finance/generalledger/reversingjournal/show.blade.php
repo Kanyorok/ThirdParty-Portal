@@ -213,11 +213,16 @@
                     <p class="journal-subtitle">Reference: {{ $journalEntry->RefNo }}</p>
                 </div>
                 <div class="status-badge">
-                    @if($journalEntry->ApprovalStatus == 'posted')
+                    @php
+                        $approvalStatus = strtolower((string)($journalEntry->ApprovalStatus ?? ''));
+                        $entryStatus = strtolower((string)($journalEntry->Status ?? ''));
+                        $isDraftForApproval = in_array($approvalStatus, ['', 'draft'], true) || $entryStatus === 'draft';
+                    @endphp
+                    @if($approvalStatus === 'posted')
                         <span class="badge bg-success">Approved</span>
-                    @elseif($journalEntry->ApprovalStatus == 'rejected')
+                    @elseif($approvalStatus === 'rejected')
                         <span class="badge bg-danger">Rejected</span>
-                    @elseif($journalEntry->ApprovalStatus == 'draft')
+                    @elseif($isDraftForApproval)
                         <span class="badge bg-warning text-dark">Pending</span>
                     @endif
                 </div>
@@ -226,7 +231,7 @@
                 <i class="fas fa-print me-2"></i>Print Journal
             </button>
         </div>
-            <div class="card-body">
+            <div class="position-relative px-3 pb-3">
                 {{-- Top Row: Journal Info + Audit Trail --}}
                 <div class="row mb-3 g-3">
                     <div class="col-lg-6">
@@ -260,8 +265,8 @@
                                 @if($journalEntry->ModifiedBy && $journalEntry->ModifiedBy != $journalEntry->CreatedBy)
                                     <li><span class="label">Last Modified By</span><span>{{ $journalEntry->modifiedBy->Name ?? 'System' }} — {{ \Carbon\Carbon::parse($journalEntry->ModifiedOn)->format('d M Y H:i') }}</span></li>
                                 @endif
-                                @if($journalEntry->ApprovalStatus == 'posted' || $journalEntry->ApprovalStatus == 'rejected')
-                                    <li><span class="label">Approval Action</span><span>{{ ucfirst($journalEntry->ApprovalStatus) }} by {{ $journalEntry->modifiedBy->Name ?? $journalEntry->createdBy->Name ?? 'System' }} — {{ \Carbon\Carbon::parse($journalEntry->ModifiedOn)->format('d M Y H:i') }}</span></li>
+                                @if(in_array($approvalStatus, ['posted', 'rejected'], true))
+                                    <li><span class="label">Approval Action</span><span>{{ ucfirst($approvalStatus) }} by {{ $journalEntry->modifiedBy->Name ?? $journalEntry->createdBy->Name ?? 'System' }} — {{ \Carbon\Carbon::parse($journalEntry->ModifiedOn)->format('d M Y H:i') }}</span></li>
                                 @endif
                                 @if($journalEntry->Type === 'reversing')
                                     <li><span class="label">Reversal Journal</span><span>This is a reversing journal — {{ \Carbon\Carbon::parse($journalEntry->CreatedOn)->format('d M Y H:i') }}</span></li>
@@ -314,7 +319,7 @@
                 </div>
 
                 {{-- Action Buttons --}}
-                @if($journalEntry->ApprovalStatus=='draft')
+                @if($isDraftForApproval)
                     <div class="mt-4 d-flex justify-content-end gap-3">
                         <button class="btn btn-outline-danger" data-bs-toggle="modal"
                                 data-bs-target="#actionRejectModal" data-action="reject">
@@ -338,7 +343,7 @@
     </div>
 
 
-    @if($journalEntry->ApprovalStatus=='draft')
+    @if($isDraftForApproval)
         {{-- Approve Modal --}}
         <div class="modal fade" id="actionApproveModal" tabindex="-1" aria-labelledby="actionModalLabel"
              aria-hidden="true">

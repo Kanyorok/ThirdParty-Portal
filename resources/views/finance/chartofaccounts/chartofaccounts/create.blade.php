@@ -1,5 +1,8 @@
 @extends('layouts.app')
 @section('title', 'New GL Account')
+@section('styles')
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+@endsection
 @section('content')
 
     @if ($errors->any())
@@ -45,13 +48,28 @@
 
                         <div class="mb-3 col-md-6">
                             <label>Currency</label>
-                            <select name="Currency" class="form-select" required>
+                            <select name="Currency" id="Currency" class="form-select" required>
+                                <option value="" disabled {{ old('Currency') ? '' : 'selected' }}>-- Select Currency --</option>
                                 @foreach($currencies as $currency)
-                                    <option value="{{$currency->Id}}">{{$currency->Code}}</option>
+                                    <option value="{{$currency->Id}}" {{ old('Currency') == $currency->Id ? 'selected' : '' }}>{{$currency->Code}}</option>
                                 @endforeach
                             </select>
                         </div>
                     </div>
+
+                    @if(!empty($allowThirdPartyPosting))
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="MappedGLCode">Map GL from Nimble <span class="text-danger">*</span></label>
+                                <select name="MappedGLCode" id="MappedGLCode" class="form-select" required>
+                                    @if(old('MappedGLCode'))
+                                        <option value="{{ old('MappedGLCode') }}" selected>{{ old('MappedGLCode') }}</option>
+                                    @endif
+                                </select>
+                                <small class="text-muted">Select currency first, then search by GL code or name to map the matching Nimble GL account.</small>
+                            </div>
+                        </div>
+                    @endif
 
                     <div class="row mb-3">
                         <div class="col-md-4">
@@ -108,11 +126,14 @@
 @endsection
 
 @section('scripts')
+        <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 const accountType = document.getElementById('accountType');
                 const typeGroup = document.getElementById('typeGroup');
                 const subType = document.getElementById('subType');
+                const currencySelect = document.getElementById('Currency');
+                const mappedSelectElement = document.getElementById('MappedGLCode');
 
                 // Reset child selects initially
                 typeGroup.innerHTML = '<option disabled selected>-- GL Account Type --</option>';
@@ -158,7 +179,70 @@
                             subType.innerHTML = '<option disabled selected>-- Error Loading --</option>';
                         });
                 });
+
+                if (currencySelect && mappedSelectElement) {
+                    const refreshMappedState = function () {
+                        const hasCurrency = !!currencySelect.value;
+                        mappedSelectElement.disabled = !hasCurrency;
+                        mappedSelectElement.required = hasCurrency;
+                    };
+
+                    refreshMappedState();
+
+                    currencySelect.addEventListener('change', function () {
+                        if (window.jQuery && $.fn.select2) {
+                            $('#MappedGLCode').val(null).trigger('change');
+                        } else {
+                            mappedSelectElement.value = '';
+                        }
+                        refreshMappedState();
+                    });
+                }
             });
+
+            (function () {
+                if (!(window.jQuery && $.fn.select2)) {
+                    return;
+                }
+
+                const mappedSelect = $('#MappedGLCode');
+                if (!mappedSelect.length) {
+                    return;
+                }
+
+                mappedSelect.select2({
+                    placeholder: 'Search by GL code or name',
+                    allowClear: true,
+                    width: '100%',
+                    ajax: {
+                        url: @json(route('chartofaccounts.mapping.search')),
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return {
+                                q: params.term || '',
+                                currency_id: $('#Currency').val() || ''
+                            };
+                        },
+                        processResults: function (data) {
+                            return { results: data.results || [] };
+                        },
+                        cache: true,
+                    },
+                    templateResult: function (data) {
+                        if (!data.id) return data.text;
+                        const code = data.code || data.id || '';
+                        const name = data.name || '';
+                        return $('<div><strong>' + code + '</strong> <small class="text-muted">(' + name + ')</small></div>');
+                    },
+                    templateSelection: function (data) {
+                        if (!data.id) return data.text;
+                        const code = data.code || data.id || '';
+                        const name = data.name || '';
+                        return code && name ? (code + ' (' + name + ')') : (data.text || code);
+                    }
+                });
+            })();
         </script>
 
 @endsection
