@@ -41,11 +41,6 @@ class Department extends Model
         return $this->hasMany(Employee::class, 'DepartmentID', 'Id');
     }
 
-    public function employees()
-    {
-        return $this->hasMany(Employee::class, 'DepartmentId', 'Id');
-    }
-
     public static function getPrimaryKey(): string
     {
         return 'DepartmentID';
