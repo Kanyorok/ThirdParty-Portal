@@ -132,6 +132,14 @@ class DocumentController extends Controller
         if ($document->RepositoryId !== $repository->Id) {
             return $this->errored('file not found');
         }
+        $service = new DocumentService($document);
+        if ($service->isHold()) {
+            return $this->errored('document is on legal hold');
+        }
+
+        if ($service->isCheckedOut()) {
+            return $this->errored('document is checked out');
+        }
 
         try {
             return DB::transaction(function () use ($repository, $document) {
