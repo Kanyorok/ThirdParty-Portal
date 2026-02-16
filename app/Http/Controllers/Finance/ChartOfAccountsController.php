@@ -10,8 +10,8 @@ use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Branch;
 use App\Models\Core\Currency;
 use App\Models\Finance\FinanceGLAccounts;
-use App\Models\Finance\FinanceGLSyncRun;
 use App\Models\Finance\FinanceGLSubAccountTypes;
+use App\Models\Finance\FinanceGLSyncRun;
 use App\Models\Finance\FinanceGLTypeGroup;
 use App\Models\Finance\FinanceSyncGLAccount;
 use App\Models\Finance\GLBranch;
@@ -217,7 +217,7 @@ class ChartOfAccountsController extends Controller
             FILTER_VALIDATE_BOOLEAN
         );
 
-        if (!$allowThirdPartyPosting) {
+        if (! $allowThirdPartyPosting) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -568,7 +568,7 @@ class ChartOfAccountsController extends Controller
         $mappedGlCode = old('MappedGLCode', $gl->MappedGLCode);
         $mappedGlOption = null;
 
-        if ($allowThirdPartyPosting && !empty($mappedGlCode)) {
+        if ($allowThirdPartyPosting && ! empty($mappedGlCode)) {
             $mappedGl = FinanceSyncGLAccount::query()
                 ->where('GLCode', $mappedGlCode)
                 ->select('GLCode', 'GLName')

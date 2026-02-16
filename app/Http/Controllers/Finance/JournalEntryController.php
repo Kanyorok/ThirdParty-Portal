@@ -25,8 +25,7 @@ class JournalEntryController extends Controller
     public function __construct(
         ApprovalWorkflow $workflowService,
         ThirdPartyTransactionPostingService $thirdPartyPostingService
-    )
-    {
+    ) {
         $this->workflowService = $workflowService;
         $this->thirdPartyPostingService = $thirdPartyPostingService;
     }

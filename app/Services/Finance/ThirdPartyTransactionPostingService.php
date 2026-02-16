@@ -40,6 +40,7 @@ class ThirdPartyTransactionPostingService
             $drcr = strtoupper((string) ($transaction['DRCR'] ?? ''));
             if (! in_array($drcr, ['DR', 'CR'], true)) {
                 $issues[] = "Line {$lineNo}: DR/CR indicator is missing.";
+
                 continue;
             }
 
@@ -49,18 +50,21 @@ class ThirdPartyTransactionPostingService
 
             if (! $gl) {
                 $issues[] = "Line {$lineNo} ({$erpGlCode}): ERP GL account is missing.";
+
                 continue;
             }
 
             $mappedGlCode = trim((string) ($gl->MappedGLCode ?? ''));
             if ($mappedGlCode === '') {
                 $issues[] = "Line {$lineNo} ({$erpGlCode}): Mapped Nimble GL is missing.";
+
                 continue;
             }
 
             $nimbleGl = $nimbleAccounts->get($mappedGlCode);
             if (! $nimbleGl) {
                 $issues[] = "Line {$lineNo} ({$erpGlCode}): Mapped Nimble GL {$mappedGlCode} was not found in synced GL list.";
+
                 continue;
             }
 
@@ -250,6 +254,7 @@ class ThirdPartyTransactionPostingService
             $branchCode = trim((string) ($branchCodes[$branchPk] ?? ''));
             if ($branchCode === '' || $branchCode === '000') {
                 $resolved = $branchCode === '' ? 'empty' : $branchCode;
+
                 throw new RuntimeException(
                     'Invalid Nimble branch mapping for ERP branch ID ' . $branchPk
                     . ' (resolved code: ' . $resolved . '). '
@@ -294,6 +299,7 @@ class ThirdPartyTransactionPostingService
                 if ((float) $credit['remaining'] <= 0) {
                     $creditIndex++;
                 }
+
                 continue;
             }
 
@@ -440,4 +446,3 @@ class ThirdPartyTransactionPostingService
         return (string) $accessToken;
     }
 }
-
