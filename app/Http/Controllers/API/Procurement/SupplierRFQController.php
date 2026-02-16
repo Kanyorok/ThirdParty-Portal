@@ -4,143 +4,291 @@ namespace App\Http\Controllers\API\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\RFQ;
+use App\Models\Procurement\RFQClarification;
+use App\Models\Procurement\RFQLine;
+use App\Models\Procurement\RFQResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
-//use App\Services\Procurement\SupplierRFQService;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class SupplierRFQController extends Controller
 {
-    /*protected SupplierRFQService $rfqService;
-
-    public function __construct(SupplierRFQService $rfqService)
+    protected function thirdPartyUser()
     {
-        $this->rfqService = $rfqService;
-    }*/
+        return Auth::guard('third_party')->user()
+            ?? Auth::guard('sanctum')->user()
+            ?? Auth::user();
+    }
 
-    /**
-     * Get all RFQ invitations for authenticated supplier
-     */
-    /**
-     * Get all RFQ invitations for authenticated supplier
-     */
+    protected function supplierIdsForUser($user)
+    {
+        return DB::table('t_Suppliers as s')
+            ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+            ->where('sm.ThirdPartyId', $user->ThirdPartyId)
+            ->where('s.Active_Status', 1)
+            ->whereNull('s.DeletedOn')
+            ->whereNull('sm.DeletedOn')
+            ->pluck('s.Id');
+    }
+
+    protected function toDateString(mixed $value): ?string
+    {
+        if (! $value) {
+            return null;
+        }
+
+        try {
+            return \Illuminate\Support\Carbon::parse($value)->toDateString();
+        } catch (\Throwable) {
+            return (string)$value;
+        }
+    }
+
+    protected function generateRFQResponseNumber(): string
+    {
+        $prefix = 'RFQRE-';
+
+        $last = RFQResponse::where('RFQResponseNumber', 'like', $prefix . '%')
+            ->orderByDesc('Id')
+            ->first();
+
+        $lastNumber = $last?->RFQResponseNumber
+            ? (int)Str::after($last->RFQResponseNumber, $prefix)
+            : 0;
+
+        return $prefix . str_pad((string)($lastNumber + 1), 5, '0', STR_PAD_LEFT);
+    }
+
+    protected function supplierNameForSupplierId(int $supplierId): ?string
+    {
+        return DB::table('t_Suppliers as s')
+            ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+            ->leftJoin('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
+            ->where('s.Id', $supplierId)
+            ->whereNull('s.DeletedOn')
+            ->whereNull('sm.DeletedOn')
+            ->selectRaw("COALESCE(tp.TradingName, tp.ThirdPartyName) as SupplierName")
+            ->value('SupplierName');
+    }
+
+    protected function normalizeSubmitResponsePayload(Request $request): void
+    {
+        $data = $request->all();
+        $merge = [];
+
+        if (! array_key_exists('rfqId', $data)) {
+            $merge['rfqId'] = $data['RFQId'] ?? $data['rfq_id'] ?? $data['rfqID'] ?? null;
+        }
+
+        if (! array_key_exists('supplierId', $data)) {
+            $merge['supplierId'] = $data['SupplierId'] ?? null;
+        }
+
+        if (! array_key_exists('currency', $data)) {
+            $merge['currency'] = $data['Currency'] ?? null;
+        }
+
+        if (! array_key_exists('durationDays', $data)) {
+            $merge['durationDays'] = $data['DurationDays'] ?? $data['duration_days'] ?? null;
+        }
+
+        if (! array_key_exists('isDraft', $data)) {
+            $merge['isDraft'] = $data['IsDraft'] ?? null;
+        }
+
+        if (! array_key_exists('items', $data)) {
+            $rawItems = $data['RequisitionItems'] ?? $data['items'] ?? null;
+
+            if (is_array($rawItems)) {
+                $merge['items'] = collect($rawItems)->map(function ($it) {
+                    if (! is_array($it)) {
+                        return $it;
+                    }
+
+                    return [
+                        'rfqLineId' => $it['rfqLineId'] ?? $it['RFQLineId'] ?? $it['id'] ?? $it['Id'] ?? null,
+                        'quotedPrice' => $it['quotedPrice'] ?? $it['quotedprice'] ?? $it['QuotedPrice'] ?? null,
+                        'totalPayable' => $it['totalPayable'] ?? $it['totalpayable'] ?? $it['TotalPayable'] ?? null,
+                    ];
+                })->toArray();
+            }
+        }
+
+        if (! empty($merge)) {
+            $request->merge($merge);
+        }
+    }
+
     public function listInvitations(Request $request): JsonResponse
     {
         try {
-            $user = Auth::guard('sanctum')->user();
-            $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
+            $user = $this->thirdPartyUser();
 
-            if (!$thirdPartyId) {
+            if (! $user || ! isset($user->ThirdPartyId)) {
                 return response()->json(['data' => []]);
             }
 
-            // FIXED: Get supplier IDs through SupplierMaster
-            $mySupplierIds = DB::table('t_Suppliers as s')
-                ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
-                ->where('sm.ThirdPartyId', $thirdPartyId)
-                ->where('s.Active_Status', 1)
-                ->whereNull('s.DeletedOn')
-                ->whereNull('sm.DeletedOn')
-                ->pluck('s.Id');
+            $supplierIds = $this->supplierIdsForUser($user);
 
-            $invitations = DB::table('t_RFQ_Supplier as p')
-                ->join('t_RFQ as r', 'r.Id', '=', 'p.RFQId')
-                ->whereIn('p.SupplierId', $mySupplierIds)
+            if ($supplierIds->isEmpty()) {
+                return response()->json(['data' => []]);
+            }
+
+            $invitations = DB::table('t_RFQ_Supplier as rs')
+                ->join('t_RFQ as r', 'r.Id', '=', 'rs.RFQId')
+                ->whereIn('rs.SupplierId', $supplierIds)
+                ->whereNull('r.DeletedOn')
                 ->select(
                     'r.Id as rfqId',
-                    'r.RFQNumber as number',
+                    'r.RFQNumber as rfqNumber',
                     'r.Comments as comments',
                     'r.Status as status',
                     'r.SubmissionDeadline as submissionDeadline',
-                    'p.Status as invitationStatus'
+                    'rs.SupplierId as supplierId',
+                    'rs.Status as invitationStatus'
                 )
                 ->orderByDesc('r.Id')
                 ->get();
 
-            return response()->json(['data' => $invitations]);
+            $rfqIds = $invitations->pluck('rfqId')->unique()->values();
 
-        } catch (\Exception $e) {
-            Log::error('Error fetching RFQ invitations: ' . $e->getMessage());
-            return response()->json([
-                'error' => 'Internal Server Error',
-                'message' => 'An error occurred while fetching RFQ invitations'
-            ], 500);
+            $rfqs = RFQ::query()
+                ->whereIn('Id', $rfqIds)
+                ->with([
+                    'rfqLines.uom',
+                    'rfqLines.category',
+                    'sections.section',
+                    'criteria.criteria',
+                    'criteria.section',
+                    'requisition',
+                    'statusDetail',
+                ])
+                ->get()
+                ->keyBy('Id');
+
+            $responses = RFQResponse::query()
+                ->whereIn('RFQId', $rfqIds)
+                ->whereIn('SupplierId', $supplierIds)
+                ->whereNull('DeletedOn')
+                ->with(['items.uom'])
+                ->orderByDesc('Id')
+                ->get()
+                ->groupBy(fn ($r) => $r->RFQId . '|' . $r->SupplierId)
+                ->map(fn ($group) => $group->first());
+
+            $data = $invitations->map(function ($inv) use ($rfqs, $responses) {
+                $rfq = $rfqs->get($inv->rfqId);
+                $myResponse = $responses->get($inv->rfqId . '|' . $inv->supplierId);
+
+                return [
+                    'rfqId' => (string)$inv->rfqId,
+                    'rfqNumber' => $inv->rfqNumber,
+                    'comments' => $inv->comments,
+                    'status' => $inv->status,
+                    'submissionDeadline' => $this->toDateString($inv->submissionDeadline),
+                    'supplierId' => (string)$inv->supplierId,
+                    'invitationStatus' => $inv->invitationStatus,
+                    'rfq' => $rfq,
+                    'myResponse' => $myResponse,
+                ];
+            });
+
+            return response()->json(['data' => $data]);
+        } catch (\Throwable $e) {
+            Log::error('listInvitations failed', ['error' => $e->getMessage()]);
+
+            return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
 
-    /**
-     * Get detailed RFQ invitation
-     */
     public function getInvitation(int|string $rfq): JsonResponse
     {
         try {
-            $rfqId = (int) $rfq;
-            $user = Auth::guard('sanctum')->user();
-            $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
+            $user = $this->thirdPartyUser();
 
-            if (!$thirdPartyId) {
+            if (! $user || ! isset($user->ThirdPartyId)) {
                 return response()->json(['error' => 'Authentication required'], 401);
             }
 
-            $rfq = RFQ::find($rfqId); // Assuming RFQ model interprets 't_RFQ'
-            // If RFQ model not imported or alias issue, ensure 'use App\Models\Procurement\RFQ;' is present or use DB.
-            if (!$rfq) {
-                 return response()->json(['error' => 'RFQ not found'], 404);
-            }
+            $supplierIds = $this->supplierIdsForUser($user);
 
-            // FIXED: Get supplier IDs through SupplierMaster
-            $mySupplierIds = DB::table('t_Suppliers as s')
-                ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
-                ->where('sm.ThirdPartyId', $thirdPartyId)
-                ->where('s.Active_Status', 1)
-                ->whereNull('s.DeletedOn')
-                ->whereNull('sm.DeletedOn')
-                ->pluck('s.Id');
-
-            $invitation = DB::table('t_RFQ_Supplier')
-                ->where('RFQId', $rfqId)
-                ->whereIn('SupplierId', $mySupplierIds)
-                ->select('SupplierId', 'Status', 'CreatedOn', 'ModifiedOn')
+            $invitation = DB::table('t_RFQ_Supplier as rs')
+                ->join('t_RFQ as r', 'r.Id', '=', 'rs.RFQId')
+                ->where('rs.RFQId', (int)$rfq)
+                ->whereIn('rs.SupplierId', $supplierIds)
+                ->whereNull('r.DeletedOn')
+                ->select(
+                    'r.Id as rfqId',
+                    'r.RFQNumber as rfqNumber',
+                    'r.Comments as comments',
+                    'r.Status as status',
+                    'r.SubmissionDeadline as submissionDeadline',
+                    'rs.SupplierId as supplierId',
+                    'rs.Status as invitationStatus',
+                    'rs.CreatedOn',
+                    'rs.ModifiedOn'
+                )
                 ->first();
 
-            if (!$invitation) {
-                return response()->json([
-                    'error' => 'Not Found',
-                    'message' => 'RFQ not found or you do not have access to it'
-                ], 404);
+            if (! $invitation) {
+                return response()->json(['error' => 'Not Found'], 404);
             }
 
-            return response()->json([
-                'success' => true,
-                ...(array)$invitation
-            ]);
+            $rfqModel = RFQ::query()
+                ->where('Id', (int)$rfq)
+                ->with([
+                    'rfqLines.uom',
+                    'rfqLines.category',
+                    'sections.section',
+                    'criteria.criteria',
+                    'criteria.section',
+                    'requisition',
+                    'statusDetail',
+                ])
+                ->first();
 
-        } catch (\Exception $e) {
-            Log::error('Error fetching RFQ invitation details', [
-                'rfq_id' => $rfq,
-                'user_id' => Auth::id(),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            $myResponse = RFQResponse::query()
+                ->where('RFQId', (int)$rfq)
+                ->where('SupplierId', (int)$invitation->supplierId)
+                ->whereNull('DeletedOn')
+                ->with(['items.uom'])
+                ->orderByDesc('Id')
+                ->first();
 
             return response()->json([
-                'error' => 'Internal Server Error',
-                'message' => 'An error occurred while fetching RFQ details'
-            ], 500);
+                'data' => [
+                    'rfqId' => (string)$invitation->rfqId,
+                    'rfqNumber' => $invitation->rfqNumber,
+                    'comments' => $invitation->comments,
+                    'status' => $invitation->status,
+                    'submissionDeadline' => $this->toDateString($invitation->submissionDeadline),
+                    'supplierId' => (string)$invitation->supplierId,
+                    'invitationStatus' => $invitation->invitationStatus,
+                    'invitedOn' => $invitation->CreatedOn ?? null,
+                    'invitationUpdatedOn' => $invitation->ModifiedOn ?? null,
+                    'rfq' => $rfqModel,
+                    'myResponse' => $myResponse,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('getInvitation failed', ['rfq' => $rfq, 'error' => $e->getMessage()]);
+
+            return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
 
-    /**
-     * Submit RFQ response
-     */
     public function submitResponse(Request $request): JsonResponse
     {
         try {
-            $request->validate([
+            $this->normalizeSubmitResponsePayload($request);
+
+            $validated = $request->validate([
                 'rfqId' => 'required|integer|exists:t_RFQ,Id',
+                'supplierId' => 'sometimes|integer',
                 'currency' => 'required|string|max:3',
                 'durationDays' => 'required|integer|min:1',
                 'items' => 'required|array|min:1',
@@ -150,153 +298,248 @@ class SupplierRFQController extends Controller
                 'isDraft' => 'sometimes|boolean',
             ]);
 
-            $user = Auth::guard("sanctum")->user();
-            $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
-            if (!$thirdPartyId) {
-                return response()->json(["error" => "Authentication required"], 401);
+            $user = $this->thirdPartyUser();
+
+            if (! $user || ! isset($user->ThirdPartyId)) {
+                return response()->json(['error' => 'Authentication required'], 401);
             }
 
-            // Fix: Assuming RFQ model exists
-            $rfq = \App\Models\Procurement\RFQ::find($request->rfqId);
-            if (!$rfq) {
+            $supplierIds = $this->supplierIdsForUser($user);
+
+            $supplierIdQuery = DB::table('t_RFQ_Supplier')
+                ->where('RFQId', $validated['rfqId'])
+                ->whereIn('SupplierId', $supplierIds);
+
+            if (! empty($validated['supplierId'])) {
+                $supplierIdQuery->where('SupplierId', (int)$validated['supplierId']);
+            }
+
+            $supplierId = $supplierIdQuery->value('SupplierId');
+
+            if (! $supplierId) {
+                return response()->json(['error' => 'No invitation found'], 403);
+            }
+
+            $rfqModel = RFQ::query()->where('Id', $validated['rfqId'])->first();
+
+            if (! $rfqModel) {
                 return response()->json(['error' => 'RFQ not found'], 404);
             }
 
-            // FIXED: Get supplier IDs through SupplierMaster
-            $mySupplierIds = DB::table('t_Suppliers as s')
-                ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
-                ->where('sm.ThirdPartyId', $thirdPartyId)
-                ->where('s.Active_Status', 1)
-                ->whereNull('s.DeletedOn')
-                ->whereNull('sm.DeletedOn')
-                ->pluck('s.Id');
-
-            $supplierId = DB::table('t_RFQ_Supplier')
-                ->where('RFQId', $rfq->Id)
-                ->whereIn('SupplierId', $mySupplierIds)
-                ->min('SupplierId');
-
-            if (!$supplierId) {
-                return response()->json(['error' => 'No invitation found for this supplier'], 403);
+            // Check Submission Deadline
+            if ($rfqModel->SubmissionDeadline && \Carbon\Carbon::parse($rfqModel->SubmissionDeadline)->isPast()) {
+                return response()->json([
+                    'error' => 'The submission deadline for this RFQ has passed. Responses can no longer be submitted.',
+                ], 422);
             }
 
-            // FIXED: Get trading name through SupplierMaster
-            $tradingName = DB::table('t_Suppliers as s')
-                ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
-                ->join('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
-                ->where('s.Id', $supplierId)
-                ->value('tp.TradingName');
+            $rfqLineIds = collect($validated['items'])->pluck('rfqLineId')->unique()->values();
 
-            // $actor = SystemHelper::user(); // Assuming SystemHelper is not imported or needed for API if we use Auth
-            $actorId = $user->Id ?? 0; // Fallback
+            $rfqLines = RFQLine::query()
+                ->where('RFQId', $validated['rfqId'])
+                ->whereIn('Id', $rfqLineIds)
+                ->get()
+                ->keyBy('Id');
 
-            $existing = \App\Models\Procurement\RFQResponse::where('RFQId', $rfq->Id)
+            $missingLineIds = $rfqLineIds->reject(fn ($id) => $rfqLines->has($id))->values();
+            if ($missingLineIds->isNotEmpty()) {
+                return response()->json([
+                    'error' => 'Invalid rfqLineId(s) for this rfqId',
+                    'missingRfqLineIds' => $missingLineIds,
+                ], 422);
+            }
+
+            $existing = RFQResponse::where('RFQId', $validated['rfqId'])
                 ->where('SupplierId', $supplierId)
                 ->whereNull('DeletedOn')
                 ->first();
 
-            if ($existing && strtoupper($existing->Status ?? 'FINAL') === 'FINAL') {
-                 return response()->json([
-                    'error' => 'Already Submitted',
-                    'message' => 'Response already submitted'
-                ], 409);
+            if ($existing && strtoupper($existing->Status) === 'FINAL') {
+                return response()->json(['error' => 'Already submitted'], 409);
             }
 
-            // Logic to save response would go here (truncated in original file? Assuming placeholder)
-             return response()->json(['message' => 'Response submitted successfully'], 200);
+            DB::beginTransaction();
 
-        } catch (\Exception $e) {
-             return response()->json([
-                'error' => 'Internal Server Error',
-                'message' => $e->getMessage()
-            ], 500);
+            $status = ($validated['isDraft'] ?? false) ? 'DRAFT' : 'FINAL';
+            $totalPayable = collect($validated['items'])->sum('totalPayable');
+            $supplierName = $this->supplierNameForSupplierId((int)$supplierId);
+
+            $response = $existing ?? RFQResponse::create([
+                'RFQId' => $validated['rfqId'],
+                'RFQResponseNumber' => $this->generateRFQResponseNumber(),
+                'RFQNumber' => $rfqModel->RFQNumber,
+                'SupplierId' => $supplierId,
+                'SupplierName' => $supplierName,
+                'TotalPayable' => $totalPayable,
+                'Currency' => $validated['currency'],
+                'DurationDays' => $validated['durationDays'],
+                'Status' => $status,
+                'SubmittedOn' => now(),
+                'CreatedBy' => $user->Id,
+                'ModifiedBy' => $user->Id,
+            ]);
+
+            if ($existing) {
+                $response->update([
+                    'RFQResponseNumber' => $response->RFQResponseNumber ?: $this->generateRFQResponseNumber(),
+                    'RFQNumber' => $response->RFQNumber ?: $rfqModel->RFQNumber,
+                    'SupplierName' => $response->SupplierName ?: $supplierName,
+                    'TotalPayable' => $totalPayable,
+                    'Currency' => $validated['currency'],
+                    'DurationDays' => $validated['durationDays'],
+                    'Status' => $status,
+                    'SubmittedOn' => now(),
+                    'ModifiedBy' => $user->Id,
+                ]);
+
+                $response->items()->delete();
+            }
+
+            foreach ($validated['items'] as $item) {
+                /** @var RFQLine $line */
+                $line = $rfqLines->get($item['rfqLineId']);
+                $response->items()->create([
+                    'ItemName' => $line->ItemName,
+                    'UOM' => $line->UOM,
+                    'Quantity' => $line->Quantity,
+                    'QuotedPrice' => $item['quotedPrice'],
+                    'TotalPayable' => $item['totalPayable'],
+                    'CreatedBy' => $user->Id,
+                    'ModifiedBy' => $user->Id,
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Response submitted successfully',
+                'data' => [
+                    'rfqResponseId' => $response->Id,
+                    'status' => $response->Status,
+                ],
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('submitResponse failed', ['error' => $e->getMessage()]);
+
+            return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
 
-    /**
-     * Submit clarification request
-     */
     public function postClarification(Request $request): JsonResponse
     {
         try {
             $validated = $request->validate([
                 'rfqId' => 'required|integer|exists:t_RFQ,Id',
+                'supplierId' => 'sometimes|integer',
                 'question' => 'required|string|max:1000',
                 'rfqLineId' => 'nullable|integer|exists:t_RFQLines,Id',
             ]);
 
-            $user = Auth::guard("sanctum")->user();
-            $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
-            if (!$thirdPartyId) {
-                return response()->json(["error" => "Authentication required"], 401);
+            $user = $this->thirdPartyUser();
+
+            if (! $user || ! isset($user->ThirdPartyId)) {
+                return response()->json(['error' => 'Authentication required'], 401);
             }
 
-            // FIXED: Get supplier IDs through SupplierMaster
-            $mySupplierIds = DB::table('t_Suppliers as s')
-                ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
-                ->where('sm.ThirdPartyId', $thirdPartyId)
-                ->where('s.Active_Status', 1)
-                ->whereNull('s.DeletedOn')
-                ->whereNull('sm.DeletedOn')
-                ->pluck('s.Id');
+            $supplierIds = $this->supplierIdsForUser($user);
 
-            $supplierId = DB::table('t_RFQ_Supplier')
-                ->where('RFQId', $request->rfqId)
-                ->whereIn('SupplierId', $mySupplierIds)
-                ->min('SupplierId');
+            $supplierIdQuery = DB::table('t_RFQ_Supplier')
+                ->where('RFQId', $validated['rfqId'])
+                ->whereIn('SupplierId', $supplierIds);
 
-            if (!$supplierId) {
-                return response()->json(['error' => 'No invitation found for this supplier'], 403);
+            if (! empty($validated['supplierId'])) {
+                $supplierIdQuery->where('SupplierId', (int)$validated['supplierId']);
             }
 
-            // $actor = SystemHelper::user();
-            $actorId = $user->Id ?? 0;
+            $supplierId = $supplierIdQuery->value('SupplierId');
 
-            \App\Models\Procurement\RFQClarification::create([
-                'RFQId' => $request->rfqId,
+            if (! $supplierId) {
+                return response()->json(['error' => 'No invitation found'], 403);
+            }
+
+            if (! empty($validated['rfqLineId'])) {
+                $validLineForRfq = RFQLine::query()
+                    ->where('RFQId', $validated['rfqId'])
+                    ->where('Id', $validated['rfqLineId'])
+                    ->exists();
+
+                if (! $validLineForRfq) {
+                    return response()->json(['error' => 'Invalid rfqLineId for this rfqId'], 422);
+                }
+            }
+
+            // Third-party users have Ids from t_ThirdPartyUsers, NOT t_Users.
+            // CreatedBy/ModifiedBy reference t_Users.Id, so we must verify the Id exists there.
+            $candidateId = (int)($user->Id ?? 0);
+            $systemUserId = null;
+
+            if ($candidateId > 0) {
+                $existsInUsers = DB::table('t_Users')->where('Id', $candidateId)->exists();
+                if ($existsInUsers) {
+                    $systemUserId = $candidateId;
+                }
+            }
+
+            // Column is nullable, so null is safe when no matching t_Users row exists
+
+            RFQClarification::create([
+                'RFQId' => $validated['rfqId'],
                 'SupplierId' => $supplierId,
-                'RFQLineId' => $request->rfqLineId,
-                'Question' => $request->question,
-                'CreatedBy' => $actorId,
-                'ModifiedBy' => $actorId,
+                'RFQLineId' => $validated['rfqLineId'] ?? null,
+                'Question' => $validated['question'],
+                'CreatedBy' => $systemUserId,
+                'ModifiedBy' => $systemUserId,
             ]);
 
             return response()->json(['message' => 'Clarification submitted'], 201);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Internal Server Error', 'message' => $e->getMessage()], 500);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Throwable $e) {
+            Log::error('postClarification failed', ['error' => $e->getMessage()]);
+
+            return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
 
     public function listClarifications(int|string $rfq): JsonResponse
     {
         try {
-             $rfqId = (int) $rfq;
-            $user = Auth::guard('sanctum')->user();
-            $thirdPartyId = ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null;
+            $user = $this->thirdPartyUser();
 
-            if (!$thirdPartyId) {
+            if (! $user || ! isset($user->ThirdPartyId)) {
                 return response()->json(['data' => []]);
             }
 
-            // FIXED: Get supplier IDs through SupplierMaster
-            $mySupplierIds = DB::table('t_Suppliers as s')
-                ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
-                ->where('sm.ThirdPartyId', $thirdPartyId)
-                ->whereNull('s.DeletedOn')
-                ->whereNull('sm.DeletedOn')
-                ->pluck('s.Id');
+            $supplierIds = $this->supplierIdsForUser($user);
 
-            $clarifications = \App\Models\Procurement\RFQClarification::query()
-                ->where('RFQId', $rfqId)
-                ->whereIn('SupplierId', $mySupplierIds)
+            $data = RFQClarification::where('RFQId', (int)$rfq)
+                ->whereIn('SupplierId', $supplierIds)
                 ->whereNull('DeletedOn')
                 ->orderByDesc('Id')
-                ->get(['Id', 'RFQId', 'SupplierId', 'RFQLineId', 'Question', 'Answer', 'CreatedOn']);
+                ->get([
+                    'Id',
+                    'RFQId',
+                    'SupplierId',
+                    'RFQLineId',
+                    'Question',
+                    'Answer',
+                    'CreatedOn',
+                ]);
 
-            return response()->json(['data' => $clarifications]);
-        } catch (\Exception $e) {
-             return response()->json(['error' => 'Failed to list clarifications'], 500);
+            return response()->json(['data' => $data]);
+        } catch (\Throwable $e) {
+            Log::error('listClarifications failed', ['rfq' => $rfq, 'error' => $e->getMessage()]);
+
+            return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
 }
-

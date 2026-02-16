@@ -6,18 +6,20 @@ use App\Models\DMS\Document;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class LegalTemplate extends Model
 {
-    use SoftDeletes, UserActorTrait, DocumentsTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_LegalTemplates';
     protected $primaryKey = 'Id';
@@ -57,7 +59,6 @@ class LegalTemplate extends Model
         'EffectiveTo' => 'date',
         'ApprovedOn' => 'datetime',
     ];
-
 
     public function documents()
     {
@@ -163,6 +164,7 @@ class LegalTemplate extends Model
             ->map(function (LegalClause $c) {
                 $title = $c->pivot->TitleOverride ?: $c->Title;
                 $body = $c->pivot->ContentOverride ?: $c->Content;
+
                 return trim("{$title}\n\n{$body}");
             })
             ->implode("\n\n");
@@ -182,7 +184,10 @@ class LegalTemplate extends Model
 
     public function scopeSearch($q, ?string $term)
     {
-        if (!$term) return $q;
+        if (! $term) {
+            return $q;
+        }
+
         return $q->where(function ($sub) use ($term) {
             $sub->where('Title', 'like', "%{$term}%")
                 ->orWhere('DocumentType', 'like', "%{$term}%")

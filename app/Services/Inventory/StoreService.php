@@ -3,8 +3,8 @@
 namespace App\Services\Inventory;
 
 use App\Models\Inventory\Store;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class StoreService
 {
@@ -17,7 +17,6 @@ class StoreService
         $store->ModifiedOn = Carbon::now();
         $store->save();
 
-        // Generate StoreID like 'STR-00001'
         $store->StoreID = 'STR-' . str_pad($store->Id, 5, '0', STR_PAD_LEFT);
         $store->save();
 

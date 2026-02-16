@@ -11,7 +11,7 @@ class FleetRunningCost extends Model
 
     protected $fillable = [
         'VehicleID', 'CostType', 'CostDate', 'Amount',
-        'Vendor', 'Notes', 'CreatedBy', 'CreatedOn'
+        'Vendor', 'Notes', 'CreatedBy', 'CreatedOn',
     ];
 
     public function vehicle()

@@ -19,11 +19,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MarketingPlanner extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_MarketingPlanner';
     protected $primaryKey = 'Id';
@@ -72,7 +73,6 @@ class MarketingPlanner extends Model
         return $this->hasMany(__CLASS__, 'MasterPlannerId', 'Id')->withTrashed();
     }
 
-
     public function mode(): BelongsTo
     {
         return $this->belongsTo(CodeDetail::class, 'Modes', 'ID')->where('CodeID', StaticListsService::MarketingModes);
@@ -98,8 +98,7 @@ class MarketingPlanner extends Model
         if ($this->Type?->value === PlannerTypeEnum::MasterPlanner->value) {
             return $this->hasMany(MarketingPlannerActivity::class, 'MasterPlannerId', 'Id');
         }
+
         return $this->hasMany(MarketingPlannerActivity::class, 'PlannerId', 'Id');
     }
-
-
 }

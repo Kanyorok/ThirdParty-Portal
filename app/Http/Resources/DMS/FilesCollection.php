@@ -26,6 +26,7 @@ class FilesCollection extends ResourceCollection
     public function setMinified(bool $minified = false): static
     {
         $this->minified = $minified;
+
         return $this;
     }
 }

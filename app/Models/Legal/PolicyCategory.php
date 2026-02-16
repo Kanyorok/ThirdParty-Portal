@@ -13,6 +13,6 @@ class PolicyCategory extends Model
     protected $fillable = [
         'Name',
         'Description',
-        'IsActive'
+        'IsActive',
     ];
 }

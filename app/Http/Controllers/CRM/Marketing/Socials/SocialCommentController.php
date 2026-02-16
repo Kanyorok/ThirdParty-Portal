@@ -40,7 +40,6 @@ class SocialCommentController extends Controller
         return new CommentCollection($social->comments()->with('creator')->latest('t_Comments.Id')->paginate(self::PAGINATION));
     }
 
-
     /**
      * Store a newly created resource in storage.
      * @throws AuthorizationException
@@ -68,12 +67,12 @@ class SocialCommentController extends Controller
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error create social comment ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
         return $this->succeeded('comment added', data: ['data' => new CommentResource($comment)]);
     }
-
 
     /**
      * Remove the specified resource from storage.

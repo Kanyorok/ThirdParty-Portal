@@ -2,18 +2,11 @@
 
 namespace App\Http\Requests\Inventory;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use App\Models\Inventory\ItemCategories;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class InventoryTypeRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
@@ -22,18 +15,21 @@ class InventoryTypeRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
      */
-
-
     public function rules()
     {
+        $typeId = $this->route('inventorytype') ?? $this->route('id');
+
         return [
-            'Type' => [ 'exists:t_CodeDetails,ID',
+            'Type' => [
                 'required',
+                'exists:t_CodeDetails,ID',
                 'string',
                 'max:255',
-                Rule::unique('t_InventoryTypes', 'Type')->ignore($this->route('Id')),
+                Rule::unique('t_InventoryTypes', 'Type')
+                    ->ignore($typeId, 'Id')
+                    ->whereNull('DeletedOn'),
             ],
             'Status' => 'required|boolean',
         ];
@@ -45,6 +41,4 @@ class InventoryTypeRequest extends FormRequest
             'Type.unique' => 'The Inventory Type already exists.',
         ];
     }
-
-
 }

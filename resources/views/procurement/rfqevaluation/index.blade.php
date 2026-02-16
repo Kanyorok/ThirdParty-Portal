@@ -9,6 +9,20 @@
       <a href="{{ route('evaluations.create') }}" class="btn btn-success">+ Create Evaluation</a>
     </div>
 
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
       <div class="table-responsive mt-3">
       <table class="table table-bordered table-striped">
         <thead class="table-light">
@@ -41,13 +55,69 @@
               <td colspan="9">
                   <div class="d-flex justify-content-between align-items-center">
                       <span>RFQ Number: {{ $rfqNumber }}</span>
-                      @php $rfqIdForGroup = optional($group->first()['rfq'] ?? null)->Id ?? ($group->first()['rfq']->id ?? null); @endphp
-                      @if($rfqIdForGroup)
-                          <a href="{{ route('evaluations.consolidated', ['rfq' => $rfqIdForGroup]) }}"
-                             class="btn btn-sm btn-outline-primary">
-                              Consolidated Scores
-                          </a>
-                      @endif
+                      <div class="d-flex gap-2 align-items-center">
+                          @php 
+                            $rfqIdForGroup = optional($group->first()['rfq'] ?? null)->Id ?? ($group->first()['rfq']->id ?? null);
+                            $awardStatus = $rfqAwardStatus[$rfqIdForGroup] ?? null;
+                            $isAwarded = $awardStatus['isAwarded'] ?? false;
+                            $allMembersEvaluated = $awardStatus['allMembersEvaluated'] ?? false;
+                            $award = $awardStatus['award'] ?? null;
+                            
+                            // Get top supplier (rank 1) for this RFQ
+                            $sortedSuppliers = $group->sortByDesc('weightedTotal')->values();
+                            $topSupplier = $sortedSuppliers->first();
+                          @endphp
+                          
+                          {{-- Award Status/Button --}}
+                          @if($isAwarded && $award)
+                              @php
+                                $awardedSupplierName = \App\Models\Procurement\RFQResponse::where('RFQId', $rfqIdForGroup)
+                                    ->where('SupplierId', $award->SupplierId)
+                                    ->with('supplier.thirdParty')
+                                    ->first()
+                                    ?->supplier?->thirdParty?->ThirdPartyName ?? 'Supplier';
+                              @endphp
+                              <span class="badge bg-success">
+                                  <i class="bi bi-trophy me-1"></i>Awarded: {{ $awardedSupplierName }}
+                              </span>
+                          @elseif($allMembersEvaluated && $rfqIdForGroup)
+                              {{-- Award Dropdown - Only show when all evaluations complete --}}
+                              <div class="dropdown">
+                                  <button class="btn btn-sm btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                      <i class="bi bi-award me-1"></i>Award
+                                  </button>
+                                  <ul class="dropdown-menu dropdown-menu-end">
+                                      <li><h6 class="dropdown-header">Select Supplier to Award</h6></li>
+                                      @foreach($sortedSuppliers->unique('supplierId') as $supplierEntry)
+                                          <li>
+                                              <form action="{{ route('evaluations.award', ['rfq' => $rfqIdForGroup, 'supplier' => $supplierEntry['supplierId']]) }}" method="POST" class="d-inline">
+                                                  @csrf
+                                                  <input type="hidden" name="Comments" value="Awarded via evaluation list">
+                                                  <button type="submit" class="dropdown-item">
+                                                      {{ $supplierEntry['supplier']?->thirdParty?->thirdParty?->ThirdPartyName ?? $supplierEntry['supplier']?->thirdParty?->thirdParty?->TradingName ?? 'Unknown' }}
+                                                      <small class="text-muted">({{ $supplierEntry['weightedTotal'] }}%)</small>
+                                                  </button>
+                                              </form>
+                                          </li>
+                                      @endforeach
+                                  </ul>
+                              </div>
+                          @else
+                              {{-- Show pending status --}}
+                              @if($awardStatus)
+                                  <span class="badge bg-warning text-dark" title="Waiting for all committee members to complete evaluations">
+                                      <i class="bi bi-clock me-1"></i>{{ $awardStatus['evaluatedCount'] ?? 0 }}/{{ $awardStatus['acceptedCount'] ?? 0 }} Evaluated
+                                  </span>
+                              @endif
+                          @endif
+                          
+                          @if($rfqIdForGroup)
+                              <a href="{{ route('evaluations.consolidated', ['rfq' => $rfqIdForGroup]) }}"
+                                 class="btn btn-sm btn-outline-primary">
+                                  Consolidated Scores
+                              </a>
+                          @endif
+                      </div>
                   </div>
               </td>
             </tr>
@@ -71,7 +141,7 @@
                 <td>{{ $Index + 1 }}</td>
                 <td>{{ $evaluation->CommitteeMemberName }}</td>
                 <td>{{ $rfqNumber }}</td>
-                  <td>{{ $response?->supplier?->thirdParty?->ThirdPartyName ?? $response?->supplier?->thirdParty?->TradingName ?? $response?->SupplierName ?? 'N/A' }}</td>
+                  <td>{{ $response?->supplier?->thirdParty?->thirdParty?->ThirdPartyName ?? $response?->supplier?->thirdParty?->thirdParty?->TradingName ?? $response?->SupplierName ?? 'N/A' }}</td>
                 <td>{{ number_format($response->TotalPayable ?? 0, 2) }}</td>
                 <td>{{ $response->DurationDays ?? '-' }} Days</td>
                 <td>{{ $weightedTotal }}%</td>
@@ -81,6 +151,15 @@
                     data-bs-target="#viewModal-{{ $evaluation->Id }}-{{ $supplier->Id }}">
                     View
                   </button>
+                  @php
+                    $currentEmployeeId = optional(auth()->user())->EmployeeId ?? optional(auth()->user()?->employee)->Id;
+                    $canEdit = (int)$evaluation->UserCode === (int)$currentEmployeeId;
+                  @endphp
+                  @if($canEdit)
+                    <a href="{{ route('evaluations.edit', $evaluation->Id) }}" class="btn btn-sm btn-outline-warning">
+                      Edit
+                    </a>
+                  @endif
                 </td>
               </tr>
             @endforeach
@@ -102,7 +181,7 @@
     @foreach ($grouped as $supplierId => $evalGroup)
       @php
         $supplier = $evalGroup->first()->supplier;
-        $response = \App\Models\Procurement\RFQResponse::with('items.uom')
+        $response = \App\Models\Procurement\RFQResponse::with(['items.uom', 'supplier.thirdParty.thirdParty'])
             ->where('SupplierId', $supplierId)
             ->where('RFQId', $evaluation->RFQId)
             ->first();
@@ -140,7 +219,7 @@
                 <hr>
               <div class="card mb-4">
                 <div class="card-header bg-light fw-bold">
-                    Supplier: {{ $response?->supplier?->thirdParty?->ThirdPartyName ?? $response?->supplier?->thirdParty?->TradingName ?? $response?->SupplierName ?? 'N/A' }}
+                    Supplier: {{ $response?->supplier?->thirdParty?->thirdParty?->ThirdPartyName ?? $response?->supplier?->thirdParty?->thirdParty?->TradingName ?? $response?->SupplierName ?? 'N/A' }}
                 </div>
                 <div class="card-body">
                   <p><strong>Total Quoted:</strong> KES {{ number_format($response->TotalPayable ?? 0, 2) }}</p>

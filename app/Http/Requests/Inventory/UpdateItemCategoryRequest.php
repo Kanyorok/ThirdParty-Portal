@@ -2,22 +2,17 @@
 
 namespace App\Http\Requests\Inventory;
 
-use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Foundation\Http\FormRequest;
 use App\Models\Inventory\ItemCategories;
-use Illuminate\Support\Str;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class UpdateItemCategoryRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         $category = ItemCategories::findOrFail($this->route('id'));
-        return auth()->user()->can('update', $category);
+
+        return $this->user()->can('update', $category);
     }
 
     /**
@@ -44,9 +39,6 @@ class UpdateItemCategoryRequest extends FormRequest
         ];
     }
 
-    /**
-     * Get custom error messages for validator errors.
-     */
     public function messages(): array
     {
         return [

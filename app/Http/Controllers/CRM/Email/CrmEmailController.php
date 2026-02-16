@@ -41,6 +41,7 @@ class CrmEmailController extends Controller
             } else {
                 throw new RuntimeException("Unexpected error");
             }
+
             return CRMEmailService::dt($query, ['party']);
         }
 
@@ -59,6 +60,7 @@ class CrmEmailController extends Controller
             });
         } catch (Exception | \Throwable $e) {
             Log::error('Error reply email ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -71,7 +73,7 @@ class CrmEmailController extends Controller
     public function show(string $email_id): JsonResponse|View
     {
         $crmEmail = Email::query()->where('EmailID', $email_id)->first();
-        if (!$crmEmail instanceof Email) {
+        if (! $crmEmail instanceof Email) {
             return $this->errored('could not load email');
         }
 
@@ -85,7 +87,7 @@ class CrmEmailController extends Controller
     public function summary(string $email_id): JsonResponse|View
     {
         $crmEmail = Email::query()->where('EmailID', $email_id)->first();
-        if (!$crmEmail instanceof Email) {
+        if (! $crmEmail instanceof Email) {
             return $this->errored('could not load email');
         }
 
@@ -116,6 +118,7 @@ class CrmEmailController extends Controller
                 Log::error($e);
             }
         }
+
         return $this->succeeded('Email marked as read', data: ['email_id' => $email_id, 'status' => 'read']);
     }
 
@@ -123,9 +126,10 @@ class CrmEmailController extends Controller
     {
         //todo check permissions
         $crmEmail = Email::query()->where('EmailID', $email_id)->first();
-        if (!$crmEmail instanceof Email) {
+        if (! $crmEmail instanceof Email) {
             return $this->errored('could not load email');
         }
+
         try {
             $conversation = DB::transaction(static function () use ($crmEmail, $request) {
                 $conversation = false;
@@ -149,6 +153,7 @@ class CrmEmailController extends Controller
                 $description = "Deleted email ";
 
                 activity()->by($request->user())->on($crmEmail)->event('delete')->log($description . ($crmEmail->Type === EmailTypeEnum::Incoming->value) ? " received from $crmEmail->From" : " sent by " . $crmEmail->creator->UserID);
+
                 return $conversation;
             });
         } catch (Exception | \Throwable $e) {

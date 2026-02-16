@@ -28,7 +28,7 @@ class LoanAssignmentRequest extends FormRequest
     {
         $user = User::query()->where('t_Users.UserID', Str::upper($this->validated('Assignee')))
             ->where('t_Users.UserID', '!=', SystemHelper::ID)->first();
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             throw ValidationException::withMessages(['Assignee' => 'invalid user selected']);
         }
 
@@ -36,7 +36,7 @@ class LoanAssignmentRequest extends FormRequest
             return $user;
         }
 
-        if (!$user->can(PermissionEnum::DebtCollectionAssignment)) {
+        if (! $user->can(PermissionEnum::DebtCollectionAssignment)) {
             throw ValidationException::withMessages([
                                                      'Assignee' => $user->Name . ' does not have permission to be assigned to a loan.',
                                                     ]);

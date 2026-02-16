@@ -20,14 +20,13 @@ class PropertyAttachmentsService
     }
 
     public static function create(
-        PropertyRegistry    $PropertyID,
-        string              $DocumentTitle,
-        CodeDetail          $DocumentType,
-        string              $Description = null,
-        User                $user,
-        UploadedFile        $document = null
-    ): self
-    {
+        PropertyRegistry $PropertyID,
+        string $DocumentTitle,
+        CodeDetail $DocumentType,
+        string $Description = null,
+        User $user,
+        UploadedFile $document = null
+    ): self {
         $propertyattachments = PropertyAttachments::create([
             'PropertyID' => $PropertyID->Id,
             'DocumentTitle' => $DocumentTitle,
@@ -47,23 +46,23 @@ class PropertyAttachmentsService
         }
 
         activity()->causedBy(auth()->user()->Id)->performedOn($propertyattachments)->event('create')->log("Added Property Attachment {$propertyattachments->Id}.");
+
         return new self($propertyattachments);
     }
 
     public static function update(
         PropertyAttachments $attachment,
-        PropertyRegistry    $PropertyID,
-        string              $DocumentTitle,
-        CodeDetail          $DocumentType,
-        ?string             $Description,
-        User                $user,
-        UploadedFile        $document = null
-    ): self
-    {
+        PropertyRegistry $PropertyID,
+        string $DocumentTitle,
+        CodeDetail $DocumentType,
+        ?string $Description,
+        User $user,
+        UploadedFile $document = null
+    ): self {
         $attachment->update([
             'PropertyID' => $PropertyID->Id,
             'DocumentTitle' => $DocumentTitle,
-            'DocumentType' => $DocumentType->Id,
+            'DocumentType' => $DocumentType->ID,
             'Description' => $Description,
             'ModifiedBy' => $user->Id,
             'ModifiedOn' => now(),
@@ -86,6 +85,4 @@ class PropertyAttachmentsService
 
         return new self($attachment);
     }
-
-
 }

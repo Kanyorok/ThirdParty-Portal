@@ -28,7 +28,6 @@ class SignDocumentJob implements ShouldQueue, ShouldBeUnique
      */
     public function __construct(public Document $document, public DMSSignature $signature, public User $actor, public int $Pages)
     {
-        //
     }
 
     public function uniqueId(): string

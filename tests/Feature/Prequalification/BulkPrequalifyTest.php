@@ -6,13 +6,12 @@ use App\Models\Auth\User;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\Procurement\Prequalification\PrequalificationResult;
 use App\Models\Procurement\Prequalification\PrequalificationRound;
-use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParies\Supplier;
+use App\Models\ThirdParty\ThirdParties;
 use Tests\TestCase;
 
 class BulkPrequalifyTest extends TestCase
 {
-
     protected function setUp(): void
     {
         parent::setUp();

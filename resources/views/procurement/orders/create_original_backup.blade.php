@@ -331,7 +331,6 @@
                         type: 'GET',
                         success: function (response) {
 
-                            console.log(response)
                             let itemCodeSelect = row.find('.itemCode');
                             itemCodeSelect.empty().append(
                                 '<option value="">Select Item</option>');
@@ -344,7 +343,6 @@
                         },
                         error: function (response) {
                             alert('Failed to load items');
-                            console.log(response);
                         }
                     });
                 } else {
@@ -375,7 +373,6 @@
                         },
                         error: function (response) {
                             alert('Failed to load item details');
-                            console.log(response);
                         }
                     });
                 } else {

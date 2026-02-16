@@ -59,6 +59,7 @@ class InsuranceProviderProductController extends Controller
             return redirect()->route('insurance.providerproducts.index')->with('success', 'Provider-product mapping created successfully.');
         } catch (\Exception $e) {
             Log::error('Failed to create provider-product mapping: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to create provider-product mapping.');
         }
     }
@@ -73,6 +74,7 @@ class InsuranceProviderProductController extends Controller
             return response()->json(['message' => 'Mapping detached successfully']);
         } catch (\Exception $e) {
             Log::error('Failed to detach provider-product mapping: ' . $e->getMessage());
+
             return response()->json(['error' => 'Failed to detach mapping'], 500);
         }
     }

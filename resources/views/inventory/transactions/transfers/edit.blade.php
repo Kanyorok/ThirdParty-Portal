@@ -45,7 +45,6 @@
                 <div class="col-md-6">
                     <label for="ToBranch" class="form-label">To Branch</label>
                     @if($transferitem->RequisitionType === 'procurement')
-                        {{-- For Procurement: Editable dropdown --}}
                         <select name="ToBranch" id="ToBranch" class="form-select" required>
                             <option value="">-- Select Branch --</option>
                             @foreach ($branches as $branch)
@@ -59,7 +58,6 @@
                         <div class="text-danger">{{ $message }}</div>
                         @enderror
                     @else
-                        {{-- For Interbranch: Readonly --}}
                         <input type="text" class="form-control" value="{{ $transferitem->toBranch->Name ?? 'N/A' }}"
                                readonly>
                         <input type="hidden" name="ToBranch" value="{{ $transferitem->ToBranch }}">
@@ -68,7 +66,6 @@
 
                 <div class="col-md-6">
                     @if($transferitem->RequisitionType === 'procurement')
-                        {{-- Empty column for alignment --}}
                     @else
                         <label class="form-label">Requisition Type</label>
                         <input type="text" class="form-control" value="Interbranch Transfer" readonly>
@@ -132,7 +129,6 @@
                             </td>
                             <td>
                                 @if($transferitem->Status === 'pe')
-                                    {{-- Only allow removal if pending --}}
                                     <button type="button" class="btn btn-danger btn-sm removeRow">Remove</button>
                                 @else
                                     <span class="text-muted">Locked</span>
@@ -144,7 +140,6 @@
                 </table>
             </div>
 
-            {{-- Status Information --}}
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label class="form-label">Current Status</label>
@@ -166,7 +161,6 @@
                 </a>
 
                 @if($transferitem->Status === 'pe')
-                    {{-- Only show delete if pending --}}
                     <button type="button" class="btn btn-danger ms-auto" onclick="confirmDelete()">
                         <i class="fas fa-trash me-1"></i> Delete Transfer
                     </button>
@@ -174,7 +168,6 @@
             </div>
         </form>
 
-        {{-- Delete Form --}}
         @if($transferitem->Status === 'pe')
             <form id="deleteForm" action="{{ route('transactionstransfers.destroy', $transferitem->Id) }}" method="POST"
                   class="d-none">
@@ -188,7 +181,6 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Remove item row (only for pending transfers)
             document.querySelector('#itemsTable').addEventListener('click', function (e) {
                 if (e.target.classList.contains('removeRow')) {
                     if (confirm('Are you sure you want to remove this item?')) {
@@ -197,7 +189,6 @@
                 }
             });
 
-            // Quantity validation
             const dispatchedInputs = document.querySelectorAll('input[name*="dispatched_qty"]');
             dispatchedInputs.forEach(input => {
                 input.addEventListener('change', function () {
@@ -216,7 +207,6 @@
             }
         }
 
-        // Add new item row functionality (if needed)
         function addNewItem() {
             const table = document.querySelector('#itemsTable tbody');
             const rowCount = table.rows.length;
@@ -260,20 +250,16 @@
 
             table.insertAdjacentHTML('beforeend', newRow);
 
-            // Add event listener for item selection
             const newItemSelect = table.lastElementChild.querySelector('select[name*="item"]');
             newItemSelect.addEventListener('change', function () {
                 const itemId = this.value;
                 if (itemId) {
-                    // Fetch item details and populate fields
                     fetchItemDetails(itemId, this.closest('tr'));
                 }
             });
         }
 
-        // Function to fetch item details (you'll need to implement this endpoint)
         function fetchItemDetails(itemId, row) {
-            // You'll need to create an API endpoint to fetch item details
             fetch(`/api/items/${itemId}/details`)
                 .then(response => response.json())
                 .then(data => {

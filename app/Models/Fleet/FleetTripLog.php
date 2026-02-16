@@ -2,27 +2,21 @@
 
 namespace App\Models\Fleet;
 
-use Illuminate\Database\Eloquent\Model;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\FleetRepairLog;
-use App\Models\Fleet\FleetMaintenanceSchedule;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Auth\User;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\HR\Employee;
-
+use App\Models\HRM\Employee;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FleetTripLog extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_TripLogs';
     protected $primaryKey = 'Id';
@@ -58,17 +52,16 @@ class FleetTripLog extends Model
     {
         return $this->belongsTo(\App\Models\Fleet\FleetVehicle::class, 'VehicleID', 'Id');
     }
+
     public function vehicleAssignments()
     {
         return $this->hasMany(FleetVehicleAssignment::class, 'TripNo', 'TripNo');
     }
 
-
     public function statusDetail()
     {
         return $this->belongsTo(CodeDetail::class, 'Status', 'ID');
     }
-
 
     public function parentTripType()
     {

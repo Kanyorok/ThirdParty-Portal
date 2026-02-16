@@ -20,11 +20,12 @@ class DocumentCheckInRequest extends FormRequest
     public function rules(): array
     {
         $size = (int)bcmul(config('app.dms.file_size'), 1024, 0);
+
         return [
             'CheckInDocument' => ['required',
                 Rule::file()->types(ExtensionsEnum::getAllMimeTypes())->max($size),
             ],
-            'CheckInRemark' => ['nullable', 'string', 'max:500']
+            'CheckInRemark' => ['nullable', 'string', 'max:500'],
         ];
     }
 
@@ -34,7 +35,7 @@ class DocumentCheckInRequest extends FormRequest
         $mime = $file->getMimeType() ?? $file->getClientMimeType();
         if ($mime !== $document->ext()?->getMimeType()) {
             throw ValidationException::withMessages([
-                'CheckInDocument' => 'file type should be same as uploaded.'
+                'CheckInDocument' => 'file type should be same as uploaded.',
             ]);
         }
 

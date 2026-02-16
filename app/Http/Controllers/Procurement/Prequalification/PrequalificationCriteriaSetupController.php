@@ -3,16 +3,11 @@
 namespace App\Http\Controllers\Procurement\Prequalification;
 
 use App\Http\Controllers\Controller;
-use App\Models\Procurement\Prequalification\PrequalificationRound;
-use App\Models\Procurement\Prequalification\PrequalificationSection;
-use App\Models\Procurement\Prequalification\PrequalificationCriteria;
-use App\Models\Procurement\Section;
 use App\Models\Procurement\Criteria;
+use App\Models\Procurement\Prequalification\PrequalificationRound;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class PrequalificationCriteriaSetupController extends Controller
 {

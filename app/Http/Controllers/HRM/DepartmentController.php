@@ -4,6 +4,7 @@ namespace App\Http\Controllers\HRM;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\HRM\DepartmentRequest;
+use App\Models\Auth\User;
 use App\Models\HRM\Department;
 use App\Services\HRM\DepartmentService;
 use Exception;
@@ -23,7 +24,6 @@ class DepartmentController extends Controller
         $this->middleware('ajax')->except('index');
         $this->authorizeResource(Department::class);
     }
-
 
     /**
      * Display a listing of the resource.
@@ -54,6 +54,7 @@ class DepartmentController extends Controller
             } catch (Exception $e) {
                 Log::error('Department index error: ' . $e->getMessage());
             }
+
             return $this->errored('cannot retrieve department list.');
         }
 
@@ -87,10 +88,11 @@ class DepartmentController extends Controller
 
                 return $this->succeeded($dpt->DepartmentID . ' created successfully.');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error("--- CREATE DEPARTMENT ERROR --- " . $e->getMessage());
             Log::error($e);
         }
+
         return $this->errored('create department failed.');
     }
 
@@ -149,14 +151,33 @@ class DepartmentController extends Controller
                     'ModifiedBy' => $request->user()->Id,
                 ]);
 
+                $service = new DepartmentService($department);
+
+                if ($request->has('HeadId')) {
+                    // Update HOD if present (even if null to clear? implementation assumed non-nullable/selection required based on UI, but code handles find returning null if ID is invalid, though validation should catch it. If ID is null, find returns null, setHOD type hint requires User. So we need to check filled)
+                    // If the user wants to clear HOD, they might send null. My setHOD requires User.
+                    // The UI normally sends an ID or empty.
+                    // If I look at the screenshot, "Select HOD" suggests valid selection.
+                    if ($request->filled('HeadId')) {
+                        $service->setHOD(User::find($request->input('HeadId')), $request->user());
+                    }
+                }
+
+                if ($request->has('DeputyHeadId')) {
+                    if ($request->filled('DeputyHeadId')) {
+                        $service->setDeputyHOD(User::find($request->input('DeputyHeadId')), $request->user());
+                    }
+                }
+
                 activity()->causedBy($request->user())->performedOn($department)->event('update')->log('updated department ' . $department->DepartmentID);
 
                 return $this->succeeded($department->DepartmentID . ' updated successfully.');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error("--- UPDATE   DEPARTMENT ERROR --- " . $e->getMessage());
             Log::error($e);
         }
+
         return $this->errored('update department failed.');
     }
 
@@ -173,12 +194,14 @@ class DepartmentController extends Controller
                 ])->save();
 
                 activity()->causedBy($request->user())->performedOn($department)->event('delete')->log('deleted department ' . $department->DepartmentID);
+
                 return $this->succeeded($department->DepartmentID . ' deleted successfully.');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error("--- DELETE   DEPARTMENT ERROR --- " . $e->getMessage());
             Log::error($e);
         }
-        return $this->errored('update department failed.');
+
+        return $this->errored('delete department failed.');
     }
 }

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\OrderLines;
-use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\TenderAward;
 use App\Models\ThirdParty\Supplier;
 use App\Services\Procurement\Orders\OrderService;
@@ -30,6 +29,7 @@ class LPOOriginationController extends Controller
     public function index()
     {
         $this->authorize('viewAny', Order::class);
+
         try {
             // Get counts for each origination type
             $contractBasedCount = $this->getContractBasedLPOsCount();
@@ -79,6 +79,7 @@ class LPOOriginationController extends Controller
             ));
         } catch (\Exception $e) {
             Log::error('LPO Origination Dashboard Error: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to load LPO origination dashboard: ' . $e->getMessage());
         }
     }
@@ -89,6 +90,7 @@ class LPOOriginationController extends Controller
     public function showContractBasedOptions()
     {
         $this->authorize('create', Order::class);
+
         try {
             // Get active contracts available for LPO creation
             $activeContracts = TenderAward::where('ContractStatus', 'Executed')
@@ -100,6 +102,7 @@ class LPOOriginationController extends Controller
             return view('procurement.lpo.origination.contract-based', compact('activeContracts'));
         } catch (\Exception $e) {
             Log::error('Contract-based LPO Options Error: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to load contract options: ' . $e->getMessage());
         }
     }
@@ -124,6 +127,7 @@ class LPOOriginationController extends Controller
             return view('procurement.lpo.origination.award-based', compact('availableAwards'));
         } catch (\Exception $e) {
             Log::error('Award-based LPO Options Error: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to load award options: ' . $e->getMessage());
         }
     }
@@ -157,6 +161,7 @@ class LPOOriginationController extends Controller
             return view('procurement.lpo.origination.direct-procurement', compact('directProcurementPlans'));
         } catch (\Exception $e) {
             Log::error('Direct Procurement LPO Options Error: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to load direct procurement options: ' . $e->getMessage());
         }
     }
@@ -186,12 +191,13 @@ class LPOOriginationController extends Controller
                 'contract_value' => $contract->ContractValue,
                 'delivery_terms' => $contract->DeliveryTerms,
                 'payment_terms' => $contract->PaymentTerms,
-                'lpo_number' => Order::generateLPONumber()
+                'lpo_number' => Order::generateLPONumber(),
             ];
 
             return view('procurement.lpo.create.contract-based', compact('contract', 'suppliers', 'lpoData'));
         } catch (\Exception $e) {
             Log::error('Create LPO from Contract Error: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to create LPO from contract: ' . $e->getMessage());
         }
     }
@@ -205,7 +211,7 @@ class LPOOriginationController extends Controller
             $award = TenderAward::with(['tender', 'winningSupplier'])
                 ->findOrFail($awardId);
 
-            if (!$award->is_approved) {
+            if (! $award->is_approved) {
                 return redirect()->back()->with('error', 'Only approved awards can be used for LPO creation.');
             }
 
@@ -219,12 +225,13 @@ class LPOOriginationController extends Controller
                 'supplier' => $award->winningSupplier,
                 'tender_no' => $award->tender->TenderNo,
                 'award_amount' => $award->AwardAmount,
-                'lpo_number' => Order::generateLPONumber()
+                'lpo_number' => Order::generateLPONumber(),
             ];
 
             return view('procurement.lpo.create.award-based', compact('award', 'suppliers', 'lpoData'));
         } catch (\Exception $e) {
             Log::error('Create LPO from Award Error: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to create LPO from award: ' . $e->getMessage());
         }
     }
@@ -266,12 +273,13 @@ class LPOOriginationController extends Controller
                 'estimated_total' => $plan->planLineItems->sum(function ($item) {
                     return $item->MergedQty * $item->EstimatedUnitCost;
                 }),
-                'lpo_number' => Order::generateLPONumber()
+                'lpo_number' => Order::generateLPONumber(),
             ];
 
             return view('procurement.lpo.create.direct-procurement', compact('plan', 'suppliers', 'lpoData'));
         } catch (\Exception $e) {
             Log::error('Create LPO from Direct Procurement Error: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to create LPO from direct procurement: ' . $e->getMessage());
         }
     }
@@ -299,7 +307,7 @@ class LPOOriginationController extends Controller
                 'items.*.unit_price' => 'required|numeric|min:0',
                 'items.*.tax_percentage' => 'nullable|numeric|min:0|max:100',
                 'items.*.discount_percentage' => 'nullable|numeric|min:0|max:100',
-                'items.*.total_amount' => 'required|numeric|min:0'
+                'items.*.total_amount' => 'required|numeric|min:0',
             ]);
 
             $contract = TenderAward::findOrFail($validated['contract_id']);
@@ -322,7 +330,7 @@ class LPOOriginationController extends Controller
                 'Notes' => $validated['notes'],
                 'DeliveryTerms' => $validated['delivery_terms'],
                 'CreatedBy' => Auth::id(),
-                'ModifiedBy' => Auth::id()
+                'ModifiedBy' => Auth::id(),
             ]);
 
             // Create Order Lines using correct column names
@@ -338,7 +346,7 @@ class LPOOriginationController extends Controller
                     'LineTotal' => $itemData['total_amount'],              // Actual column name
                     'cLineNotes' => $itemData['notes'] ?? '',             // Actual column name
                     'CreatedBy' => Auth::id(),
-                    'ModifiedBy' => Auth::id()
+                    'ModifiedBy' => Auth::id(),
                 ]);
             }
 
@@ -353,6 +361,7 @@ class LPOOriginationController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Contract-based LPO creation failed: ' . $e->getMessage());
+
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['general' => 'Failed to create LPO: ' . $e->getMessage()]);

@@ -31,7 +31,6 @@
         </div>
     </div>
 
-    {{-- Subcategories Section --}}
     @if($category->children->count() > 0)
         <h3 class="mt-5 mb-3">Subcategories</h3>
         <div class="table-responsive">
@@ -53,13 +52,11 @@
                         <td>{{ $subcategory->Name }}</td>
                         <td>{{ $subcategory->Description ?? 'No description available' }}</td>
 
-                        {{-- Actions Column --}}
                         <td>
                             <a href="{{ route('itemcategory.show', $subcategory->Id) }}" class="btn btn-sm btn-primary">View</a>
                             <a href="{{ route('itemcategory.edit', $subcategory->Id) }}" class="btn btn-sm btn-warning">Edit</a>
 
                             @if($subcategory->hasItems())
-                                {{-- Replace Delete button with "In Use" badge --}}
                                 <span class="badge bg-info text-light">In Use ({{ $subcategory->items->count() }})</span>
                             @else
                                 <a href="#" class="btn btn-danger btn-sm"

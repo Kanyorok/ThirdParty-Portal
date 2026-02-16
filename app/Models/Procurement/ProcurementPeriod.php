@@ -29,5 +29,4 @@ class ProcurementPeriod extends Model
     {
         return $this->hasMany(ProcurementPlan::class, 'ProcurementPeriodId');
     }
-
 }

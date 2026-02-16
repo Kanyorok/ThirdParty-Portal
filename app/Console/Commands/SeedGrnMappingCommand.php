@@ -39,4 +39,3 @@ class SeedGrnMappingCommand extends Command
         return $exit;
     }
 }
-

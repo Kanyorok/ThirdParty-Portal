@@ -6,7 +6,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class DepartmentRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -17,6 +16,8 @@ class DepartmentRequest extends FormRequest
         return [
             'Name' => ['required', 'string', 'max:255'],
             'Description' => ['nullable', 'string', 'max:5000'],
+            'HeadId' => ['nullable', 'exists:t_Users,Id'],
+            'DeputyHeadId' => ['nullable', 'exists:t_Users,Id'],
         ];
     }
 }

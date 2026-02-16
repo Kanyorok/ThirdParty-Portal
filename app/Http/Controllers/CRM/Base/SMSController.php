@@ -20,7 +20,7 @@ class SMSController extends Controller
     public function __invoke(string $sms_id): JsonResponse|View
     {
         $sms = SMS::query()->where('SMSId', $sms_id)->first();
-        if (!$sms instanceof SMS) {
+        if (! $sms instanceof SMS) {
             return $this->errored('could not load sms');
         }
 

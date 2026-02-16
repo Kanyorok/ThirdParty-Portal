@@ -75,6 +75,4 @@ class EmployeeInternalCommitteeController extends Controller
 
         return back()->with('success', 'Employee removed from committee.');
     }
-
-
 }

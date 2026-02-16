@@ -2,11 +2,9 @@
 
 namespace App\Services\FleetManagement;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Fleet\ContractedDriver;
 use App\Models\Fleet\FleetContractedDriverLicense;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class FleetContractedDriverLicenseService
 {
@@ -24,7 +22,7 @@ class FleetContractedDriverLicenseService
                 'ExpiryDate' => $data['ExpiryDate'] ?? null,
                 'Notes' => $data['Notes'] ?? null,
                 'CreatedBy' => $data['CreatedBy'] = Auth::id(),
-                'CreatedOn' => $data['CreatedOn'] = now()
+                'CreatedOn' => $data['CreatedOn'] = now(),
             ]);
 
             activity()

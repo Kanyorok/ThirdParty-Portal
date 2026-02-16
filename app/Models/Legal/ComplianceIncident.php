@@ -13,7 +13,7 @@ class ComplianceIncident extends Model
     protected $fillable = [
         'ObligationID', 'Title', 'Description', 'IncidentDate',
         'SeverityID', 'ResponsibleUserID', 'Status',
-        'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn'
+        'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn',
     ];
 
     public function obligation()

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Legal\ComplianceTrainingController;
 use App\Http\Controllers\Legal\ContractObligationController;
 use App\Http\Controllers\Legal\LegalCaseController;
 use App\Http\Controllers\Legal\LegalCaseEvidenceController;
@@ -18,20 +19,15 @@ use App\Http\Controllers\Legal\LegalObligationController;
 use App\Http\Controllers\Legal\LegalSearchRequestController;
 use App\Http\Controllers\Legal\LegalTemplateController;
 use App\Http\Controllers\Legal\LoanSecurityController;
-use App\Http\Controllers\Legal\ReportsController;
 use App\Http\Controllers\Legal\RegulatoryTaskController;
-use App\Http\Controllers\Legal\RegulatoryObligationController;
-use App\Http\Controllers\Legal\ComplianceCalendarController;
-use App\Http\Controllers\Legal\ComplianceIncidentController;
-use App\Http\Controllers\Legal\ComplianceTrainingController;
+use App\Http\Controllers\Legal\ReportsController;
 use Illuminate\Support\Facades\Route;
-
 
 Route::middleware(['module:800000'])->prefix('legal')->group(function () {
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('legal-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'legal-reports.index',
-        'show' => 'legal-reports.show'
+        'show' => 'legal-reports.show',
     ]);
     Route::name('legal.')->group(function () {
 
@@ -39,7 +35,7 @@ Route::middleware(['module:800000'])->prefix('legal')->group(function () {
         // AJAX endpoint for fetching templates by document type
         Route::get('templates/by-type', [LegalDocumentController::class, 'getTemplatesByType'])->name('templates.by-type');
         Route::get('templates/{id}/content', [LegalDocumentController::class, 'getTemplateById'])->name('templates.get-by-id');
-        
+
         Route::resource('documents', LegalDocumentController::class);
         Route::resource('documents.dispatches', LegalDispatchController::class);
         Route::resource('documents.execution_logs', LegalExecutionLogController::class);
@@ -171,12 +167,13 @@ Route::prefix('legal/compliance')->name('legal.compliance.')->group(function () 
     Route::resource('trainings', \App\Http\Controllers\Legal\ComplianceTrainingController::class);
     Route::post('trainings/{id}/add-participant', [\App\Http\Controllers\Legal\ComplianceTrainingController::class,'addParticipant'])->name('trainings.addParticipant');
     Route::post('trainings/{trainingId}/mark-attendance/{participantId}', [\App\Http\Controllers\Legal\ComplianceTrainingController::class,'markAttendance'])->name('trainings.markAttendance');
-    Route::post('trainings/{id}/add-certification',[\App\Http\Controllers\Legal\ComplianceTrainingController::class,'addCertification'])->name('trainings.addCertification');
+    Route::post('trainings/{id}/add-certification', [\App\Http\Controllers\Legal\ComplianceTrainingController::class,'addCertification'])->name('trainings.addCertification');
     Route::post('trainings/{trainingId}/quick-issue/{participantId}', [ComplianceTrainingController::class,'quickIssueCertification'])->name('trainings.quickIssueCert');
-    Route::post('trainings/{trainingId}/bulk-issue',[ComplianceTrainingController::class,'bulkIssueCertifications'])->name('trainings.bulkIssueCerts');
+    Route::post('trainings/{trainingId}/bulk-issue', [ComplianceTrainingController::class,'bulkIssueCertifications'])->name('trainings.bulkIssueCerts');
 });
 
-Route::prefix('legal/compliance')->name('legal.compliance.')->group(function () {
-    Route::get('analytics', [ComplianceAnalyticsController::class,'index'])
-        ->name('analytics.index');
-});
+// ComplianceAnalyticsController does not exist - routes removed
+// Route::prefix('legal/compliance')->name('legal.compliance.')->group(function () {
+//     Route::get('analytics', [ComplianceAnalyticsController::class,'index'])
+//         ->name('analytics.index');
+// });

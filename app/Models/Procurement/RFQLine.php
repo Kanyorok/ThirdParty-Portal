@@ -11,17 +11,18 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RFQLine extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     protected $table = 't_RFQLines';
     protected $primaryKey = 'Id';
 
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'RFQLineNo', 'RequisitionId', 'RequisitionLineId', 'RFQId', 'ItemId', 'UOM', 'Quantity', 'ItemName', 'ItemCategoryId', 'CreatedOn', 'ModifiedOn', 'CreatedBy', 'ModifiedBy'
+        'RFQLineNo', 'RequisitionId', 'RequisitionLineId', 'RFQId', 'ItemId', 'UOM', 'Quantity', 'ItemName', 'ItemCategoryId', 'CreatedOn', 'ModifiedOn', 'CreatedBy', 'ModifiedBy',
     ];
 
     public static function getPrimaryKey(): string

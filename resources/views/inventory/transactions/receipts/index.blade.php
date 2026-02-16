@@ -12,7 +12,6 @@
         use App\Enums\Inventory\Transfers;use Carbon\Carbon;
     @endphp
 
-    {{-- Custom Error/Success Message Containers --}}
     @if($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -90,9 +89,7 @@
                             <td>
                                 @php
                                     $hasDiscrepancy = $receipt->items->some(function ($item) {
-                                        $dispatched = optional($item->transferItem)->DispatchedQty ?? 0;
-                                        $received = $item->ReceivedQty ?? 0;
-                                        return $dispatched !== $received;
+                                        return $item->Discrepancy != 0;
                                     });
                                 @endphp
                                 {{ $hasDiscrepancy ? 'Yes' : 'No' }}
@@ -110,7 +107,6 @@
                     </tbody>
                 </table>
 
-                {{-- Pagination --}}
                 <div class="d-flex justify-content-center">
                     {{ $receipts->links() }}
                 </div>

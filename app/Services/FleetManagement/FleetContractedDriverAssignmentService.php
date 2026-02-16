@@ -2,12 +2,9 @@
 
 namespace App\Services\FleetManagement;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\ContractedDriver;
 use App\Models\Fleet\FleetContractedDriverAssignment;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class FleetContractedDriverAssignmentService
 {
@@ -26,7 +23,7 @@ class FleetContractedDriverAssignmentService
                 'AssignedBy' => $data['AssignedBy'] ?? null,
                 'Notes' => $data['Notes'] ?? null,
                 'CreatedBy' => Auth::id(),
-                'CreatedOn' => now()
+                'CreatedOn' => now(),
             ]);
 
             activity()

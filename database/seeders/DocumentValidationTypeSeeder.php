@@ -18,6 +18,5 @@ class DocumentValidationTypeSeeder extends Seeder
             ValidationTypeService::create('Client Onboarding', $actor, 'Client Onboarding');
             ValidationTypeService::create('Loan Application', $actor, 'Loan Application');
         }
-
     }
 }

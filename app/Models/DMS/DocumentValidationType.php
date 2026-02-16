@@ -12,11 +12,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DocumentValidationType extends Model implements SpecialPermissionContract
 {
-    use SoftDeletes, UserActorTrait, SpecialPermissionTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use SpecialPermissionTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_DocumentValidationTypes';
     protected $primaryKey = 'Id';

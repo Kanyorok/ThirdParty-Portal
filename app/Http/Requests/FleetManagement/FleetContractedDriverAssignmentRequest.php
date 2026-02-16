@@ -30,7 +30,7 @@ class FleetContractedDriverAssignmentRequest extends FormRequest
             'AssignedBy' => 'required|exists:t_Employees,Id',
             'Notes' => 'nullable|string',
 
-            //
+
         ];
     }
 }

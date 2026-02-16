@@ -15,6 +15,22 @@
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
+        @if (session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+
+        {{-- Evaluation Status Alert --}}
+        @if (!($allMembersEvaluated ?? true))
+            <div class="alert alert-warning">
+                <strong><i class="bi bi-exclamation-triangle me-2"></i>Evaluation Incomplete</strong>
+                <p class="mb-1">{{ $evaluatedMembersCount ?? 0 }} of {{ $acceptedMembersCount ?? 0 }} committee members have submitted their evaluations.</p>
+                @if (!empty($pendingMembers))
+                    <small>Pending: {{ implode(', ', $pendingMembers) }}</small>
+                @endif
+                <p class="mt-2 mb-0"><em>Award cannot be made until all committee members complete their evaluations.</em></p>
+            </div>
+        @endif
+
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-suppliers" type="button"
@@ -78,10 +94,25 @@
                                         method="POST">
                                         @csrf
                                         <input type="hidden" name="Comments" value="Awarded via consolidated view">
-                                        <button
-                                            class="btn btn-sm {{ ($award && $award->SupplierId == $sup['supplier_id']) ? 'btn-success' : 'btn-outline-primary' }}">
-                                            {{ ($award && $award->SupplierId == $sup['supplier_id']) ? 'Awarded' : 'Award' }}
-                                        </button>
+                                        @php
+                                            $isAwarded = $award && $award->SupplierId == $sup['supplier_id'];
+                                            $hasExistingAward = !empty($award); // Check if ANY award exists
+                                            $canAward = ($allMembersEvaluated ?? true) && !$hasExistingAward;
+                                        @endphp
+                                        @if($isAwarded)
+                                            <span class="badge bg-success">Awarded</span>
+                                        @elseif($hasExistingAward)
+                                            <button class="btn btn-sm btn-secondary" disabled title="RFQ already awarded to another supplier">
+                                                Award
+                                            </button>
+                                        @else
+                                            <button
+                                                class="btn btn-sm {{ $canAward ? 'btn-outline-primary' : 'btn-secondary' }}"
+                                                {{ !$canAward ? 'disabled' : '' }}
+                                                title="{{ !$canAward ? 'All committee members must complete evaluations before awarding' : '' }}">
+                                                Award
+                                            </button>
+                                        @endif
                                     </form>
                                 </td>
                             </tr>

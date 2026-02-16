@@ -21,47 +21,39 @@ class EmployeeSeeder extends Seeder
     public function run(): void
     {
 
-            $actor = SystemHelper::user();
-            $department = Department::query()->first();
-            if (!$department instanceof Department) {
-                throw new RuntimeException('No department found');
-            }
-            $branch = Branch::query()->first();
-            if (!$branch instanceof Branch) {
-                throw new RuntimeException('No branch found');
-            }
+        $actor = SystemHelper::user();
+        $department = Department::query()->first();
+        if (! $department instanceof Department) {
+            throw new RuntimeException('No department found');
+        }
+        $branch = Branch::query()->first();
+        if (! $branch instanceof Branch) {
+            throw new RuntimeException('No branch found');
+        }
         $role = Role::query()->latest('id')->first();
-        if (!$role instanceof Role) {
-            throw new RuntimeException('No role found');
+        if (! $role instanceof Role) {
+            throw new RuntimeException('No branch found');
         }
 
-        // Create employee using the new HR service
-        $employeeService = EmployeeService::create([
-            'FirstName' => 'Default',
-            'LastName' => 'User',
-            'Email' => 'admin@test.co.ke',
-            'Phone' => '+254700100100',
-            'DepartmentID' => $department->Id,
-            'BranchID' => $branch->Id,
-            'EmploymentDate' => now(),
-            'Gender' => 'Other',
-            'Status' => 'Active',
-            'IsActive' => 1,
-        ], $actor);
+        $user = EmployeeService::create(
+            department: $department,
+            branch: $branch,
+            actor: $actor,
+            JobTitle: 'ICT ADMIN',
+            FirstName: 'Default',
+            Surname: 'User',
+            Email: "admin@test.co.ke",
+            Phone: '254700100100',
+            JoinDate: now(),
+            Gender: GenderEnum::Other
+        )
+            ->createUser($actor)->setRole($role, $branch, $actor)->user->refresh();
 
-        // Create user account for the employee
-        $hrUserService = $employeeService->createUserAccount($actor);
-        $user = $hrUserService->user;
-
-        // Assign role to user at the branch (required for login)
-        $hrmUserService = new UserService($user);
-        $hrmUserService->setRole($role, $branch, $actor);
-
-        // Update UserID first, then hash password with the correct UserID
-        $user->update(['UserID' => 'CSADM']);
-        $user->refresh();
-        $user->update(['Password' => BREncryption::hashUser($user, '2')]);
-
-
+        $user->update([
+            'UserID' => 'CSADM',
+        ]);
+        $user->update([
+            'Password' => BREncryption::hashUser($user, '2'),
+        ]);
     }
 }

@@ -232,7 +232,7 @@ class GRNTransactionTypesSeeder extends Seeder
             if ($mapping['TransactionTypeID'] && $mapping['DebitGLAccountID'] && $mapping['CreditGLAccountID']) {
                 DB::table('t_FinanceGlTransactionsMapping')->updateOrInsert([
                     'ModuleID' => $mapping['ModuleID'],
-                    'TransactionTypeID' => $mapping['TransactionTypeID']
+                    'TransactionTypeID' => $mapping['TransactionTypeID'],
                 ], $mapping);
             }
         }

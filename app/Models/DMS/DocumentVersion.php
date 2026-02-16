@@ -11,11 +11,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DocumentVersion extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_DocumentVersions';
     protected $primaryKey = 'Id';
@@ -29,7 +30,6 @@ class DocumentVersion extends Model
         'Size' => 'integer',
         'Disk' => DisksEnum::class,
     ];
-
 
     public static function getPrimaryKey(): string
     {

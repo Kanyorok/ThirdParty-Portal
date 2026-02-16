@@ -26,7 +26,6 @@ Route::middleware(['module:200000'])->namespace('CRM')->prefix('crm')->group(fun
         });
         Route::prefix('unattached')->name('unattached.')->group(function () {
             Route::resource('contacts', 'ContactController')->only(['show', 'index']);
-            //Route::get('contacts/{contact}', 'ContactActionsController@show')->name('unattached.contact.show');
         });
 
         Route::resource('contacts', 'ContactsController')->only(['show', 'update', 'destroy']);
@@ -148,7 +147,6 @@ Route::middleware(['module:200000'])->namespace('CRM')->prefix('crm')->group(fun
             Route::prefix('marketing-list/{list}')->group(function () {
                 Route::match(['get', 'post'], 'leads', 'MarketingListsActionsController@leads')->name('marketing-list.leads');
                 Route::match(['get', 'post'], 'clients', 'MarketingListsActionsController@clients')->name('marketing-list.clients');
-                // Route::match(['get', 'put'], 'loans', 'MarketingListsActionsController@loans')->name('marketing-list.loans');
 
                 Route::resource('marketing-list-upload', 'MarketingListsUploadController')->only(['index', 'store']);
                 Route::resource('marketing-list-filters', 'MarketingListFilterController')->only(['index', 'create', 'store', 'destroy']);

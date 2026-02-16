@@ -42,9 +42,10 @@ class CheckEmailCommand extends Command
     public function handle(): void
     {
         $actor = SystemHelper::user();
+
         try {
             $email = APICredential::query()->where('Integration', IntegrationsEnum::Email->value)->latest('Id')->first();
-            if (!$email instanceof APICredential) {
+            if (! $email instanceof APICredential) {
                 throw new ErroredException('no email mail configuration');
             }
             $emailConfig = $email->Configuration;
@@ -55,24 +56,21 @@ class CheckEmailCommand extends Command
                 $emailConfig?->Incoming?->username, // Username for the before configured mailbox
                 $emailConfig?->Incoming?->password, // Password for the before configured username
                 null,
-                "US-ASCII" //'UTF-8',
+                "UTF-8" //'UTF-8',
             ); //SE_UID, "US-ASCII")
         } catch (ConnectionException | InvalidParameterException | Exception $e) {
             SystemHelper::notifyAdmin('Issue with fetch mail: ' . $e->getMessage());
+
             return;
         }
 
-        //  dd($mailbox->checkMailbox());
-        //dd($mailbox->getMailboxInfo());
-        //dd($mailbox->getMailboxes());
-        // dd($mailbox->searchMailbox('UNSEEN'));
 
-        // dd($mailbox->getMail(41, false));
 
         try {
             $mailIds = $mailbox->searchMailbox('UNSEEN');
         } catch (\Throwable $e) {
             SystemHelper::notifyAdmin('Issue with search mail: ' . $e->getMessage());
+
             return;
         }
 
@@ -82,10 +80,12 @@ class CheckEmailCommand extends Command
             } catch (Exception) {
                 continue;
             }
+
             try {
                 $dated = Carbon::parse($email->date);
             } catch (Exception $e) {
                 SystemHelper::notifyAdmin('Issue with fetch mail ' . $emailID . ' date: ' . $e->getMessage());
+
                 continue;
             }
 
@@ -100,25 +100,26 @@ class CheckEmailCommand extends Command
             if (Email::query()->where('MailID', $messageID)->exists()) {
                 continue;
             }
+
             try {
                 DB::transaction(function () use ($ref, $dated, $email, $actor) {
 
                     $crmEmail = new Email();
                     $crmEmail->fill([
-                        'MailID'      => trim($email->messageId ?? '', '<>'),
-                        'Type'        => EmailTypeEnum::Incoming->value,
-                        'Status'      => EmailStatusEnum::Unread->value,
-                        'Priority'    => $this->priority($email->priority, $email->importance)->value,
-                        'From'        => $email->fromAddress,
-                        'To'          => $this->_flipAddresses($email->to),
-                        'CC'          => $this->_flipAddresses($email->cc),
+                        'MailID' => trim($email->messageId ?? '', '<>'),
+                        'Type' => EmailTypeEnum::Incoming->value,
+                        'Status' => EmailStatusEnum::Unread->value,
+                        'Priority' => $this->priority($email->priority, $email->importance)->value,
+                        'From' => $email->fromAddress,
+                        'To' => $this->_flipAddresses($email->to),
+                        'CC' => $this->_flipAddresses($email->cc),
                         'ReferenceId' => $ref,
-                        'Subject'     => $email->subject,
-                        'Body' => (empty($email->textHtml)) ? $email->textPlain : $this->processEmailBody($email->textHtml),
-                        'Text'        => Str::of($email->textPlain)->trim()->value(),
-                        'CreatedBy'   => $actor->Id,
-                        'ModifiedBy'  => $actor->Id,
-                        'Dated'       => $dated,
+                        'Subject' => $this->cleanString($email->subject),
+                        'Body' => (empty($email->textHtml)) ? $this->cleanString($email->textPlain) : $this->cleanString($this->processEmailBody($email->textHtml)),
+                        'Text' => Str::of($this->cleanString($email->textPlain))->trim()->value(),
+                        'CreatedBy' => $actor->Id,
+                        'ModifiedBy' => $actor->Id,
+                        'Dated' => $dated,
                     ])->save();
 
                     $service = (new CRMEmailService($crmEmail->refresh()))->autoAttachIncoming($dated);
@@ -144,6 +145,7 @@ class CheckEmailCommand extends Command
                 });
             } catch (Exception | \Throwable $e) {
                 SystemHelper::notifyAdmin('handle incoming email failed: ' . $e->getMessage());
+
                 continue;
             }
 
@@ -197,6 +199,7 @@ class CheckEmailCommand extends Command
         if ($addr->isEmpty()) {
             return null;
         }
+
         return $addr->toArray();
     }
 
@@ -304,6 +307,7 @@ class CheckEmailCommand extends Command
                 // Clean up base64 data
                 $src = $matches[1];
                 $src = preg_replace('/\s+/', '', $src);
+
                 return str_replace($matches[1], $src, $matches[0]);
             },
             $content
@@ -379,13 +383,17 @@ class CheckEmailCommand extends Command
             return 'gmail';
         }
 
-        if (str_contains($htmlLower, 'yahoo') ||
-            str_contains($htmlLower, 'y-mail')) {
+        if (
+            str_contains($htmlLower, 'yahoo') ||
+            str_contains($htmlLower, 'y-mail')
+        ) {
             return 'yahoo';
         }
 
-        if (str_contains($htmlLower, 'apple-mail') ||
-            str_contains($htmlLower, 'iphone')) {
+        if (
+            str_contains($htmlLower, 'apple-mail') ||
+            str_contains($htmlLower, 'iphone')
+        ) {
             return 'apple';
         }
 
@@ -406,5 +414,12 @@ class CheckEmailCommand extends Command
         $content = count($matches) ? $matches[1] : $html;
 
         return trim(preg_replace('/style="[^"]*-webkit-[^"]*"/i', '', $content));
+    }
+
+    private function cleanString($string): array|string|null
+    {
+        // 1. Convert to UTF-8 and ignore invalid characters
+        //    '//IGNORE' silently discards characters that cannot be represented in the target charset
+        return iconv('UTF-8', 'UTF-8//IGNORE', $string);
     }
 }

@@ -19,6 +19,7 @@ class LegalCaseOutcomeController extends Controller
 
         $case = LegalCase::findOrFail($caseId);
         $outcomes = LegalCaseOutcome::with('case')->orderByDesc('JudgmentDate')->get();
+
         return view('legal.disputes.outcomes.index', compact('outcomes', 'case'));
     }
 
@@ -35,7 +36,6 @@ class LegalCaseOutcomeController extends Controller
     {
         $this->authorize(PermissionEnum::DisputeLitigationCreate, LegalCaseOutcome::class);
 
-        // dd($request->all());
         $validated = $request->validate([
             'LegalCaseID' => 'required|exists:t_LegalCases,ID',
             'Outcome' => 'required|string|max:255',
@@ -53,6 +53,7 @@ class LegalCaseOutcomeController extends Controller
         if ($duplicate) {
             return back()->with('error', 'Existing record for this Outcome');
         }
+
         try {
             DB::beginTransaction();
 
@@ -88,6 +89,7 @@ class LegalCaseOutcomeController extends Controller
                 ->log('Error creating case outcome');
 
             Log::error('Error creating case outcome: ' . $th->getMessage());
+
             return back()->with('error', 'Error creating case outcome: ' . $th->getMessage());
         }
     }
@@ -148,6 +150,7 @@ class LegalCaseOutcomeController extends Controller
                 ->log('Error updating case outcome');
 
             Log::error('Error updating case outcome: ' . $th->getMessage());
+
             return back()->with('error', 'Error updating case outcome: ' . $th->getMessage());
         }
     }
@@ -158,6 +161,7 @@ class LegalCaseOutcomeController extends Controller
 
         $outcome = LegalCaseOutcome::with('case')->findOrFail($id);
         $case = LegalCase::findOrFail($outcome->LegalCaseID);
+
         return view('legal.disputes.outcomes.show', compact('outcome', 'case'));
     }
 
@@ -182,7 +186,6 @@ class LegalCaseOutcomeController extends Controller
             DB::commit();
 
             return redirect()->route('legal.cases.show', $caseId)->with('success', 'Case outcome deleted successfully.');
-
         } catch (\Throwable $th) {
             DB::rollBack();
 
@@ -192,6 +195,7 @@ class LegalCaseOutcomeController extends Controller
                 ->log('Error deleted case outcome');
 
             Log::error('Error deleted case outcome: ' . $th->getMessage());
+
             return back()->with('error', 'Error deleted case outcome: ' . $th->getMessage());
         }
     }

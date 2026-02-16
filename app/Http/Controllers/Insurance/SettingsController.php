@@ -28,13 +28,12 @@ class SettingsController extends Controller
 
         $codeDetails = DB::table('t_CodeDetails')
             ->select('ID', 'Description', 'DisplayOrder', 'IsActive')
-            ->when($codeId, fn($query) => $query->where('CodeID', $codeId))
+            ->when($codeId, fn ($query) => $query->where('CodeID', $codeId))
             ->orderBy('DisplayOrder')
             ->get();
 
         return view('bancassurance.settings.index', compact('codeDetails', 'codeTypes'));
     }
-
 
     public function store(Request $request)
     {
@@ -44,7 +43,7 @@ class SettingsController extends Controller
             'DisplayOrder' => $request->DisplayOrder,
             'IsActive' => $request->has('IsActive') ? 1 : 0,
             'CreatedBy' => auth()->id(),
-            'CreatedOn' => now()
+            'CreatedOn' => now(),
         ]);
 
         return back()->with('success', 'Code detail added successfully.');
@@ -57,7 +56,7 @@ class SettingsController extends Controller
             'DisplayOrder' => $request->DisplayOrder,
             'IsActive' => $request->has('IsActive') ? 1 : 0,
             'ModifiedBy' => auth()->id(),
-            'ModifiedOn' => now()
+            'ModifiedOn' => now(),
         ]);
 
         return back()->with('success', 'Code detail updated.');
@@ -110,7 +109,7 @@ class SettingsController extends Controller
     {
         $record = DB::table('t_CodeDetails')->where('ID', $id)->first();
 
-        if (!$record) {
+        if (! $record) {
             return redirect()->back()->with('error', 'Record not found.');
         }
 

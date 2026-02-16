@@ -2,7 +2,6 @@
 
 namespace App\Policies\Procurement;
 
-use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\ThirdParty\SupplierMaster;
 use App\Services\Core\PermissionResolver;

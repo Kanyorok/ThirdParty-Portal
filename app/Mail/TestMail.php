@@ -27,7 +27,7 @@ class TestMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-        // to: $this->MailTo,
+            // to: $this->MailTo,
             subject: 'Test email configuration'
         );
     }

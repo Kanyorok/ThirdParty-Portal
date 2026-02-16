@@ -24,7 +24,7 @@ abstract class FileExtraction extends DocumentService
     {
         parent::__construct($document);
         $ex = $this->document->ext();
-        if (!$ex instanceof ExtensionsEnum) {
+        if (! $ex instanceof ExtensionsEnum) {
             throw new RuntimeException('Invalid file extension');
         }
         $this->extension = $ex;
@@ -47,6 +47,7 @@ abstract class FileExtraction extends DocumentService
             }, 2);
         } catch (Throwable $e) {
             Log::error('Generate Document Blog & Auto Tagging Failed : ' . $e);
+
             return false;
         }
     }
@@ -57,6 +58,7 @@ abstract class FileExtraction extends DocumentService
     protected function createTempFile(): ?string
     {
         $name = Uuid::uuid4()->toString() . '.' . $this->extension->value;
+
         return (Storage::disk('temp')->put($name, $this->getFileContent(false))) ? $name : null;
     }
 

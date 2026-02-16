@@ -24,13 +24,13 @@
 
         <div class="row mb-3">
             <div class="col-md-4">
-                <label for="CategoryCode" class="form-label">Category Code</label>
+                <label for="CategoryCode" class="form-label">Category Code<span class="text-danger">*</span></label>
                 <input type="text" name="CategoryCode"
                     value="{{ old('CategoryCode', $category->CategoryCode) }}"
                     class="form-control" readonly>
             </div>
             <div class="col-md-4">
-                <label for="Name" class="form-label">Category Name</label>
+                <label for="Name" class="form-label">Category Name<span class="text-danger">*</span></label>
                 <input type="text" name="Name"
                     value="{{ old('Name', $category->Name) }}"
                     class="form-control" required>
@@ -85,7 +85,6 @@
                 </select>
             </div>
 
-            <!-- Auto-assign ModifiedBy -->
             <div class="d-flex justify-content-start mt-4">
                 <input type="hidden" name="ModifiedBy" value="{{ auth()->id() }}">
                 <button type="submit" class="btn btn-success"

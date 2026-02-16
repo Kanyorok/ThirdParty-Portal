@@ -14,6 +14,18 @@
 <div class="container mt-4">
     <h3>Inter-Branch Requisition Approval</h3>
 
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Approval Restrictions:</strong>
+        <ul class="mb-0 mt-2">
+            <li><strong>Maker-Checker Policy:</strong> You cannot approve requisitions that you initiated yourself.</li>
+            <li><strong>Workflow Configuration:</strong> Requisitions require proper workflow setup and user permissions.</li>
+            <li><strong>Branch Authorization:</strong> You can only approve requisitions destined for your assigned branch.</li>
+            <li><strong>Status Validation:</strong> Only pending requisitions can be approved or rejected.</li>
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -28,10 +40,14 @@
             <select name="ReqId" id="ReqId" class="form-select" onchange="this.form.submit()" required>
                 <option value="">-- Choose Requisition To Approve --</option>
                 @foreach($pendingRequisitions as $requisitionOption)
-                    <option
-                        value="{{ $requisitionOption->Id }}" {{ old('ReqId', request()->ReqId) == $requisitionOption->Id ? 'selected' : '' }}>
+                    <option 
+                        value="{{ $requisitionOption->Id }}" 
+                        {{ request('ReqId') == $requisitionOption->Id ? 'selected' : '' }}
+                        {{ $requisitionOption->canApprove ? '' : 'disabled' }}
+                        title="{{ $requisitionOption->canApprove ? '' : 'Cannot approve: Workflow restriction or maker-checker policy' }}">
                         {{ $requisitionOption->ReqNo }} ({{ $requisitionOption->fromBranch?->Name ?? '?' }}
                         → {{ $requisitionOption->toBranch?->Name ?? '?' }})
+                        {{ $requisitionOption->canApprove ? '' : ' [Cannot Approve]' }}
                     </option>
                 @endforeach
             </select>
@@ -39,13 +55,14 @@
     </form>
 
     <div id="requisition-details" class="mt-4">
-        @if(isset($requisition) && $requisition)
+        @if(request()->has('ReqId') && $requisition)
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4>Requisition Details</h4>
-                <span
-                    class="badge bg-primary">Logged in as: {{ Auth::user()->role() ? Auth::user()->role()->name : 'Unknown User' }}</span>
+                <span class="badge bg-primary">
+                    Logged in as: {{ Auth::user()->employee->branch->Name ?? Auth::user()->name }}
+                </span>
             </div>
-            <!-- Requisition Summary -->
+            
             <div class="row mb-4 bg-light p-3 border rounded">
                 <div class="col-md-4"><strong>Requisition No.:</strong> {{ $requisition->ReqNo ?? 'N/A' }}</div>
                 <div class="col-md-4">
@@ -58,16 +75,16 @@
                         $statusEnum = App\Enums\Inventory\InterBranchRequisitionEnum::tryFrom($requisition->Status);
                     @endphp
                     @if($statusEnum)
-                        <span
-                            class="badge bg-{{ $statusEnum->badgeColor() }}{{ $statusEnum->badgeColor() === 'warning' ? ' text-dark' : ' text-light' }}">{{ $statusEnum->label() }}</span>
+                        <span class="badge bg-{{ $statusEnum->badgeColor() }} {{ $statusEnum->badgeColor() === 'warning' ? 'text-dark' : 'text-light' }}">
+                            {{ $statusEnum->label() }}
+                        </span>
                     @else
                         <span class="badge bg-secondary">{{ $requisition->Status }}</span>
                     @endif
                 </div>
-                <div class="col-md-4"><strong>Requested By:</strong> {{ $requisition->creator->Name?? '-' }}</div>
+                <div class="col-md-4"><strong>Requested By:</strong> {{ $requisition->creator?->Name ?? '-' }}</div>
             </div>
 
-            <!-- Requisition Items Table -->
             <div class="mb-4">
                 <h5>Requested Items</h5>
                 @if($requisition->items && $requisition->items->isNotEmpty())
@@ -96,7 +113,6 @@
                                            form="approval-form" required>
                                     <small class="text-muted">Max: {{ $requisitionItem->RequestedQty }}</small>
                                     <div class="invalid-feedback" id="error-{{ $requisitionItem->Id }}" style="display: none;">
-                                        <!-- Error message will appear here -->
                                     </div>
                                 </td>
                                 <td>
@@ -114,7 +130,6 @@
                 @endif
             </div>
 
-            <!-- Approval Form -->
             <div class="card p-4 shadow-sm border rounded">
                 <h5>Approval Decision</h5>
                 <form method="POST" action="{{ route('interbranchrequisitionapproval.submit') }}" id="approval-form">
@@ -138,7 +153,12 @@
 
                     <div class="d-flex justify-content-end gap-2">
                         <a href="{{ route('interbranchrequisitionapproval.index') }}" class="btn btn-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-primary">Submit Decision</button>
+                        <button type="submit" 
+                                class="btn btn-primary {{ $requisition->canApprove ? '' : 'disabled' }}" 
+                                title="{{ $requisition->canApprove ? 'Submit your approval decision' : 'Cannot submit: Workflow restriction or maker-checker policy' }}"
+                                {{ $requisition->canApprove ? '' : 'disabled' }}>
+                            Submit Decision
+                        </button>
                     </div>
                 </form>
             </div>
@@ -150,7 +170,6 @@
 
 @push('styles')
 <style>
-    /* Style for inline error display */
     .quantity-error {
         color: #dc3545;
         font-size: 0.875em;
@@ -168,14 +187,22 @@
 @endpush
 
 @push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Client-side validation for the approval form
+    $(document).ready(function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+<script>
     document.addEventListener('DOMContentLoaded', function() {
         const approvalForm = document.getElementById('approval-form');
         const actionSelect = document.getElementById('action-select');
         const approvedQtyInputs = document.querySelectorAll('.approved-qty-input');
         
-        // Function to show inline error
         function showInlineError(input, message) {
             const errorDiv = document.getElementById(`error-${input.dataset.itemId}`);
             if (errorDiv) {
@@ -187,7 +214,6 @@
             }
         }
         
-        // Function to hide inline error
         function hideInlineError(input) {
             const errorDiv = document.getElementById(`error-${input.dataset.itemId}`);
             if (errorDiv) {
@@ -198,23 +224,19 @@
             }
         }
         
-        // Function to clear all errors
         function clearAllErrors() {
             approvedQtyInputs.forEach(input => {
                 hideInlineError(input);
             });
         }
         
-        // Function to validate a single input
         function validateInput(input) {
             const action = actionSelect.value;
             const requestedQty = parseFloat(input.max) || 0;
             const approvedQty = parseFloat(input.value) || 0;
             
-            // Clear previous error
             hideInlineError(input);
             
-            // Validation only applies when action is APPROVED
             if (action === 'APPROVED') {
                 if (approvedQty < 0) {
                     showInlineError(input, 'Approved quantity cannot be negative.');
@@ -240,7 +262,6 @@
             return true;
         }
         
-        // Function to validate all inputs
         function validateAllInputs() {
             let allValid = true;
             
@@ -253,7 +274,6 @@
             return allValid;
         }
         
-        // Real-time validation on blur (when user leaves the field)
         approvedQtyInputs.forEach(input => {
             input.addEventListener('blur', function() {
                 if (actionSelect.value === 'APPROVED') {
@@ -261,7 +281,6 @@
                 }
             });
             
-            // Also validate on input change for immediate feedback
             input.addEventListener('input', function() {
                 if (actionSelect.value === 'APPROVED') {
                     const approvedQty = parseFloat(this.value) || 0;
@@ -272,13 +291,10 @@
             });
         });
         
-        // Handle action change
         actionSelect.addEventListener('change', function() {
             if (this.value === 'REJECTED') {
-                // Clear all errors when switching to reject
                 clearAllErrors();
             } else if (this.value === 'APPROVED') {
-                // Validate all inputs when switching to approve
                 validateAllInputs();
             }
         });
@@ -288,7 +304,6 @@
                 const actionSelect = this.querySelector('select[name="action"]');
                 const commentsTextarea = this.querySelector('textarea[name="comments"]');
                 
-                // Validate action selection
                 if (!actionSelect.value) {
                     e.preventDefault();
                     alert('Please select an action (Approve or Reject).');
@@ -296,7 +311,6 @@
                     return false;
                 }
                 
-                // Validate comments
                 if (!commentsTextarea.value.trim()) {
                     e.preventDefault();
                     alert('Please enter notes for your decision.');
@@ -304,12 +318,9 @@
                     return false;
                 }
                 
-                // Validate approved quantities if approving
                 if (actionSelect.value === 'APPROVED') {
-                    // Clear all errors first
                     clearAllErrors();
                     
-                    // Validate all inputs
                     let allValid = true;
                     approvedQtyInputs.forEach(input => {
                         if (!validateInput(input)) {
@@ -320,7 +331,6 @@
                     if (!allValid) {
                         e.preventDefault();
                         
-                        // Scroll to first error
                         const firstErrorInput = document.querySelector('.has-error');
                         if (firstErrorInput) {
                             firstErrorInput.scrollIntoView({
@@ -334,7 +344,6 @@
                     }
                 }
                 
-                // Confirmation message
                 const actionText = actionSelect.value === 'APPROVED' ? 'approve' : 'reject';
                 if (!confirm(`Are you sure you want to ${actionText} this requisition? This action cannot be undone.`)) {
                     e.preventDefault();
@@ -345,9 +354,7 @@
             });
         }
         
-        // Initial validation if action is already set to APPROVED (e.g., from form submission with errors)
         if (actionSelect.value === 'APPROVED') {
-            // Small delay to ensure DOM is fully rendered
             setTimeout(() => {
                 validateAllInputs();
             }, 100);

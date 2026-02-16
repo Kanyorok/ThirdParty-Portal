@@ -576,12 +576,9 @@
 
             // Upload complete
             xhr.addEventListener('load', function () {
-                console.log('Upload response status:', xhr.status); // Debug log
-                console.log('Upload response:', xhr.responseText); // Debug log
 
                 try {
                     const response = JSON.parse(xhr.responseText);
-                    console.log('Parsed response:', response); // Debug log
 
                     if (response.success) {
                         // Success
@@ -590,7 +587,6 @@
                         uploadStatus.innerHTML = '<div class="alert alert-success">' + response.message + '</div>';
 
                         // Add document to table
-                        console.log('Adding document to table:', response.document); // Debug log
                         addDocumentToTable(response.document);
 
                         // Reset form
@@ -642,7 +638,6 @@
 
         // Add document to table
         function addDocumentToTable(doc) {
-            console.log('addDocumentToTable called with:', doc); // Debug log
 
             const tableBody = document.getElementById('documentsTableBody');
             const noDocsRow = document.getElementById('noDocsRow');
@@ -654,7 +649,6 @@
 
             // Remove "no documents" row if it exists
             if (noDocsRow) {
-                console.log('Removing no docs row');
                 noDocsRow.remove();
             }
 
@@ -668,7 +662,6 @@
                 minute: '2-digit'
             });
 
-            console.log('Creating row with date:', uploadDate); // Debug log
 
             newRow.innerHTML = `
                 <td>${doc.type || 'Contract Document'}</td>
@@ -682,7 +675,6 @@
             `;
 
             tableBody.appendChild(newRow);
-            console.log('Row added to table'); // Debug log
         }
 
         function submitForReview() {

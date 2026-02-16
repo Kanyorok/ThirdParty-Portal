@@ -2,14 +2,42 @@
 @section('title', 'Create Stock Adjustment')
 
 @section('content')
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    @if($errors->has('workflow'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Workflow Configuration Required:</strong>
+            {{ $errors->first('workflow') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
 <div class="container bg-white shadow rounded p-4">
     <h4 class="mb-4">Stock Adjustment Form</h4>
+
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Workflow Configuration Required:</strong>
+        <ul class="mb-0 mt-2">
+            <li><strong>Approval Workflow:</strong> Stock adjustments require a configured approval workflow before they can be submitted.</li>
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 
     <form method="POST" action="{{ route('transactionsadjustment.store') }}">
         @csrf
         <div class="row mb-3">
             <div class="col-md-6">
-                <label for="adjustmentDate" class="form-label">Adjustment Date</label>
+                <label for="adjustmentDate" class="form-label">Adjustment Date</label><span class="text-danger">*</span>
                 <input type="hidden" id="adjustmentDate" name="AdjustmentDate" value="{{ now()->format('Y-m-d') }}">
                 <input type="text" class="form-control" value="{{ now()->format('m/d/Y') }}" readonly>
                 <small class="text-muted">Current date (non-editable)</small>
@@ -18,13 +46,13 @@
                 @enderror
             </div>
             <div class="col-md-6">
-                <label for="branch" class="form-label">Branch</label>
-                <input type="hidden" id="branch" name="Branch" value="{{ $branch->Id }}">
-                <input type="text" class="form-control" value="{{ $branch->Name }}" readonly>
-                @error('Branch')
-                <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
+            <label for="branch" class="form-label">Branch</label><span class="text-danger">*</span>
+            <input type="hidden" id="branch" name="Branch" value="{{ $currentBranch->Id }}">
+            <input type="text" class="form-control" value="{{ $currentBranch->Name }}" readonly>
+            @error('Branch')
+            <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
         </div>
 
         <div class="table-responsive mb-3">
@@ -32,14 +60,14 @@
                 <thead class="table-light">
                 <tr>
                     <th>#</th>
-                    <th>Item Code</th>
-                    <th>Item Name</th>
-                    <th>UOM</th>
+                    <th>Item Code<span class="text-danger">*</span></th>
+                    <th>Item Name<span class="text-danger">*</span></th>
+                    <th>UOM<span class="text-danger">*</span></th>
                     <th>Unit Cost</th>
-                    <th>Current Qty</th>
-                    <th>Adjustment Qty</th>
+                    <th>Current Qty<span class="text-danger">*</span></th>
+                    <th>Adjustment Qty<span class="text-danger">*</span></th>
                     <th>New Qty</th>
-                    <th>Adjustment Reason</th>
+                    <th>Adjustment Reason<span class="text-danger">*</span></th>
                     <th>Remarks</th>
                     <th>Action</th>
                 </tr>
@@ -48,7 +76,6 @@
                 @php $oldItems = old('items'); @endphp
 
                 @if ($oldItems)
-                    {{-- repopulate old values on validation failure --}}
                     @foreach ($oldItems as $index => $item)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
@@ -59,7 +86,7 @@
                                        value="{{ $item['ItemCode'] ?? '' }}">
                             </td>
                             <td>
-                                <input type="text" class="form-control" value="{{ $item['ItemName'] ?? '' }}" readonly>
+                                <input type="text" class="form-control" value="{{ $item['ItemName'] ?? '' }}" readonly><span class="text-danger">*</span>
                             </td>
                             <td>
                                 <input type="text" class="form-control" value="{{ $item['UOMCode'] ?? '' }}" readonly>
@@ -113,7 +140,6 @@
                         </tr>
                     @endforeach
                 @else
-                    {{-- preload branch stock items on first load --}}
                     @foreach ($stockItems as $index => $stock)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
@@ -191,7 +217,6 @@
     </form>
 </div>
 
-    {{-- Scripts --}}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -216,12 +241,10 @@
         }
     }
 
-    // remove row button
     $(document).on('click', '.remove-row', function () {
         $(this).closest('tr').remove();
     });
 
-    // handle dynamic branch reload
     document.getElementById('branch').addEventListener('change', function () {
         const branchId = this.value;
         if (!branchId) return;

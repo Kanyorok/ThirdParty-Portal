@@ -3,7 +3,6 @@
 namespace App\Http\Requests\FleetManagement;
 
 use Illuminate\Foundation\Http\FormRequest;
-use App\Models\FleetManagement\FleetModel;
 
 class FleetModelRequest extends FormRequest
 {
@@ -25,7 +24,7 @@ class FleetModelRequest extends FormRequest
         return [
             'ModelName' => 'required|string|max:255',
             'BrandID' => 'required|exists:t_FleetBrands,Id',
-            //
+
         ];
     }
 }

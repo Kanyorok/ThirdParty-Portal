@@ -13,16 +13,16 @@ class ItemSubCategorySeeder extends Seeder
             [
                 'SubCategoryCode' => 'SUB-001',
                 'SubCategoryName' => 'Electronics',
-                'ParentCategory'  => 16,
-                'Description'     => 'Subcategory for electronic items',
-                'Status'          => true,
+                'ParentCategory' => 16,
+                'Description' => 'Subcategory for electronic items',
+                'Status' => true,
             ],
             [
                 'SubCategoryCode' => 'SUB-002',
                 'SubCategoryName' => 'Furniture',
-                'ParentCategory'  => 17,
-                'Description'     => 'Furniture related items',
-                'Status'          => true,
+                'ParentCategory' => 17,
+                'Description' => 'Furniture related items',
+                'Status' => true,
             ],
         ]);
     }

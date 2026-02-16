@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Marketing;
 
-use App\Models\Core\Branch;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Branch;
 use App\Services\StaticListsService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -26,7 +26,6 @@ class PlannerRequest extends FormRequest
         ];
     }
 
-
     /**
      * @throws ValidationException
      */
@@ -36,6 +35,7 @@ class PlannerRequest extends FormRequest
         if ($Mode instanceof CodeDetail) {
             return $Mode;
         }
+
         throw ValidationException::withMessages(['Mode' => 'Invalid Marketing Modes.']);
     }
 
@@ -48,14 +48,15 @@ class PlannerRequest extends FormRequest
         if ($branch instanceof Branch) {
             if ((is_null($branch->ManagerId) && is_null($branch->UserId))) {
                 throw ValidationException::withMessages([
-                    'Branch' => 'Branch does not have a manager or operations manager.'
+                    'Branch' => 'Branch does not have a manager or operations manager.',
                 ]);
             }
+
             return $branch;
         }
 
         throw ValidationException::withMessages([
-            'Branch' => 'Branch is not found.'
+            'Branch' => 'Branch is not found.',
         ]);
     }
 }

@@ -12,15 +12,12 @@ use App\Models\Procurement\GoodsReceipt;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\OrderLines;
 use App\Models\ThirdParies\Supplier;
-use App\Models\ThirdParty\ThirdParties;
 use App\Services\Finance\TransactionService;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\DB as FacadesDB;
-use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Log;
-use Ramsey\Collection\Queue;
 
 class InvoiceEntryController extends Controller
 {
@@ -34,7 +31,8 @@ class InvoiceEntryController extends Controller
         return view('finance.accountspayable.invoiceentry.index', compact('invoices'));
     }
 
-    public function create(){
+    public function create()
+    {
 
         $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
 
@@ -43,35 +41,35 @@ class InvoiceEntryController extends Controller
             ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 't_Suppliers.ThirdPartyID')
             ->select('t_Suppliers.Id', 't_Suppliers.ThirdPartyID', DB::raw("ISNULL(tp.TradingName, tp.ThirdPartyName) as SupplierName"))
             ->get();
-        $orders = Order::select('Id','AccountID','Description','OrdTotExcl','OrderNo')
+        $orders = Order::select('Id', 'AccountID', 'Description', 'OrdTotExcl', 'OrderNo')
             ->get();
         $currencies = Currency::select('Id', 'Code')->get();
         $grns = GoodsReceipt::select('Id', 'GRNID', 'SupplierId')
             ->get();
-        $orderLines = OrderLines::select('Id','iOrderID','fQuantity','fTaxRate','fUnitPriceExcl','LineTotal')
+        $orderLines = OrderLines::select('Id', 'iOrderID', 'fQuantity', 'fTaxRate', 'fUnitPriceExcl', 'LineTotal')
             ->get();
-        return view('finance.accountspayable.invoiceentry.create',compact('suppliers', 'orders', 'currencies', 'grns', 'orderLines'));
+
+        return view('finance.accountspayable.invoiceentry.create', compact('suppliers', 'orders', 'currencies', 'grns', 'orderLines'));
     }
 
     public function store(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
-        // return$request->all();
         $validated = $request->validate([
-            'InvoiceNumber'=> 'required|string',
+            'InvoiceNumber' => 'required|string',
             'ThirdPartyID' => 'required|exists:t_ThirdParties,Id',
-            'CurrencyID'=> 'required|exists:t_Currencies,Id',
-            'ExchangeRate'=> 'required|numeric|min:0',
-            'POReference'=> 'required|exists:t_Orders,OrderNo',
-            'GRNReference'=> 'required|exists:t_GoodsReceipts,GRNID',
-            'InvoiceDate'=> 'required|date',
-            'InvoiceAmount'=> 'required|numeric',
-            'Description'=> 'required|string|max:255',
+            'CurrencyID' => 'required|exists:t_Currencies,Id',
+            'ExchangeRate' => 'required|numeric|min:0',
+            'POReference' => 'required|exists:t_Orders,OrderNo',
+            'GRNReference' => 'required|exists:t_GoodsReceipts,GRNID',
+            'InvoiceDate' => 'required|date',
+            'InvoiceAmount' => 'required|numeric',
+            'Description' => 'required|string|max:255',
             // File upload validation
             'file' => 'nullable|file|max:5120|mimes:pdf,doc,docx,xls,xlsx,csv,png,jpg,jpeg',
         ], [
             'file.mimes' => 'Only PDF, Word, Excel, CSV, JPG, and PNG files are allowed.',
-            'file.max'   => 'File size must not exceed 5 MB.',
+            'file.max' => 'File size must not exceed 5 MB.',
         ]);
 
 
@@ -81,24 +79,19 @@ class InvoiceEntryController extends Controller
         $poId = Order::where('OrderNo', $poOrderNo)->value('Id');
         $grnId = $validated['GRNReference'];
 
-        // $poItemsID = FacadesDB::table('t_OrderLines')
-        //     ->where('iOrderID', $poId)
-        //     ->pluck('Id') //represents the unique Orderline Ids based on
-        //     ->toArray();
 
-        try{
-
+        try {
             $grnItems = FacadesDB::table('t_GoodsReceipts')
                 ->where('GRNID', $grnId)
                 ->get();
-            $sum=0;
-            foreach($grnItems as $item) {
+            $sum = 0;
+            foreach ($grnItems as $item) {
                 $GRN_ID = $item->id;
-                $itemID=$item->ItemNo;
-                $grnItemQty=$item->ReceivedQTY;
+                $itemID = $item->ItemNo;
+                $grnItemQty = $item->ReceivedQTY;
                 $poItemqty = $item->POQTY; //represents the unique Orderline Ids based on
-                if($grnItemQty !== $poItemqty) {
-                    return back()->with('error' , 'GRN quantity does not match PO quantity for item.');
+                if ($grnItemQty !== $poItemqty) {
+                    return back()->with('error', 'GRN quantity does not match PO quantity for item.');
                 }
 
                 $linestotal = FacadesDB::table('t_OrderLines')
@@ -109,7 +102,7 @@ class InvoiceEntryController extends Controller
             }
             $invoiceTotAmount = $validated['InvoiceAmount'];
 
-            if($sum != $invoiceTotAmount){
+            if ($sum != $invoiceTotAmount) {
                 return back()->with('error', 'Invoice amount does not match PO total amount.');
             }
             //Currency Exchange Rates Details
@@ -121,19 +114,19 @@ class InvoiceEntryController extends Controller
             // Optionally resolve a SupplierID that maps to this ThirdParty (for legacy FK compatibility)
             $legacySupplierId = FacadesDB::table('t_Suppliers')->where('ThirdPartyID', $thirdPartyId)->value('Id');
 
-            $invoice =  FinanceInvoiceEntry::create([
-                'InvoiceNumber'=> $validated['InvoiceNumber'],
+            $invoice = FinanceInvoiceEntry::create([
+                'InvoiceNumber' => $validated['InvoiceNumber'],
                 'SupplierID' => $legacySupplierId, // legacy field; prefer ThirdPartyID
                 'ThirdPartyID' => $thirdPartyId,
-                'CurrencyID'=> $validated['CurrencyID'],
-                'ExchangeRate'=> $validated['ExchangeRate'],
-                'POReference'=> $poId,
-                'GRNReference'=> $GRN_ID,
-                'InvoiceDate'=> $validated['InvoiceDate'],
-                'InvoiceAmount'=> $validated['InvoiceAmount'],
-                'Description'=> $validated['Description'],
-                'CreatedBy'          =>Auth::Id(),
-                'ModifiedBy'         => Auth::Id(),
+                'CurrencyID' => $validated['CurrencyID'],
+                'ExchangeRate' => $validated['ExchangeRate'],
+                'POReference' => $poId,
+                'GRNReference' => $GRN_ID,
+                'InvoiceDate' => $validated['InvoiceDate'],
+                'InvoiceAmount' => $validated['InvoiceAmount'],
+                'Description' => $validated['Description'],
+                'CreatedBy' => Auth::Id(),
+                'ModifiedBy' => Auth::Id(),
             ]);
 
             //File Upload
@@ -154,14 +147,12 @@ class InvoiceEntryController extends Controller
 
             FacadesDB::commit();
 
-            return redirect()->route('invoiceentry.index')->with('success','Invoice created successfully');
-        }catch(\Throwable $th){
+            return redirect()->route('invoiceentry.index')->with('success', 'Invoice created successfully');
+        } catch (\Throwable $th) {
             FacadesDB::rollback();
-            //return $th->getMessage();
-            Log::error('Failed to Create Invoice'. $th->getMessage());
+            Log::error('Failed to Create Invoice' . $th->getMessage());
 
-            return back()->withError('error','Failed to create Invoice:' .$th->getMessage());
-
+            return back()->withError('error', 'Failed to create Invoice:' . $th->getMessage());
         }
     }
 
@@ -181,23 +172,22 @@ class InvoiceEntryController extends Controller
     public function getGRNs($selectedPO)
     {
 
-        // return $selectedPO;
         $grns = FacadesDB::table('t_GoodsReceipts')
             ->select(FacadesDB::raw('MIN(id) as id'), 'GRNID')
             ->where('POID', $selectedPO)
-            ->where('InspectionStatus','p') // Pick ones that are posted or approved
+            ->where('InspectionStatus', 'p') // Pick ones that are posted or approved
             ->groupBy('GRNID')
             ->get();
+
         return response()->json($grns);
     }
-
 
     public function viewPOModal($selectedPO)
     {
         // Get PO details
         $po = FacadesDB::table('t_Orders')->where('OrderNo', $selectedPO)->first();
-        $orderID=$po->Id;
-        if (!$po) {
+        $orderID = $po->Id;
+        if (! $po) {
             return response()->json(['error' => 'PO not found'], 404);
         }
 
@@ -215,19 +205,19 @@ class InvoiceEntryController extends Controller
             ->get()
             ->map(function ($item) {
                 return [
-                    'ItemName'    => $item->ItemName ?? '',
+                    'ItemName' => $item->ItemName ?? '',
                     'Description' => $item->Description ?? '',
-                    'Quantity'    => $item->fQuantity ?? '',
-                    'UnitCost'    => $item->fUnitPriceExcl ?? '',
+                    'Quantity' => $item->fQuantity ?? '',
+                    'UnitCost' => $item->fUnitPriceExcl ?? '',
                 ];
             });
 
         // Build response
         $data = [
-            'OrderNo'      => $po->OrderNo ?? '',
+            'OrderNo' => $po->OrderNo ?? '',
             'SupplierName' => $supplier->SupplierName ?? '',
-            'OrderDate'    => $po->OrderDate ?? '',
-            'items'        => $items,
+            'OrderDate' => $po->OrderDate ?? '',
+            'items' => $items,
         ];
 
         return response()->json($data);
@@ -242,10 +232,13 @@ class InvoiceEntryController extends Controller
             ->leftJoin('t_ThirdParties as tp', 's.ThirdPartyID', '=', 'tp.Id')
             ->where('gr.GRNID', $grnId)
             ->select(
-                'gr.GRNID', 'gr.POID',
+                'gr.GRNID',
+                'gr.POID',
                 FacadesDB::raw("ISNULL(tp.TradingName, tp.ThirdPartyName) as SupplierName"),
-                'i.ItemName', 'i.ItemDescription as Description',
-                'gr.POQTY as OrderedQty', 'gr.ReceivedQTY as ReceivedQty'
+                'i.ItemName',
+                'i.ItemDescription as Description',
+                'gr.POQTY as OrderedQty',
+                'gr.ReceivedQTY as ReceivedQty'
             )
             ->get();
 
@@ -253,14 +246,14 @@ class InvoiceEntryController extends Controller
             return response()->json(['error' => 'GRN not found'], 404);
         }
 
-        $sumOrdered = (float)$lines->sum(fn($li) => (float)($li->OrderedQty ?? 0));
-        $sumReceived = (float)$lines->sum(fn($li) => (float)($li->ReceivedQty ?? 0));
+        $sumOrdered = (float)$lines->sum(fn ($li) => (float)($li->OrderedQty ?? 0));
+        $sumReceived = (float)$lines->sum(fn ($li) => (float)($li->ReceivedQty ?? 0));
 
         return response()->json([
             'GRNID' => $grnId,
             'POID' => $lines->first()->POID,
             'SupplierName' => $lines->first()->SupplierName,
-            'items' => $lines->map(fn($li) => [
+            'items' => $lines->map(fn ($li) => [
                 'ItemName' => $li->ItemName ?? '',
                 'Description' => $li->Description ?? '',
                 'OrderedQty' => $li->OrderedQty ?? 0,
@@ -279,10 +272,6 @@ class InvoiceEntryController extends Controller
         $poId = $request->input('POReference');
         $grnId = $request->input('GRNReference');
 
-        // $poItemsID = FacadesDB::table('t_OrderLines')
-        //     ->where('iOrderID', $poId)
-        //     ->pluck('Id') //represents the unique Orderline Ids based on
-        //     ->toArray();
 
         FacadesDB::beginTransaction();
 
@@ -292,15 +281,15 @@ class InvoiceEntryController extends Controller
                 ->where('GRNID', $grnId)
                 ->get();
 
-            foreach($grnItems as $item) {
-                $itemID=$item->ItemNo;
-                $grnItemQty=$item->qty;
+            foreach ($grnItems as $item) {
+                $itemID = $item->ItemNo;
+                $grnItemQty = $item->qty;
                 $poItemqty = FacadesDB::table('t_OrderLines')
                     ->where('iOrderID', $poId)
                     ->where('iStockCodeID', $itemID)
                     ->value('fQuantity');
-                if($grnItemQty !== $poItemqty) {
-                    return back()->with('error' , 'GRN quantity does not match PO quantity for item.');
+                if ($grnItemQty !== $poItemqty) {
+                    return back()->with('error', 'GRN quantity does not match PO quantity for item.');
                 }
 
                 $poTotAmount = FacadesDB::table('t_Orders')
@@ -309,13 +298,14 @@ class InvoiceEntryController extends Controller
 
                 $invoiceTotAmount = $request->input('InvoiceAmount');
 
-                if($poTotAmount !== $invoiceTotAmount){
+                if ($poTotAmount !== $invoiceTotAmount) {
                     return back()->with('error', 'Invoice amount does not match PO total amount.');
                 }
                 FacadesDB::commit();
+
                 return 200;
             }
-        }catch (\Throwable $th) {
+        } catch (\Throwable $th) {
             FacadesDB::rollback();
 
             return  'Failed to validate GRN and PO';
@@ -348,32 +338,30 @@ class InvoiceEntryController extends Controller
                 )
                 ->get();
 
-            $poSub = $poItems->sum(fn($li) => (float)$li->UnitCost * (float)$li->Quantity);
+            $poSub = $poItems->sum(fn ($li) => (float)$li->UnitCost * (float)$li->Quantity);
         }
 
         // Prepare view data
         $viewData = [
-            'currencyCode'   => $invoice->currency->Code ?? '',
+            'currencyCode' => $invoice->currency->Code ?? '',
             'currencySymbol' => $invoice->currency->Symbol ?? '',
-            'invNo'          => $invoice->InvoiceNumber ?? '—',
-            'invDate'        => $invoice->InvoiceDate
+            'invNo' => $invoice->InvoiceNumber ?? '—',
+            'invDate' => $invoice->InvoiceDate
                 ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d M Y')
                 : '—',
-            'amount'         => number_format((float)($invoice->InvoiceAmount ?? 0), 2),
-            'exRate'         => $invoice->ExchangeRate ?? 1.0,
+            'amount' => number_format((float)($invoice->InvoiceAmount ?? 0), 2),
+            'exRate' => $invoice->ExchangeRate ?? 1.0,
             'vendorName' => ($invoice->thirdParty->TradingName ?? $invoice->thirdParty->ThirdPartyName) ?? '—',
-            'poNo'           => $invoice->order->OrderNo ?? '—',
-            'grnNo'          => $invoice->grn->GRNID ?? '—',
-            'poSub'          => $poSub,
+            'poNo' => $invoice->order->OrderNo ?? '—',
+            'grnNo' => $invoice->grn->GRNID ?? '—',
+            'poSub' => $poSub,
         ];
 
         return view('finance.accountspayable.invoiceentry.show', compact('invoice', 'poItems') + $viewData);
     }
 
-
     public function approve(Request $request, int $id, TransactionService $svc)
     {
-        // $this->authorize('approve-ap-invoice', FinanceInvoiceEntry::class);
 
         $validated = $request->validate([
             'Reason' => 'required|string|max:255',
@@ -381,7 +369,7 @@ class InvoiceEntryController extends Controller
 
         // Configure your module + transaction type mapping IDs
         // Make sure these exist in t_Modules and t_FinanceTransactionTypes
-        $MODULE_ID          = 1100000; // Finance module
+        $MODULE_ID = 1100000; // Finance module
         $TRANSACTION_TYPEID = 15;    // "AP Invoice"
 
         try {
@@ -414,32 +402,28 @@ class InvoiceEntryController extends Controller
 
                 // Build payload for TransactionService (service does idempotency)
                 $payload = [
-                    'ModuleID'          => $MODULE_ID,
-                    'ThirdPartyID'=>$invoice->SupplierID,
+                    'ModuleID' => $MODULE_ID,
+                    'ThirdPartyID' => $invoice->SupplierID,
                     'TransactionTypeID' => $TRANSACTION_TYPEID,
-                    'TransactionType'   => 'Account Payable Invoice',
-                    'ReferenceNumber'   => $invoice->InvoiceNumber,
-                    'TransactionDate'   => $invoice->InvoiceDate ?? now()->toDateString(),
-                    'Amount'            => (float)($invoice->InvoiceAmount ?? 0),   // net (excl. tax) if that's your model
-                    'TaxAmount'         => (float)($invoice->TaxAmount ?? 0),      // 0 if not captured
-                    'BranchID'          => session('LoginBranchId', 1),
-                    'DepartmentID'      => $invoice->DepartmentID ?? null,
-                    'CurrencyID'        => $invoice->CurrencyID ?? 1,
-                    'CurrencyCode'      => optional($invoice->currency)->Code ?? 'KES',
-                    'ExchangeRate'      => (float)($invoice->ExchangeRate ?? 1),
-                    'Narration'         => trim(($invoice->Description ?? '').' '.$validated['Reason']),
-                    'SourceTable'       => 't_FinanceInvoiceEntries',
-                    'SystemDescription' => 'AP Invoice '.$invoice->InvoiceNumber,
+                    'TransactionType' => 'Account Payable Invoice',
+                    'ReferenceNumber' => $invoice->InvoiceNumber,
+                    'TransactionDate' => $invoice->InvoiceDate ?? now()->toDateString(),
+                    'Amount' => (float)($invoice->InvoiceAmount ?? 0),   // net (excl. tax) if that's your model
+                    'TaxAmount' => (float)($invoice->TaxAmount ?? 0),      // 0 if not captured
+                    'BranchID' => session('LoginBranchId', 1),
+                    'DepartmentID' => $invoice->DepartmentID ?? null,
+                    'CurrencyID' => $invoice->CurrencyID ?? 1,
+                    'CurrencyCode' => optional($invoice->currency)->Code ?? 'KES',
+                    'ExchangeRate' => (float)($invoice->ExchangeRate ?? 1),
+                    'Narration' => trim(($invoice->Description ?? '') . ' ' . $validated['Reason']),
+                    'SourceTable' => 't_FinanceInvoiceEntries',
+                    'SystemDescription' => 'AP Invoice ' . $invoice->InvoiceNumber,
                     // Optional one‑off overrides if needed:
                     // 'DebitGLAccountID'  => 5_001,
                     // 'CreditGLAccountID' => 3_001,
                     // 'TaxGLAccountID'    => 2_101,
                 ];
                 // Post via mapping; TransactionService handles:
-                // - mapping lookup
-                // - idempotency (no duplicates)
-                // - validation + balancing
-                // - persistence (single DB txn internally)
                 $result = $svc->postFromTypeMapping($payload);
 
                 // Update invoice approval status if posted (or keep as-is if service reported 'exists')
@@ -447,8 +431,8 @@ class InvoiceEntryController extends Controller
                     $invoice->update([
                         'ApprovalStatus' => 'posted',
                         'ApprovalReason' => $validated['Reason'],
-                        'ModifiedBy'     => Auth::id(),
-                        'ModifiedOn'     => now(),
+                        'ModifiedBy' => Auth::id(),
+                        'ModifiedOn' => now(),
                     ]);
                 }
 
@@ -469,8 +453,7 @@ class InvoiceEntryController extends Controller
             });
         } catch (\Throwable $e) {
             // Log if you want: Log::error('AP approve error', ['id'=>$id, 'err'=>$e->getMessage()])
-            //return $e->getMessage();
-            return back()->with('error', "Approval/Post failed: ".$e->getMessage());
+            return back()->with('error', "Approval/Post failed: " . $e->getMessage());
         }
     }
 

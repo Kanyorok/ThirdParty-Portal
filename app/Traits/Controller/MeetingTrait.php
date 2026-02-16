@@ -32,17 +32,21 @@ trait MeetingTrait
      */
     public function meetings(Builder|BelongsToMany|\Illuminate\Database\Eloquent\Builder $query): JsonResponse
     {
-                $tz = config('app.timezone');
-                return Datatables::of($query->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
+        $tz = config('app.timezone');
+
+        return Datatables::of($query->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
             ->editColumn('StartOn', function (Meeting $meeting) {
-                                $tz = config('app.timezone');
-                                return $meeting->StartOn?->format('F d, Y h:i A') . " ({$tz})";
+                $tz = config('app.timezone');
+
+                return $meeting->StartOn?->format('F d, Y h:i A') . " ({$tz})";
             })->editColumn('EndOn', function (Meeting $meeting) {
-                                $tz = config('app.timezone');
-                                return $meeting->EndOn?->format('F d, Y h:i A') . " ({$tz})";
+                $tz = config('app.timezone');
+
+                return $meeting->EndOn?->format('F d, Y h:i A') . " ({$tz})";
             })->editColumn('Title', function (Meeting $meeting) {
-                                $tz = config('app.timezone');
-                                return '<details><summary>' . $meeting->Title . '</summary>
+                $tz = config('app.timezone');
+
+                return '<details><summary>' . $meeting->Title . '</summary>
                                     <p><b>Location: ' . $meeting->Location . '</b></p>
                                     <p><b>Duration: ' . $meeting->EndOn->diffForHumans($meeting->StartOn, CarbonInterface::DIFF_ABSOLUTE, parts: 2, short: true) . '</b></p>
                                     <p><small class="text-muted">Timezone: ' . e($tz) . '</small></p>
@@ -53,12 +57,14 @@ trait MeetingTrait
                 if ($meeting->Type === Board::getPrimaryKey()) {
                     return 'user-select-none dbl-click-redirect-data';
                 }
+
                 return '';
             })->setRowData([
                             'dbl_click_url' => function (Meeting $meeting) {
                                 if ($meeting->Type === Board::getPrimaryKey()) {
                                     return route('board-meetings.show', $meeting->MeetingID);
                                 }
+
                                 return '';
                             },
                            ])->rawColumns(['Title'])->make();
@@ -117,8 +123,8 @@ trait MeetingTrait
 
             $meeting->update([
                               'Location' => $location,
-                              'Title'    => $title,
-                              'EndOn'    => $end,
+                              'Title' => $title,
+                              'EndOn' => $end,
                               'StatusID' => MeetingStatusEnum::Completed->value,
                              ]);
 
@@ -126,24 +132,24 @@ trait MeetingTrait
             (new MeetingService($meeting))->attachUser($UserIDs, now(), $actor);
 
             $discussionID = Discussion::insertGetId([
-                                                     'SourceType'   => Meeting::getPrimaryKey(),
+                                                     'SourceType' => Meeting::getPrimaryKey(),
                                                      'SourceTypeID' => $meeting->MeetingID,
-                                                     "Party"        => $meeting->Type,
-                                                     "PartyID"      => $PartyID,
-                                                     'Discussion'   => $discussion,
-                                                     'CreatedBy'    => $actor->Id,
-                                                     'ModifiedBy'   => $actor->Id,
-                                                     'CreatedOn'    => $end,
-                                                     'ModifiedOn'   => $end,
+                                                     "Party" => $meeting->Type,
+                                                     "PartyID" => $PartyID,
+                                                     'Discussion' => $discussion,
+                                                     'CreatedBy' => $actor->Id,
+                                                     'ModifiedBy' => $actor->Id,
+                                                     'CreatedOn' => $end,
+                                                     'ModifiedOn' => $end,
                                                     ]);
 
             DiscussionUser::create([
                                     'DiscussionId' => $discussionID,
-                                    'UserID'       => $actor->Id,
-                                    'CreatedBy'    => $actor->Id,
-                                    'ModifiedBy'   => $actor->Id,
-                                    'CreatedOn'    => $end,
-                                    'ModifiedOn'   => $end,
+                                    'UserID' => $actor->Id,
+                                    'CreatedBy' => $actor->Id,
+                                    'ModifiedBy' => $actor->Id,
+                                    'CreatedOn' => $end,
+                                    'ModifiedOn' => $end,
                                    ]);
 
             ActivityService::meeting($meeting, $PartyID, 'Meeting : ' . $meeting->Title, $actor);
@@ -152,13 +158,14 @@ trait MeetingTrait
             if (is_string($notes)) {
                 Notes::create([
                                'DiscussionID' => $discussionID,
-                               "Party"        => $meeting->Type,
-                               "PartyID"      => $PartyID,
-                               'Notes'        => $notes,
-                               'CreatedBy'    => $actor->Id,
-                               'ModifiedBy'   => $actor->Id,
+                               "Party" => $meeting->Type,
+                               "PartyID" => $PartyID,
+                               'Notes' => $notes,
+                               'CreatedBy' => $actor->Id,
+                               'ModifiedBy' => $actor->Id,
                               ]);
             }
+
             return $meeting;
         });
     }

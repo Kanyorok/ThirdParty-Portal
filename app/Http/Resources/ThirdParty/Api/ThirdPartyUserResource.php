@@ -11,23 +11,24 @@ class ThirdPartyUserResource extends JsonResource
     {
         return [
             'id' => $this->Id,
-            'userId' => $this->UserID,
+            // 'userId' => $this->Id,
             'firstName' => $this->FirstName,
             'lastName' => $this->LastName,
-            'fullName' => "{$this->FirstName} {$this->LastName}",
+            'fullName' => trim($this->FirstName . ' ' . $this->LastName),
             'email' => $this->Email,
             'phone' => $this->Phone,
+            'gender' => $this->genderDetail?->Description,
             'imageId' => $this->ImageId,
             'thirdPartyId' => $this->ThirdPartyId,
-            'isActive' => $this->isActive(),
-            'isApproved' => $this->isApproved(),
-            'isSupplier' => $this->isSupplier(),
-            'isTenant' => $this->isTenant(),
-            'isCustomer' => $this->isCustomer(),
+            'isActive' => (bool) $this->IsActive,
+            'emailVerified' => ! is_null($this->EmailVerifiedOn),
             'emailVerifiedOn' => $this->EmailVerifiedOn?->toDateTimeString(),
+            'isSupplier' => (bool) $this->isSupplier(),
+            'isTenant' => (bool) $this->isTenant(),
+            'isCustomer' => (bool) $this->isCustomer(),
             'createdOn' => $this->CreatedOn?->toDateTimeString(),
             'modifiedOn' => $this->ModifiedOn?->toDateTimeString(),
-            'thirdParty' => new ThirdPartyResource($this->whenLoaded('thirdParty')),
+            'thirdParty' => ThirdPartyResource::make($this->whenLoaded('thirdParty')),
         ];
     }
 }

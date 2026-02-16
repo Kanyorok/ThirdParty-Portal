@@ -21,12 +21,12 @@ class NewBoardRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'ClientID'          => [
+                'ClientID' => [
                                         'required',
                                         'string',
                                         'max:200',
                                        ],
-                'BoardCommittees'   => [
+                'BoardCommittees' => [
                                         'required',
                                         'array',
                                         'min:1',
@@ -36,12 +36,12 @@ class NewBoardRequest extends FormRequest
                                         'required',
                                         Rule::exists('t_Committees', 'CommitteeID'),
                                        ],
-                'BoardMemberRole'   => [
+                'BoardMemberRole' => [
                                         'nullable',
                                         'string',
                                         'max:200',
                                        ],
-                'BoardMemberNotes'  => [
+                'BoardMemberNotes' => [
                                         'nullable',
                                         'string',
                                         'max:2000',
@@ -61,8 +61,10 @@ class NewBoardRequest extends FormRequest
             if (Board::query()->where('ClientID', $client->ClientID)->exists()) {
                 throw ValidationException::withMessages(['ClientID' => 'client already has a board member']);
             }
+
             return $client;
         }
+
         throw ValidationException::withMessages(['ClientID' => 'invalid Member Number']);
     }
 

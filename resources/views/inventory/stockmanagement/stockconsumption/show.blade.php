@@ -37,7 +37,6 @@
 
             <div class="col-md-6 mb-3">
                 @php
-                    // Calculate issued to name
                     $issuedToName = 'N/A';
                     if ($consumption->IssuedToType && $consumption->IssuedToID) {
                         $type = \App\Models\Core\Approval\CodeDetail::find($consumption->IssuedToType);
@@ -60,7 +59,6 @@
                         }
                     }
                     
-                    // Get issued to type name
                     $issuedToType = \App\Models\Core\Approval\CodeDetail::find($consumption->IssuedToType);
                 @endphp
                 <strong>Issued To:</strong> {{ $issuedToName }}
@@ -71,7 +69,6 @@
 
             <div class="col-md-6 mb-3">
                 @php
-                    // Calculate issued by name
                     $issuedByName = 'N/A';
                     if ($consumption->issuedBy) {
                         $employee = $consumption->issuedBy->employee;

@@ -3,34 +3,39 @@
 namespace App\Models\Inventory;
 
 use App\Models\Auth\User;
-use App\Models\Core\Branch;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Branch;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InventoryHold extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_InventoryHold';
     protected $primaryKey = 'Id';
     protected $connection = 'sqlsrv';
 
-
     protected $fillable = [
         'InventoryHoldID', 'ItemID', 'BranchID', 'Store', 'Quantity', 'Reason', 'Source', 'SourceID',
-        'Status', 'Remarks', 'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy'
+        'Status', 'Remarks', 'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy',
     ];
 
     public function defect()
     {
         return $this->belongsTo(CodeDetail::class, 'Reason', 'ID')
             ->where('CodeID', 'Adjustment Reason');
+    }
+
+    public function defectDetail()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Reason', 'ID');
     }
 
     public function item()
@@ -58,6 +63,11 @@ class InventoryHold extends Model
         return $this->belongsTo(Branch::class, 'BranchID');
     }
 
+    public function fromBranch()
+    {
+        return $this->belongsTo(Branch::class, 'BranchID');
+    }
+
     public function store()
     {
         return $this->belongsTo(Store::class, 'Store');
@@ -66,6 +76,29 @@ class InventoryHold extends Model
     public function sourceDetail()
     {
         return $this->belongsTo(CodeDetail::class, 'Source');
+    }
+
+    public function sourceAdjustment()
+    {
+        return $this->belongsTo(StockAdjustment::class, 'SourceID', 'Id');
+    }
+
+    public function sourceReceipt()
+    {
+        return $this->belongsTo(TransactionReceipt::class, 'SourceID', 'Id');
+    }
+
+    public function getSourceDocumentIdAttribute()
+    {
+        $sourceType = $this->sourceDetail->Description ?? '';
+
+        if (stripos($sourceType, 'adjustment') !== false && $this->sourceAdjustment) {
+            return $this->sourceAdjustment->AdjustmentId ?? $this->SourceID;
+        } elseif ((stripos($sourceType, 'receipt') !== false || stripos($sourceType, 'transfer') !== false) && $this->sourceReceipt) {
+            return $this->sourceReceipt->ReceiptId ?? $this->SourceID;
+        }
+
+        return $this->SourceID;
     }
 
     public function inventoryHoldReview()
@@ -81,17 +114,15 @@ class InventoryHold extends Model
     protected static function booted()
     {
         static::created(function ($hold) {
-            if (!$hold->InventoryHoldID) {
+            if (! $hold->InventoryHoldID) {
                 $year = now()->format('Y');
                 $hold->newQueryWithoutScopes()
                     ->where('Id', $hold->Id)
                     ->update([
-                        'InventoryHoldID' => 'HLD-' . $year . '-' . str_pad($hold->Id, 4, '0', STR_PAD_LEFT)
+                        'InventoryHoldID' => 'HLD-' . $year . '-' . str_pad($hold->Id, 4, '0', STR_PAD_LEFT),
                     ]);
                 $hold->InventoryHoldID = 'HLD-' . $year . '-' . str_pad($hold->Id, 4, '0', STR_PAD_LEFT);
             }
         });
     }
-
-
 }

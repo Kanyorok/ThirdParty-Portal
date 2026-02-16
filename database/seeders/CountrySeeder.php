@@ -11,6 +11,5 @@ class CountrySeeder extends Seeder
      */
     public function run(): void
     {
-        //
     }
 }

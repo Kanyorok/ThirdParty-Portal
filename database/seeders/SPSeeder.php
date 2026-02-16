@@ -20,12 +20,11 @@ class SPSeeder extends Seeder
 
         $directories = collect(File::directories($spPath))->sort()->values()->all();
         foreach ($directories as $directory) {
-
             $baseName = basename($directory);
             if (str_starts_with($baseName, '0')) {
                 continue;
             }
-            if (!$fresh && str_starts_with($baseName, '2')) {
+            if (! $fresh && str_starts_with($baseName, '2')) {
                 continue;
             }
 
@@ -38,7 +37,13 @@ class SPSeeder extends Seeder
                     } catch (FileNotFoundException $e) {
                         continue;
                     }
-                    DB::unprepared($sql);
+                    echo "Processing: " . $file->getPathname() . PHP_EOL;
+                    $statements = preg_split('/^GO\s*$/m', $sql);
+                    foreach ($statements as $statement) {
+                        if (trim($statement) !== '') {
+                            DB::unprepared($statement);
+                        }
+                    }
                 }
             }
         }

@@ -155,6 +155,9 @@
 
 <script>
     $(function () {
+        $('#updateHeadId').select2({ dropdownParent: $('#departmentActionModel'), placeholder: 'Select HOD', allowClear: true });
+        $('#updateDeputyHeadId').select2({ dropdownParent: $('#departmentActionModel'), placeholder: 'Select Deputy HOD', allowClear: true });
+
         $('form#trashDepartmentForm').submit(async function (e) {
             e.preventDefault();
             if (await saveForm($(this), $('#trashDepartmentBtn'), false, true, true)) {

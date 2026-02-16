@@ -6,8 +6,8 @@ use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Approval\CodeDetail;
-use Illuminate\Http\Request;
 use App\Models\Legal\LegalIntellectualProperty;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,6 +19,7 @@ class LegalIntellectualPropertyController extends Controller
         $this->authorize(PermissionEnum::IntellectualPropertyView, LegalIntellectualProperty::class);
 
         $records = LegalIntellectualProperty::orderByDesc('CreatedOn')->paginate(15);
+
         return view('legal.intellectual.index', compact('records'));
     }
 
@@ -29,6 +30,7 @@ class LegalIntellectualPropertyController extends Controller
         $details = CodeDetail::select('Value')
             ->where('CodeID', 'IPTypes')
             ->get();
+
         return view('legal.intellectual.create', compact('details'));
     }
 
@@ -60,6 +62,7 @@ class LegalIntellectualPropertyController extends Controller
         if ($duplicates) {
             return back()->with('error', 'Error there is alreaady an existing record with these details');
         }
+
         try {
             DB::beginTransaction();
 
@@ -107,8 +110,8 @@ class LegalIntellectualPropertyController extends Controller
                 ->log('Error creating Intellectual Property');
 
             Log::error('Error creating Intellectual Property.' . $th->getMessage());
-            return back()->with('error', 'Error creating Intellectual Property: ' . $th->getMessage());
 
+            return back()->with('error', 'Error creating Intellectual Property: ' . $th->getMessage());
         }
     }
 
@@ -117,6 +120,7 @@ class LegalIntellectualPropertyController extends Controller
         $this->authorize(PermissionEnum::IntellectualPropertyView, LegalIntellectualProperty::class);
 
         $record = LegalIntellectualProperty::findOrFail($id);
+
         return view('legal.intellectual.show', compact('record'));
     }
 
@@ -128,6 +132,7 @@ class LegalIntellectualPropertyController extends Controller
         $details = CodeDetail::select('Value')
             ->where('CodeID', 'IPTypes')
             ->get();
+
         return view('legal.intellectual.edit', compact('record', 'details'));
     }
 
@@ -149,8 +154,8 @@ class LegalIntellectualPropertyController extends Controller
             'IsDisputed' => 'boolean',
             'DisputeReason' => 'nullable|string',
         ]);
-        try {
 
+        try {
             $validated['ModifiedBy'] = Auth::id();
             $validated['ModifiedOn'] = now();
 
@@ -175,6 +180,7 @@ class LegalIntellectualPropertyController extends Controller
                 ->log('Error updating Intellectual Property');
 
             Log::error('Error updating Intellectual Property.' . $th->getMessage());
+
             return back()->with('error', 'Error updating Intellectual Property: ' . $th->getMessage());
         }
     }
@@ -228,6 +234,7 @@ class LegalIntellectualPropertyController extends Controller
                 ->log('Error deleting Intellectual Property');
 
             Log::error('Error deleting Intellectual Property.' . $th->getMessage());
+
             return back()->with('error', 'Error deleting Intellectual Property: ' . $th->getMessage());
         }
     }

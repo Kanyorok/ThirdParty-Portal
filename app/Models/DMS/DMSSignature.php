@@ -14,11 +14,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DMSSignature extends Model
 {
-    use SoftDeletes, UserActorTrait, SpecialPermissionTrait, DocumentsTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use SpecialPermissionTrait;
+    use DocumentsTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_DMSSignatures';
     protected $primaryKey = 'Id';
@@ -70,5 +73,4 @@ class DMSSignature extends Model
     {
         return "#" . $this->SignatureId;
     }
-
 }

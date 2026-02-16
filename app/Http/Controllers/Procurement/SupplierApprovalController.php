@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\ThirdParty\SupplierMaster;
 use App\Services\ThirdParties\SupplierWorkflowService;
-use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
 
 class SupplierApprovalController extends Controller
 {
@@ -69,8 +68,9 @@ class SupplierApprovalController extends Controller
 
         $user = Auth::user();
 
-        if (!$this->workflowService->canApproveSupplier($supplier, $user)) {
+        if (! $this->workflowService->canApproveSupplier($supplier, $user)) {
             $msg = $this->workflowService->getApprovalDetailsMessage(SupplierMaster::getPrimaryKey(), $id);
+
             return redirect()->back()->with('error', "You are not authorized to approve. " . $msg);
         }
 
@@ -88,6 +88,7 @@ class SupplierApprovalController extends Controller
             return redirect()->route('suppliers-approval.index')->with('success', 'Supplier approved successfully.');
         } catch (\Exception $e) {
             Log::error('Supplier approval failed: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Approval failed: ' . $e->getMessage());
         }
     }
@@ -102,8 +103,9 @@ class SupplierApprovalController extends Controller
 
         $user = Auth::user();
 
-        if (!$this->workflowService->canApproveSupplier($supplier, $user)) {
+        if (! $this->workflowService->canApproveSupplier($supplier, $user)) {
             $msg = $this->workflowService->getApprovalDetailsMessage(SupplierMaster::getPrimaryKey(), $id);
+
             return redirect()->back()->with('error', "You are not authorized to reject. " . $msg);
         }
 
@@ -124,7 +126,6 @@ class SupplierApprovalController extends Controller
 
             return redirect()->route('suppliers-approval.index')->with('success', 'Supplier rejected successfully.');
         } catch (\Exception $e) {
-
             return redirect()->back()->with('error', 'Rejection failed: ' . $e->getMessage());
         }
     }

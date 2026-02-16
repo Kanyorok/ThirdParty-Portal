@@ -578,7 +578,6 @@
             fetchIndustries();
 
             $(document).on('dblclick', '.reorder', function (e) {
-                console.log(e);
                 alert('Double click does not do anything here');
             });
             $(document).on('click', '.list-action-add', function () {
@@ -842,7 +841,6 @@
 
                 CountyTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the notes.");
-                    console.log(er);
                 });
             } else {
                 CountyTable.ajax.reload();
@@ -873,7 +871,6 @@
 
                 CityTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the notes.");
-                    console.log(er);
                 });
             } else {
                 CityTable.ajax.reload();
@@ -883,7 +880,6 @@
         function fetchLists(code) {
             let table = $('#' + code + 'Table').on('dt-error.dt', function (e, settings, techNote, message) {
                 nWarning("an issue occurred while loading the list.");
-                console.log('An error has been reported by DataTables: ', message);
             }).DataTable({
                 processing: true,
                 serverSide: true,
@@ -921,7 +917,6 @@
                 },
             });
             /* table.on('error', function (er) {
-                 console.log(er);
                  nWarning("an issue occurred while loading the list.");
              });*/
             $('#' + code + 'Table tbody').on('dblclick', 'tr', function (e) {
@@ -931,7 +926,6 @@
             table.on('row-reorder', function (e, diff, edit) {
                 e.preventDefault();
                 if (isBusy) {
-                    console.log('busy');
                 } else if (!Array.isArray(diff) && diff.length === 0) {
                     isBusy = true;
                     setTimeout(function () {
@@ -939,7 +933,6 @@
                     }, 1000);
                 } else {
                     if ($(diff[0].node).data('info') == edit.originalEvent.target.parentNode.dataset.info) {
-                        // console.log('else '+$(diff[0].node).data('info')+' first: '+diff[0].oldPosition + ' N: '+ diff[0].newPosition);
                         let position = parseInt(diff[0].newPosition);
                         isBusy = true;
                         if (Number.isInteger(position)) {
@@ -965,7 +958,6 @@
                             });
                         }
                     } else if ($(diff[diff.length - 1].node).data('info') == edit.originalEvent.target.parentNode.dataset.info) {
-                        //  console.log('else '+$(diff[diff.length - 1].node).data('info')+' End : '+diff[diff.length - 1].oldPosition + ' N: '+ diff[diff.length - 1].newPosition)
                         let position = parseInt(diff[diff.length - 1].newPosition);
                         isBusy = true;
                         if (Number.isInteger(position)) {
@@ -1028,7 +1020,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading meeting rooms.");
-                    // console.log(er);
                 });
             } else {
                 $('#meetingRoomsTable').DataTable().ajax.reload();
@@ -1059,7 +1050,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading currenciess.");
-                    // console.log(er);
                 });
             } else {
                 $('#meetingRoomsTable').DataTable().ajax.reload();

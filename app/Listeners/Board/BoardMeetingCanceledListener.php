@@ -21,7 +21,6 @@ class BoardMeetingCanceledListener implements ShouldQueue
      */
     public function __construct()
     {
-        //
     }
 
     /**
@@ -34,7 +33,7 @@ class BoardMeetingCanceledListener implements ShouldQueue
         $actor = SystemHelper::user();
         if ($schedule instanceof Schedule) {
             foreach ($schedule->members as $member) {
-                if (!$member instanceof Board) {
+                if (! $member instanceof Board) {
                     continue;
                 }
 
@@ -60,7 +59,7 @@ class BoardMeetingCanceledListener implements ShouldQueue
             }
 
             foreach ($schedule->users as $user) {
-                if (!$user instanceof User) {
+                if (! $user instanceof User) {
                     continue;
                 }
                 (new UserService($user))->sendEmail(

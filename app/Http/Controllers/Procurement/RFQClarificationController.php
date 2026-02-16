@@ -12,24 +12,24 @@ use Illuminate\Support\Facades\DB;
 class RFQClarificationController extends Controller
 {
     // Full-screen page
-   public function page()
-{
-    // Preload minimal filters: approved RFQs and suppliers (optional)
-    $rfqs = DB::table('t_RFQ')->where('Status', 'Approved')->orderByDesc('Id')->get(['Id','RFQNumber']);
-    
-    $suppliers = DB::table('t_ThirdParties as tp')
-        ->join('t_SupplierMaster as sm', 'sm.ThirdPartyId', '=', 'tp.Id')
-        ->join('t_Suppliers as s', 's.SupplierMasterId', '=', 'sm.Id')
-        ->whereNull('tp.DeletedOn')
-        ->whereNull('sm.DeletedOn')
-        ->whereNull('s.DeletedOn')
-        ->where('s.Active_Status', 1)
-        ->groupBy('tp.Id','tp.TradingName')
-        ->orderBy('tp.TradingName')
-        ->get(['tp.Id','tp.TradingName']);
-        
-    return view('procurement.rfqclarifications.index', compact('rfqs','suppliers'));
-}
+    public function page()
+    {
+        // Preload minimal filters: approved RFQs and suppliers (optional)
+        $rfqs = DB::table('t_RFQ')->where('Status', 'Approved')->orderByDesc('Id')->get(['Id','RFQNumber']);
+
+        $suppliers = DB::table('t_ThirdParties as tp')
+            ->join('t_SupplierMaster as sm', 'sm.ThirdPartyId', '=', 'tp.Id')
+            ->join('t_Suppliers as s', 's.SupplierMasterId', '=', 'sm.Id')
+            ->whereNull('tp.DeletedOn')
+            ->whereNull('sm.DeletedOn')
+            ->whereNull('s.DeletedOn')
+            ->where('s.Active_Status', 1)
+            ->groupBy('tp.Id', 'tp.TradingName')
+            ->orderBy('tp.TradingName')
+            ->get(['tp.Id','tp.TradingName']);
+
+        return view('procurement.rfqclarifications.index', compact('rfqs', 'suppliers'));
+    }
 
     // List clarifications across RFQs (filters)
     public function listAll(Request $request): \Illuminate\Http\JsonResponse
@@ -41,10 +41,10 @@ class RFQClarificationController extends Controller
 
         $rows = RFQClarification::query()
             ->join('t_RFQ as r', 'r.Id', '=', 't_RFQClarifications.RFQId')
-            ->where('r.Status', 'Approved')
-            ->when($rfqId > 0, fn($x) => $x->where('t_RFQClarifications.RFQId', $rfqId))
-            ->when($answered === 'yes', fn($x) => $x->whereNotNull('t_RFQClarifications.Answer'))
-            ->when($answered === 'no', fn($x) => $x->whereNull('t_RFQClarifications.Answer'))
+            ->where('r.Status', 'Pub')
+            ->when($rfqId > 0, fn ($x) => $x->where('t_RFQClarifications.RFQId', $rfqId))
+            ->when($answered === 'yes', fn ($x) => $x->whereNotNull('t_RFQClarifications.Answer'))
+            ->when($answered === 'no', fn ($x) => $x->whereNull('t_RFQClarifications.Answer'))
             ->when($q !== '', function ($x) use ($q) {
                 $x->where(function ($w) use ($q) {
                     $w->where('t_RFQClarifications.Question', 'like', "%$q%")
@@ -56,7 +56,7 @@ class RFQClarificationController extends Controller
             ->get(['t_RFQClarifications.*']);
 
         // Decorate
-        $rfqNumbers = DB::table('t_RFQ')->whereIn('Id', $rows->pluck('RFQId')->unique())->pluck('RFQNumber','Id');
+        $rfqNumbers = DB::table('t_RFQ')->whereIn('Id', $rows->pluck('RFQId')->unique())->pluck('RFQNumber', 'Id');
         $supplierNames = DB::table('t_SupplierMaster as s')
             ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyId')
             ->whereIn('s.Id', $rows->pluck('SupplierId')->unique())
@@ -80,6 +80,7 @@ class RFQClarificationController extends Controller
 
         return response()->json(['data' => $data]);
     }
+
     // List clarifications for an RFQ (procurement-side)
     public function index(Request $request, int $rfqId): JsonResponse
     {
@@ -89,7 +90,7 @@ class RFQClarificationController extends Controller
 
         $rows = RFQClarification::query()
             ->where('RFQId', $rfqId)
-            ->when($supplierId > 0, fn($q) => $q->where('SupplierId', $supplierId))
+            ->when($supplierId > 0, fn ($q) => $q->where('SupplierId', $supplierId))
             ->whereNull('DeletedOn')
             ->orderByDesc('Id')
             ->get(['Id','RFQId','SupplierId','RFQLineId','Question','Answer','CreatedOn']);
@@ -107,6 +108,7 @@ class RFQClarificationController extends Controller
 
         $data = $rows->map(function ($r) use ($supplierNames, $lineInfo) {
             $line = $r->RFQLineId ? ($lineInfo[$r->RFQLineId] ?? null) : null;
+
             return [
                 'Id' => $r->Id,
                 'RFQId' => $r->RFQId,

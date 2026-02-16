@@ -2,18 +2,16 @@
 
 namespace App\Services\Finance;
 
+use App\Enums\Core\ModulesEnum;
+use App\Models\Finance\CustomerWallet;
+use App\Models\Finance\FinanceCreditManagement;
+use App\Models\Finance\FinanceCreditMovement;
+use App\Models\Finance\FinanceInvoice;
 use App\Models\Finance\FinanceReceipt;
 use App\Models\Finance\FinanceReceiptAllocation;
-use App\Models\Finance\FinanceInvoice;
-use App\Models\Finance\FinanceCreditMovement;
-use App\Models\Finance\FinanceCreditManagement;
-use App\Models\Finance\CustomerWallet;
-use App\Models\ThirdParty\ThirdParties;
-use App\Enums\Core\ModulesEnum;
-use App\Traits\Model\DocumentsTrait;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ReceiptPostingService
@@ -89,7 +87,9 @@ class ReceiptPostingService
             $invoice = FinanceInvoice::findOrFail($allocation['invoice_id']);
             $allocateAmount = min($allocation['allocate'], $invoice->TotalAmount - $invoice->AmountPaid);
 
-            if ($allocateAmount <= 0) continue;
+            if ($allocateAmount <= 0) {
+                continue;
+            }
 
             // Create allocation record
             FinanceReceiptAllocation::create([
@@ -157,7 +157,7 @@ class ReceiptPostingService
             })
             ->first();
 
-        if (!$creditProfile) {
+        if (! $creditProfile) {
             return; // No active credit profile
         }
 
@@ -204,7 +204,9 @@ class ReceiptPostingService
             ->get();
 
         foreach ($unpaidInvoices as $invoice) {
-            if ($remainingAmount <= 0) break;
+            if ($remainingAmount <= 0) {
+                break;
+            }
 
             $outstanding = $invoice->TotalAmount - $invoice->AmountPaid;
             $allocateAmount = min($outstanding, $remainingAmount);
@@ -213,7 +215,7 @@ class ReceiptPostingService
                 'invoice_id' => $invoice->Id,
                 'allocate' => $allocateAmount,
                 'invoice_number' => $invoice->InvoiceNumber,
-                'outstanding' => $outstanding
+                'outstanding' => $outstanding,
             ];
 
             $remainingAmount -= $allocateAmount;
@@ -222,7 +224,7 @@ class ReceiptPostingService
         return [
             'allocations' => $allocations,
             'remaining_amount' => $remainingAmount,
-            'total_allocated' => $amount - $remainingAmount + ($useWallet ? ($wallet->Balance ?? 0) : 0)
+            'total_allocated' => $amount - $remainingAmount + ($useWallet ? ($wallet->Balance ?? 0) : 0),
         ];
     }
 
@@ -251,12 +253,12 @@ class ReceiptPostingService
         } catch (\Exception $e) {
             Log::error('Failed to post receipt to GL', [
                 'receipt_id' => $receipt->Id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'status' => 'error',
-                'message' => 'Failed to post receipt to GL: ' . $e->getMessage()
+                'message' => 'Failed to post receipt to GL: ' . $e->getMessage(),
             ];
         }
     }

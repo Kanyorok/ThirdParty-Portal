@@ -12,9 +12,9 @@ class BudgetTopDownData extends Model
     use UserActorTrait;
     use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn'; // Use your actual table name
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn'; // Use your actual table name
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $table = 't_BudgetTopDownData';
     protected $primaryKey = 'Id';
     protected $fillable = [

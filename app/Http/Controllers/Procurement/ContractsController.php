@@ -3,12 +3,10 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Models\Procurement\ContractPenaltyRule;
-use App\Models\Procurement\TenderAward;
-use App\Models\Procurement\Tender;
-use App\Models\Procurement\RFQAward;
 use App\Models\Procurement\RFQ;
-use App\Models\ThirdParies\Supplier;
+use App\Models\Procurement\RFQAward;
+use App\Models\Procurement\Tender;
+use App\Models\Procurement\TenderAward;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -40,12 +38,12 @@ class ContractsController extends Controller
                 $q->where('TenderNo', 'like', '%' . $search . '%')
                     ->orWhere('Title', 'like', '%' . $search . '%');
             });
-            
+
             // For RFQ, we need to search related RFQ model
             // This is a bit complex with Eloquent, so we might filter after fetch or use whereHas if relationship exists
             // Assuming RFQAward has 'rfq' relationship (which we used in other methods via RFQ::find)
             // But RFQAward model doesn't seem to have 'rfq' relation defined standardly, we used manual lookup.
-            // For simplicity in search, we'll filter the collection after fetching for RFQs if needed, 
+            // For simplicity in search, we'll filter the collection after fetching for RFQs if needed,
             // or just fetch all and filter in memory if dataset isn't huge.
             // Given the context, let's fetch and map, then filter.
         }
@@ -66,7 +64,7 @@ class ContractsController extends Controller
             }
             $contract->winningSupplier = $contract->supplier;
             // Ensure AwardDate is set (RFQAward might use CreatedOn or similar)
-            if (!$contract->AwardDate) {
+            if (! $contract->AwardDate) {
                 $contract->AwardDate = $contract->CreatedOn;
             }
         }
@@ -87,11 +85,11 @@ class ContractsController extends Controller
                 $ref = strtolower($contract->tender?->TenderNo ?? '');
                 $title = strtolower($contract->tender?->Title ?? '');
                 $supplier = strtolower(
-                    $contract->winningSupplier?->thirdParty?->TradingName 
-                    ?? $contract->winningSupplier?->supplierMaster?->party?->TradingName 
+                    $contract->winningSupplier?->thirdParty?->TradingName
+                    ?? $contract->winningSupplier?->supplierMaster?->party?->TradingName
                     ?? ''
                 );
-                
+
                 return str_contains($ref, $search) || str_contains($title, $search) || str_contains($supplier, $search);
             });
         }
@@ -100,7 +98,7 @@ class ContractsController extends Controller
         $page = $request->input('page', 1);
         $perPage = 15;
         $offset = ($page - 1) * $perPage;
-        
+
         $contracts = new \Illuminate\Pagination\LengthAwarePaginator(
             $allContracts->slice($offset, $perPage)->values(),
             $allContracts->count(),
@@ -128,7 +126,7 @@ class ContractsController extends Controller
                 $award = RFQAward::with(['supplier.supplierMaster.party'])
                     ->where('Id', $awardId)
                     ->first();
-                
+
                 if ($award) {
                     // Map RFQ award to look like Tender award for the view
                     $rfq = RFQ::find($award->RFQId);
@@ -138,6 +136,17 @@ class ContractsController extends Controller
                         $award->tender->Title = $rfq->Subject;
                     }
                     $award->winningSupplier = $award->supplier;
+
+                    // Fix: If AwardedAmount is missing, try to get it from the RFQ Response
+                    if (empty($award->AwardedAmount) || $award->AwardedAmount <= 0) {
+                        $response = \App\Models\Procurement\RFQResponse::where('RFQId', $award->RFQId)
+                            ->where('SupplierId', $award->SupplierId)
+                            ->first();
+
+                        if ($response) {
+                            $award->AwardedAmount = $response->TotalPayable;
+                        }
+                    }
                 }
             } else {
                 $award = TenderAward::with(['tender', 'winningSupplier'])
@@ -146,7 +155,7 @@ class ContractsController extends Controller
                     ->first();
             }
 
-            if (!$award) {
+            if (! $award) {
                 return redirect()->route('contracts.index')
                     ->with('error', 'Award not found or not approved yet.');
             }
@@ -239,6 +248,7 @@ class ContractsController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollBack();
+
             return redirect()->back()
                 ->with('error', 'Failed to create contract: ' . $e->getMessage())
                 ->withInput();
@@ -256,7 +266,7 @@ class ContractsController extends Controller
         if ($type === 'rfq') {
             $contract = RFQAward::with(['supplier.supplierMaster.party'])
                 ->findOrFail($id);
-            
+
             // Map RFQ to Tender structure for view
             $rfq = RFQ::find($contract->RFQId);
             $contract->tender = $rfq;
@@ -296,7 +306,7 @@ class ContractsController extends Controller
         if ($type === 'rfq') {
             $award = RFQAward::with(['supplier.supplierMaster.party'])
                 ->findOrFail($id);
-            
+
             // Map RFQ to Tender structure
             $rfq = RFQ::find($award->RFQId);
             $award->tender = $rfq;
@@ -321,7 +331,7 @@ class ContractsController extends Controller
     public function update(Request $request, $id)
     {
         $type = $request->input('award_type', 'tender');
-        
+
         $request->validate([
             'contract_value' => 'required|numeric|min:0',
             'start_date' => 'required|date',
@@ -379,7 +389,7 @@ class ContractsController extends Controller
             ->whereIn('ContractStatus', ['Draft Created', 'rv', 'Under Review']) // Include 'rv' and legacy
             ->orderBy('CreatedOn', 'desc')
             ->get();
-        
+
         // Map RFQ contracts to look like Tender contracts
         foreach ($rfqContracts as $contract) {
             $contract->type = 'rfq';
@@ -403,7 +413,7 @@ class ContractsController extends Controller
         $page = request()->input('page', 1);
         $perPage = 15;
         $offset = ($page - 1) * $perPage;
-        
+
         $contracts = new \Illuminate\Pagination\LengthAwarePaginator(
             $allContracts->slice($offset, $perPage)->values(),
             $allContracts->count(),
@@ -429,6 +439,7 @@ class ContractsController extends Controller
     {
         // specific code IDs based on config/workflow.php
         $codeId = ($type === 'rfq') ? 'rfq_award' : 'tender_award';
+
         return new \App\Services\Workflow\ApprovalWorkflow($codeId, 'ContractStatus');
     }
 
@@ -438,7 +449,7 @@ class ContractsController extends Controller
     public function approve(Request $request, $id)
     {
         $type = $request->input('award_type', 'tender');
-        
+
         $request->validate([
             'approval_remarks' => 'nullable|string|max:500',
         ]);
@@ -452,7 +463,7 @@ class ContractsController extends Controller
 
         try {
             $workflow = $this->getWorkflow($type);
-            
+
             // Use Approved status which maps to 'Approved' text in config for these types
             $workflow->approve(
                 $award,
@@ -463,7 +474,7 @@ class ContractsController extends Controller
             );
 
             // Manual update just in case workflow doesn't handle non-standard status columns seamlessly depending on version
-            // But workflow service usually handles it if column passed. 
+            // But workflow service usually handles it if column passed.
             // We keep specific field updates like user/time if workflow doesn't do it automatically for these specific custom fields.
             $award->update([
                // 'ContractStatus' => 'Approved', // Workflow should handle this
@@ -477,6 +488,7 @@ class ContractsController extends Controller
                 ->with('success', 'Contract approved successfully.');
         } catch (\Exception $e) {
             \Log::error('Contract approval error: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Approval failed: ' . $e->getMessage());
         }
     }
@@ -501,7 +513,7 @@ class ContractsController extends Controller
 
         try {
             $workflow = $this->getWorkflow($type);
-            
+
             // Use Rejected status
             $workflow->reject(
                 $award,
@@ -513,17 +525,18 @@ class ContractsController extends Controller
 
             // Log the rejection details in custom fields if needed
             // Workflow handles status and history.
-             \Log::info('Contract rejected', [
-                'award_id' => $id,
-                'award_type' => $type,
-                'rejection_reason' => $request->rejection_reason,
-                'rejected_by' => Auth::id()
+            \Log::info('Contract rejected', [
+               'award_id' => $id,
+               'award_type' => $type,
+               'rejection_reason' => $request->rejection_reason,
+               'rejected_by' => Auth::id(),
             ]);
 
             return redirect()->route('contracts.approvalQueue')
                 ->with('warning', 'Contract rejected and returned to draft status for revision.');
         } catch (\Exception $e) {
             \Log::error('Contract rejection error: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Rejection failed: ' . $e->getMessage());
         }
     }
@@ -538,7 +551,7 @@ class ContractsController extends Controller
         return [
             'success' => true,
             'reference' => 'LEGAL-REQ-' . date('Y') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
-            'message' => 'Contract request submitted to Legal Department'
+            'message' => 'Contract request submitted to Legal Department',
         ];
     }
 
@@ -549,6 +562,7 @@ class ContractsController extends Controller
     {
         $year = date('Y');
         $sequence = str_pad(($award->Id ?? rand(1, 999)), 3, '0', STR_PAD_LEFT);
+
         return "CONTRACT/PROC/{$year}/{$sequence}";
     }
 
@@ -621,7 +635,7 @@ class ContractsController extends Controller
                 ->first();
         }
 
-        if (!$award) {
+        if (! $award) {
             return redirect()->route('procawards.index')
                 ->with('error', 'Award not found or not approved yet.');
         }
@@ -636,7 +650,7 @@ class ContractsController extends Controller
     public function submitForReview(Request $request, $id)
     {
         $type = $request->input('award_type', 'tender');
-        
+
         $request->validate([
             'review_notes' => 'nullable|string|max:500',
         ]);
@@ -650,8 +664,8 @@ class ContractsController extends Controller
 
         // Maker-Checker: Prevent re-submission if already under review or approved
         $allowedStatuses = ['Draft Created', 'Dr', 'Rejected', 'Re'];
-        if (!in_array($award->ContractStatus, $allowedStatuses)) {
-             return redirect()->back()->with('warning', 'This contract has already been submitted for approval.');
+        if (! in_array($award->ContractStatus, $allowedStatuses)) {
+            return redirect()->back()->with('warning', 'This contract has already been submitted for approval.');
         }
 
         try {
@@ -666,7 +680,7 @@ class ContractsController extends Controller
             );
 
             // Manual update just in case workflow doesn't handle non-standard status columns seamlessly depending on version
-            // But workflow service usually handles it if column passed. 
+            // But workflow service usually handles it if column passed.
             // We keep specific field updates like user/time if workflow doesn't do it automatically for these specific custom fields.
             $award->update([
                 'ContractStatus' => 'Under Review', // Ensure status is updated
@@ -676,10 +690,10 @@ class ContractsController extends Controller
 
             return redirect()->route('contracts.show', ['id' => $id, 'type' => $type])
                 ->with('success', 'Contract submitted for review successfully.');
-
         } catch (\Exception $e) {
             \Log::error('Contract submission error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Submission failed: ' . $e->getMessage()); 
+
+            return redirect()->back()->with('error', 'Submission failed: ' . $e->getMessage());
         }
     }
 
@@ -689,7 +703,7 @@ class ContractsController extends Controller
     public function execute(Request $request, $id)
     {
         $type = $request->input('award_type', 'tender');
-        
+
         $award = null;
         if ($type === 'rfq') {
             $award = RFQAward::findOrFail($id);
@@ -711,9 +725,9 @@ class ContractsController extends Controller
 
             return redirect()->route('contracts.show', ['id' => $id, 'type' => $type])
                 ->with('success', 'Contract executed successfully. It is now active.');
-
         } catch (\Exception $e) {
             \Log::error('Contract execution error: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'Execution failed: ' . $e->getMessage());
         }
     }
@@ -742,7 +756,7 @@ class ContractsController extends Controller
                 $file = $request->file('contract_document');
 
                 // Check if file is valid
-                if (!$file->isValid()) {
+                if (! $file->isValid()) {
                     throw new \Exception('Invalid file uploaded: ' . $file->getErrorMessage());
                 }
 
@@ -752,7 +766,7 @@ class ContractsController extends Controller
                 // Store the file
                 $filePath = $file->storeAs('contracts/documents', $fileName, 'public');
 
-                if (!$filePath) {
+                if (! $filePath) {
                     throw new \Exception('Failed to store file on disk');
                 }
 
@@ -761,7 +775,7 @@ class ContractsController extends Controller
                 $documents = [];
 
                 // Try to parse existing data as JSON (documents array)
-                if (!empty($existingConditions)) {
+                if (! empty($existingConditions)) {
                     $parsed = json_decode($existingConditions, true);
                     if (is_array($parsed)) {
                         $documents = $parsed;
@@ -771,8 +785,8 @@ class ContractsController extends Controller
                             [
                                 'type' => 'Original Special Conditions',
                                 'content' => $existingConditions,
-                                'created_at' => now()->toISOString()
-                            ]
+                                'created_at' => now()->toISOString(),
+                            ],
                         ];
                     }
                 }
@@ -783,7 +797,7 @@ class ContractsController extends Controller
                     'file_path' => $filePath,
                     'upload_date' => now()->toISOString(),
                     'uploaded_by' => Auth::id(),
-                    'file_size' => $file->getSize()
+                    'file_size' => $file->getSize(),
                 ];
 
                 $documents[] = $newDoc;
@@ -800,7 +814,7 @@ class ContractsController extends Controller
                     'award_type' => $type,
                     'file_name' => $originalName,
                     'file_path' => $filePath,
-                    'user_id' => Auth::id()
+                    'user_id' => Auth::id(),
                 ]);
 
                 // Return JSON response for AJAX
@@ -808,7 +822,7 @@ class ContractsController extends Controller
                     return response()->json([
                         'success' => true,
                         'message' => 'Document uploaded successfully.',
-                        'document' => $newDoc
+                        'document' => $newDoc,
                     ]);
                 }
 
@@ -821,13 +835,13 @@ class ContractsController extends Controller
             \Log::warning('Contract document upload validation failed', [
                 'award_id' => $id,
                 'errors' => $e->errors(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Validation failed: ' . implode(', ', $e->validator->errors()->all())
+                    'message' => 'Validation failed: ' . implode(', ', $e->validator->errors()->all()),
                 ], 422);
             }
 
@@ -839,13 +853,13 @@ class ContractsController extends Controller
                 'award_id' => $id,
                 'error' => $e->getMessage(),
                 'user_id' => Auth::id(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Upload failed: ' . $e->getMessage()
+                    'message' => 'Upload failed: ' . $e->getMessage(),
                 ], 500);
             }
 

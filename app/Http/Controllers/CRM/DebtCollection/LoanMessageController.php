@@ -28,7 +28,7 @@ class LoanMessageController extends Controller
     public function index(string $product_id): JsonResponse
     {
         $product = DebtProduct::query()->where('AccountID', $product_id)->oldest('processDate')->first();
-        if (!$product instanceof DebtProduct) {
+        if (! $product instanceof DebtProduct) {
             throw new Exception('Product not found, maybe closed.');
         }
         $this->authorize('view', $product);
@@ -43,13 +43,13 @@ class LoanMessageController extends Controller
     public function store(MessageRequest $request, string $product_id): JsonResponse
     {
         $product = DebtProduct::query()->where('AccountID', $product_id)->oldest('processDate')->first();
-        if (!$product instanceof DebtProduct) {
+        if (! $product instanceof DebtProduct) {
             return $this->errored('Product not found, maybe closed.');
         }
         $this->authorize('view', $product);
 
         $client = $product->client;
-        if (!$client instanceof Client) {
+        if (! $client instanceof Client) {
             throw ValidationException::withMessages(['message_to' => 'phone number maybe invalid']);
         }
         $request->getClientPhone($client);
@@ -60,6 +60,7 @@ class LoanMessageController extends Controller
             });
         } catch (Exception $e) {
             Log::error('Error sending sms to client ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

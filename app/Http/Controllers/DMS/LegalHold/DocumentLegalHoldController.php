@@ -24,10 +24,11 @@ class DocumentLegalHoldController extends Controller
     public function index(Request $request, $legalHoldId): JsonResponse
     {
         $legalHold = LegalHold::query()->where('t_DMSLegalHolds.Ref', $legalHoldId)->first();
-        if (!$legalHold instanceof LegalHold) {
+        if (! $legalHold instanceof LegalHold) {
             return $this->errored('Invalid legal hold provided');
         }
         $this->authorize('view', $legalHold);
+
         return $this->documents($legalHold->documents(), $request->user());
     }
 
@@ -36,7 +37,6 @@ class DocumentLegalHoldController extends Controller
      */
     public function create()
     {
-        //
     }
 
     /**
@@ -44,7 +44,6 @@ class DocumentLegalHoldController extends Controller
      */
     public function store(Request $request)
     {
-        //
     }
 
     /**
@@ -52,7 +51,6 @@ class DocumentLegalHoldController extends Controller
      */
     public function show(DocumentLegalHold $documentLegalHold)
     {
-        //
     }
 
     /**
@@ -60,7 +58,6 @@ class DocumentLegalHoldController extends Controller
      */
     public function edit(DocumentLegalHold $documentLegalHold)
     {
-        //
     }
 
     /**
@@ -68,7 +65,6 @@ class DocumentLegalHoldController extends Controller
      */
     public function update(Request $request, DocumentLegalHold $documentLegalHold)
     {
-        //
     }
 
     /**
@@ -76,6 +72,5 @@ class DocumentLegalHoldController extends Controller
      */
     public function destroy(DocumentLegalHold $documentLegalHold)
     {
-        //
     }
 }

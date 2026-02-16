@@ -2,11 +2,9 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\UOMConversion;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class UOMConversionService
 {
@@ -30,12 +28,11 @@ class UOMConversionService
             ->log('Unit of Measure Conversion Created');
     }
 
-
     private function generateUOMNo(): string
     {
         $latestUOM = UOMConversion::withTrashed()->latest('CreatedOn')->first();
 
-        if (!$latestUOM || !$latestUOM->UOMNo) {
+        if (! $latestUOM || ! $latestUOM->UOMNo) {
             return 'UOM-0001';
         }
 
@@ -44,7 +41,6 @@ class UOMConversionService
 
         return 'UOM-' . str_pad($newId, 4, '0', STR_PAD_LEFT);
     }
-
 
     public function update(UOMConversion $unit, array $data): UOMConversion
     {

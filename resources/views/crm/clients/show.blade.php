@@ -1,4 +1,4 @@
-@php use App\Services\BR\ClientService; @endphp
+u@php use App\Services\BR\ClientService; @endphp
 @php use App\Models\BR\Client; @endphp
 @php use App\Models\CRM\Discussion; @endphp
 @php use App\Enums\CallStatusEnum; @endphp
@@ -27,6 +27,33 @@
             font-family: "Gwendolyn", cursive;
             font-weight: 400;
             font-style: normal;
+        }
+
+        /* Prevent horizontal overflow on client view */
+        #mainBodyContent > .row {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .col-md-8, .col-xxl-9 {
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .col-md-8 .card-body,
+        .col-xxl-9 .card-body {
+            overflow-x: auto;
+        }
+
+        .col-md-8 .dataTables_wrapper,
+        .col-xxl-9 .dataTables_wrapper {
+            width: 100% !important;
+            overflow-x: auto;
+        }
+
+        .col-md-8 table,
+        .col-xxl-9 table {
+            width: 100% !important;
         }
 
     </style>
@@ -1179,9 +1206,6 @@
             const startTime = new Date(startTimeString).getTime();
             const now = new Date().getTime();
             const distance = Math.abs((now - startTime));
-            /*  console.log(distance);
-              console.log(startTime);
-              console.log(now);*/
             let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             let seconds = Math.floor((distance % (1000 * 60)) / 1000);
@@ -1242,7 +1266,6 @@
 
                 callsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the notes.");
-                    console.log(er);
                 });
             } else {
                 callsTable.ajax.reload();
@@ -1292,7 +1315,6 @@
 
                 ticketsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading tickets.");
-                    console.log(er);
                 });
             } else {
                 ticketsTable.ajax.reload();
@@ -1332,7 +1354,6 @@
 
                 notesTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the notes.");
-                    console.log(er);
                 });
             } else {
                 notesTable.ajax.reload();
@@ -1368,7 +1389,6 @@
 
                 scheduleTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the schedule.");
-                    console.log(er);
                 });
             } else {
                 scheduleTable.ajax.reload();
@@ -1404,7 +1424,6 @@
 
                 AppointmentsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading meetings.");
-                    console.log(er);
                 });
             } else {
                 AppointmentsTable.ajax.reload();
@@ -1445,7 +1464,6 @@
 
                 discussionsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the client discussions.");
-                    console.log(er);
                 });
             } else {
                 discussionsTable.ajax.reload();
@@ -1501,7 +1519,6 @@
 
                 accountsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the client portfolio.");
-                    console.log(er);
                 });
             } else {
                 accountsTable.ajax.reload();
@@ -1538,7 +1555,6 @@
 
                 relationsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the relations list.");
-                    console.log(er);
                 });
             } else {
                 relationsTable.ajax.reload();
@@ -1656,7 +1672,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading the reviews.");
-                    console.log(er);
                 });
             } else {
                 $('#reviewsTable').DataTable().ajax.reload();
@@ -1690,7 +1705,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading client contacts.");
-                    // console.log(er);
                 });
             } else {
                 $('#contactsTable').DataTable().ajax.reload();

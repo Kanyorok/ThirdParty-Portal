@@ -22,7 +22,7 @@ class UserMeetingRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'StaffMeetingTitle'    => [
+                'StaffMeetingTitle' => [
                                            'required',
                                            'string',
                                            'max:200',
@@ -31,23 +31,23 @@ class UserMeetingRequest extends FormRequest
                                            'required',
                                            'string',
                                           ],
-                'StaffMeetingStart'    => [
+                'StaffMeetingStart' => [
                                            'required',
                                            'date_format:"Y-m-d H:i"',
                                            'before:StaffMeetingEnd',
                                           ],
-                'StaffMeetingEnd'      => [
+                'StaffMeetingEnd' => [
                                            'required',
                                            'date_format:"Y-m-d H:i"',
                                            'after:StaffMeetingStart',
                                           ],
-                'StaffMeetingUsers'    => [
+                'StaffMeetingUsers' => [
                                            'required',
                                            'array',
                                            'min:1',
                                            'max:30',
                                           ],
-                'StaffMeetingAgenda'   => [
+                'StaffMeetingAgenda' => [
                                            'required',
                                            'string',
                                           ],
@@ -60,7 +60,7 @@ class UserMeetingRequest extends FormRequest
     public function getEnd(Carbon $start): Carbon
     {
         $end = Carbon::createFromFormat('Y-m-d H:i', $this->validated('StaffMeetingEnd'));
-        if (!$end instanceof Carbon) {
+        if (! $end instanceof Carbon) {
             throw ValidationException::withMessages(['StaffMeetingEnd' => 'invalid date format']);
         }
 
@@ -90,6 +90,7 @@ class UserMeetingRequest extends FormRequest
         if ($start instanceof Carbon) {
             return $start;
         }
+
         throw ValidationException::withMessages(['meeting_start' => 'invalid date format']);
     }
 
@@ -118,6 +119,7 @@ class UserMeetingRequest extends FormRequest
                 return $room;
             }
         }
+
         return $location;
     }
 }

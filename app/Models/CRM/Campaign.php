@@ -15,11 +15,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Campaign extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Campaigns';
     protected $primaryKey = 'Id';
@@ -59,7 +60,6 @@ class Campaign extends Model
     {
         return $this->hasMany(CampaignParty::class, 'CampaignId');
     }
-
 
     public function workflows(): MorphMany
     {

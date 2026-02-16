@@ -9,11 +9,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Store extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $connection = 'sqlsrv';
     protected $table = 't_Stores';
@@ -47,7 +48,6 @@ class Store extends Model
         'DeletedBy' => 'integer',
         'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
-
     ];
 
     public function branch()
@@ -55,4 +55,13 @@ class Store extends Model
         return $this->belongsTo(Branch::class, 'BranchID', 'Id');
     }
 
+    public function stockItems()
+    {
+        return $this->hasMany(StockItem::class, 'Store', 'Id');
+    }
+
+    public function hasStockItems(): bool
+    {
+        return $this->stockItems()->exists();
+    }
 }

@@ -23,12 +23,12 @@ class MedicalFundBeneficiaryRequest extends FormRequest
     {
         return [
             'FundId' => 'required|exists:t_MedicalFunds,Id',
-            'ContributorId'  => 'nullable|exists:t_MedicalFundContributors,Id',   
-            'FullName'    => 'required|string',
+            'ContributorId' => 'nullable|exists:t_MedicalFundContributors,Id',
+            'FullName' => 'required|string',
             'Relationship' => 'required|exists:t_CodeDetails,ID',
             'DateOfBirth' => 'nullable|date',
             'NationalID' => 'nullable|string|max:50',
-            'Contact'    => 'nullable|string|max:50',
+            'Contact' => 'nullable|string|max:50',
             'IsActive' => 'nullable|boolean',
         ];
     }

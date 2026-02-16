@@ -23,6 +23,7 @@ class RFQSettingCriteriaController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             RFQSettingCriteria::create([
                 'CriteriaName' => $request->input('name'),
@@ -38,6 +39,7 @@ class RFQSettingCriteriaController extends Controller
                 ->log('Created a new RFQ criteria: ' . $request->input('name'));
 
             DB::commit();
+
             return back()->with('success', 'Criteria created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -54,6 +56,7 @@ class RFQSettingCriteriaController extends Controller
     {
         $sectionID = $id;
         $criterias = RFQSettingCriteria::where('SectionID', $id)->get();
+
         return view('procurement.rfqs.settings.criterias', compact('criterias', 'sectionID'));
     }
 
@@ -78,7 +81,7 @@ class RFQSettingCriteriaController extends Controller
             ->causedBy(auth()->user())
             ->withProperties([
                 'old' => $oldValues,
-                'new' => $criteria->getChanges()
+                'new' => $criteria->getChanges(),
             ])
             ->log('Updated RFQ criteria: ' . $criteria->CriteriaName);
 
@@ -104,5 +107,3 @@ class RFQSettingCriteriaController extends Controller
         return redirect()->back()->with('success', 'Criteria deleted successfully.');
     }
 }
-
-

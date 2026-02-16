@@ -29,7 +29,7 @@ class TicketController extends Controller
     public function index(string $ClientID): TicketCollection|JsonResponse
     {
         $client = Client::query()->where('ClientID', $ClientID)->first();
-        if (!$client instanceof Client) {
+        if (! $client instanceof Client) {
             return $this->errored('client may be invalid');
         }
 
@@ -46,7 +46,7 @@ class TicketController extends Controller
     public function store(Request $request, string $ClientID): JsonResponse
     {
         $client = Client::query()->where('ClientID', $ClientID)->first();
-        if (!$client instanceof Client) {
+        if (! $client instanceof Client) {
             return $this->br_response(422, 'member id may be invalid');
         }
 
@@ -73,17 +73,19 @@ class TicketController extends Controller
         }
 
         $category = StaticListsService::getRawList(StaticListsService::TicketCategories)->where('ID', $data['ticket_category'])->first();
-        if (!$category instanceof CodeDetail) {
+        if (! $category instanceof CodeDetail) {
             return $this->br_response(422, 'category may be invalid', ['category' => 'category may be invalid']);
         }
 
         $actor = SystemHelper::user();
+
         try {
             $service = $this->save($client, $category, $data['ticket_title'], $data['ticket_description'], $actor, TicketSourceEnum::Channels, TicketPriorityEnum::Normal, SourceTicketID: $data['ticket_id']);
         } catch (ErroredException $e) {
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error channels creating Client ticket ' . $e->getMessage());
+
             return $this->br_response(400, 'unexpected error, try again later');
         }
 

@@ -2,27 +2,25 @@
 
 namespace App\Models\Procurement\Prequalification;
 
-use App\Traits\Model\UserActorTrait;
 use App\Enums\Procurement\PrequalificationRoundEnum;
 use App\Models\Auth\User;
-use App\Models\Procurement\Prequalification\PrequalificationSection;
-use App\Models\Procurement\Prequalification\PrequalificationCriteria;
-use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\Procurement\Section;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PrequalificationRound extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_PrequalificationRounds';
     protected $primaryKey = 'RoundID';
@@ -83,6 +81,7 @@ class PrequalificationRound extends Model
     public function sections(): HasMany
     {
         return $this->prequalificationSections();
+
     }
 
     /**
@@ -98,9 +97,13 @@ class PrequalificationRound extends Model
         return $this->belongsToMany(
             \App\Models\ThirdParty\SupplierCategory::class,
             't_PrequalificationRoundSupplierCategory',
-            'round_id',
-            'supplier_category_id'
-        )->withTimestamps();
+            'RoundID',
+            'SupplierCategoryID',
+            'RoundID',
+            'SupplierCategoryID'
+            // 'round_id',
+            // 'supplier_category_id'
+        )->withPivot(['CreatedOn','ModifiedOn']);
     }
 
     public function masterSections(): HasManyThrough

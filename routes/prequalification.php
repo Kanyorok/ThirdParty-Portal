@@ -1,12 +1,12 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Procurement\Prequalification\PrequalificationRoundController;
-use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
 use App\Http\Controllers\Procurement\CriteriaController;
-use App\Http\Controllers\Procurement\SectionController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationResultsController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationRoundController;
+use App\Http\Controllers\Procurement\SectionController;
+use Illuminate\Support\Facades\Route;
 
 // Add this line
 
@@ -14,6 +14,8 @@ Route::prefix('prequalification')
     ->name('prequalification.')
     ->group(function () {
         Route::resource('prequalification-rounds', PrequalificationRoundController::class);
+        Route::post('prequalification-rounds/{prequalification_round}/publish', [PrequalificationRoundController::class, 'publish'])
+            ->name('prequalification-rounds.publish');
         Route::resource('sections', SectionController::class);
         Route::prefix('sections/{section}')->name('sections.')->group(function () {
             Route::resource('criteria', CriteriaController::class)
@@ -22,8 +24,12 @@ Route::prefix('prequalification')
         Route::get('sections/{section}/criteria', [CriteriaController::class, 'fetchAll'])
             ->name('sections.criteria.fetch');
 
+        // Manual Store Route for Admin
+        Route::post('applications/manual', [PrequalificationApplicationController::class, 'storeManual'])
+            ->name('applications.store-manual');
+
         Route::resource('applications', PrequalificationApplicationController::class)
-            ->except(['create', 'store', 'evaluate']);
+            ->except(['store', 'evaluate']);
 
         // Evaluation Routes (for form display and submission)
         Route::controller(PrequalificationEvaluationController::class)->group(function () {

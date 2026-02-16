@@ -1826,9 +1826,6 @@
             const startTime = new Date(startTimeString).getTime();
             const now = new Date().getTime();
             const distance = Math.abs((now - startTime));
-            /*  console.log(distance);
-              console.log(startTime);
-              console.log(now);*/
             let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             let seconds = Math.floor((distance % (1000 * 60)) / 1000);
@@ -1879,7 +1876,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading workflow.");
-                    // console.log(er);
                 });
             } else {
                 $('#leadWatchersTable').DataTable().ajax.reload();
@@ -1920,7 +1916,6 @@
 
                 callsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the notes.");
-                    console.log(er);
                 });
             } else {
                 callsTable.ajax.reload();
@@ -1976,7 +1971,6 @@
 
                 notesTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the notes.");
-                    console.log(er);
                 });
             } else {
                 notesTable.ajax.reload();
@@ -2017,7 +2011,6 @@
 
                 discussionsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the lead discussions.");
-                    console.log(er);
                 });
             } else {
                 discussionsTable.ajax.reload();
@@ -2052,7 +2045,6 @@
 
                 productsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the lead portfolio.");
-                    console.log(er);
                 });
             } else {
                 productsTable.ajax.reload();
@@ -2154,7 +2146,6 @@
 
                 scheduleTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the schedule.");
-                    console.log(er);
                 });
             } else {
                 scheduleTable.ajax.reload();
@@ -2189,7 +2180,6 @@
 
                 tasksTable.on('error', function (er) {
                     nWarning("an issue occurred while loading tasks.");
-                    console.log(er);
                 });
             } else {
                 tasksTable.ajax.reload();
@@ -2225,7 +2215,6 @@
 
                 ticketsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading tickets.");
-                    console.log(er);
                 });
             } else {
                 ticketsTable.ajax.reload();
@@ -2261,7 +2250,6 @@
 
                 contactsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading contacts.");
-                    console.log(er);
                 });
             } else {
                 contactsTable.ajax.reload();

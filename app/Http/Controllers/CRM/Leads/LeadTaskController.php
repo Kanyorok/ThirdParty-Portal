@@ -29,6 +29,7 @@ class LeadTaskController extends Controller
     public function index(Lead $lead): JsonResponse
     {
         $this->authorize('viewAny', Task::class);
+
         return $this->tasks($lead->tasks());
     }
 
@@ -48,6 +49,7 @@ class LeadTaskController extends Controller
             $activity = $this->save($lead, $notes, $dated, $assignee, $actor);
         } catch (\Throwable | Exception $e) {
             Log::error('Error adding  Lead Task. e: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 
@@ -61,17 +63,19 @@ class LeadTaskController extends Controller
     public function update(PartyTaskRequest $request, Lead $lead, string $task_id): JsonResponse
     {
         $task = $lead->tasks()->where('TaskID', $task_id)->first();
-        if (!$task instanceof Task) {
+        if (! $task instanceof Task) {
             return $this->errored('Task not found');
         }
         $this->authorize('update', $task);
         $notes = $request->getNotes();
         $actor = $request->user();
         $dated = $request->getDated($task->Dated);
+
         try {
             $this->change($task, $notes, $dated, $actor);
         } catch (Exception $e) {
             Log::error('Error updating  Lead Task. e: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 

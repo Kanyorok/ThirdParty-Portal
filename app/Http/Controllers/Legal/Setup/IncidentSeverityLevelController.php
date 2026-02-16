@@ -11,6 +11,7 @@ class IncidentSeverityLevelController extends Controller
     public function index()
     {
         $levels = IncidentSeverityLevel::orderBy('Id')->get();
+
         return view('legal.setup.incident_severity_levels.index', compact('levels'));
     }
 
@@ -27,6 +28,7 @@ class IncidentSeverityLevelController extends Controller
         ]);
 
         IncidentSeverityLevel::create($validated + ['IsActive' => 1]);
+
         return redirect()->route('legal.setup.incident_severity_levels.index')
             ->with('success', 'Incident Severity Level added successfully.');
     }
@@ -34,6 +36,7 @@ class IncidentSeverityLevelController extends Controller
     public function edit($id)
     {
         $level = IncidentSeverityLevel::findOrFail($id);
+
         return view('legal.setup.incident_severity_levels.edit', compact('level'));
     }
 
@@ -47,6 +50,7 @@ class IncidentSeverityLevelController extends Controller
         ]);
 
         $level->update($validated);
+
         return redirect()->route('legal.setup.incident_severity_levels.index')
             ->with('success', 'Incident Severity Level updated successfully.');
     }
@@ -55,6 +59,7 @@ class IncidentSeverityLevelController extends Controller
     {
         $level = IncidentSeverityLevel::findOrFail($id);
         $level->delete();
+
         return back()->with('success', 'Incident Severity Level deleted.');
     }
 }

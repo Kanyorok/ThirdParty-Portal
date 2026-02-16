@@ -13,6 +13,7 @@ class CompetitorPolicy
         if (is_array($competitor->Processing)) {
             return false;
         }
+
         return $user->can(PermissionEnum::CompetitorLLM->value);
     }
 
@@ -48,6 +49,7 @@ class CompetitorPolicy
         if (is_array($competitor->Processing)) {
             return false;
         }
+
         return $user->can(PermissionEnum::Competitor->value);
     }
 

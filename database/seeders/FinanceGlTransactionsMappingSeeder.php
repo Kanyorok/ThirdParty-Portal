@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class FinanceGlTransactionsMappingSeeder extends Seeder
 {
@@ -28,13 +28,7 @@ class FinanceGlTransactionsMappingSeeder extends Seeder
         ];
 
         foreach ($mappings as [$transactionTypeId, $debitCode, $creditCode]) {
-//            $debitId = DB::table('t_FinanceGLAccounts')->where('AccountCode', $debitCode)->value('Id');
-//            $creditId = DB::table('t_FinanceGLAccounts')->where('AccountCode', $creditCode)->value('Id');
-
-//            if (!$debitId || !$creditId) {
-//                $this->command->warn("Skipping TransactionTypeID {$transactionTypeId} — GL not found ({$debitCode} or {$creditCode})");
-//                continue;
-//            }
+            //                continue;
 
             $exists = DB::table('t_FinanceGlTransactionsMapping')
                 ->where('ModuleID', $moduleId)
@@ -43,7 +37,7 @@ class FinanceGlTransactionsMappingSeeder extends Seeder
                 ->where('CreditGLAccountID', $creditCode)
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('t_FinanceGlTransactionsMapping')->insert([
                     'ModuleID' => $moduleId,
                     'TransactionTypeID' => $transactionTypeId,

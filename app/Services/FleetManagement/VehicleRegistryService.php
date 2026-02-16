@@ -2,21 +2,12 @@
 
 namespace App\Services\FleetManagement;
 
-
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use App\Models\FleetManagement\FleetMake;
 use App\Models\FleetManagement\VehicleRegistry;
-use App\Models\FleetManagement\FleetModel;
-use App\Models\Auth\User;
-use App\Http\Requests\FleetManagement\VehicleRegistryRequest;
-use App\Traits\Model\UserActorTrait;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class VehicleRegistryService
 {
-
     public function create(array $data): VehicleRegistry
     {
         return DB::transaction(function () use ($data) {
@@ -52,7 +43,6 @@ class VehicleRegistryService
             return $vehicle;
         });
     }
-
 
     public function update(VehicleRegistry $vehicle, array $data): VehicleRegistry
     {
@@ -91,5 +81,3 @@ class VehicleRegistryService
         });
     }
 }
-
-

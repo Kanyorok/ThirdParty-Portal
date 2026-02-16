@@ -2,15 +2,12 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\Inventory\StockConsumption;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use App\Models\HRM\Department;
-use App\Models\HR\Employee;
-use App\Models\Inventory\StockItem;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Inventory\StockConsumption;
+use App\Models\Inventory\StockItem;
 use App\Models\Inventory\StockTransaction;
-use App\Models\Inventory\ItemMasterList;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class StockConsumptionService
 {
@@ -18,19 +15,19 @@ class StockConsumptionService
     {
         return DB::transaction(function () use ($data) {
             $consumptionNo = $this->generateConsumptionNo();
-            
+
             $stockItem = StockItem::where('Id', $data['ItemID'])
                 ->where('Store', $data['StoreID'] ?? null)
                 ->where('Branch', $data['BranchID'])
                 ->first();
 
-            if (!$stockItem) {
+            if (! $stockItem) {
                 throw new \Exception("Stock item not found for specified Branch and Store.");
             }
 
             $masterItemId = $stockItem->ItemID;
 
-            if (!$masterItemId) {
+            if (! $masterItemId) {
                 throw new \Exception("Master item reference not found for this stock item.");
             }
 
@@ -49,17 +46,17 @@ class StockConsumptionService
             $stockConsumption = StockConsumption::create([
                 'ConsumptionNo' => $consumptionNo,
                 'ItemID' => $stockItem->ItemID,
-                'StoreID'       => $data['StoreID'] ?? null,
-                'BranchID'      => $data['BranchID'],
-                'UOM'           => $data['UOM'],
-                'Quantity'      => $qty,
-                'IssuedToType'  => $data['IssuedToType'],
-                'IssuedToID'    => $data['IssuedToID'],
-                'IssuedBy'      => $data['IssuedBy'],
-                'IssuedOn'      => $data['IssuedOn'],
-                'Remarks'       => $data['Remarks'] ?? null,
-                'CreatedBy'     => Auth::id(),
-                'ModifiedBy'    => Auth::id(),
+                'StoreID' => $data['StoreID'] ?? null,
+                'BranchID' => $data['BranchID'],
+                'UOM' => $data['UOM'],
+                'Quantity' => $qty,
+                'IssuedToType' => $data['IssuedToType'],
+                'IssuedToID' => $data['IssuedToID'],
+                'IssuedBy' => $data['IssuedBy'],
+                'IssuedOn' => $data['IssuedOn'],
+                'Remarks' => $data['Remarks'] ?? null,
+                'CreatedBy' => Auth::id(),
+                'ModifiedBy' => Auth::id(),
             ]);
 
             $latestSKU = StockTransaction::where('SKUID', 'like', 'SKU%')
@@ -75,22 +72,22 @@ class StockConsumptionService
             $transactionType = $this->getTransactionType($data['IssuedToType']);
 
             StockTransaction::create([
-                'SKUID'           => $skuId,
+                'SKUID' => $skuId,
                 'TransactionType' => $transactionType,
-                'ReferenceID'     => $stockConsumption->Id,
-                'ItemID'          => $masterItemId,
-                'StoreID'         => $data['StoreID'],
-                'BranchID'        => $data['BranchID'],
-                'UnitCost'        => $stockItem->UnitCost ?? 0,
-                'UOMID'           => $data['UOM'],
-                'QuantityIn'      => 0,
-                'QuantityOut'     => $data['Quantity'],
-                'BalanceQty'      => $stockItem->CurrentQty,
-                'TotalCost'       => ($stockItem->UnitCost ?? 0) * $data['Quantity'],
+                'ReferenceID' => $stockConsumption->Id,
+                'ItemID' => $masterItemId,
+                'StoreID' => $data['StoreID'],
+                'BranchID' => $data['BranchID'],
+                'UnitCost' => $stockItem->UnitCost ?? 0,
+                'UOMID' => $data['UOM'],
+                'QuantityIn' => 0,
+                'QuantityOut' => $data['Quantity'],
+                'BalanceQty' => $stockItem->CurrentQty,
+                'TotalCost' => ($stockItem->UnitCost ?? 0) * $data['Quantity'],
                 'TransactionDate' => $data['IssuedOn'] ?? now(),
-                'Remarks'         => 'Stock consumed (Ref: ' . $consumptionNo . ')',
-                'CreatedBy'       => Auth::id(),
-                'CreatedOn'       => now(),
+                'Remarks' => 'Stock consumed (Ref: ' . $consumptionNo . ')',
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
             ]);
 
             activity()
@@ -116,18 +113,18 @@ class StockConsumptionService
                 $oldStockItem->save();
             }
 
-            $stockItem = StockItem::where('Id', $data['ItemID'])
-                ->where('Store', $data['StoreID'])
+            $stockItem = StockItem::where('ItemID', $data['ItemID'])
+                ->where('Store', $data['StoreID'] ?? null)
                 ->where('Branch', $data['BranchID'])
                 ->first();
 
-            if (!$stockItem) {
+            if (! $stockItem) {
                 throw new \Exception("Stock item not found for specified Branch and Store.");
             }
 
             $masterItemId = $stockItem->ItemID;
 
-            if (!$masterItemId) {
+            if (! $masterItemId) {
                 throw new \Exception("Master item reference not found for this stock item.");
             }
 
@@ -144,18 +141,18 @@ class StockConsumptionService
             $stockItem->save();
 
             $stockConsumption->update([
-                'ItemID'        => $masterItemId,
-                'StoreID'       => $data['StoreID'],
-                'BranchID'      => $data['BranchID'],
-                'IssuedToType'  => $data['IssuedToType'],
-                'IssuedToID'    => $data['IssuedToID'],
-                'Quantity'      => $qty,
-                'UOM'           => $data['UOM'],
-                'IssuedBy'      => $data['IssuedBy'],
-                'IssuedOn'      => $data['IssuedOn'],
-                'Remarks'       => $data['Remarks'] ?? null,
-                'ModifiedBy'    => Auth::id(),
-                'ModifiedOn'    => now(),
+                'ItemID' => $masterItemId,
+                'StoreID' => $data['StoreID'],
+                'BranchID' => $data['BranchID'],
+                'IssuedToType' => $data['IssuedToType'],
+                'IssuedToID' => $data['IssuedToID'],
+                'Quantity' => $qty,
+                'UOM' => $data['UOM'],
+                'IssuedBy' => $data['IssuedBy'],
+                'IssuedOn' => $data['IssuedOn'],
+                'Remarks' => $data['Remarks'] ?? null,
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
             ]);
 
             $transaction = StockTransaction::where('ReferenceID', $stockConsumption->Id)
@@ -163,17 +160,17 @@ class StockConsumptionService
 
             if ($transaction) {
                 $transaction->update([
-                    'ItemID'          => $masterItemId,
-                    'StoreID'         => $data['StoreID'],
-                    'BranchID'        => $data['BranchID'],
-                    'UOMID'           => $data['UOM'],
-                    'QuantityOut'     => $qty,
-                    'BalanceQty'      => $stockItem->CurrentQty,
-                    'TotalCost'       => ($stockItem->UnitCost ?? 0) * $qty,
+                    'ItemID' => $masterItemId,
+                    'StoreID' => $data['StoreID'],
+                    'BranchID' => $data['BranchID'],
+                    'UOMID' => $data['UOM'],
+                    'QuantityOut' => $qty,
+                    'BalanceQty' => $stockItem->CurrentQty,
+                    'TotalCost' => ($stockItem->UnitCost ?? 0) * $qty,
                     'TransactionDate' => $data['IssuedOn'] ?? now(),
-                    'Remarks'         => 'Stock consumption updated (Ref: ' . $stockConsumption->ConsumptionNo . ')',
-                    'ModifiedBy'      => Auth::id(),
-                    'ModifiedOn'      => now(),
+                    'Remarks' => 'Stock consumption updated (Ref: ' . $stockConsumption->ConsumptionNo . ')',
+                    'ModifiedBy' => Auth::id(),
+                    'ModifiedOn' => now(),
                 ]);
             } else {
                 $latestSKU = StockTransaction::where('SKUID', 'like', 'SKU%')
@@ -188,22 +185,22 @@ class StockConsumptionService
                 $transactionType = $this->getTransactionType($data['IssuedToType']);
 
                 StockTransaction::create([
-                    'SKUID'           => $skuId,
+                    'SKUID' => $skuId,
                     'TransactionType' => $transactionType,
-                    'ReferenceID'     => $stockConsumption->Id,
-                    'ItemID'          => $masterItemId,
-                    'StoreID'         => $data['StoreID'],
-                    'BranchID'        => $data['BranchID'],
-                    'UnitCost'        => $stockItem->UnitCost ?? 0,
-                    'UOMID'           => $data['UOM'],
-                    'QuantityIn'      => 0,
-                    'QuantityOut'     => $qty,
-                    'BalanceQty'      => $stockItem->CurrentQty,
-                    'TotalCost'       => ($stockItem->UnitCost ?? 0) * $qty,
+                    'ReferenceID' => $stockConsumption->Id,
+                    'ItemID' => $masterItemId,
+                    'StoreID' => $data['StoreID'],
+                    'BranchID' => $data['BranchID'],
+                    'UnitCost' => $stockItem->UnitCost ?? 0,
+                    'UOMID' => $data['UOM'],
+                    'QuantityIn' => 0,
+                    'QuantityOut' => $qty,
+                    'BalanceQty' => $stockItem->CurrentQty,
+                    'TotalCost' => ($stockItem->UnitCost ?? 0) * $qty,
                     'TransactionDate' => $data['IssuedOn'] ?? now(),
-                    'Remarks'         => 'Stock consumed (Ref: ' . $stockConsumption->ConsumptionNo . ')',
-                    'CreatedBy'       => Auth::id(),
-                    'CreatedOn'       => now(),
+                    'Remarks' => 'Stock consumed (Ref: ' . $stockConsumption->ConsumptionNo . ')',
+                    'CreatedBy' => Auth::id(),
+                    'CreatedOn' => now(),
                 ]);
             }
 
@@ -264,7 +261,7 @@ class StockConsumptionService
     protected function getTransactionType($issuedToTypeId)
     {
         $typeDetail = CodeDetail::find($issuedToTypeId);
-        if (!$typeDetail) {
+        if (! $typeDetail) {
             return null;
         }
 

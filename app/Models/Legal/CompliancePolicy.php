@@ -13,7 +13,7 @@ class CompliancePolicy extends Model
     protected $fillable = [
         'Title', 'CategoryID', 'ComplianceAreaID', 'EffectiveDate', 'Version',
         'FileName', 'MimeType', 'FilePath', 'IsActive',
-        'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn'
+        'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn',
     ];
 
     public function acknowledgments()

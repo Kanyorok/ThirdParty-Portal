@@ -18,8 +18,9 @@ class KenyaFirstSeeder extends Seeder
 
         $local = database_path('data/countries_states_cities.json');
 
-        if (!file_exists($local)) {
+        if (! file_exists($local)) {
             $this->command->error('Countries data file not found: ' . $local);
+
             return;
         }
 
@@ -28,7 +29,7 @@ class KenyaFirstSeeder extends Seeder
             $fileContent = file_get_contents($local);
             $countries = json_decode($fileContent, true, 512, JSON_THROW_ON_ERROR);
 
-            if (!is_array($countries)) {
+            if (! is_array($countries)) {
                 throw new \RuntimeException('Parsed JSON is not an array.');
             }
 
@@ -42,12 +43,14 @@ class KenyaFirstSeeder extends Seeder
             foreach ($countries as $countryData) {
                 if (strtolower($countryData['name'] ?? '') === 'kenya') {
                     $kenyaData = $countryData;
+
                     break;
                 }
             }
 
-            if (!$kenyaData) {
+            if (! $kenyaData) {
                 $this->command->error('Kenya not found in countries data!');
+
                 return;
             }
 
@@ -72,7 +75,6 @@ class KenyaFirstSeeder extends Seeder
             }
 
             $this->command->info('KenyaFirstSeeder completed successfully!');
-
         } catch (JsonException $e) {
             $this->command->error('Could not parse JSON data from ' . $local . '. Error: ' . $e->getMessage());
         } catch (\Throwable $e) {
@@ -95,7 +97,7 @@ class KenyaFirstSeeder extends Seeder
 
         $currencyId = $currencyCode ? $this->getCurrencyId($currencyCode, $currencySymbol) : null;
 
-        if (!$currencyId && $currencyCode) {
+        if (! $currencyId && $currencyCode) {
             $currencyData = [
                 'Name' => $currencyName ?: $currencyCode,
                 'Code' => $currencyCode,
@@ -139,6 +141,7 @@ class KenyaFirstSeeder extends Seeder
                 // Still need to process localities for Kenya
                 $countryId = $existingKenya->Id;
                 $this->processLocalities($countryData, $countryId, $countryName);
+
                 return;
             }
         }
@@ -161,7 +164,7 @@ class KenyaFirstSeeder extends Seeder
      */
     private function processLocalities(array $countryData, $countryId, string $countryName): void
     {
-        if (!$countryId || empty($countryData['states'])) {
+        if (! $countryId || empty($countryData['states'])) {
             return;
         }
 
@@ -203,7 +206,7 @@ class KenyaFirstSeeder extends Seeder
                 ->value('Id');
 
             // Process cities
-            if (!empty($stateData['cities']) && $stateId) {
+            if (! empty($stateData['cities']) && $stateId) {
                 $maxCities = strtolower($countryName) === 'kenya' ? 20 : 10; // More cities for Kenya
                 $majorCities = array_slice($stateData['cities'], 0, $maxCities);
                 $this->command->info("    Processing " . count($majorCities) . " cities for {$stateName}");
@@ -239,7 +242,7 @@ class KenyaFirstSeeder extends Seeder
      */
     private function getCurrencyId(?string $currencyCode, ?string $currencySymbol): ?int
     {
-        if (!$currencyCode && !$currencySymbol) {
+        if (! $currencyCode && ! $currencySymbol) {
             return null;
         }
 

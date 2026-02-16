@@ -520,9 +520,7 @@
             });
             $(document).on('click', '.reply-mail-to-action', function () {
                 const btn = $(this), url = $(this).data('info');
-                console.log(btn);
                 btn.addClass('disabled').html('<i class="fas fa-spinner fa-spin"></i> please wait');
-                console.log(btn);
 
                 $.ajax({
                     url: url,
@@ -723,7 +721,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading conversation watchers.");
-                    // console.log(er);
                 });
             } else {
                 $('#conversationWatchersTable').DataTable().ajax.reload();

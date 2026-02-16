@@ -34,14 +34,16 @@ class LeadService
     public static function dt(Builder $query, array $with = []): JsonResponse
     {
         $query->lock('WITH(NOLOCK)');
-        if (!empty($with)) {
+        if (! empty($with)) {
             $query->with($with);
         }
+
         return Datatables::of($query->select('*'))
             ->editColumn('photo', function (Lead $lead) use ($with) {
                 if (in_array('photo', $with, true)) {
                     return $lead->getImage('class="img-thumbnail" style="height: 70px;"');
                 }
+
                 return '';
             })->editColumn('Status', function (Lead $lead) {
                 return $lead->Status->name;
@@ -51,11 +53,13 @@ class LeadService
                 if (in_array('ind', $with, true)) {
                     return $lead->ind?->Description;
                 }
+
                 return '';
             })->editColumn('location', function (Lead $lead) use ($with) {
                 if (in_array('location', $with, true)) {
                     return $lead->location?->Name;
                 }
+
                 return '';
             })->editColumn('LastContacted', function (Lead $lead) {
                 return $lead->LastContacted?->diffForHumans();
@@ -73,23 +77,44 @@ class LeadService
     }
 
     public static function company(
-        string   $name, string $email, string $phone, string $website, Carbon $last_contact, User $manager, User $actor,
-        Locality $location, CodeDetail $industry = null, CodeDetail $source = null, CodeDetail $customerType = null, string $notes = ''
-    ): self
-    {
+        string $name,
+        string $email,
+        string $phone,
+        string $website,
+        Carbon $last_contact,
+        User $manager,
+        User $actor,
+        Locality $location,
+        CodeDetail $industry = null,
+        CodeDetail $source = null,
+        CodeDetail $customerType = null,
+        string $notes = ''
+    ): self {
         $service = self::_create($name, '', $email, $phone, $website, '', $last_contact, LeadTypeEnum::Company, GenderEnum::Other, $actor, $notes, $location, $industry, $source, $customerType);
         if ($manager->Id !== $actor->Id) {
             return $service->assign($manager, $actor);
         }
+
         return $service;
     }
 
     private static function _create(
-        string       $name, string $other_names, string $email, string $phone, string $website, string $job_title, Carbon $last_contact,
-        LeadTypeEnum $type, GenderEnum $gender, User $actor, string $notes, Locality $location, CodeDetail $industry = null,
-        CodeDetail   $source = null, CodeDetail $customerType = null
-    ): self
-    {
+        string $name,
+        string $other_names,
+        string $email,
+        string $phone,
+        string $website,
+        string $job_title,
+        Carbon $last_contact,
+        LeadTypeEnum $type,
+        GenderEnum $gender,
+        User $actor,
+        string $notes,
+        Locality $location,
+        CodeDetail $industry = null,
+        CodeDetail $source = null,
+        CodeDetail $customerType = null
+    ): self {
         $lead = new Lead();
         $lead->fill([
             "Name" => $name,
@@ -131,7 +156,7 @@ class LeadService
         if ($watcher instanceof Team) {
             $leadUser = $this->lead->watchers()->lock('WITH(NOLOCK)')
                 ->where('Party', Team::getPrimaryKey())->where('PartyID', $watcher->TeamID)->first();
-            if (!$leadUser instanceof LeadUser) {
+            if (! $leadUser instanceof LeadUser) {
                 $leadUser = new LeadUser();
                 $leadUser->fill([
                     'LeadId' => $this->lead->LeadID,
@@ -171,7 +196,7 @@ class LeadService
         $leadUser = $this->lead->watchers()->lock('WITH(NOLOCK)')
             ->where('Party', User::getPrimaryKey())->where('PartyID', $watcher->Id)->first();
 
-        if (!$leadUser instanceof LeadUser) {
+        if (! $leadUser instanceof LeadUser) {
             $leadUser = new LeadUser();
             $leadUser->fill([
                 'LeadId' => $this->lead->LeadID,
@@ -197,6 +222,7 @@ class LeadService
                 actor: SystemHelper::user()
             );
         }
+
         return $this;
     }
 
@@ -248,40 +274,54 @@ class LeadService
         }
 
         CrmEmailService::createLead($this->lead, $email, $subject, $body, $actor);
+
         return $this;
     }
 
     public function getEmail(): ?string
     {
-        if (!empty($this->lead->Email) && (filter_var($this->lead->Email, FILTER_VALIDATE_EMAIL))) {
+        if (! empty($this->lead->Email) && (filter_var($this->lead->Email, FILTER_VALIDATE_EMAIL))) {
             return $this->lead->Email;
         }
+
         return null;
     }
 
     public function sendMessage(string $message, User $actor, string $description = null, bool $immediate = false, BulkNotification $bulkNotification = null): static
     {
         $service = SMSService::createLead($this->lead, $message, $actor);
-        if (is_string($description) && !empty($description)) {
+        if (is_string($description) && ! empty($description)) {
             $service->addActivity($service->sms->CreatedOn, $description);
         }
         if ($bulkNotification instanceof BulkNotification) {
             $service->setBulk($bulkNotification);
         }
         $service->send($immediate);
+
         return $this;
     }
 
     public static function individual(
-        string     $name, string $other_names, string $email, string $phone, string $job_title, Carbon $last_contact,
-        GenderEnum $gender, User $manager, User $actor, Locality $location, CodeDetail $industry = null,
-        CodeDetail $source = null, CodeDetail $customerType = null, string $notes = ''
-    ): self
-    {
+        string $name,
+        string $other_names,
+        string $email,
+        string $phone,
+        string $job_title,
+        Carbon $last_contact,
+        GenderEnum $gender,
+        User $manager,
+        User $actor,
+        Locality $location,
+        CodeDetail $industry = null,
+        CodeDetail $source = null,
+        CodeDetail $customerType = null,
+        string $notes = ''
+    ): self {
         $service = self::_create($name, $other_names, $email, $phone, '', $job_title, $last_contact, LeadTypeEnum::Individual, $gender, $actor, $notes, $location, $industry, $source, $customerType);
         if ($manager->Id !== $actor->Id) {
             return $service->assign($manager, $actor);
         }
+
         return $service;
     }
 
@@ -326,6 +366,7 @@ class LeadService
             '<p>You have been removed as watchers from Lead ' . $this->lead->Name . '. As a result, you will no longer receive updates or notifications related to this lead.</p>
                 <p>Thank you for your continued support and collaboration.</p>'
         );
+
         return $this;
     }
 }

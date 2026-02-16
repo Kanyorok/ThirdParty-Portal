@@ -7,7 +7,6 @@ use App\Helpers\SystemHelper;
 use App\Models\Auth\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Arr;
 use Spatie\Permission\Guard;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -15,16 +14,16 @@ use Spatie\Permission\Models\Role;
 class RolePermissionSeeder extends Seeder
 {
     /**
-     * Run the database seeds. 
+     * Run the database seeds.
      */
     public function run(): void
     {
         $actor = SystemHelper::user();
-        $now   = now();
+        $now = now();
         $guard = Guard::getDefaultName(User::class);
 
         // Ensure baseline roles
-        if (!Role::query()->where('name', 'Default')->exists()) {
+        if (! Role::query()->where('name', 'Default')->exists()) {
             Role::create([
                 'name' => 'Default',
                 'guard_name' => $guard,
@@ -41,7 +40,6 @@ class RolePermissionSeeder extends Seeder
             ['CreatedBy' => $actor->Id ?? 1, 'ModifiedBy' => $actor->Id ?? 1]
         );
 
-        // --- Build permission rows ---
         $table = config('permission.table_names.permissions');
 
         // 1. Get all valid permission names from Enum
@@ -60,11 +58,15 @@ class RolePermissionSeeder extends Seeder
 
         // 3. Prepare rows for Upsert
         $rows = [];
-        // We re-fetch existing to know what to insert? No, upsert handles it.
-        // Actually, upsert needs all columns. 
-        // Let's just build the full list from Enum.
-        
+
         foreach (PermissionEnum::cases() as $perm) {
+            // Skip if this permission is used in workflow stages
+            if (in_array($perm->value, $workflowPermissionNames)) {
+                echo "  - Skipping workflow permission: {$perm->value}" . PHP_EOL;
+
+                continue;
+            }
+
             $rows[] = [
                 'name' => $perm->value,
                 'ModuleId' => $perm->module()->value,
@@ -74,11 +76,10 @@ class RolePermissionSeeder extends Seeder
             ];
         }
 
-        // --- Upsert permissions in chunks to avoid 2100-param limit ---
         // 5 columns per row here => safe chunk ~400 rows
         $chunkSize = 400;
 
-        if (!empty($rows)) {
+        if (! empty($rows)) {
             DB::connection()->disableQueryLog();
             DB::transaction(function () use ($table, $rows, $chunkSize) {
                 foreach (array_chunk($rows, $chunkSize) as $chunk) {
@@ -98,7 +99,8 @@ class RolePermissionSeeder extends Seeder
             ->pluck('id')
             ->all();
 
-        // --- Attach permissions to admin role in chunks ---
+        echo "Assigning " . count($permissionIds) . " permissions to admin role (excluding workflow permissions)..." . PHP_EOL;
+
         // Pivot likely: role_has_permissions (role_id, permission_id, + your audit cols)
         // Each row binds ~2-6 params; stay well under 2100
         $pivotValues = [
@@ -115,7 +117,6 @@ class RolePermissionSeeder extends Seeder
             $adminRole->permissions()->syncWithoutDetaching($attachPayload);
         }
 
-        // --- Attach admin role to any user with no roles (also chunked) ---
         User::query()
             ->whereDoesntHave('roles')
             ->orderBy('Id')
@@ -125,7 +126,7 @@ class RolePermissionSeeder extends Seeder
                 foreach ($users as $u) {
                     // t_ModelRoles does not have CreatedBy/ModifiedBy; only use existing columns
                     $payload[$adminRole->id] = [
-                        'BranchId'  => $u->BranchId ?? 1,
+                        'BranchId' => $u->BranchId ?? 1,
                         'CreatedOn' => $now,
                         'ModifiedOn' => $now,
                     ];

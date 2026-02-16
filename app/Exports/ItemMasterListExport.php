@@ -2,37 +2,27 @@
 
 namespace App\Exports;
 
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\ItemCategories;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Inventory\InventoryType;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMultipleSheets;
-use Maatwebsite\Excel\Concerns\WithTitle;
 
-class ItemMasterListExport implements WithMultipleSheets
-{
-    public function sheets(): array
-    {
-        return [
-            'Items' => new ItemsSheet(),
-            'ReferenceData' => new ReferenceDataSheet(),
-        ];
-    }
-}
-
-class ItemsSheet implements FromArray, WithHeadings, WithTitle
+class ItemMasterListExport implements FromArray, WithHeadings
 {
     public function array(): array
     {
+        // Load items with all relationships
         $items = ItemMasterList::with([
-            'itemType', // Relationship to CodeDetails for ItemType
+            'itemType.type',      // ItemType relationship through t_ItemTypes
             'uom',
-            'inventoryType', // Relationship to CodeDetails for InventoryType
-            'status', // Relationship to CodeDetails for Status
+            'inventoryType.type', // InventoryType relationship through t_InventoryTypes
+            'status',
             'price',
-            'category.parent'
+            'category.parent',
         ])->get();
 
         $data = [];
@@ -42,21 +32,81 @@ class ItemsSheet implements FromArray, WithHeadings, WithTitle
             $parent = $category?->parent;
 
             // Determine whether the assigned category is a parent or child
-            $categoryName = $parent ? $category->Name : ($category?->Name ?? '-');
-            $parentName = $parent?->Name ?? ($category && !$parent ? $category->Name : '-');
+            $categoryName = $parent ? $category->Name : ($category?->Name ?? '');
+            $parentName = $parent?->Name ?? ($category && ! $parent ? $category->Name : '');
 
             $data[] = [
-                $item->ItemCode ?? '-',
-                $item->BarCode ?? '-',
-                $item->ItemName ?? '-',
-                $item->itemType?->Description ?? '-', 
-                $item->uom?->Code ?? '-',
-                $item->inventoryType?->Description ?? '-', 
+                $item->ItemCode ?? '',
+                $item->BarCode ?? '',
+                $item->ItemName ?? '',
+                $item->itemType?->type?->Description ?? '', // Get Description from CodeDetail through ItemType
+                $item->uom?->Code ?? '',
+                $item->inventoryType?->type?->Description ?? '', // Get Description from CodeDetail through InventoryType
                 $categoryName,
                 $parentName,
-                $item->price?->ActualPrice ?? '-', 
-                $item->status?->Description ?? '-', 
-                $item->ItemDescription ?? '-',
+                $item->price?->ActualPrice ?? '',
+                $item->status?->Description ?? '',
+                $item->ItemDescription ?? '',
+            ];
+        }
+
+        // Add spacing and reference data
+        $data[] = [];
+        $data[] = ['--- REFERENCE DATA (Do not modify this section) ---'];
+        $data[] = [];
+
+        // Item Types from t_ItemTypes
+        $data[] = ['--- Available Item Types ---'];
+        $itemTypes = ItemType::with('type')
+            ->where('Active', 1)
+            ->get()
+            ->sortBy('type.Description');
+        foreach ($itemTypes as $type) {
+            if ($type->type) {
+                $data[] = ['ItemType: ' . $type->type->Description];
+            }
+        }
+        $data[] = [];
+
+        // UOMs
+        $data[] = ['--- Available Units of Measure (UOM) ---'];
+        foreach (UnitOfMeasure::where('Active', 1)->orderBy('Code')->get() as $uom) {
+            $data[] = ['UOM: ' . $uom->Code];
+        }
+        $data[] = [];
+
+        // Inventory Types from t_InventoryTypes
+        $data[] = ['--- Available Inventory Types ---'];
+        $inventoryTypes = InventoryType::with('type')
+            ->where('Status', 1)
+            ->get()
+            ->sortBy('type.Description');
+        foreach ($inventoryTypes as $invType) {
+            if ($invType->type) {
+                $data[] = ['InventoryType: ' . $invType->type->Description];
+            }
+        }
+        $data[] = [];
+
+        // Statuses from CodeDetails
+        $data[] = ['--- Available Item Statuses ---'];
+        foreach (CodeDetail::where('CodeID', 'ItemStatus')->orderBy('Description')->get() as $status) {
+            $data[] = ['Status: ' . $status->Description];
+        }
+        $data[] = [];
+
+        // Categories with hierarchy
+        $data[] = ['--- Available Categories & Subcategories ---'];
+        $categories = ItemCategories::with('parent')
+            ->whereHas('status', fn ($q) => $q->where('Description', 'Active'))
+            ->orderBy('Name')
+            ->get();
+
+        foreach ($categories as $cat) {
+            $parentName = $cat->parent?->Name ?? '(Main Category)';
+            $data[] = [
+                'Category: ' . $cat->Name,
+                'Parent: ' . $parentName,
             ];
         }
 
@@ -78,70 +128,5 @@ class ItemsSheet implements FromArray, WithHeadings, WithTitle
             'Status',
             'ItemDescription',
         ];
-    }
-
-    public function title(): string
-    {
-        return 'Items';
-    }
-}
-
-class ReferenceDataSheet implements FromArray, WithHeadings, WithTitle
-{
-    public function array(): array
-    {
-        $data = [];
-        
-        // Header
-        $data[] = ['--- Available Options for Reference ---'];
-        $data[] = ['(This sheet is for reference only - do not import this data)'];
-        $data[] = [];
-
-        // Item Types from CodeDetails
-        $data[] = ['Item Types:'];
-        foreach (CodeDetail::where('CodeID', 'ItemTypeStatus')->get() as $type) {
-            $data[] = ['- ' . $type->Description];
-        }
-        $data[] = [];
-
-        // UOMs
-        $data[] = ['Units of Measure (UOM):'];
-        foreach (UnitOfMeasure::all() as $uom) {
-            $data[] = ['- ' . $uom->Code];
-        }
-        $data[] = [];
-
-        // Inventory Types from CodeDetails
-        $data[] = ['Inventory Types:'];
-        foreach (CodeDetail::where('CodeID', 'InventoryTypeStatus')->get() as $invType) {
-            $data[] = ['- ' . $invType->Description];
-        }
-        $data[] = [];
-
-        // Statuses from CodeDetails
-        $data[] = ['Item Statuses:'];
-        foreach (CodeDetail::where('CodeID', 'ItemStatus')->get() as $status) {
-            $data[] = ['- ' . $status->Description];
-        }
-        $data[] = [];
-
-        // Categories
-        $data[] = ['Categories & Subcategories:'];
-        foreach (ItemCategories::with('parent')->get() as $cat) {
-            $parentName = $cat->parent?->Name ?? '(Main Category)';
-            $data[] = ['- ' . $cat->Name . ' → Parent: ' . $parentName];
-        }
-
-        return $data;
-    }
-
-    public function headings(): array
-    {
-        return ['Reference Data'];
-    }
-
-    public function title(): string
-    {
-        return 'ReferenceData';
     }
 }

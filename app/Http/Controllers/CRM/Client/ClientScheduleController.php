@@ -67,6 +67,7 @@ class ClientScheduleController extends Controller
             });
         } catch (Throwable | Exception $e) {
             Log::error('Error scheduling client appointment failed:  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 
@@ -98,6 +99,7 @@ class ClientScheduleController extends Controller
             });
         } catch (Throwable | Exception $e) {
             Log::error('Error scheduling client call failed:  ' . $e->getMessage());
+
             return $this->errored('unexpected error scheduling call, try again latter');
         }
 
@@ -118,15 +120,17 @@ class ClientScheduleController extends Controller
     public function destroy(Request $request, Client $client, $schedule_id): JsonResponse
     {
         $schedule = $client->schedules()->where('t_Schedule.ScheduleID', $schedule_id)->first();
-        if (!$schedule instanceof Schedule) {
+        if (! $schedule instanceof Schedule) {
             return $this->errored('could not find that schedule.');
         }
+
         try {
             DB::transaction(function () use ($client, $request, $schedule) {
                 $this->cancel($client, $schedule, $request->user());
             });
         } catch (Throwable | Exception $e) {
             Log::error('Cancel client schedule failed:  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 

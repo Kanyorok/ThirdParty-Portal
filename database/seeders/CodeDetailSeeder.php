@@ -6,6 +6,7 @@ use App\Enums\BusinessTypeEnum;
 use App\Enums\CampaignStatusEnum;
 use App\Enums\Core\ApprovalEnum;
 use App\Enums\DMS\DocumentCheckOutStatusEnum;
+use App\Enums\Inventory\InterBranchRequisitionEnum;
 use App\Enums\LeadStatusEnum;
 use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Enums\Procurement\PrequalificationApplicationEnum;
@@ -15,12 +16,12 @@ use App\Enums\Procurement\SchedulePlanEnum;
 use App\Enums\Property\PropertyInvoiceEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Enums\Property\TenantClearanceEnum;
+use App\Enums\RFQAwardStatusEnum;
 use App\Enums\TenderApprovalStatusEnum;
 use App\Enums\TenderCategoryEnum;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyTypeEnum;
-use App\Enums\Inventory\InterBranchRequisitionEnum;
 use App\Enums\TicketStatusEnum;
 use App\Helpers\SystemHelper;
 use App\Services\StaticListsService;
@@ -169,6 +170,15 @@ class CodeDetailSeeder extends Seeder
             ]);
         }
 
+        foreach (RFQAwardStatusEnum::cases() as $index => $rfqAwardStatusEnum) {
+            $entries->push([
+                'CodeID' => 'rfq_award',
+                'Value' => $rfqAwardStatusEnum->value,
+                'Description' => $rfqAwardStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+                'IsActive' => 1,
+            ]);
+        }
 
         foreach (BusinessTypeEnum::cases() as $index => $businessTypeEnum) {
             $entries->push([
@@ -237,6 +247,8 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'RequisitionStatus', 'Description' => 'Pending', 'Value' => 'Pe'],
             ['CodeID' => 'RequisitionStatus', 'Description' => 'Rejected', 'Value' => 'Re'],
             ['CodeID' => 'RequisitionStatus', 'Description' => 'Deferred', 'Value' => 'De'],
+            ['CodeID' => 'RequisitionStatus', 'Description' => 'Published', 'Value' => 'Pub'],
+            ['CodeID' => 'RequisitionStatus', 'Description' => 'Awarded', 'Value' => 'Aw'],
 
             // Requisition Urgency
             ['CodeID' => 'RequisitionUrgency', 'Description' => 'Very Urgent', 'Value' => 1],
@@ -250,7 +262,6 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'GLAccountType', 'Description' => 'Liabilities', 'Value' => 'L', 'DisplayOrder' => 0],
             ['CodeID' => 'GLAccountType', 'Description' => 'Income', 'Value' => 'I', 'DisplayOrder' => 0],
             ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E', 'DisplayOrder' => 0],
-            //['CodeID' => 'GLAccountType', 'Description' => 'Share Capital', 'Value' => 'S', 'DisplayOrder' => 0],
 
             // Tenant Types
             ['CodeID' => 'TenantType', 'Description' => 'Individual', 'Value' => 'I'],
@@ -300,7 +311,6 @@ class CodeDetailSeeder extends Seeder
             // Payment Type
             ['CodeID' => 'PaymentType', 'Description' => 'Full', 'Value' => 'F'],
             ['CodeID' => 'PaymentType', 'Description' => 'Partial', 'Value' => 'P'],
-            //['CodeID' => 'PaymentType', 'Description' => 'Scheduled', 'Value' => 'S'],
 
             // Termination Reason
             // Tender Status codes
@@ -319,8 +329,6 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ', 'Value' => 'R'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Direct Purchase', 'Value' => 'D'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender', 'Value' => 'T'],
-            // ['CodeID' => 'ProcurementMethod', 'Description' => 'Prequalification', 'Value' => 'P'],
-            // ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
 
             // Approval WorkFlow Documents
             ['CodeID' => 'ApprovalWorkFlowDocument', 'Value' => 'PR', 'Description' => 'Requisition'],
@@ -571,6 +579,12 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'VehicleType', 'Description' => 'Truck', 'Value' => 'TK'],
             ['CodeID' => 'VehicleType', 'Description' => 'Van', 'Value' => 'VA'],
 
+            //Prequalification Rounds
+            ['CodeID' => 'PrequalificationRound', 'Description' => 'Expired', 'Value' => 'E'],
+            ['CodeID' => 'PrequalificationRound', 'Description' => 'Draft', 'Value' => 'D'],
+            ['CodeID' => 'PrequalificationRound', 'Description' => 'Open', 'Value' => 'O'],
+            ['CodeID' => 'PrequalificationRound', 'Description' => 'Closed', 'Value' => 'CL'],
+
             //Inspection Types
             ['CodeID' => 'InspectionType', 'Description' => 'Pre-Trip Inspection', 'Value' => 'PRI'],
             ['CodeID' => 'InspectionType', 'Description' => 'Post-Trip Inspection', 'Value' => 'POI'],
@@ -764,9 +778,9 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'JournalEntryStatus', 'Description' => 'Reject', 'Value' => 'r', 'DisplayOrder' => 5],
 
             //tender Approval Status
-            ['CodeID' => 'TenderStatus', 'Description' => 'Pending', 'Value'=> 'P','DisplayOrder' => 53],
-            ['CodeID' => 'TenderStatus', 'Description' => 'Approved', 'Value'=> 'A','DisplayOrder' => 54],
-            ['CodeID' => 'TenderStatus', 'Description' => 'Rejected', 'Value'=> 'R','DisplayOrder' => 55],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Pending', 'Value' => 'P','DisplayOrder' => 53],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Approved', 'Value' => 'A','DisplayOrder' => 54],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Rejected', 'Value' => 'R','DisplayOrder' => 55],
 
 
 
@@ -778,18 +792,45 @@ class CodeDetailSeeder extends Seeder
 
 
         foreach ($entries as $entry) {
-            $exists = DB::table('t_CodeDetails')->where('CodeID', $entry['CodeID'])->where('Description', $entry['Description'])->exists();
-            if (!$exists) {
-                DB::table('t_CodeDetails')->insert([
-                    'CodeID' => $entry['CodeID'],
-                    'Value' => $entry['Value'] ?? null,
-                    'Description' => $entry['Description'],
-                    'DisplayOrder' => $entry['DisplayOrder'] ?? 1,
+            $query = DB::table('t_CodeDetails')->where('CodeID', $entry['CodeID']);
+
+            // Match by Value if present, otherwise by Description (fallback for items without Value)
+            if (isset($entry['Value'])) {
+                $query->where('Value', (string) $entry['Value']);
+            } else {
+                $query->where('Description', $entry['Description']);
+            }
+
+            $existing = $query->first();
+
+            $data = [
+                'CodeID' => $entry['CodeID'],
+                'Value' => isset($entry['Value']) ? (string) $entry['Value'] : null,
+                'Description' => $entry['Description'],
+                'DisplayOrder' => $entry['DisplayOrder'] ?? 1,
+                'IsActive' => $entry['IsActive'] ?? 1,
+            ];
+
+            if ($existing) {
+                // Update existing record
+                DB::table('t_CodeDetails')
+                    ->where('ID', $existing->ID)
+                    ->update(array_merge($data, [
+                        'ModifiedOn' => $date,
+                        'ModifiedBy' => $user->Id,
+                        'DeletedOn' => null, // Restore if soft-deleted
+                        'DeletedBy' => null,
+                    ]));
+            } else {
+                // Insert new record
+                DB::table('t_CodeDetails')->insert(array_merge($data, [
                     'CreatedOn' => $date,
                     'CreatedBy' => $user->Id,
                     'ModifiedOn' => $date,
                     'ModifiedBy' => $user->Id,
-                ]);
+                    'DeletedOn' => null,
+                    'DeletedBy' => null,
+                ]));
             }
         }
     }

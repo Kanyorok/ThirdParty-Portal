@@ -2,19 +2,19 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\Auth\User;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\HR\Employee;
-use App\Models\Auth\User;
 
 class RFQCommitteeMember extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_RFQCommitteeMembers';
 
@@ -108,6 +108,4 @@ class RFQCommitteeMember extends Model
     {
         return $this->belongsTo(User::class, 'UserID', 'EmployeeId');
     }
-
-
 }

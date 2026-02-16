@@ -3,18 +3,17 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\FleetManagement\ContractedDriversRequest;
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\Fleet\ContractedDriver;
+use App\Models\Fleet\FleetContractedDriverAssignment;
+use App\Models\Fleet\FleetContractedDriverLicense;
+use App\Models\Fleet\FleetVehicle;
+use App\Models\HRM\Employee;
+use App\Models\ThirdParty\SupplierMaster;
+use App\Services\FleetManagement\ContractedDriverService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Http\Requests\FleetManagement\ContractedDriversRequest;
-use App\Services\FleetManagement\ContractedDriverService;
-use App\Models\Fleet\FleetContractedDriverLicense;
-use App\Models\Fleet\FleetContractedDriverAssignment;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\ContractedDriver;
-use App\Models\HR\Employee;
-use App\Models\ThirdParty\ThirdParties;
-use App\Models\Core\Approval\CodeDetail;
-use App\Models\ThirdParty\SupplierMaster;
 
 class ContractedDriverController extends Controller
 {
@@ -112,10 +111,10 @@ class ContractedDriverController extends Controller
         $this->authorize('view', ContractedDriver::class);
 
         $driver = ContractedDriver::with([
-        'company.party', 
+        'company.party',
         'assignments.vehicle.vehicleType',
         'tripLogs.vehicle',
-    ])->findOrFail($id);
+        ])->findOrFail($id);
 
         $licenses = FleetContractedDriverLicense::where('ContractedDriverID', $id)
             ->orderByDesc('IssueDate')
@@ -131,9 +130,9 @@ class ContractedDriverController extends Controller
             ->orderByDesc('TripStartDate')
             ->get();
 
-       $activeVehicleStatus = CodeDetail::where('CodeID', 'VehicleStatus')
-            ->where('Description', 'Active')
-            ->value('ID');
+        $activeVehicleStatus = CodeDetail::where('CodeID', 'VehicleStatus')
+             ->where('Description', 'Active')
+             ->value('ID');
 
         $assignedToContracted = FleetContractedDriverAssignment::whereNull('DeletedOn')
             ->pluck('VehicleID')

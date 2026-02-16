@@ -70,7 +70,6 @@
 
                 discussionsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the client discussions.");
-                    console.log(er);
                 });
             } else {
                 discussionsTable.ajax.reload();

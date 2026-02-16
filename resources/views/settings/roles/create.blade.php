@@ -1,15 +1,19 @@
+<link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+<style>
+    .select2-container { width: 100% !important; }
+</style>
 <div>
     <form action="{{ route('roles.store') }}" method="post" id="createRoleForm"> @csrf
         <div class="col-12 mb-3">
             <label class="form-label" for="RoleName">Role Name <span class="text-danger">*</span></label>
-            <select class="form-select" id="RoleName" name="RoleName" required>
+            <select class="form-control" id="RoleName" name="RoleName" required>
                 <option value="">Select Job Role</option>
-                @foreach(($jobRoles ?? []) as $jobRole)
-                    <option value="{{ $jobRole->Name }}" {{ old('RoleName') == $jobRole->Name ? 'selected' : '' }}>
-                        {{ $jobRole->Code }} - {{ $jobRole->Name }}
-                    </option>
+                @foreach($jobTitles as $title)
+                    <option value="{{ $title }}">{{ $title }}</option>
                 @endforeach
             </select>
+            <small class="text-info">Select a job role from the Human Capital Suite module</small>
             <p id="RoleName_error" class="invalid-feedback d-none error col-12" role="alert"></p>
             <div class="form-text">Select a job role from the Human Capital Suite module</div>
         </div>
@@ -111,6 +115,8 @@ ksort($grouped);
 </div>
 <script>
     $(function () {
+        $('#RoleName').select2({ placeholder: 'Select Job Role', allowClear: true });
+
         const $search = $('#permSearch');
         const normalize = (s) => (s||'').toString().trim().toLowerCase();
 

@@ -21,6 +21,7 @@ class DocumentUploadController extends Controller
         }
         $allowedFiles .= '</p>';
         $root = RepositoryService::root();
+
         return view('dms.files.create')
             ->with('repositories', RepositoryService::getUser($request->user(), [$root->Id, null]))
             ->with('allowedFiles', $allowedFiles)

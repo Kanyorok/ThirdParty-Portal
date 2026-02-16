@@ -2,15 +2,12 @@
 
 namespace App\Services\FleetManagement;
 
-use App\Models\Fleet\FleetVehicleAssignment;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\FleetDriver;
 use App\Models\Core\Approval\CodeDetail;
-use Illuminate\Support\Facades\DB;
+use App\Models\Fleet\FleetDriver;
+use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FleetVehicleAssignment;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\Core\PermissionEnum;
-use App\Enums\Core\ModulesEnum;
-use Exception;
+use Illuminate\Support\Facades\DB;
 
 class FleetVehicleAssignmentService
 {
@@ -21,7 +18,7 @@ class FleetVehicleAssignmentService
     {
         $lastInspection = FleetVehicleAssignment::withTrashed()->latest('CreatedOn')->first();
 
-        if (!$lastInspection) {
+        if (! $lastInspection) {
             return 'ASG-0001';
         }
 
@@ -55,7 +52,7 @@ class FleetVehicleAssignmentService
 
             // Update the vehicle status to "AssignedTrip"
             $this->updateVehicleStatus($data['VehicleID'], 'AssignedTrip');
-            
+
             // Update the driver status to "AssignedTrip"
             $this->updateDriverStatus($data['DriverID'], 'AssignedTrip');
 
@@ -77,7 +74,7 @@ class FleetVehicleAssignmentService
         return DB::transaction(function () use ($assignment, $data) {
             $oldVehicleId = $assignment->VehicleID;
             $oldDriverId = $assignment->DriverID;
-            
+
             $data['ModifiedBy'] = Auth::id();
             $data['ModifiedOn'] = now();
 
@@ -87,7 +84,7 @@ class FleetVehicleAssignmentService
             if (isset($data['VehicleID']) && $data['VehicleID'] != $oldVehicleId) {
                 // Set old vehicle back to "Available" if no other assignments
                 $this->revertVehicleStatusIfNoAssignment($oldVehicleId);
-                
+
                 // Set new vehicle to "AssignedTrip"
                 $this->updateVehicleStatus($data['VehicleID'], 'AssignedTrip');
             }
@@ -96,7 +93,7 @@ class FleetVehicleAssignmentService
             if (isset($data['DriverID']) && $data['DriverID'] != $oldDriverId) {
                 // Set old driver back to "Available" if no other assignments
                 $this->revertDriverStatusIfNoAssignment($oldDriverId);
-                
+
                 // Set new driver to "AssignedTrip"
                 $this->updateDriverStatus($data['DriverID'], 'AssignedTrip');
             }
@@ -120,7 +117,7 @@ class FleetVehicleAssignmentService
         return DB::transaction(function () use ($assignment) {
             $vehicleId = $assignment->VehicleID;
             $driverId = $assignment->DriverID;
-            
+
             $assignment->DeletedBy = Auth::id();
             $assignment->DeletedOn = now();
             $assignment->save();
@@ -129,7 +126,7 @@ class FleetVehicleAssignmentService
 
             // Set vehicle back to "Available" if no other active assignments
             $this->revertVehicleStatusIfNoAssignment($vehicleId);
-            
+
             // Set driver back to "Available" if no other active assignments
             $this->revertDriverStatusIfNoAssignment($driverId);
 

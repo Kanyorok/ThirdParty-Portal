@@ -236,9 +236,6 @@
     @stack('scripts')
 
     <script>
-        window.__DEFAULT_ACTIVE_ROUTE__ = @json(request()->path() ? '/'.request()->path() : '/'); 
-    </script>
-    <script>
         // Refresh Feather icons after partial content loads
         document.addEventListener('partial:loaded', function() {
             if (window.feather && typeof window.feather.replace === 'function') {
@@ -249,7 +246,9 @@
         });
     </script>
     <script type="module">
-        import { SidebarState } from '/js/sidebarState.js';
+        import {
+            SidebarState
+        } from '/js/sidebarState.js';
 
         SidebarState.init({
             rootSelector: 'nav.pc-sidebar',
@@ -348,13 +347,19 @@
                     target.innerHTML = newContent.innerHTML;
                     const newTitle = doc.querySelector('title');
                     if (newTitle) document.title = newTitle.innerText;
-                    if (addToHistory) history.pushState({ url: url }, '', url);
+                    if (addToHistory) history.pushState({
+                        url: url
+                    }, '', url);
                     window.scrollTo(0, 0);
                     runScripts(target);
                     try {
                         sessionStorage.setItem('activeSidebarRoute', new URL(url, location.href).pathname);
                     } catch (e) {}
-                    document.dispatchEvent(new CustomEvent('partial:loaded', { detail: { url } }));
+                    document.dispatchEvent(new CustomEvent('partial:loaded', {
+                        detail: {
+                            url
+                        }
+                    }));
                 } catch (err) {
                     console.error('AJAX navigate failed, falling back', err);
                     window.location.href = url;
@@ -406,18 +411,22 @@
                 if (!sidebar) return;
                 const navRoot = sidebar.querySelector('.pc-navbar') || sidebar;
                 navRoot.querySelectorAll('a.pc-link:not([data-route])').forEach(a => {
-                    try { a.setAttribute('data-route', new URL(a.getAttribute('href'), location.href).pathname); } catch (e) {}
+                    try {
+                        a.setAttribute('data-route', new URL(a.getAttribute('href'), location.href).pathname);
+                    } catch (e) {}
                 });
                 const anchors = Array.from(navRoot.querySelectorAll('a[data-route]'));
                 const current = normalizePath(location.pathname);
                 let match = anchors.find(a => normalizePath(a.dataset.route) === current);
 
                 if (!match) {
-                    let best = null, bestLen = 0;
+                    let best = null,
+                        bestLen = 0;
                     anchors.forEach(a => {
                         const p = normalizePath(a.dataset.route);
                         if (current.startsWith(p) && p.length > bestLen && p !== '/') {
-                            best = a; bestLen = p.length;
+                            best = a;
+                            bestLen = p.length;
                         }
                     });
                     match = best;
@@ -444,7 +453,10 @@
                     const rect = match.getBoundingClientRect();
                     const vpH = window.innerHeight || document.documentElement.clientHeight;
                     if (rect.top < 80 || rect.bottom > vpH - 40) {
-                        match.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        match.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
                     }
                 } catch (e) {}
             }
@@ -459,13 +471,17 @@
                 if (typeof jQuery === 'undefined') return;
                 clearInterval(checkJQuery);
                 var $ = jQuery;
+
                 function setupDataTableObserver() {
                     var sidebarToggleButtons = document.querySelectorAll('#sidebar-hide, #mobile-collapse');
                     if (sidebarToggleButtons.length) {
                         sidebarToggleButtons.forEach(function(btn) {
                             btn.addEventListener('click', function() {
                                 setTimeout(function() {
-                                    if ($.fn.DataTable) $.fn.DataTable.tables({ visible: true, api: true }).columns.adjust();
+                                    if ($.fn.DataTable) $.fn.DataTable.tables({
+                                        visible: true,
+                                        api: true
+                                    }).columns.adjust();
                                 }, 400);
                             });
                         });
@@ -474,7 +490,10 @@
                     $(window).on('resize', function() {
                         clearTimeout(resizeTimer);
                         resizeTimer = setTimeout(function() {
-                            if ($.fn.DataTable) $.fn.DataTable.tables({ visible: true, api: true }).columns.adjust();
+                            if ($.fn.DataTable) $.fn.DataTable.tables({
+                                visible: true,
+                                api: true
+                            }).columns.adjust();
                         }, 250);
                     });
                 }
@@ -482,7 +501,10 @@
                 document.addEventListener('partial:loaded', function() {
                     setTimeout(setupDataTableObserver, 100);
                     setTimeout(function() {
-                        if ($.fn.DataTable) $.fn.DataTable.tables({ visible: true, api: true }).columns.adjust();
+                        if ($.fn.DataTable) $.fn.DataTable.tables({
+                            visible: true,
+                            api: true
+                        }).columns.adjust();
                     }, 500);
                 });
             }, 100);

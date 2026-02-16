@@ -66,6 +66,7 @@ class LeadScheduleController extends Controller
             });
         } catch (Exception | \Throwable $e) {
             Log::error('Error scheduling lead appointment failed:  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 
@@ -97,6 +98,7 @@ class LeadScheduleController extends Controller
             });
         } catch (Exception $e) {
             Log::error('Error scheduling lead call failed:  ' . $e->getMessage());
+
             return $this->errored('unexpected error scheduling call, try again latter');
         }
 
@@ -119,15 +121,17 @@ class LeadScheduleController extends Controller
     public function destroy(Request $request, Lead $lead, $schedule_id): JsonResponse
     {
         $schedule = $lead->schedules()->where('t_Schedule.ScheduleID', $schedule_id)->first();
-        if (!$schedule instanceof Schedule) {
+        if (! $schedule instanceof Schedule) {
             return $this->errored('could not find that schedule.');
         }
+
         try {
             DB::transaction(function () use ($lead, $request, $schedule) {
                 $this->cancel($lead, $schedule, $request->user());
             });
         } catch (Exception $e) {
             Log::error('Cancel lead schedule failed:  ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 

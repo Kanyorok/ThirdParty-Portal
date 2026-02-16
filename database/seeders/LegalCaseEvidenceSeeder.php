@@ -44,7 +44,7 @@ class LegalCaseEvidenceSeeder extends Seeder
                 ->where('EvidenceTitle', $item['EvidenceTitle'])
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('t_LegalCaseEvidence')->insert([
                     'LegalCaseID' => $item['LegalCaseID'],
                     'EvidenceTitle' => $item['EvidenceTitle'],

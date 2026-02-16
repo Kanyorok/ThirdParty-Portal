@@ -3,10 +3,12 @@
 namespace App\Services\ThirdParties;
 
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
+use App\Enums\ThirdParty\ThirdPartyStatusEnum;
 use App\Models\Auth\User;
 use App\Models\ThirdParty\SupplierMaster;
 use App\Services\Core\ApprovalWorkflowService;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
 
 class SupplierWorkflowService extends ApprovalWorkflowService
 {
@@ -64,6 +66,17 @@ class SupplierWorkflowService extends ApprovalWorkflowService
             // 2. Ensure account is active
             \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyId', $supplier->ThirdPartyId)
                 ->update(['IsActive' => true]);
+
+            if ($thirdParty = $supplier->thirdParty) {
+                try {
+                    app(ThirdPartyStatusService::class)->applyStatus($thirdParty, ThirdPartyStatusEnum::Active);
+                } catch (\Throwable $exception) {
+                    Log::error('Failed to sync third-party approval status', [
+                        'third_party_id' => $thirdParty->Id,
+                        'exception' => $exception->getMessage(),
+                    ]);
+                }
+            }
         }
 
         return $result;
@@ -88,6 +101,16 @@ class SupplierWorkflowService extends ApprovalWorkflowService
         if ($result) {
             $supplier->ApprovalStatus = ThirdPartyApprovalStatusEnum::Rejected;
             $supplier->save();
+            if ($thirdParty = $supplier->thirdParty) {
+                try {
+                    app(ThirdPartyStatusService::class)->applyStatus($thirdParty, ThirdPartyStatusEnum::Suspended);
+                } catch (\Throwable $exception) {
+                    Log::error('Failed to sync third-party rejection status', [
+                        'third_party_id' => $thirdParty->Id,
+                        'exception' => $exception->getMessage(),
+                    ]);
+                }
+            }
         }
 
         return $result;

@@ -65,7 +65,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading reports.");
-                    // console.log(er);
                 });
             } else {
                 $('#reportsTable').DataTable().ajax.reload();

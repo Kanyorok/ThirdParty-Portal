@@ -79,7 +79,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading notification.");
-                    // console.log(er);
                 });
             } else {
                 $('#notificationTable').DataTable().ajax.reload();

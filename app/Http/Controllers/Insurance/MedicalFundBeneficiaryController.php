@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Insurance;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\MedicalFundBeneficiaryRequest;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\Insurance\MedicalFundContributor;
 use App\Models\Insurance\MedicalFund;
 use App\Models\Insurance\MedicalFundBeneficiary;
+use App\Models\Insurance\MedicalFundContributor;
 use App\Services\Insurance\MedicalFundBeneficiaryService;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class MedicalFundBeneficiaryController extends Controller
 {
@@ -30,7 +30,6 @@ class MedicalFundBeneficiaryController extends Controller
 
         $medical_fund = $contributor->fund;
 
-        // dd($contributor);
 
         return view('bancassurance.medical_fund_beneficiaries.index', compact(
             'beneficiaries',
@@ -89,7 +88,7 @@ class MedicalFundBeneficiaryController extends Controller
         );
 
         // If ContributorId was passed from the form (e.g., contributor's show page), attach it
-        if (!empty($validated['ContributorId'])) {
+        if (! empty($validated['ContributorId'])) {
             $service->medicalFundBeneficiary->update(['ContributorId' => $validated['ContributorId']]);
         }
 

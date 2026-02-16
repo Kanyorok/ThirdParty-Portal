@@ -2,20 +2,20 @@
 
 namespace App\Models\Insurance;
 
+use App\Enums\Insurance\InsuranceReferralStatus;
 use App\Models\Auth\User;
-use App\Models\HR\Employee;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Enums\Insurance\InsuranceReferralStatus;
 
 class BancAssuranceReferral extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $table = 't_BancassuranceReferrals';
     protected $primaryKey = 'Id';
 
@@ -23,7 +23,7 @@ class BancAssuranceReferral extends Model
         'ClientId','BranchId',
         'ReferredBy', 'ReferralDate', 'InsuranceProductId', 'PreferredInsurerId',
         'Remarks', 'Status', 'AssignedTo', 'CreatedBy',
-        'ModifiedBy', 'DeletedBy'
+        'ModifiedBy', 'DeletedBy',
     ];
 
     protected $casts = [

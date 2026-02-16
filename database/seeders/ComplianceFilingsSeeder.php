@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -99,7 +98,7 @@ class ComplianceFilingsSeeder extends Seeder
                 'FilePath' => 'compliance/acknowledgments/aml_ack_letter.pdf',
                 'UploadedBy' => 1,
                 'UploadedOn' => now()->subMonths(2)->addDays(2),
-            ]
+            ],
         ]);
     }
 }

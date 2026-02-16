@@ -5,6 +5,18 @@
 @section('content')
 <div class="container">
 
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -159,14 +171,14 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <input type="text" class="form-control" value="${item.UOMName}" readonly>
                                 </td>
                                 <td><input type="number" name="RequisitionItems[${index}][quantity]" value="${item.Quantity}" class="form-control" readonly></td>
-                                <td><input type="number" name="RequisitionItems[${index}][quotedprice]" data-index="${index}" class="form-control quotedprice" required></td>
+                                <td><input type="number" name="RequisitionItems[${index}][quotedprice]" data-index="${index}" class="form-control quotedprice" step="0.01" min ="0" required></td>
                                 <td><input type="number" name="DurationDays" class="form-control" required></td>
                                 <td>
                                     <select name="Currency" class="form-control" required>
                                         <option value="">-- Select Currency --</option>
                                         @foreach($currencies as $curr)
-                        <option value="{{ $curr->Code }}" {{ $curr->Symbol === 'Ksh' ? 'selected' : '' }}>
-                                                {{ $curr->Symbol }}
+                        <option value="{{ $curr->Code }}" {{ $curr->Symbol=== 'Ksh' ? 'selected' : '' }}>
+                                                {{ $curr->Name }} ({{ $curr->Symbol }})
                         </option>
 @endforeach
                                     </select>

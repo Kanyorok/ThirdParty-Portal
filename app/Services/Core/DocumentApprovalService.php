@@ -12,7 +12,6 @@ class DocumentApprovalService
 {
     public function __construct(protected ApprovalService $approvalService)
     {
-        //
     }
 
     public function approve(Request $request, int $id)
@@ -58,7 +57,7 @@ class DocumentApprovalService
                 );
 
                 // Set document status to Rejected
-                DB::table((new $docMap[$documentType]['model'])->getTable())
+                DB::table((new $docMap[$documentType]['model']())->getTable())
                     ->where('id', $id)
                     ->update([
                         $docMap[$documentType]['approved_column'] => $this->getCodeId('RequisitionStatus', 'Rejected'),
@@ -79,7 +78,12 @@ class DocumentApprovalService
 
         // Perform insert + update in a transaction
         DB::transaction(function () use (
-            $documentType, $id, $actor, $data, $docMap, &$isNowFullyApproved
+            $documentType,
+            $id,
+            $actor,
+            $data,
+            $docMap,
+            &$isNowFullyApproved
         ) {
             // Insert approval only if not already approved by this user
             $alreadyApproved = DB::table('t_Approvals')
@@ -88,7 +92,7 @@ class DocumentApprovalService
                 ->where('UserId', $actor->Id)
                 ->exists();
 
-            if (!$alreadyApproved) {
+            if (! $alreadyApproved) {
                 DB::table('t_Approvals')->insert([
                     'DocType' => $documentType,
                     'DocumentId' => $id,
@@ -106,7 +110,7 @@ class DocumentApprovalService
                 ->isFullyApproved($documentType, $id, (float)$data['order_total']);
 
             if ($isNowFullyApproved) {
-                DB::table((new $docMap[$documentType]['model'])->getTable())
+                DB::table((new $docMap[$documentType]['model']())->getTable())
                     ->where('id', $id)
                     ->update([
                         $docMap[$documentType]['approved_column'] => $docMap[$documentType]['approved_value'],

@@ -8,14 +8,15 @@ class SystemBankSetting extends Model
 {
     protected $table = 't_SystemBankSetting';
     protected $primaryKey = 'Id';
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'BankName','ShortName','BankCode','SwiftCode','ClearingCode','Address1','Address2',
         'CityID','CountryID','ZipCode','Phone1','Phone2','Mobile','Fax','EmailID','Website',
-        'BankRegNumber','EmployerTaxPIN','AuditedDate','BankTypeID','ImageID','IsActive','CreatedBy','ModifiedBy',
-        'SupervisedBy','SupervisedOn'
+        'BankRegNumber','AuditedDate','BankTypeID','ImageID','IsActive','CreatedBy','ModifiedBy',
+        'SupervisedBy','SupervisedOn',
     ];
 
     protected $casts = [

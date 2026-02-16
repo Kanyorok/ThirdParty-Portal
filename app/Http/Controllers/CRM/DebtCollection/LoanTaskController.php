@@ -29,7 +29,7 @@ class LoanTaskController extends Controller
     public function index(string $product_id): JsonResponse
     {
         $product = DebtProduct::query()->where('AccountID', $product_id)->oldest('processDate')->first();
-        if (!$product instanceof DebtProduct) {
+        if (! $product instanceof DebtProduct) {
             return $this->errored('Product not found, maybe closed.');
         }
         $this->authorize('view', $product);
@@ -44,7 +44,7 @@ class LoanTaskController extends Controller
     public function store(PartyTaskRequest $request, string $product_id): JsonResponse
     {
         $product = DebtProduct::query()->where('AccountID', $product_id)->oldest('processDate')->first();
-        if (!$product instanceof DebtProduct) {
+        if (! $product instanceof DebtProduct) {
             return $this->errored('Product not found, maybe closed.');
         }
         $this->authorize('view', $product);
@@ -57,6 +57,7 @@ class LoanTaskController extends Controller
             $activity = $this->save($product->client, $notes, $dated, $assignee, $actor, DebtProduct::getPrimaryKey(), $product_id);
         } catch (\Throwable | Exception $e) {
             Log::error('Error adding  Loan Task. e: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again latter');
         }
 

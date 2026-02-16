@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Finance\FinanceCreditAdjustment;
 use App\Models\Finance\FinanceCreditManagement;
 use App\Models\Finance\FinanceCreditMovement;
-use App\Models\ThirdParty\ThirdParties;
 use App\Services\Finance\CreditManagementTransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +19,7 @@ class CreditAdjustmentController extends Controller
         $query = FinanceCreditAdjustment::with([
             'customer:Id,ThirdPartyName,RegistrationNumber',
             'creditProfile:Id,CreditLimit',
-            'requestedByUser:Id,Name'
+            'requestedByUser:Id,Name',
         ]);
 
         // Filter by customer if customer_id is provided
@@ -43,7 +42,7 @@ class CreditAdjustmentController extends Controller
         $creditId = $request->get('creditId') ?? $request->get('id');
 
         // Support bare numeric query like ?4
-        if (!$creditId) {
+        if (! $creditId) {
             $rawQuery = $request->getQueryString();
             if (is_string($rawQuery) && ctype_digit($rawQuery)) {
                 $creditId = (int) $rawQuery;
@@ -56,7 +55,6 @@ class CreditAdjustmentController extends Controller
 
         return view('finance.accountsreceivable.creditadjustment.create', compact('creditProfiles', 'selectedCredit'));
     }
-
 
     public function createWithId($creditId)
     {
@@ -85,6 +83,7 @@ class CreditAdjustmentController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $creditProfile = FinanceCreditManagement::findOrFail($validated['CreditID']);
 
@@ -131,12 +130,13 @@ class CreditAdjustmentController extends Controller
                 ->log("Created {$validated['AdjustmentType']} credit adjustment for " . $creditProfile->customer->ThirdPartyName);
 
             DB::commit();
+
             return redirect()->route('creditadjustment.show', $adjustment->Id)
                 ->with('success', 'Credit adjustment request created successfully and is pending approval.');
-
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Credit adjustment creation failed: ' . $th->getMessage());
+
             return back()->withErrors(['error' => 'Failed to create credit adjustment: ' . $th->getMessage()]);
         }
     }
@@ -146,7 +146,7 @@ class CreditAdjustmentController extends Controller
         $adjustment = FinanceCreditAdjustment::with([
             'creditProfile.customer',
             'requestedByUser:Id,Name',
-            'approvedByUser:Id,Name'
+            'approvedByUser:Id,Name',
         ])->findOrFail($id);
 
         return view('finance.accountsreceivable.creditadjustment.show', compact('adjustment'));
@@ -189,6 +189,7 @@ class CreditAdjustmentController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $creditProfile = $adjustment->creditProfile;
 
@@ -222,12 +223,13 @@ class CreditAdjustmentController extends Controller
                 ->log("Updated credit adjustment #{$adjustment->Id}");
 
             DB::commit();
+
             return redirect()->route('creditadjustment.show', $adjustment->Id)
                 ->with('success', 'Credit adjustment updated successfully.');
-
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Credit adjustment update failed: ' . $th->getMessage());
+
             return back()->withErrors(['error' => 'Failed to update credit adjustment: ' . $th->getMessage()]);
         }
     }
@@ -270,6 +272,7 @@ class CreditAdjustmentController extends Controller
         }
 
         DB::beginTransaction();
+
         try {
             if ($validated['action_type'] === 'reject') {
                 $adjustment->update([
@@ -286,8 +289,8 @@ class CreditAdjustmentController extends Controller
                     ->log("Rejected credit adjustment #{$adjustment->Id}");
 
                 DB::commit();
-                return back()->with('success', 'Credit adjustment rejected successfully.');
 
+                return back()->with('success', 'Credit adjustment rejected successfully.');
             } elseif ($validated['action_type'] === 'approve') {
                 // Approve the adjustment
                 $adjustment->update([
@@ -333,7 +336,7 @@ class CreditAdjustmentController extends Controller
                     // Log but don't fail the approval process
                     Log::warning('Credit adjustment GL posting failed', [
                         'adjustment_id' => $adjustment->Id,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                 }
 
@@ -344,11 +347,13 @@ class CreditAdjustmentController extends Controller
                     ->log("Approved credit adjustment #{$adjustment->Id}");
 
                 DB::commit();
+
                 return back()->with('success', 'Credit adjustment approved, credit limit updated, and GL transactions posted successfully.');
             }
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Credit adjustment approval failed: ' . $th->getMessage());
+
             return back()->with('error', 'Failed to process approval: ' . $th->getMessage());
         }
     }

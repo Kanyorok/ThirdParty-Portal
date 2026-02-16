@@ -3,10 +3,10 @@
 namespace App\Services\Insurance\Customers;
 
 use App\Models\Auth\User;
-use App\Models\Insurance\BancassuranceCustomerContact;
-use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\HR\Employee;
+use App\Models\HRM\Employee;
+use App\Models\Insurance\BancassuranceCustomer;
+use App\Models\Insurance\BancassuranceCustomerContact;
 use DateTime;
 
 class BancassuranceCustomersContactsService
@@ -20,14 +20,13 @@ class BancassuranceCustomersContactsService
 
     public static function create(
         BancassuranceCustomer $CustomerID,
-        DateTime              $ContactDate,
-        CodeDetail            $ContactType,
-        string                $Summary,
-        string                $Notes,
-        Employee              $HandledBy,
-        User                  $user
-    ): self
-    {
+        DateTime $ContactDate,
+        CodeDetail $ContactType,
+        string $Summary,
+        string $Notes,
+        Employee $HandledBy,
+        User $user
+    ): self {
         $log = BancassuranceCustomerContact::create([
             'CustomerID' => $CustomerID->Id,
             'ContactDate' => $ContactDate,
@@ -40,6 +39,7 @@ class BancassuranceCustomersContactsService
         ]);
 
         activity()->causedBy($user->Id)->performedOn($log)->event('create')->log("Added Customer Contacts {$log->Id}.");
+
         return new self($log);
     }
 }

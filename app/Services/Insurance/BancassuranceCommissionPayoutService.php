@@ -21,18 +21,16 @@ class BancassuranceCommissionPayoutService
 
     public static function create(
         BancassurancePolicy $PolicyId,
-        string              $PayoutReference,
-        float               $PaidAmount,
-        Currency            $CurrencyId,
+        string $PayoutReference,
+        float $PaidAmount,
+        Currency $CurrencyId,
         BancassuranceCommissionRule $CommissionRuleId,
-        DateTime            $PaymentDate,
-        CodeDetail          $PaymentMode,
-        string              $Remarks,
-        User                $PaidTo,
-        User                $user
-
-    ): self
-    {
+        DateTime $PaymentDate,
+        CodeDetail $PaymentMode,
+        string $Remarks,
+        User $PaidTo,
+        User $user
+    ): self {
 
         $payout = BancassuranceCommissionPayout::create([
             'PolicyId' => $PolicyId->Id,
@@ -49,7 +47,7 @@ class BancassuranceCommissionPayoutService
         ]);
 
         activity()->causedBy($user->Id)->performedOn($payout)->event('create')->log("Added Provider {$payout->Id}.");
+
         return new self($payout);
     }
-
 }

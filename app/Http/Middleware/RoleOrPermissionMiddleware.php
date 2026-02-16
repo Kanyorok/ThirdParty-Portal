@@ -11,9 +11,10 @@ class RoleOrPermissionMiddleware
         $class = 'Spatie\\Permission\\Middlewares\\RoleOrPermissionMiddleware';
         if (class_exists($class)) {
             $inner = app($class);
+
             return $inner->handle($request, $next, $roleOrPermission, ...$guards);
         }
+
         return $next($request);
     }
 }
-

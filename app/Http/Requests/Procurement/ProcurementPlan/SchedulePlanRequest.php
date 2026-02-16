@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Procurement\ProcurementPlan;
 
-use Illuminate\Foundation\Http\FormRequest;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
 
 class SchedulePlanRequest extends FormRequest
@@ -43,7 +43,6 @@ class SchedulePlanRequest extends FormRequest
         throw ValidationException::withMessages(['pending_plan_id' => 'Invalid plan selected']);
     }
 
-
     public function getQuarterOne(int $lineItemId): int
     {
         return (int)$this->input("q1_{$lineItemId}", 0);
@@ -63,5 +62,4 @@ class SchedulePlanRequest extends FormRequest
     {
         return (int)$this->input("q4_{$lineItemId}", 0);
     }
-
 }

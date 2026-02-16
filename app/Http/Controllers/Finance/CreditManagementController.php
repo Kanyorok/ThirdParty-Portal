@@ -6,11 +6,10 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Finance\FinanceCreditManagement;
-use App\Models\Finance\FinanceInvoice;
 use App\Models\Finance\FinanceCreditMovement;
 use App\Models\ThirdParty\ThirdParties;
-use App\Services\Finance\CreditManagementTransactionService;
 use App\Services\Finance\CreditCalculationService;
+use App\Services\Finance\CreditManagementTransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,16 +23,17 @@ class CreditManagementController extends Controller
     {
         $this->creditService = $creditService;
     }
+
     public function index(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceCreditManagementView, FinanceCreditManagement::class);
-        $query = FinanceCreditManagement::select('Id','CustomerID','CreditLimit','Status','EffectiveFrom','ExpiryDate')
+        $query = FinanceCreditManagement::select('Id', 'CustomerID', 'CreditLimit', 'Status', 'EffectiveFrom', 'ExpiryDate')
             ->with(['customer:Id,ThirdPartyName,RegistrationNumber,Email']);
 
         // Search functionality
         if ($request->filled('search')) {
             $search = $request->get('search');
-            $query->whereHas('customer', function($q) use ($search) {
+            $query->whereHas('customer', function ($q) use ($search) {
                 $q->where('ThirdPartyName', 'like', "%{$search}%")
                   ->orWhere('RegistrationNumber', 'like', "%{$search}%")
                   ->orWhere('Email', 'like', "%{$search}%");
@@ -90,62 +90,65 @@ class CreditManagementController extends Controller
         return view('finance.accountsreceivable.creditmanagement.index', compact('credits'));
     }
 
-    public function create(){
+    public function create()
+    {
         $this->authorize(PermissionEnum::FinanceCreditManagementCreate, FinanceCreditManagement::class);
-        $paymentTerms = CodeDetail::select('Value','Description')
+        $paymentTerms = CodeDetail::select('Value', 'Description')
             ->where('CodeID', 'PaymentTerm')
             ->orderBy('Description')
             ->get();
-         $customers = ThirdParties::select('Id','ThirdPartyName','RegistrationNumber','Email')
-            ->orderBy('ThirdPartyName')
-            ->get();
-        return view('finance.accountsreceivable.creditmanagement.create', compact('paymentTerms','customers'));
+        $customers = ThirdParties::select('Id', 'ThirdPartyName', 'RegistrationNumber', 'Email')
+           ->orderBy('ThirdPartyName')
+           ->get();
+
+        return view('finance.accountsreceivable.creditmanagement.create', compact('paymentTerms', 'customers'));
     }
 
     public function store(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceCreditManagementCreate, FinanceCreditManagement::class);
         $validated = $request->validate([
-            'CustomerID'   => 'required|integer|exists:t_ThirdParties,Id',
-            'CreditLimit'  => 'required|numeric|min:0',
+            'CustomerID' => 'required|integer|exists:t_ThirdParties,Id',
+            'CreditLimit' => 'required|numeric|min:0',
             'PaymentTerms' => 'required|exists:t_CodeDetails,Value',
-            'EffectiveFrom'=> 'required|date',
-            'ExpiryDate'   => 'required|date|after_or_equal:EffectiveFrom',
-            'Colleteral'   => 'required|string|max:255',
-            'Remarks'      => 'required|string|max:1000',
+            'EffectiveFrom' => 'required|date',
+            'ExpiryDate' => 'required|date|after_or_equal:EffectiveFrom',
+            'Colleteral' => 'required|string|max:255',
+            'Remarks' => 'required|string|max:1000',
         ]);
 
         DB::beginTransaction();
-        try{
+
+        try {
             $creditManagement = FinanceCreditManagement::create([
-                'CustomerID'     => $validated['CustomerID'],
-                'CreditLimit'    => $validated['CreditLimit'],
-                'PaymentTerms'   => $validated['PaymentTerms'],
-                'EffectiveFrom'  => $validated['EffectiveFrom'],
-                'ExpiryDate'     => $validated['ExpiryDate'],
-                'Colleteral'     => $validated['Colleteral'],
-                'Remarks'        => $validated['Remarks'],
-                'Status'         => 'Pending',
+                'CustomerID' => $validated['CustomerID'],
+                'CreditLimit' => $validated['CreditLimit'],
+                'PaymentTerms' => $validated['PaymentTerms'],
+                'EffectiveFrom' => $validated['EffectiveFrom'],
+                'ExpiryDate' => $validated['ExpiryDate'],
+                'Colleteral' => $validated['Colleteral'],
+                'Remarks' => $validated['Remarks'],
+                'Status' => 'Pending',
                 // 'ApprovalStatus' => 'Pending', // Now using Status column instead
                 'ApprovalReason' => null,
-                'CreatedBy'      => Auth::id(),
-                'ModifiedBy'     => Auth::id(),
+                'CreatedBy' => Auth::id(),
+                'ModifiedBy' => Auth::id(),
             ]);
 
             // Initialize movement: limit_set
             FinanceCreditMovement::create([
-                'CreditID'      => $creditManagement->Id,
-                'CustomerID'    => $creditManagement->CustomerID,
-                'MovementType'  => 'limit_set',
-                'Amount'        => $creditManagement->CreditLimit, // Positive because it increases available credit
+                'CreditID' => $creditManagement->Id,
+                'CustomerID' => $creditManagement->CustomerID,
+                'MovementType' => 'limit_set',
+                'Amount' => $creditManagement->CreditLimit, // Positive because it increases available credit
                 'ReferenceType' => 'credit_profile',
-                'ReferenceID'   => $creditManagement->Id,
-                'Notes'         => 'Initial credit limit set',
-                'CreatedBy'     => Auth::id(),
-                'CreatedOn'     => now(),
-                'ModifiedBy'    => Auth::id(),
-                'ModifiedOn'    => now(),
-                'EffectiveOn'   => $creditManagement->EffectiveFrom ?? now(),
+                'ReferenceID' => $creditManagement->Id,
+                'Notes' => 'Initial credit limit set',
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+                'EffectiveOn' => $creditManagement->EffectiveFrom ?? now(),
             ]);
 
             activity()->performedOn($creditManagement)
@@ -154,18 +157,22 @@ class CreditManagementController extends Controller
                 ->log('Created Credit Management for Customer ID: ' . $validated['CustomerID']);
 
             DB::commit();
+
             return redirect()->route('creditmanagement.index')->with('success', 'Credit Management created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return $th->getMessage();
+
             return redirect()->back()->withErrors(['error' => 'Failed to create credit management: ' . $th->getMessage()])->withInput();
         }
     }
 
-    public function show($id){
+    public function show($id)
+    {
         $this->authorize(PermissionEnum::FinanceCreditManagementView, FinanceCreditManagement::class);
-         $credit = FinanceCreditManagement::with(['customer:Id,ThirdPartyName,RegistrationNumber,Email'])
-            ->findOrFail($id);
+        $credit = FinanceCreditManagement::with(['customer:Id,ThirdPartyName,RegistrationNumber,Email'])
+           ->findOrFail($id);
 
         $utilization = $this->creditService->calculateCustomerCreditUtilization($credit->CustomerID);
 
@@ -179,7 +186,7 @@ class CreditManagementController extends Controller
         // Refresh model to get updated risk data
         $credit->refresh();
 
-        return view('finance.accountsreceivable.creditmanagement.show', compact('credit','used','available','util'));
+        return view('finance.accountsreceivable.creditmanagement.show', compact('credit', 'used', 'available', 'util'));
     }
 
     public function history($id)
@@ -202,45 +209,49 @@ class CreditManagementController extends Controller
             ->get()
             ->map(function ($movement) {
                 // Ensure dates are properly cast
-                if ($movement->EffectiveOn && !($movement->EffectiveOn instanceof \Carbon\Carbon)) {
+                if ($movement->EffectiveOn && ! ($movement->EffectiveOn instanceof \Carbon\Carbon)) {
                     $movement->EffectiveOn = \Carbon\Carbon::parse($movement->EffectiveOn);
                 }
-                if ($movement->CreatedOn && !($movement->CreatedOn instanceof \Carbon\Carbon)) {
+                if ($movement->CreatedOn && ! ($movement->CreatedOn instanceof \Carbon\Carbon)) {
                     $movement->CreatedOn = \Carbon\Carbon::parse($movement->CreatedOn);
                 }
+
                 return $movement;
             });
 
-        return view('finance.accountsreceivable.creditmanagement.history',
-            compact('credit', 'used', 'available', 'util', 'movements'));
+        return view(
+            'finance.accountsreceivable.creditmanagement.history',
+            compact('credit', 'used', 'available', 'util', 'movements')
+        );
     }
 
     public function edit($id)
     {
         $this->authorize(PermissionEnum::FinanceCreditManagementUpdate, FinanceCreditManagement::class);
         $credit = FinanceCreditManagement::findOrFail($id);
-        $paymentTerms = CodeDetail::select('Value','Description')
+        $paymentTerms = CodeDetail::select('Value', 'Description')
             ->where('CodeID', 'PaymentTerm')
             ->orderBy('Description')
             ->get();
-        $customers = ThirdParties::select('Id','ThirdPartyName','RegistrationNumber','Email')
+        $customers = ThirdParties::select('Id', 'ThirdPartyName', 'RegistrationNumber', 'Email')
             ->orderBy('ThirdPartyName')
             ->get();
-        return view('finance.accountsreceivable.creditmanagement.edit', compact('credit','paymentTerms','customers'));
+
+        return view('finance.accountsreceivable.creditmanagement.edit', compact('credit', 'paymentTerms', 'customers'));
     }
 
     public function update(Request $request, $id)
     {
         $this->authorize(PermissionEnum::FinanceCreditManagementUpdate, FinanceCreditManagement::class);
         $validated = $request->validate([
-            'CustomerID'   => 'required|integer|exists:t_ThirdParties,Id',
-            'CreditLimit'  => 'required|numeric|min:0',
+            'CustomerID' => 'required|integer|exists:t_ThirdParties,Id',
+            'CreditLimit' => 'required|numeric|min:0',
             'PaymentTerms' => 'required|exists:t_CodeDetails,Value',
-            'EffectiveFrom'=> 'required|date',
-            'ExpiryDate'   => 'required|date|after_or_equal:EffectiveFrom',
-            'Colleteral'   => 'required|string|max:255',
-            'Remarks'      => 'required|string|max:1000',
-            'Status'       => 'required|string',
+            'EffectiveFrom' => 'required|date',
+            'ExpiryDate' => 'required|date|after_or_equal:EffectiveFrom',
+            'Colleteral' => 'required|string|max:255',
+            'Remarks' => 'required|string|max:1000',
+            'Status' => 'required|string',
         ]);
         $credit = FinanceCreditManagement::findOrFail($id);
 
@@ -254,6 +265,7 @@ class CreditManagementController extends Controller
         }
 
         DB::beginTransaction();
+
         try {
             // If not approved yet and credit limit changed, remove previous initial movement and recreate to avoid duplicates
             $isPending = strtolower($credit->Status ?? '') === 'pending';
@@ -266,18 +278,18 @@ class CreditManagementController extends Controller
 
                 // Recreate initial movement with the new limit (positive amount per signed-amounts convention)
                 FinanceCreditMovement::create([
-                    'CreditID'      => $credit->Id,
-                    'CustomerID'    => $credit->CustomerID,
-                    'MovementType'  => 'limit_set',
-                    'Amount'        => (float)$validated['CreditLimit'],
+                    'CreditID' => $credit->Id,
+                    'CustomerID' => $credit->CustomerID,
+                    'MovementType' => 'limit_set',
+                    'Amount' => (float)$validated['CreditLimit'],
                     'ReferenceType' => 'credit_profile',
-                    'ReferenceID'   => $credit->Id,
-                    'Notes'         => 'Initial credit limit updated before approval',
-                    'EffectiveOn'   => $validated['EffectiveFrom'] ?? now(),
-                    'CreatedBy'     => Auth::id(),
-                    'CreatedOn'     => now(),
-                    'ModifiedBy'    => Auth::id(),
-                    'ModifiedOn'    => now(),
+                    'ReferenceID' => $credit->Id,
+                    'Notes' => 'Initial credit limit updated before approval',
+                    'EffectiveOn' => $validated['EffectiveFrom'] ?? now(),
+                    'CreatedBy' => Auth::id(),
+                    'CreatedOn' => now(),
+                    'ModifiedBy' => Auth::id(),
+                    'ModifiedOn' => now(),
                 ]);
             }
 
@@ -289,9 +301,11 @@ class CreditManagementController extends Controller
             $credit->save();
 
             DB::commit();
+
             return redirect()->route('creditmanagement.show', $credit->Id)->with('success', 'Credit Management updated.');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return back()->with('error', 'Failed to update credit management: ' . $th->getMessage());
         }
     }
@@ -303,6 +317,7 @@ class CreditManagementController extends Controller
         $credit->DeletedBy = Auth::id();
         $credit->save();
         $credit->delete();
+
         return redirect()->route('creditmanagement.index')->with('success', 'Credit Management deleted.');
     }
 
@@ -321,6 +336,7 @@ class CreditManagementController extends Controller
         }
 
         DB::beginTransaction();
+
         try {
             if ($validated['action_type'] === 'reject') {
                 $credit->update([
@@ -338,8 +354,8 @@ class CreditManagementController extends Controller
                     ->log("Rejected credit profile for {$credit->customer->ThirdPartyName}");
 
                 DB::commit();
-                return back()->with('success', 'Credit profile rejected successfully.');
 
+                return back()->with('success', 'Credit profile rejected successfully.');
             } elseif ($validated['action_type'] === 'approve') {
                 $credit->update([
                     'Status' => 'Approved',
@@ -403,7 +419,7 @@ class CreditManagementController extends Controller
                     // Log but don't fail the approval process
                     Log::warning('Credit approval GL posting failed', [
                         'credit_id' => $credit->Id,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                 }
 
@@ -414,10 +430,12 @@ class CreditManagementController extends Controller
                     ->log("Approved credit profile for {$credit->customer->ThirdPartyName}");
 
                 DB::commit();
+
                 return back()->with('success', 'Credit profile approved successfully and GL transactions posted.');
             }
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return back()->with('error', 'Failed to process approval: ' . $th->getMessage());
         }
     }

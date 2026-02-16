@@ -8,18 +8,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PettyCashLine extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     protected $table = 't_PettyCashLines';
     protected $primaryKey = 'LineID';
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'VoucherID', 'GLAccountID', 'Description', 'Amount',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     protected $casts = [

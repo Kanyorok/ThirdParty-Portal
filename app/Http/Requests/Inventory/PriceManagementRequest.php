@@ -13,16 +13,14 @@ class PriceManagementRequest extends FormRequest
 
     public function rules(): array
     {
-        // If it's the upload route, only validate file
         if ($this->routeIs('pricemanagement.upload')) {
             return [
                 'file' => 'required|file|mimes:xlsx,csv,xls|max:2048',
             ];
         }
 
-        // Otherwise (create/update price)
         $rules = [
-            'ActualPrice' => ['required','numeric','min:0','max:9999999999999.99'],            
+            'ActualPrice' => ['required','numeric','min:0','max:9999999999999.99'],
             'CurrencyCode' => 'required|string|exists:t_Currencies,Id',
             'EffectiveFrom' => 'nullable|date',
             'EffectiveTo' => 'nullable|date|after_or_equal:EffectiveFrom',

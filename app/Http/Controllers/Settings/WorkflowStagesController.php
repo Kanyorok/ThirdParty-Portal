@@ -7,7 +7,6 @@ use App\Http\Requests\Settings\WorkFlowStageRequest;
 use App\Services\WorkFlowStageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 
 class WorkflowStagesController extends Controller
 {
@@ -27,7 +26,13 @@ class WorkflowStagesController extends Controller
             Log::info('Storing new workflow stage', [
                 'workflow_id' => $validated['WorkFlowId'],
                 'stage_name' => $validated['StageName'],
-                'is_final' => !empty($validated['IsFinalStage'])
+                'is_final' => ! empty($validated['IsFinalStage']),
+            ]);
+
+            Log::info('Storing new workflow stage', [
+                'workflow_id' => $validated['WorkFlowId'],
+                'stage_name' => $validated['StageName'],
+                'is_final' => ! empty($validated['IsFinalStage']),
             ]);
 
             // Create the stage
@@ -37,7 +42,7 @@ class WorkflowStagesController extends Controller
             $stage = \App\Models\Core\Approval\WorkflowStage::with(['type_name', 'workflow', 'permission.roles'])
                 ->find($result['stage']->Id);
 
-            if (!$stage) {
+            if (! $stage) {
                 throw new \Exception('Stage created but could not be retrieved');
             }
 
@@ -70,7 +75,7 @@ class WorkflowStagesController extends Controller
             Log::info('Workflow stage created successfully', [
                 'stage_id' => $stage->Id,
                 'is_final' => $isFinalStage,
-                'workflow_has_final' => !empty($workflow->FinalStage)
+                'workflow_has_final' => ! empty($workflow->FinalStage),
             ]);
 
             return response()->json([
@@ -78,7 +83,7 @@ class WorkflowStagesController extends Controller
                 'message' => 'Workflow stage created successfully'
                     . ($isFinalStage ? ' (final stage)' : ''),
                 'stage' => $stageData,
-                'workflow_has_final_stage' => !empty($workflow->FinalStage),
+                'workflow_has_final_stage' => ! empty($workflow->FinalStage),
             ]);
         } catch (\App\Exceptions\ErroredException $e) {
             Log::error('Failed to create workflow stage', [
@@ -113,7 +118,7 @@ class WorkflowStagesController extends Controller
 
             // Get stage info before deletion for logging
             $stage = \App\Models\Core\Approval\WorkflowStage::find($id);
-            if (!$stage) {
+            if (! $stage) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Stage not found.',
@@ -134,7 +139,7 @@ class WorkflowStagesController extends Controller
                 'stage_id' => $id,
                 'stage_name' => $stageName,
                 'was_final' => $result['was_final_stage'],
-                'new_final' => $result['final_stage']
+                'new_final' => $result['final_stage'],
             ]);
 
             return response()->json([
@@ -142,7 +147,7 @@ class WorkflowStagesController extends Controller
                 'message' => 'Workflow stage deleted successfully.',
                 'final_stage' => $result['final_stage'],
                 'was_final_stage' => $result['was_final_stage'],
-                'workflow_has_final_stage' => !empty($workflow->FinalStage)
+                'workflow_has_final_stage' => ! empty($workflow->FinalStage),
             ]);
         } catch (\Throwable $e) {
             Log::error('Failed to delete workflow stage', [

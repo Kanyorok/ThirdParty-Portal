@@ -11,11 +11,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyTenantClearance extends Model
 {
-    use SoftDeletes, UserActorTrait, DocumentsTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
+
     protected $table = 't_TenantClearance';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -29,9 +32,8 @@ class PropertyTenantClearance extends Model
         'Status',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
-
 
     public static function getPrimaryKey(): string
     {
@@ -51,6 +53,4 @@ class PropertyTenantClearance extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'DepositRefunded', 'ID');
     }
-
-
 }

@@ -72,7 +72,6 @@
 
                 documentValidationTable.on('error', function (er) {
                     nWarning("an issue occurred while loading document validation.");
-                    console.log(er);
                 });
             } else {
                 documentValidationTable.ajax.reload();

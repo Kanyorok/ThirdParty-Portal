@@ -2,11 +2,11 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\Inventory\ItemCategories;
 use App\Models\Core\Approval\CodeDetail;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\QueryException;
+use App\Models\Inventory\ItemCategories;
 use Exception;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 
 class ItemCategoryService
 {
@@ -18,14 +18,13 @@ class ItemCategoryService
         do {
             try {
                 $category = DB::transaction(function () use (&$data) {
-                    $isSubcategory = !empty($data['ParentId']);
+                    $isSubcategory = ! empty($data['ParentId']);
                     $data['CategoryCode'] = $this->generateCategoryCode($isSubcategory);
                     $data['CreatedBy'] = auth()->id();
                     $data['ModifiedBy'] = auth()->id();
                     $data['CreatedOn'] = now();
                     $data['ModifiedOn'] = now();
 
-                    // Default to Active if no status provided
                     if (empty($data['Status'])) {
                         $data['Status'] = CodeDetail::where('CodeID', 'CategoryStatus')
                             ->where('Description', 'Active')
@@ -42,7 +41,6 @@ class ItemCategoryService
                     ->log('Created Item Category ' . $category->CategoryCode);
 
                 return $category;
-
             } catch (QueryException $e) {
                 if ($this->isDuplicateCategoryCodeError($e)) {
                     $attempt++;
@@ -110,23 +108,21 @@ class ItemCategoryService
     {
         $category->loadMissing(['children', 'items']);
 
-        // Cascade to child categories
         foreach ($category->children ?? [] as $child) {
             $child->update([
                 'Status' => $statusId,
                 'ModifiedBy' => auth()->id(),
-                'ModifiedOn' => now()
+                'ModifiedOn' => now(),
             ]);
 
             $this->cascadeStatus($child, $statusId);
         }
 
-        // Cascade to items under this category
         foreach ($category->items ?? [] as $item) {
             $item->update([
                 'Status' => $statusId,
                 'ModifiedBy' => auth()->id(),
-                'ModifiedOn' => now()
+                'ModifiedOn' => now(),
             ]);
         }
     }

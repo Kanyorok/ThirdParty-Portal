@@ -15,7 +15,7 @@ class LoanCampaignRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'Label'   => [
+                'Label' => [
                               'required',
                               'string',
                               'max:200',
@@ -26,7 +26,7 @@ class LoanCampaignRequest extends FormRequest
                               'min:5',
                               'max:50000',
                              ],
-                'Notes'   => [
+                'Notes' => [
                               'nullable',
                               'string',
                               'max:5000',

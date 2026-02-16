@@ -9,7 +9,6 @@ use App\Models\Procurement\ContractPenaltyRule;
 use App\Models\Procurement\TenderAward;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class ContractsLifecycleController extends Controller
 {

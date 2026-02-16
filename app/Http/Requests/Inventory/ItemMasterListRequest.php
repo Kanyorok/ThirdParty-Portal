@@ -14,7 +14,6 @@ class ItemMasterListRequest extends FormRequest
 
     public function rules()
     {
-        // Your route uses "Id" as the parameter
         $itemId = $this->route('Id') ?? $this->route('id');
 
         $rules = [
@@ -28,40 +27,37 @@ class ItemMasterListRequest extends FormRequest
             'Document.*' => 'nullable|file|max:2048',
             'ItemDescription' => 'required|string',
             'Status' => 'nullable|exists:t_CodeDetails,ID',
-            'ItemPrice' => 'nullable|string',
+            'ItemPrice' => 'nullable|exists:t_Pricing,Id',
             'remove_image' => 'nullable|boolean',
         ];
 
-        // If no item ID present => Creating mode
-        if (!$itemId) {
+        if (! $itemId) {
             $rules['BarCode'] = [
                 'nullable',
                 'regex:/^[A-Za-z0-9]+$/',
                 'max:255',
-                Rule::unique('t_Items', 'BarCode')->whereNull('DeletedOn'), // <- exclude soft-deleted
+                Rule::unique('t_Items', 'BarCode')->whereNull('DeletedOn'),
             ];
 
             $rules['ItemName'] = [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('t_Items', 'ItemName')->whereNull('DeletedOn'), // <- exclude soft-deleted
+                Rule::unique('t_Items', 'ItemName')->whereNull('DeletedOn'),
             ];
-        }
-        else {
-            // Update mode (ignore the current record)
+        } else {
             $rules['BarCode'] = [
                 'nullable',
                 'regex:/^[A-Za-z0-9]+$/',
                 'max:255',
-                Rule::unique('t_Items', 'BarCode')->ignore($itemId, 'Id')->whereNull('DeletedOn'), // <- exclude soft-deleted
+                Rule::unique('t_Items', 'BarCode')->ignore($itemId, 'Id')->whereNull('DeletedOn'),
             ];
 
             $rules['ItemName'] = [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('t_Items', 'ItemName')->ignore($itemId, 'Id')->whereNull('DeletedOn'), // <- exclude soft-deleted
+                Rule::unique('t_Items', 'ItemName')->ignore($itemId, 'Id')->whereNull('DeletedOn'),
             ];
         }
 

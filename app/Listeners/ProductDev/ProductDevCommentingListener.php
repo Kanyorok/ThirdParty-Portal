@@ -18,7 +18,6 @@ class ProductDevCommentingListener implements ShouldQueue
      */
     public function __construct()
     {
-        //
     }
 
     /**

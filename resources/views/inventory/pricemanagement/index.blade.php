@@ -2,18 +2,49 @@
 @section('title', 'Item Price Management')
 @section('content')
 @if($errors->any())
-<div class="alert alert-danger">
-    <ul>
-        @foreach($errors->all() as $error)
-        <li>{{ $error }}</li>
-        @endforeach
-    </ul>
-</div>
-@endif
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('warning'))
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                {{ session('warning') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {!! session('error') !!}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error_details'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-list me-2"></i>
+                {!! session('error_details') !!}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 <div class="container mt-4">
     <h4 class="mb-3">Item Pricing</h4>
 
-    <!-- Nav Tabs -->
     <ul class="nav nav-tabs" id="priceTabs" role="tablist">
         <li class="nav-item">
             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#addPrice" type="button"
@@ -32,15 +63,13 @@
         </li>
     </ul>
 
-    <!-- Tab Contents -->
     <div class="tab-content border p-3">
 
-        <!-- Add Price Tab -->
         <div class="tab-pane fade show active" id="addPrice" role="tabpanel">
             <form method="POST" action="{{ route('pricemanagement.store') }}">
                 @csrf
                 <div class="mb-3">
-                    <label class="form-label">Item</label>
+                    <label class="form-label">Item<span class="text-danger">*</span></label>
                     <select class="form-select" name="ItemID" id="itemSelect" required>
                         <option selected disabled>Select Item</option>
                         @foreach($items ?? [] as $item)
@@ -54,7 +83,7 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">UOM</label>
+                    <label class="form-label">UOM<span class="text-danger">*</span></label>
                     <select class="form-select" id="uomSelect" disabled>
                         <option selected disabled>Auto-filled from Item</option>
                     </select>
@@ -62,11 +91,11 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Estimated Price</label>
+                    <label class="form-label">Estimated Price<span class="text-danger">*</span></label>
                     <input type="number" step="0.01" class="form-control" name="ActualPrice" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Currency</label>
+                    <label class="form-label">Currency<span class="text-danger">*</span></label>
                     <select class="form-select" name="CurrencyCode" required>
                         <option selected disabled>-- Select Currency --</option>
                         @foreach($currencies ?? [] as $currenc)
@@ -80,15 +109,11 @@
                     <input class="form-check-input" type="checkbox" name="IsDefault" id="isDefault" value="1">
                     <label class="form-check-label" for="isDefault">Mark as Default Price</label>
                 </div>
-                {{-- <div class="mb-3 mt-3">
-                    <label class="form-label">Source</label>
-                    <input type="text" class="form-control" name="Source" placeholder="Optional">
-                </div> --}}
+
                 <button type="submit" class="btn btn-primary mt-3">Save Price</button>
             </form>
         </div>
 
-        <!-- View Prices Tab -->
         <div class="tab-pane fade" id="viewPrices" role="tabpanel">
             <table id="pricingTable" class="table table-bordered table-striped align-middle">
                 <thead class="table-light">
@@ -99,9 +124,6 @@
                         <th>UOM</th>
                         <th>Estimated Price</th>
                         <th>Currency</th>
-                        {{-- <th>Effective From</th> --}}
-                        {{-- <th>Effective To</th>
-                        <th>Default</th> --}}
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -112,11 +134,8 @@
                         <td>{{ $price->PriceID }}</td>
                         <td>{{ $price->item->ItemName ?? $price->item->ItemCode ?? '-' }}</td>
                         <td>{{ $price->uom->Code ?? '-' }}</td>
-                        <td>{{ number_format($price->ActualPrice, 2) }}</td>
+                        <td>{{ $price->ActualPrice ? number_format($price->ActualPrice, 2) : '0.00' }}</td>
                         <td>{{ $price->currency->Code ?? '-' }}</td>
-                        {{-- <td>{{ $price->EffectiveFrom ? \Carbon\Carbon::parse($price->EffectiveFrom)->format('Y-m-d') : '—' }}</td>
-                        <td>{{ $price->EffectiveTo ? \Carbon\Carbon::parse($price->EffectiveTo)->format('Y-m-d') : '—' }}</td>
-                        <td>{!! $price->IsDefault ? '✔️' : '' !!}</td> --}}
                         <td>
                             <div class="d-flex gap-1">
                                 <a href="{{ route('pricemanagement.edit', $price->Id) }}" 
@@ -136,15 +155,11 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <!-- <td colspan="11" class="text-center">No prices found.</td> -->
-                    </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        <!-- Upload Price List Tab -->
         <div class="tab-pane fade" id="uploadPrice" role="tabpanel">
             <form action="{{ route('pricemanagement.upload') }}" method="POST" enctype="multipart/form-data">
                 @csrf
@@ -153,8 +168,17 @@
                     <input class="form-control" type="file" name="file" accept=".csv,.xlsx,.xls" required>
                 </div>
                 <div class="alert alert-info small">
-                    Ensure your file has headers: <code>ItemCode, UOMCode, Price, EffectiveFrom, EffectiveTo, Currency,
-                        IsDefault</code>
+                    <strong>File Format:</strong> Ensure your file has these headers:<br>
+                    <code>PriceID, ItemCode, ItemName, UOM, ActualPrice, CurrencyCode, IsDefault</code>
+                    <br><br>
+                    <strong>Notes:</strong>
+                    <ul class="mb-0">
+                        <li>ItemName is for reference only (system matches by ItemCode)</li>
+                        <li>UOM should be the UOM code (e.g., "PCS", "KG")</li>
+                        <li>CurrencyCode should be a valid currency code (e.g., "KES", "USD")</li>
+                        <li>IsDefault should be "Yes" or "No"</li>
+                        <li>If ActualPrice changes, a new version will be created and the old one soft-deleted</li>
+                    </ul>
                     <br>
                     <a href="{{ route('pricemanagement.sample') }}" class="btn btn-sm btn-outline-primary mt-2">
                         📥 Download Template
@@ -166,7 +190,6 @@
     </div>
 </div>
 
-<!-- Add Font Awesome CSS for icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -196,7 +219,6 @@
             const uomId = selectedOption.getAttribute('data-uom');
             const uomCode = selectedOption.getAttribute('data-uom-code');
 
-            // Set UOM display dropdown (disabled)
             uomSelect.innerHTML = '';
             if (uomId && uomCode) {
                 const option = document.createElement('option');
@@ -206,7 +228,6 @@
                 uomSelect.appendChild(option);
             }
 
-            // Set hidden input for actual form submission
             uomHidden.value = uomId;
         });
     });

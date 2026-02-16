@@ -26,7 +26,6 @@ class ProductDevelopmentController extends Controller
     public function __construct()
     {
         $this->middleware('ajax')->except(['index', 'show']);
-        // $this->authorizeResource(ProductDevelopment::class);
     }
 
     /**
@@ -40,7 +39,7 @@ class ProductDevelopmentController extends Controller
             $actor = $request->user();
             $query = ProductDevelopment::query();
             //check if has write permission
-            if (!$actor->can(PermissionEnum::ProductDevelopmentUpdate->value)) {
+            if (! $actor->can(PermissionEnum::ProductDevelopmentUpdate->value)) {
                 $query->whereNotNull('CommentStart')->whereNull('CommentEnd');
             }
             if ($request->has('status') && $request->get('status') !== 'archived') {
@@ -98,9 +97,11 @@ class ProductDevelopmentController extends Controller
             });
         } catch (ErroredException $e) {
             Log::error('Error adding product dev: ' . $e->getMessage());
+
             return $this->errored($e->getMessage());
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Unexpected error adding product dev: ' . $e->getMessage());
+
             return $this->errored('An unexpected error occurred. Please try again later.');
         }
 
@@ -113,11 +114,12 @@ class ProductDevelopmentController extends Controller
     public function show(string $product_id): RedirectResponse|View
     {
         $product = ProductDevelopment::where('ProductID', $product_id)->first();
-        if (!$product instanceof ProductDevelopment) {
+        if (! $product instanceof ProductDevelopment) {
             return redirect()->back()->with('fail', 'Product development not found');
         }
         $this->authorize('view', $product);
         $canUpdate = (auth()->user()->can(PermissionEnum::ProductDevelopmentUpdate->value) && (is_null($product->ArchivedBy) && is_null($product->ArchivedOn)));
+
         return view('crm.product-dev.show', compact('product'))
             ->with('canUpdate', $canUpdate)
             ->with('canComment', (new ProductDevService($product))->commenting())
@@ -130,7 +132,7 @@ class ProductDevelopmentController extends Controller
     public function update(UpdateProductDevelopmentRequest $request, string $product_id): JsonResponse
     {
         $product = ProductDevelopment::where('ProductID', $product_id)->first();
-        if (!$product instanceof ProductDevelopment) {
+        if (! $product instanceof ProductDevelopment) {
             return $this->errored('product could be invalid', status: 404);
         }
 
@@ -155,12 +157,14 @@ class ProductDevelopmentController extends Controller
                 if ($data->has('Revenue')) {
                     $data = $data->put('Revenue', Number::abbreviate($product->Revenue, 2));
                 }
+
                 return $data;
             });
         } catch (ErroredException $e) {
             return $e->toJson();
         } catch (Exception $e) {
             Log::error('Error update product : ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -173,7 +177,7 @@ class ProductDevelopmentController extends Controller
     public function destroy(Request $request, string $product_id): JsonResponse
     {
         $product = ProductDevelopment::where('ProductID', $product_id)->first();
-        if (!$product instanceof ProductDevelopment) {
+        if (! $product instanceof ProductDevelopment) {
             return $this->errored('product could be invalid', status: 404);
         }
         $this->authorize('delete', $product);

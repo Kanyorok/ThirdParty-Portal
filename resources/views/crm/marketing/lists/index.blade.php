@@ -226,7 +226,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading marketing lists.");
-                    // console.log(er);
                 });
             } else {
                 $('#marketingListsTable').DataTable().ajax.reload();

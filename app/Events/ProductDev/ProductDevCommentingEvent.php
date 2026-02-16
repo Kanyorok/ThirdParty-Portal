@@ -18,6 +18,5 @@ class ProductDevCommentingEvent
      */
     public function __construct(public ProductDevelopment $product, public bool $enabled)
     {
-        //
     }
 }

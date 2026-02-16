@@ -2,11 +2,9 @@
 
 namespace App\Services\FleetManagement;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Fleet\FleetDriver;
 use App\Models\Fleet\FleetDriverLicenseTracking;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class FleetDriverLicenseTrackingService
 {
@@ -25,7 +23,7 @@ class FleetDriverLicenseTrackingService
                 'RenewalDate' => $data['RenewalDate'] ?? null,
                 'Notes' => $data['Notes'] ?? null,
                 'CreatedBy' => $data['CreatedBy'] = Auth::id(),
-                'CreatedOn' => $data['CreatedOn'] = now()
+                'CreatedOn' => $data['CreatedOn'] = now(),
             ]);
 
             activity()

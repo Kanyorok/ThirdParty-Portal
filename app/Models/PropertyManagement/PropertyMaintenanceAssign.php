@@ -3,22 +3,24 @@
 namespace App\Models\PropertyManagement;
 
 use App\Enums\Core\PostingEnum;
+use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\HR\Employee;
+use App\Models\HRM\Employee;
+use app\Models\PropertyManagement\PropertyMaintenanceWorkCompletion;
 use App\Models\ThirdParty\SupplierMaster;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Auth\User;
-use app\Models\PropertyManagement\PropertyMaintenanceWorkCompletion;
 
 class PropertyMaintenanceAssign extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+
     protected $table = 't_AssignRequest';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -34,7 +36,7 @@ class PropertyMaintenanceAssign extends Model
         'Status',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
@@ -44,22 +46,27 @@ class PropertyMaintenanceAssign extends Model
     protected $casts = [
         'Status' => PostingEnum::class,
     ];
+
     public function request()
     {
         return $this->belongsTo(PropertyMaintenanceRequest::class, 'RequestNumber', 'Id');
     }
+
     public function assignmentType()
     {
         return $this->belongsTo(CodeDetail::class, 'AssignmentType', 'Id');
     }
+
     public function internalTechnician()
     {
         return $this->belongsTo(Employee::class, 'InternalTechnician', 'Id');
     }
+
     public function prequalifiedVendor()
     {
         return $this->belongsTo(SupplierMaster::class, 'PrequalifiedVendor', 'Id');
     }
+
     public function priorityLevel()
     {
         return $this->belongsTo(CodeDetail::class, 'PriorityLevel', 'Id');

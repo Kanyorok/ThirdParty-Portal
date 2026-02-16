@@ -2,25 +2,21 @@
 
 namespace App\Models\Fleet;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
 use App\Models\Core\Approval\CodeDetail;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Auth\User;
-use App\Models\HR\Employee;
 use App\Models\HRM\Department;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\FleetTripLog;
+use App\Models\HRM\Employee;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FleetVehicleRequest extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_FleetVehicleRequests';
     protected $primaryKey = 'Id';
@@ -32,7 +28,6 @@ class FleetVehicleRequest extends Model
         'Purpose', 'FromLocation', 'ToLocation', 'PassengerCount',
         'PreferredVehicleType', 'Status', 'ApprovedBy',
         'ApprovedOn', 'RejectionReason', 'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn'];
-
 
     public static function getPrimaryKey(): string
     {
@@ -48,7 +43,6 @@ class FleetVehicleRequest extends Model
     {
         return $this->belongsTo(FleetTripLog::class, 'TripNo', 'Id');
     }
-
 
     public function department()
     {

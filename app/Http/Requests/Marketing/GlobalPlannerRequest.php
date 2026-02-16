@@ -18,19 +18,19 @@ class GlobalPlannerRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'Name'    => [
+                'Name' => [
                               'required',
                               'string',
                               'max:200',
                              ],
-                'plans'   => [
+                'plans' => [
                               'required',
                               'array',
                               'min:1',
                               'max:500',
                              ],
                 'plans.*' => ['required'],
-                'Notes'   => [
+                'Notes' => [
                               'nullable',
                               'string',
                              ],
@@ -49,6 +49,7 @@ class GlobalPlannerRequest extends FormRequest
             if ($plan instanceof MarketingPlanner) {
                 $plans->push($plan->Id);
                 $id++;
+
                 continue;
             }
 

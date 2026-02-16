@@ -18,7 +18,7 @@ class PropertyMaintenanceDashboardController extends Controller
         $priorities = CodeDetail::where('CodeID', 'PriorityLevel')->get();
         $totalRequests = PropertyMaintenanceRequest::count();
         $inProgress = PropertyMaintenanceAssign::where('Status', '!=', PostingEnum::Completed)->count();
-        $completed  = PropertyMaintenanceAssign::where('Status', PostingEnum::Completed)->count();
+        $completed = PropertyMaintenanceAssign::where('Status', PostingEnum::Completed)->count();
         $unassigned = $totalRequests - $totalAssignedRequests = PropertyMaintenanceAssign::count();
 
         // Base query
@@ -27,18 +27,22 @@ class PropertyMaintenanceDashboardController extends Controller
             'request.issueType',
             'request.priority',
             'internalTechnician',
-            'prequalifiedVendor'
+            'prequalifiedVendor',
         ]);
 
         // Filters (ALL CAN CO-EXIST)
         if ($request->filled('property_id')) {
-            $query->whereHas('request', fn ($q) =>
+            $query->whereHas(
+                'request',
+                fn ($q) =>
                 $q->where('Property', $request->property_id)
             );
         }
 
         if ($request->filled('priority')) {
-            $query->whereHas('request.priority', fn ($q) =>
+            $query->whereHas(
+                'request.priority',
+                fn ($q) =>
                 $q->where('Description', $request->priority)
             );
         }

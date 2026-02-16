@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\PropertyManagement\PropertyNewTenant;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class TenantRegistrySeeder extends Seeder
 {
@@ -18,8 +18,9 @@ class TenantRegistrySeeder extends Seeder
             ->where('Description', 'Individual')
             ->first();
 
-        if (!$tenantType) {
+        if (! $tenantType) {
             $this->command->warn('TenantType "Individual" not found in CodeDetail. Skipping PropertyNewTenant seeding.');
+
             return;
         }
 

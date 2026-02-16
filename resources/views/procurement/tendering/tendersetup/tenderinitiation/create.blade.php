@@ -151,8 +151,7 @@
                 <th>Planned Qty</th>
                 <th>Qty to Tender</th>
                 <th>Specs</th>
-                <th>PR Ref (optional)</th>
-                <th></th>
+            <th></th>
               </tr>
             </thead>
             <tbody name="plan_items">
@@ -169,7 +168,6 @@
               <th>Item Description</th>
               <th>Qty</th>
               <th>Specs</th>
-              <th>PR Ref (optional)</th>
               <th></th>
             </tr>
           </thead>
@@ -284,11 +282,6 @@
 
     // : Log data on page load
     if (DEBUG) {
-      console.log('=== TENDER FORM DEBUG ===');
-      console.log('Available Plans:', availablePlans);
-      console.log('Plan Items by Plan:', planItemsByPlan);
-      console.log('All Items with Categories:', allItemsWithCategoryIds.length);
-      console.log('Suppliers:', suppliers.length);
     }
 
     // ============================================================================
@@ -297,6 +290,7 @@
     function loadPlanItemsForPlan() {
       const planSel = document.getElementById('selectedProcurementPlan');
       const itemSel = document.getElementById('planItemSelect');
+      const itemCatSel = document.getElementById('itemCategory');
 
       if (!planSel || !itemSel) {
         console.error('Plan or item select not found');
@@ -307,28 +301,25 @@
       itemSel.innerHTML = '<option selected disabled>-- Select Item --</option>';
 
       if (!planId) {
-        if (DEBUG) console.log('No plan selected');
         return;
       }
 
       //  Ensure planId is treated as string for object key lookup
       const items = planItemsByPlan[String(planId)] || [];
+      const selectedCategory = itemCatSel ? itemCatSel.value : '';
 
       if (DEBUG) {
-        console.log('Loading items for plan:', planId);
-        console.log('Found items:', items.length);
-        console.log('Items data:', items);
       }
 
-      if (items.length === 0) {
-        const opt = document.createElement('option');
-        opt.disabled = true;
-        opt.textContent = 'No available items in this plan';
-        itemSel.appendChild(opt);
-        return;
-      }
+      let visibleCount = 0;
 
       items.forEach(it => {
+        // Filter by Item Category
+        if (selectedCategory && String(it.categoryId) !== String(selectedCategory)) {
+            return;
+        }
+
+        visibleCount++;
         const opt = document.createElement('option');
         opt.value = String(it.planLineItemId);
 
@@ -345,8 +336,14 @@
 
         itemSel.appendChild(opt);
       });
+      
+      if (visibleCount === 0) {
+        const opt = document.createElement('option');
+        opt.disabled = true;
+        opt.textContent = selectedCategory ? 'No items match the selected category' : 'No available items in this plan';
+        itemSel.appendChild(opt);
+      }
 
-      if (DEBUG) console.log('Populated item select with', items.length, 'items');
     }
 
     // ============================================================================
@@ -404,11 +401,6 @@
                name="plan_items[${compositeKey}][specs]">
       </td>
       <td>
-        <input type="text" class="form-control form-control-sm" 
-               name="plan_items[${compositeKey}][pr_ref]" 
-               placeholder="Optional">
-      </td>
-      <td>
         <button type="button" class="btn btn-sm btn-outline-danger remove-row">Remove</button>
       </td>
       <input type="hidden" name="plan_items[${compositeKey}][item_id]" value="${itemId}">
@@ -418,7 +410,6 @@
 
       tbody.appendChild(row);
 
-      if (DEBUG) console.log('Added plan item to grid:', compositeKey);
 
       // Update tab status after adding
       updateTabStatus();
@@ -480,18 +471,12 @@
                name="manual_items[${key}][specs]">
       </td>
       <td>
-        <input type="text" class="form-control form-control-sm"
-               name="manual_items[${key}][pr_ref]" 
-               placeholder="Optional">
-      </td>
-      <td>
         <button type="button" class="btn btn-sm btn-outline-danger remove-row">Remove</button>
       </td>
     `;
 
       tbody.appendChild(tr);
 
-      if (DEBUG) console.log('Added manual item row:', key);
 
       // Update tab status
       updateTabStatus();
@@ -636,7 +621,6 @@
         return;
       }
 
-      console.log('populateSuppliers called with categoryId:', categoryId);
       suppliersList.innerHTML = '';
 
       // Validate categoryId is present AND is a number
@@ -652,7 +636,6 @@
 
       try {
         const url = `{{ url('procurement/initiatetender/prequalified-suppliers') }}/${encodeURIComponent(categoryId)}`;
-        console.log('Fetching suppliers from:', url);
         
         const res = await fetch(url, {
           credentials: 'same-origin'
@@ -667,10 +650,8 @@
           data
         } = await res.json();
         
-        console.log('API Response:', { success, data });
         
         const rows = Array.isArray(data) ? data : [];
-        console.log('Rows to process:', rows.length);
 
         if (supplierMatchCount) {
           supplierMatchCount.textContent = `Matching suppliers: ${rows.length}`;
@@ -691,7 +672,6 @@
               value: r.SupplierId || r.ThirdPartyId || r.ThirdPartyID || r.Id || '',
               label: r.SupplierName || r.ThirdPartyName || `Supplier #${r.SupplierId || r.ThirdPartyId || r.ThirdPartyID || r.Id || ''}`
             };
-            console.log('Mapped row:', r, '->', mapped);
             return mapped;
           })
           .filter(r => {
@@ -701,7 +681,6 @@
           })
           .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
           
-        console.log('Final mapped rows:', mappedRows);
 
         mappedRows.forEach(({
             value,
@@ -711,10 +690,8 @@
             opt.value = value;
             opt.textContent = label;
             suppliersList.appendChild(opt);
-            console.log('Added option:', value, label);
           });
           
-        console.log('✓ Suppliers populated successfully');
 
       } catch (e) {
         console.error('Failed to load suppliers', e);
@@ -745,21 +722,42 @@
           populateSuppliers(itemCatSel.value);
         }
 
-        // Enable plan select after category selection
+        // Enable plan select after category selection AND filter available plans
         const planSel = document.getElementById('selectedProcurementPlan');
         if (planSel) {
-          const hasCategory = Boolean(itemCatSel.value);
-          planSel.disabled = !hasCategory;
-          planSel.innerHTML = '<option selected disabled>-- Choose Procurement Plan --</option>';
+            const selectedCategory = itemCatSel.value;
+            const hasCategory = Boolean(selectedCategory);
+            planSel.disabled = !hasCategory;
+            planSel.innerHTML = '<option selected disabled>-- Choose Procurement Plan --</option>';
 
-          if (hasCategory) {
-            availablePlans.forEach(p => {
-              const opt = document.createElement('option');
-              opt.value = p.PlanID;
-              opt.textContent = `${p.Title} - ${p.ReferenceNumber}`;
-              planSel.appendChild(opt);
-            });
-          }
+            if (hasCategory) {
+               let planCount = 0;
+               availablePlans.forEach(p => {
+                    // Check if this plan has ANY items matching the category
+                    const planItems = planItemsByPlan[String(p.PlanID)] || [];
+                    const hasMatchingItems = planItems.some(it => String(it.categoryId) === String(selectedCategory));
+
+                    if (hasMatchingItems) {
+                        const opt = document.createElement('option');
+                        opt.value = p.PlanID;
+                        opt.textContent = `${p.Title} - ${p.ReferenceNumber}`;
+                        planSel.appendChild(opt);
+                        planCount++;
+                    }
+               });
+               
+               if (planCount === 0) {
+                   const opt = document.createElement('option');
+                   opt.disabled = true;
+                   opt.textContent = '-- No Plans found for this Category --';
+                   planSel.appendChild(opt);
+               }
+            }
+            // Clear items dropdown since plan might have changed or been cleared
+            const planItemSel = document.getElementById('planItemSelect');
+            if (planItemSel) {
+                planItemSel.innerHTML = '<option selected disabled>-- Select Item (Tender-method, not already used) --</option>';
+            }
         }
       });
     }
@@ -850,7 +848,6 @@
       // Initialize tab status
       updateTabStatus();
 
-      if (DEBUG) console.log('Tender form initialized');
     });
 
   })();

@@ -29,32 +29,35 @@ class ClientService
 
     public function phoneNo(): ?string
     {
-        if (!empty($this->client->Mobile) && Str::length($this->client->Mobile) > 9) {
+        if (! empty($this->client->Mobile) && Str::length($this->client->Mobile) > 9) {
             return $this->client->Mobile;
         }
-        if (!empty($this->client->Phone1) && Str::length($this->client->Phone1) > 9) {
+        if (! empty($this->client->Phone1) && Str::length($this->client->Phone1) > 9) {
             return $this->client->Phone1;
         }
-        if (!empty($this->client->Phone2) && Str::length($this->client->Phone2) > 9) {
+        if (! empty($this->client->Phone2) && Str::length($this->client->Phone2) > 9) {
             return $this->client->Phone2;
         }
+
         return null;
     }
 
     public function sendMessage(string $message, User $actor, string $description = null): SMSService
     {
         $service = SMSService::createClient($this->client, $message, $actor)->send();
-        if (is_string($description) && !empty($description)) {
+        if (is_string($description) && ! empty($description)) {
             $service->addActivity($service->sms->CreatedOn, $description);
         }
+
         return $service;
     }
 
     public function getEmail(): ?string
     {
-        if (!empty($this->client->Email) && (filter_var($this->client->Email, FILTER_VALIDATE_EMAIL))) {
+        if (! empty($this->client->Email) && (filter_var($this->client->Email, FILTER_VALIDATE_EMAIL))) {
             return $this->client->Email;
         }
+
         return null;
     }
 
@@ -64,6 +67,7 @@ class ClientService
         if (is_null($email)) {
             return null;
         }
+
         return CRMEmailService::createClient($this->client, $email, $subject, $body, $actor, $cc, ($priorityEnum) ?? EmailPriorityEnum::Normal);
     }
 
@@ -89,7 +93,7 @@ class ClientService
                 return '<a href="#" data-click_url="' . route('clients.summary', $client->ClientID) . '" data-summary_title="member summary" class="click-summary-data">' . $client->ClientID . '</a>';
             })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
                                                                                                    'dbl_click_url' => function (Client $client) {
-                                                                                                    return route('clients.show', $client->ClientID);
+                                                                                                       return route('clients.show', $client->ClientID);
                                                                                                    },
                                                                                                   ])->rawColumns(['action', 'ClientID'])->make();
     }
@@ -100,6 +104,7 @@ class ClientService
         if ($client instanceof Client) {
             return new self($client);
         }
+
         return null;
     }
 
@@ -118,6 +123,7 @@ class ClientService
             $phone2 = $phoneNo;
             $phone3 = '+254' . $phoneNo;
         }
+
         return $query->where(function (Builder $query) use ($phone3, $phone2, $phone1) {
             $query->where('Phone1', $phone1)->orWhere('Phone1', $phone2)->orWhere('Phone1', $phone3)
                 ->orWhere('Phone2', $phone1)->orWhere('Phone2', $phone2)->orWhere('Phone2', $phone3)

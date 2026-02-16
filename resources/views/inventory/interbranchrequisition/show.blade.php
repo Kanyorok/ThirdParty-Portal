@@ -11,27 +11,66 @@
             <i class="bi bi-arrow-left"></i> Back to List
         </a>
 
-        {{-- Edit button restriction --}}
-        <a href="{{ $item->Status === 'su' ? route('interbranchrequisition.edit', $item->Id) : '#' }}"
-           class="btn btn-warning btn-sm {{ $item->Status !== 'su' ? 'disabled' : '' }}"
-           data-bs-toggle="tooltip"
-           title="{{ $item->Status !== 'su' ? 'Cannot edit - decision already made' : 'Edit Requisition' }}"
-           onclick="@if($item->Status !== 'su') return showCustomError('You cannot edit this requisition because a decision has already been made.'); @endif">
-            <i class="bi bi-pencil"></i> Edit
-        </a>
+        @php
+            $canEdit = false;
+            $canDelete = false;
+            $editTooltip = '';
+            $deleteTooltip = '';
+            
+            if ($isHeadOffice) {
+                $editTooltip = 'HQ cannot edit any requisitions.';
+                $deleteTooltip = 'HQ cannot delete any requisitions.';
+            }
+            elseif ($item->ToBranch != $currentBranch->Id) {
+                $editTooltip = 'You can only edit requisitions created by your branch.';
+                $deleteTooltip = 'You can only delete requisitions created by your branch.';
+            }
+            elseif ($item->Status !== 'P') {
+                $editTooltip = 'Only pending requisitions can be edited.';
+                $deleteTooltip = 'Only pending requisitions can be deleted.';
+            }
+            else {
+                $canEdit = true;
+                $canDelete = true;
+                $editTooltip = 'Edit Requisition';
+                $deleteTooltip = 'Delete Requisition';
+            }
+        @endphp
 
-        {{-- Delete button restriction --}}
-        <button type="button"
-                class="btn btn-danger btn-sm {{ $item->Status !== 'su' ? 'disabled' : '' }}"
-                data-bs-toggle="tooltip"
-                title="{{ $item->Status !== 'su' ? 'Cannot delete - decision already made' : 'Delete Requisition' }}"
-                @if($item->Status === 'su')
-                    onclick="confirmDelete('{{ $item->Id }}', '{{ $item->ReqNo }}')"
-                @else
-                    onclick="return showCustomError('You cannot delete this requisition because a decision has already been made.');"
-                @endif>
-            <i class="bi bi-trash"></i> Delete
-        </button>
+        @if($canEdit)
+            <a href="{{ route('interbranchrequisition.edit', $item->Id) }}"
+               class="btn btn-warning btn-sm"
+               data-bs-toggle="tooltip"
+               title="{{ $editTooltip }}">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+        @else
+            <button type="button"
+                    class="btn btn-warning btn-sm disabled"
+                    data-bs-toggle="tooltip"
+                    title="{{ $editTooltip }}"
+                    onclick="return showCustomError('{{ $editTooltip }}');">
+                <i class="bi bi-pencil"></i> Edit
+            </button>
+        @endif
+
+        @if($canDelete)
+            <button type="button"
+                    class="btn btn-danger btn-sm"
+                    data-bs-toggle="tooltip"
+                    title="{{ $deleteTooltip }}"
+                    onclick="confirmDelete('{{ $item->Id }}', '{{ $item->ReqNo }}')">
+                <i class="bi bi-trash"></i> Delete
+            </button>
+        @else
+            <button type="button"
+                    class="btn btn-danger btn-sm disabled"
+                    data-bs-toggle="tooltip"
+                    title="{{ $deleteTooltip }}"
+                    onclick="return showCustomError('{{ $deleteTooltip }}');">
+                <i class="bi bi-trash"></i> Delete
+            </button>
+        @endif
 
         <form id="delete-form-{{ $item->Id }}" action="{{ route('interbranchrequisition.destroy', $item->Id) }}" method="POST" style="display:none;">
             @csrf
@@ -46,11 +85,11 @@
         <div class="card-body">
             <div class="row mb-3">
                 <div class="col-md-4">
-                    <strong>Requesting Branch:</strong>
+                    <strong>From Branch:</strong>
                     <div>{{ $item->fromBranch->Name ?? '-' }}</div>
                 </div>
                 <div class="col-md-4">
-                    <strong>To Branch:</strong>
+                    <strong>To Branch/Requesting:</strong>
                     <div>{{ $item->toBranch->Name ?? '-' }}</div>
                 </div>
                 <div class="col-md-4">

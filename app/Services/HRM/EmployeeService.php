@@ -17,11 +17,21 @@ class EmployeeService
     {
     }
 
-    public static function create(Department $department, Branch $branch, User $actor, string $JobTitle,
-                                  string     $FirstName, string $Surname, string $Email, string $Phone, Carbon $JoinDate, GenderEnum $Gender,
-                                  string     $MiddleName = null, string $Address = null, Carbon $DateOfBirth = null,
-    ): self
-    {
+    public static function create(
+        Department $department,
+        Branch $branch,
+        User $actor,
+        string $JobTitle,
+        string $FirstName,
+        string $Surname,
+        string $Email,
+        string $Phone,
+        Carbon $JoinDate,
+        GenderEnum $Gender,
+        string $MiddleName = null,
+        string $Address = null,
+        Carbon $DateOfBirth = null,
+    ): self {
         $employee = Employee::create([
             'EmployeeNo' => self::_id(),
             'FirstName' => $FirstName,
@@ -29,7 +39,7 @@ class EmployeeService
             'MiddleName' => $MiddleName,
             'Email' => $Email,
             'Phone' => $Phone,
-            'Address'  => $Address,
+            'Address' => $Address,
             'DateOfBirth' => $DateOfBirth,
             'JoinDate' => $JoinDate ,
             'DepartmentId' => $department->Id,
@@ -48,7 +58,6 @@ class EmployeeService
     public function createUser(User $actor): UserService
     {
         return UserService::create($this->employee, $actor);
-
     }
 
     public function setImage(UploadedFile $file, User $actor): static
@@ -57,8 +66,8 @@ class EmployeeService
 
         activity()->causedBy($actor)->performedOn($this->employee)->event('update')->log("Updated employee Image {$this->employee->EmployeeNo}.");
         return $this;
-
     }
+
     private static function _id(): string
     {
         $number = Employee::query()->withTrashed()->count();

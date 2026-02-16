@@ -5,20 +5,32 @@
 @section('title', 'View Transfers')
 
 @section('content')
-    @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
+@if($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-    {{-- Custom client‑side error --}}
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
     <div id="customErrorContainer" style="display:none;">
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <span id="customErrorMessage"></span>
@@ -32,10 +44,8 @@
             <a href="{{ route('transactionstransfers.create') }}" class="btn btn-success">➕ New Transfer</a>
         </div>
 
-        <!-- Tabs Navigation -->
         <ul class="nav nav-tabs mb-3" id="transferTabs" role="tablist">
             @if($isHeadOffice)
-                <!-- For Head Office - All Transfers Tab -->
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" 
                             type="button" role="tab" aria-controls="all" aria-selected="true">
@@ -43,7 +53,6 @@
                         <span class="badge bg-secondary ms-1">{{ $allTransfers->count() }}</span>
                     </button>
                 </li>
-                <!-- For Head Office - Incoming Tab -->
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="incoming-tab" data-bs-toggle="tab" data-bs-target="#incoming" 
                             type="button" role="tab" aria-controls="incoming" aria-selected="false">
@@ -51,7 +60,6 @@
                         <span class="badge bg-primary ms-1">{{ $incomingTransfers->count() }}</span>
                     </button>
                 </li>
-                <!-- For Head Office - Outgoing Tab -->
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="outgoing-tab" data-bs-toggle="tab" data-bs-target="#outgoing" 
                             type="button" role="tab" aria-controls="outgoing" aria-selected="false">
@@ -60,7 +68,6 @@
                     </button>
                 </li>
             @else
-                <!-- For Non-HQ Branches - Incoming Tab -->
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="incoming-tab" data-bs-toggle="tab" data-bs-target="#incoming" 
                             type="button" role="tab" aria-controls="incoming" aria-selected="true">
@@ -68,7 +75,6 @@
                         <span class="badge bg-primary ms-1">{{ $incomingTransfers->count() }}</span>
                     </button>
                 </li>
-                <!-- For Non-HQ Branches - Outgoing Tab -->
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="outgoing-tab" data-bs-toggle="tab" data-bs-target="#outgoing" 
                             type="button" role="tab" aria-controls="outgoing" aria-selected="false">
@@ -76,7 +82,6 @@
                         <span class="badge bg-success ms-1">{{ $outgoingTransfers->count() }}</span>
                     </button>
                 </li>
-                <!-- For Non-HQ Branches - All Tab -->
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" 
                             type="button" role="tab" aria-controls="all" aria-selected="false">
@@ -87,12 +92,9 @@
             @endif
         </ul>
 
-        <!-- Tab Content -->
         <div class="tab-content" id="transferTabsContent">
             @if($isHeadOffice)
-                <!-- Head Office - All Transfers Tab -->
                 <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
-                    <!-- Information for All Transfers Tab -->
                     <div class="alert alert-info mb-3">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-info-circle-fill me-2 fs-5"></i>
@@ -104,7 +106,6 @@
                         </div>
                     </div>
 
-                    <!-- HQ Branch Filter -->
                     <div class="card mb-3">
                         <div class="card-body">
                             <form id="branchFilterForm" class="row g-3">
@@ -144,16 +145,13 @@
                                     <tbody>
                                     @foreach ($allTransfers as $i => $transfer)
                                         @php
-                                            // Use the same approach as show blade
                                             $statusEnum = $transfer->Status instanceof Transfers
                                                 ? $transfer->Status
                                                 : (Transfers::tryFrom($transfer->Status) ?? null);
                                             
-                                            // For HQ All tab: Determine if transfer is incoming (to HQ) or outgoing (from HQ)
                                             $isIncomingToHQ = $transfer->ToBranch == $currentBranch->Id;
                                             $isOutgoingFromHQ = $transfer->FromBranch == $currentBranch->Id;
                                             
-                                            // HQ can edit/delete only outgoing transfers that are pending
                                             $isPending = $statusEnum && $statusEnum->value === Transfers::Pending->value;
                                             $canEdit = $isOutgoingFromHQ && $isPending;
                                             $canDelete = $isOutgoingFromHQ && $isPending;
@@ -185,13 +183,11 @@
                                                 @endif
                                             </td>
                                             <td class="d-flex gap-1">
-                                                {{-- View always allowed --}}
                                                 <a href="{{ route('transactionstransfers.show', $transfer->Id) }}"
                                                    class="btn btn-sm btn-primary" title="View">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
 
-                                                {{-- Edit --}}
                                                 @if($canEdit)
                                                     <a href="{{ route('transactionstransfers.edit', $transfer->Id) }}"
                                                     class="btn btn-sm btn-warning" title="{{ $editTooltip }}">
@@ -205,7 +201,6 @@
                                                     </button>
                                                 @endif
 
-                                                {{-- Delete --}}
                                                 @if($canDelete)
                                                     <form id="delete-form-{{ $transfer->Id }}"
                                                         action="{{ route('transactionstransfers.destroy', $transfer->Id) }}"
@@ -235,9 +230,7 @@
                     </div>
                 </div>
                 
-                <!-- Head Office - Incoming Tab -->
                 <div class="tab-pane fade" id="incoming" role="tabpanel" aria-labelledby="incoming-tab">
-                    <!-- Information for Incoming to HQ Tab -->
                     <div class="alert alert-info mb-3">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-info-circle-fill me-2 fs-5"></i>
@@ -289,19 +282,16 @@
                                                 @endif
                                             </td>
                                             <td class="d-flex gap-1">
-                                                {{-- View only for incoming transfers --}}
                                                 <a href="{{ route('transactionstransfers.show', $transfer->Id) }}"
                                                    class="btn btn-sm btn-primary" title="View">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
 
-                                                {{-- Edit disabled for incoming --}}
                                                 <button type="button" class="btn btn-sm btn-warning disabled"
                                                         title="Cannot edit incoming transfers">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
 
-                                                {{-- Delete disabled for incoming --}}
                                                 <button type="button" class="btn btn-sm btn-danger disabled"
                                                         title="Cannot delete incoming transfers">
                                                     <i class="fas fa-trash"></i>
@@ -316,9 +306,7 @@
                     </div>
                 </div>
                 
-                <!-- Head Office - Outgoing Tab -->
                 <div class="tab-pane fade" id="outgoing" role="tabpanel" aria-labelledby="outgoing-tab">
-                    <!-- Information for Outgoing from HQ Tab -->
                     <div class="alert alert-info mb-3">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-info-circle-fill me-2 fs-5"></i>
@@ -377,13 +365,11 @@
                                                 @endif
                                             </td>
                                             <td class="d-flex gap-1">
-                                                {{-- View always allowed --}}
                                                 <a href="{{ route('transactionstransfers.show', $transfer->Id) }}"
                                                    class="btn btn-sm btn-primary" title="View">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
 
-                                                {{-- Edit --}}
                                                 @if($canEdit)
                                                     <a href="{{ route('transactionstransfers.edit', $transfer->Id) }}"
                                                     class="btn btn-sm btn-warning" title="{{ $editTooltip }}">
@@ -397,7 +383,6 @@
                                                     </button>
                                                 @endif
 
-                                                {{-- Delete --}}
                                                 @if($canDelete)
                                                     <form id="delete-form-{{ $transfer->Id }}"
                                                         action="{{ route('transactionstransfers.destroy', $transfer->Id) }}"
@@ -427,9 +412,7 @@
                     </div>
                 </div>
             @else
-                <!-- Non-HQ - Incoming Tab -->
                 <div class="tab-pane fade show active" id="incoming" role="tabpanel" aria-labelledby="incoming-tab">
-                    <!-- Information for Incoming Tab -->
                     <div class="alert alert-info mb-3">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-info-circle-fill me-2 fs-5"></i>
@@ -481,19 +464,16 @@
                                                 @endif
                                             </td>
                                             <td class="d-flex gap-1">
-                                                {{-- View only for incoming transfers --}}
                                                 <a href="{{ route('transactionstransfers.show', $transfer->Id) }}"
                                                    class="btn btn-sm btn-primary" title="View">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
 
-                                                {{-- Edit disabled for incoming --}}
                                                 <button type="button" class="btn btn-sm btn-warning disabled"
                                                         title="Cannot edit incoming transfers">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
 
-                                                {{-- Delete disabled for incoming --}}
                                                 <button type="button" class="btn btn-sm btn-danger disabled"
                                                         title="Cannot delete incoming transfers">
                                                     <i class="fas fa-trash"></i>
@@ -508,9 +488,7 @@
                     </div>
                 </div>
                 
-                <!-- Non-HQ - Outgoing Tab -->
                 <div class="tab-pane fade" id="outgoing" role="tabpanel" aria-labelledby="outgoing-tab">
-                    <!-- Information for Outgoing Tab -->
                     <div class="alert alert-info mb-3">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-info-circle-fill me-2 fs-5"></i>
@@ -569,13 +547,11 @@
                                                 @endif
                                             </td>
                                             <td class="d-flex gap-1">
-                                                {{-- View always allowed --}}
                                                 <a href="{{ route('transactionstransfers.show', $transfer->Id) }}"
                                                    class="btn btn-sm btn-primary" title="View">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
 
-                                                {{-- Edit --}}
                                                 @if($canEdit)
                                                     <a href="{{ route('transactionstransfers.edit', $transfer->Id) }}"
                                                     class="btn btn-sm btn-warning" title="{{ $editTooltip }}">
@@ -589,7 +565,6 @@
                                                     </button>
                                                 @endif
 
-                                                {{-- Delete --}}
                                                 @if($canDelete)
                                                     <form id="delete-form-{{ $transfer->Id }}"
                                                         action="{{ route('transactionstransfers.destroy', $transfer->Id) }}"
@@ -619,9 +594,7 @@
                     </div>
                 </div>
                 
-                <!-- Non-HQ - All Tab -->
                 <div class="tab-pane fade" id="all" role="tabpanel" aria-labelledby="all-tab">
-                    <!-- Information for All Tab -->
                     <div class="alert alert-info mb-3">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-info-circle-fill me-2 fs-5"></i>
@@ -658,11 +631,9 @@
                                             
                                             $isPending = $statusEnum && $statusEnum->value === Transfers::Pending->value;
                                             
-                                            // Determine if transfer is incoming or outgoing for non-HQ
                                             $isIncoming = $transfer->ToBranch == $currentBranch->Id;
                                             $isOutgoing = $transfer->FromBranch == $currentBranch->Id;
                                             
-                                            // Non-HQ can edit/delete only outgoing transfers that are pending
                                             $canEdit = $isOutgoing && $isPending;
                                             $canDelete = $isOutgoing && $isPending;
                                             
@@ -693,13 +664,11 @@
                                                 @endif
                                             </td>
                                             <td class="d-flex gap-1">
-                                                {{-- View always allowed --}}
                                                 <a href="{{ route('transactionstransfers.show', $transfer->Id) }}"
                                                    class="btn btn-sm btn-primary" title="View">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
 
-                                                {{-- Edit --}}
                                                 @if($canEdit)
                                                     <a href="{{ route('transactionstransfers.edit', $transfer->Id) }}"
                                                     class="btn btn-sm btn-warning" title="{{ $editTooltip }}">
@@ -713,7 +682,6 @@
                                                     </button>
                                                 @endif
 
-                                                {{-- Delete --}}
                                                 @if($canDelete)
                                                     <form id="delete-form-{{ $transfer->Id }}"
                                                         action="{{ route('transactionstransfers.destroy', $transfer->Id) }}"
@@ -747,7 +715,6 @@
     </div>
 
     <style>
-        /* Custom styles for better DataTables appearance */
         .dataTables_wrapper .dataTables_length,
         .dataTables_wrapper .dataTables_filter {
             margin-bottom: 1rem;
@@ -764,7 +731,6 @@
             padding: 0.25rem 0.5rem;
         }
         
-        /* Tab-specific styling */
         .nav-tabs .nav-link {
             color: #495057;
             border: 1px solid transparent;
@@ -783,7 +749,6 @@
             font-weight: 600;
         }
         
-        /* Alert styling */
         .alert-info {
             background-color: #e7f1ff;
             border-color: #cfe2ff;
@@ -794,7 +759,6 @@
             color: #0d6efd;
         }
         
-        /* Row highlighting */
         .incoming-row {
             background-color: rgba(13, 110, 253, 0.05) !important;
         }
@@ -803,19 +767,16 @@
             background-color: rgba(25, 135, 84, 0.05) !important;
         }
         
-        /* Badge styling */
         .badge {
             font-size: 0.75em;
             padding: 0.35em 0.65em;
         }
         
-        /* Nav badge styling */
         .nav-link .badge {
             font-size: 0.65em;
             padding: 0.25em 0.5em;
         }
         
-        /* Disabled button styling */
         .btn.disabled {
             opacity: 0.5;
             cursor: not-allowed;
@@ -825,36 +786,24 @@
 @endsection
 
 @section('scripts')
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     
-    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
         $(document).ready(function () {
-            // Initialize DataTables for the active tab
             initializeActiveTabDataTable();
             
-            // Re-initialize DataTables when tab changes
             $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
-                // Destroy existing DataTable instances
                 $('.transfer-table').DataTable().destroy();
-                // Initialize DataTable for the newly active tab
                 initializeActiveTabDataTable();
             });
             
-            // Initialize tooltips
             function initializeTooltips() {
                 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
                 var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -862,17 +811,16 @@
                 });
             }
             
-            // Initialize DataTable for the currently active tab
             function initializeActiveTabDataTable() {
                 var activeTable = $('.tab-pane.active .transfer-table');
                 if (activeTable.length) {
                     activeTable.DataTable({
-                        pageLength: 10, // Default page length
-                        lengthMenu: [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, "All"]], // Records per page options
+                        pageLength: 10, 
+                        lengthMenu: [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, "All"]], 
                         ordering: true,
-                        order: [[2, 'desc']], // Sort by Date column (3rd column) in descending order
+                        order: [[2, 'desc']], 
                         searching: true,
-                        lengthChange: true, // Enable records per page dropdown ("Show entries")
+                        lengthChange: true, 
                         dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>', // Layout with length menu on left
                         language: {
                             emptyTable: "No transfers found.",
@@ -889,7 +837,6 @@
                             }
                         },
                         initComplete: function() {
-                            // Ensure tooltips are initialized after table is fully loaded
                             initializeTooltips();
                         },
                         drawCallback: function() {
@@ -898,32 +845,25 @@
                         responsive: true
                     });
                     
-                    // Add custom styling to the length menu for better visibility
                     $('.dataTables_length').addClass('mb-2');
                     $('.dataTables_filter').addClass('mb-2');
                 }
             }
             
-            // Initial tooltip setup
             initializeTooltips();
             
             @if($isHeadOffice)
-                // Branch filter function for HQ
                 function applyBranchFilter() {
                     var branchId = $('#branchFilter').val();
                     var table = $('.tab-pane.active #allTable').DataTable();
                     
                     if (branchId) {
-                        // Get the branch name from the selected option
                         var branchName = $('#branchFilter option:selected').text();
                         
-                        // Clear any existing search
                         table.search('').draw();
                         
-                        // Filter to show only rows containing the branch name
                         table.columns([3, 4]).search(branchName).draw();
                     } else {
-                        // Clear all filters
                         table.search('').columns([3, 4]).search('').draw();
                     }
                 }

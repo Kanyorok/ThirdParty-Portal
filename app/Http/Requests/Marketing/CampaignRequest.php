@@ -62,7 +62,6 @@ class CampaignRequest extends FormRequest
         ]);
     }
 
-
     /**
      * @throws ValidationException
      */
@@ -72,6 +71,7 @@ class CampaignRequest extends FormRequest
             return CampaignTypeEnum::fromValue($this->validated('Type'));
         } catch (ErroredException) {
         }
+
         throw ValidationException::withMessages(['Type' => 'invalid type']);
     }
 
@@ -90,6 +90,7 @@ class CampaignRequest extends FormRequest
             if ($contacts < 3) {
                 throw ValidationException::withMessages(['MarketingList' => 'List must have at least 3 contacts to create a campaign.']);
             }
+
             return $ml;
         }
 

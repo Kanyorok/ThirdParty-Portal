@@ -4,24 +4,22 @@ namespace App\Http\Controllers\Finance;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceJournalLines;
 use App\Models\HRM\Department;
-use App\Models\Auth\User;
 use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 
 class JournalEntryController extends Controller
 {
     protected $workflowService;
-    //
+
     public function __construct(ApprovalWorkflow $workflowService)
     {
         $this->workflowService = $workflowService;
@@ -86,9 +84,9 @@ class JournalEntryController extends Controller
         $gls = FinanceGLAccounts::select('Id', 'GLName', 'GLCode')->get();
         $branches = Branch::select('Id', 'Name')->get();
         $departments = Department::select('Id', 'Name')->get();
+
         return view('finance.generalledger.journalentry.create', compact('gls', 'branches', 'departments'));
     }
-
 
     public function store(Request $request)
     {
@@ -103,7 +101,7 @@ class JournalEntryController extends Controller
                 'debit' => $request->DRCR[$index] === 'DR' ? $request->Amount[$index] : 0,
                 'credit' => $request->DRCR[$index] === 'CR' ? $request->Amount[$index] : 0,
                 'is_debit' => $request->DRCR[$index] === 'DR' ? true : false,
-                'amount'=> $request->Amount[$index],
+                'amount' => $request->Amount[$index],
                 'narration' => $request->Narration[$index] ?? null,
             ];
         }
@@ -132,47 +130,47 @@ class JournalEntryController extends Controller
         }
 
         DB::beginTransaction();
-        try{
+
+        try {
             // Save the master entry in the JournalEntry Table
             $journalEntry = FinanceJournalEntry::create([
                 'Date' => $request->JournalDate,
                 'Description' => $request->Description,
                 'CreatedBy' => Auth::id(),
-                'ModifiedBy'=> Auth::Id(),
+                'ModifiedBy' => Auth::Id(),
             ]);
 
             // SAVE to the JournalLines table
             foreach ($request->entries as $entry) {
                 FinanceJournalLines::create([
                     'JournalEntryId' => $journalEntry->Id,
-                    'GLAccountID'    => $entry['gl_id'],
-                    'BranchID'       => $entry['branch_id'],
-                    'DepartmentID'   => $entry['department_id'],
-                    'IsDebit'        => $entry['is_debit'],
+                    'GLAccountID' => $entry['gl_id'],
+                    'BranchID' => $entry['branch_id'],
+                    'DepartmentID' => $entry['department_id'],
+                    'IsDebit' => $entry['is_debit'],
                     'Amount' => $entry['is_debit'] ? $entry['amount'] * -1 : $entry['amount'],
                     'Debit' => ($entry['debit'] * -1) ?? 0,
-                    'Credit'         => $entry['credit'] ?? 0,
-                    'Narration'      => $entry['narration'] ?? null,
+                    'Credit' => $entry['credit'] ?? 0,
+                    'Narration' => $entry['narration'] ?? null,
                     'CreatedBy' => Auth::id(),
-                    'ModifiedBy'=> Auth::Id(),
+                    'ModifiedBy' => Auth::Id(),
                 ]);
             }
             activity('Journal Entry Creation')
                 ->performedOn(new FinanceJournalEntry())
                 ->causedBy(Auth::id())
-                ->withProperties(['Create' =>$journalEntry])
+                ->withProperties(['Create' => $journalEntry])
                 ->log('Created Journal Entry');
             DB::commit();
+
             return back()->with('success', "Journal Entry ($journalEntry->RefNo) created successfully.");
-            //return redirect()->route('journalentry.index')->with('success', 'Journal Entry created successfully.');
-        }catch (\Throwable $th){
+        } catch (\Throwable $th) {
             DB::rollBack();
-            //return $th->getMessage();
-            Log::error('Failed to create Journal Entry'.$th->getMessage());
+            Log::error('Failed to create Journal Entry' . $th->getMessage());
+
             return back()->with('error', 'Failed to create Journal Entry');
         }
     }
-
 
     public function show($id)
     {
@@ -182,21 +180,22 @@ class JournalEntryController extends Controller
             'sourceModule',
             'createdBy:Id,Name',
             'modifiedBy:Id,Name',
-            'reversalsAsOriginal' => function($query) {
+            'reversalsAsOriginal' => function ($query) {
                 $query->with('journalEntry.createdBy:Id,Name');
-            }
+            },
         ])->findOrFail($id);
-            // Check if user can approve (pending row + stage permission + maker-checker)
-            try {
-                $canApprove = $this->workflowService->canApproveModel($journalEntry, Auth::user());
-                Log::info("Can approve check completed", ['journal_entry_id' => $id, 'can_approve' => $canApprove]);
-            } catch (\Exception $e) {
-                Log::warning("Failed to check approval permission", [
-                    'journal_entry_id' => $id,
-                    'error' => $e->getMessage()
-                ]);
-                $canApprove = false;
-            }
+
+        // Check if user can approve (pending row + stage permission + maker-checker)
+        try {
+            $canApprove = $this->workflowService->canApproveModel($journalEntry, Auth::user());
+            Log::info("Can approve check completed", ['journal_entry_id' => $id, 'can_approve' => $canApprove]);
+        } catch (\Exception $e) {
+            Log::warning("Failed to check approval permission", [
+                'journal_entry_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+            $canApprove = false;
+        }
 
         $workflowSources = array_values(array_unique(array_filter([
             $journalEntry->getTable(),
@@ -211,7 +210,7 @@ class JournalEntryController extends Controller
             ->exists();
 
         $cantApproveReason = null;
-        if ($hasPendingApprovals && !$canApprove) {
+        if ($hasPendingApprovals && ! $canApprove) {
             $cantApproveReason = $this->getCantApproveReason(
                 $workflowSources,
                 $journalEntry->getKey(),
@@ -271,11 +270,12 @@ class JournalEntryController extends Controller
 
             $roleNamesByUser = $roleRows
                 ->groupBy('UserId')
-                ->map(fn($rows) => $rows->pluck('name')->unique()->implode(', '));
+                ->map(fn ($rows) => $rows->pluck('name')->unique()->implode(', '));
         }
 
         $pendingApprovers = $pendingApprovers->map(function ($row) use ($roleNamesByUser) {
             $row->RoleNames = $roleNamesByUser[$row->UserId] ?? '-';
+
             return $row;
         });
 
@@ -310,7 +310,7 @@ class JournalEntryController extends Controller
             ->orderBy('CreatedOn', 'desc')
             ->first(['Stage', 'UserId']);
 
-        if (!$pendingRow) {
+        if (! $pendingRow) {
             return 'No pending approvals found for this entry.';
         }
 
@@ -329,13 +329,13 @@ class JournalEntryController extends Controller
             return 'You cannot approve your own entry (Maker-Checker policy).';
         }
 
-        if (!empty($pendingRow->Stage)) {
+        if (! empty($pendingRow->Stage)) {
             $stageRow = DB::table('t_WorkFlowStages')
                 ->select('PermissionId', 'StageName')
                 ->where('Id', (int)$pendingRow->Stage)
                 ->first();
 
-            if (!$stageRow) {
+            if (! $stageRow) {
                 return 'Approval stage not found. Contact an administrator.';
             }
 
@@ -344,15 +344,15 @@ class JournalEntryController extends Controller
                     ->where('id', (int)$stageRow->PermissionId)
                     ->value('name');
 
-                if (!$permissionName) {
+                if (! $permissionName) {
                     $permissionName = 'workflowstage_' . str_replace(' ', '', (string)$stageRow->StageName);
                     $exists = DB::table('t_Permissions')->where('name', $permissionName)->exists();
-                    if (!$exists) {
+                    if (! $exists) {
                         return 'Approval stage permission is not configured.';
                     }
                 }
 
-                if (!$user->hasPermissionTo($permissionName)) {
+                if (! $user->hasPermissionTo($permissionName)) {
                     return 'You do not have permission for stage: ' . $stageRow->StageName . '.';
                 }
             }
@@ -366,6 +366,11 @@ class JournalEntryController extends Controller
         $this->authorize(PermissionEnum::FinanceGeneralLedgerUpdate, FinanceJournalEntry::class);
 
         $journalEntry = FinanceJournalEntry::with('journalLines')->findOrFail($id);
+        $approvalStatus = strtolower((string) $journalEntry->ApprovalStatus);
+        if (in_array($approvalStatus, ['posted', 'rejected'], true)) {
+            return redirect()->route('journalentry.show', $journalEntry->Id)
+                ->with('error', 'Posted or rejected journal entries cannot be edited.');
+        }
         $gls = FinanceGLAccounts::select('Id', 'GLName', 'GLCode')->get();
         $branches = Branch::select('Id', 'Name')->get();
         $departments = Department::select('Id', 'Name')->get();
@@ -378,6 +383,11 @@ class JournalEntryController extends Controller
         $this->authorize(PermissionEnum::FinanceGeneralLedgerUpdate, FinanceJournalEntry::class);
 
         $journalEntry = FinanceJournalEntry::with('journalLines')->findOrFail($id);
+        $approvalStatus = strtolower((string) $journalEntry->ApprovalStatus);
+        if (in_array($approvalStatus, ['posted', 'rejected'], true)) {
+            return redirect()->route('journalentry.show', $journalEntry->Id)
+                ->with('error', 'Posted or rejected journal entries cannot be edited.');
+        }
 
         // Normalize incoming arrays to entries and include optional line_id for diffing
         $entries = [];
@@ -418,19 +428,20 @@ class JournalEntryController extends Controller
         }
 
         // Guard: ensure provided line_ids (if any) belong to this journal entry
-        $existingIds = $journalEntry->journalLines->pluck('Id')->map(fn($v) => (int)$v)->all();
+        $existingIds = $journalEntry->journalLines->pluck('Id')->map(fn ($v) => (int)$v)->all();
         $incomingIds = collect($validated['entries'])
             ->pluck('line_id')
             ->filter()
-            ->map(fn($v) => (int)$v)
+            ->map(fn ($v) => (int)$v)
             ->all();
         foreach ($incomingIds as $lid) {
-            if (!in_array($lid, $existingIds, true)) {
+            if (! in_array($lid, $existingIds, true)) {
                 return back()->withErrors(['Invalid line submitted' => 'One or more lines do not belong to this journal entry.'])->withInput();
             }
         }
 
         DB::beginTransaction();
+
         try {
             // Update header
             $journalEntry->Date = $request->JournalDate;
@@ -440,7 +451,7 @@ class JournalEntryController extends Controller
 
             // Delete removed lines
             $toDelete = array_diff($existingIds, $incomingIds);
-            if (!empty($toDelete)) {
+            if (! empty($toDelete)) {
                 FinanceJournalLines::where('JournalEntryId', $journalEntry->Id)
                     ->whereIn('Id', $toDelete)
                     ->delete();
@@ -460,7 +471,7 @@ class JournalEntryController extends Controller
                     'ModifiedBy' => Auth::id(),
                 ];
 
-                if (!empty($entry['line_id'])) {
+                if (! empty($entry['line_id'])) {
                     // Update existing
                     FinanceJournalLines::where('JournalEntryId', $journalEntry->Id)
                         ->where('Id', (int)$entry['line_id'])
@@ -480,11 +491,14 @@ class JournalEntryController extends Controller
                 ->log('Updated Journal Entry');
 
             DB::commit();
+
             return redirect()->route('journalentry.show', $journalEntry->Id)->with('success', 'Journal Entry updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return $th->getMessage();
             Log::error('Failed to update Journal Entry ' . $th->getMessage());
+
             return back()->with('error', 'Failed to update Journal Entry')->withInput();
         }
     }
@@ -494,6 +508,11 @@ class JournalEntryController extends Controller
         $this->authorize(PermissionEnum::FinanceGeneralLedgerDelete, FinanceJournalEntry::class);
 
         $entry = FinanceJournalEntry::findOrFail($id);
+        $approvalStatus = strtolower((string) $entry->ApprovalStatus);
+        if (in_array($approvalStatus, ['posted', 'rejected'], true)) {
+            return redirect()->route('journalentry.index')
+                ->with('error', 'Posted or rejected journal entries cannot be deleted.');
+        }
         DB::transaction(function () use ($entry) {
             FinanceJournalLines::where('JournalEntryId', $entry->Id)->delete();
             $entry->delete();
@@ -518,6 +537,4 @@ class JournalEntryController extends Controller
 
         return redirect()->route('journalentry.index')->with('status', 'Journal entry ' . $request->action_type . 'd successfully.');
     }
-
-
 }

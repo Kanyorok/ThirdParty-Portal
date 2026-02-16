@@ -8,13 +8,13 @@ use App\Helpers\SystemHelper;
 use Carbon\Carbon;
 use Exception;
 use getID3;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use PhpOffice\PhpPresentation\IOFactory as PptFactory;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpWord\IOFactory as WordFactory;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 // Add getID3 import for media file analysis
 
@@ -40,38 +40,44 @@ class UploadFileProperties
         try {
             if ($this->type->isImage()) {
                 $this->extractImageProperties();
+
                 return;
             }
 
             if ($this->type->isVideo()) {
                 $this->extractVideoProperties();
+
                 return;
             }
 
             if ($this->type->isAudio()) {
                 $this->extractAudioProperties();
+
                 return;
             }
 
             if ($this->type->isDocument()) {
                 $this->extractDocumentProperties();
+
                 return;
             }
             if ($this->type->isPresentation()) {
                 $this->extractPresentationProperties();
+
                 return;
             }
 
             if ($this->type->value === ExtensionsEnum::Csv->value || $this->type->isSpreadsheet()) {
                 $this->extractSpreadsheetProperties();
+
                 return;
             }
 
             if ($this->type->value === ExtensionsEnum::Pdf->value) {
                 $this->extractPdfProperties();
+
                 return;
             }
-
         } catch (Exception $e) {
             Log::warning('Failed to extract type-specific properties: ' . $e->getMessage());
         }
@@ -141,6 +147,7 @@ class UploadFileProperties
             'Value' => $value,
             'DataType' => $type->value,
         ]);
+
         return $this;
     }
 
@@ -151,7 +158,7 @@ class UploadFileProperties
     {
         if (class_exists(getID3::class)) {
             try {
-                $getID3 = new getID3;
+                $getID3 = new getID3();
                 $fileInfo = $getID3->analyze($this->file->getRealPath());
 
                 if (isset($fileInfo['playtime_seconds'])) {
@@ -191,12 +198,10 @@ class UploadFileProperties
                         $this->add('audio_sample_rate', $fileInfo['audio']['sample_rate'], DataTypesEnum::Integer);
                     }
                 }
-
             } catch (Exception $e) {
                 Log::warning('Failed to extract video properties: ' . $e->getMessage());
             }
         }
-
     }
 
     /**
@@ -301,21 +306,21 @@ class UploadFileProperties
             $spreadsheet = IOFactory::load($this->file->getRealPath());
             $properties = $spreadsheet->getProperties();
 
-            if (!empty(trim($properties->getCreator()))) {
+            if (! empty(trim($properties->getCreator()))) {
                 $this->add('creator', $properties->getCreator());
             }
-            if (!empty(trim($properties->getLastModifiedBy()))) {
+            if (! empty(trim($properties->getLastModifiedBy()))) {
                 $this->add('modified_by', $properties->getLastModifiedBy());
             }
             if ($created = $properties->getCreated()) {
                 try {
-                    $this->add('creation_date', Carbon::createFromFormat('U', (integer)$created)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
+                    $this->add('creation_date', Carbon::createFromFormat('U', (int)$created)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
                 } catch (Exception $e) {
                 }
             }
 
             if ($modified = $properties->getModified()) {
-                $this->add('modified_date', Carbon::createFromFormat('U', (integer)$modified)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
+                $this->add('modified_date', Carbon::createFromFormat('U', (int)$modified)?->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
             }
 
             $this->add('sheet_count', $spreadsheet->getSheetCount(), DataTypesEnum::Integer);
@@ -323,7 +328,6 @@ class UploadFileProperties
         } catch (Exception $e) {
             Log::warning('Failed to extract spreadsheet properties: ' . $e->getMessage());
         }
-
     }
 
     public function getProperties(): Collection
@@ -339,12 +343,14 @@ class UploadFileProperties
         try {
             if (shell_exec("command -v pdfinfo") === null) {
                 SystemHelper::notifyAdmin('pdfinfo command not found. Please install poppler-utils package.');
+
                 return;
             }
 
             $pdfinfo = shell_exec("pdfinfo " . $this->file->getRealPath());
             if ($pdfinfo === null) {
                 Log::warning('Failed to get PDF information');
+
                 return;
             }
 
@@ -365,11 +371,13 @@ class UploadFileProperties
                 // Convert numeric values to appropriate types
                 if (is_numeric($value)) {
                     $this->add($key, (float)$value, (str_contains($value, '.')) ? DataTypesEnum::Integer : DataTypesEnum::Float);
+
                     continue;
                 }
 
                 if ($value === 'yes' || $value === 'no') {
                     $this->add($key, (int)($value === 'yes'), DataTypesEnum::Boolean);
+
                     continue;
                 }
 
@@ -378,6 +386,7 @@ class UploadFileProperties
                         $this->add($key, Carbon::createFromFormat('D M  j H:i:s Y T', $value)?->timezone(config('app.timezone'))->format(self::DATE_TIME_FORMAT), DataTypesEnum::DateTime);
                     } catch (Exception $e) {
                     }
+
                     continue;
                 }
 
@@ -386,7 +395,6 @@ class UploadFileProperties
         } catch (Exception $e) {
             Log::warning('Failed to extract PDF properties: ' . $e->getMessage());
         }
-
     }
 
     /**
@@ -399,6 +407,4 @@ class UploadFileProperties
             ->add('size', $this->file->getSize(), DataTypesEnum::Integer)
             ->add('extension', $this->type->value);
     }
-
-
 }

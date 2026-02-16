@@ -9,12 +9,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FinanceCreditManagement extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_FinanceCreditManagement';
     protected $primaryKey = 'Id';
@@ -29,7 +30,7 @@ class FinanceCreditManagement extends Model
             'Status',
             'ApprovalStatus',
             'ApprovalReason',
-            
+
             // Risk assessment fields
             'RiskScore',
             'RiskLevel',
@@ -43,7 +44,7 @@ class FinanceCreditManagement extends Model
             'ModifiedBy',
             'ModifiedOn',
             'DeletedBy',
-            'DeletedOn'
+            'DeletedOn',
     ];
 
     /**
@@ -51,8 +52,8 @@ class FinanceCreditManagement extends Model
      */
     protected $guarded = [
         'used',
-        'utilization', 
-        'available'
+        'utilization',
+        'available',
     ];
 
     public static function getPrimaryKey(): string
@@ -85,7 +86,7 @@ class FinanceCreditManagement extends Model
      */
     public function getRiskBadgeClassAttribute(): string
     {
-        return match(strtolower($this->RiskLevel ?? 'medium')) {
+        return match (strtolower($this->RiskLevel ?? 'medium')) {
             'low' => 'bg-success',
             'high' => 'bg-danger',
             'medium' => 'bg-warning text-dark',
@@ -98,9 +99,10 @@ class FinanceCreditManagement extends Model
      */
     public function isReviewDue(): bool
     {
-        if (!$this->NextReviewDate) {
+        if (! $this->NextReviewDate) {
             return true; // No review date set, assume due
         }
+
         return now()->gte($this->NextReviewDate);
     }
 
@@ -109,9 +111,10 @@ class FinanceCreditManagement extends Model
      */
     public function getDaysUntilReview(): int
     {
-        if (!$this->NextReviewDate) {
+        if (! $this->NextReviewDate) {
             return 0;
         }
+
         return now()->diffInDays($this->NextReviewDate, false);
     }
 
@@ -121,7 +124,7 @@ class FinanceCreditManagement extends Model
     public function calculateRiskScore(float $utilizationPercentage): int
     {
         $score = 20; // Base score
-        
+
         // Utilization risk (0-40 points)
         if ($utilizationPercentage > 90) {
             $score += 40;
@@ -132,7 +135,7 @@ class FinanceCreditManagement extends Model
         } elseif ($utilizationPercentage > 25) {
             $score += 10;
         }
-        
+
         // Credit age risk (0-20 points) if age is more than 90 dayss then dont deduct anything so the score remains as it was at the top.
         $daysSinceCreated = $this->CreatedOn ? now()->diffInDays($this->CreatedOn) : 0;
         if ($daysSinceCreated < 30) {
@@ -140,15 +143,15 @@ class FinanceCreditManagement extends Model
         } elseif ($daysSinceCreated < 90) {
             $score += 10;
         }
-        
+
         // Payment history risk (0-20 points) - placeholder for future implementation
         // This could check payment delays, defaults, etc.
-        
+
         // Review frequency risk (0-20 points)
         if ($this->isReviewDue()) {
             $score += 15; // Overdue review
         }
-        
+
         return min(100, max(0, $score));
     }
 
@@ -158,26 +161,26 @@ class FinanceCreditManagement extends Model
     public function updateRiskAssessment(float $utilizationPercentage): void
     {
         $newScore = $this->calculateRiskScore($utilizationPercentage);
-        
+
         // Determine risk level based on score
-        $riskLevel = match(true) {
+        $riskLevel = match (true) {
             $newScore >= 70 => 'High',
             $newScore >= 40 => 'Medium',
             default => 'Low'
         };
-        
+
         // Determine review cycle based on risk level
-        $reviewCycle = match($riskLevel) {
+        $reviewCycle = match ($riskLevel) {
             'High' => 3,    // 3 months
             'Medium' => 6,  // 6 months
             'Low' => 12,    // 12 months
         };
-        
+
         // Calculate next review date
-        $nextReviewDate = $this->LastReviewDate 
+        $nextReviewDate = $this->LastReviewDate
             ? $this->LastReviewDate->addMonths($reviewCycle)
             : now()->addMonths($reviewCycle);
-        
+
         $this->update([
             'RiskScore' => $newScore,
             'RiskLevel' => $riskLevel,
@@ -185,5 +188,4 @@ class FinanceCreditManagement extends Model
             'NextReviewDate' => $nextReviewDate,
         ]);
     }
-        
 }

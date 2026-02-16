@@ -26,9 +26,10 @@ class BoardService
 
     public function sendEmail(string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = null): ?CRMEmailService
     {
-        if (!filter_var($this->board->Email, FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($this->board->Email, FILTER_VALIDATE_EMAIL)) {
             return null;
         }
+
         return CRMEmailService::createBoard($this->board, $subject, $body, $actor, $cc, $priorityEnum ?? EmailPriorityEnum::Normal);
     }
 }

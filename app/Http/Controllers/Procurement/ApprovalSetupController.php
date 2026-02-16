@@ -17,6 +17,7 @@ class ApprovalSetupController extends Controller
             ->get();
 
         $permissions = DB::table('t_Permissions')->get();
+
         return view('procurement.requisitions.approval-setup', compact('approvalGroups', 'permissions'));
     }
 
@@ -45,7 +46,6 @@ class ApprovalSetupController extends Controller
         return back()->with('status', 'Approval configuration saved!');
     }
 
-
     public function storeLimit(Request $request)
     {
         $this->authorize('create', \App\Models\Core\ApprovalGroup::class);
@@ -65,7 +65,7 @@ class ApprovalSetupController extends Controller
         $this->authorize('viewAny', \App\Models\Core\ApprovalGroup::class); // Using viewAny as we don't have a model instance easily from DB query here without checking
         // Or fetch first then authorize.
         $approvalGroup = DB::table('t_ApprovalGroups')->where('id', $id)->first();
-        if (!$approvalGroup) {
+        if (! $approvalGroup) {
             return redirect()->back()->withErrors(['error' => 'Approval group not found.']);
         }
 
@@ -75,6 +75,7 @@ class ApprovalSetupController extends Controller
         $this->authorize('update', \App\Models\Core\ApprovalGroup::class); // Check if user can update *any* approval group (settings role)
 
         $permissions = DB::table('t_Permissions')->get();
+
         return view('procurement.requisitions.edit-approval-group', compact('approvalGroup', 'permissions'));
     }
 
@@ -102,6 +103,7 @@ class ApprovalSetupController extends Controller
     {
         $this->authorize('delete', \App\Models\Core\ApprovalGroup::class);
         DB::table('t_ApprovalGroups')->where('id', $id)->delete();
+
         return redirect()->route('approval-setup.index')->with('status', 'Approval group deleted successfully!');
     }
 }

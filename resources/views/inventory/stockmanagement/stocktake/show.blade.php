@@ -7,7 +7,6 @@
             <a href="{{ route('stocktake.index') }}" class="btn btn-outline-secondary btn-sm">⬅ Back to List</a>
         </div>
 
-        {{-- Header Info --}}
         <div class="card shadow-sm mb-4 border-0">
             <div class="card-header bg-light">
                 <h5 class="mb-0 text-dark">📝 Header Information</h5>
@@ -34,7 +33,6 @@
             </div>
         </div>
 
-        {{-- Line Items --}}
         <div class="card shadow-sm border-0">
             <div class="card-header bg-light">
                 <h5 class="mb-0 text-dark">🧾 Counted Items</h5>

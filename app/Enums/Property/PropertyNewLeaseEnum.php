@@ -16,14 +16,13 @@ enum PropertyNewLeaseEnum: string
 
     case Terminate = 't';
 
-
     public function label(): string
     {
         return match ($this) {
             self::New => 'New',
             self::Renew => 'Renew',
             self::Terminate => 'Terminate',
-            Self::OfferLetter => 'Offer Letter',
+            self::OfferLetter => 'Offer Letter',
         };
     }
 
@@ -33,7 +32,7 @@ enum PropertyNewLeaseEnum: string
             self::New => 'success',
             self::Renew => 'info',
             self::Terminate => 'danger',
-            Self::OfferLetter => 'primary',
+            self::OfferLetter => 'primary',
         };
     }
 }

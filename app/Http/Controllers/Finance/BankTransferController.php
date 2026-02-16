@@ -20,6 +20,7 @@ class BankTransferController extends Controller
     {
         $rows = BankTransfer::with(['fromAccount.bank', 'toAccount.bank', 'currency'])
             ->orderByDesc('TransferID')->paginate(25);
+
         return view('finance.bank-transfers.index', compact('rows'));
     }
 
@@ -32,6 +33,7 @@ class BankTransferController extends Controller
             'ExchangeRate' => 1,
             'ClearingGLAccountID' => config('finance.gl.interbank_clearing', self::DEFAULT_CLEARING_GL),
         ];
+
         return view('finance.bank-transfers.create', compact('bankAccounts', 'currencies', 'defaults'));
     }
 
@@ -52,7 +54,7 @@ class BankTransferController extends Controller
         return DB::transaction(function () use ($request) {
             $data = $request->only([
                 'FromBankAccountID', 'ToBankAccountID', 'DocDate', 'CurrencyID',
-                'ExchangeRate', 'Amount', 'ClearingGLAccountID', 'Reference', 'Narration'
+                'ExchangeRate', 'Amount', 'ClearingGLAccountID', 'Reference', 'Narration',
             ]);
             $data['ExchangeRate'] = $data['ExchangeRate'] ?: 1;
             $data['AmountBase'] = round($data['Amount'] * $data['ExchangeRate'], 2);
@@ -70,6 +72,7 @@ class BankTransferController extends Controller
     public function show($id)
     {
         $row = BankTransfer::with(['fromAccount.bank', 'toAccount.bank', 'currency'])->findOrFail($id);
+
         return view('finance.bank-transfers.show', compact('row'));
     }
 
@@ -81,6 +84,7 @@ class BankTransferController extends Controller
         }
         $bankAccounts = BankAccount::with('bank')->orderBy('AccountNumber')->get();
         $currencies = Currency::orderBy('Name')->get(['Id', 'Code', 'Name', 'DecimalDigits']);
+
         return view('finance.bank-transfers.edit', compact('row', 'bankAccounts', 'currencies'));
     }
 
@@ -106,7 +110,7 @@ class BankTransferController extends Controller
         return DB::transaction(function () use ($request, $row) {
             $row->fill($request->only([
                 'FromBankAccountID', 'ToBankAccountID', 'DocDate', 'CurrencyID',
-                'ExchangeRate', 'Amount', 'ClearingGLAccountID', 'Reference', 'Narration'
+                'ExchangeRate', 'Amount', 'ClearingGLAccountID', 'Reference', 'Narration',
             ]));
             $row->ExchangeRate = $row->ExchangeRate ?: 1;
             $row->AmountBase = round($row->Amount * $row->ExchangeRate, 2);
@@ -124,6 +128,7 @@ class BankTransferController extends Controller
             return back()->with('error', 'Posted transfers cannot be deleted.');
         }
         $row->delete();
+
         return redirect()->route('banktransfers.index')->with('success', 'Transfer deleted.');
     }
 

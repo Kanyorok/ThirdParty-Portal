@@ -4,10 +4,8 @@ namespace App\Models\Procurement;
 
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
 
 class TenderItems extends Model
 {
@@ -15,7 +13,7 @@ class TenderItems extends Model
 
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'TenderID',

@@ -2,12 +2,8 @@
 
 namespace App\Http\Requests\Inventory;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use App\Models\Inventory\ItemCategories;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class UnitOfMeasureRequest extends FormRequest
 {
@@ -30,7 +26,7 @@ class UnitOfMeasureRequest extends FormRequest
                 'max:50',
                 Rule::unique('t_UOM', 'Code')
                     ->ignore($this->route('Id'))
-                    ->whereNull('DeletedOn'), // ← exclude soft-deleted records
+                    ->whereNull('DeletedOn'),
             ],
             'Name' => [
                 'required',
@@ -38,16 +34,13 @@ class UnitOfMeasureRequest extends FormRequest
                 'max:255',
                 Rule::unique('t_UOM', 'Name')
                     ->ignore($this->route('Id'))
-                    ->whereNull('DeletedOn'), // ← exclude soft-deleted records
+                    ->whereNull('DeletedOn'),
             ],
             'BaseUnit' => 'nullable|boolean',
             'Active' => 'required|boolean',
         ];
     }
 
-    /**
-     * Get custom error messages for validator errors.
-     */
     public function messages(): array
     {
         return [

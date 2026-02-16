@@ -10,7 +10,6 @@ class Instance extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'DbGuid', 'HostFingerprint', 'MaxSeenNonce', 'CreatedOn'
+        'DbGuid', 'HostFingerprint', 'MaxSeenNonce', 'CreatedOn',
     ];
 }
-
