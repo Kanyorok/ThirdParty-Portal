@@ -5,11 +5,11 @@ namespace App\Jobs\Campaigns;
 use App\Enums\CampaignStatusEnum;
 use App\Enums\CampaignTypeEnum;
 use App\Enums\EmailPriorityEnum;
+use App\Models\Auth\User;
 use App\Models\BR\Client;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
 use App\Models\CRM\Lead;
-use App\Models\Auth\User;
 use App\Services\ActivityService;
 use App\Services\HRM\UserService;
 use App\Services\Marketing\CampaignService;
@@ -25,7 +25,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
-
 
 class ProcessRunJob implements ShouldQueue, ShouldBeUnique
 {
@@ -59,21 +58,23 @@ class ProcessRunJob implements ShouldQueue, ShouldBeUnique
     {
 
         $lock = Cache::lock($this->campaign->CampaignID . '-process-run-job', 60 * 30); // 30 minutes lock
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             return;
         }
         if ($this->campaign->Type->value === CampaignTypeEnum::Email->value) {
             $this->_email($this->campaign, $this->actor);
+
             return;
         }
 
         if ($this->campaign->Type->value === CampaignTypeEnum::SMS->value) {
             $this->_sms($this->campaign, $this->actor);
+
             return;
         }
 
         $this->campaign->update([
-            'Processing' => false
+            'Processing' => false,
         ]);
 
         $this->campaign->contacts()->update([
@@ -112,7 +113,6 @@ class ProcessRunJob implements ShouldQueue, ShouldBeUnique
             return;
         }*/
 
-        //$date = now();
         $description = 'Campaign ' . $campaign->CampaignID . ' sent via Email';
 
         try {
@@ -131,10 +131,12 @@ class ProcessRunJob implements ShouldQueue, ShouldBeUnique
                 (new CampaignService($campaign))->complete();
             });
             Log::info('Campaign ' . $campaign->CampaignID . ' sent via Email');
+
             return;
         } catch (Throwable|Exception $e) {
             Log::error('Processing Campaign Contacts Failed for sp : ' . $e);
             (new USerService($actor))->sendEmail('Process Campaign Failed for sp', '<div><p>Hello</p><p>The campaign <a href="' . route('campaigns.show', [$campaign->CampaignID]) . '"><b>' . $campaign->Label . '</b></a> you have approved, has failed to process contact support<p><div>');
+
             return;
         }
 
@@ -296,6 +298,7 @@ class ProcessRunJob implements ShouldQueue, ShouldBeUnique
 
         if ($LoansActivity->count() > 0) {
             DB::table('t_PartyActivities')->lock('WITH(NOLOCK)')->insert($LoansActivity->toArray());
+
             return;
         }
 
@@ -314,8 +317,8 @@ class ProcessRunJob implements ShouldQueue, ShouldBeUnique
 
     protected function _sms(Campaign $campaign, User $actor): void
     {
-        // $date = now();
         $description = 'Campaign ' . $campaign->Label . ' sent via SMS';
+
         try {
             DB::transaction(static function () use ($campaign, $actor, $description) {
                 /*
@@ -330,10 +333,12 @@ class ProcessRunJob implements ShouldQueue, ShouldBeUnique
 
                 (new CampaignService($campaign))->complete();
             });
+
             return;
         } catch (Throwable|Exception $e) {
             Log::error('Processing Campaign Contacts tp SMS Table Failed for sp : ' . $e);
             (new USerService($actor))->sendEmail('Process Campaign Failed for sp', '<div><p>Hello</p><p>The campaign <a href="' . route('campaigns.show', [$campaign->CampaignID]) . '"><b>' . $campaign->Label . '</b></a> you have approved, has failed to process contact support<p><div>');
+
             return;
         }
 
