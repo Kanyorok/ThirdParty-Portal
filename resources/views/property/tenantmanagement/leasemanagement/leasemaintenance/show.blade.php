@@ -69,7 +69,7 @@
         <div class="form-control bg-light">{{ $newlease->code->Description ?? '-' }}</div>
     </div>
     <div class="col-md-3">
-        <label class="small text-muted">Due Day</label>
+        <label class="small text-muted">Payment Due Date</label>
         <div class="form-control bg-light">{{ $newlease->DueDay ?? '-' }}</div>
     </div>
 </div>
@@ -87,7 +87,7 @@
 
     $subtotal = $rent + $service + $parking + $other;
 
-    $taxRate = $newlease->taxRule->Rate ?? 0; // adjust if relation name differs
+    $taxRate = $newlease->taxRule->Rate ?? 0;
     $taxAmount = ($subtotal * ($taxRate) / 100);
 
     $totalInclusive = $subtotal + $taxAmount;
