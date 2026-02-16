@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
+use App\Models\Procurement\TenderAward;
+use App\Models\Procurement\ContractMilestone;
+use App\Models\Procurement\RFQAward;
 
 class InvoiceEntryV2Controller extends Controller
 {
