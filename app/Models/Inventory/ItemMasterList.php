@@ -133,6 +133,7 @@ class ItemMasterList extends Model
     {
         return $this->hasMany(InterBranchRequisitionItem::class, 'Item', 'Id');
     }
+
     public function stores()
     {
         return $this->belongsToMany(

@@ -5,14 +5,13 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\TransactionTransferRequest;
 use App\Models\Auth\User;
-use App\Models\Core\Branch;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Branch;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\StockGRNLedger;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\TransactionTransferItem;
-use App\Models\Procurement\GoodsReceipt;
 use App\Models\Procurement\Requisitions;
 use App\Services\Inventory\TransactionTransferService;
 use Illuminate\Http\Request;
@@ -112,7 +111,7 @@ class TransactionTransfersController extends Controller
                 throw new \Exception('Only approved requisitions can be transferred.');
             }
 
-            $validatedData['ToBranch'] = $requisition->requestingBranch?->Id 
+            $validatedData['ToBranch'] = $requisition->requestingBranch?->Id
           ?? throw new \Exception('Requisition has no requesting branch.');
             $validatedData['FromBranch'] = $currentBranch->Id;
             foreach ($items as $index => $itemData) {
@@ -214,7 +213,7 @@ class TransactionTransfersController extends Controller
         return view('inventory.transactions.transfers.edit', compact('transferitem', 'branches', 'itemsMasterList', 'users'));
     }
 
-   public function update(TransactionTransferRequest $request, $Id)
+    public function update(TransactionTransferRequest $request, $Id)
     {
         $this->authorize('update', TransactionTransfer::class);
         $transactionTransfer = TransactionTransfer::findOrFail($Id);
@@ -232,18 +231,18 @@ class TransactionTransfersController extends Controller
             $transactionTransfer->items()->delete();
             foreach ($items as $itemData) {
                 TransactionTransferItem::create([
-                    'TransferId'      => $transactionTransfer->Id,
-                    'Item'            => $itemData['item'],
-                    'ApprovedQty'     => $itemData['approved_qty'],
-                    'DispatchedQty'   => $itemData['dispatched_qty'],
-                    'UOM'             => $itemData['uom'],
-                    'UnitCost'        => $itemData['unit_cost'] ?? null,
+                    'TransferId' => $transactionTransfer->Id,
+                    'Item' => $itemData['item'],
+                    'ApprovedQty' => $itemData['approved_qty'],
+                    'DispatchedQty' => $itemData['dispatched_qty'],
+                    'UOM' => $itemData['uom'],
+                    'UnitCost' => $itemData['unit_cost'] ?? null,
                     'BatchAllocation' => $itemData['batch_allocation'] ?? null,
-                    'Remarks'         => $itemData['remarks'] ?? null,
-                    'CreatedBy'       => $transactionTransfer->CreatedBy, 
-                    'ModifiedBy'      => auth()->id(),
-                    'CreatedOn'       => $transactionTransfer->CreatedOn,
-                    'ModifiedOn'      => now(),
+                    'Remarks' => $itemData['remarks'] ?? null,
+                    'CreatedBy' => $transactionTransfer->CreatedBy,
+                    'ModifiedBy' => auth()->id(),
+                    'CreatedOn' => $transactionTransfer->CreatedOn,
+                    'ModifiedOn' => now(),
                 ]);
             }
         });
@@ -251,6 +250,7 @@ class TransactionTransfersController extends Controller
         return redirect()->route('transactionstransfers.index')
                         ->with('success', 'Transfer updated successfully.');
     }
+
     public function getGRNBatches(Request $request)
     {
         try {
@@ -306,9 +306,9 @@ class TransactionTransfersController extends Controller
                 ->get()
                 ->map(function ($req) {
                     return [
-                        'Id'         => $req->Id,
-                        'ReqNo'      => $req->ReqNo,
-                        'to_branch'  => $req->toBranch,
+                        'Id' => $req->Id,
+                        'ReqNo' => $req->ReqNo,
+                        'to_branch' => $req->toBranch,
                     ];
                 });
 
@@ -335,9 +335,9 @@ class TransactionTransfersController extends Controller
                 ->get()
                 ->map(function ($req) {
                     return [
-                        'Id'             => $req->Id,
-                        'RequisitionNo'  => $req->RequisitionNo,
-                        'branch'         => $req->requestingBranch,
+                        'Id' => $req->Id,
+                        'RequisitionNo' => $req->RequisitionNo,
+                        'branch' => $req->requestingBranch,
                     ];
                 });
 
@@ -362,25 +362,25 @@ class TransactionTransfersController extends Controller
 
                 $items = $requisition->items->map(function ($item) {
                     return [
-                        'Id'            => $item->Id,
-                        'Item'          => $item->Item,
-                        'ItemCode'      => $item->item?->ItemCode ?? '',
-                        'ItemName'      => $item->item?->ItemName ?? '',
-                        'UnitCost'      => $item->item?->price?->ActualPrice ?? 0,
-                        'UOM'           => $item->UOM ?? $item->item?->UOM,
-                        'UOMCode'       => $item->item?->uom?->Code ?? 'N/A',
-                        'PriceID'       => $item->item?->ItemPrice,
-                        'ApprovedQty'   => $item->ApprovedQty ?? $item->Quantity,
+                        'Id' => $item->Id,
+                        'Item' => $item->Item,
+                        'ItemCode' => $item->item?->ItemCode ?? '',
+                        'ItemName' => $item->item?->ItemName ?? '',
+                        'UnitCost' => $item->item?->price?->ActualPrice ?? 0,
+                        'UOM' => $item->UOM ?? $item->item?->UOM,
+                        'UOMCode' => $item->item?->uom?->Code ?? 'N/A',
+                        'PriceID' => $item->item?->ItemPrice,
+                        'ApprovedQty' => $item->ApprovedQty ?? $item->Quantity,
                         'DispatchedQty' => $item->DispatchedQty ?? null,
-                        
+
                     ];
                 });
 
                 return response()->json([
-                    'Id'          => $requisition->Id,
+                    'Id' => $requisition->Id,
                     'from_branch' => $requisition->fromBranch,
-                    'to_branch'   => $requisition->toBranch,
-                    'items'       => $items,
+                    'to_branch' => $requisition->toBranch,
+                    'items' => $items,
                 ]);
             }
             if ($type === 'procurement') {
@@ -393,7 +393,7 @@ class TransactionTransfersController extends Controller
                     'requestingBranch',
                     'requisitionLines.item.price',
                     'requisitionLines.item.uom',
-                    'requisitionLines.uom'
+                    'requisitionLines.uom',
                 ])->findOrFail($id);
 
                 $approvedStatusId = CodeDetail::where('CodeID', 'RequisitionStatus')
@@ -419,34 +419,34 @@ class TransactionTransfersController extends Controller
                         ->sum('RemainingQTY');
 
                     $items[] = [
-                        'Id'             => $line->Id,
-                        'Item'           => $line->Item,
-                        'ItemCode'       => $line->item->ItemCode ?? '',
-                        'ItemName'       => $line->item->ItemName ?? '',
-                        'UnitCost'       => $line->item->price->ActualPrice ?? 0,
-                        'UOM'            => $line->UOM,
-                        'UOMCode'        => $line->uom->Code ?? 'N/A',
-                        'PriceID'        => $line->item->ItemPrice ?? null,
-                        'ApprovedQty'    => $line->Quantity,
-                        'RemainingQty'   => $remainingQty,
+                        'Id' => $line->Id,
+                        'Item' => $line->Item,
+                        'ItemCode' => $line->item->ItemCode ?? '',
+                        'ItemName' => $line->item->ItemName ?? '',
+                        'UnitCost' => $line->item->price->ActualPrice ?? 0,
+                        'UOM' => $line->UOM,
+                        'UOMCode' => $line->uom->Code ?? 'N/A',
+                        'PriceID' => $line->item->ItemPrice ?? null,
+                        'ApprovedQty' => $line->Quantity,
+                        'RemainingQty' => $remainingQty,
                         'AvailableStock' => $availableStock,
-                        'DispatchedQty'  => 0,
+                        'DispatchedQty' => 0,
                     ];
                 }
 
                 return response()->json([
-                    'Id'            => $requisition->Id,
-                    'requisition_no'=> $requisition->RequisitionNo,
-                    'from_branch'   => $currentBranch, 
-                    'to_branch'     => $requisition->requestingBranch,
-                    'items'         => $items,
+                    'Id' => $requisition->Id,
+                    'requisition_no' => $requisition->RequisitionNo,
+                    'from_branch' => $currentBranch,
+                    'to_branch' => $requisition->requestingBranch,
+                    'items' => $items,
                 ]);
             }
 
             return response()->json(['error' => 'Invalid type'], 400);
         } catch (Throwable $e) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => $e->getMessage(),
             ], 500);
         }

@@ -5,11 +5,11 @@ namespace App\Models\Procurement;
 use App\Enums\WorkflowStatus;
 use App\Models\Core\Approval\WorkflowHistory;
 use App\Models\Core\Approval\WorkflowPending;
+use App\Models\Core\Branch;
 use App\Models\Inventory\TransactionTransfer;
 use App\Services\Procurement\Requisition\RequisitionWorkflowService;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Core\Branch;
 
 class Requisitions extends Model
 {

@@ -91,15 +91,15 @@ class ItemMasterListController extends Controller
             $errors = $import->getErrors();
 
             $successParts = [];
-            
+
             if ($created > 0) {
                 $successParts[] = "Created: {$created} new item" . ($created > 1 ? 's' : '');
             }
-            
+
             if ($updated > 0) {
                 $successParts[] = "Updated: {$updated} existing item" . ($updated > 1 ? 's' : '');
             }
-            
+
             if ($skipped > 0) {
                 $successParts[] = "Skipped: {$skipped} row" . ($skipped > 1 ? 's' : '') . " (empty/invalid data)";
             }
@@ -119,16 +119,16 @@ class ItemMasterListController extends Controller
                     'skipped' => $skipped,
                 ],
                 'errors' => $errors,
-                'warnings' => []
+                'warnings' => [],
             ];
 
-            if (!empty($errors)) {
+            if (! empty($errors)) {
                 $errorMessage = "<strong>Critical errors encountered:</strong><br>";
-                
+
                 foreach (array_slice($errors, 0, 20) as $error) {
                     $errorMessage .= "• {$error}<br>";
                 }
-                
+
                 if (count($errors) > 20) {
                     $errorMessage .= "<br>... and " . (count($errors) - 20) . " more errors.";
                 }
@@ -145,6 +145,7 @@ class ItemMasterListController extends Controller
             $errors = collect($e->failures())->map(function ($failure) {
                 $row = $failure->row();
                 $errors = implode(', ', $failure->errors());
+
                 return "Row {$row}: {$errors}";
             })->toArray();
 
@@ -157,7 +158,7 @@ class ItemMasterListController extends Controller
                     'skipped' => count($errors),
                 ],
                 'errors' => $errors,
-                'warnings' => []
+                'warnings' => [],
             ];
 
             return redirect()->route('itemmaster.index')
@@ -175,18 +176,18 @@ class ItemMasterListController extends Controller
                     'skipped' => 0,
                 ],
                 'errors' => [config('app.debug') ? $e->getMessage() : "System error occurred"],
-                'warnings' => []
+                'warnings' => [],
             ];
 
             return redirect()->route('itemmaster.index')
                 ->with('import_result', $importResult);
         }
     }
-    
+
     public function export()
     {
         return Excel::download(
-            new ItemMasterListExport(), 
+            new ItemMasterListExport(),
             'ItemMasterList_' . now()->format('Y-m-d_His') . '.xlsx'
         );
     }
@@ -198,7 +199,7 @@ class ItemMasterListController extends Controller
         $validated = $request->validated();
         $document = $request->file('Document');
         $image = $request->file('ImageUpload');
-        
+
         $validated['Status'] = CodeDetail::where('CodeID', 'ItemStatus')
             ->where('Description', 'Active')
             ->value('Id');
