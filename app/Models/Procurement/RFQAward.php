@@ -2,8 +2,10 @@
 
 namespace App\Models\Procurement;
 use App\Models\Core\Approval\WorkflowHistory;
+use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -31,6 +33,7 @@ class RFQAward extends Model
         'ContractStatus',
         'ContractRef',
         'ContractValue',
+        'ContractTaxID',
         'ContractRequestRef',
         'PaymentTerms',
         'DeliveryTerms',
@@ -49,6 +52,7 @@ class RFQAward extends Model
         'ContractApprovedOn' => 'datetime',
         'AwardedAmount' => 'decimal:2',
         'ContractValue' => 'decimal:2',
+        'ContractTaxID' => 'integer',
     ];
 
     public static function getPrimaryKey(): string
@@ -76,6 +80,11 @@ class RFQAward extends Model
     {
         return $this->hasMany(ContractPenaltyRule::class, 'ContractSourceID', 'Id')
             ->where('ContractSourceType', 'rfq');
+    }
+
+    public function contractTaxRule(): BelongsTo
+    {
+        return $this->belongsTo(FinanceTaxRuleConfiguration::class, 'ContractTaxID', 'Id');
     }
 
      /**
@@ -123,4 +132,3 @@ class RFQAward extends Model
         return !empty($this->ContractStatus);
     }
 }
-

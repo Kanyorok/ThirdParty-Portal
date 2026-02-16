@@ -10,6 +10,10 @@ use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\TenderSupplier;
+use App\Models\Procurement\TenderCommittee;
+use App\Models\Procurement\TenderCommitteeMember;
+use App\Models\Procurement\RFQCommittee;
+use App\Models\Procurement\RFQCommitteeMember;
 use App\Models\Procurement\TenderCommitteeEvaluation;
 use App\Models\Procurement\BidResponsiveness;
 use App\Services\Workflow\ApprovalWorkflow;
@@ -86,7 +90,7 @@ class AwardsController extends Controller
                     'status_class' => 'bg-warning text-dark',
                     'winning_bidder' => '--',
                     'award_date' => '--',
-                    'id' => $tender->Id,
+                    'tender_id' => $tender->Id,
                 ];
             })
             ->values()
@@ -141,7 +145,7 @@ class AwardsController extends Controller
                     'status_class' => 'bg-warning text-dark',
                     'winning_bidder' => '--',
                     'award_date' => '--',
-                    'id' => $rfq->Id,
+                    'rfq_id' => $rfq->Id,
                 ];
             })
             ->values()
@@ -377,6 +381,16 @@ class AwardsController extends Controller
      */
     public function store(Request $request)
     {
+        // Consolidation can submit SupplierMaster/ThirdParty keys in some legacy records.
+        // Normalize to t_Suppliers.Id before validation.
+        $normalizedSupplierId = $this->resolveWinningSupplierId(
+            $request->input('winning_supplier_id'),
+            $request->input('tender_id')
+        );
+        if ($normalizedSupplierId !== null) {
+            $request->merge(['winning_supplier_id' => $normalizedSupplierId]);
+        }
+
         $request->validate([
             'tender_id' => 'required|exists:t_Tenders,Id',
             'winning_supplier_id' => 'required|exists:t_Suppliers,Id',
@@ -393,13 +407,50 @@ class AwardsController extends Controller
         DB::beginTransaction();
 
         try {
-            // Check if active award exists
-            $hasActiveAward = TenderAward::where('TenderID', $request->tender_id)
-                ->whereIn('AwardStatus', ['Pending', 'Approved'])
-                ->exists();
-                
-            if ($hasActiveAward) {
-                return redirect()->back()->with('error', 'An active award already exists for this tender.');
+            // Check if any queued/active award exists for this tender.
+            $existingActiveAward = TenderAward::where('TenderID', (int)$request->tender_id)
+                ->whereIn('AwardStatus', $this->blockingAwardStatuses())
+                ->orderByDesc('Id')
+                ->first();
+
+            if ($existingActiveAward) {
+                return redirect()->back()->with(
+                    'error',
+                    'An award already exists for this tender with status "' . $existingActiveAward->AwardStatus .
+                    '". Cancel it first before creating another award.'
+                );
+            }
+
+            // Ensure evaluator completion before allowing award:
+            // every accepted active evaluator must either submit or be marked [SKIPPED].
+            $pendingEvaluatorCount = DB::table('t_TenderCommitteeMembers as m')
+                ->where('m.TenderID', (int)$request->tender_id)
+                ->where('m.IsActive', 1)
+                ->where('m.Response', 1)
+                ->where(function ($q) {
+                    $q->whereNull('m.reason')
+                        ->orWhere(function ($inner) {
+                            $inner->whereRaw("UPPER(LTRIM(RTRIM(m.reason))) NOT LIKE 'SKIPPED:%'")
+                                ->whereRaw("UPPER(LTRIM(RTRIM(m.reason))) NOT LIKE '[[]SKIPPED[]]%'");
+                        });
+                })
+                ->where(function ($q) {
+                    $q->whereNull('m.HasEvaluated')
+                        ->orWhere('m.HasEvaluated', 0);
+                })
+                ->whereNotExists(function ($q) {
+                    $q->select(DB::raw(1))
+                        ->from('t_TenderCommitteeEvaluations as e')
+                        ->whereColumn('e.TenderID', 'm.TenderID')
+                        ->whereColumn('e.MemberID', 'm.Id');
+                })
+                ->count();
+
+            if ($pendingEvaluatorCount > 0) {
+                return redirect()->back()->with(
+                    'error',
+                    'Evaluation is still pending for one or more evaluators. Complete evaluations or mark pending evaluators as skipped from the consolidation page.'
+                );
             }
 
             // Create award in Pending status
@@ -441,6 +492,76 @@ class AwardsController extends Controller
         }
     }
 
+    /**
+     * Resolve incoming supplier reference to a valid t_Suppliers.Id.
+     * Supports direct Supplier.Id, SupplierMaster.Id, and ThirdParty.Id inputs.
+     */
+    private function resolveWinningSupplierId($candidate, $tenderId = null): ?int
+    {
+        if ($candidate === null || $candidate === '') {
+            return null;
+        }
+
+        $candidate = (int) $candidate;
+        $tenderId = $tenderId !== null && $tenderId !== '' ? (int) $tenderId : null;
+
+        // 1) Already a valid Supplier row ID.
+        $direct = DB::table('t_Suppliers')
+            ->where('Id', $candidate)
+            ->whereNull('DeletedOn')
+            ->value('Id');
+        if ($direct) {
+            return (int) $direct;
+        }
+
+        // 2) Prefer tender invitation mapping when available.
+        if ($tenderId) {
+            $invited = DB::table('t_TenderInvitations as ti')
+                ->join('t_Suppliers as s', 's.Id', '=', 'ti.SupplierId')
+                ->where('ti.TenderId', $tenderId)
+                ->whereNull('ti.DeletedOn')
+                ->whereNull('s.DeletedOn')
+                ->where(function ($q) use ($candidate) {
+                    $q->where('s.SupplierMasterId', $candidate)
+                        ->orWhere('s.Id', $candidate);
+                })
+                ->orderByDesc('ti.InvitationID')
+                ->value('s.Id');
+            if ($invited) {
+                return (int) $invited;
+            }
+        }
+
+        // 3) Treat candidate as SupplierMaster.Id.
+        $fromMaster = DB::table('t_Suppliers')
+            ->where('SupplierMasterId', $candidate)
+            ->whereNull('DeletedOn')
+            ->orderByDesc('Active_Status')
+            ->orderByDesc('Id')
+            ->value('Id');
+        if ($fromMaster) {
+            return (int) $fromMaster;
+        }
+
+        // 4) Treat candidate as ThirdParty.Id -> SupplierMaster.Id -> Supplier.Id.
+        $supplierMasterId = DB::table('t_SupplierMaster')
+            ->where('ThirdPartyId', $candidate)
+            ->value('Id');
+        if ($supplierMasterId) {
+            $fromThirdParty = DB::table('t_Suppliers')
+                ->where('SupplierMasterId', (int) $supplierMasterId)
+                ->whereNull('DeletedOn')
+                ->orderByDesc('Active_Status')
+                ->orderByDesc('Id')
+                ->value('Id');
+            if ($fromThirdParty) {
+                return (int) $fromThirdParty;
+            }
+        }
+
+        return null;
+    }
+
      public function submitForApproval($id)
     {
         try {
@@ -448,6 +569,18 @@ class AwardsController extends Controller
             
             $award = TenderAward::findOrFail($id);
             $user = Auth::user();
+
+            // Prevent submitting if another queued/active award already exists for this tender.
+            $duplicateQueuedAward = TenderAward::where('TenderID', (int)$award->TenderID)
+                ->where('Id', '<>', (int)$award->Id)
+                ->whereIn('AwardStatus', $this->blockingAwardStatuses())
+                ->exists();
+            if ($duplicateQueuedAward) {
+                return redirect()->back()->with(
+                    'error',
+                    'Another award for this tender is already in queue. Cancel the existing queued award before submitting this one.'
+                );
+            }
 
             // Validation: Must be in Draft or Pending status
             if (!in_array($award->AwardStatus, [TenderAward::STATUS_DRAFT, TenderAward::STATUS_PENDING])) {
@@ -556,6 +689,8 @@ public function approve(Request $request)
                 'ModifiedOn' => now(),
             ]);
 
+            $this->deactivateTenderCommittee((int) $award->TenderID, (int) $user->Id);
+
             // Send notifications to unsuccessful bidders if requested
             if ($award->NotifyUnsuccessfulBidders) {
                 $this->notifyUnsuccessfulBidders($award);
@@ -648,27 +783,39 @@ public function approve(Request $request)
             return redirect()->route('procawards.index')->with('error', 'Failed to determine top supplier for RFQ.');
         }
 
-        // Persist award
-        $award = RFQAward::create([
-            'RFQId' => $rfq->Id,
-            'SupplierId' => $topSupplierId,
-            'Comments' => $request->input('approval_remarks'),
-            'CreatedBy' => Auth::id(),
-            'ModifiedBy' => Auth::id(),
-        ]);
+        DB::beginTransaction();
 
-        activity()
-            ->performedOn($award)
-            ->causedBy(Auth::user())
-            ->withProperties([
-                'action' => 'approve-rfq',
-                'rfq_id' => $rfq->Id,
-                'supplier_id' => $topSupplierId,
-                'score' => round($topScore,2),
-            ])
-            ->log('RFQ awarded to top ranked supplier.');
+        try {
+            // Persist award
+            $award = RFQAward::create([
+                'RFQId' => $rfq->Id,
+                'SupplierId' => $topSupplierId,
+                'Comments' => $request->input('approval_remarks'),
+                'CreatedBy' => Auth::id(),
+                'ModifiedBy' => Auth::id(),
+            ]);
 
-        return redirect()->route('procawards.index')->with('success', 'RFQ awarded successfully.');
+            $this->deactivateRfqCommittee((int) $rfq->Id, (int) Auth::id());
+
+            activity()
+                ->performedOn($award)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'action' => 'approve-rfq',
+                    'rfq_id' => $rfq->Id,
+                    'supplier_id' => $topSupplierId,
+                    'score' => round($topScore,2),
+                ])
+                ->log('RFQ awarded to top ranked supplier.');
+
+            DB::commit();
+
+            return redirect()->route('procawards.index')->with('success', 'RFQ awarded successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('RFQ approval error: ' . $th->getMessage());
+            return redirect()->route('procawards.index')->with('error', 'Failed to award RFQ: ' . $th->getMessage());
+        }
     }
 
     /**
@@ -1106,13 +1253,13 @@ public function approve(Request $request)
             return redirect()->back()->with('error', 'No evaluations found for this tender. Please complete evaluations first.');
         }
 
-        // Block only if there is an active award (Pending/Approved)
+        // Block if there is any queued/active award.
         $hasActive = TenderAward::where('TenderID', $tenderId)
-            ->whereIn('AwardStatus', [TenderAward::STATUS_PENDING, TenderAward::STATUS_APPROVED])
+            ->whereIn('AwardStatus', $this->blockingAwardStatuses())
             ->exists();
         if ($hasActive) {
             return redirect()->route('awards.tender', $tenderId)
-                ->with('info', 'This tender already has an active award.');
+                ->with('info', 'This tender already has an award in queue. Cancel it first before creating another award.');
         }
 
         // Redirect to unified award interface
@@ -1134,7 +1281,91 @@ public function approve(Request $request)
         return view('procurement.awards.create', compact('tenders'));
     }
 
-     protected function notifyUnsuccessfulBidders($award)
+    /**
+     * Award statuses that block creating/submitting another award for the same tender.
+     */
+    private function blockingAwardStatuses(): array
+    {
+        return [
+            TenderAward::STATUS_DRAFT,
+            TenderAward::STATUS_PENDING,
+            TenderAward::STATUS_SUBMITTED,
+            TenderAward::STATUS_UNDER_REVIEW,
+            TenderAward::STATUS_APPROVED,
+        ];
+    }
+
+    protected function deactivateTenderCommittee(int $tenderId, int $actorId): void
+    {
+        $now = now();
+
+        $committeeIds = TenderCommittee::query()
+            ->where('IsActive', true)
+            ->where(function ($query) use ($tenderId) {
+                $query->where('TenderID', $tenderId)
+                    ->orWhere(function ($subQuery) use ($tenderId) {
+                        $subQuery->where('CommitteeType', 'tender')
+                            ->where('ReferenceId', $tenderId);
+                    });
+            })
+            ->pluck('Id')
+            ->values();
+
+        if ($committeeIds->isEmpty()) {
+            return;
+        }
+
+        TenderCommittee::query()
+            ->whereIn('Id', $committeeIds->all())
+            ->update([
+                'IsActive' => false,
+                'ModifiedBy' => $actorId,
+                'ModifiedOn' => $now,
+            ]);
+
+        TenderCommitteeMember::query()
+            ->whereIn('CommitteeID', $committeeIds->all())
+            ->where('IsActive', true)
+            ->update([
+                'IsActive' => false,
+                'ModifiedBy' => $actorId,
+                'ModifiedOn' => $now,
+            ]);
+    }
+
+    protected function deactivateRfqCommittee(int $rfqId, int $actorId): void
+    {
+        $now = now();
+
+        $committeeIds = RFQCommittee::query()
+            ->where('RFQID', $rfqId)
+            ->where('IsActive', true)
+            ->pluck('Id')
+            ->values();
+
+        if ($committeeIds->isEmpty()) {
+            return;
+        }
+
+        RFQCommittee::query()
+            ->whereIn('Id', $committeeIds->all())
+            ->update([
+                'IsActive' => false,
+                'ModifiedBy' => $actorId,
+                'ModifiedOn' => $now,
+            ]);
+
+        RFQCommitteeMember::query()
+            ->whereIn('CommitteeID', $committeeIds->all())
+            ->where('IsActive', true)
+            ->update([
+                'IsActive' => false,
+                'ModifiedBy' => $actorId,
+                'ModifiedOn' => $now,
+            ]);
+    }
+
+    protected function notifyUnsuccessfulBidders($award)
     {
         // TODO: Implement notification logic
         Log::info("Sending notifications to unsuccessful bidders for award: " . $award->Id);

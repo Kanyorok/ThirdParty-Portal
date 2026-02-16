@@ -76,14 +76,13 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 209210, 'Name' => 'Lists', 'Icon' => null, 'Description' => '', 'ParentID' => 209200, 'Route' => 'loans-list.index', 'RequiredPermission' => PermissionEnum::DebtCollectionLists->value],
             ['ModuleID' => 209220, 'Name' => 'Loans', 'Icon' => null, 'Description' => '', 'ParentID' => 209200, 'Route' => 'debt-collection.index', 'RequiredPermission' => PermissionEnum::DebtCollectionView->value],
 
-            // =========================================================
-            // Submenu: Policy & Training Repository
-            // =========================================================
-            /* ['ModuleID' => 209400, 'Name' => 'Training', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Policies, trainings, and staff acknowledgments', 'ParentID' => 200000, 'Route' => null],
-
-             // ['ModuleID' => 209405, 'Name' => 'Policies', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Org Policies', 'ParentID' => 209400, 'Route' => 'legal.compliance.policies.index'],
-             ['ModuleID' => 209410, 'Name' => 'Trainings', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff trainings', 'ParentID' => 209400, 'Route' => 'legal.compliance.trainings.index'],
-             ['ModuleID' => 209415, 'Name' => 'Certification', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff certifications', 'ParentID' => 209400, 'Route' => 'legal.compliance.certifications.index'],*/
+            ['ModuleID' => 209400, 'Name' => 'Client Trainings', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Client training and capacity building', 'ParentID' => 200000, 'Route' => null, 'RequiredPermission' => PermissionEnum::ClientRead->value],
+            ['ModuleID' => 209410, 'Name' => 'Training Programs', 'Icon' => null, 'Description' => 'Client training programs', 'ParentID' => 209400, 'Route' => 'crm.training.programs.index', 'RequiredPermission' => PermissionEnum::ClientRead->value],
+            ['ModuleID' => 209420, 'Name' => 'Training Sessions', 'Icon' => null, 'Description' => 'Scheduled client training sessions', 'ParentID' => 209400, 'Route' => 'crm.training.sessions.index', 'RequiredPermission' => PermissionEnum::ClientRead->value],
+            ['ModuleID' => 209430, 'Name' => 'Trainers', 'Icon' => null, 'Description' => 'Client training trainers', 'ParentID' => 209400, 'Route' => 'crm.training.trainers.index', 'RequiredPermission' => PermissionEnum::ClientRead->value],
+            ['ModuleID' => 209440, 'Name' => 'Training Categories', 'Icon' => null, 'Description' => 'Client training categories', 'ParentID' => 209400, 'Route' => 'crm.training.categories.index', 'RequiredPermission' => PermissionEnum::ClientRead->value],
+            ['ModuleID' => 209450, 'Name' => 'Certificates', 'Icon' => null, 'Description' => 'Client training certificates', 'ParentID' => 209400, 'Route' => 'crm.training.certificates.index', 'RequiredPermission' => PermissionEnum::ClientRead->value],
+            ['ModuleID' => 209460, 'Name' => 'Training Reports', 'Icon' => null, 'Description' => 'Client training reports', 'ParentID' => 209400, 'Route' => 'crm.training.reports.index', 'RequiredPermission' => PermissionEnum::ClientRead->value],
 
 
             ['ModuleID' => 299000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'crm-reports.index', 'RequiredPermission' => PermissionEnum::LeadRead->value],

@@ -13,6 +13,11 @@ use Illuminate\Support\Facades\DB;
 
 class ContractsLifecycleController extends Controller
 {
+    private function isMilestoneStructureLocked(?string $contractStatus): bool
+    {
+        return in_array((string) $contractStatus, ['Approved', 'Ap', 'Executed', 'Terminated'], true);
+    }
+
     /**
      * Display list of active contracts for lifecycle management
      */
@@ -196,6 +201,12 @@ class ContractsLifecycleController extends Controller
         $contract = TenderAward::findOrFail($id);
         $this->authorize('update', $contract);
 
+        if ($this->isMilestoneStructureLocked($contract->ContractStatus)) {
+            return redirect()
+                ->route('contracts.lifecycle.execution', $contract->Id)
+                ->with('error', 'Milestone structure is locked once the contract is approved.');
+        }
+
         $validated = $request->validate([
             'MilestoneNo' => 'required|integer|min:1',
             'Title' => 'required|string|max:255',
@@ -205,7 +216,33 @@ class ContractsLifecycleController extends Controller
             'ValuePercent' => 'nullable|required_if:ValueType,PERCENT|numeric|min:0|max:100',
             'ValueAmount' => 'nullable|required_if:ValueType,FIXED|numeric|min:0',
             'AcceptanceRequired' => 'nullable|boolean',
+        ], [
+            'ValuePercent.required_if' => 'Percent Value is required when Value Type is Percent. This percentage is applied on Contract Value.',
+            'ValueAmount.required_if' => 'Fixed Amount is required when Value Type is Fixed.',
         ]);
+
+        $contractValue = round(max(0, (float) ($contract->ContractValue ?? 0)), 2);
+        $existingMilestoneTotal = $this->getTenderMilestoneCoverageTotal((int) $contract->Id, $contractValue);
+        $newMilestoneAmount = $this->resolveMilestoneAmountFromInputs(
+            (string) $validated['ValueType'],
+            isset($validated['ValuePercent']) ? (float) $validated['ValuePercent'] : null,
+            isset($validated['ValueAmount']) ? (float) $validated['ValueAmount'] : null,
+            $contractValue
+        );
+        $proposedMilestoneTotal = round($existingMilestoneTotal + $newMilestoneAmount, 2);
+
+        if ($proposedMilestoneTotal > ($contractValue + 0.01)) {
+            $remainingAllocatable = max(0, round($contractValue - $existingMilestoneTotal, 2));
+
+            return redirect()
+                ->route('contracts.lifecycle.execution', $contract->Id)
+                ->withInput()
+                ->with(
+                    'error',
+                    'Cannot add milestone: total milestone value would exceed contract value. '
+                    . 'Remaining allocatable amount is ' . number_format($remainingAllocatable, 2) . '.'
+                );
+        }
 
         ContractMilestone::create([
             'ContractSourceType' => 'tender',
@@ -221,15 +258,29 @@ class ContractsLifecycleController extends Controller
             'Status' => 'Draft',
         ]);
 
+        $remainingCoverage = round($contractValue - $proposedMilestoneTotal, 2);
+        $successMessage = 'Milestone added.';
+        if ($remainingCoverage > 0.01) {
+            $successMessage .= ' Remaining allocation: ' . number_format($remainingCoverage, 2) . '.';
+        } elseif (abs($remainingCoverage) <= 0.01) {
+            $successMessage .= ' Milestone allocation now fully matches the contract value.';
+        }
+
         return redirect()
             ->route('contracts.lifecycle.execution', $contract->Id)
-            ->with('success', 'Milestone added.');
+            ->with('success', $successMessage);
     }
 
     public function checklistStore(Request $request, $id, $milestoneId)
     {
         $contract = TenderAward::findOrFail($id);
         $this->authorize('update', $contract);
+
+        if ($this->isMilestoneStructureLocked($contract->ContractStatus)) {
+            return redirect()
+                ->route('contracts.lifecycle.execution', $contract->Id)
+                ->with('error', 'Checklist structure is locked once the contract is approved.');
+        }
 
         $milestone = ContractMilestone::where('Id', $milestoneId)
             ->where('ContractSourceType', 'tender')
@@ -301,6 +352,28 @@ class ContractsLifecycleController extends Controller
                 ->with('error', 'Invalid milestone action.');
         }
 
+        $currentStatus = (string) ($milestone->Status ?? 'Draft');
+        $canTransition = match ($action) {
+            'submit' => in_array($currentStatus, ['Draft', 'In Progress', 'Rejected'], true),
+            'accept', 'reject' => $currentStatus === 'Submitted',
+            'waive' => !in_array($currentStatus, ['Accepted', 'Waived'], true),
+            default => false,
+        };
+
+        if (!$canTransition) {
+            $message = match ($action) {
+                'submit' => 'Milestone can only be submitted from Draft, In Progress, or Rejected status.',
+                'accept' => 'Milestone must be Submitted before it can be accepted.',
+                'reject' => 'Milestone must be Submitted before it can be rejected.',
+                'waive' => 'Accepted or waived milestones cannot be waived again.',
+                default => 'Invalid milestone action.',
+            };
+
+            return redirect()
+                ->route('contracts.lifecycle.execution', $contract->Id)
+                ->with('error', $message);
+        }
+
         if ($action === 'submit') {
             $milestone->Status = 'Submitted';
         }
@@ -341,5 +414,36 @@ class ContractsLifecycleController extends Controller
         return redirect()
             ->route('contracts.lifecycle.execution', $contract->Id)
             ->with('success', 'Milestone status updated.');
+    }
+
+    private function getTenderMilestoneCoverageTotal(int $contractId, float $contractValue): float
+    {
+        $milestones = ContractMilestone::query()
+            ->where('ContractSourceType', 'tender')
+            ->where('ContractSourceID', $contractId)
+            ->get(['ValueType', 'ValuePercent', 'ValueAmount']);
+
+        return round(
+            $milestones->sum(fn ($milestone) => $this->resolveMilestoneAmountFromInputs(
+                (string) $milestone->ValueType,
+                $milestone->ValuePercent !== null ? (float) $milestone->ValuePercent : null,
+                $milestone->ValueAmount !== null ? (float) $milestone->ValueAmount : null,
+                $contractValue
+            )),
+            2
+        );
+    }
+
+    private function resolveMilestoneAmountFromInputs(
+        string $valueType,
+        ?float $valuePercent,
+        ?float $valueAmount,
+        float $contractValue
+    ): float {
+        if (strtoupper($valueType) === 'PERCENT') {
+            return round(max(0, $contractValue * (max(0, (float) $valuePercent) / 100)), 2);
+        }
+
+        return round(max(0, (float) $valueAmount), 2);
     }
 }

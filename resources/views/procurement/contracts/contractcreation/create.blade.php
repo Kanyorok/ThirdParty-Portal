@@ -130,10 +130,10 @@
                                 </div>
 
                                 <!-- Contract Basic Information -->
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Contract Title <span
-                                                class="text-danger">*</span></label>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Contract Title <span
+                        class="text-danger">*</span></label>
                                         <input type="text" name="contract_title" class="form-control"
                                                value="{{ old('contract_title', $award->tender?->Title ?? '') }}"
                                                placeholder="Enter contract title">
@@ -147,6 +147,22 @@
                         <span
                             class="input-group-text">{{ optional($award->tender?->Currency)->Code ?? $award->tender?->Currency ?? 'KES' }}</span>
                     </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Contract Tax Rule</label>
+                    <select name="contract_tax_id" class="form-select">
+                        <option value="">-- No tax --</option>
+                        @foreach(($taxRules ?? []) as $taxRule)
+                            <option value="{{ $taxRule->Id }}"
+                                @selected((string) old('contract_tax_id', $award->ContractTaxID ?? '') === (string) $taxRule->Id)>
+                                {{ $taxRule->taxType->TaxTypeName ?? 'Tax' }} ({{ number_format((float) $taxRule->Rate, 2) }}%)
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="text-muted">This rule is used by default for contract-originating AP invoices.</small>
                 </div>
             </div>
 

@@ -494,16 +494,17 @@ abstract class ApprovalWorkflowService
             // Start a SINGLE transaction for everything
             DB::beginTransaction();
 
-            // Prevent double submission
-            $existingSubmission = DB::table('t_WorkFlowHistory')
+            // Prevent double submission only when there are active pending approvers.
+            // History rows can remain with isApproved = null after transitions, so they are
+            // not reliable as a sole "already submitted" marker.
+            $hasActivePending = WorkflowPending::query()
                 ->where('Source', $table)
-                ->where('SourceID', (string)$sourceId)
-                ->where('isApproved', null)
+                ->where('SourceID', (string) $sourceId)
                 ->whereNull('DeletedOn')
-                ->first();
+                ->exists();
 
-            if ($existingSubmission) {
-                Log::warning("Already submitted", ['table' => $table, 'sourceId' => $sourceId]);
+            if ($hasActivePending) {
+                Log::warning("Already submitted (active pending exists)", ['table' => $table, 'sourceId' => $sourceId]);
                 throw new ErroredException("This item has already been submitted for approval");
             }
 

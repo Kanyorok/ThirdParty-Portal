@@ -20,6 +20,17 @@ class RFQCommitteeMember extends Model
 
     protected $primaryKey = 'Id';
 
+    // Compatibility bridge: DB uses lowercase `id`, legacy code often reads/writes `Id`.
+    public function getIdAttribute()
+    {
+        return $this->attributes['id'] ?? null;
+    }
+
+    public function setIdAttribute($value): void
+    {
+        $this->attributes['id'] = $value;
+    }
+
     protected $fillable = [
         'CommitteeID',
         'UserID',
@@ -96,7 +107,8 @@ class RFQCommitteeMember extends Model
 
     public function employee()
     {
-        return $this->user?->employee();
+        $user = $this->user ?: $this->userByEmployee;
+        return $user?->employee();
     }
 
     public function getCommitteeMemberNameAttribute(): string
@@ -106,6 +118,13 @@ class RFQCommitteeMember extends Model
 
     public function user()
     {
+        // Standard mapping: UserID stores User.Id
+        return $this->belongsTo(User::class, 'UserID', 'Id');
+    }
+
+    public function userByEmployee()
+    {
+        // Backward-compat: some legacy records saved Employee.Id into UserID
         return $this->belongsTo(User::class, 'UserID', 'EmployeeId');
     }
 

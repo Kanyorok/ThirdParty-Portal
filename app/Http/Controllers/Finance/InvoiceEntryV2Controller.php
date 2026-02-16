@@ -16,6 +16,7 @@ use App\Models\ThirdParty\ThirdParties;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Currency;
 use App\Models\Finance\FinanceTaxRuleConfiguration;
+use App\Services\Finance\ContractInvoiceEligibilityService;
 use App\Services\Finance\TransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -102,28 +103,40 @@ class InvoiceEntryV2Controller extends Controller
 
     public function getContracts()
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
+        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
         return response()->json($this->buildContractOptions());
     }
 
     public function getContractMilestones(string $type, int $id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
+        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
 
         if (!in_array($type, ['tender', 'rfq'], true)) {
             return response()->json(['error' => 'Invalid contract type.'], 422);
         }
 
-        $milestones = ContractMilestone::with('checklistItems')
+        $milestonesCollection = ContractMilestone::with('checklistItems')
             ->where('ContractSourceType', $type)
             ->where('ContractSourceID', $id)
             ->orderBy('MilestoneNo')
-            ->get()
-            ->map(function ($m) {
+            ->get();
+        $contractValue = $this->resolveContractValue($type, $id);
+
+        $billedByMilestone = $this->getMilestoneBilledTotals(
+            $milestonesCollection->pluck('Id')->map(fn ($v) => (int) $v)->all(),
+            $type,
+            $id
+        );
+
+        $milestones = $milestonesCollection->map(function ($m) use ($billedByMilestone, $contractValue) {
                 $requiredTotal = $m->checklistItems->where('Required', true)->count();
                 $requiredDone = $m->checklistItems->where('Required', true)->where('IsFulfilled', true)->count();
-                $eligible = $m->Status === 'Waived'
+                $workflowEligible = $m->Status === 'Waived'
                     || ($m->Status === 'Accepted' && $requiredTotal === $requiredDone);
+                $valueAmount = $this->getMilestoneTargetAmount($m, $contractValue);
+                $billedAmount = (float) ($billedByMilestone[(int) $m->Id] ?? 0);
+                $remainingAmount = round(max(0, $valueAmount - $billedAmount), 2);
+                $eligible = $workflowEligible && $remainingAmount > 0;
 
                 return [
                     'Id' => $m->Id,
@@ -133,17 +146,34 @@ class InvoiceEntryV2Controller extends Controller
                     'PlannedDueDate' => $m->PlannedDueDate ? $m->PlannedDueDate->format('Y-m-d') : null,
                     'ValueType' => $m->ValueType,
                     'ValuePercent' => $m->ValuePercent,
-                    'ValueAmount' => $m->ValueAmount,
+                    'ValueAmount' => $valueAmount,
+                    'ConfiguredValueAmount' => $m->ValueAmount,
+                    'BilledAmount' => $billedAmount,
+                    'RemainingAmount' => $remainingAmount,
+                    'BillableAmount' => $remainingAmount,
+                    'IsFullyBilled' => $remainingAmount <= 0.0,
                     'RequiredChecklistTotal' => $requiredTotal,
                     'RequiredChecklistFulfilled' => $requiredDone,
+                    'ChecklistItems' => $m->checklistItems->map(function ($item) {
+                        return [
+                            'Id' => $item->Id,
+                            'ItemDescription' => $item->ItemDescription,
+                            'Required' => (bool) $item->Required,
+                            'IsFulfilled' => (bool) $item->IsFulfilled,
+                            'Notes' => $item->Notes,
+                        ];
+                    })->values(),
                     'Eligible' => $eligible,
                 ];
             });
+
+        $contractTotals = $this->getContractBillingSummary($type, $id);
 
         return response()->json([
             'contract_type' => $type,
             'contract_id' => $id,
             'milestones' => $milestones,
+            'totals' => $contractTotals,
         ]);
     }
 
@@ -154,8 +184,20 @@ class InvoiceEntryV2Controller extends Controller
         $invoice = FinanceInvoiceEntry::with([
             'thirdParty:Id,ThirdPartyName,TradingName',
             'currency:Id,Name,Code,Symbol',
-            'createdBy:Id,Name'
+            'createdBy:Id,Name',
+            'milestoneAllocations.milestone.checklistItems',
         ])->findOrFail($id);
+        $isContractInvoice = strtoupper((string) ($invoice->InvoiceSourceType ?? 'PO')) === 'CONTRACT';
+        if ($isContractInvoice) {
+            app(ContractInvoiceEligibilityService::class)->refreshInvoiceHoldStatus($invoice);
+            $invoice->refresh();
+            $invoice->load([
+                'thirdParty:Id,ThirdPartyName,TradingName',
+                'currency:Id,Name,Code,Symbol',
+                'createdBy:Id,Name',
+                'milestoneAllocations.milestone.checklistItems',
+            ]);
+        }
 
         // Create mock order relationship if POId exists
         if ($invoice->POId) {
@@ -165,7 +207,10 @@ class InvoiceEntryV2Controller extends Controller
                     'Id' => $orderData->Id,
                     'OrderNo' => $orderData->OrderNo,
                     'Description' => $orderData->Description ?? '',
+                    'OrderDate' => $orderData->OrderDate ?? null,
                     'OrdTotExcl' => $orderData->OrdTotExcl ?? 0,
+                    'OrdDiscAmnt' => $orderData->OrdDiscAmnt ?? 0,
+                    'OrdTotIncl' => $orderData->OrdTotIncl ?? null,
                     'TaxPercentage' => $orderData->TaxPercentage ?? 0,
                     'TaxID' => $orderData->TaxID ?? null
                 ];
@@ -179,6 +224,8 @@ class InvoiceEntryV2Controller extends Controller
                 $invoice->grn = (object)[
                     'id' => $grnData->id,
                     'GRNID' => $grnData->GRNID,
+                    'POID' => $grnData->POID ?? null,
+                    'ReceivedDate' => $grnData->ReceivedDate ?? null,
                     'SupplierId' => $grnData->SupplierId ?? null
                 ];
                 // Log::info('GRN data loaded', ['grn_id' => $grnData->GRNID]);
@@ -191,8 +238,83 @@ class InvoiceEntryV2Controller extends Controller
 
         $poItems = collect();
         $poSub = 0.0;
+        $contractReference = null;
+        $sourceReferenceLabel = null;
+        $contractMilestoneDetails = collect();
+        $matchedPoData = null;
+        $matchedGrnData = null;
+        $matchedGrnItems = collect();
+        $matchedGrnTotals = [
+            'ordered_qty' => 0.0,
+            'received_qty' => 0.0,
+        ];
 
-        if ($invoice->order ?? false) {
+        if ($isContractInvoice) {
+            if (($invoice->ContractSourceType ?? null) === 'tender') {
+                $contractReference = TenderAward::where('Id', (int) ($invoice->ContractSourceID ?? 0))
+                        ->value('ContractRef')
+                    ?: ('TENDER-CONTRACT-' . (int) ($invoice->ContractSourceID ?? 0));
+            } elseif (($invoice->ContractSourceType ?? null) === 'rfq') {
+                $contractReference = RFQAward::where('Id', (int) ($invoice->ContractSourceID ?? 0))
+                        ->value('ContractRef')
+                    ?: ('RFQ-CONTRACT-' . (int) ($invoice->ContractSourceID ?? 0));
+            }
+
+            $poItems = $invoice->milestoneAllocations
+                ->sortBy(function ($allocation) {
+                    return (int) ($allocation->milestone->MilestoneNo ?? PHP_INT_MAX);
+                })
+                ->values()
+                ->map(function ($allocation) {
+                    $milestone = $allocation->milestone;
+                    $title = $milestone
+                        ? ('M' . ($milestone->MilestoneNo ?? '?') . ' - ' . ($milestone->Title ?? ('Milestone ' . $allocation->MilestoneID)))
+                        : ('Milestone ' . $allocation->MilestoneID);
+
+                    $descriptionParts = [];
+                    if ($milestone && !empty($milestone->PlannedDueDate)) {
+                        $descriptionParts[] = 'Due ' . \Carbon\Carbon::parse($milestone->PlannedDueDate)->format('d M Y');
+                    }
+                    if ($milestone && !empty($milestone->Status)) {
+                        $descriptionParts[] = 'Status: ' . $milestone->Status;
+                    }
+
+                    return (object) [
+                        'ItemName' => $title,
+                        'Description' => implode(' | ', $descriptionParts),
+                        'Quantity' => 1,
+                        'UnitCost' => (float) ($allocation->BilledAmount ?? 0),
+                    ];
+                });
+
+            $poSub = $poItems->sum(fn ($li) => (float) ($li->UnitCost ?? 0) * (float) ($li->Quantity ?? 0));
+            $sourceReferenceLabel = 'From Contract: ' . ($contractReference ?: 'N/A');
+
+            $contractMilestoneDetails = $invoice->milestoneAllocations
+                ->sortBy(function ($allocation) {
+                    return (int) ($allocation->milestone->MilestoneNo ?? PHP_INT_MAX);
+                })
+                ->values()
+                ->map(function ($allocation) {
+                    $milestone = $allocation->milestone;
+                    $checklistItems = $milestone?->checklistItems ?? collect();
+
+                    $requiredTotal = $checklistItems->where('Required', true)->count();
+                    $requiredDone = $checklistItems->where('Required', true)->where('IsFulfilled', true)->count();
+
+                    return (object) [
+                        'MilestoneID' => (int) ($allocation->MilestoneID ?? 0),
+                        'MilestoneNo' => (int) ($milestone->MilestoneNo ?? 0),
+                        'Title' => $milestone->Title ?? ('Milestone ' . (int) ($allocation->MilestoneID ?? 0)),
+                        'Status' => $milestone->Status ?? null,
+                        'PlannedDueDate' => $milestone?->PlannedDueDate,
+                        'BilledAmount' => (float) ($allocation->BilledAmount ?? 0),
+                        'RequiredChecklistTotal' => (int) $requiredTotal,
+                        'RequiredChecklistFulfilled' => (int) $requiredDone,
+                        'ChecklistItems' => $checklistItems->values(),
+                    ];
+                });
+        } elseif ($invoice->order ?? false) {
             $poItems = DB::table('t_OrderLines as ol')
                 ->leftJoin('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
                 ->where('ol.iOrderID', $invoice->order->Id)
@@ -205,7 +327,74 @@ class InvoiceEntryV2Controller extends Controller
                 ->get();
 
             $poSub = $poItems->sum(fn($li) => (float)($li->UnitCost ?? 0) * (float)($li->Quantity ?? 0));
+            $sourceReferenceLabel = 'From PO: ' . ($invoice->order->OrderNo ?? '—');
+
+            $ordTotExcl = (float) ($invoice->order->OrdTotExcl ?? 0);
+            $ordTaxPct = (float) ($invoice->order->TaxPercentage ?? 0);
+            $ordTotIncl = (float) ($invoice->order->OrdTotIncl ?? 0);
+            if ($ordTotIncl <= 0) {
+                $ordTotIncl = round($ordTotExcl + ($ordTotExcl * ($ordTaxPct / 100)), 2);
+            }
+
+            $matchedPoData = (object) [
+                'OrderNo' => $invoice->order->OrderNo ?? null,
+                'OrderDate' => $invoice->order->OrderDate ?? null,
+                'OrdTotExcl' => $ordTotExcl,
+                'OrdDiscAmnt' => (float) ($invoice->order->OrdDiscAmnt ?? 0),
+                'OrdTotIncl' => $ordTotIncl,
+                'TaxPercentage' => $ordTaxPct,
+            ];
+
+            if ($invoice->grn ?? false) {
+                $matchedGrnRows = DB::table('t_GoodsReceipts as gr')
+                    ->leftJoin('t_Items as i', 'gr.iStockCodeID', '=', 'i.Id')
+                    ->where('gr.GRNID', (string) ($invoice->grn->GRNID ?? ''))
+                    ->select(
+                        'gr.GRNID',
+                        'gr.POID',
+                        'gr.ReceivedDate',
+                        DB::raw("COALESCE(i.ItemName, 'Item') as ItemName"),
+                        DB::raw('COALESCE(gr.POQTY, 0) as POQTY'),
+                        DB::raw('COALESCE(gr.ReceivedQTY, 0) as ReceivedQTY')
+                    )
+                    ->get();
+
+                if ($matchedGrnRows->isNotEmpty()) {
+                    $firstGrn = $matchedGrnRows->first();
+                    $matchedGrnData = (object) [
+                        'GRNID' => $firstGrn->GRNID,
+                        'POID' => $firstGrn->POID,
+                        'ReceivedDate' => $firstGrn->ReceivedDate,
+                    ];
+
+                    $matchedGrnItems = $matchedGrnRows->map(function ($row) {
+                        return (object) [
+                            'ItemName' => $row->ItemName,
+                            'POQTY' => (float) ($row->POQTY ?? 0),
+                            'ReceivedQTY' => (float) ($row->ReceivedQTY ?? 0),
+                        ];
+                    })->values();
+
+                    $matchedGrnTotals = [
+                        'ordered_qty' => (float) $matchedGrnItems->sum('POQTY'),
+                        'received_qty' => (float) $matchedGrnItems->sum('ReceivedQTY'),
+                    ];
+                } else {
+                    $matchedGrnData = (object) [
+                        'GRNID' => $invoice->grn->GRNID ?? null,
+                        'POID' => $invoice->grn->POID ?? null,
+                        'ReceivedDate' => $invoice->grn->ReceivedDate ?? null,
+                    ];
+                }
+            }
+        } else {
+            $sourceReferenceLabel = 'From PO: —';
         }
+
+        $invoiceBeforeTax = round((float) ($invoice->InvoiceAmount ?? $poSub), 2);
+        $invoiceTaxPct = round((float) ($invoice->TaxPercentage ?? 0), 4);
+        $invoiceTaxAmount = round((float) ($invoice->TaxAmount ?? 0), 2);
+        $invoiceAfterTax = round((float) ($invoice->TotalAmount ?? ($invoiceBeforeTax + $invoiceTaxAmount)), 2);
 
         // Prepare view data exactly like original controller
         $viewData = [
@@ -221,6 +410,18 @@ class InvoiceEntryV2Controller extends Controller
             'poNo'           => $invoice->order->OrderNo ?? '—',
             'grnNo'          => $invoice->grn->GRNID ?? '—',
             'poSub'          => $poSub,
+            'isContractInvoice' => $isContractInvoice,
+            'contractReference' => $contractReference,
+            'sourceReferenceLabel' => $sourceReferenceLabel,
+            'invoiceBeforeTax' => $invoiceBeforeTax,
+            'invoiceTaxPct' => $invoiceTaxPct,
+            'invoiceTaxAmount' => $invoiceTaxAmount,
+            'invoiceAfterTax' => $invoiceAfterTax,
+            'contractMilestoneDetails' => $contractMilestoneDetails,
+            'matchedPoData' => $matchedPoData,
+            'matchedGrnData' => $matchedGrnData,
+            'matchedGrnItems' => $matchedGrnItems,
+            'matchedGrnTotals' => $matchedGrnTotals,
         ];
 
         // Remove debug logging in production
@@ -247,10 +448,12 @@ class InvoiceEntryV2Controller extends Controller
                 ], 200);
             }
 
-            // Quick search in ThirdParties and join with Suppliers
+            // Quick search in ThirdParties through SupplierMaster:
+            // t_Suppliers -> t_SupplierMaster -> t_ThirdParties
             // Collapse duplicates by ThirdPartyID (choose a stable SupplierID via MIN)
-            $suppliers = DB::table('t_ThirdParties as tp')
-                ->join('t_Suppliers as s', 's.ThirdPartyID', '=', 'tp.Id')
+            $suppliers = DB::table('t_Suppliers as s')
+                ->join('t_SupplierMaster as sm', 'sm.Id', '=', 's.SupplierMasterId')
+                ->join('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
                 ->where(function($query) use ($q) {
                     $query->where('tp.RegistrationNumber', 'like', "%{$q}%")
                           ->orWhere('tp.Email', 'like', "%{$q}%")
@@ -260,7 +463,7 @@ class InvoiceEntryV2Controller extends Controller
                 })
                 ->select(
                     DB::raw('MIN(s.Id) as SupplierID'),
-                    'tp.Id as ThirdPartyID',
+                    'sm.ThirdPartyId as ThirdPartyID',
                     'tp.ThirdPartyName',
                     'tp.TradingName',
                     'tp.RegistrationNumber',
@@ -268,7 +471,7 @@ class InvoiceEntryV2Controller extends Controller
                     'tp.Phone'
                 )
                 ->groupBy(
-                    'tp.Id',
+                    'sm.ThirdPartyId',
                     'tp.ThirdPartyName',
                     'tp.TradingName',
                     'tp.RegistrationNumber',
@@ -338,12 +541,13 @@ class InvoiceEntryV2Controller extends Controller
                 $supplierId = $request->supplier_id;
 
                 // Get supplier details by ID
-                $supplier = DB::table('t_ThirdParties as tp')
-                    ->join('t_Suppliers as s', 's.ThirdPartyID', '=', 'tp.Id')
+                $supplier = DB::table('t_Suppliers as s')
+                    ->join('t_SupplierMaster as sm', 'sm.Id', '=', 's.SupplierMasterId')
+                    ->join('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
                     ->where('s.Id', $supplierId)
                     ->select(
                         's.Id as SupplierID',
-                        'tp.Id as ThirdPartyID',
+                        'sm.ThirdPartyId as ThirdPartyID',
                         'tp.ThirdPartyName',
                         'tp.TradingName',
                         'tp.RegistrationNumber',
@@ -359,8 +563,9 @@ class InvoiceEntryV2Controller extends Controller
                 $q = trim((string) $request->search_term);
 
                 // Search in ThirdParties and join with Suppliers - Search in all relevant fields
-                $supplier = DB::table('t_ThirdParties as tp')
-                    ->join('t_Suppliers as s', 's.ThirdPartyID', '=', 'tp.Id')
+                $supplier = DB::table('t_Suppliers as s')
+                    ->join('t_SupplierMaster as sm', 'sm.Id', '=', 's.SupplierMasterId')
+                    ->join('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
                     ->where(function($query) use ($q) {
                         $query->where('tp.RegistrationNumber', $q)
                               ->orWhere('tp.Email', $q)
@@ -372,7 +577,7 @@ class InvoiceEntryV2Controller extends Controller
                     ->where('s.Active_Status', 1) // Only active suppliers
                     ->select(
                         's.Id as SupplierID',
-                        'tp.Id as ThirdPartyID',
+                        'sm.ThirdPartyId as ThirdPartyID',
                         'tp.ThirdPartyName',
                         'tp.TradingName',
                         'tp.RegistrationNumber',
@@ -398,7 +603,8 @@ class InvoiceEntryV2Controller extends Controller
             // Get related Purchase Orders for this ThirdParty via Supplier join, excluding those already used in invoices
             $orders = DB::table('t_Orders as o')
                 ->join('t_Suppliers as s', 'o.AccountID', '=', 's.Id')
-                ->where('s.ThirdPartyID', '=', (int) $supplier->ThirdPartyID)
+                ->join('t_SupplierMaster as sm', 'sm.Id', '=', 's.SupplierMasterId')
+                ->where('sm.ThirdPartyId', '=', (int) $supplier->ThirdPartyID)
                 ->whereNotIn('o.Id', $existingPOIds)
                 ->select(
                     'o.Id',
@@ -450,7 +656,8 @@ class InvoiceEntryV2Controller extends Controller
             $grns = DB::table('t_GoodsReceipts as gr')
                 ->join('t_Orders as o', 'gr.POID', '=', 'o.OrderNo')
                 ->join('t_Suppliers as s', 'o.AccountID', '=', 's.Id')
-                ->where('s.ThirdPartyID', '=', (int) $supplier->ThirdPartyID)
+                ->join('t_SupplierMaster as sm', 'sm.Id', '=', 's.SupplierMasterId')
+                ->where('sm.ThirdPartyId', '=', (int) $supplier->ThirdPartyID)
                 ->where('gr.InspectionStatus', '=', 'p') // Posted only
                 ->select(
                     'gr.GRNID',
@@ -626,7 +833,7 @@ class InvoiceEntryV2Controller extends Controller
                     'Amount' => 'required|numeric|min:0.01',
                     'Description' => 'nullable|string',
                     'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
-                    'TaxID' => 'nullable|exists:t_FinanceTaxRuleConfiguration,Id',
+                    'TaxID' => 'nullable|integer',
                     'CurrencyID' => 'nullable|exists:t_Currencies,Id',
                     'ExchangeRate' => 'nullable|numeric|min:0.0001',
                 ]);
@@ -634,6 +841,10 @@ class InvoiceEntryV2Controller extends Controller
                 $contractType = strtolower($validated['ContractSourceType']);
                 $contractId = (int) $validated['ContractSourceID'];
                 $milestoneIds = array_values(array_unique(array_map('intval', $validated['MilestoneIDs'] ?? [])));
+                $requestedTaxId = !empty($validated['TaxID']) ? (int) $validated['TaxID'] : null;
+                if (!empty($requestedTaxId) && !FinanceTaxRuleConfiguration::where('Id', $requestedTaxId)->exists()) {
+                    $requestedTaxId = null;
+                }
 
                 $party = $this->resolveContractParty($contractType, $contractId);
                 if (!$party) {
@@ -655,19 +866,43 @@ class InvoiceEntryV2Controller extends Controller
                     ]);
                 }
 
-                $eligibility = $this->evaluateContractEligibility($contractType, $contractId, $milestones, (float) $validated['Amount']);
-                $tax = $this->computeTax((float) $validated['Amount'], $validated['TaxID'] ?? null);
-                [$fallbackPoId, $fallbackGrnId] = $this->resolveFallbackReferences();
+                $contractValue = $this->resolveContractValue($contractType, $contractId);
+                $billedByMilestone = $this->getMilestoneBilledTotals($milestoneIds, $contractType, $contractId);
+                $remainingByMilestone = [];
+                foreach ($milestones as $milestone) {
+                    $milestoneValue = $this->getMilestoneTargetAmount($milestone, $contractValue);
+                    $alreadyBilled = (float) ($billedByMilestone[(int) $milestone->Id] ?? 0);
+                    $remainingByMilestone[(int) $milestone->Id] = round(max(0, $milestoneValue - $alreadyBilled), 2);
+                }
 
-                if ($fallbackPoId === null || $fallbackGrnId === null) {
+                $selectedBillableTotal = round(array_sum($remainingByMilestone), 2);
+                if ($selectedBillableTotal <= 0) {
                     throw ValidationException::withMessages([
-                        'ContractSourceID' => 'Cannot create contract invoice because fallback PO/GRN references are missing.',
+                        'MilestoneIDs' => 'Selected milestones are already fully billed.',
                     ]);
                 }
 
-                $invoice = FinanceInvoiceEntry::create([
+                $invoiceAmount = round((float) $validated['Amount'], 2);
+                if ($invoiceAmount - $selectedBillableTotal > 0.009) {
+                    throw ValidationException::withMessages([
+                        'Amount' => 'Invoice amount exceeds selected milestones remaining billable value (' . number_format($selectedBillableTotal, 2) . ').',
+                    ]);
+                }
+
+                $eligibility = $this->evaluateContractEligibility($contractType, $contractId, $milestones, (float) $validated['Amount']);
+                $contractTaxId = $this->resolveContractTaxId($contractType, $contractId);
+                $taxIdToUse = $contractTaxId ?? $requestedTaxId;
+                $tax = $this->computeTax((float) $validated['Amount'], $taxIdToUse);
+                [$fallbackPoId, $fallbackGrnId] = $this->resolveFallbackReferences((int) ($party['supplier_id'] ?? 0));
+
+                if ($fallbackPoId === null || $fallbackGrnId === null) {
+                    throw ValidationException::withMessages([
+                        'ContractSourceID' => 'Cannot create contract invoice because fallback PO/GRN references could not be generated.',
+                    ]);
+                }
+
+                $invoicePayload = [
                     'SupplierID' => $party['supplier_ref'],
-                    'ThirdPartyID' => $party['third_party_id'],
                     'POId' => $fallbackPoId,
                     'POReference' => $fallbackPoId,
                     'GRNId' => $fallbackGrnId,
@@ -679,7 +914,7 @@ class InvoiceEntryV2Controller extends Controller
                     'TaxAmount' => $tax['TaxAmount'],
                     'TaxPercentage' => $tax['TaxPercentage'],
                     'Description' => $validated['Description'] ?? null,
-                    'TaxID' => $validated['TaxID'] ?? null,
+                    'TaxID' => $taxIdToUse,
                     'TotalAmount' => $tax['TotalAmount'],
                     'CurrencyID' => $validated['CurrencyID'] ?? 56,
                     'ExchangeRate' => $validated['ExchangeRate'] ?? 1.0,
@@ -697,21 +932,42 @@ class InvoiceEntryV2Controller extends Controller
                     'CreatedOn' => now(),
                     'ModifiedBy' => Auth::id(),
                     'ModifiedOn' => now(),
-                ]);
+                ];
 
-                $count = max(1, $milestones->count());
-                $baseAllocation = round(((float) $validated['Amount']) / $count, 2);
-                $allocatedTotal = 0.0;
-                foreach ($milestones as $index => $milestone) {
-                    $amount = $index === ($count - 1)
-                        ? round(((float) $validated['Amount']) - $allocatedTotal, 2)
-                        : $baseAllocation;
-                    $allocatedTotal += $amount;
+                if (Schema::hasColumn('t_FinanceInvoiceEntry', 'ThirdPartyID')) {
+                    $invoicePayload['ThirdPartyID'] = $party['third_party_id'];
+                }
+
+                $invoice = FinanceInvoiceEntry::create($invoicePayload);
+
+                $remainingToAllocate = $invoiceAmount;
+                foreach ($milestones as $milestone) {
+                    if ($remainingToAllocate <= 0) {
+                        break;
+                    }
+
+                    $cap = (float) ($remainingByMilestone[(int) $milestone->Id] ?? 0);
+                    if ($cap <= 0) {
+                        continue;
+                    }
+
+                    $allocation = round(min($cap, $remainingToAllocate), 2);
+                    if ($allocation <= 0) {
+                        continue;
+                    }
 
                     APInvoiceMilestone::create([
                         'FinanceInvoiceID' => $invoice->Id,
                         'MilestoneID' => $milestone->Id,
-                        'BilledAmount' => $amount,
+                        'BilledAmount' => $allocation,
+                    ]);
+
+                    $remainingToAllocate = round($remainingToAllocate - $allocation, 2);
+                }
+
+                if ($remainingToAllocate > 0.009) {
+                    throw ValidationException::withMessages([
+                        'Amount' => 'Invoice amount could not be fully allocated to selected milestones remaining value.',
                     ]);
                 }
 
@@ -839,10 +1095,15 @@ class InvoiceEntryV2Controller extends Controller
 
     private function buildContractOptions()
     {
-        $tenderContracts = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
-            ->whereIn('ContractStatus', ['Approved', 'Executed'])
+        $invoiceEligibleStatuses = ['Approved', 'Ap', 'Executed', 'Ex', 'Contract Approved'];
+
+        $tenderContracts = TenderAward::with(['tender', 'winningSupplier.thirdParty', 'contractTaxRule.taxType'])
+            ->whereIn('ContractStatus', $invoiceEligibleStatuses)
             ->get()
             ->map(function ($award) {
+                $summary = $this->getContractBillingSummary('tender', (int) $award->Id);
+                $resolvedTaxId = $this->resolveContractTaxId('tender', (int) $award->Id);
+                $taxRule = $resolvedTaxId ? $award->contractTaxRule : null;
                 return [
                     'type' => 'tender',
                     'id' => $award->Id,
@@ -850,14 +1111,25 @@ class InvoiceEntryV2Controller extends Controller
                     'title' => $award->tender?->Title ?? 'Tender Contract',
                     'supplier' => $this->resolveSupplierNameById((int) ($award->WinningSupplierID ?? 0)),
                     'value' => (float) ($award->ContractValue ?? 0),
+                    'contract_total_value' => $summary['contract_total'],
+                    'billed_value' => $summary['billed_total'],
+                    'remaining_value' => $summary['remaining_total'],
+                    'active_for_invoicing' => $summary['remaining_total'] > 0 || $summary['contract_total'] <= 0,
                     'status' => $award->ContractStatus,
+                    'tax_id' => $resolvedTaxId,
+                    'tax_name' => $taxRule?->taxType?->TaxTypeName,
+                    'tax_rate' => $taxRule?->Rate,
                 ];
-            });
+            })
+            ->filter(fn ($contract) => (bool) ($contract['active_for_invoicing'] ?? false));
 
-        $rfqContracts = RFQAward::with(['rfq', 'supplier.supplierMaster.party'])
-            ->whereIn('ContractStatus', ['Approved', 'Executed'])
+        $rfqContracts = RFQAward::with(['rfq', 'supplier.supplierMaster.party', 'contractTaxRule.taxType'])
+            ->whereIn('ContractStatus', $invoiceEligibleStatuses)
             ->get()
             ->map(function ($award) {
+                $summary = $this->getContractBillingSummary('rfq', (int) $award->Id);
+                $resolvedTaxId = $this->resolveContractTaxId('rfq', (int) $award->Id);
+                $taxRule = $resolvedTaxId ? $award->contractTaxRule : null;
                 return [
                     'type' => 'rfq',
                     'id' => $award->Id,
@@ -865,9 +1137,17 @@ class InvoiceEntryV2Controller extends Controller
                     'title' => $award->rfq?->Subject ?? 'RFQ Contract',
                     'supplier' => $this->resolveSupplierNameById((int) ($award->SupplierId ?? 0)),
                     'value' => (float) ($award->ContractValue ?? 0),
+                    'contract_total_value' => $summary['contract_total'],
+                    'billed_value' => $summary['billed_total'],
+                    'remaining_value' => $summary['remaining_total'],
+                    'active_for_invoicing' => $summary['remaining_total'] > 0 || $summary['contract_total'] <= 0,
                     'status' => $award->ContractStatus,
+                    'tax_id' => $resolvedTaxId,
+                    'tax_name' => $taxRule?->taxType?->TaxTypeName,
+                    'tax_rate' => $taxRule?->Rate,
                 ];
-            });
+            })
+            ->filter(fn ($contract) => (bool) ($contract['active_for_invoicing'] ?? false));
 
         return $tenderContracts
             ->merge($rfqContracts)
@@ -895,9 +1175,17 @@ class InvoiceEntryV2Controller extends Controller
             return null;
         }
 
-        $thirdPartyId = DB::table('t_Suppliers')
-            ->where('Id', $supplierId)
-            ->value('ThirdPartyID');
+        $thirdPartyId = DB::table('t_Suppliers as s')
+            ->join('t_SupplierMaster as sm', 'sm.Id', '=', 's.SupplierMasterId')
+            ->where('s.Id', $supplierId)
+            ->value('sm.ThirdPartyId');
+
+        // Fallback: some contract records may already carry SupplierMaster.Id.
+        if (!$thirdPartyId) {
+            $thirdPartyId = DB::table('t_SupplierMaster')
+                ->where('Id', $supplierId)
+                ->value('ThirdPartyId');
+        }
 
         // Keep backward compatibility with existing AP behavior where SupplierID stores ThirdPartyID.
         $supplierRef = (int) ($thirdPartyId ?: $supplierId);
@@ -906,6 +1194,111 @@ class InvoiceEntryV2Controller extends Controller
             'supplier_id' => $supplierId,
             'third_party_id' => (int) ($thirdPartyId ?: $supplierRef),
             'supplier_ref' => $supplierRef,
+        ];
+    }
+
+    private function resolveContractTaxId(string $type, int $contractId): ?int
+    {
+        if ($type === 'tender') {
+            $taxId = TenderAward::where('Id', $contractId)->value('ContractTaxID');
+        } else {
+            $taxId = RFQAward::where('Id', $contractId)->value('ContractTaxID');
+        }
+
+        $taxId = $taxId ? (int) $taxId : null;
+        if (!$taxId) {
+            return null;
+        }
+
+        $exists = FinanceTaxRuleConfiguration::where('Id', $taxId)->exists();
+        return $exists ? $taxId : null;
+    }
+
+    private function getMilestoneBilledTotals(array $milestoneIds, ?string $contractType = null, ?int $contractId = null): array
+    {
+        $milestoneIds = array_values(array_unique(array_filter(array_map('intval', $milestoneIds), fn ($id) => $id > 0)));
+        if (empty($milestoneIds)) {
+            return [];
+        }
+
+        $query = DB::table('t_APInvoiceMilestones as aim')
+            ->join('t_FinanceInvoiceEntry as fi', 'fi.Id', '=', 'aim.FinanceInvoiceID')
+            ->whereIn('aim.MilestoneID', $milestoneIds)
+            ->whereNull('fi.DeletedOn');
+
+        if (Schema::hasColumn('t_FinanceInvoiceEntry', 'InvoiceSourceType')) {
+            $query->where('fi.InvoiceSourceType', 'CONTRACT');
+        }
+        if (!empty($contractType) && Schema::hasColumn('t_FinanceInvoiceEntry', 'ContractSourceType')) {
+            $query->where('fi.ContractSourceType', $contractType);
+        }
+        if (!empty($contractId) && Schema::hasColumn('t_FinanceInvoiceEntry', 'ContractSourceID')) {
+            $query->where('fi.ContractSourceID', (int) $contractId);
+        }
+
+        return $query
+            ->groupBy('aim.MilestoneID')
+            ->select('aim.MilestoneID', DB::raw('SUM(COALESCE(aim.BilledAmount, 0)) as BilledTotal'))
+            ->pluck('BilledTotal', 'aim.MilestoneID')
+            ->map(fn ($v) => (float) $v)
+            ->toArray();
+    }
+
+    private function resolveContractValue(string $contractType, int $contractId): float
+    {
+        if ($contractType === 'tender') {
+            $value = TenderAward::where('Id', $contractId)->value('ContractValue');
+        } else {
+            $value = RFQAward::where('Id', $contractId)->value('ContractValue');
+        }
+
+        return (float) ($value ?? 0);
+    }
+
+    private function getMilestoneTargetAmount(ContractMilestone $milestone, float $contractValue): float
+    {
+        if (strtoupper((string) $milestone->ValueType) === 'PERCENT') {
+            $percent = (float) ($milestone->ValuePercent ?? 0);
+            return round(max(0, $contractValue * ($percent / 100)), 2);
+        }
+
+        return round(max(0, (float) ($milestone->ValueAmount ?? 0)), 2);
+    }
+
+    private function getContractBillingSummary(string $contractType, int $contractId): array
+    {
+        $contractValue = $this->resolveContractValue($contractType, $contractId);
+        $milestones = ContractMilestone::query()
+            ->where('ContractSourceType', $contractType)
+            ->where('ContractSourceID', $contractId)
+            ->get(['Id', 'ValueType', 'ValuePercent', 'ValueAmount']);
+
+        $contractTotal = round(
+            $milestones->sum(fn ($m) => $this->getMilestoneTargetAmount($m, $contractValue)),
+            2
+        );
+
+        $billedQuery = DB::table('t_APInvoiceMilestones as aim')
+            ->join('t_FinanceInvoiceEntry as fi', 'fi.Id', '=', 'aim.FinanceInvoiceID')
+            ->whereNull('fi.DeletedOn');
+
+        if (Schema::hasColumn('t_FinanceInvoiceEntry', 'InvoiceSourceType')) {
+            $billedQuery->where('fi.InvoiceSourceType', 'CONTRACT');
+        }
+        if (Schema::hasColumn('t_FinanceInvoiceEntry', 'ContractSourceType')) {
+            $billedQuery->where('fi.ContractSourceType', $contractType);
+        }
+        if (Schema::hasColumn('t_FinanceInvoiceEntry', 'ContractSourceID')) {
+            $billedQuery->where('fi.ContractSourceID', $contractId);
+        }
+
+        $billedTotal = (float) $billedQuery->sum(DB::raw('COALESCE(aim.BilledAmount, 0)'));
+        $remainingTotal = round(max(0, $contractTotal - $billedTotal), 2);
+
+        return [
+            'contract_total' => round($contractTotal, 2),
+            'billed_total' => round($billedTotal, 2),
+            'remaining_total' => $remainingTotal,
         ];
     }
 
@@ -1000,12 +1393,103 @@ class InvoiceEntryV2Controller extends Controller
         ];
     }
 
-    private function resolveFallbackReferences(): array
+    private function resolveFallbackReferences(?int $preferredSupplierId = null): array
     {
         $poId = DB::table('t_Orders')->orderBy('Id')->value('Id');
+        if (!$poId) {
+            $poId = $this->createContractFallbackOrder();
+        }
+
         $grnId = DB::table('t_GoodsReceipts')->orderBy('id')->value('id');
+        if (!$grnId) {
+            $grnId = $this->createContractFallbackGrn($preferredSupplierId, $poId ? (int) $poId : null);
+        }
 
         return [$poId ? (int) $poId : null, $grnId ? (int) $grnId : null];
+    }
+
+    private function createContractFallbackOrder(): ?int
+    {
+        $actorId = Auth::id() ?: DB::table('t_Users')->orderBy('Id')->value('Id');
+        if (!$actorId) {
+            Log::warning('Unable to create contract fallback order: no user available.');
+            return null;
+        }
+
+        $now = now();
+        $orderNo = 'CONTRACT-FB-' . $now->format('YmdHis');
+
+        try {
+            return (int) DB::table('t_Orders')->insertGetId([
+                'OrderNo' => $orderNo,
+                'Description' => 'System fallback order for contract invoices',
+                'OrderDate' => $now,
+                'CreatedBy' => (int) $actorId,
+                'CreatedOn' => $now,
+                'ModifiedBy' => (int) $actorId,
+                'ModifiedOn' => $now,
+            ], 'Id');
+        } catch (\Throwable $e) {
+            Log::error('Failed to create contract fallback order', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    private function createContractFallbackGrn(?int $preferredSupplierId, ?int $poId): ?int
+    {
+        $actorId = Auth::id() ?: DB::table('t_Users')->orderBy('Id')->value('Id');
+        if (!$actorId) {
+            Log::warning('Unable to create contract fallback GRN: no user available.');
+            return null;
+        }
+
+        $supplierId = $this->resolveFallbackSupplierId($preferredSupplierId);
+        if (!$supplierId) {
+            Log::warning('Unable to create contract fallback GRN: no supplier available.', ['preferred_supplier_id' => $preferredSupplierId]);
+            return null;
+        }
+
+        $now = now();
+        $poCode = $poId ? (string) (DB::table('t_Orders')->where('Id', $poId)->value('OrderNo') ?: $poId) : 'CONTRACT-FB';
+        $grnCode = 'GRN-FB-' . $now->format('YmdHis');
+
+        try {
+            return (int) DB::table('t_GoodsReceipts')->insertGetId([
+                'GRNID' => $grnCode,
+                'POID' => $poCode,
+                'SupplierId' => (int) $supplierId,
+                'ReceivedDate' => $now,
+                'InspectionStatus' => 'p',
+                'CreatedBy' => (int) $actorId,
+                'CreatedOn' => $now,
+                'ModifiedBy' => (int) $actorId,
+                'ModifiedOn' => $now,
+            ], 'id');
+        } catch (\Throwable $e) {
+            Log::error('Failed to create contract fallback GRN', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    private function resolveFallbackSupplierId(?int $preferredSupplierId): ?int
+    {
+        if (!empty($preferredSupplierId)) {
+            $direct = DB::table('t_Suppliers')->where('Id', (int) $preferredSupplierId)->value('Id');
+            if ($direct) {
+                return (int) $direct;
+            }
+
+            $fromMaster = DB::table('t_Suppliers')
+                ->where('SupplierMasterId', (int) $preferredSupplierId)
+                ->orderBy('Id')
+                ->value('Id');
+            if ($fromMaster) {
+                return (int) $fromMaster;
+            }
+        }
+
+        $first = DB::table('t_Suppliers')->orderBy('Id')->value('Id');
+        return $first ? (int) $first : null;
     }
 
     private function resolveSupplierNameById(int $supplierId): string
@@ -1015,7 +1499,8 @@ class InvoiceEntryV2Controller extends Controller
         }
 
         $row = DB::table('t_Suppliers as s')
-            ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+            ->leftJoin('t_SupplierMaster as sm', 'sm.Id', '=', 's.SupplierMasterId')
+            ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
             ->where('s.Id', $supplierId)
             ->selectRaw("COALESCE(tp.TradingName, tp.ThirdPartyName, 'N/A') as SupplierName")
             ->first();
@@ -1076,10 +1561,11 @@ class InvoiceEntryV2Controller extends Controller
 
         // Suppliers: fetch from suppliers joined to third parties for the dropdown
         $suppliers = DB::table('t_Suppliers as s')
-            ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+            ->leftJoin('t_SupplierMaster as sm', 'sm.Id', '=', 's.SupplierMasterId')
+            ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
             ->select(
                 's.Id',
-                's.ThirdPartyID',
+                'sm.ThirdPartyId as ThirdPartyID',
                 DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName, 'Unknown Supplier') as SupplierName")
             )
             ->get();

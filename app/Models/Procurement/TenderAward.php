@@ -4,6 +4,7 @@ namespace App\Models\Procurement;
 
 use App\Enums\TenderStatusEnum;
 use App\Models\Auth\User;
+use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Models\ThirdParies\Supplier;
 use App\Models\Core\Approval\WorkflowHistory;
 use App\Traits\Model\UserActorTrait;
@@ -55,6 +56,7 @@ class TenderAward extends Model
         'ContractStatus',
         'ContractRef',
         'ContractValue',
+        'ContractTaxID',
         'ContractRequestRef',
         'PaymentTerms',
         'DeliveryTerms',
@@ -83,6 +85,7 @@ class TenderAward extends Model
         'DeletedOn' => 'datetime',
         // Contract Management Casts
         'ContractValue' => 'decimal:2',
+        'ContractTaxID' => 'integer',
         'ContractApprovedOn' => 'datetime',
         'TerminationDate' => 'date',
     ];
@@ -133,6 +136,11 @@ class TenderAward extends Model
     {
         return $this->hasMany(ContractPenaltyRule::class, 'ContractSourceID', 'Id')
             ->where('ContractSourceType', 'tender');
+    }
+
+    public function contractTaxRule(): BelongsTo
+    {
+        return $this->belongsTo(FinanceTaxRuleConfiguration::class, 'ContractTaxID', 'Id');
     }
 
     // Scopes

@@ -45,6 +45,18 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
+                @if(session('warning'))
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>{{ session('warning') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+                @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-times-circle me-2"></i>{{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
 
                 <!-- Contract Status Card -->
                 <div class="row mb-4">
@@ -304,6 +316,28 @@
                                 @endif
                             </div>
                         </div>
+                        <div class="mt-3">
+                            <h6 class="text-primary">Tax Rule</h6>
+                            <div class="bg-light p-3 rounded">
+                                @if(!empty($contract->contractTaxRule))
+                                    <div><strong>Rule:</strong> {{ $contract->contractTaxRule->taxType->TaxTypeName ?? 'Tax' }}</div>
+                                    <div><strong>Rate:</strong> {{ number_format((float) ($contract->contractTaxRule->Rate ?? 0), 2) }}%</div>
+                                @else
+                                    <span class="text-muted">No contract tax rule configured.</span>
+                                @endif
+                            </div>
+                        </div>
+                        @if(($type ?? 'tender') === 'tender')
+                            <div class="mt-3">
+                                <h6 class="text-primary">Milestones and Checklist</h6>
+                                <div class="bg-light p-3 rounded d-flex justify-content-between align-items-center">
+                                    <span>Manage milestones, checklist fulfillment, and acceptance in Contract Lifecycle Execution.</span>
+                                    <a href="{{ route('contracts.lifecycle.execution', $contract->Id) }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-list-check me-1"></i> Manage Milestones
+                                    </a>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -314,17 +348,36 @@
                             <h5 class="card-title mb-0">⚡ Contract Actions</h5>
                         </div>
                         <div class="card-body">
+                            @php
+                                $canSubmitForReview = in_array((string) $contract->ContractStatus, ['Draft Created', 'Dr', 'Rejected', 'Re'], true)
+                                    && empty($hasPendingWorkflow);
+                                $underReviewPending = !empty($hasPendingWorkflow)
+                                    || in_array((string) $contract->ContractStatus, ['Under Review', 'rv'], true);
+                            @endphp
                             <div class="row">
-                                @if($contract->ContractStatus === 'Draft Created')
+                                @if($canSubmitForReview)
                                     <div class="col-md-3">
                                         <button class="btn btn-success w-100" onclick="submitForReview()">
                                             <i class="fas fa-paper-plane"></i>
                                             Submit for Review
                                         </button>
                                     </div>
+                                @elseif($underReviewPending && !$canApprove)
+                                    <div class="col-md-3">
+                                        <button class="btn btn-secondary w-100" disabled title="Already submitted and awaiting review">
+                                            <i class="fas fa-hourglass-half"></i>
+                                            Under Review
+                                        </button>
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <div class="small text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Approval action is hidden because your current branch/session does not have the required workflow approval permission.
+                                        </div>
+                                    </div>
                                 @endif
 
-                                @if($contract->ContractStatus === 'Under Review' && $canApprove)
+                                @if($underReviewPending && $canApprove)
                                     <div class="col-md-3">
                                         <button class="btn btn-success w-100" onclick="showApproveModal()">
                                             <i class="fas fa-check-circle"></i>

@@ -499,11 +499,22 @@ class RFQEvaluationController extends Controller
             return response()->json(['error' => 'RFQ not found'], 404);
         }
 
+        $currentUserId = optional(auth()->user())->Id;
         $employeeId = optional(auth()->user())->EmployeeId ?? optional(auth()->user()?->employee)->Id;
 
-        $member = RFQCommitteeMember::with('user.employee')
+        $member = RFQCommitteeMember::with(['user.employee', 'userByEmployee.employee'])
             ->where('RFQID', $rfq->Id)
-            ->where('UserID', $employeeId)
+            ->where(function ($query) use ($currentUserId, $employeeId) {
+                if ($currentUserId) {
+                    $query->orWhere('UserID', $currentUserId);
+                }
+                if ($employeeId) {
+                    $query->orWhere('UserID', $employeeId);
+                }
+                if (!$currentUserId && !$employeeId) {
+                    $query->whereRaw('1 = 0');
+                }
+            })
             ->where('Response', 1)
             ->first();
 
@@ -511,9 +522,11 @@ class RFQEvaluationController extends Controller
             return response()->json(['error' => 'User not part of committee or has not accepted the appointment']);
         }
 
+        $resolvedUser = $member->user ?: $member->userByEmployee;
+
         return response()->json([
-            'CommitteeMember' => $member->user->Name,
-            'UserID' => $member->UserID
+            'CommitteeMember' => $resolvedUser->Name ?? 'N/A',
+            'UserID' => $member->UserID,
         ]);
     }
 }

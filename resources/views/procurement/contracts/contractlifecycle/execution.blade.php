@@ -26,6 +26,20 @@
             </div>
         @endif
 
+        @php
+            $milestoneStructureLocked = in_array((string) $contract->ContractStatus, ['Approved', 'Ap', 'Executed', 'Terminated'], true);
+            $contractValue = round(max(0, (float) ($contract->ContractValue ?? 0)), 2);
+            $allocatedMilestoneValue = round((float) $milestones->sum(function ($milestone) use ($contractValue) {
+                if (strtoupper((string) $milestone->ValueType) === 'PERCENT') {
+                    return round(max(0, $contractValue * ((float) ($milestone->ValuePercent ?? 0) / 100)), 2);
+                }
+
+                return round(max(0, (float) ($milestone->ValueAmount ?? 0)), 2);
+            }), 2);
+            $remainingMilestoneValue = round($contractValue - $allocatedMilestoneValue, 2);
+            $allocationBalanced = abs($remainingMilestoneValue) <= 0.01;
+        @endphp
+
         <div class="card mb-3">
             <div class="card-body">
                 <div class="row">
@@ -91,45 +105,68 @@
         <div class="card mb-4">
             <div class="card-header">Add Milestone</div>
             <div class="card-body">
-                <form action="{{ route('contracts.lifecycle.milestones.store', $contract->Id) }}" method="POST" class="row g-2">
-                    @csrf
-                    <div class="col-md-2">
-                        <label class="form-label">No</label>
-                        <input type="number" name="MilestoneNo" class="form-control" min="1" value="{{ old('MilestoneNo', ($milestones->count() + 1)) }}" required>
+                <div class="alert {{ $allocationBalanced ? 'alert-success' : ($remainingMilestoneValue > 0 ? 'alert-warning' : 'alert-danger') }}">
+                    <strong>Milestone Allocation:</strong>
+                    {{ number_format($allocatedMilestoneValue, 2) }} / {{ number_format($contractValue, 2) }}
+                    @if($allocationBalanced)
+                        (Fully allocated)
+                    @elseif($remainingMilestoneValue > 0)
+                        (Remaining: {{ number_format($remainingMilestoneValue, 2) }})
+                    @else
+                        (Over by: {{ number_format(abs($remainingMilestoneValue), 2) }})
+                    @endif
+                </div>
+
+                @if($milestoneStructureLocked)
+                    <div class="alert alert-warning mb-0">
+                        Milestone structure is locked because this contract is already approved/executed. You can still tick checklist fulfillment and update milestone status.
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Title</label>
-                        <input type="text" name="Title" class="form-control" value="{{ old('Title') }}" required>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Due Date</label>
-                        <input type="date" name="PlannedDueDate" class="form-control" value="{{ old('PlannedDueDate') }}">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Value Type</label>
-                        <select name="ValueType" class="form-select">
-                            <option value="FIXED">Fixed</option>
-                            <option value="PERCENT">Percent</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Fixed Amount</label>
-                        <input type="number" step="0.01" name="ValueAmount" class="form-control" value="{{ old('ValueAmount') }}">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Percent Value (%)</label>
-                        <input type="number" step="0.0001" min="0" max="100" name="ValuePercent" class="form-control" value="{{ old('ValuePercent') }}">
-                    </div>
-                    <div class="col-md-9">
-                        <label class="form-label">Description</label>
-                        <textarea name="Description" class="form-control" rows="2">{{ old('Description') }}</textarea>
-                    </div>
-                    <div class="col-md-12 text-end">
-                        <button type="submit" class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus me-1"></i> Add Milestone
-                        </button>
-                    </div>
-                </form>
+                @else
+                    <form action="{{ route('contracts.lifecycle.milestones.store', $contract->Id) }}" method="POST" class="row g-2">
+                        @csrf
+                        <div class="col-md-2">
+                            <label class="form-label">No</label>
+                            <input type="number" name="MilestoneNo" class="form-control" min="1" value="{{ old('MilestoneNo', ($milestones->count() + 1)) }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Title</label>
+                            <input type="text" name="Title" class="form-control" value="{{ old('Title') }}" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Due Date</label>
+                            <input type="date" name="PlannedDueDate" class="form-control" value="{{ old('PlannedDueDate') }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Value Type</label>
+                            <select name="ValueType" class="form-select" id="milestoneValueType">
+                                <option value="FIXED" @selected(old('ValueType', 'FIXED') === 'FIXED')>Fixed</option>
+                                <option value="PERCENT" @selected(old('ValueType') === 'PERCENT')>Percent</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Fixed Amount</label>
+                            <input type="number" step="0.01" name="ValueAmount" class="form-control" id="milestoneValueAmount" value="{{ old('ValueAmount') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Percent Value (%)</label>
+                            <input type="number" step="0.0001" min="0" max="100" name="ValuePercent" class="form-control" id="milestoneValuePercent" value="{{ old('ValuePercent') }}">
+                        </div>
+                        <div class="col-md-12">
+                            <div class="small text-muted" id="milestoneValuePreview">
+                                For Percent milestones, amount is computed as: Contract Value x Percent / 100.
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <label class="form-label">Description</label>
+                            <textarea name="Description" class="form-control" rows="2">{{ old('Description') }}</textarea>
+                        </div>
+                        <div class="col-md-12 text-end">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-1"></i> Add Milestone
+                            </button>
+                        </div>
+                    </form>
+                @endif
             </div>
         </div>
 
@@ -143,6 +180,9 @@
                         @php
                             $requiredTotal = $milestone->checklistItems->where('Required', true)->count();
                             $requiredDone = $milestone->checklistItems->where('Required', true)->where('IsFulfilled', true)->count();
+                            $milestoneAmount = strtoupper((string) $milestone->ValueType) === 'PERCENT'
+                                ? round(max(0, $contractValue * ((float) ($milestone->ValuePercent ?? 0) / 100)), 2)
+                                : round(max(0, (float) ($milestone->ValueAmount ?? 0)), 2);
                             $statusClass = match($milestone->Status) {
                                 'Accepted' => 'success',
                                 'Waived' => 'secondary',
@@ -151,6 +191,17 @@
                                 'In Progress' => 'warning',
                                 default => 'light text-dark'
                             };
+                            $currentStatus = $milestone->Status ?? 'Draft';
+                            $canSubmit = in_array($currentStatus, ['Draft', 'In Progress', 'Rejected'], true);
+                            $canAccept = $currentStatus === 'Submitted';
+                            $canReject = $currentStatus === 'Submitted';
+                            $canWaive = !in_array($currentStatus, ['Accepted', 'Waived'], true);
+                            $nextStepHint = match ($currentStatus) {
+                                'Submitted' => 'Next step: Accept or Reject this submitted milestone.',
+                                'Accepted' => 'Milestone accepted. No further action required.',
+                                'Waived' => 'Milestone waived. No further action required.',
+                                default => 'First step: Submit the milestone for review, then Accept/Reject.',
+                            };
                         @endphp
                         <div class="border rounded p-3 mb-3">
                             <div class="d-flex justify-content-between align-items-start mb-2">
@@ -158,7 +209,11 @@
                                     <h6 class="mb-1">M{{ $milestone->MilestoneNo }} - {{ $milestone->Title }}</h6>
                                     <div class="small text-muted">
                                         Due: {{ $milestone->PlannedDueDate ? $milestone->PlannedDueDate->format('d-M-Y') : 'N/A' }} |
-                                        Required Checklist: {{ $requiredDone }}/{{ $requiredTotal }}
+                                        Required Checklist: {{ $requiredDone }}/{{ $requiredTotal }} |
+                                        Value: {{ $contract->tender->Currency->Code ?? 'KES' }} {{ number_format($milestoneAmount, 2) }}
+                                        @if(strtoupper((string) $milestone->ValueType) === 'PERCENT')
+                                            ({{ number_format((float) ($milestone->ValuePercent ?? 0), 4) }}%)
+                                        @endif
                                     </div>
                                 </div>
                                 <span class="badge bg-{{ $statusClass }}">{{ $milestone->Status }}</span>
@@ -168,27 +223,29 @@
                                 <p class="small mb-2">{{ $milestone->Description }}</p>
                             @endif
 
+                            <div class="small text-muted mb-2">{{ $nextStepHint }}</div>
+
                             <div class="d-flex flex-wrap gap-2 mb-3">
                                 <form action="{{ route('contracts.lifecycle.milestones.status', [$contract->Id, $milestone->Id]) }}" method="POST" class="d-inline">
                                     @csrf
                                     <input type="hidden" name="action" value="submit">
-                                    <button class="btn btn-outline-info btn-sm">Submit</button>
+                                    <button class="btn btn-outline-info btn-sm" @disabled(!$canSubmit) title="{{ $canSubmit ? 'Submit milestone for review' : 'Already submitted or finalized' }}">Submit</button>
                                 </form>
                                 <form action="{{ route('contracts.lifecycle.milestones.status', [$contract->Id, $milestone->Id]) }}" method="POST" class="d-inline">
                                     @csrf
                                     <input type="hidden" name="action" value="accept">
-                                    <button class="btn btn-outline-success btn-sm">Accept</button>
+                                    <button class="btn btn-outline-success btn-sm" @disabled(!$canAccept) title="{{ $canAccept ? 'Accept submitted milestone' : 'Accept is available only after Submit' }}">Accept</button>
                                 </form>
                                 <form action="{{ route('contracts.lifecycle.milestones.status', [$contract->Id, $milestone->Id]) }}" method="POST" class="d-inline">
                                     @csrf
                                     <input type="hidden" name="action" value="reject">
-                                    <button class="btn btn-outline-danger btn-sm">Reject</button>
+                                    <button class="btn btn-outline-danger btn-sm" @disabled(!$canReject) title="{{ $canReject ? 'Reject submitted milestone' : 'Reject is available only after Submit' }}">Reject</button>
                                 </form>
                                 <form action="{{ route('contracts.lifecycle.milestones.status', [$contract->Id, $milestone->Id]) }}" method="POST" class="d-flex gap-2">
                                     @csrf
                                     <input type="hidden" name="action" value="waive">
-                                    <input type="text" name="waive_reason" class="form-control form-control-sm" placeholder="Waive reason" required>
-                                    <button class="btn btn-outline-secondary btn-sm">Waive</button>
+                                    <input type="text" name="waive_reason" class="form-control form-control-sm" placeholder="Waive reason" @if($canWaive) required @endif @disabled(!$canWaive)>
+                                    <button class="btn btn-outline-secondary btn-sm" @disabled(!$canWaive) title="{{ $canWaive ? 'Waive this milestone with a reason' : 'Accepted or waived milestones cannot be waived again' }}">Waive</button>
                                 </form>
                             </div>
 
@@ -233,26 +290,30 @@
                                 </table>
                             </div>
 
-                            <form action="{{ route('contracts.lifecycle.milestones.checklist.store', [$contract->Id, $milestone->Id]) }}" method="POST" class="row g-2">
-                                @csrf
-                                <div class="col-md-5">
-                                    <input type="text" name="ItemDescription" class="form-control form-control-sm" placeholder="Checklist item description" required>
-                                </div>
-                                <div class="col-md-2">
-                                    <select name="Required" class="form-select form-select-sm">
-                                        <option value="1">Required</option>
-                                        <option value="0">Optional</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <input type="text" name="Notes" class="form-control form-control-sm" placeholder="Notes (optional)">
-                                </div>
-                                <div class="col-md-1 text-end">
-                                    <button type="submit" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-plus"></i>
-                                    </button>
-                                </div>
-                            </form>
+                            @if($milestoneStructureLocked)
+                                <div class="small text-muted">Checklist structure is locked after approval.</div>
+                            @else
+                                <form action="{{ route('contracts.lifecycle.milestones.checklist.store', [$contract->Id, $milestone->Id]) }}" method="POST" class="row g-2">
+                                    @csrf
+                                    <div class="col-md-5">
+                                        <input type="text" name="ItemDescription" class="form-control form-control-sm" placeholder="Checklist item description" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <select name="Required" class="form-select form-select-sm">
+                                            <option value="1">Required</option>
+                                            <option value="0">Optional</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="text" name="Notes" class="form-control form-control-sm" placeholder="Notes (optional)">
+                                    </div>
+                                    <div class="col-md-1 text-end">
+                                        <button type="submit" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            @endif
                         </div>
                     @endforeach
                 @endif
@@ -260,3 +321,56 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const valueType = document.getElementById('milestoneValueType');
+        const valueAmount = document.getElementById('milestoneValueAmount');
+        const valuePercent = document.getElementById('milestoneValuePercent');
+        const preview = document.getElementById('milestoneValuePreview');
+
+        if (!valueType || !valueAmount || !valuePercent || !preview) {
+            return;
+        }
+
+        const contractValue = Number(@json($contractValue));
+        const currencyCode = @json($contract->tender->Currency->Code ?? 'KES');
+
+        function formatMoney(amount) {
+            const parsed = Number.isFinite(amount) ? amount : 0;
+            return `${currencyCode} ${parsed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function updatePreview() {
+            const type = (valueType.value || 'FIXED').toUpperCase();
+            if (type === 'PERCENT') {
+                const percent = Number.parseFloat(valuePercent.value || '0') || 0;
+                const amount = (contractValue * percent) / 100;
+                preview.textContent = `Computed Milestone Amount: ${formatMoney(amount)} (${percent.toFixed(4)}% of ${formatMoney(contractValue)}).`;
+                return;
+            }
+
+            const amount = Number.parseFloat(valueAmount.value || '0') || 0;
+            preview.textContent = `Milestone Amount: ${formatMoney(amount)}.`;
+        }
+
+        function syncFieldState() {
+            const type = (valueType.value || 'FIXED').toUpperCase();
+            const isPercent = type === 'PERCENT';
+
+            valuePercent.required = isPercent;
+            valueAmount.required = !isPercent;
+            valuePercent.disabled = !isPercent;
+            valueAmount.disabled = isPercent;
+
+            updatePreview();
+        }
+
+        valueType.addEventListener('change', syncFieldState);
+        valueAmount.addEventListener('input', updatePreview);
+        valuePercent.addEventListener('input', updatePreview);
+        syncFieldState();
+    });
+</script>
+@endpush

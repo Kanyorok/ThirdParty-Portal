@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\Tender;
+use App\Models\Procurement\TenderCommitteeMember;
 use App\Models\Procurement\TenderCommitteeEvaluation;
 use App\Models\Procurement\TenderSupplier;
 use App\Models\Procurement\TenderSection;
 use App\Models\Procurement\Section;
 use App\Models\Procurement\Criteria;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class BidScoreConsolidationController extends Controller
@@ -89,23 +91,48 @@ class BidScoreConsolidationController extends Controller
                 $join->on('u.Id', '=', 'm.UserID')
                      ->orOn('u.EmployeeId', '=', 'm.UserID');
             })
-            ->leftJoin('t_Employees as e', 'e.Id', '=', 'u.EmployeeId')
+            ->leftJoin('t_HREmployees as e', 'e.Id', '=', 'u.EmployeeId')
             ->where('m.TenderID', $tenderId)
             ->where('m.IsActive', 1)
             ->where('m.Response', 1)
-            ->select('m.Id as MemberID', 'u.Name as UserName', 'e.FirstName', 'e.LastName')
+            ->select(
+                'm.Id as MemberID',
+                'm.HasEvaluated',
+                'm.reason',
+                'u.Name as UserName',
+                'e.FirstName',
+                'e.LastName'
+            )
             ->orderBy('m.Id')
             ->get()
-            ->map(function ($row) {
+            ->map(function ($row) use ($rawEvaluations) {
                 $name = trim(($row->FirstName ? $row->FirstName . ' ' : '') . ($row->LastName ?? ''));
                 if ($name === '') {
                     $name = $row->UserName ?? ('Member #' . $row->MemberID);
                 }
+
+                $memberId = (int)$row->MemberID;
+                $hasAnyEvaluation = $rawEvaluations->contains(function ($evaluation) use ($memberId) {
+                    return (int)$evaluation->MemberID === $memberId;
+                });
+                $isSkipped = $this->isSkippedEvaluatorReason($row->reason ?? null);
+                $isCompleted = $isSkipped || (bool)$row->HasEvaluated || $hasAnyEvaluation;
+
                 return [
-                    'id' => (int)$row->MemberID,
+                    'id' => $memberId,
                     'name' => $name,
+                    'is_skipped' => $isSkipped,
+                    'is_completed' => $isCompleted,
+                    'is_pending' => !$isCompleted,
+                    'skip_reason' => $this->extractSkippedReason($row->reason ?? null),
                 ];
             })->values();
+
+        $pendingEvaluators = $evaluators
+            ->filter(fn ($ev) => !empty($ev['is_pending']))
+            ->values();
+        $pendingEvaluatorCount = $pendingEvaluators->count();
+        $canAward = !$awardBlocks && $evaluators->count() > 0 && $pendingEvaluatorCount === 0;
 
         // Group evaluations by Supplier -> Member -> Section
         $grouped = $rawEvaluations->groupBy(['SupplierId', 'MemberID', 'SectionID']);
@@ -181,6 +208,9 @@ class BidScoreConsolidationController extends Controller
             'evaluators' => $evaluators,
             'supplierSummaries' => $supplierSummaries,
             'evaluatorCount' => $evaluators->count(),
+            'pendingEvaluators' => $pendingEvaluators,
+            'pendingEvaluatorCount' => $pendingEvaluatorCount,
+            'canAward' => $canAward,
             // For header display (award info), use the active award if present
             'existingAward' => $activeAward,
             'awardBlocks' => $awardBlocks,
@@ -490,6 +520,95 @@ class BidScoreConsolidationController extends Controller
             return back()->with('error', 'No evaluation data available to consolidate.');
         }
 
+        if (($data['pendingEvaluatorCount'] ?? 0) > 0) {
+            $pendingNames = collect($data['pendingEvaluators'] ?? [])
+                ->pluck('name')
+                ->implode(', ');
+            return back()->with(
+                'error',
+                'Evaluation pending for: ' . $pendingNames . '. Skip pending evaluator(s) or wait for completion before consolidating.'
+            );
+        }
+
         return back()->with('success', 'Consolidated scores computed successfully.');
+    }
+
+    /**
+     * Mark a pending evaluator as skipped during consolidation.
+     */
+    public function skipEvaluator(Request $request, $tenderId, $memberId)
+    {
+        $request->validate([
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $member = TenderCommitteeMember::where('TenderID', (int)$tenderId)
+            ->where('Id', (int)$memberId)
+            ->where('IsActive', 1)
+            ->where('Response', 1)
+            ->first();
+
+        if (!$member) {
+            return back()->with('error', 'Evaluator not found for this tender.');
+        }
+
+        if ($this->isSkippedEvaluatorReason($member->reason ?? null)) {
+            return back()->with('info', 'Evaluator is already marked as skipped.');
+        }
+
+        $hasScores = TenderCommitteeEvaluation::where('TenderID', (int)$tenderId)
+            ->where('MemberID', (int)$memberId)
+            ->exists();
+
+        if ($hasScores || (bool)$member->HasEvaluated) {
+            return back()->with('error', 'Cannot skip this evaluator because evaluation has already been submitted.');
+        }
+
+        $reason = trim((string)$request->input('reason', ''));
+        $skipReason = 'SKIPPED: ' . ($reason !== ''
+            ? $reason
+            : ('Skipped during consolidation by user #' . Auth::id()));
+
+        $member->update([
+            'HasEvaluated' => true,
+            'reason' => $skipReason,
+            'ModifiedBy' => Auth::id(),
+            'ModifiedOn' => now(),
+        ]);
+
+        activity()
+            ->performedOn($member)
+            ->causedBy(Auth::id())
+            ->withProperties([
+                'tender_id' => (int)$tenderId,
+                'committee_member_id' => (int)$memberId,
+                'reason' => $skipReason,
+            ])
+            ->log('Evaluator marked as skipped in bid score consolidation.');
+
+        return back()->with('success', 'Evaluator marked as skipped successfully.');
+    }
+
+    private function isSkippedEvaluatorReason(?string $reason): bool
+    {
+        if (!is_string($reason) || trim($reason) === '') {
+            return false;
+        }
+
+        $normalized = strtoupper(trim($reason));
+        return str_starts_with($normalized, 'SKIPPED:')
+            || str_starts_with($normalized, '[SKIPPED]');
+    }
+
+    private function extractSkippedReason(?string $reason): ?string
+    {
+        if (!$this->isSkippedEvaluatorReason($reason)) {
+            return null;
+        }
+
+        $cleaned = preg_replace('/^(SKIPPED:|\[SKIPPED\])\s*/i', '', (string)$reason);
+        $cleaned = trim((string)$cleaned);
+
+        return $cleaned === '' ? null : $cleaned;
     }
 }
