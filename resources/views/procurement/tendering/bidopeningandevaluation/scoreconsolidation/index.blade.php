@@ -100,9 +100,10 @@
                                         <i class="fas fa-hourglass-half"></i> Award
                                     </button>
                                 @else
-                                    <form method="POST" action="{{ route('procawards.store') }}" class="d-inline" onsubmit="return disableSubmitButton(this);">
+                                    <form method="POST" action="{{ route('procawards.store') }}" class="d-inline" onsubmit="return submitAwardForm(this);">
                                         @csrf
                                         <input type="hidden" name="tender_id" value="{{ $tender->Id }}">
+                                        <input type="hidden" name="award_type" value="tender">
                                         <input type="hidden" name="winning_supplier_id" value="{{ $row['supplier_id'] }}">
                                         <input type="hidden" name="award_justification" value="Awarded based on highest consolidated average score">
                                         <input type="hidden" name="awarded_amount" value="{{ $row['bid_amount'] ?? 0 }}">
@@ -157,13 +158,24 @@ function rejectAllBids() {
     }
 }
 
-function disableSubmitButton(form) {
+function submitAwardForm(form) {
     const btn = form.querySelector('button[type="submit"]');
     if (btn) {
-        btn.disabled = true;
+        // Change text immediately
+        const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        
+        // Disable after a short delay to ensure form submission event propagates
+        setTimeout(() => {
+            btn.disabled = true;
+        }, 50);
     }
-    return true;
+    return true; // Use simple return true to allow submission
+}
+
+function disableSubmitButton(form) {
+    // Legacy support or for other forms
+    return submitAwardForm(form);
 }
 
 // Initialize tooltips

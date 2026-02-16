@@ -113,10 +113,22 @@ class TenderCommitteeController extends Controller
             ]);
 
             // ✅ Create members
-            foreach ($request->committeeMembers as $memberId) {
+            foreach ($request->committeeMembers as $employeeId) {
+                $employee = Employee::with('user')->find($employeeId);
+
+                if (! $employee) {
+                    Log::warning("Employee not found for ID: " . $employeeId);
+
+                    continue;
+                }
+                if (! $employee->user) {
+                    Log::warning("User not found for Employee ID: " . $employeeId);
+
+                    continue;
+                }
                 TenderCommitteeMember::create([
                     'CommitteeID' => $committee->Id,
-                    'UserID' => $memberId,
+                    'UserID' => $employee->user->Id,
                     'TenderID' => $tenderId, // 🔁 Keep for legacy linkage
                     'Role' => 'Member',
                     'Response' => 0,
@@ -208,20 +220,24 @@ class TenderCommitteeController extends Controller
         DB::beginTransaction();
 
         try {
-            foreach ($request->memberID as $index => $userID) {
+            foreach ($request->memberID as $index => $employeeOrUserId) {
                 $role = $request->memberRole[$index];
+
+                // Try to determine if this is an Employee ID or User ID
+                $employee = Employee::with('user')->find($employeeOrUserId);
+                $actualUserId = $employee && $employee->user ? $employee->user->Id : $employeeOrUserId;
 
                 if ($request->committeeType === 'tender') {
                     TenderCommitteeMember::where('TenderID', $request->tenderID)
-                        ->where('UserID', $userID)
+                        ->where('UserID', $actualUserId)
                         ->update([
                             'Role' => $role,
                             'ModifiedBy' => $userId,
                             'ModifiedOn' => $now,
                         ]);
                 } elseif ($request->committeeType === 'rfq') {
-                    \App\Models\Procurement\RFQCommitteeMember::where('RFQID', $request->tenderID)
-                        ->where('UserID', $userID)
+                    RFQCommitteeMember::where('RFQID', $request->tenderID)
+                        ->where('UserID', $actualUserId)
                         ->update([
                             'Role' => $role,
                             'ModifiedBy' => $userId,

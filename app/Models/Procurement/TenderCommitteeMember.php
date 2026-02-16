@@ -18,6 +18,7 @@ class TenderCommitteeMember extends Model
     public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_TenderCommitteeMembers';
+
     protected $fillable = [
         'CommitteeID',
         'UserID',
@@ -56,7 +57,7 @@ class TenderCommitteeMember extends Model
         'DeletedOn',
     ];
 
-    protected $primaryKey = 'Id';
+    protected $primaryKey = 'id';
 
     public function committee()
     {

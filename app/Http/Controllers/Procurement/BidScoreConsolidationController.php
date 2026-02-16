@@ -191,7 +191,7 @@ class BidScoreConsolidationController extends Controller
         $totalEvaluators = $evaluators->count();
         $totalBidders = $bidders->count();
         $requiredEvaluationsPerMember = $totalBidders * $totalCriteriaCount;
-        
+
         $pendingMembers = [];
         $evaluatedMembersCount = 0;
 
@@ -202,7 +202,7 @@ class BidScoreConsolidationController extends Controller
                     ->unique(function ($item) {
                         return $item->SupplierId . '-' . $item->CriteriaID;
                     })->count();
-                
+
                 if ($memberEvalCount >= $requiredEvaluationsPerMember) {
                     $evaluatedMembersCount++;
                 } else {
