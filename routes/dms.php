@@ -56,6 +56,7 @@ Route::middleware(['module:700000'])->namespace('DMS')->prefix('dms')->group(fun
     Route::resource('repo', RepositoryController::class)->parameters(['repo' => 'repository'])->except('create');
 
     Route::put('validation/{documentValidation}/approve', [DocumentValidationController::class, 'approve'])->name('dms.validation.approve');
+    Route::put('validation/{documentValidation}/reject', [DocumentValidationController::class, 'reject'])->name('dms.validation.reject');
     Route::resource('validation', DocumentValidationController::class)->names([
         'index' => 'dms.validation.index',
         'show' => 'dms.validation.show',

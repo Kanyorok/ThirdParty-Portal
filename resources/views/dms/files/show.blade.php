@@ -123,7 +123,7 @@
                         <div class="dropdown-menu" style="">
                             @if($file->ext()->canSign())
                                 <a class="dropdown-item click-summary-data" href="javascript:void(0)"
-                                   data-summary_title='<i class="fas fa-tags"></i> Update File Tags'
+                                   data-summary_title="{!! $file->ext()?->getIcon() !!} Validation {{ $file->Name }}"
                                    data-click_url='{{ route('file-validation.store',[$file->DocumentId]) }}'
                                   ><i class="fas fa-check"></i> Request for
                                     Validation</a>

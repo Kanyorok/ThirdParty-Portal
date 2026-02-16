@@ -69,14 +69,14 @@
                     @if(is_null($documentValidation->ApprovedBy))
                         <div class="card-footer">
                             <div class="row">
-                                <div class="col-sm-6 col-12">{{-- dms.validation.approve--}}
-                                    <button class="btn btn-primary w-100 " type="button"><i
+                                <div class="col-sm-6 col-12">
+                                    <button class="btn btn-primary w-100 approve-document-validation" type="button"><i
                                             class="fas fa-check-double"></i> approve
                                     </button>
                                 </div>
 
                                 <div class="col-sm-6 col-12">
-                                    <button class="btn btn-danger w-100 file-action-trash" type="button"><i
+                                    <button class="btn btn-danger w-100 reject-document-validation" type="button"><i
                                             class="fas fa-trash"></i> reject
                                     </button>
                                 </div>
@@ -87,12 +87,71 @@
             @endif
         </div>
     </div>
+
+    <div class="modal fade" id="DocumentValidationActionsModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">..</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="onboarding-content d-none modal-item text-center" id="rejectDocumentModal">
+                        <h4 class="text-danger">  @method('PUT')
+                            Reject Document {{ $document->Name }} ?
+                        </h4>
+                        <div class="mt-2 mb-2">
+                            You are about to reject this document, confirm below ?
+                        </div>
+                        <hr>
+                        <form id="rejectDocumentForm" method="post"
+                              action="{{ route('dms.validation.reject',[$documentValidation->ValidationId]) }}"> @csrf @method('delete')
+                            <div class="mt-4">
+                                <button type="button" class="btn btn-success float-start"
+                                        data-bs-dismiss="modal">
+                                   cancel
+                                </button>
+                                <button class="btn btn-danger float-end" id="rejectDocumentBtn" type="submit"><i
+                                        class="fas fa-trash"></i> reject
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="onboarding-content with-gradient d-none modal-item" id="approveDocumentModal">
+                        <form action="{{ route('dms.validation.approve',[$documentValidation->ValidationId]) }}" method="post" id="approveDocumentForm">
+                            <div class="mb-3"> @csrf @method('PUT')
+                                <label for="Signature" class="form-label">Signature <span class="text-danger">*</span></label>
+                                <select class="form-control" name="Signature" id="Signature" required>
+                                    <option selected disabled>Select a Signature</option>
+                                    @foreach($signatures as $signature)
+                                        <option value="{{ $signature->SignatureId }}">{{ $signature->Name }}</option>
+                                    @endforeach
+                                </select>
+                                <p id="Signature_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            </div>
+                            <hr>
+                            <div class="mt-4">
+                                <button type="button" class="btn btn-secondary float-start"
+                                        data-bs-dismiss="modal">
+                                    cancel
+                                </button>
+                                <button class="btn btn-primary float-end" id="approveDocumentBtn" type="submit"><i
+                                        class="fas fa-save"></i>
+                                    approve & sign
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @section('scripts')
     <script src="{{asset('assets/libs/jquery-form/jquery.form.min.js')}}"></script>
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-
-    <script>
+    <script> const $Modal = $('#DocumentValidationActionsModal');
         $(function () {
             fetchFilePreview();
 
@@ -101,7 +160,7 @@
             });
 
             @if(is_null($document))
-            $('#documentUploadForm').on('submit', function (e) {
+                $('#documentUploadForm').on('submit', function (e) {
                 e.preventDefault();
                 const btn = $("#documentUploadBtn");
                 $(this).ajaxSubmit({
@@ -130,6 +189,33 @@
                     }, resetForm: true
                 });
             });
+            @else
+                $(document).on('click', '.approve-document-validation', function () {
+                    $(".modal-item").addClass('d-none');
+                    $('#approveDocumentModal').removeClass('d-none');
+                    $('.modal-title').html('Approve Document Validation.');
+                    $('.modal-dialog').removeClass('modal-lg');
+                    $Modal.modal('show');
+                });
+                $('form#approveDocumentForm').submit(async function (e) {
+                    e.preventDefault();
+                    if (await saveForm($(this), $('#approveDocumentBtn'), true, true, true)) {
+                        $Modal.modal('hide');
+                    }
+                });
+                $(document).on('click', '.reject-document-validation', function () {
+                    $(".modal-item").addClass('d-none');
+                    $('#rejectDocumentModal').removeClass('d-none');
+                    $('.modal-title').html('Reject Document Validation.');
+                    $('.modal-dialog').removeClass('modal-lg');
+                    $Modal.modal('show');
+                });
+                $('form#rejectDocumentForm').submit(async function (e) {
+                    e.preventDefault();
+                    if (await saveForm($(this), $('#rejectDocumentBtn'), true, true, true)) {
+                        $Modal.modal('hide');
+                    }
+                });
             @endif
         });
 

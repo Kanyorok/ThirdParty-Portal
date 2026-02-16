@@ -11,6 +11,7 @@ use App\Services\HRM\UserService;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Log;
 use Throwable;
 
 class SignDocumentJob implements ShouldQueue, ShouldBeUnique
@@ -50,7 +51,9 @@ class SignDocumentJob implements ShouldQueue, ShouldBeUnique
     public function failed(?Throwable $exception): void
     {
         $message = $exception?->getMessage() ?? 'Unknown error occurred';
-
+        Log::error('Document signing failed: ' . $message, [
+            'e' => $exception
+        ]);
         (new UserService($this->actor))->sendEmail(
             subject: 'Document Signing Failed',
             body: '<div><p>Dear ' . $this->actor->Name . ',</p>
