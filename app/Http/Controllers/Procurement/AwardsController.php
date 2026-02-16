@@ -56,14 +56,23 @@ class AwardsController extends Controller
                     default => 'bg-light text-dark'
                 };
 
+                // Safely resolve winning bidder name
+                $winningBidder = $award->winningSupplier?->supplierMaster?->party?->TradingName
+                    ?? $award->winningSupplier?->supplierMaster?->party?->ThirdPartyName
+                    ?? ($award->winningSupplier?->SupplierName ?? 'Supplier #'.$award->WinningSupplierID);
+
+                // Safely resolve award date
+                $awardDate = optional($award->AwardDate)->format('Y-m-d')
+                    ?? ($award->CreatedOn?->format('Y-m-d') ?? '--');
+
                 return [
                     'type' => 'tender',
                     'ref_no' => trim((($award->tender->TenderNo ?? '') . ' - ' . ($award->tender->Title ?? ''))) ?: 'N/A',
                     'title' => $award->tender->Title ?? 'N/A',
                     'status' => $status,
                     'status_class' => $statusClass,
-                    'winning_bidder' => $award->winningSupplier->supplierMaster->party->TradingName ?? '--',
-                    'award_date' => optional($award->AwardDate)->format('Y-m-d') ?? ($award->CreatedOn?->format('Y-m-d') ?? '--'),
+                    'winning_bidder' => $winningBidder,
+                    'award_date' => $awardDate,
                     'tender_id' => $award->tender->Id ?? $award->TenderID,
                     'award_id' => $award->Id,
                 ];
@@ -115,6 +124,10 @@ class AwardsController extends Controller
                     default => 'bg-light text-dark'
                 };
 
+                $winningBidder = $award->supplier?->supplierMaster?->party?->TradingName
+                    ?? $award->supplier?->supplierMaster?->party?->ThirdPartyName
+                    ?? ($award->supplier?->SupplierName ?? 'Supplier #'.($award->SupplierId ?? ''));
+
                 return [
                     'type' => 'rfq',
                     'ref_no' => $award->rfq->RFQNumber ?? 'N/A',
@@ -125,7 +138,7 @@ class AwardsController extends Controller
                     ],
                     'status' => $status,
                     'status_class' => $statusClass,
-                    'winning_bidder' => $award->supplier->supplierMaster->party->TradingName ?? '--',
+                    'winning_bidder' => $winningBidder,
                     'award_date' => ($award->CreatedOn?->format('Y-m-d')) ?? '--',
                     'rfq_id' => $award->RFQId ?? ($award->rfq->Id ?? null),
                     'award_id' => $award->Id,
@@ -418,6 +431,8 @@ class AwardsController extends Controller
      */
     public function store(Request $request)
     {
+        Log::info('AwardsController::store - Start', $request->all());
+
         $type = $request->input('award_type', 'tender');
 
         $rules = [
@@ -542,15 +557,20 @@ class AwardsController extends Controller
                      ->withProperties(['type' => 'tender', 'tender_id' => $id])
                     ->log('Created tender award (Pending) for tender ID: ' . $id);
 
+                Log::info('AwardsController::store - Committing Transaction for Tender Award ID: ' . $award->Id);
                 DB::commit();
 
                 return redirect()->route('awards.unified', ['id' => $id, 'type' => 'tender'])
                     ->with('success', 'Tender award created successfully. Please review and submit for approval.');
             }
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('AwardsController::store - Validation failed', $e->errors());
+            throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Award creation error: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
 
             return redirect()->back()
                 ->with('error', 'Failed to create award: ' . $e->getMessage())
@@ -1599,171 +1619,199 @@ class AwardsController extends Controller
      *   - total_bids
      *   - pending_members (array of names)
      */
-    protected function checkEvaluationCompleteness(int $tenderId): array
-    {
-        $tender = Tender::find($tenderId);
-        if (! $tender) {
-            return ['is_complete' => false, 'total_members' => 0, 'members_completed' => 0, 'total_bids' => 0, 'pending_members' => []];
-        }
-
-
-        $members = TenderCommitteeMember::where(function ($q) use ($tenderId) {
-            $q->where('TenderID', $tenderId)
-              ->orWhereHas('committee', function ($cq) use ($tenderId) {
-                  $cq->where('ReferenceId', $tenderId);
-              });
-        })
-            ->where('IsActive', 1)
-            ->where(function ($q) {
-                $q->whereNull('Response')->orWhere('Response', 1);
-            })
-            ->with('user')
-            ->get();
-
-        $totalMembers = $members->count();
-
-        if ($totalMembers === 0) {
-            return ['is_complete' => false, 'total_members' => 0, 'members_completed' => 0, 'total_bids' => 0, 'pending_members' => ['No committee members assigned']];
-        }
-
-        //  Get responsive bids (suppliers) for this tender
-        $responsiveBids = BidSubmission::where('TenderRef', $tender->TenderNo)
-            ->where('IsResponsive', true)
-            ->whereIn('BidStatus', ['responsive', 'evaluated'])
-            ->get();
-
-        $totalBids = $responsiveBids->count();
-
-        if ($totalBids === 0) {
-            return ['is_complete' => false, 'total_members' => $totalMembers, 'members_completed' => 0, 'total_bids' => 0, 'pending_members' => ['No responsive bids found']];
-        }
-
-        // Get active criteria count for this tender
-        $totalCriteria = DB::table('t_TenderCriteria')
-            ->where('TenderID', $tenderId)
-            ->where('IsActive', true)
-            ->count();
-
-        if ($totalCriteria === 0) {
-            return ['is_complete' => false, 'total_members' => $totalMembers, 'members_completed' => 0, 'total_bids' => $totalBids, 'pending_members' => ['No evaluation criteria defined']];
-        }
-
-        $supplierIds = $responsiveBids->pluck('SupplierId')->unique()->values();
-        $requiredPerMember = $totalCriteria * $supplierIds->count(); // criteria × bids
-
-        $pendingMembers = [];
-        $membersCompleted = 0;
-
-        foreach ($members as $member) {
-            $actualCount = TenderCommitteeEvaluation::where('TenderID', $tenderId)
-                ->where('MemberID', $member->Id)
-                ->whereIn('SupplierId', $supplierIds)
-                ->count();
-
-            if ($actualCount >= $requiredPerMember) {
-                $membersCompleted++;
-            } else {
-                $memberName = $member->user->Name ?? ('Member #' . $member->Id);
-                $pendingMembers[] = $memberName;
-            }
-        }
-
-        return [
-            'is_complete' => $membersCompleted >= $totalMembers,
-            'total_members' => $totalMembers,
-            'members_completed' => $membersCompleted,
-            'total_bids' => $totalBids,
-            'pending_members' => $pendingMembers,
-        ];
+// Optimized version:
+protected function checkEvaluationCompleteness(int $tenderId): array
+{
+    $tender = Tender::find($tenderId);
+    if (!$tender) {
+        return $this->buildResponse(false, 0, 0, 0, ['Tender not found']);
     }
+
+    $members = TenderCommitteeMember::where(function ($q) use ($tenderId) {
+        $q->where('TenderID', $tenderId)
+          ->orWhereHas('committee', function ($cq) use ($tenderId) {
+              $cq->where('CommitteeType', 'tender')  
+                 ->where('ReferenceId', $tenderId);
+          });
+    })
+        ->where('IsActive', 1)
+        ->where(function ($q) {
+            $q->whereNull('Response')->orWhere('Response', 1);
+        })
+        ->with('user')
+        ->get();
+
+    $totalMembers = $members->count();
+    if ($totalMembers === 0) {
+        return $this->buildResponse(false, 0, 0, 0, ['No committee members assigned']);
+    }
+
+    $responsiveBids = BidSubmission::where('TenderRef', $tender->TenderNo)
+        ->where('IsResponsive', true)
+        ->whereIn('BidStatus', ['responsive', 'evaluated'])
+        ->get();
+
+    $totalBids = $responsiveBids->count();
+    if ($totalBids === 0) {
+        return $this->buildResponse(false, $totalMembers, 0, 0, ['No responsive bids found']);
+    }
+
+    $criteriaIds = DB::table('t_TenderCriteria')
+        ->where('TenderID', $tenderId)
+        ->where('IsActive', true)
+        ->pluck('Id');
+
+    $totalCriteria = $criteriaIds->count();
+    if ($totalCriteria === 0) {
+        return $this->buildResponse(false, $totalMembers, 0, $totalBids, ['No evaluation criteria defined']);
+    }
+
+    $supplierIds = $responsiveBids->pluck('SupplierId')->unique()->values();
+    $requiredCombinations = $supplierIds->count() * $totalCriteria;
+
+    // Batch fetch all evaluations to avoid N+1
+    $allEvaluations = TenderCommitteeEvaluation::where('TenderID', $tenderId)
+        ->whereIn('MemberID', $members->pluck('Id'))
+        ->whereIn('SupplierId', $supplierIds)
+        ->whereIn('CriteriaID', $criteriaIds)
+        ->select('MemberID', 'SupplierId', 'CriteriaID')
+        ->distinct()
+        ->get()
+        ->groupBy('MemberID');
+
+    $pendingMembers = [];
+    $membersCompleted = 0;
+
+    foreach ($members as $member) {
+        $memberEvaluations = $allEvaluations->get($member->Id, collect());
+        $actualCombinations = $memberEvaluations->count();
+
+        if ($actualCombinations >= $requiredCombinations) {
+            $membersCompleted++;
+        } else {
+            $memberName = $member->user->Name ?? ('Member #' . $member->Id);
+            $missing = $requiredCombinations - $actualCombinations;
+            $pendingMembers[] = "$memberName ($missing evaluations pending)";
+        }
+    }
+
+    return [
+        'is_complete' => $membersCompleted >= $totalMembers,
+        'total_members' => $totalMembers,
+        'members_completed' => $membersCompleted,
+        'total_bids' => $totalBids,
+        'pending_members' => $pendingMembers,
+    ];
+}
+
 
     /**
      * Check if all committee members have completed evaluations for all supplier responses of an RFQ.
      *
      * Returns the same structure as checkEvaluationCompleteness().
      */
-    protected function checkRFQEvaluationCompleteness(int $rfqId): array
-    {
-        $rfq = RFQ::find($rfqId);
-        if (! $rfq) {
-            return ['is_complete' => false, 'total_members' => 0, 'members_completed' => 0, 'total_bids' => 0, 'pending_members' => []];
-        }
-
-        // 1. Get all active committee members for this RFQ
-        $members = RFQCommitteeMember::where('RFQID', $rfqId)
-            ->where('IsActive', 1)
-            ->where(function ($q) {
-                $q->whereNull('Response')->orWhere('Response', 1);
-            })
-            ->get();
-
-        $totalMembers = $members->count();
-
-        if ($totalMembers === 0) {
-            return ['is_complete' => false, 'total_members' => 0, 'members_completed' => 0, 'total_bids' => 0, 'pending_members' => ['No committee members assigned']];
-        }
-
-        // 2. Get suppliers who have responded to this RFQ
-        $supplierIds = RFQResponse::where('RFQId', $rfqId)
-            ->pluck('SupplierId')
-            ->unique()
-            ->values();
-
-        $totalBids = $supplierIds->count();
-
-        if ($totalBids === 0) {
-            return ['is_complete' => false, 'total_members' => $totalMembers, 'members_completed' => 0, 'total_bids' => 0, 'pending_members' => ['No supplier responses found']];
-        }
-
-        // 3. Get active criteria count for this RFQ
-        $totalCriteria = RFQCriteria::where('RFQID', $rfqId)
-            ->where('IsActive', true)
-            ->count();
-
-        if ($totalCriteria === 0) {
-            return ['is_complete' => false, 'total_members' => $totalMembers, 'members_completed' => 0, 'total_bids' => $totalBids, 'pending_members' => ['No evaluation criteria defined']];
-        }
-
-        // 4. For each member, check if they have evaluated every supplier on every criterion
-        //    RFQ evaluations use a two-level structure:
-        //    RFQEvaluation (parent, per member) -> RFQSupplierResponseEvaluation (child, per supplier/criteria)
-        $requiredPerMember = $totalCriteria * $totalBids; // criteria × suppliers
-
-        $pendingMembers = [];
-        $membersCompleted = 0;
-
-        foreach ($members as $member) {
-            // Find the evaluation record(s) for this member
-            $evaluationIds = RFQEvaluation::where('RFQId', $rfqId)
-                ->where('UserCode', $member->UserID)
-                ->pluck('Id');
-
-            if ($evaluationIds->isEmpty()) {
-                $memberName = $member->user->Name ?? $member->committee_member_name ?? ('Member #' . $member->Id);
-                $pendingMembers[] = $memberName;
-
-                continue;
-            }
-
-            // Count actual supplier/criteria evaluation records
-            $actualCount = RFQSupplierResponseEvaluation::whereIn('RFQEvaluationId', $evaluationIds)
-                ->whereIn('SupplierId', $supplierIds)
-                ->count();
-
-            if ($actualCount >= $requiredPerMember) {
-                $membersCompleted++;
-            } else {
-                $memberName = $member->user->Name ?? $member->committee_member_name ?? ('Member #' . $member->Id);
-                $pendingMembers[] = $memberName;
-            }
-        }
-
-        return [
-            'is_complete' => $membersCompleted >= $totalMembers,
-            'total_members' => $totalMembers,
-            'members_completed' => $membersCompleted,
-            'total_bids' => $totalBids,
-            'pending_members' => $pendingMembers,
-        ];
+ protected function checkRFQEvaluationCompleteness(int $rfqId): array
+{
+    $rfq = RFQ::find($rfqId);
+    if (!$rfq) {
+        return $this->buildResponse(false, 0, 0, 0, ['RFQ not found']);
     }
+
+    // 1. Get all active committee members with user relationship
+    $members = RFQCommitteeMember::where('RFQID', $rfqId)
+        ->where('IsActive', 1)
+        ->where(function ($q) {
+            $q->whereNull('Response')->orWhere('Response', 1);
+        })
+        ->with('user')
+        ->get();
+
+    $totalMembers = $members->count();
+    if ($totalMembers === 0) {
+        return $this->buildResponse(false, 0, 0, 0, ['No committee members assigned']);
+    }
+
+    // 2. Get suppliers who have responded to this RFQ
+    $supplierIds = RFQResponse::where('RFQId', $rfqId)
+        ->pluck('SupplierId')
+        ->unique()
+        ->values();
+
+    $totalBids = $supplierIds->count();
+    if ($totalBids === 0) {
+        return $this->buildResponse(false, $totalMembers, 0, 0, ['No supplier responses found']);
+    }
+
+    // 3. Get active criteria IDs for this RFQ
+    $criteriaIds = RFQCriteria::where('RFQID', $rfqId)
+        ->where('IsActive', true)
+        ->pluck('Id'); // Get actual IDs, not just count
+
+    $totalCriteria = $criteriaIds->count();
+    if ($totalCriteria === 0) {
+        return $this->buildResponse(false, $totalMembers, 0, $totalBids, ['No evaluation criteria defined']);
+    }
+
+    $requiredCombinations = $totalCriteria * $totalBids;
+
+    // 4. Batch fetch all evaluations to avoid N+1
+    $memberUserCodes = $members->pluck('UserID')->unique();
+    
+    $evaluationsByUser = RFQEvaluation::where('RFQId', $rfqId)
+        ->whereIn('UserCode', $memberUserCodes)
+        ->pluck('Id', 'UserCode'); // Map UserCode => EvaluationId
+
+    // Get all supplier response evaluations grouped by evaluation ID
+    $allSupplierEvaluations = RFQSupplierResponseEvaluation::whereIn('RFQEvaluationId', $evaluationsByUser->values())
+        ->whereIn('SupplierId', $supplierIds)
+        ->whereIn('CriteriaId', $criteriaIds) // Validate against active criteria
+        ->select('RFQEvaluationId', 'SupplierId', 'CriteriaId')
+        ->distinct()
+        ->get()
+        ->groupBy('RFQEvaluationId');
+
+    $pendingMembers = [];
+    $membersCompleted = 0;
+
+    foreach ($members as $member) {
+        $evaluationId = $evaluationsByUser->get($member->UserID);
+
+        if (!$evaluationId) {
+            $memberName = $member->user->Name ?? $member->committee_member_name ?? ('Member #' . $member->Id);
+            $pendingMembers[] = "$memberName ({$requiredCombinations} evaluations pending)";
+            continue;
+        }
+
+        // Check if member has evaluated ALL criteria for ALL suppliers
+        $memberEvaluations = $allSupplierEvaluations->get($evaluationId, collect());
+        $actualCombinations = $memberEvaluations->count();
+
+        if ($actualCombinations >= $requiredCombinations) {
+            $membersCompleted++;
+        } else {
+            $memberName = $member->user->Name ?? $member->committee_member_name ?? ('Member #' . $member->Id);
+            $missing = $requiredCombinations - $actualCombinations;
+            $pendingMembers[] = "$memberName ($missing evaluations pending)";
+        }
+    }
+
+    return [
+        'is_complete' => $membersCompleted >= $totalMembers,
+        'total_members' => $totalMembers,
+        'members_completed' => $membersCompleted,
+        'total_bids' => $totalBids,
+        'pending_members' => $pendingMembers,
+    ];
+}
+
+private function buildResponse(bool $isComplete, int $totalMembers, int $membersCompleted, int $totalBids, array $pendingMembers): array
+{
+    return [
+        'is_complete' => $isComplete,
+        'total_members' => $totalMembers,
+        'members_completed' => $membersCompleted,
+        'total_bids' => $totalBids,
+        'pending_members' => $pendingMembers,
+    ];
+}
 }

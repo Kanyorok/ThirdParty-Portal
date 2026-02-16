@@ -287,58 +287,54 @@ class TenderSubmissionController extends Controller
         }
     }
 
-    public function getInvitedSuppliers($tenderId)
-    {
-        // Try finding by TenderNo first (as it's passed from Select2 value)
-        $tender = Tender::where('TenderNo', $tenderId)->first();
+  public function getInvitedSuppliers($tenderId)
+{
+    // Find tender by TenderNo or Id
+    $tender = Tender::where('TenderNo', $tenderId)->first() ?? Tender::find($tenderId);
 
-        // Fallback to ID if not found
-        if (! $tender) {
-            $tender = Tender::find($tenderId);
-        }
-
-        if (! $tender) {
-            return response()->json(['error' => 'Tender not found'], 404);
-        }
-
-        // Get IDs of suppliers who already submitted for this tender
-        $submittedSupplierIds = BidSubmission::where('TenderRef', $tender->TenderNo)
-            ->pluck('SupplierId')
-            ->toArray();
-
-        $query = Supplier::query();
-
-        // For Restricted tenders: only show invited suppliers who have ACCEPTED the invitation
-        if ($tender->TenderType === \App\Enums\TenderTypeEnum::Restricted) {
-            $acceptedSupplierIds = TenderInvitation::where('TenderId', $tender->Id)
-                ->where('ResponseStatus', TenderInvitation::STATUS_ACCEPTED)
-                ->pluck('SupplierId')
-                ->toArray();
-
-            $query->whereIn('Id', $acceptedSupplierIds)
-                  ->whereIn('Id', $tender->invitedSuppliers()->pluck('t_Suppliers.Id'));
-        }
-
-        // Exclude suppliers who have already submitted
-        $query->whereNotIn('Id', $submittedSupplierIds);
-
-        // Fetch suppliers with details
-        $suppliers = $query->with(['supplierMaster.party'])->get();
-
-        // Map to format expected by frontend (Id, SupplierName)
-        $data = $suppliers->unique('Id')->map(function ($supplier) {
-            $name = $supplier->supplierMaster->party->TradingName
-                ?? $supplier->supplierMaster->party->ThirdPartyName
-                ?? 'Unknown Supplier';
-
-            return [
-                'Id' => $supplier->Id,
-                'SupplierName' => $name,
-            ];
-        })->unique('SupplierName')->values();
-
-        return response()->json($data);
+    if (! $tender) {
+        return response()->json(['error' => 'Tender not found'], 404);
     }
+
+    // Get IDs of suppliers who already submitted for this tender
+    $submittedSupplierIds = BidSubmission::where('TenderRef', $tender->TenderNo)
+        ->pluck('SupplierId');
+
+    $query = Supplier::query()
+        // Only suppliers who are Approved & Prequalified
+        ->whereHas('supplierMaster', function ($q) {
+            $q->where('ApprovalStatus', \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved)
+              ->where('IsPrequalified', true);
+        })
+        // Exclude already submitted suppliers
+        ->whereNotIn('Id', $submittedSupplierIds);
+
+    // Handle restricted tenders: only show suppliers who accepted invitations
+    if ($tender->TenderType === \App\Enums\TenderTypeEnum::Restricted) {
+        $query->whereHas('tenderInvitations', function ($q) use ($tender) {
+            $q->where('TenderId', $tender->Id)
+              ->where('ResponseStatus', TenderInvitation::STATUS_ACCEPTED);
+        });
+    }
+
+    // Eager load related party details
+    $suppliers = $query->with(['supplierMaster.party'])->get();
+
+    // Format for frontend
+    $data = $suppliers->map(function ($supplier) {
+        $name = $supplier->supplierMaster->party->TradingName
+            ?? $supplier->supplierMaster->party->ThirdPartyName
+            ?? 'Unknown Supplier';
+
+        return [
+            'Id' => $supplier->Id,
+            'SupplierName' => $name,
+        ];
+    })->unique('SupplierName')->values();
+
+    return response()->json($data);
+}
+
 
     private function resolveSupplier(): ?Supplier
     {

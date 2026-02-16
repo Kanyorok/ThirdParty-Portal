@@ -1503,9 +1503,10 @@ class TenderController extends Controller
         // FIX: 'types' is on ThirdParties (party), not SupplierMaster (thirdParty)
         $supplierQuery = \App\Models\ThirdParies\Supplier::query()
             ->where('Active_Status', 1)
-            /* ->whereHas('thirdParty.party.types', function ($q) {
-                 $q->where('Code', 'like', 'SU-%');
-             })*/
+            ->whereHas('thirdParty', function ($q) {
+                $q->where('ApprovalStatus', \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved)
+                  ->where('IsPrequalified', true);
+            })
             ->with(['thirdParty.party', 'supplierCategory.itemCategories']);
 
         $prequalifiedSuppliers = $supplierQuery->get();

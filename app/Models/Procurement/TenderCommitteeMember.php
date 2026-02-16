@@ -80,7 +80,7 @@ class TenderCommitteeMember extends Model
 
     public function tenderCommitteeEvaluations()
     {
-        return $this->hasMany(TenderCommitteeEvaluation::class, 'TenderCommitteeMemberID', 'Id');
+        return $this->hasMany(TenderCommitteeEvaluation::class, 'MemberID', 'Id');
     }
 
     public function tender()

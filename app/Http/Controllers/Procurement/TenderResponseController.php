@@ -144,9 +144,9 @@ class TenderResponseController extends Controller
         // Note: SupplierMaster connects to ThirdParty via ThirdPartyId
         $query = \App\Models\ThirdParty\SupplierMaster::whereNull('DeletedOn')
             ->where(function ($q) {
-                // Include if Approved (Active) OR IsPrequalified
+                // Include if Approved (Active)and IsPrequalified
                 $q->where('ApprovalStatus', \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved)
-                  ->orWhere('IsPrequalified', true);
+                  ->where('IsPrequalified', true);
             })
             ->whereNotIn('Id', $respondedMasterIds) // Exclude MASTERS who have alrady responded via any child
             ->with(['thirdParty']);

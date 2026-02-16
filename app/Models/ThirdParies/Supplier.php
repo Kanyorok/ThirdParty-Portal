@@ -92,6 +92,11 @@ class Supplier extends Model
         return $this->hasMany(PrequalificationApplication::class, 'SupplierID', 'Id');
     }
 
+    public function tenderInvitations(): HasMany
+    {
+        return $this->hasMany(\App\Models\Procurement\TenderInvitation::class, 'SupplierId', 'Id');
+    }
+
     public function scopeApprovedAndPrequalified($query)
     {
         // Treat Active_Status true as approved/active supplier row for the round/category

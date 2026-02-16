@@ -198,7 +198,7 @@
                                 onclick="showReadOutSummary({{ $item->Id }})">
                             <i class="fas fa-microphone"></i> Read Out
                         </button>
-                    @elseif(isset($tender) && $tender->OpeningDate && $tender->OpeningDate <= now())
+                    @elseif(isset($tender) && $tender->Status === \App\Enums\TenderStatusEnum::OpeningInProgress)
                         <!-- Ceremony started but bid not opened yet - show opening action -->
                         <button class="btn btn-sm btn-warning mb-1"
                                 onclick="openIndividualBid({{ $item->Id }})"
