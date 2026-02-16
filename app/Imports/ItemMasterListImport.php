@@ -24,160 +24,150 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
 
     public function model(array $row)
     {
-        DB::beginTransaction();
+        $this->processed++;
+        $rowNumber = $this->processed + 1;
 
-        try {
-            $this->processed++;
-            $rowNumber = $this->processed + 1;
-            $row = array_map(fn ($v) => is_string($v) ? trim($v) : $v, $row);
+        $row = array_map(fn ($v) => is_string($v) ? trim($v) : $v, $row);
 
-            if (isset($row['itemcode']) && str_starts_with($row['itemcode'], '---')) {
-                DB::rollBack();
+        $itemCode = $row['itemcode'] ?? '';
 
-                return null;
-            }
+        if (empty($itemCode) && empty($row['itemname'] ?? '')) {
+            $this->processed--;
 
-            if (empty($row['itemcode']) && empty($row['itemname'])) {
-                DB::rollBack();
+            return null;
+        }
 
-                return null;
-            }
+        if (
+            str_starts_with($itemCode, '---') ||
+            str_starts_with($itemCode, '===') ||
+            str_starts_with($itemCode, '#') ||
+            stripos($itemCode, 'reference') !== false ||
+            stripos($itemCode, 'example') !== false ||
+            stripos($itemCode, 'sample') !== false ||
+            stripos($itemCode, 'template') !== false
+        ) {
+            $this->processed--;
+            $this->skipped++;
 
-            $requiredColumns = [
-                'itemcode', 'itemname', 'itemtype', 'uom',
-                'inventorytype', 'category',
-            ];
+            return null;
+        }
 
-            foreach ($requiredColumns as $col) {
-                if (! array_key_exists($col, $row)) {
-                    throw new \Exception("The uploaded file is missing required column: {$col}");
-                }
-            }
-
-            $validationErrors = $this->validateRequiredFields($row, $rowNumber);
-            if (! empty($validationErrors)) {
+        $requiredColumns = ['itemcode', 'itemname', 'itemtype', 'uom', 'inventorytype', 'category'];
+        foreach ($requiredColumns as $col) {
+            if (! array_key_exists($col, $row)) {
+                $this->errors[] = "File format error: Missing column '{$col}'. Please use the template.";
                 $this->skipped++;
-                $this->errors = array_merge($this->errors, $validationErrors);
-                DB::rollBack();
 
                 return null;
             }
+        }
 
-            $itemCode = $row['itemcode'];
-            $itemName = $row['itemname'];
-            $itemType = $row['itemtype'];
-            $uom = $row['uom'];
-            $inventoryType = $row['inventorytype'];
-            $category = $row['category'];
+        if (! $this->hasRequiredFields($row)) {
+            $this->skipped++;
 
-            $itemTypeRecord = ItemType::whereHas('type', function ($q) use ($itemType) {
-                $q->where('Description', $itemType);
-            })->where('Active', 1)->first();
+            return null;
+        }
 
-            if (! $itemTypeRecord) {
-                $errorMsg = "Row {$rowNumber}: Invalid Item Type '{$itemType}'";
+        $itemTypeId = $this->findItemTypeId($row['itemtype']);
+        if (! $itemTypeId) {
+            $this->skipped++;
+
+            return null;
+        }
+
+        $uomId = $this->findUomId($row['uom']);
+        if (! $uomId) {
+            $this->skipped++;
+
+            return null;
+        }
+
+        $inventoryTypeId = $this->findInventoryTypeId($row['inventorytype']);
+        if (! $inventoryTypeId) {
+            $this->skipped++;
+
+            return null;
+        }
+
+        $categoryId = $this->findCategoryId($row['category'], $row['parentcategory'] ?? null);
+        if (! $categoryId) {
+            $this->skipped++;
+
+            return null;
+        }
+
+        $statusId = $this->lookupCodeDetailId('ItemStatus', $row['status'] ?? 'Active')
+                    ?? $this->getDefaultStatusId();
+
+        $priceId = $this->lookupOrCreatePrice($row['itemprice'] ?? null);
+
+        $existingItem = ItemMasterList::with('status')->where('ItemCode', $itemCode)->first();
+
+        if ($existingItem) {
+            if ($existingItem->inUse()) {
                 $this->skipped++;
-                $this->errors[] = $errorMsg;
-                DB::rollBack();
 
                 return null;
             }
-            $itemTypeId = $itemTypeRecord->Id;
 
-            $uomRecord = UnitOfMeasure::where('Code', $uom)
-                ->where('Active', 1)
-                ->first();
-            if (! $uomRecord) {
-                $errorMsg = "Row {$rowNumber}: Invalid UOM '{$uom}'";
+            $isInactive = $existingItem->status && strtolower($existingItem->status->Description) === 'inactive';
+            if ($isInactive) {
                 $this->skipped++;
-                $this->errors[] = $errorMsg;
-                DB::rollBack();
-
-                return null;
-            }
-            $uomId = $uomRecord->Id;
-
-            $inventoryTypeRecord = InventoryType::whereHas('type', function ($q) use ($inventoryType) {
-                $q->where('Description', $inventoryType);
-            })->where('Status', 1)->first();
-
-            if (! $inventoryTypeRecord) {
-                $errorMsg = "Row {$rowNumber}: Invalid Inventory Type '{$inventoryType}'";
-                $this->skipped++;
-                $this->errors[] = $errorMsg;
-                DB::rollBack();
-
-                return null;
-            }
-            $inventoryTypeId = $inventoryTypeRecord->Id;
-
-            $statusValue = $row['status'] ?? 'Active';
-            $statusId = $this->lookupCodeDetailId('ItemStatus', $statusValue);
-            if (! $statusId) {
-                $statusId = $this->getDefaultStatusId();
-            }
-
-            $priceId = $this->lookupOrCreatePrice($row['itemprice'] ?? null);
-
-            $categoryName = $category;
-            $parentCategoryName = $row['parentcategory'] ?? null;
-
-            $categoryId = $this->findCategoryId($categoryName, $parentCategoryName);
-            if (! $categoryId) {
-                $parentText = $parentCategoryName ? " with parent '{$parentCategoryName}'" : "";
-                $errorMsg = "Row {$rowNumber}: Category '{$categoryName}'{$parentText} not found";
-                $this->skipped++;
-                $this->errors[] = $errorMsg;
-                DB::rollBack();
 
                 return null;
             }
 
-            $existingItem = ItemMasterList::where('ItemCode', $itemCode)->first();
+            if ($this->isUnchanged($existingItem, $row, $itemTypeId, $uomId, $inventoryTypeId, $categoryId, $statusId, $priceId)) {
+                $this->processed--;
 
-            if ($existingItem) {
-                if ($existingItem->inUse()) {
-                    $this->skipped++;
-                    $this->errors[] = "Row {$rowNumber}: Item '{$itemCode}' is currently in use and cannot be updated via import";
-                    DB::rollBack();
+                return null;
+            }
 
-                    return null;
-                }
+            DB::beginTransaction();
 
+            try {
                 $existingItem->BarCode = $row['barcode'] ?? $existingItem->BarCode;
-                $existingItem->ItemName = $itemName;
+                $existingItem->ItemName = $row['itemname'];
                 $existingItem->ItemType = $itemTypeId;
                 $existingItem->UOM = $uomId;
                 $existingItem->InventoryType = $inventoryTypeId;
                 $existingItem->Category = $categoryId;
                 $existingItem->Status = $statusId;
                 $existingItem->ItemDescription = $row['itemdescription'] ?? $existingItem->ItemDescription;
-
-                if (! empty($row['itemprice']) && $priceId !== null) {
+                if ($priceId) {
                     $existingItem->ItemPrice = $priceId;
                 }
-
                 $existingItem->ModifiedBy = Auth::id();
                 $existingItem->ModifiedOn = now();
-
                 $existingItem->save();
+
                 $this->updated++;
-
-                activity()
-                    ->causedBy(Auth::user())
-                    ->performedOn($existingItem)
-                    ->event('updated')
-                    ->log('Item updated via Excel import');
-
                 DB::commit();
 
                 return null;
-            }
 
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                $this->skipped++;
+
+                $message = $e->getMessage();
+                if (config('app.debug')) {
+                    $this->errors[] = "Row {$rowNumber}: Update failed - {$message}";
+                } else {
+                    $this->errors[] = "Row {$rowNumber}: System error during update";
+                }
+
+                return null;
+            }
+        }
+
+        DB::beginTransaction();
+
+        try {
             $newItemData = [
                 'ItemCode' => $itemCode,
                 'BarCode' => $row['barcode'] ?? null,
-                'ItemName' => $itemName,
+                'ItemName' => $row['itemname'],
                 'ItemType' => $itemTypeId,
                 'UOM' => $uomId,
                 'InventoryType' => $inventoryTypeId,
@@ -189,8 +179,7 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
                 'CreatedOn' => now(),
                 'ModifiedOn' => now(),
             ];
-
-            if (! empty($row['itemprice']) && $priceId !== null) {
+            if ($priceId) {
                 $newItemData['ItemPrice'] = $priceId;
             }
 
@@ -200,58 +189,139 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
             $this->created++;
             DB::commit();
 
-            activity()
-                ->causedBy(Auth::user())
-                ->performedOn($newItem)
-                ->event('imported')
-                ->log('Item imported via Excel');
-
             return $newItem;
+
         } catch (\Throwable $e) {
             DB::rollBack();
             $this->skipped++;
-            $rowNumber = $this->processed + 1;
-            $errorMsg = "Row {$rowNumber}: " . $e->getMessage();
-            $this->errors[] = $errorMsg;
+
+            $message = $e->getMessage();
+
+            if (str_contains($message, 'Duplicate entry')) {
+                $this->errors[] = "Row {$rowNumber}: Duplicate item code '{$itemCode}'";
+            } elseif (str_contains($message, 'foreign key constraint')) {
+                $this->errors[] = "Row {$rowNumber}: Invalid reference data";
+            } elseif (config('app.debug')) {
+                $this->errors[] = "Row {$rowNumber}: Creation failed - {$message}";
+            } else {
+                $this->errors[] = "Row {$rowNumber}: System error during creation";
+            }
 
             return null;
         }
     }
 
-    private function validateRequiredFields(array $row, int $rowNumber): array
+    private function hasRequiredFields(array $row): bool
     {
-        $errors = [];
+        $requiredFields = ['itemcode', 'itemname', 'itemtype', 'uom', 'inventorytype', 'category'];
 
-        $requiredFields = [
-            'itemcode' => 'Item Code',
-            'itemname' => 'Item Name',
-            'itemtype' => 'Item Type',
-            'uom' => 'UOM',
-            'inventorytype' => 'Inventory Type',
-            'category' => 'Category',
-        ];
-
-        foreach ($requiredFields as $field => $label) {
+        foreach ($requiredFields as $field) {
             $value = $row[$field] ?? null;
-            if (empty($value) || trim($value) === '') {
-                $errors[] = "Row {$rowNumber}: {$label} is required";
+            if (empty($value) || trim($value) === '' || trim($value) === '-') {
+                return false;
             }
         }
 
-        return $errors;
+        return true;
+    }
+
+    private function isUnchanged($item, array $row, $itemTypeId, $uomId, $inventoryTypeId, $categoryId, $statusId, $priceId): bool
+    {
+        $current = [
+            'ItemName' => $item->ItemName,
+            'BarCode' => $item->BarCode ?? '',
+            'ItemType' => $item->ItemType,
+            'UOM' => $item->UOM,
+            'InventoryType' => $item->InventoryType,
+            'Category' => $item->Category,
+            'Status' => $item->Status,
+            'ItemDescription' => $item->ItemDescription ?? '',
+            'ItemPrice' => $item->ItemPrice,
+        ];
+
+        $incoming = [
+            'ItemName' => $row['itemname'],
+            'BarCode' => $row['barcode'] ?? '',
+            'ItemType' => $itemTypeId,
+            'UOM' => $uomId,
+            'InventoryType' => $inventoryTypeId,
+            'Category' => $categoryId,
+            'Status' => $statusId,
+            'ItemDescription' => $row['itemdescription'] ?? '',
+            'ItemPrice' => $priceId,
+        ];
+
+        return $current == $incoming;
+    }
+
+    private function findItemTypeId($itemType)
+    {
+        if (empty($itemType) || trim($itemType) === '-') {
+            return null;
+        }
+
+        $record = ItemType::whereHas('type', fn ($q) => $q->where('Description', $itemType))
+            ->where('Active', 1)
+            ->first();
+
+        return $record ? $record->Id : null;
+    }
+
+    private function findUomId($uomCode)
+    {
+        if (empty($uomCode) || trim($uomCode) === '-') {
+            return null;
+        }
+
+        $record = UnitOfMeasure::where('Code', $uomCode)
+            ->where('Active', 1)
+            ->first();
+
+        return $record ? $record->Id : null;
+    }
+
+    private function findInventoryTypeId($inventoryType)
+    {
+        if (empty($inventoryType) || trim($inventoryType) === '-') {
+            return null;
+        }
+
+        $record = InventoryType::whereHas('type', fn ($q) => $q->where('Description', $inventoryType))
+            ->where('Status', 1)
+            ->first();
+
+        return $record ? $record->Id : null;
+    }
+
+    private function findCategoryId($categoryName, $parentCategoryName)
+    {
+        if (empty($categoryName) || $categoryName === '-') {
+            return null;
+        }
+
+        $query = ItemCategories::where('Name', $categoryName)
+            ->whereHas('status', fn ($q) => $q->where('Description', 'Active'));
+
+        if (! empty($parentCategoryName) && $parentCategoryName !== '-' && $parentCategoryName !== '') {
+            $query->whereHas('parent', fn ($q) => $q->where('Name', $parentCategoryName));
+        } else {
+            $query->whereNull('ParentId');
+        }
+
+        $category = $query->first();
+
+        return $category ? $category->Id : null;
     }
 
     private function lookupCodeDetailId(string $codeId, ?string $description)
     {
-        if (empty($description) || strtoupper($description) === 'N/A' || $description === '-') {
+        if (empty($description) || in_array(strtoupper($description), ['N/A', '-'])) {
             return null;
         }
 
-        $codeDetail = CodeDetail::where('CodeID', $codeId)
+        return CodeDetail::where('CodeID', $codeId)
             ->where('Description', $description)
-            ->first();
-
-        return $codeDetail ? $codeDetail->ID : null;
+            ->value('ID');
     }
 
     private function lookupOrCreatePrice($priceValue)
@@ -268,51 +338,25 @@ class ItemMasterListImport implements ToModel, WithHeadingRow
             return null;
         }
 
-        $price = PriceManagement::where('ActualPrice', $numericValue)->first();
-
-        if (! $price) {
-            $price = PriceManagement::create([
-                'ActualPrice' => $numericValue,
+        $price = PriceManagement::firstOrCreate(
+            ['ActualPrice' => $numericValue],
+            [
                 'Description' => 'Imported price',
                 'CreatedBy' => Auth::id(),
                 'ModifiedBy' => Auth::id(),
                 'CreatedOn' => now(),
                 'ModifiedOn' => now(),
-            ]);
-        }
+            ]
+        );
 
         return $price->Id;
     }
 
-    private function findCategoryId(?string $categoryName, ?string $parentCategoryName = null)
-    {
-        if (empty($categoryName) || $categoryName === '-' || $categoryName === '') {
-            return null;
-        }
-
-        $query = ItemCategories::where('Name', $categoryName)
-            ->whereHas('status', fn ($q) => $q->where('Description', 'Active'));
-
-        if (! empty($parentCategoryName) && $parentCategoryName !== '-' && $parentCategoryName !== '') {
-            $query->whereHas('parent', function ($q) use ($parentCategoryName) {
-                $q->where('Name', $parentCategoryName);
-            });
-        } else {
-            $query->whereNull('ParentId');
-        }
-
-        $category = $query->first();
-
-        return $category ? $category->Id : null;
-    }
-
     private function getDefaultStatusId()
     {
-        $status = CodeDetail::where('CodeID', 'ItemStatus')
+        return CodeDetail::where('CodeID', 'ItemStatus')
             ->where('Description', 'Active')
-            ->first();
-
-        return $status ? $status->ID : null;
+            ->value('ID');
     }
 
     public function getProcessedCount(): int

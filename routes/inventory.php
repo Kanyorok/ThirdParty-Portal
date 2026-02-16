@@ -84,6 +84,10 @@ Route::middleware(['module:400000'])->namespace('Inventory')->prefix('inventory'
     Route::post('/openingstock/upload', [OpeningStockController::class, 'uploadExcel'])->name('openingstock.upload');
 
     Route::resource('movementdashboard', StockMovementController::class);
+    Route::get('/stores-by-branch/{branchId}', [StockMovementController::class, 'getStoresByBranch'])
+    ->name('inventory.stores.by.branch');
+    Route::get('/items-by-store/{storeId}', [StockMovementController::class, 'getItemsByStore'])
+    ->name('inventory.items.by.store');
 
     Route::get('/stocktake/index', [StockTakeController::class, 'index'])->name('stocktake.index');
     Route::get('/stocktake', [StockTakeController::class, 'create'])->name('stocktake.create');
