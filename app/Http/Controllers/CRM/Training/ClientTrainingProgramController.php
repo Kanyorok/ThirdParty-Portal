@@ -172,7 +172,7 @@ class ClientTrainingProgramController extends Controller
 
         if ($previewListId > 0) {
             $previewList = $this->findAccessibleClientMarketingList($previewListId);
-            if (!$previewList) {
+            if (! $previewList) {
                 return redirect()->route('crm.training.programs.participants', $program->Id)
                     ->withErrors('Marketing list not found or not accessible.');
             }
@@ -215,7 +215,7 @@ class ClientTrainingProgramController extends Controller
     {
         $program = TrainingProgram::with('category')->findOrFail($id);
 
-        if (!$program->HasCertification) {
+        if (! $program->HasCertification) {
             return redirect()->route('crm.training.programs.show', $program->Id)
                 ->withErrors('This program has certification disabled.');
         }
@@ -237,6 +237,7 @@ class ClientTrainingProgramController extends Controller
         $eligibleClientIds = $targetClientIds
             ->filter(function (string $clientId) use ($attendedCounts, $completionConfig) {
                 $attended = (int) $attendedCounts->get($clientId, 0);
+
                 return $this->isProgramParticipantEligibleForCertification($attended, $completionConfig);
             })
             ->values();
@@ -341,7 +342,7 @@ class ClientTrainingProgramController extends Controller
         @ini_set('memory_limit', '512M');
         $program = TrainingProgram::findOrFail($id);
 
-        if (!$program->HasCertification) {
+        if (! $program->HasCertification) {
             return redirect()->route('crm.training.programs.certification', $program->Id)
                 ->withErrors('This program has certification disabled.');
         }
@@ -370,7 +371,7 @@ class ClientTrainingProgramController extends Controller
             })
             ->first();
 
-        if (!$selectedTemplate) {
+        if (! $selectedTemplate) {
             return redirect()->route('crm.training.programs.certification', $program->Id)
                 ->withErrors('Selected certificate template is not available for this program.')
                 ->withInput();
@@ -387,6 +388,7 @@ class ClientTrainingProgramController extends Controller
         $eligibleClientIds = $targetClientIds
             ->filter(function (string $clientId) use ($attendedCounts, $completionConfig) {
                 $attended = (int) $attendedCounts->get($clientId, 0);
+
                 return $this->isProgramParticipantEligibleForCertification($attended, $completionConfig);
             })
             ->values();
@@ -405,7 +407,7 @@ class ClientTrainingProgramController extends Controller
 
         $issuedOn = $data['IssuedOn'] ?? now()->toDateString();
         $expiresOn = $data['ExpiresOn'] ?? null;
-        if (!$expiresOn && is_numeric($selectedTemplate->DefaultValidityMonths)) {
+        if (! $expiresOn && is_numeric($selectedTemplate->DefaultValidityMonths)) {
             $expiresOn = Carbon::parse($issuedOn)->addMonths((int) $selectedTemplate->DefaultValidityMonths)->toDateString();
         }
 
@@ -434,12 +436,14 @@ class ClientTrainingProgramController extends Controller
                 $clientId = (string) $clientId;
                 if ($existingClientIds->has($clientId)) {
                     $skippedCount++;
+
                     continue;
                 }
 
                 $client = $clients->get($clientId);
-                if (!$client) {
+                if (! $client) {
                     $failedCount++;
+
                     continue;
                 }
 
@@ -560,7 +564,7 @@ class ClientTrainingProgramController extends Controller
         ]);
 
         $marketingList = $this->findAccessibleClientMarketingList((int) $data['MarketingListID']);
-        if (!$marketingList) {
+        if (! $marketingList) {
             return back()->withErrors('Marketing list not found or not accessible.');
         }
 
@@ -629,7 +633,7 @@ class ClientTrainingProgramController extends Controller
         $data['HasCertification'] = $request->boolean('HasCertification', false);
         $data['Status'] = $data['Status'] ?? ($program?->Status ?? 'Active');
 
-        if (!$data['HasCertification']) {
+        if (! $data['HasCertification']) {
             $data['CertificateScope'] = 'Session';
             $data['CertificationCompletionRule'] = null;
             $data['CertificationMinimumSessions'] = null;
@@ -792,7 +796,7 @@ class ClientTrainingProgramController extends Controller
 
     private function resolveCertificateBackgroundImageDataUri(?TrainingCertificateTemplate $selectedTemplate): ?string
     {
-        if (!$selectedTemplate) {
+        if (! $selectedTemplate) {
             return null;
         }
 
@@ -815,12 +819,12 @@ class ClientTrainingProgramController extends Controller
         }
 
         $normalizedPath = str_replace('\\', '/', ltrim($backgroundImagePath, '/\\'));
-        if (!preg_match('/^assets\/certificates\/templates\/[A-Za-z0-9._-]+$/', $normalizedPath)) {
+        if (! preg_match('/^assets\/certificates\/templates\/[A-Za-z0-9._-]+$/', $normalizedPath)) {
             return null;
         }
 
         $fullPath = public_path($normalizedPath);
-        if (!is_file($fullPath)) {
+        if (! is_file($fullPath)) {
             return null;
         }
 
@@ -856,12 +860,12 @@ class ClientTrainingProgramController extends Controller
     ): bool {
         try {
             $email = trim((string) ($client->Email ?? ''));
-            if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 return false;
             }
 
             $document = $certificate->document ?: ($certificate->DocumentId ? Document::find($certificate->DocumentId) : null);
-            if (!$document) {
+            if (! $document) {
                 return false;
             }
 
@@ -898,6 +902,7 @@ class ClientTrainingProgramController extends Controller
             return true;
         } catch (\Throwable $e) {
             report($e);
+
             return false;
         }
     }
@@ -915,6 +920,7 @@ class ClientTrainingProgramController extends Controller
         }
 
         $base = 'training-program-certificate-' . $programSlug . '-' . $participantSlug . '-' . $issuedOn->format('Ymd');
+
         return substr($base, 0, 170) . '.pdf';
     }
 

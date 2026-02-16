@@ -62,14 +62,14 @@ class DisciplinaryCaseController extends Controller
             'EvidenceFiles.*' => ['nullable', 'file', 'max:5120', 'mimes:pdf,doc,docx,xls,xlsx,csv,png,jpg,jpeg'],
         ]);
 
-        if (!empty($data['ComplainantID']) && (int)$data['ComplainantID'] === (int)$data['EmployeeID']) {
+        if (! empty($data['ComplainantID']) && (int)$data['ComplainantID'] === (int)$data['EmployeeID']) {
             return back()->withErrors([
                 'ComplainantID' => 'Complainant cannot be the same as the employee.',
             ])->withInput();
         }
 
         $offence = DisciplinaryOffence::find($data['OffenceID']);
-        if ($offence?->RequiresEvidence && !$request->hasFile('EvidenceFiles')) {
+        if ($offence?->RequiresEvidence && ! $request->hasFile('EvidenceFiles')) {
             return back()->withErrors(['EvidenceFiles' => 'Evidence is required for this offence.'])->withInput();
         }
 

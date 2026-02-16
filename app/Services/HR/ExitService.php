@@ -2,12 +2,12 @@
 
 namespace App\Services\HR;
 
-use App\Models\HR\Employee;
 use App\Models\Auth\User;
+use App\Models\HR\Employee;
+use App\Models\HR\Employee as LegacyEmployee;
 use App\Models\HR\Exit\ExitPolicy;
 use App\Models\HR\Exit\ExitPolicyNoticePeriod;
 use App\Models\HR\Exit\ExitRequest;
-use App\Models\HR\Employee as LegacyEmployee;
 use App\Models\HR\GratuityAccrual;
 use App\Models\HR\LeaveBalance;
 use App\Models\HR\LeaveType;
@@ -17,7 +17,7 @@ class ExitService
 {
     public function resolveNoticePeriod(?ExitPolicy $policy, Employee $employee): array
     {
-        if (!$policy) {
+        if (! $policy) {
             return ['days' => 0, 'payInLieuAllowed' => true];
         }
 
@@ -35,7 +35,7 @@ class ExitService
             return empty($period->EmploymentType) && empty($period->ContractType);
         });
 
-        if (!$match) {
+        if (! $match) {
             return ['days' => 0, 'payInLieuAllowed' => true];
         }
 
@@ -58,7 +58,7 @@ class ExitService
     public function calculateSalaryToLastDay(Employee $employee, ?Carbon $effectiveDate): float
     {
         $basic = (float)($employee->BasicSalary ?? 0);
-        if ($basic <= 0 || !$effectiveDate) {
+        if ($basic <= 0 || ! $effectiveDate) {
             return 0.0;
         }
 
@@ -90,13 +90,14 @@ class ExitService
     public function calculateGratuity(Employee $employee): float
     {
         $amount = GratuityAccrual::where('EmployeeID', $employee->Id)->sum('Amount');
+
         return round((float)$amount, 2);
     }
 
     public function buildTerminalDues(ExitRequest $exit): array
     {
         $employee = $exit->employee;
-        if (!$employee) {
+        if (! $employee) {
             return [];
         }
 

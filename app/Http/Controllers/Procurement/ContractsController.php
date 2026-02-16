@@ -3,16 +3,14 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use App\Models\Procurement\ContractMilestone;
-use App\Models\Procurement\ContractPenaltyRule;
-use App\Models\Procurement\TenderAward;
-use App\Models\Procurement\Tender;
-use App\Models\Procurement\RFQAward;
-use App\Models\Procurement\RFQ;
-use App\Models\Core\Approval\WorkflowHistory;
 use App\Models\Core\Approval\WorkflowPending;
 use App\Models\Finance\FinanceTaxRuleConfiguration;
-use App\Models\ThirdParies\Supplier;
+use App\Models\Procurement\ContractMilestone;
+use App\Models\Procurement\ContractPenaltyRule;
+use App\Models\Procurement\RFQ;
+use App\Models\Procurement\RFQAward;
+use App\Models\Procurement\Tender;
+use App\Models\Procurement\TenderAward;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -113,7 +111,7 @@ class ContractsController extends Controller
             'active' => $statusValues->filter(fn ($status) => in_array($status, ['Approved', 'Ap', 'Contract Approved', 'Executed', 'Ex'], true))->count(),
             'with_legal' => $statusValues->filter(fn ($status) => $status === 'Sent to Legal')->count(),
         ];
-        
+
         $contracts = new \Illuminate\Pagination\LengthAwarePaginator(
             $allContracts->slice($offset, $perPage)->values(),
             $allContracts->count(),
@@ -307,7 +305,7 @@ class ContractsController extends Controller
 
             // Branch-aware permissions may fail if LoginBranchId is missing in session.
             // Fallback to the authenticated user's default branch for this approval check only.
-            if (!$canApprove && empty(session('LoginBranchId')) && Auth::check() && !empty(Auth::user()->BranchId)) {
+            if (! $canApprove && empty(session('LoginBranchId')) && Auth::check() && ! empty(Auth::user()->BranchId)) {
                 session(['LoginBranchId' => (int) Auth::user()->BranchId]);
                 $canApprove = $workflow->canApproveModel($contract, Auth::user());
             }
@@ -325,7 +323,7 @@ class ContractsController extends Controller
         }
 
         // Recover stale state: status says under review but there is no active workflow pending assignee.
-        if (!$hasPendingWorkflow && in_array((string) $contract->ContractStatus, ['Under Review', 'rv'], true)) {
+        if (! $hasPendingWorkflow && in_array((string) $contract->ContractStatus, ['Under Review', 'rv'], true)) {
             $contract->ContractStatus = 'Draft Created';
         }
 
@@ -565,18 +563,20 @@ class ContractsController extends Controller
             $missingChecklist = $milestones->filter(fn ($m) => ((int) $m->checklist_items_count) === 0);
             if ($missingChecklist->isNotEmpty()) {
                 $sample = $missingChecklist->pluck('MilestoneNo')->map(fn ($no) => 'M' . $no)->take(5)->implode(', ');
+
                 return redirect()->back()->with('error', "Cannot approve contract: add checklist items for {$sample}.");
             }
 
             $missingRequiredChecklist = $milestones->filter(fn ($m) => ((int) $m->required_checklist_count) === 0);
             if ($missingRequiredChecklist->isNotEmpty()) {
                 $sample = $missingRequiredChecklist->pluck('MilestoneNo')->map(fn ($no) => 'M' . $no)->take(5)->implode(', ');
+
                 return redirect()->back()->with('error', "Cannot approve contract: each milestone must have at least one required checklist item. Missing in {$sample}.");
             }
 
             $contractValue = round(max(0, (float) ($award->ContractValue ?? 0)), 2);
             $allocatedMilestoneValue = $this->calculateMilestoneCoverageTotal($milestones, $contractValue);
-            if (!$this->isAmountEqual($allocatedMilestoneValue, $contractValue)) {
+            if (! $this->isAmountEqual($allocatedMilestoneValue, $contractValue)) {
                 $difference = round(abs($contractValue - $allocatedMilestoneValue), 2);
                 $direction = $allocatedMilestoneValue < $contractValue ? 'below' : 'above';
                 $actionHint = $allocatedMilestoneValue < $contractValue ? 'Add more milestone value' : 'Reduce milestone value';
@@ -655,11 +655,11 @@ class ContractsController extends Controller
 
             // Log the rejection details in custom fields if needed
             // Workflow handles status and history.
-             \Log::info('Contract rejected', [
-                'award_id' => $id,
-                'award_type' => $type,
-                'rejection_reason' => $request->rejection_reason,
-                'rejected_by' => Auth::id()
+            \Log::info('Contract rejected', [
+               'award_id' => $id,
+               'award_type' => $type,
+               'rejection_reason' => $request->rejection_reason,
+               'rejected_by' => Auth::id(),
             ]);
 
             $award->update([
@@ -768,11 +768,12 @@ class ContractsController extends Controller
 
     protected function upsertPenaltyRule(string $type, int $contractId, Request $request): void
     {
-        if (!$request->filled('penalty_type')) {
+        if (! $request->filled('penalty_type')) {
             ContractPenaltyRule::where('ContractSourceType', $type)
                 ->where('ContractSourceID', $contractId)
                 ->whereNull('MilestoneID')
                 ->update(['IsActive' => false]);
+
             return;
         }
 
@@ -866,7 +867,7 @@ class ContractsController extends Controller
 
             $contractValue = round(max(0, (float) ($award->ContractValue ?? 0)), 2);
             $allocatedMilestoneValue = $this->calculateMilestoneCoverageTotal($milestones, $contractValue);
-            if (!$this->isAmountEqual($allocatedMilestoneValue, $contractValue)) {
+            if (! $this->isAmountEqual($allocatedMilestoneValue, $contractValue)) {
                 $difference = round(abs($contractValue - $allocatedMilestoneValue), 2);
                 $direction = $allocatedMilestoneValue < $contractValue ? 'below' : 'above';
                 $actionHint = $allocatedMilestoneValue < $contractValue ? 'Add more milestone value' : 'Reduce milestone value';
@@ -884,7 +885,7 @@ class ContractsController extends Controller
         $hasPendingWorkflow = $this->hasActiveWorkflowPending($award);
 
         if ($hasPendingWorkflow) {
-            if (!in_array((string) $award->ContractStatus, ['Under Review', 'rv'], true)) {
+            if (! in_array((string) $award->ContractStatus, ['Under Review', 'rv'], true)) {
                 $award->update([
                     'ContractStatus' => 'Under Review',
                     'ModifiedBy' => Auth::id(),
@@ -906,9 +907,9 @@ class ContractsController extends Controller
 
         // Maker-Checker: Prevent re-submission if already under review or approved
         $allowedStatuses = ['Draft Created', 'Dr', 'Rejected', 'Re'];
-        if (!in_array($award->ContractStatus, $allowedStatuses)) {
-             return redirect()->route('contracts.show', ['id' => $id, 'type' => $type])
-                 ->with('warning', 'This contract has already been submitted for approval.');
+        if (! in_array($award->ContractStatus, $allowedStatuses)) {
+            return redirect()->route('contracts.show', ['id' => $id, 'type' => $type])
+                ->with('warning', 'This contract has already been submitted for approval.');
         }
 
         try {

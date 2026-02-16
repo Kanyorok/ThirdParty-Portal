@@ -8,7 +8,6 @@ use App\Models\Core\Branch;
 use App\Models\HRM\Department;
 use App\Services\BR\BREncryption;
 use App\Services\HR\EmployeeService;
-use App\Services\HRM\UserService;
 use Illuminate\Database\Seeder;
 use RuntimeException;
 use Spatie\Permission\Models\Role;

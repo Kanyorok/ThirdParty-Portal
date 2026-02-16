@@ -46,7 +46,7 @@ class TrainingReportController extends Controller
 
         $clientIds = $hoursByClientRaw->pluck('ClientID')->map(fn ($id) => (string)$id)->all();
         $clients = collect();
-        if (!empty($clientIds)) {
+        if (! empty($clientIds)) {
             $clients = Client::query()
                 ->whereIn('ClientID', $clientIds)
                 ->get(['ClientID', 'Name', 'ClientTypeID'])
@@ -69,7 +69,7 @@ class TrainingReportController extends Controller
             $client = $clients->get((string)$row->ClientID);
             $type = $client?->ClientTypeID ?: 'UNSPECIFIED';
 
-            if (!isset($typeSummary[$type])) {
+            if (! isset($typeSummary[$type])) {
                 $typeSummary[$type] = [
                     'Department' => $type,
                     'EmployeeCount' => 0,
@@ -78,7 +78,7 @@ class TrainingReportController extends Controller
                 ];
             }
 
-            if (!isset($typeSummary[$type]['seen'][(string)$row->ClientID])) {
+            if (! isset($typeSummary[$type]['seen'][(string)$row->ClientID])) {
                 $typeSummary[$type]['EmployeeCount']++;
                 $typeSummary[$type]['seen'][(string)$row->ClientID] = true;
             }
@@ -135,11 +135,11 @@ class TrainingReportController extends Controller
             ->get(['Title', 'BudgetedCost', 'ActualCost']);
 
         $feedbackSummary = TrainingSessionFeedback::select(
-                'SessionID',
-                DB::raw('AVG(CAST(RatingContent as float)) as AvgContent'),
-                DB::raw('AVG(CAST(RatingTrainer as float)) as AvgTrainer'),
-                DB::raw('AVG(CAST(RatingRelevance as float)) as AvgRelevance')
-            )
+            'SessionID',
+            DB::raw('AVG(CAST(RatingContent as float)) as AvgContent'),
+            DB::raw('AVG(CAST(RatingTrainer as float)) as AvgTrainer'),
+            DB::raw('AVG(CAST(RatingRelevance as float)) as AvgRelevance')
+        )
             ->groupBy('SessionID')
             ->get()
             ->keyBy('SessionID');

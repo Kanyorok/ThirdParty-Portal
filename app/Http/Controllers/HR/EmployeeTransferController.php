@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\HR;
 
 use App\Http\Controllers\Controller;
+use App\Models\Core\Branch;
 use App\Models\HR\Employee;
 use App\Models\HR\EmployeeTransfer;
-use App\Models\Core\Branch;
-use App\Models\HRM\Department;
 use App\Models\HR\JobRole;
+use App\Models\HRM\Department;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -16,6 +16,7 @@ class EmployeeTransferController extends Controller
     public function index()
     {
         $transfers = EmployeeTransfer::with(['employee'])->orderByDesc('Id')->paginate(20);
+
         return view('hr.movements.transfers.index', compact('transfers'));
     }
 
@@ -25,6 +26,7 @@ class EmployeeTransferController extends Controller
         $branches = Branch::whereNull('DeletedOn')->orderBy('Name')->get();
         $departments = Department::whereNull('DeletedOn')->orderBy('Name')->get();
         $roles = JobRole::where('IsActive', 1)->orderBy('Name')->get();
+
         return view('hr.movements.transfers.create', compact('employees', 'branches', 'departments', 'roles'));
     }
 
@@ -37,12 +39,14 @@ class EmployeeTransferController extends Controller
         $data['CreatedOn'] = now();
 
         EmployeeTransfer::create($data);
+
         return redirect()->route('hr.movements.transfers.index')->with('success', 'Transfer request submitted.');
     }
 
     public function show($id)
     {
         $transfer = EmployeeTransfer::with('employee')->findOrFail($id);
+
         return view('hr.movements.transfers.show', compact('transfer'));
     }
 
@@ -53,6 +57,7 @@ class EmployeeTransferController extends Controller
         $branches = Branch::whereNull('DeletedOn')->orderBy('Name')->get();
         $departments = Department::whereNull('DeletedOn')->orderBy('Name')->get();
         $roles = JobRole::where('IsActive', 1)->orderBy('Name')->get();
+
         return view('hr.movements.transfers.edit', compact('transfer', 'employees', 'branches', 'departments', 'roles'));
     }
 
@@ -64,6 +69,7 @@ class EmployeeTransferController extends Controller
             'ModifiedBy' => auth()->id(),
             'ModifiedOn' => now(),
         ]);
+
         return redirect()->route('hr.movements.transfers.index')->with('success', 'Transfer updated.');
     }
 
@@ -75,6 +81,7 @@ class EmployeeTransferController extends Controller
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);
+
         return redirect()->route('hr.movements.transfers.index')->with('success', 'Transfer marked rejected.');
     }
 
@@ -87,6 +94,7 @@ class EmployeeTransferController extends Controller
             'ApprovedOn' => now(),
             'ApprovalComment' => $request->input('ApprovalComment'),
         ]);
+
         return redirect()->route('hr.movements.transfers.index')->with('success', 'Transfer approved.');
     }
 
@@ -99,22 +107,23 @@ class EmployeeTransferController extends Controller
             'ApprovedOn' => now(),
             'ApprovalComment' => $request->input('ApprovalComment'),
         ]);
+
         return redirect()->route('hr.movements.transfers.index')->with('success', 'Transfer rejected.');
     }
 
     private function validateData(Request $request, bool $requireEmployee = false): array
     {
         return $request->validate([
-            'EmployeeID'       => [$requireEmployee ? 'required' : 'nullable', 'integer'],
-            'FromBranchID'     => 'nullable|integer',
-            'ToBranchID'       => 'nullable|integer',
+            'EmployeeID' => [$requireEmployee ? 'required' : 'nullable', 'integer'],
+            'FromBranchID' => 'nullable|integer',
+            'ToBranchID' => 'nullable|integer',
             'FromDepartmentID' => 'nullable|integer',
-            'ToDepartmentID'   => 'nullable|integer',
-            'FromRoleID'       => 'nullable|integer',
-            'ToRoleID'         => 'nullable|integer',
-            'EffectiveDate'    => 'required|date',
-            'Reason'           => 'nullable|string|max:255',
-            'Status'           => ['nullable', Rule::in(['Pending','Approved','Rejected'])],
+            'ToDepartmentID' => 'nullable|integer',
+            'FromRoleID' => 'nullable|integer',
+            'ToRoleID' => 'nullable|integer',
+            'EffectiveDate' => 'required|date',
+            'Reason' => 'nullable|string|max:255',
+            'Status' => ['nullable', Rule::in(['Pending','Approved','Rejected'])],
         ]);
     }
 }

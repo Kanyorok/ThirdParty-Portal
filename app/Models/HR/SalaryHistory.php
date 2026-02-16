@@ -12,7 +12,7 @@ class SalaryHistory extends Model
 
     protected $fillable = [
         'EmployeeID','EffectiveDate','BasicSalary','Reason','Status',
-        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn'
+        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn',
     ];
 
     protected $casts = [

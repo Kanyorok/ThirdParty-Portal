@@ -2,9 +2,8 @@
 
 namespace App\Models\HR;
 
-use Illuminate\Database\Eloquent\Model;
-use App\Models\HR\JobGrade;
 use App\Models\Finance\FinanceGLAccounts;
+use Illuminate\Database\Eloquent\Model;
 
 class PayrollAllowance extends Model
 {

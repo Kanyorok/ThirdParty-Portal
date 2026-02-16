@@ -11,6 +11,7 @@ class StatutoryNssfController extends Controller
     public function index()
     {
         $rates = StatutoryNssfRate::orderBy('IncomeFrom')->paginate(20);
+
         return view('hr.statutory.nssf.index', compact('rates'));
     }
 
@@ -22,15 +23,15 @@ class StatutoryNssfController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'Tier'          => ['nullable', 'string', 'max:50'],
-            'IncomeFrom'    => ['required', 'numeric', 'min:0'],
-            'IncomeTo'      => ['nullable', 'numeric', 'gte:IncomeFrom'],
-            'EmployeeRate'  => ['required', 'numeric', 'min:0'],
-            'EmployerRate'  => ['required', 'numeric', 'min:0'],
-            'IsPercentage'  => ['nullable', 'boolean'],
+            'Tier' => ['nullable', 'string', 'max:50'],
+            'IncomeFrom' => ['required', 'numeric', 'min:0'],
+            'IncomeTo' => ['nullable', 'numeric', 'gte:IncomeFrom'],
+            'EmployeeRate' => ['required', 'numeric', 'min:0'],
+            'EmployerRate' => ['required', 'numeric', 'min:0'],
+            'IsPercentage' => ['nullable', 'boolean'],
             'EffectiveFrom' => ['required', 'date'],
-            'EffectiveTo'   => ['nullable', 'date', 'after:EffectiveFrom'],
-            'Description'   => ['nullable', 'string', 'max:255'],
+            'EffectiveTo' => ['nullable', 'date', 'after:EffectiveFrom'],
+            'Description' => ['nullable', 'string', 'max:255'],
         ]);
 
         $data['IsPercentage'] = $request->boolean('IsPercentage', true);
@@ -46,6 +47,7 @@ class StatutoryNssfController extends Controller
     public function edit($id)
     {
         $rate = StatutoryNssfRate::findOrFail($id);
+
         return view('hr.statutory.nssf.edit', compact('rate'));
     }
 
@@ -53,16 +55,16 @@ class StatutoryNssfController extends Controller
     {
         $rate = StatutoryNssfRate::findOrFail($id);
         $data = $request->validate([
-            'Tier'          => ['nullable', 'string', 'max:50'],
-            'IncomeFrom'    => ['required', 'numeric', 'min:0'],
-            'IncomeTo'      => ['nullable', 'numeric', 'gte:IncomeFrom'],
-            'EmployeeRate'  => ['required', 'numeric', 'min:0'],
-            'EmployerRate'  => ['required', 'numeric', 'min:0'],
-            'IsPercentage'  => ['nullable', 'boolean'],
+            'Tier' => ['nullable', 'string', 'max:50'],
+            'IncomeFrom' => ['required', 'numeric', 'min:0'],
+            'IncomeTo' => ['nullable', 'numeric', 'gte:IncomeFrom'],
+            'EmployeeRate' => ['required', 'numeric', 'min:0'],
+            'EmployerRate' => ['required', 'numeric', 'min:0'],
+            'IsPercentage' => ['nullable', 'boolean'],
             'EffectiveFrom' => ['required', 'date'],
-            'EffectiveTo'   => ['nullable', 'date', 'after:EffectiveFrom'],
-            'Description'   => ['nullable', 'string', 'max:255'],
-            'IsActive'      => ['nullable', 'boolean'],
+            'EffectiveTo' => ['nullable', 'date', 'after:EffectiveFrom'],
+            'Description' => ['nullable', 'string', 'max:255'],
+            'IsActive' => ['nullable', 'boolean'],
         ]);
 
         $data['IsPercentage'] = $request->boolean('IsPercentage', true);
@@ -79,7 +81,7 @@ class StatutoryNssfController extends Controller
     {
         $rate = StatutoryNssfRate::findOrFail($id);
         $rate->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);

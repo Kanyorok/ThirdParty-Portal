@@ -30,11 +30,11 @@ class TrainingCertificate extends Model
     ];
 
     protected $casts = [
-        'IssuedOn'   => 'date',
-        'ExpiresOn'  => 'date',
-        'CreatedOn'  => 'datetime',
+        'IssuedOn' => 'date',
+        'ExpiresOn' => 'date',
+        'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
-        'DeletedOn'  => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
     public function session()

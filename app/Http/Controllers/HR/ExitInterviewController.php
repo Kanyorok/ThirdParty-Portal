@@ -67,7 +67,7 @@ class ExitInterviewController extends Controller
             'Answers.*' => ['nullable', 'string'],
         ]);
 
-        if (!empty($data['InterviewerID']) && (int) $data['InterviewerID'] === (int) $exit->EmployeeID) {
+        if (! empty($data['InterviewerID']) && (int) $data['InterviewerID'] === (int) $exit->EmployeeID) {
             return back()->withErrors(['InterviewerID' => 'The exiting employee cannot be selected as the interviewer.'])->withInput();
         }
 
@@ -93,7 +93,7 @@ class ExitInterviewController extends Controller
         $answers = $data['Answers'] ?? [];
         foreach ($answers as $questionId => $answer) {
             $questionId = (int) $questionId;
-            if (!in_array($questionId, $questionIds, true)) {
+            if (! in_array($questionId, $questionIds, true)) {
                 continue;
             }
             ExitInterviewResponse::updateOrCreate(

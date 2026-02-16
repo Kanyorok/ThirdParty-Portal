@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\HR;
 
 use App\Http\Controllers\Controller;
-use App\Models\HR\KpiAppraisal;
 use App\Models\HR\KpiPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -62,13 +61,13 @@ class KpiReportController extends Controller
         } else {
             $query = clone $base;
             $rows = $query->selectRaw('EmployeeID, EmployeeNo, FirstName, LastName, BranchName, DepartmentName, COUNT(*) as Appraisals, AVG(TotalScore) as AvgScore')
-                ->groupBy('EmployeeID','EmployeeNo','FirstName','LastName','BranchName','DepartmentName')
+                ->groupBy('EmployeeID', 'EmployeeNo', 'FirstName', 'LastName', 'BranchName', 'DepartmentName')
                 ->orderBy('FirstName')
                 ->get();
         }
 
         $periods = KpiPeriod::where('IsActive', 1)->orderBy('Name')->get(['Id','Name']);
 
-        return view('hr.kpi.reports.index', compact('rows','periods','group','status','periodId'));
+        return view('hr.kpi.reports.index', compact('rows', 'periods', 'group', 'status', 'periodId'));
     }
 }

@@ -13,6 +13,7 @@ class PayrollDeductionController extends Controller
     public function index()
     {
         $deductions = PayrollDeduction::orderBy('Name')->paginate(20);
+
         return view('hr.statutory.deductions.index', compact('deductions'));
     }
 
@@ -67,7 +68,7 @@ class PayrollDeductionController extends Controller
             ->orderBy('GLCode')
             ->get(['Id','GLCode','GLName','CBSAccountCode']);
 
-        return view('hr.statutory.deductions.edit', compact('deduction','glAccounts'));
+        return view('hr.statutory.deductions.edit', compact('deduction', 'glAccounts'));
     }
 
     public function update(Request $request, $id)

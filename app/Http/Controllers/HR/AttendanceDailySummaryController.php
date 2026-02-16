@@ -26,6 +26,7 @@ class AttendanceDailySummaryController extends Controller
         }
         $dailies = $query->paginate(50);
         $employees = Employee::orderBy('FirstName')->get(['Id','FirstName','LastName']);
-        return view('hr.attendance.daily.index', compact('dailies','employees'));
+
+        return view('hr.attendance.daily.index', compact('dailies', 'employees'));
     }
 }

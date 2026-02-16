@@ -45,6 +45,7 @@ class ExitInterviewQuestionController extends Controller
     public function edit($id)
     {
         $question = ExitInterviewQuestion::whereNull('DeletedOn')->findOrFail($id);
+
         return view('hr.exit.config.interview_questions.edit', compact('question'));
     }
 

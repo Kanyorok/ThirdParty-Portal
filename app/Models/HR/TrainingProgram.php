@@ -33,13 +33,13 @@ class TrainingProgram extends Model
 
     protected $casts = [
         'DurationHours' => 'decimal:2',
-        'BudgetedCost'  => 'decimal:2',
-        'ActualCost'    => 'decimal:2',
-        'IsMandatory'   => 'boolean',
+        'BudgetedCost' => 'decimal:2',
+        'ActualCost' => 'decimal:2',
+        'IsMandatory' => 'boolean',
         'HasCertification' => 'boolean',
-        'CreatedOn'     => 'datetime',
-        'ModifiedOn'    => 'datetime',
-        'DeletedOn'     => 'datetime',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
     public function category()

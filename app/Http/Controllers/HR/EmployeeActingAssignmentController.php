@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\HR;
 
 use App\Http\Controllers\Controller;
+use App\Models\Core\Branch;
 use App\Models\HR\Employee;
 use App\Models\HR\EmployeeActingAssignment;
-use App\Models\Core\Branch;
-use App\Models\HRM\Department;
 use App\Models\HR\JobRole;
+use App\Models\HRM\Department;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -16,6 +16,7 @@ class EmployeeActingAssignmentController extends Controller
     public function index()
     {
         $assignments = EmployeeActingAssignment::with(['employee'])->orderByDesc('Id')->paginate(20);
+
         return view('hr.movements.acting.index', compact('assignments'));
     }
 
@@ -25,6 +26,7 @@ class EmployeeActingAssignmentController extends Controller
         $branches = Branch::whereNull('DeletedOn')->orderBy('Name')->get();
         $departments = Department::whereNull('DeletedOn')->orderBy('Name')->get();
         $roles = JobRole::where('IsActive', 1)->orderBy('Name')->get();
+
         return view('hr.movements.acting.create', compact('employees', 'branches', 'departments', 'roles'));
     }
 
@@ -37,12 +39,14 @@ class EmployeeActingAssignmentController extends Controller
         $data['CreatedOn'] = now();
 
         EmployeeActingAssignment::create($data);
+
         return redirect()->route('hr.movements.acting.index')->with('success', 'Acting assignment request submitted.');
     }
 
     public function show($id)
     {
         $assignment = EmployeeActingAssignment::with('employee')->findOrFail($id);
+
         return view('hr.movements.acting.show', compact('assignment'));
     }
 
@@ -53,6 +57,7 @@ class EmployeeActingAssignmentController extends Controller
         $branches = Branch::whereNull('DeletedOn')->orderBy('Name')->get();
         $departments = Department::whereNull('DeletedOn')->orderBy('Name')->get();
         $roles = JobRole::where('IsActive', 1)->orderBy('Name')->get();
+
         return view('hr.movements.acting.edit', compact('assignment', 'employees', 'branches', 'departments', 'roles'));
     }
 
@@ -64,6 +69,7 @@ class EmployeeActingAssignmentController extends Controller
             'ModifiedBy' => auth()->id(),
             'ModifiedOn' => now(),
         ]);
+
         return redirect()->route('hr.movements.acting.index')->with('success', 'Acting assignment updated.');
     }
 
@@ -75,6 +81,7 @@ class EmployeeActingAssignmentController extends Controller
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);
+
         return redirect()->route('hr.movements.acting.index')->with('success', 'Acting assignment marked rejected.');
     }
 
@@ -87,6 +94,7 @@ class EmployeeActingAssignmentController extends Controller
             'ApprovedOn' => now(),
             'ApprovalComment' => $request->input('ApprovalComment'),
         ]);
+
         // Optional hook: flag acting allowance generation (use configured ACTING allowance rule)
         // Placeholder: integrate with payroll staging when available.
         return redirect()->route('hr.movements.acting.index')->with('success', 'Acting assignment approved.');
@@ -101,22 +109,23 @@ class EmployeeActingAssignmentController extends Controller
             'ApprovedOn' => now(),
             'ApprovalComment' => $request->input('ApprovalComment'),
         ]);
+
         return redirect()->route('hr.movements.acting.index')->with('success', 'Acting assignment rejected.');
     }
 
     private function validateData(Request $request, bool $requireEmployee = false): array
     {
         return $request->validate([
-            'EmployeeID'         => [$requireEmployee ? 'required' : 'nullable', 'integer'],
-            'ActingBranchID'     => 'nullable|integer',
+            'EmployeeID' => [$requireEmployee ? 'required' : 'nullable', 'integer'],
+            'ActingBranchID' => 'nullable|integer',
             'ActingDepartmentID' => 'nullable|integer',
-            'ActingRoleID'       => 'nullable|integer',
-            'StartDate'          => 'required|date',
-            'EndDate'            => 'nullable|date|after_or_equal:StartDate',
-            'Reason'             => 'nullable|string|max:255',
-            'Status'             => ['nullable', Rule::in(['Pending','Approved','Rejected'])],
+            'ActingRoleID' => 'nullable|integer',
+            'StartDate' => 'required|date',
+            'EndDate' => 'nullable|date|after_or_equal:StartDate',
+            'Reason' => 'nullable|string|max:255',
+            'Status' => ['nullable', Rule::in(['Pending','Approved','Rejected'])],
             'ActingReferenceSalary' => ['nullable','numeric'],
-            'ActingAllowanceRate'   => ['nullable','numeric'],
+            'ActingAllowanceRate' => ['nullable','numeric'],
         ]);
     }
 }

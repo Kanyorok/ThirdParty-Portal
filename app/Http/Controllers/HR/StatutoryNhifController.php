@@ -11,6 +11,7 @@ class StatutoryNhifController extends Controller
     public function index()
     {
         $rates = StatutoryNhifRate::orderBy('EffectiveFrom')->paginate(20);
+
         return view('hr.statutory.nhif.index', compact('rates'));
     }
 
@@ -22,11 +23,11 @@ class StatutoryNhifController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'EmployeeRate'  => ['required', 'numeric', 'min:0'],
-            'MinAmount'     => ['required', 'numeric', 'min:0'],
+            'EmployeeRate' => ['required', 'numeric', 'min:0'],
+            'MinAmount' => ['required', 'numeric', 'min:0'],
             'EffectiveFrom' => ['required', 'date'],
-            'EffectiveTo'   => ['nullable', 'date', 'after:EffectiveFrom'],
-            'Description'   => ['nullable', 'string', 'max:255'],
+            'EffectiveTo' => ['nullable', 'date', 'after:EffectiveFrom'],
+            'Description' => ['nullable', 'string', 'max:255'],
         ]);
 
         $data['BandName'] = 'SHA/SHIF';
@@ -46,6 +47,7 @@ class StatutoryNhifController extends Controller
     public function edit($id)
     {
         $rate = StatutoryNhifRate::findOrFail($id);
+
         return view('hr.statutory.nhif.edit', compact('rate'));
     }
 
@@ -53,12 +55,12 @@ class StatutoryNhifController extends Controller
     {
         $rate = StatutoryNhifRate::findOrFail($id);
         $data = $request->validate([
-            'EmployeeRate'  => ['required', 'numeric', 'min:0'],
-            'MinAmount'     => ['required', 'numeric', 'min:0'],
+            'EmployeeRate' => ['required', 'numeric', 'min:0'],
+            'MinAmount' => ['required', 'numeric', 'min:0'],
             'EffectiveFrom' => ['required', 'date'],
-            'EffectiveTo'   => ['nullable', 'date', 'after:EffectiveFrom'],
-            'Description'   => ['nullable', 'string', 'max:255'],
-            'IsActive'      => ['nullable', 'boolean'],
+            'EffectiveTo' => ['nullable', 'date', 'after:EffectiveFrom'],
+            'Description' => ['nullable', 'string', 'max:255'],
+            'IsActive' => ['nullable', 'boolean'],
         ]);
 
         $data['BandName'] = 'SHA/SHIF';
@@ -79,7 +81,7 @@ class StatutoryNhifController extends Controller
     {
         $rate = StatutoryNhifRate::findOrFail($id);
         $rate->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);

@@ -28,6 +28,7 @@ class RFQCommitteeController extends Controller
         [$resolvedUserIds, $unresolvedIds] = $this->resolveCommitteeUserIds((array) $request->committeeMembers);
         if ($unresolvedIds->isNotEmpty()) {
             $missing = $this->formatMissingEmployeeNames($unresolvedIds);
+
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Some selected members do not have active user accounts: ' . $missing);
@@ -213,6 +214,7 @@ class RFQCommitteeController extends Controller
                 'ModifiedBy' => $actorId,
                 'ModifiedOn' => $now,
             ]);
+
             return;
         }
 

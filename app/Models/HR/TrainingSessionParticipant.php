@@ -29,10 +29,10 @@ class TrainingSessionParticipant extends Model
 
     protected $casts = [
         'AttendanceMarkedOn' => 'datetime',
-        'EnrolledOn'         => 'datetime',
-        'CreatedOn'          => 'datetime',
-        'ModifiedOn'         => 'datetime',
-        'DeletedOn'          => 'datetime',
+        'EnrolledOn' => 'datetime',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
     public function session()

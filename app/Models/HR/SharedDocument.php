@@ -38,15 +38,15 @@ class SharedDocument extends Model
     ];
 
     protected $casts = [
-        'EffectiveDate'        => 'date',
-        'ExpiryDate'           => 'date',
+        'EffectiveDate' => 'date',
+        'ExpiryDate' => 'date',
         'AcknowledgementDueOn' => 'date',
-        'IsDownloadable'       => 'boolean',
-        'IsMandatory'          => 'boolean',
-        'IsActive'             => 'boolean',
-        'CreatedOn'            => 'datetime',
-        'ModifiedOn'           => 'datetime',
-        'DeletedOn'            => 'datetime',
+        'IsDownloadable' => 'boolean',
+        'IsMandatory' => 'boolean',
+        'IsActive' => 'boolean',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
     public function category()

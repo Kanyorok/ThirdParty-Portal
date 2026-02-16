@@ -61,7 +61,7 @@ class EmployeeWorkingDayController extends Controller
             if ($isWorking) {
                 $request->validate([
                     "start_time.$day" => ['required', 'date_format:H:i'],
-                    "end_time.$day"   => ['required', 'date_format:H:i', "after:start_time.$day"],
+                    "end_time.$day" => ['required', 'date_format:H:i', "after:start_time.$day"],
                 ], [], ['start_time.' . $day => "{$weekdays[$day]} start time", 'end_time.' . $day => "{$weekdays[$day]} end time"]);
                 $request->validate([
                     "day_fraction.$day" => ['required', 'in:1,0.5'],
@@ -77,7 +77,7 @@ class EmployeeWorkingDayController extends Controller
                 'EmployeeID' => $employee->Id,
                 'DayOfWeek' => $day,
             ]);
-            if (!$record->exists) {
+            if (! $record->exists) {
                 $record->CreatedBy = $userId;
                 $record->CreatedOn = now();
             }

@@ -12,6 +12,7 @@ class SharedDocumentCategoryController extends Controller
     public function index()
     {
         $categories = SharedDocumentCategory::orderBy('Name')->paginate(30);
+
         return view('hr.shared-docs.categories.index', compact('categories'));
     }
 
@@ -41,6 +42,7 @@ class SharedDocumentCategoryController extends Controller
     public function edit($id)
     {
         $category = SharedDocumentCategory::findOrFail($id);
+
         return view('hr.shared-docs.categories.edit', compact('category'));
     }
 

@@ -2,8 +2,8 @@
 
 namespace App\Models\HR\Exit;
 
-use App\Models\HR\Employee;
 use App\Models\HR\Discipline\DisciplinaryCase;
+use App\Models\HR\Employee;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;

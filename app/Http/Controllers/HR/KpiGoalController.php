@@ -17,7 +17,7 @@ class KpiGoalController extends Controller
 {
     private function periodSegmentCount(?KpiPeriod $period): int
     {
-        if (!$period) {
+        if (! $period) {
             return 1;
         }
         $start = (int)($period->StartMonth ?? 1);
@@ -29,6 +29,7 @@ class KpiGoalController extends Controller
         if (12 % $length !== 0) {
             return 1;
         }
+
         return (int)(12 / $length);
     }
 
@@ -52,6 +53,7 @@ class KpiGoalController extends Controller
         for ($i = 0; $i < $years; $i++) {
             $options[] = $startYear + $i;
         }
+
         return $options;
     }
 
@@ -73,7 +75,7 @@ class KpiGoalController extends Controller
         $employees = Employee::orderBy('FirstName')->get(['Id','FirstName','LastName','EmployeeNo']);
         $periods = KpiPeriod::where('IsActive', 1)->orderBy('Name')->get(['Id','Name','Code','StartMonth','EndMonth']);
 
-        return view('hr.kpi.goals.index', compact('goals','employees','periods'));
+        return view('hr.kpi.goals.index', compact('goals', 'employees', 'periods'));
     }
 
     public function create()
@@ -164,6 +166,7 @@ class KpiGoalController extends Controller
         $perspectiveWeights = $weightMap->mapWithKeys(function ($row, $perspectiveId) {
             $weight = (float)$row->Weight;
             $percent = $weight <= 1 ? $weight * 100 : $weight;
+
             return [(int)$perspectiveId => $percent];
         })->toArray();
         $perspectiveNames = KpiPerspective::whereIn('Id', array_keys($perspectiveWeights))
@@ -202,7 +205,7 @@ class KpiGoalController extends Controller
         foreach ($data['Items'] as $item) {
             $kpiItem = KpiItem::find($item['KpiItemID']);
             $itemPerspectiveId = $item['PerspectiveID'] ?? $kpiItem?->PerspectiveID;
-            if (!$itemPerspectiveId) {
+            if (! $itemPerspectiveId) {
                 throw ValidationException::withMessages([
                     'Items' => 'Each KPI item must have a perspective assigned.',
                 ]);
@@ -212,7 +215,7 @@ class KpiGoalController extends Controller
                     'Items' => 'KPI item does not match the selected perspective.',
                 ]);
             }
-            if (!in_array((int)$itemPerspectiveId, $allowedPerspectives->toArray(), true)) {
+            if (! in_array((int)$itemPerspectiveId, $allowedPerspectives->toArray(), true)) {
                 throw ValidationException::withMessages([
                     'Items' => 'One or more KPI perspectives are not allowed for this employee.',
                 ]);
@@ -224,6 +227,7 @@ class KpiGoalController extends Controller
             $actual = $itemWeightTotals[$perspectiveId] ?? 0;
             if (abs($actual - $expected) > 0.01) {
                 $name = $perspectiveNames[$perspectiveId] ?? "Perspective {$perspectiveId}";
+
                 throw ValidationException::withMessages([
                     'Items' => "Total KPI weight for {$name} must be {$expected} (currently {$actual}).",
                 ]);
@@ -281,7 +285,7 @@ class KpiGoalController extends Controller
     public function edit($id)
     {
         $goal = KpiGoal::with(['items.kpiItem'])->findOrFail($id);
-        if (!in_array($goal->Status, ['Draft','Returned','Rejected'], true)) {
+        if (! in_array($goal->Status, ['Draft','Returned','Rejected'], true)) {
             return redirect()->route('hr.kpi.goals.show', $goal->Id)->withErrors([
                 'status' => 'Only draft/returned/rejected goals can be edited.',
             ]);
@@ -335,7 +339,7 @@ class KpiGoalController extends Controller
     public function update(Request $request, $id)
     {
         $goal = KpiGoal::findOrFail($id);
-        if (!in_array($goal->Status, ['Draft','Returned','Rejected'], true)) {
+        if (! in_array($goal->Status, ['Draft','Returned','Rejected'], true)) {
             return redirect()->route('hr.kpi.goals.show', $goal->Id)->withErrors([
                 'status' => 'Only draft/returned/rejected goals can be updated.',
             ]);
@@ -381,6 +385,7 @@ class KpiGoalController extends Controller
         $perspectiveWeights = $weightMap->mapWithKeys(function ($row, $perspectiveId) {
             $weight = (float)$row->Weight;
             $percent = $weight <= 1 ? $weight * 100 : $weight;
+
             return [(int)$perspectiveId => $percent];
         })->toArray();
         $perspectiveNames = KpiPerspective::whereIn('Id', array_keys($perspectiveWeights))
@@ -420,7 +425,7 @@ class KpiGoalController extends Controller
         foreach ($data['Items'] as $item) {
             $kpiItem = KpiItem::find($item['KpiItemID']);
             $itemPerspectiveId = $item['PerspectiveID'] ?? $kpiItem?->PerspectiveID;
-            if (!$itemPerspectiveId) {
+            if (! $itemPerspectiveId) {
                 throw ValidationException::withMessages([
                     'Items' => 'Each KPI item must have a perspective assigned.',
                 ]);
@@ -430,7 +435,7 @@ class KpiGoalController extends Controller
                     'Items' => 'KPI item does not match the selected perspective.',
                 ]);
             }
-            if (!in_array((int)$itemPerspectiveId, $allowedPerspectives->toArray(), true)) {
+            if (! in_array((int)$itemPerspectiveId, $allowedPerspectives->toArray(), true)) {
                 throw ValidationException::withMessages([
                     'Items' => 'One or more KPI perspectives are not allowed for this employee.',
                 ]);
@@ -442,6 +447,7 @@ class KpiGoalController extends Controller
             $actual = $itemWeightTotals[$perspectiveId] ?? 0;
             if (abs($actual - $expected) > 0.01) {
                 $name = $perspectiveNames[$perspectiveId] ?? "Perspective {$perspectiveId}";
+
                 throw ValidationException::withMessages([
                     'Items' => "Total KPI weight for {$name} must be {$expected} (currently {$actual}).",
                 ]);
@@ -485,7 +491,7 @@ class KpiGoalController extends Controller
     public function submit($id)
     {
         $goal = KpiGoal::findOrFail($id);
-        if (!in_array($goal->Status, ['Draft','Returned','Rejected'], true)) {
+        if (! in_array($goal->Status, ['Draft','Returned','Rejected'], true)) {
             return redirect()->route('hr.kpi.goals.show', $goal->Id)->withErrors([
                 'status' => 'Only draft/returned/rejected goals can be submitted.',
             ]);

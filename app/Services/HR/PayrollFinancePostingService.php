@@ -5,12 +5,12 @@ namespace App\Services\HR;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceJournalLines;
 use App\Models\HR\Employee;
+use App\Models\HR\GratuityAccrual;
 use App\Models\HR\MonthlyAllowance;
 use App\Models\HR\MonthlyDeduction;
-use App\Models\HR\PayrollEmployerContribution;
-use App\Models\HR\GratuityAccrual;
 use App\Models\HR\PayrollAllowance;
 use App\Models\HR\PayrollDeduction;
+use App\Models\HR\PayrollEmployerContribution;
 use App\Models\HR\PayrollGLSetting;
 use App\Models\HR\PayrollRun;
 use Carbon\Carbon;
@@ -27,21 +27,21 @@ class PayrollFinancePostingService
     public function postRun(PayrollRun $run, string $postingMode = 'summary'): FinanceJournalEntry
     {
         $postingMode = strtolower(trim($postingMode));
-        if (!in_array($postingMode, ['summary', 'branch_department'], true)) {
+        if (! in_array($postingMode, ['summary', 'branch_department'], true)) {
             throw ValidationException::withMessages([
                 'posting_mode' => 'Invalid posting mode selected.',
             ]);
         }
 
         $cycle = $run->cycle;
-        if (!$cycle) {
+        if (! $cycle) {
             throw ValidationException::withMessages([
                 'posting_mode' => 'Payroll run has no cycle attached.',
             ]);
         }
 
         $settings = PayrollGLSetting::orderByDesc('Id')->first();
-        if (!$settings || !$settings->PayrollControlGLAccountID || !$settings->BasicSalaryExpenseGLAccountID) {
+        if (! $settings || ! $settings->PayrollControlGLAccountID || ! $settings->BasicSalaryExpenseGLAccountID) {
             throw ValidationException::withMessages([
                 'posting_mode' => 'Configure Payroll GL Setup first (Payroll Control and Basic Salary Expense).',
             ]);
@@ -133,6 +133,7 @@ class PayrollFinancePostingService
             }
             $lines->push($this->debitLine($settings->BasicSalaryExpenseGLAccountID, $amount, null, null, "Base Salary {$run->cycle?->Month}/{$run->cycle?->Year}"));
             $lines->push($this->creditLine($settings->PayrollControlGLAccountID, $amount, null, null, 'Payroll Control (Base Salary)'));
+
             return $lines;
         }
 
@@ -173,7 +174,7 @@ class PayrollFinancePostingService
         $allowanceIds = $rows->pluck('AllowanceID')->unique()->values();
         $allowances = PayrollAllowance::whereIn('Id', $allowanceIds)->get(['Id','Name','DebitGLAccountID','CreditGLAccountID'])->keyBy('Id');
 
-        $missing = $allowances->filter(fn($a) => empty($a->DebitGLAccountID))->map(fn($a) => $a->Name)->values();
+        $missing = $allowances->filter(fn ($a) => empty($a->DebitGLAccountID))->map(fn ($a) => $a->Name)->values();
         if ($missing->isNotEmpty()) {
             throw ValidationException::withMessages([
                 'posting_mode' => 'Missing GL mapping (Debit GL) for allowances: ' . $missing->implode(', ') . '.',
@@ -183,11 +184,15 @@ class PayrollFinancePostingService
         $lines = collect();
         foreach ($rows as $row) {
             $amount = (float)$row->Amount;
-            if ($amount <= 0) continue;
+            if ($amount <= 0) {
+                continue;
+            }
 
             $emp = $employees->get($row->EmployeeID);
             $alw = $allowances->get($row->AllowanceID);
-            if (!$alw) continue;
+            if (! $alw) {
+                continue;
+            }
 
             $branchId = $postingMode === 'branch_department' ? ($emp?->BranchID ?? null) : null;
             $deptId = $postingMode === 'branch_department' ? ($emp?->DepartmentID ?? null) : null;
@@ -217,7 +222,7 @@ class PayrollFinancePostingService
         $deductionIds = $rows->pluck('DeductionID')->unique()->values();
         $deductions = PayrollDeduction::whereIn('Id', $deductionIds)->get(['Id','Name','DebitGLAccountID','CreditGLAccountID'])->keyBy('Id');
 
-        $missing = $deductions->filter(fn($d) => empty($d->CreditGLAccountID))->map(fn($d) => $d->Name)->values();
+        $missing = $deductions->filter(fn ($d) => empty($d->CreditGLAccountID))->map(fn ($d) => $d->Name)->values();
         if ($missing->isNotEmpty()) {
             throw ValidationException::withMessages([
                 'posting_mode' => 'Missing GL mapping (Credit GL) for deductions: ' . $missing->implode(', ') . '.',
@@ -227,11 +232,15 @@ class PayrollFinancePostingService
         $lines = collect();
         foreach ($rows as $row) {
             $amount = (float)$row->Amount;
-            if ($amount <= 0) continue;
+            if ($amount <= 0) {
+                continue;
+            }
 
             $emp = $employees->get($row->EmployeeID);
             $ded = $deductions->get($row->DeductionID);
-            if (!$ded) continue;
+            if (! $ded) {
+                continue;
+            }
 
             $branchId = $postingMode === 'branch_department' ? ($emp?->BranchID ?? null) : null;
             $deptId = $postingMode === 'branch_department' ? ($emp?->DepartmentID ?? null) : null;
@@ -247,7 +256,7 @@ class PayrollFinancePostingService
     private function buildEmployerContributionLines(PayrollRun $run, PayrollGLSetting $settings, string $postingMode): Collection
     {
         $cycle = $run->cycle;
-        if (!$cycle) {
+        if (! $cycle) {
             return collect();
         }
 
@@ -267,7 +276,7 @@ class PayrollFinancePostingService
 
         $missing = $deductions->filter(function ($d) {
             return empty($d->EmployerDebitGLAccountID) || empty($d->EmployerCreditGLAccountID);
-        })->map(fn($d) => $d->Name)->values();
+        })->map(fn ($d) => $d->Name)->values();
         if ($missing->isNotEmpty()) {
             throw ValidationException::withMessages([
                 'posting_mode' => 'Missing Employer GL mapping for deductions: ' . $missing->implode(', ') . '.',
@@ -277,11 +286,15 @@ class PayrollFinancePostingService
         $lines = collect();
         foreach ($rows as $row) {
             $amount = (float)$row->Amount;
-            if ($amount <= 0) continue;
+            if ($amount <= 0) {
+                continue;
+            }
 
             $emp = $employees->get($row->EmployeeID);
             $ded = $deductions->get($row->DeductionID);
-            if (!$ded) continue;
+            if (! $ded) {
+                continue;
+            }
 
             $branchId = $postingMode === 'branch_department' ? ($emp?->BranchID ?? null) : null;
             $deptId = $postingMode === 'branch_department' ? ($emp?->DepartmentID ?? null) : null;
@@ -301,7 +314,7 @@ class PayrollFinancePostingService
             return collect();
         }
 
-        if (!$settings->GratuityExpenseGLAccountID || !$settings->GratuityLiabilityGLAccountID) {
+        if (! $settings->GratuityExpenseGLAccountID || ! $settings->GratuityLiabilityGLAccountID) {
             throw ValidationException::withMessages([
                 'posting_mode' => 'Configure Gratuity Expense/Liability GLs before posting gratuity accruals.',
             ]);
@@ -318,11 +331,13 @@ class PayrollFinancePostingService
             }
             $lines->push($this->debitLine((int)$settings->GratuityExpenseGLAccountID, $amount, null, null, 'Gratuity Accrual'));
             $lines->push($this->creditLine((int)$settings->GratuityLiabilityGLAccountID, $amount, null, null, 'Gratuity Payable'));
+
             return $lines;
         }
 
         $grouped = $rows->groupBy(function ($row) use ($employees) {
             $emp = $employees->get($row->EmployeeID);
+
             return ($emp?->BranchID ?? 0) . '|' . ($emp?->DepartmentID ?? 0);
         });
 
@@ -371,6 +386,7 @@ class PayrollFinancePostingService
     private function debitLine(int $glAccountId, float $amount, ?int $branchId, ?int $deptId, string $narration): array
     {
         $amount = round($amount, 2);
+
         return [
             'GLAccountID' => $glAccountId,
             'BranchID' => $branchId,
@@ -387,6 +403,7 @@ class PayrollFinancePostingService
     private function creditLine(int $glAccountId, float $amount, ?int $branchId, ?int $deptId, string $narration): array
     {
         $amount = round($amount, 2);
+
         return [
             'GLAccountID' => $glAccountId,
             'BranchID' => $branchId,

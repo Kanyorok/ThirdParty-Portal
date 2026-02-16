@@ -39,4 +39,3 @@ class ContractPenaltyRule extends Model
         return $this->belongsTo(ContractMilestone::class, 'MilestoneID', 'Id');
     }
 }
-

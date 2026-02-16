@@ -53,4 +53,3 @@ class ContractMilestone extends Model
         return $this->belongsTo(User::class, 'WaivedBy', 'Id');
     }
 }
-

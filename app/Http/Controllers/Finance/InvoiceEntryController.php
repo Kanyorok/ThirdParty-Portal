@@ -12,7 +12,6 @@ use App\Models\Procurement\GoodsReceipt;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\OrderLines;
 use App\Models\ThirdParies\Supplier;
-use App\Models\ThirdParty\ThirdParties;
 use App\Services\Finance\ContractInvoiceEligibilityService;
 use App\Services\Finance\TransactionService;
 use Illuminate\Http\Request;

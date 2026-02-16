@@ -12,7 +12,7 @@ class StaffLoanSchedule extends Model
 
     protected $fillable = [
         'StaffLoanID','InstallmentNo','DueDate','PrincipalComponent','InterestComponent','TotalDue',
-        'Status','PaidBy','PaidOn'
+        'Status','PaidBy','PaidOn',
     ];
 
     protected $casts = [

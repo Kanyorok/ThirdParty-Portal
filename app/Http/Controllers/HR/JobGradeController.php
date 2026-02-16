@@ -12,6 +12,7 @@ class JobGradeController extends Controller
     public function index()
     {
         $grades = JobGrade::orderBy('Name')->paginate(20);
+
         return view('hr.config.jobgrades.index', compact('grades'));
     }
 
@@ -23,8 +24,8 @@ class JobGradeController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'Code'      => ['required', 'string', 'max:50', 'unique:t_HRJobGrades,Code'],
-            'Name'      => ['required', 'string', 'max:150'],
+            'Code' => ['required', 'string', 'max:50', 'unique:t_HRJobGrades,Code'],
+            'Name' => ['required', 'string', 'max:150'],
             'MinSalary' => ['nullable', 'numeric', 'min:0'],
             'MaxSalary' => ['nullable', 'numeric', 'min:0'],
             'Description' => ['nullable', 'string', 'max:255'],
@@ -43,6 +44,7 @@ class JobGradeController extends Controller
     public function edit($id)
     {
         $grade = JobGrade::findOrFail($id);
+
         return view('hr.config.jobgrades.edit', compact('grade'));
     }
 
@@ -51,12 +53,12 @@ class JobGradeController extends Controller
         $grade = JobGrade::findOrFail($id);
 
         $data = $request->validate([
-            'Code'      => ['required', 'string', 'max:50', Rule::unique('t_HRJobGrades', 'Code')->ignore($grade->Id, 'Id')],
-            'Name'      => ['required', 'string', 'max:150'],
+            'Code' => ['required', 'string', 'max:50', Rule::unique('t_HRJobGrades', 'Code')->ignore($grade->Id, 'Id')],
+            'Name' => ['required', 'string', 'max:150'],
             'MinSalary' => ['nullable', 'numeric', 'min:0'],
             'MaxSalary' => ['nullable', 'numeric', 'min:0'],
             'Description' => ['nullable', 'string', 'max:255'],
-            'IsActive'    => ['nullable', 'boolean'],
+            'IsActive' => ['nullable', 'boolean'],
         ]);
 
         $data['IsActive'] = $request->has('IsActive') ? $request->boolean('IsActive') : $grade->IsActive;
@@ -74,7 +76,7 @@ class JobGradeController extends Controller
         $grade = JobGrade::findOrFail($id);
 
         $grade->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);
@@ -88,7 +90,7 @@ class JobGradeController extends Controller
         $grade = JobGrade::findOrFail($id);
 
         $grade->update([
-            'IsActive'   => 1,
+            'IsActive' => 1,
             'ModifiedBy' => auth()->id(),
             'ModifiedOn' => now(),
         ]);

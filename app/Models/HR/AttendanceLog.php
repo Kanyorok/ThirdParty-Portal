@@ -25,8 +25,8 @@ class AttendanceLog extends Model
     ];
 
     protected $casts = [
-        'LogTime'   => 'datetime',
-        'Latitude'  => 'decimal:7',
+        'LogTime' => 'datetime',
+        'Latitude' => 'decimal:7',
         'Longitude' => 'decimal:7',
         'CreatedOn' => 'datetime',
     ];

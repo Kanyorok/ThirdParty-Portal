@@ -13,12 +13,14 @@ class PayrollDeductionRuleController extends Controller
     {
         $deduction = PayrollDeduction::findOrFail($deductionId);
         $rules = $deduction->rules()->orderBy('IncomeFrom')->paginate(20);
+
         return view('hr.statutory.deductions.rules.index', compact('deduction', 'rules'));
     }
 
     public function create($deductionId)
     {
         $deduction = PayrollDeduction::findOrFail($deductionId);
+
         return view('hr.statutory.deductions.rules.create', compact('deduction'));
     }
 
@@ -40,6 +42,7 @@ class PayrollDeductionRuleController extends Controller
     {
         $deduction = PayrollDeduction::findOrFail($deductionId);
         $rule = PayrollDeductionRule::where('DeductionID', $deductionId)->findOrFail($id);
+
         return view('hr.statutory.deductions.rules.edit', compact('deduction', 'rule'));
     }
 
@@ -62,7 +65,7 @@ class PayrollDeductionRuleController extends Controller
         $deduction = PayrollDeduction::findOrFail($deductionId);
         $rule = PayrollDeductionRule::where('DeductionID', $deductionId)->findOrFail($id);
         $rule->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);
@@ -73,17 +76,17 @@ class PayrollDeductionRuleController extends Controller
     protected function validateRule(Request $request): array
     {
         return $request->validate([
-            'CalcMethod'   => ['required', 'string', 'max:50'],
-            'Rate'         => ['nullable', 'numeric', 'min:0'],
-            'Amount'       => ['nullable', 'numeric', 'min:0'],
-            'IncomeFrom'   => ['nullable', 'numeric', 'min:0'],
-            'IncomeTo'     => ['nullable', 'numeric', 'gte:IncomeFrom'],
-            'MinAmount'    => ['nullable', 'numeric', 'min:0'],
-            'MaxAmount'    => ['nullable', 'numeric', 'min:0'],
-            'EffectiveFrom'=> ['required', 'date'],
-            'EffectiveTo'  => ['nullable', 'date', 'after:EffectiveFrom'],
-            'Description'  => ['nullable', 'string', 'max:255'],
-            'FormulaText'  => ['nullable', 'string'],
+            'CalcMethod' => ['required', 'string', 'max:50'],
+            'Rate' => ['nullable', 'numeric', 'min:0'],
+            'Amount' => ['nullable', 'numeric', 'min:0'],
+            'IncomeFrom' => ['nullable', 'numeric', 'min:0'],
+            'IncomeTo' => ['nullable', 'numeric', 'gte:IncomeFrom'],
+            'MinAmount' => ['nullable', 'numeric', 'min:0'],
+            'MaxAmount' => ['nullable', 'numeric', 'min:0'],
+            'EffectiveFrom' => ['required', 'date'],
+            'EffectiveTo' => ['nullable', 'date', 'after:EffectiveFrom'],
+            'Description' => ['nullable', 'string', 'max:255'],
+            'FormulaText' => ['nullable', 'string'],
         ]);
     }
 }

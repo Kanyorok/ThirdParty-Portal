@@ -14,7 +14,6 @@ use App\Models\HR\OnboardingTask;
 use App\Models\HRM\Department;
 use App\Services\HR\PayrollMandatoryAllocator;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 
 class OnboardingController extends Controller
 {
@@ -191,7 +190,7 @@ class OnboardingController extends Controller
     private function copyApplicationDocuments(OnboardingQueue $queue, Employee $employee): void
     {
         $application = $queue->application;
-        if (!$application) {
+        if (! $application) {
             return;
         }
 

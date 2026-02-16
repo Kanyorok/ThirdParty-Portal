@@ -2,10 +2,10 @@
 
 namespace App\Models\HR\Exit;
 
+use App\Models\HRM\Department;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\HRM\Department;
 
 class ExitClearanceDepartment extends Model
 {
@@ -57,7 +57,7 @@ class ExitClearanceDepartment extends Model
             }
 
             $existing = self::where('DepartmentID', $department->Id)->first();
-            if (!$existing) {
+            if (! $existing) {
                 $existing = self::where('Name', $name)->first();
             }
 
@@ -84,7 +84,7 @@ class ExitClearanceDepartment extends Model
             $sequence++;
         }
 
-        if (!empty($departmentIds)) {
+        if (! empty($departmentIds)) {
             self::whereNotIn('DepartmentID', $departmentIds)
                 ->update([
                     'IsActive' => 0,

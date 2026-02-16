@@ -6,19 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Models\HR\Employee;
 use App\Models\HR\TrainingTrainer;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class TrainingTrainerController extends Controller
 {
     public function index()
     {
         $trainers = TrainingTrainer::with('employee')->orderBy('Name')->paginate(30);
+
         return view('hr.training.trainers.index', compact('trainers'));
     }
 
     public function create()
     {
         $employees = Employee::orderBy('FirstName')->get(['Id', 'FirstName', 'LastName', 'EmployeeNo']);
+
         return view('hr.training.trainers.create', compact('employees'));
     }
 
@@ -64,6 +65,7 @@ class TrainingTrainerController extends Controller
     {
         $trainer = TrainingTrainer::findOrFail($id);
         $employees = Employee::orderBy('FirstName')->get(['Id', 'FirstName', 'LastName', 'EmployeeNo']);
+
         return view('hr.training.trainers.edit', compact('trainer', 'employees'));
     }
 

@@ -14,12 +14,14 @@ class ExitPolicyController extends Controller
     public function index()
     {
         $policies = ExitPolicy::with('checklistTemplate')->orderBy('Name')->get();
+
         return view('hr.exit.config.policies.index', compact('policies'));
     }
 
     public function create()
     {
         $templates = ExitChecklistTemplate::where('IsActive', 1)->orderBy('Name')->get(['Id', 'Name']);
+
         return view('hr.exit.config.policies.create', compact('templates'));
     }
 
@@ -70,6 +72,7 @@ class ExitPolicyController extends Controller
     {
         $policy = ExitPolicy::with('noticePeriods')->findOrFail($id);
         $templates = ExitChecklistTemplate::where('IsActive', 1)->orderBy('Name')->get(['Id', 'Name']);
+
         return view('hr.exit.config.policies.edit', compact('policy', 'templates'));
     }
 
@@ -134,7 +137,7 @@ class ExitPolicyController extends Controller
                 'EmploymentType' => $employmentTypes[$index] ?? null,
                 'ContractType' => $contractTypes[$index] ?? null,
                 'NoticeDays' => (int)$days,
-                'PayInLieuAllowed' => !empty($payInLieu[$index]),
+                'PayInLieuAllowed' => ! empty($payInLieu[$index]),
                 'CreatedBy' => auth()->id(),
                 'CreatedOn' => now(),
             ]);

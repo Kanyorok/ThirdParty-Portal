@@ -28,7 +28,7 @@ class WorkingDaySetting extends Model
         'IsWorking' => 'boolean',
         'DayFraction' => 'decimal:2',
         'CreatedOn' => 'datetime',
-        'ModifiedOn'=> 'datetime',
+        'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
     ];
 }

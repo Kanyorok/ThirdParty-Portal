@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\HR;
 
 use App\Http\Controllers\Controller;
-use App\Models\HR\LeaveType;
 use App\Models\HR\JobGrade;
+use App\Models\HR\LeaveType;
 use Illuminate\Http\Request;
 
 class LeaveTypeController extends Controller
@@ -25,31 +25,32 @@ class LeaveTypeController extends Controller
     public function create()
     {
         $grades = JobGrade::where('IsActive', 1)->orderBy('Name')->get();
+
         return view('hr.config.leavetypes.create', compact('grades'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'Code'                 => 'required|string|max:50|unique:t_HRLeaveTypes,Code',
-            'Name'                 => 'required|string|max:150',
-            'AnnualEntitlementDays'=> 'required|integer|min:0',
-            'AllowedGender'        => 'nullable|string|in:Male,Female',
-            'AllowCarryForward'    => 'nullable|boolean',
-            'MaxCarryForwardDays'  => 'nullable|integer|min:0',
-            'RequiresAttachment'   => 'nullable|boolean',
-            'IsPaid'               => 'nullable|boolean',
-            'GradeIDs'             => 'nullable|array',
-            'GradeIDs.*'           => 'integer',
+            'Code' => 'required|string|max:50|unique:t_HRLeaveTypes,Code',
+            'Name' => 'required|string|max:150',
+            'AnnualEntitlementDays' => 'required|integer|min:0',
+            'AllowedGender' => 'nullable|string|in:Male,Female',
+            'AllowCarryForward' => 'nullable|boolean',
+            'MaxCarryForwardDays' => 'nullable|integer|min:0',
+            'RequiresAttachment' => 'nullable|boolean',
+            'IsPaid' => 'nullable|boolean',
+            'GradeIDs' => 'nullable|array',
+            'GradeIDs.*' => 'integer',
         ]);
 
-        $data['AllowCarryForward']  = $request->boolean('AllowCarryForward');
+        $data['AllowCarryForward'] = $request->boolean('AllowCarryForward');
         $data['RequiresAttachment'] = $request->boolean('RequiresAttachment');
-        $data['IsPaid']             = $request->boolean('IsPaid', true);
-        $data['IsActive']           = 1;
-        $data['Status']             = 'Pending';
-        $data['CreatedBy']          = auth()->id();
-        $data['CreatedOn']          = now();
+        $data['IsPaid'] = $request->boolean('IsPaid', true);
+        $data['IsActive'] = 1;
+        $data['Status'] = 'Pending';
+        $data['CreatedBy'] = auth()->id();
+        $data['CreatedOn'] = now();
 
         $gradeIds = $data['GradeIDs'] ?? [];
         unset($data['GradeIDs']);
@@ -78,24 +79,24 @@ class LeaveTypeController extends Controller
         $type = LeaveType::findOrFail($id);
 
         $data = $request->validate([
-            'Name'                 => 'required|string|max:150',
-            'AnnualEntitlementDays'=> 'required|integer|min:0',
-            'AllowedGender'        => 'nullable|string|in:Male,Female',
-            'AllowCarryForward'    => 'nullable|boolean',
-            'MaxCarryForwardDays'  => 'nullable|integer|min:0',
-            'RequiresAttachment'   => 'nullable|boolean',
-            'IsPaid'               => 'nullable|boolean',
-            'IsActive'             => 'nullable|boolean',
-            'GradeIDs'             => 'nullable|array',
-            'GradeIDs.*'           => 'integer',
+            'Name' => 'required|string|max:150',
+            'AnnualEntitlementDays' => 'required|integer|min:0',
+            'AllowedGender' => 'nullable|string|in:Male,Female',
+            'AllowCarryForward' => 'nullable|boolean',
+            'MaxCarryForwardDays' => 'nullable|integer|min:0',
+            'RequiresAttachment' => 'nullable|boolean',
+            'IsPaid' => 'nullable|boolean',
+            'IsActive' => 'nullable|boolean',
+            'GradeIDs' => 'nullable|array',
+            'GradeIDs.*' => 'integer',
         ]);
 
-        $data['AllowCarryForward']  = $request->boolean('AllowCarryForward');
+        $data['AllowCarryForward'] = $request->boolean('AllowCarryForward');
         $data['RequiresAttachment'] = $request->boolean('RequiresAttachment');
-        $data['IsPaid']             = $request->boolean('IsPaid', true);
-        $data['IsActive']           = $request->has('IsActive') ? $request->boolean('IsActive') : $type->IsActive;
-        $data['ModifiedBy']         = auth()->id();
-        $data['ModifiedOn']         = now();
+        $data['IsPaid'] = $request->boolean('IsPaid', true);
+        $data['IsActive'] = $request->has('IsActive') ? $request->boolean('IsActive') : $type->IsActive;
+        $data['ModifiedBy'] = auth()->id();
+        $data['ModifiedOn'] = now();
 
         $gradeIds = $data['GradeIDs'] ?? [];
         unset($data['GradeIDs']);
@@ -113,7 +114,7 @@ class LeaveTypeController extends Controller
         $type = LeaveType::findOrFail($id);
 
         $type->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);
@@ -128,7 +129,7 @@ class LeaveTypeController extends Controller
         $type = LeaveType::findOrFail($id);
 
         $type->update([
-            'Status'     => 'Approved',
+            'Status' => 'Approved',
             'ApprovedBy' => auth()->id(),
             'ApprovedOn' => now(),
         ]);

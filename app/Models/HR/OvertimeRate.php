@@ -3,7 +3,6 @@
 namespace App\Models\HR;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\HR\JobGrade;
 
 class OvertimeRate extends Model
 {
@@ -27,12 +26,12 @@ class OvertimeRate extends Model
 
     protected $casts = [
         'RateMultiplier' => 'decimal:4',
-        'EffectiveFrom'  => 'date',
-        'EffectiveTo'    => 'date',
-        'IsActive'       => 'boolean',
-        'CreatedOn'      => 'datetime',
-        'ModifiedOn'     => 'datetime',
-        'DeletedOn'      => 'datetime',
+        'EffectiveFrom' => 'date',
+        'EffectiveTo' => 'date',
+        'IsActive' => 'boolean',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
     public function grade()

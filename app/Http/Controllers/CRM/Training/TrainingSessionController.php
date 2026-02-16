@@ -415,7 +415,7 @@ class TrainingSessionController extends Controller
         $session = TrainingSession::findOrFail($id);
         $participant = TrainingSessionParticipant::where('SessionID', $id)->findOrFail($participantId);
 
-        if (!$this->canMarkAttendance($session)) {
+        if (! $this->canMarkAttendance($session)) {
             return redirect()->route('crm.training.sessions.show', $id)
                 ->withErrors(['attendance' => 'Attendance cannot be marked for cancelled sessions.']);
         }
@@ -444,7 +444,7 @@ class TrainingSessionController extends Controller
     {
         $session = TrainingSession::findOrFail($id);
 
-        if (!$this->canMarkAttendance($session)) {
+        if (! $this->canMarkAttendance($session)) {
             return redirect()->route('crm.training.sessions.show', $id)
                 ->withErrors(['attendance' => 'Attendance cannot be marked for cancelled sessions.']);
         }
@@ -513,7 +513,7 @@ class TrainingSessionController extends Controller
         }
 
         $selectedTemplate = null;
-        if (!empty($data['CertificateTemplateID'])) {
+        if (! empty($data['CertificateTemplateID'])) {
             $selectedTemplate = TrainingCertificateTemplate::query()
                 ->where('Id', (int) $data['CertificateTemplateID'])
                 ->where('IsActive', 1)
@@ -523,7 +523,7 @@ class TrainingSessionController extends Controller
                 })
                 ->first();
 
-            if (!$selectedTemplate) {
+            if (! $selectedTemplate) {
                 return redirect()->route('crm.training.sessions.show', $id)
                     ->withErrors(['certificate' => 'Selected certificate template is not available for this program.'])
                     ->withInput();
@@ -558,7 +558,7 @@ class TrainingSessionController extends Controller
 
         $issuedOn = $data['IssuedOn'] ?? now()->toDateString();
         $expiresOn = $data['ExpiresOn'] ?? null;
-        if (!$expiresOn && $selectedTemplate && is_numeric($selectedTemplate->DefaultValidityMonths)) {
+        if (! $expiresOn && $selectedTemplate && is_numeric($selectedTemplate->DefaultValidityMonths)) {
             $expiresOn = Carbon::parse($issuedOn)->addMonths((int) $selectedTemplate->DefaultValidityMonths)->toDateString();
         }
 
@@ -637,7 +637,7 @@ class TrainingSessionController extends Controller
         @ini_set('memory_limit', '512M');
         $session = TrainingSession::with('program')->findOrFail($id);
 
-        if (!$session->program?->HasCertification) {
+        if (! $session->program?->HasCertification) {
             $message = 'This program does not support certification.';
 
             if ($request->expectsJson()) {
@@ -694,7 +694,7 @@ class TrainingSessionController extends Controller
             })
             ->first();
 
-        if (!$selectedTemplate) {
+        if (! $selectedTemplate) {
             return redirect()->route('crm.training.sessions.show', $id)
                 ->withErrors(['certificate' => 'Selected certificate template is not available for this program.'])
                 ->withInput();
@@ -735,7 +735,7 @@ class TrainingSessionController extends Controller
 
         $issuedOn = $data['IssuedOn'] ?? now()->toDateString();
         $expiresOn = $data['ExpiresOn'] ?? null;
-        if (!$expiresOn && is_numeric($selectedTemplate->DefaultValidityMonths)) {
+        if (! $expiresOn && is_numeric($selectedTemplate->DefaultValidityMonths)) {
             $expiresOn = Carbon::parse($issuedOn)->addMonths((int) $selectedTemplate->DefaultValidityMonths)->toDateString();
         }
 
@@ -812,6 +812,7 @@ class TrainingSessionController extends Controller
                     foreach ($participants as $participant) {
                         if ($this->bulkCertificateCancelRequested($sessionId)) {
                             $cancelRequested = true;
+
                             break;
                         }
 
@@ -827,6 +828,7 @@ class TrainingSessionController extends Controller
                             $runState['emails_sent'] = $emailsSentCount;
                             $runState['emails_failed'] = $emailFailedCount;
                             $runState = $this->cacheBulkCertificateState($sessionId, $runState);
+
                             continue;
                         }
 
@@ -1014,7 +1016,7 @@ class TrainingSessionController extends Controller
         $state = $this->getBulkCertificateState($sessionId);
         $status = (string) ($state['status'] ?? 'idle');
 
-        if (!in_array($status, ['processing', 'cancelling'], true)) {
+        if (! in_array($status, ['processing', 'cancelling'], true)) {
             $message = 'No active bulk certificate issuance is currently running.';
 
             if ($request->expectsJson()) {
@@ -1064,15 +1066,15 @@ class TrainingSessionController extends Controller
         $now = now();
         foreach ($data['Feedback'] ?? [] as $clientId => $row) {
             $clientId = trim((string)$clientId);
-            if ($clientId === '' || !in_array($clientId, $participantIds, true)) {
+            if ($clientId === '' || ! in_array($clientId, $participantIds, true)) {
                 continue;
             }
 
-            $hasValue = !empty($row['RatingContent'])
-                || !empty($row['RatingTrainer'])
-                || !empty($row['RatingRelevance'])
-                || !empty($row['Comments']);
-            if (!$hasValue) {
+            $hasValue = ! empty($row['RatingContent'])
+                || ! empty($row['RatingTrainer'])
+                || ! empty($row['RatingRelevance'])
+                || ! empty($row['Comments']);
+            if (! $hasValue) {
                 continue;
             }
 
@@ -1090,7 +1092,7 @@ class TrainingSessionController extends Controller
                 'ModifiedOn' => $now,
             ]);
 
-            if (!$feedback->exists) {
+            if (! $feedback->exists) {
                 $feedback->CreatedBy = auth()->id();
                 $feedback->CreatedOn = $now;
             }
@@ -1138,7 +1140,7 @@ class TrainingSessionController extends Controller
                 ->map(fn ($id) => (string) $id)
                 ->toArray();
 
-            if (!empty($chunkExisting)) {
+            if (! empty($chunkExisting)) {
                 $existing = array_merge($existing, $chunkExisting);
             }
         }
@@ -1154,6 +1156,7 @@ class TrainingSessionController extends Controller
             $maxParticipants = (int) $session->MaxParticipants;
             if (($existingCount + $newClientIds->count()) > $maxParticipants) {
                 $remaining = max($maxParticipants - $existingCount, 0);
+
                 throw ValidationException::withMessages([
                     'ClientIDs' => $remaining > 0
                         ? 'Max participants is ' . $maxParticipants . '. You can only add ' . $remaining . ' more participant(s).'
@@ -1176,7 +1179,7 @@ class TrainingSessionController extends Controller
             ];
         }
 
-        if (!empty($insert)) {
+        if (! empty($insert)) {
             foreach (array_chunk($insert, 250) as $batch) {
                 TrainingSessionParticipant::insert($batch);
             }
@@ -1253,12 +1256,12 @@ class TrainingSessionController extends Controller
 
     private function canMarkAttendance(TrainingSession $session): bool
     {
-        return !in_array($session->Status, ['Cancelled'], true);
+        return ! in_array($session->Status, ['Cancelled'], true);
     }
 
     private function normalizeTime(?string $value): ?string
     {
-        if (!$value) {
+        if (! $value) {
             return null;
         }
         if (strlen($value) === 5) {
@@ -1275,25 +1278,25 @@ class TrainingSessionController extends Controller
             ->where('CreatedBy', $data['CreatedBy'])
             ->where('CreatedOn', '>=', now()->subSeconds(15));
 
-        if (!empty($data['SessionCode'])) {
+        if (! empty($data['SessionCode'])) {
             $query->where('SessionCode', $data['SessionCode']);
-        } elseif (!empty($data['Title'])) {
+        } elseif (! empty($data['Title'])) {
             $query->where('Title', $data['Title']);
         }
 
-        if (!empty($data['StartDate'])) {
+        if (! empty($data['StartDate'])) {
             $query->whereDate('StartDate', $data['StartDate']);
         } else {
             $query->whereNull('StartDate');
         }
 
-        if (!empty($data['StartTime'])) {
+        if (! empty($data['StartTime'])) {
             $query->where('StartTime', $data['StartTime']);
         } else {
             $query->whereNull('StartTime');
         }
 
-        if (!empty($data['TrainerID'])) {
+        if (! empty($data['TrainerID'])) {
             $query->where('TrainerID', $data['TrainerID']);
         }
 
@@ -1384,7 +1387,7 @@ class TrainingSessionController extends Controller
 
     private function resolveCertificateBackgroundImageDataUri(?TrainingCertificateTemplate $selectedTemplate): ?string
     {
-        if (!$selectedTemplate) {
+        if (! $selectedTemplate) {
             return null;
         }
 
@@ -1407,12 +1410,12 @@ class TrainingSessionController extends Controller
         }
 
         $normalizedPath = str_replace('\\', '/', ltrim($backgroundImagePath, '/\\'));
-        if (!preg_match('/^assets\/certificates\/templates\/[A-Za-z0-9._-]+$/', $normalizedPath)) {
+        if (! preg_match('/^assets\/certificates\/templates\/[A-Za-z0-9._-]+$/', $normalizedPath)) {
             return null;
         }
 
         $fullPath = public_path($normalizedPath);
-        if (!is_file($fullPath)) {
+        if (! is_file($fullPath)) {
             return null;
         }
 
@@ -1449,17 +1452,17 @@ class TrainingSessionController extends Controller
         try {
             $participant->loadMissing('client');
             $client = $participant->client;
-            if (!$client) {
+            if (! $client) {
                 return false;
             }
 
             $email = trim((string) ($client->Email ?? ''));
-            if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 return false;
             }
 
             $document = $certificate->document ?: ($certificate->DocumentId ? Document::find($certificate->DocumentId) : null);
-            if (!$document) {
+            if (! $document) {
                 return false;
             }
 
@@ -1497,6 +1500,7 @@ class TrainingSessionController extends Controller
             return true;
         } catch (\Throwable $e) {
             report($e);
+
             return false;
         }
     }
@@ -1540,7 +1544,7 @@ class TrainingSessionController extends Controller
     private function getBulkCertificateState(int $sessionId): array
     {
         $cached = Cache::get($this->bulkCertificateStateCacheKey($sessionId));
-        if (!is_array($cached)) {
+        if (! is_array($cached)) {
             $default = $this->bulkCertificateDefaultState();
             $default['session_id'] = $sessionId;
 
@@ -1593,6 +1597,7 @@ class TrainingSessionController extends Controller
         }
 
         $base = 'training-certificate-' . $programSlug . '-' . $participantSlug . '-' . $issuedOn->format('Ymd');
+
         return substr($base, 0, 170) . '.pdf';
     }
 }

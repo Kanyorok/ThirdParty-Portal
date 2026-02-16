@@ -13,7 +13,7 @@ class SalaryAdjustment extends Model
     protected $fillable = [
         'EmployeeID','Type','Amount','EffectiveDate','Reason','Status',
         'RequestedBy','RequestedOn','ApprovedBy','ApprovedOn',
-        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn'
+        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn',
     ];
 
     protected $casts = [

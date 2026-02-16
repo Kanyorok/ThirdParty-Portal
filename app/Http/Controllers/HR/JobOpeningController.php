@@ -60,7 +60,7 @@ class JobOpeningController extends Controller
         if ($request->filled('requisition_id')) {
             $requisition = $requisitions->firstWhere('Id', (int)$request->requisition_id);
         }
-        
+
         // Auto-generate opening code
         $generatedCode = $this->generateOpeningCode();
 
@@ -225,12 +225,12 @@ class JobOpeningController extends Controller
     {
         $year = now()->year;
         $prefix = "JOB-{$year}-";
-        
+
         // Get the last opening for this year
         $lastOpening = JobOpening::where('Code', 'like', "{$prefix}%")
             ->orderByDesc('Code')
             ->first();
-        
+
         if ($lastOpening) {
             // Extract the number from the last code and increment
             $lastNumber = (int) substr($lastOpening->Code, -4);
@@ -239,7 +239,7 @@ class JobOpeningController extends Controller
             // First opening of the year
             $newNumber = 1;
         }
-        
+
         // Format with leading zeros (4 digits)
         return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }

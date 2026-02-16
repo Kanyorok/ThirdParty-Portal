@@ -20,7 +20,7 @@ class LeaveBalanceController extends Controller
         $search = $request->input('employee_search');
 
         $leaveTypes = LeaveType::where('IsActive', 1)->orderBy('Name')->get();
-        
+
         $query = $this->filteredBalances($filter);
 
         if ($search) {
@@ -67,7 +67,7 @@ class LeaveBalanceController extends Controller
             $gradeId = $emp->GradeID;
 
             foreach ($monthlyTypes as $type) {
-                if (!$this->eligibleForEmployee($type, $gradeId, $emp->Gender)) {
+                if (! $this->eligibleForEmployee($type, $gradeId, $emp->Gender)) {
                     continue;
                 }
                 $key = "{$emp->Id}-{$type->Id}";
@@ -96,7 +96,7 @@ class LeaveBalanceController extends Controller
                 ? 'Monthly accrual posted for accruing leave types.'
                 : "Accrual completed for {$processedMonthly} outstanding monthly records in {$monthlyPeriod}.";
         }
-        if (!empty($annualLoadResult['processed'])) {
+        if (! empty($annualLoadResult['processed'])) {
             $messages[] = "Loaded {$annualLoadResult['processed']} annual leave balances for {$annualPeriod}.";
         }
 
@@ -111,6 +111,7 @@ class LeaveBalanceController extends Controller
             return redirect()->route('hr.leave.balances.index')
                 ->with('warning', "Yearly load for {$year} is already complete.");
         }
+
         return redirect()->route('hr.leave.balances.index')
             ->with('success', "Loaded {$result['processed']} annual leave balances for {$year}.");
     }
@@ -131,7 +132,7 @@ class LeaveBalanceController extends Controller
         foreach ($employees as $emp) {
             $gradeId = $emp->GradeID;
             foreach ($types as $type) {
-                if (!$this->eligibleForEmployee($type, $gradeId, $emp->Gender)) {
+                if (! $this->eligibleForEmployee($type, $gradeId, $emp->Gender)) {
                     continue;
                 }
                 $key = "{$emp->Id}-{$type->Id}";
@@ -147,6 +148,7 @@ class LeaveBalanceController extends Controller
                 $processed++;
             }
         }
+
         return ['processed' => $processed];
     }
 
@@ -191,12 +193,13 @@ class LeaveBalanceController extends Controller
                 $query->where('LeaveTypeID', $typeId);
             }
         }
+
         return $query;
     }
 
     private function eligibleForEmployee(LeaveType $type, ?int $gradeId, ?string $gender): bool
     {
-        if (!empty($type->AllowedGender) && $gender) {
+        if (! empty($type->AllowedGender) && $gender) {
             if (strcasecmp($type->AllowedGender, $gender) !== 0) {
                 return false;
             }
@@ -206,9 +209,10 @@ class LeaveBalanceController extends Controller
         if ($grades->isEmpty()) {
             return true;
         }
-        if (!$gradeId) {
+        if (! $gradeId) {
             return false;
         }
+
         return $grades->contains('Id', $gradeId);
     }
 }

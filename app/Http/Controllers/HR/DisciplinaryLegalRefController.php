@@ -11,6 +11,7 @@ class DisciplinaryLegalRefController extends Controller
     public function index()
     {
         $refs = DisciplinaryLegalRef::orderBy('Section')->get();
+
         return view('hr.discipline.legal_refs.index', compact('refs'));
     }
 
@@ -45,6 +46,7 @@ class DisciplinaryLegalRefController extends Controller
     public function edit($id)
     {
         $ref = DisciplinaryLegalRef::findOrFail($id);
+
         return view('hr.discipline.legal_refs.edit', compact('ref'));
     }
 

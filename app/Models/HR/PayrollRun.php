@@ -13,7 +13,7 @@ class PayrollRun extends Model
     protected $fillable = [
         'PayrollCycleID','Status','FinanceJournalEntryID','FinancePostingMode','FinancePostedOn','FinancePostedBy','GeneratedOn','GeneratedBy','Notes',
         'ApprovedBy','ApprovedOn','RejectedBy','RejectedOn','RejectionReason',
-        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn'
+        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn',
     ];
 
     protected $casts = [

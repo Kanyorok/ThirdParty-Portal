@@ -12,6 +12,7 @@ class KpiUnitController extends Controller
     public function index()
     {
         $units = KpiUnit::orderBy('Name')->paginate(20);
+
         return view('hr.config.kpi.units.index', compact('units'));
     }
 
@@ -40,6 +41,7 @@ class KpiUnitController extends Controller
     public function edit($id)
     {
         $unit = KpiUnit::findOrFail($id);
+
         return view('hr.config.kpi.units.edit', compact('unit'));
     }
 

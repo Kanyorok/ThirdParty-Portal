@@ -5,15 +5,15 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQAward;
-use App\Models\Procurement\RFQEvaluation;
-use App\Models\Procurement\RFQResponse;
-use App\Models\Procurement\RFQ;
-use App\Models\Procurement\TenderSupplier;
-use App\Models\Procurement\TenderCommittee;
-use App\Models\Procurement\TenderCommitteeMember;
 use App\Models\Procurement\RFQCommittee;
 use App\Models\Procurement\RFQCommitteeMember;
+use App\Models\Procurement\RFQEvaluation;
+use App\Models\Procurement\RFQResponse;
+use App\Models\Procurement\Tender;
+use App\Models\Procurement\TenderAward;
+use App\Models\Procurement\TenderCommittee;
 use App\Models\Procurement\TenderCommitteeEvaluation;
+use App\Models\Procurement\TenderCommitteeMember;
 use App\Models\Procurement\TenderSupplier;
 use App\Services\Procurement\TenderScoringService;
 use App\Services\Workflow\ApprovalWorkflow;
@@ -426,16 +426,7 @@ class AwardsController extends Controller
             'contract_start_date' => 'nullable|date|after_or_equal:today',
             'contract_end_date' => 'nullable|date|after:contract_start_date',
             'notify_unsuccessful' => 'boolean',
-        ];
-
-        // Specific validation based on type
-        if ($type === 'tender') {
-            $rules['tender_id'] .= '|exists:t_Tenders,Id';
-        } else {
-            $rules['tender_id'] .= '|exists:t_RFQ,Id';
-        }
-
-        $request->validate($rules);
+        ]);
 
         DB::beginTransaction();
 
@@ -486,36 +477,38 @@ class AwardsController extends Controller
                 );
             }
 
-                // Create award in Pending status
-                $award = TenderAward::create([
-                    'TenderID' => $id,
-                    'WinningSupplierID' => $request->winning_supplier_id,
-                    'AwardedAmount' => $request->awarded_amount,
-                    'AwardJustification' => $request->award_justification,
-                    'AwardDate' => now()->toDateString(),
-                    'ContractStartDate' => $request->contract_start_date,
-                    'ContractEndDate' => $request->contract_end_date,
-                    'TechnicalScore' => $request->technical_score,
-                    'FinancialScore' => $request->financial_score,
-                    'TotalScore' => $request->total_score,
-                    'NotifyUnsuccessfulBidders' => $request->boolean('notify_unsuccessful', true),
-                    'AwardStatus' => 'Pending',
-                    'CreatedBy' => $user->Id,
-                    'ModifiedBy' => $user->Id,
-                ]);
+            $user = Auth::user();
+            $id = $request->tender_id;
 
-                // Log activity
-                activity()
-                    ->performedOn($award)
-                    ->causedBy($user)
-                     ->withProperties(['type' => 'tender', 'tender_id' => $id])
-                    ->log('Created tender award (Pending) for tender ID: ' . $id);
+            // Create award in Pending status
+            $award = TenderAward::create([
+                'TenderID' => $id,
+                'WinningSupplierID' => $request->winning_supplier_id,
+                'AwardedAmount' => $request->awarded_amount,
+                'AwardJustification' => $request->award_justification,
+                'AwardDate' => now()->toDateString(),
+                'ContractStartDate' => $request->contract_start_date,
+                'ContractEndDate' => $request->contract_end_date,
+                'TechnicalScore' => $request->technical_score,
+                'FinancialScore' => $request->financial_score,
+                'TotalScore' => $request->total_score,
+                'NotifyUnsuccessfulBidders' => $request->boolean('notify_unsuccessful', true),
+                'AwardStatus' => 'Pending',
+                'CreatedBy' => $user->Id,
+                'ModifiedBy' => $user->Id,
+            ]);
 
-                DB::commit();
+            // Log activity
+            activity()
+                ->performedOn($award)
+                ->causedBy($user)
+                ->withProperties(['type' => 'tender', 'tender_id' => $id])
+                ->log('Created tender award (Pending) for tender ID: ' . $id);
 
-                return redirect()->route('awards.unified', ['id' => $id, 'type' => 'tender'])
-                    ->with('success', 'Tender award created successfully. Please review and submit for approval.');
-            }
+            DB::commit();
+
+            return redirect()->route('awards.unified', ['id' => $id, 'type' => 'tender'])
+                ->with('success', 'Tender award created successfully. Please review and submit for approval.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Award creation error: ' . $e->getMessage());
@@ -785,6 +778,7 @@ class AwardsController extends Controller
 
             $this->deactivateTenderCommittee((int) $award->TenderID, (int) $user->Id);
 
+            if ($type === 'tender') {
                 // Update Tender Status
                 if ($award->tender) {
                     $award->tender->update(['Status' => \App\Enums\TenderStatusEnum::Awarded->value]);
@@ -863,10 +857,13 @@ class AwardsController extends Controller
         }
     }
 
+    /**
+     * Reject award
+     */
     public function reject(Request $request, $id = null)
     {
         $request->validate([
-             'reason' => 'required|string|max:1000',
+            'reason' => 'required|string|max:1000',
         ]);
 
         $awardId = $request->award_id ?? $id;
@@ -875,105 +872,46 @@ class AwardsController extends Controller
             return redirect()->back()->with('error', 'Award ID is required.');
         }
 
-        // Load evaluations + criteria weights
-        $evaluations = RFQEvaluation::with([
-            'evaluations.rfqCriteriaUnscoped.criteria',
-            'evaluations.rfqCriteriaUnscoped.section',
-            'evaluations.supplier.thirdParty',
-        ])->where('RFQId', $rfq->Id)->get();
-
-        if ($evaluations->isEmpty()) {
-            return redirect()->route('procawards.index')->with('error', 'No evaluations found for this RFQ.');
-        }
-
-        // Section weights
-        $sectionWeights = \DB::table('t_RFQSection')
-            ->where('RFQID', $rfq->Id)
-            ->pluck('Weight', 'SectionID')
-            ->map(fn($w) => (float)$w)
-            ->toArray();
-
-        // Aggregate per supplier (similar to RFQEvaluationController@index logic)
-        $supplierTotals = []; // [supplierId] => [sumWeightedAcrossEvaluators, evaluatorCount]
-        foreach ($evaluations as $evaluation) {
-            $bySupplier = $evaluation->evaluations->groupBy('SupplierId');
-            foreach ($bySupplier as $supplierId => $entries) {
-                $sectionGroups = $entries->groupBy(fn($e) => $e->rfqCriteriaUnscoped?->SectionID);
-                $evaluatorWeightedTotal = 0.0;
-                foreach ($sectionGroups as $sectionId => $criteriaList) {
-                    $weight = (float)($sectionWeights[$sectionId] ?? 0);
-                    $maxTotal = $criteriaList->count() * 10; // each criteria out of 10
-                    $actualTotal = $criteriaList->sum('Score');
-                    $sectionWeighted = $maxTotal > 0 ? (($actualTotal / $maxTotal) * $weight) : 0.0;
-                    $evaluatorWeightedTotal += $sectionWeighted;
-                }
-                $supplierTotals[$supplierId]['sum'] = ($supplierTotals[$supplierId]['sum'] ?? 0) + $evaluatorWeightedTotal;
-                $supplierTotals[$supplierId]['count'] = ($supplierTotals[$supplierId]['count'] ?? 0) + 1;
-            }
-        }
-
-        // Determine top supplier (highest average weighted total)
-        $topSupplierId = null;
-        $topScore = -1;
-        foreach ($supplierTotals as $sid => $agg) {
-            $avg = $agg['count'] > 0 ? $agg['sum'] / $agg['count'] : 0.0;
-            if ($avg > $topScore) { $topScore = $avg; $topSupplierId = (int)$sid; }
-        }
-
-        if (!$topSupplierId) {
-            return redirect()->route('procawards.index')->with('error', 'Failed to determine top supplier for RFQ.');
-        }
-
-        DB::beginTransaction();
-
-        try {
-            // Persist award
-            $award = RFQAward::create([
-                'RFQId' => $rfq->Id,
-                'SupplierId' => $topSupplierId,
-                'Comments' => $request->input('approval_remarks'),
-                'CreatedBy' => Auth::id(),
-                'ModifiedBy' => Auth::id(),
-            ]);
-
-            $this->deactivateRfqCommittee((int) $rfq->Id, (int) Auth::id());
-
-            activity()
-                ->performedOn($award)
-                ->causedBy(Auth::user())
-                ->withProperties([
-                    'action' => 'approve-rfq',
-                    'rfq_id' => $rfq->Id,
-                    'supplier_id' => $topSupplierId,
-                    'score' => round($topScore,2),
-                ])
-                ->log('RFQ awarded to top ranked supplier.');
-
-            DB::commit();
-
-            return redirect()->route('procawards.index')->with('success', 'RFQ awarded successfully.');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::error('RFQ approval error: ' . $th->getMessage());
-            return redirect()->route('procawards.index')->with('error', 'Failed to award RFQ: ' . $th->getMessage());
-        }
-    }
-
-    /**
-     * Reject award
-     */
-    public function reject(Request $request)
-    {
-        $request->validate([
-            'award_id' => 'required|exists:t_TenderAward,Id',
-            'reason' => 'required|string|max:1000',
-        ]);
-
         try {
             DB::beginTransaction();
 
-            $award = TenderAward::findOrFail($request->award_id);
             $user = Auth::user();
+
+            // Check for explicit type
+            $requestedType = $request->input('type') ?? $request->input('award_type');
+            $award = null;
+            $type = null;
+
+            if ($requestedType === 'rfq') {
+                $award = RFQAward::find($awardId);
+                $type = 'rfq';
+                $workflowService = $this->rfqWorkflow;
+                $statusEnum = \App\Enums\RFQAwardStatusEnum::REJECTED;
+            } elseif ($requestedType === 'tender') {
+                $award = TenderAward::find($awardId);
+                $type = 'tender';
+                $workflowService = $this->workflow;
+                $statusEnum = \App\Enums\TenderAwardStatusEnum::REJECTED;
+            } else {
+                // Fallback: Try Tender then RFQ
+                $award = TenderAward::find($awardId);
+                if ($award) {
+                    $type = 'tender';
+                    $workflowService = $this->workflow;
+                    $statusEnum = \App\Enums\TenderAwardStatusEnum::REJECTED;
+                } else {
+                    $award = RFQAward::find($awardId);
+                    $type = 'rfq';
+                    $workflowService = $this->rfqWorkflow;
+                    $statusEnum = \App\Enums\RFQAwardStatusEnum::REJECTED;
+                }
+            }
+
+            $statusColumn = 'AwardStatus';
+
+            if (! $award) {
+                return redirect()->back()->with('error', 'Award not found.');
+            }
 
             Log::info("Starting award rejection", [
                 'award_id' => $award->Id,

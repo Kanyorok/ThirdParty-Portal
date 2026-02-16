@@ -22,7 +22,7 @@ class ContractInvoiceEligibilityService
         // Respect explicit manual waiver.
         if (
             strtolower((string) ($invoice->MilestoneEligibilityStatus ?? '')) === 'waived'
-            && !(bool) $invoice->IsOnHold
+            && ! (bool) $invoice->IsOnHold
         ) {
             return $this->asResult(
                 true,
@@ -38,7 +38,7 @@ class ContractInvoiceEligibilityService
 
         if ($contractType === '' || $contractId <= 0) {
             return $this->asResult(
-                !(bool) $invoice->IsOnHold,
+                ! (bool) $invoice->IsOnHold,
                 $invoice->HoldReason,
                 (float) ($invoice->PenaltySuggestedAmount ?? 0),
                 (string) ($invoice->MilestoneEligibilityStatus ?? 'Pending'),
@@ -58,7 +58,7 @@ class ContractInvoiceEligibilityService
 
         if ($milestones->isEmpty()) {
             return $this->asResult(
-                !(bool) $invoice->IsOnHold,
+                ! (bool) $invoice->IsOnHold,
                 $invoice->HoldReason,
                 (float) ($invoice->PenaltySuggestedAmount ?? 0),
                 (string) ($invoice->MilestoneEligibilityStatus ?? 'Pending'),
@@ -69,7 +69,7 @@ class ContractInvoiceEligibilityService
         $evaluated = $this->evaluate($contractType, $contractId, $milestones, (float) ($invoice->InvoiceAmount ?? 0));
 
         $newStatus = $evaluated['eligible'] ? 'Eligible' : 'Pending';
-        $newHold = !$evaluated['eligible'];
+        $newHold = ! $evaluated['eligible'];
         $newReason = $evaluated['eligible'] ? null : $evaluated['hold_reason'];
         $newPenalty = (float) $evaluated['penalty_suggested_amount'];
 
@@ -100,7 +100,7 @@ class ContractInvoiceEligibilityService
         }
 
         return $this->asResult(
-            !$newHold,
+            ! $newHold,
             $newReason,
             $newPenalty,
             $newStatus,
@@ -128,7 +128,7 @@ class ContractInvoiceEligibilityService
             $isAccepted = in_array($milestone->Status, ['Accepted', 'Waived'], true);
             $isWaived = $milestone->Status === 'Waived';
 
-            if (!$isAccepted || (!$isWaived && $requiredTotal !== $requiredDone)) {
+            if (! $isAccepted || (! $isWaived && $requiredTotal !== $requiredDone)) {
                 $eligible = false;
                 $reasons[] = "M{$milestone->MilestoneNo} - {$milestone->Title} not accepted/complete.";
             }
@@ -143,7 +143,7 @@ class ContractInvoiceEligibilityService
             if ($rule && $milestone->PlannedDueDate) {
                 $graceDays = (int) ($rule->GraceDays ?? 0);
                 $dueDate = \Carbon\Carbon::parse($milestone->PlannedDueDate)->addDays($graceDays)->startOfDay();
-                if ($today->greaterThan($dueDate) && !$isAccepted) {
+                if ($today->greaterThan($dueDate) && ! $isAccepted) {
                     $delayDays = $dueDate->diffInDays($today);
                     $penaltySuggested += $this->computeMilestonePenalty($rule, $delayDays, $invoiceAmount);
                 }
@@ -168,10 +168,10 @@ class ContractInvoiceEligibilityService
             $base = (float) ($rule->Rate ?? 0);
         }
 
-        if (!empty($rule->CapAmount)) {
+        if (! empty($rule->CapAmount)) {
             $base = min($base, (float) $rule->CapAmount);
         }
-        if (!empty($rule->CapPercent)) {
+        if (! empty($rule->CapPercent)) {
             $capPercentAmount = $invoiceAmount * (((float) $rule->CapPercent) / 100);
             $base = min($base, $capPercentAmount);
         }
@@ -190,4 +190,3 @@ class ContractInvoiceEligibilityService
         ];
     }
 }
-

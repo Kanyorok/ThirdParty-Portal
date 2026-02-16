@@ -37,6 +37,7 @@ class BulkUploadController extends Controller
         ]);
 
         $import = new BulkEmployeesImport();
+
         try {
             Excel::import($import, $request->file('file'));
         } catch (\Throwable $e) {
@@ -69,6 +70,7 @@ class BulkUploadController extends Controller
         ]);
 
         $import = new BulkSalaryImport();
+
         try {
             Excel::import($import, $request->file('file'));
         } catch (\Throwable $e) {
@@ -95,6 +97,7 @@ class BulkUploadController extends Controller
         ]);
 
         $import = new BulkAllowancesImport();
+
         try {
             Excel::import($import, $request->file('file'));
         } catch (\Throwable $e) {
@@ -122,6 +125,7 @@ class BulkUploadController extends Controller
         ]);
 
         $import = new BulkDeductionsImport();
+
         try {
             Excel::import($import, $request->file('file'));
         } catch (\Throwable $e) {
@@ -154,6 +158,7 @@ class BulkUploadController extends Controller
         ]);
 
         $import = new BulkAttendanceImport();
+
         try {
             Excel::import($import, $request->file('file'));
         } catch (\Throwable $e) {
@@ -185,6 +190,7 @@ class BulkUploadController extends Controller
         ]);
 
         $import = new BulkKpiTargetsImport();
+
         try {
             Excel::import($import, $request->file('file'));
         } catch (\Throwable $e) {

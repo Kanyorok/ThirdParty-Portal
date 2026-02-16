@@ -12,6 +12,7 @@ class KpiCategoryController extends Controller
     public function index()
     {
         $categories = KpiCategory::orderBy('Name')->paginate(20);
+
         return view('hr.config.kpi.categories.index', compact('categories'));
     }
 
@@ -40,6 +41,7 @@ class KpiCategoryController extends Controller
     public function edit($id)
     {
         $category = KpiCategory::findOrFail($id);
+
         return view('hr.config.kpi.categories.edit', compact('category'));
     }
 

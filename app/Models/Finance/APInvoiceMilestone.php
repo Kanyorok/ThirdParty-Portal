@@ -30,4 +30,3 @@ class APInvoiceMilestone extends Model
         return $this->belongsTo(ContractMilestone::class, 'MilestoneID', 'Id');
     }
 }
-

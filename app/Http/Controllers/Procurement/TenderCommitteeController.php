@@ -8,10 +8,8 @@ use App\Models\HR\Employee;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQCommittee;
 use App\Models\Procurement\RFQCommitteeMember;
-use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderCommittee;
-use App\Models\Procurement\TenderCommitteeEvaluation;
 use App\Models\Procurement\TenderCommitteeMember;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -33,6 +31,7 @@ class TenderCommitteeController extends Controller
             ->get()
             ->map(function ($item) {
                 $committeeKey = (int) ($item->getKey() ?? 0);
+
                 return [
                     'id' => $committeeKey ?: ($item->TenderID ?? 0),
                     'committee_id' => $committeeKey,
@@ -54,6 +53,7 @@ class TenderCommitteeController extends Controller
             ->get()
             ->map(function ($item) {
                 $committeeKey = (int) ($item->getKey() ?? 0);
+
                 return [
                     'id' => $committeeKey ?: ($item->RFQID ?? 0),
                     'committee_id' => $committeeKey,
@@ -112,6 +112,7 @@ class TenderCommitteeController extends Controller
         [$resolvedUserIds, $unresolvedIds] = $this->resolveCommitteeUserIds((array) $request->committeeMembers);
         if ($unresolvedIds->isNotEmpty()) {
             $missing = $this->formatMissingEmployeeNames($unresolvedIds);
+
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Some selected members do not have active user accounts: ' . $missing);
@@ -277,14 +278,14 @@ class TenderCommitteeController extends Controller
             return redirect()->back()->with('error', 'Unsupported committee type.');
         }
 
-        if (!$committee) {
+        if (! $committee) {
             return redirect()->back()->with('error', 'No committee found for this reference.');
         }
         $committeeKey = (int) ($committee->getKey() ?? 0);
 
         $currentMemberValues = $committeeMembers
             ->pluck('UserID')
-            ->filter(fn ($value) => !is_null($value))
+            ->filter(fn ($value) => ! is_null($value))
             ->map(fn ($value) => (int) $value)
             ->unique()
             ->values();
@@ -334,17 +335,18 @@ class TenderCommitteeController extends Controller
         $committeeId = $request->filled('committeeID') ? (int) $request->committeeID : null;
 
         $committee = $this->resolveCommitteeForManagement($committeeType, $referenceId, $committeeId);
-        if (!$committee) {
+        if (! $committee) {
             return redirect()->back()->with('error', 'Committee not found for the selected reference.');
         }
 
-        if (!(bool) $committee->IsActive) {
+        if (! (bool) $committee->IsActive) {
             return redirect()->back()->with('error', 'This committee is inactive and cannot be modified.');
         }
 
         [$newUserIds, $unresolvedNewIds] = $this->resolveCommitteeUserIds((array) $request->input('newMembers', []));
         if ($unresolvedNewIds->isNotEmpty()) {
             $missing = $this->formatMissingEmployeeNames($unresolvedNewIds);
+
             return redirect()->back()->with('error', 'Some selected new members do not have active user accounts: ' . $missing);
         }
 
@@ -390,7 +392,7 @@ class TenderCommitteeController extends Controller
                         ->first();
                 }
 
-                if (!$member) {
+                if (! $member) {
                     continue;
                 }
 
@@ -634,6 +636,7 @@ class TenderCommitteeController extends Controller
     private function resolveCommitteeUserId(int $memberId): ?int
     {
         [$resolved, ] = $this->resolveCommitteeUserIds([$memberId]);
+
         return $resolved->first();
     }
 
@@ -686,6 +689,7 @@ class TenderCommitteeController extends Controller
                 'ModifiedBy' => $actorId,
                 'ModifiedOn' => $now,
             ]);
+
             return;
         }
 
@@ -732,6 +736,7 @@ class TenderCommitteeController extends Controller
                 'ModifiedBy' => $actorId,
                 'ModifiedOn' => $now,
             ]);
+
             return;
         }
 

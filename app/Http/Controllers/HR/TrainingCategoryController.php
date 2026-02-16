@@ -12,6 +12,7 @@ class TrainingCategoryController extends Controller
     public function index()
     {
         $categories = TrainingCategory::orderBy('Name')->paginate(30);
+
         return view('hr.training.categories.index', compact('categories'));
     }
 
@@ -41,6 +42,7 @@ class TrainingCategoryController extends Controller
     public function edit($id)
     {
         $category = TrainingCategory::findOrFail($id);
+
         return view('hr.training.categories.edit', compact('category'));
     }
 

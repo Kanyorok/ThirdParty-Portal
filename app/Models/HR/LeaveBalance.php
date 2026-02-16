@@ -3,8 +3,6 @@
 namespace App\Models\HR;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\HR\Employee;
-use App\Models\HR\LeaveType;
 
 class LeaveBalance extends Model
 {

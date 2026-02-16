@@ -13,12 +13,14 @@ class ExitTerminalDueController extends Controller
     public function index()
     {
         $exits = ExitRequest::with('employee')->orderByDesc('CreatedOn')->paginate(30);
+
         return view('hr.exit.terminal_dues.index', compact('exits'));
     }
 
     public function edit($exitId)
     {
         $exit = ExitRequest::with(['employee', 'terminalDues'])->findOrFail($exitId);
+
         return view('hr.exit.terminal_dues.edit', compact('exit'));
     }
 

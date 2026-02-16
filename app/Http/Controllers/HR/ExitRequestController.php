@@ -6,19 +6,17 @@ use App\Enums\Core\ModulesEnum;
 use App\Http\Controllers\Controller;
 use App\Models\HR\Discipline\DisciplinaryCase;
 use App\Models\HR\Employee;
-use App\Models\HR\MonthlyAllowance;
-use App\Models\HR\MonthlyDeduction;
 use App\Models\HR\Exit\ExitChecklistItem;
 use App\Models\HR\Exit\ExitClearance;
 use App\Models\HR\Exit\ExitClearanceDepartment;
 use App\Models\HR\Exit\ExitDocument;
-use App\Models\HR\Exit\ExitNotice;
 use App\Models\HR\Exit\ExitPolicy;
 use App\Models\HR\Exit\ExitRedundancy;
 use App\Models\HR\Exit\ExitRequest;
 use App\Models\HR\Exit\ExitStatusLog;
-use App\Models\HR\Exit\ExitTerminalDue;
 use App\Models\HR\Exit\ExitType;
+use App\Models\HR\MonthlyAllowance;
+use App\Models\HR\MonthlyDeduction;
 use App\Services\DMS\DocumentService;
 use App\Services\DMS\RepositoryService;
 use App\Services\HR\ExitService;
@@ -98,7 +96,7 @@ class ExitRequestController extends Controller
 
         $employee = Employee::find($data['EmployeeID']);
         $exitType = ExitType::find($data['ExitTypeID']);
-        $policy = !empty($data['PolicyID']) ? ExitPolicy::find($data['PolicyID']) : null;
+        $policy = ! empty($data['PolicyID']) ? ExitPolicy::find($data['PolicyID']) : null;
 
         $activeExitExists = ExitRequest::where('EmployeeID', $data['EmployeeID'])
             ->whereNotIn('Status', ['Closed', 'Rejected'])
@@ -126,13 +124,13 @@ class ExitRequestController extends Controller
         $payInLieuAllowed = $noticeInfo['payInLieuAllowed'];
 
         $noticePayInLieu = $request->boolean('NoticePayInLieu');
-        if ($noticePayInLieu && !$payInLieuAllowed) {
+        if ($noticePayInLieu && ! $payInLieuAllowed) {
             return back()->withErrors(['NoticePayInLieu' => 'Notice pay in lieu is not allowed for this policy.'])->withInput();
         }
 
         $noticeDate = $data['NoticeDate'] ?? $data['RequestedOn'] ?? now()->toDateString();
         $effectiveExitDate = $data['EffectiveExitDate'] ?? $data['ProposedLastDay'];
-        if (!$effectiveExitDate && $noticeDate) {
+        if (! $effectiveExitDate && $noticeDate) {
             $effectiveExitDate = Carbon::parse($noticeDate)->addDays($noticeDays)->toDateString();
         }
 
@@ -383,5 +381,4 @@ class ExitRequestController extends Controller
             ]);
         }
     }
-
 }

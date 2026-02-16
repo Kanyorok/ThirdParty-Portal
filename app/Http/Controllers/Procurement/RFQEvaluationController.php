@@ -690,7 +690,7 @@ class RFQEvaluationController extends Controller
                 if ($employeeId) {
                     $query->orWhere('UserID', $employeeId);
                 }
-                if (!$currentUserId && !$employeeId) {
+                if (! $currentUserId && ! $employeeId) {
                     $query->whereRaw('1 = 0');
                 }
             })

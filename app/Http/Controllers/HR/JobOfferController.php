@@ -74,7 +74,7 @@ class JobOfferController extends Controller
         ]);
 
         $application = JobApplication::find($data['ApplicationID']);
-        if ($application && !in_array($application->Status, ['Rejected', 'Withdrawn', 'Hired'], true)) {
+        if ($application && ! in_array($application->Status, ['Rejected', 'Withdrawn', 'Hired'], true)) {
             $application->update([
                 'Status' => 'Offer',
                 'ModifiedBy' => auth()->id(),
@@ -137,7 +137,7 @@ class JobOfferController extends Controller
     public function approve($id)
     {
         $offer = JobOffer::findOrFail($id);
-        if (!in_array($offer->Status, ['Submitted', 'Draft'], true)) {
+        if (! in_array($offer->Status, ['Submitted', 'Draft'], true)) {
             return redirect()->route('hr.recruitment.offers.show', $offer->Id)
                 ->withErrors(['status' => 'Only draft/submitted offers can be approved.']);
         }
@@ -174,7 +174,7 @@ class JobOfferController extends Controller
     public function accept($id)
     {
         $offer = JobOffer::findOrFail($id);
-        if (!in_array($offer->Status, ['Approved', 'Sent'], true)) {
+        if (! in_array($offer->Status, ['Approved', 'Sent'], true)) {
             return redirect()->route('hr.recruitment.offers.show', $offer->Id)
                 ->withErrors(['status' => 'Offer must be approved/sent before acceptance.']);
         }

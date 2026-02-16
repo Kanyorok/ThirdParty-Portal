@@ -61,9 +61,9 @@ class TenderAcceptController extends Controller
         try {
             DB::beginTransaction();
 
-        // Get current user and employee IDs to match both canonical and legacy committee records
-        $currentUserId = Auth::id();
-        $currentEmployeeId = optional(Auth::user())->EmployeeId;
+            // Get current user and employee IDs to match both canonical and legacy committee records
+            $currentUserId = Auth::id();
+            $currentEmployeeId = optional(Auth::user())->EmployeeId;
 
             // Validate response input to only accept 1 (accept) or 2 (decline)
             $validated = $request->validate([
@@ -91,25 +91,25 @@ class TenderAcceptController extends Controller
                     ]);
             }
 
-        // Update RFQ committee response if submitted
-        if ($request->filled('rfq_id') && $request->filled('rfq_response')) {
-            RFQCommitteeMember::where(function ($q) use ($currentUserId, $currentEmployeeId) {
-                $q->where('UserID', $currentUserId)
-                    ->orWhereHas('user', fn($uq) => $uq->where('Id', $currentUserId))
-                    ->orWhereHas('userByEmployee', fn($uq) => $uq->where('Id', $currentUserId));
+            // Update RFQ committee response if submitted
+            if ($request->filled('rfq_id') && $request->filled('rfq_response')) {
+                RFQCommitteeMember::where(function ($q) use ($currentUserId, $currentEmployeeId) {
+                    $q->where('UserID', $currentUserId)
+                        ->orWhereHas('user', fn ($uq) => $uq->where('Id', $currentUserId))
+                        ->orWhereHas('userByEmployee', fn ($uq) => $uq->where('Id', $currentUserId));
 
-                if ($currentEmployeeId) {
-                    $q->orWhere('UserID', $currentEmployeeId);
-                }
-            })
-                ->where('RFQID', $request->rfq_id)
-                ->update([
-                    'Response' => (int)$request->rfq_response,
-                    'reason' => $request->rfq_comments,
-                    'ModifiedBy' => $currentUserId,
-                    'ModifiedOn' => now(),
-                ]);
-        }
+                    if ($currentEmployeeId) {
+                        $q->orWhere('UserID', $currentEmployeeId);
+                    }
+                })
+                    ->where('RFQID', $request->rfq_id)
+                    ->update([
+                        'Response' => (int)$request->rfq_response,
+                        'reason' => $request->rfq_comments,
+                        'ModifiedBy' => $currentUserId,
+                        'ModifiedOn' => now(),
+                    ]);
+            }
 
             DB::commit();
 

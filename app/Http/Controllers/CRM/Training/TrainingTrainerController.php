@@ -44,7 +44,7 @@ class TrainingTrainerController extends Controller
             return back()->withErrors(['Name' => 'Enter the trainer name for external trainers.'])->withInput();
         }
 
-        if (!empty($data['UserID'])) {
+        if (! empty($data['UserID'])) {
             $user = User::find($data['UserID']);
             if ($user) {
                 $data['Name'] = $data['Name'] ?: $user->Name;
@@ -95,7 +95,7 @@ class TrainingTrainerController extends Controller
             return back()->withErrors(['Name' => 'Enter the trainer name for external trainers.'])->withInput();
         }
 
-        if (!empty($data['UserID'])) {
+        if (! empty($data['UserID'])) {
             $user = User::find($data['UserID']);
             if ($user) {
                 $data['Name'] = $data['Name'] ?: $user->Name;

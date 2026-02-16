@@ -4,8 +4,6 @@ namespace App\Http\Controllers\HR;
 
 use App\Enums\Core\ModulesEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Auth\User;
-use App\Models\DMS\Document;
 use App\Models\HR\Employee;
 use App\Models\HR\JobGrade;
 use App\Models\HR\JobRole;
@@ -195,11 +193,11 @@ class TrainingSessionController extends Controller
         $canMarkAttendance = in_array($session->Status, ['Ongoing', 'Completed'], true);
 
         if ($action === 'attendance') {
-            if (!$canMarkAttendance) {
+            if (! $canMarkAttendance) {
                 return redirect()->route('hr.training.sessions.show', $id)
                     ->withErrors(['attendance' => 'Attendance can only be marked when the session is ongoing or completed.']);
             }
-            if (!in_array($participant->Status, ['Approved', 'Confirmed', 'Completed'], true)) {
+            if (! in_array($participant->Status, ['Approved', 'Confirmed', 'Completed'], true)) {
                 return redirect()->route('hr.training.sessions.show', $id)
                     ->withErrors(['attendance' => 'Attendance can only be marked for confirmed participants.']);
             }
@@ -212,7 +210,7 @@ class TrainingSessionController extends Controller
             $data['AttendanceMarkedBy'] = auth()->id();
             $data['Status'] = $participant->Status ?: 'Nominated';
         } else {
-            if (!$canUpdateRsvp) {
+            if (! $canUpdateRsvp) {
                 return redirect()->route('hr.training.sessions.show', $id)
                     ->withErrors(['rsvp' => 'RSVP can only be updated before the session starts.']);
             }
@@ -307,15 +305,15 @@ class TrainingSessionController extends Controller
         $now = now();
         foreach ($data['Feedback'] ?? [] as $employeeId => $row) {
             $employeeId = (int)$employeeId;
-            if (!in_array($employeeId, $participantIds, true)) {
+            if (! in_array($employeeId, $participantIds, true)) {
                 continue;
             }
 
-            $hasValue = !empty($row['RatingContent'])
-                || !empty($row['RatingTrainer'])
-                || !empty($row['RatingRelevance'])
-                || !empty($row['Comments']);
-            if (!$hasValue) {
+            $hasValue = ! empty($row['RatingContent'])
+                || ! empty($row['RatingTrainer'])
+                || ! empty($row['RatingRelevance'])
+                || ! empty($row['Comments']);
+            if (! $hasValue) {
                 continue;
             }
 
@@ -333,7 +331,7 @@ class TrainingSessionController extends Controller
                 'ModifiedOn' => $now,
             ]);
 
-            if (!$feedback->exists) {
+            if (! $feedback->exists) {
                 $feedback->CreatedBy = auth()->id();
                 $feedback->CreatedOn = $now;
             }
@@ -374,15 +372,15 @@ class TrainingSessionController extends Controller
         $gradeIds = $request->input('EnrollGrades', []);
         $roleIds = $request->input('EnrollRoles', []);
 
-        if (!empty($departmentIds)) {
+        if (! empty($departmentIds)) {
             $employeeIds = $employeeIds->merge(
                 Employee::whereIn('DepartmentID', $departmentIds)->pluck('Id')
             );
-        } elseif (!empty($gradeIds)) {
+        } elseif (! empty($gradeIds)) {
             $employeeIds = $employeeIds->merge(
                 Employee::whereIn('GradeID', $gradeIds)->pluck('Id')
             );
-        } elseif (!empty($roleIds)) {
+        } elseif (! empty($roleIds)) {
             $employeeIds = $employeeIds->merge(
                 Employee::whereIn('RoleID', $roleIds)->pluck('Id')
             );
@@ -415,19 +413,20 @@ class TrainingSessionController extends Controller
             ];
         }
 
-        if (!empty($insert)) {
+        if (! empty($insert)) {
             TrainingSessionParticipant::insert($insert);
         }
     }
 
     private function normalizeTime(?string $value): ?string
     {
-        if (!$value) {
+        if (! $value) {
             return null;
         }
         if (strlen($value) === 5) {
             return $value . ':00';
         }
+
         return $value;
     }
 }

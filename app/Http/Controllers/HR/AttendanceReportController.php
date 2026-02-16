@@ -5,9 +5,9 @@ namespace App\Http\Controllers\HR;
 use App\Http\Controllers\Controller;
 use App\Models\HR\AttendanceDaily;
 use App\Models\HR\Employee;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class AttendanceReportController extends Controller
 {
@@ -29,14 +29,15 @@ class AttendanceReportController extends Controller
         $totalPresent = (clone $query)->whereIn('Status', ['Present', 'Late'])->count();
         $totalAbsent = (clone $query)->where('Status', 'Absent')->count();
         $totalLate = (clone $query)->where('LateMinutes', '>', 0)->count();
-        
+
         $totalHoursWorked = (clone $query)->sum('TotalHours');
         $totalOvertimeHours = (clone $query)->sum('OvertimeHours');
         $totalLateMinutes = (clone $query)->sum('LateMinutes');
 
         // 2. Line Chart: Daily Trend (Present vs Late)
         $dailyTrend = (clone $query)
-            ->select('WorkDate', 
+            ->select(
+                'WorkDate',
                 DB::raw("SUM(CASE WHEN Status IN ('Present', 'Late') THEN 1 ELSE 0 END) as present_count"),
                 DB::raw("SUM(CASE WHEN LateMinutes > 0 THEN 1 ELSE 0 END) as late_count"),
                 DB::raw("SUM(OvertimeHours) as ot_hours")
@@ -77,10 +78,20 @@ class AttendanceReportController extends Controller
         $employees = Employee::orderBy('FirstName')->get(['Id', 'FirstName', 'LastName']);
 
         return view('hr.attendance.reports.index', compact(
-            'startDate', 'endDate', 'employees',
-            'totalScheduled', 'totalPresent', 'totalAbsent', 'totalLate',
-            'totalHoursWorked', 'totalOvertimeHours', 'totalLateMinutes',
-            'dailyTrend', 'statusDist', 'topLateEmployees', 'topOvertimeEmployees'
+            'startDate',
+            'endDate',
+            'employees',
+            'totalScheduled',
+            'totalPresent',
+            'totalAbsent',
+            'totalLate',
+            'totalHoursWorked',
+            'totalOvertimeHours',
+            'totalLateMinutes',
+            'dailyTrend',
+            'statusDist',
+            'topLateEmployees',
+            'topOvertimeEmployees'
         ));
     }
 }

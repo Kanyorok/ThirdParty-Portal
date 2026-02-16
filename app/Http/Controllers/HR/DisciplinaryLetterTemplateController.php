@@ -25,6 +25,7 @@ class DisciplinaryLetterTemplateController extends Controller
         $legalTemplates = LegalTemplate::whereIn('Id', $templates->pluck('TemplateID')->filter())
             ->get(['Id', 'Title'])
             ->keyBy('Id');
+
         return view('hr.discipline.letter-templates.index', [
             'templates' => $templates,
             'letterTypes' => $this->letterTypes(),
@@ -35,6 +36,7 @@ class DisciplinaryLetterTemplateController extends Controller
     public function create()
     {
         $legalTemplates = LegalTemplate::orderBy('Title')->get(['Id', 'Title', 'DocumentType', 'Status']);
+
         return view('hr.discipline.letter-templates.create', [
             'legalTemplates' => $legalTemplates,
             'letterTypes' => $this->letterTypes(),
@@ -64,6 +66,7 @@ class DisciplinaryLetterTemplateController extends Controller
     {
         $template = DisciplinaryLetterTemplate::findOrFail($id);
         $legalTemplates = LegalTemplate::orderBy('Title')->get(['Id', 'Title', 'DocumentType', 'Status']);
+
         return view('hr.discipline.letter-templates.edit', [
             'template' => $template,
             'legalTemplates' => $legalTemplates,

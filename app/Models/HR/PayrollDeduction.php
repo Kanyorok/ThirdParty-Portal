@@ -2,8 +2,8 @@
 
 namespace App\Models\HR;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Finance\FinanceGLAccounts;
+use Illuminate\Database\Eloquent\Model;
 
 class PayrollDeduction extends Model
 {

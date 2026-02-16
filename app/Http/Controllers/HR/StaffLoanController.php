@@ -17,12 +17,14 @@ class StaffLoanController extends Controller
     public function index()
     {
         $loans = StaffLoan::with('employee')->orderByDesc('Id')->get();
+
         return view('hr.payroll.loans.index', compact('loans'));
     }
 
     public function create()
     {
         $employees = Employee::orderBy('FirstName')->get(['Id','FirstName','LastName']);
+
         return view('hr.payroll.loans.create', compact('employees'));
     }
 
@@ -54,7 +56,7 @@ class StaffLoanController extends Controller
         ]);
 
         $employeeId = (int)$data['EmployeeID'];
-        if (!empty($data['LoanRef'])) {
+        if (! empty($data['LoanRef'])) {
             $exists = StaffLoan::where('EmployeeID', $employeeId)
                 ->where('LoanRef', $data['LoanRef'])
                 ->whereIn('Status', ['Pending','Approved'])
@@ -86,7 +88,7 @@ class StaffLoanController extends Controller
         $data['Status'] = 'Pending';
         $data['CreatedBy'] = auth()->id();
         $data['CreatedOn'] = now();
-        if (empty($data['EndDate']) && !empty($data['StartDate']) && !empty($data['TenureMonths'])) {
+        if (empty($data['EndDate']) && ! empty($data['StartDate']) && ! empty($data['TenureMonths'])) {
             $data['EndDate'] = \Carbon\Carbon::parse($data['StartDate'])->startOfMonth()->addMonths(((int)$data['TenureMonths']) - 1)->endOfMonth()->toDateString();
         }
 
@@ -137,7 +139,7 @@ class StaffLoanController extends Controller
     public function cancel($id)
     {
         $loan = StaffLoan::findOrFail($id);
-        
+
         // Only allow cancellation for Approved loans
         if ($loan->Status !== 'Approved') {
             return redirect()->route('hr.payroll.loans.index')
@@ -146,7 +148,7 @@ class StaffLoanController extends Controller
 
         // Check if any repayments have been made
         $deductions = MonthlyDeduction::where('StaffLoanID', $loan->Id)->get();
-        
+
         // Check if any of these deductions have been processed in a payroll run
         $hasPayments = false;
         foreach ($deductions as $deduction) {
@@ -155,6 +157,7 @@ class StaffLoanController extends Controller
             if ($deduction->Month < now()->month && $deduction->Year <= now()->year) {
                 // Check if this period has been processed
                 $hasPayments = true;
+
                 break;
             }
         }
@@ -186,7 +189,7 @@ class StaffLoanController extends Controller
     private function generateLoanRepaymentDeductions(StaffLoan $loan): void
     {
         $deduction = PayrollDeduction::where('Code', 'LOAN-REP')->first();
-        if (!$deduction) {
+        if (! $deduction) {
             throw ValidationException::withMessages([
                 'LoanRef' => 'Payroll deduction code LOAN-REP is not configured. Create it under HR Config → Statutory & Payroll Rules → Deductions.',
             ]);
@@ -201,7 +204,7 @@ class StaffLoanController extends Controller
 
         foreach ($schedules as $schedule) {
             $dueDate = $schedule->DueDate;
-            if (!$dueDate) {
+            if (! $dueDate) {
                 continue;
             }
             $month = (int)$dueDate->month;

@@ -24,7 +24,7 @@ class Religion extends Model
     protected $casts = [
         'IsActive' => 'boolean',
         'CreatedOn' => 'datetime',
-        'ModifiedOn'=> 'datetime',
+        'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
     ];
 }

@@ -26,6 +26,7 @@ class AttendanceRawLogController extends Controller
         }
         $logs = $query->paginate(50);
         $employees = Employee::orderBy('FirstName')->get(['Id','FirstName','LastName']);
-        return view('hr.attendance.logs.index', compact('logs','employees'));
+
+        return view('hr.attendance.logs.index', compact('logs', 'employees'));
     }
 }

@@ -111,7 +111,7 @@ class DisciplinaryInvestigationController extends Controller
     {
         $case = DisciplinaryCase::findOrFail($caseId);
         $investigation = DisciplinaryInvestigation::where('CaseID', $case->Id)->orderBy('Id')->first();
-        if (!$investigation) {
+        if (! $investigation) {
             return redirect()->route('hr.discipline.cases.investigation.edit', $case->Id)->withErrors([
                 'status' => 'No investigation record found.',
             ]);
@@ -134,7 +134,7 @@ class DisciplinaryInvestigationController extends Controller
     {
         $case = DisciplinaryCase::findOrFail($caseId);
         $investigation = DisciplinaryInvestigation::where('CaseID', $case->Id)->orderBy('Id')->first();
-        if (!$investigation) {
+        if (! $investigation) {
             return redirect()->route('hr.discipline.cases.investigation.edit', $case->Id)->withErrors([
                 'status' => 'Create the investigation first.',
             ]);

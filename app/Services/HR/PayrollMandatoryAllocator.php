@@ -27,10 +27,10 @@ class PayrollMandatoryAllocator
                 $q->whereNull('Status')->orWhere('Status', '!=', 'Exited');
             })
             ->chunk(200, function ($employees) use ($month, $year) {
-            foreach ($employees as $employee) {
-                $this->syncForEmployee($employee, $month, $year);
-            }
-        });
+                foreach ($employees as $employee) {
+                    $this->syncForEmployee($employee, $month, $year);
+                }
+            });
     }
 
     private function syncMandatoryAllowancesForEmployee(Employee $employee, int $month, int $year): void
@@ -64,6 +64,7 @@ class PayrollMandatoryAllocator
                         'ModifiedOn' => now(),
                     ]);
                 }
+
                 continue;
             }
 
@@ -96,7 +97,7 @@ class PayrollMandatoryAllocator
                 ->orderByDesc('Id')
                 ->first();
             if ($existing) {
-                if ($existing->Status !== 'Approved' || !$existing->IsAutoCalculated) {
+                if ($existing->Status !== 'Approved' || ! $existing->IsAutoCalculated) {
                     $existing->update([
                         'Amount' => (float)($existing->Amount ?? 0),
                         'IsRecurring' => true,
@@ -108,6 +109,7 @@ class PayrollMandatoryAllocator
                         'ModifiedOn' => now(),
                     ]);
                 }
+
                 continue;
             }
             MonthlyDeduction::create([
@@ -134,7 +136,7 @@ class PayrollMandatoryAllocator
             ->where('IsActive', 1)
             ->orderByDesc('EffectiveFrom')
             ->first();
-        if (!$rule) {
+        if (! $rule) {
             return 0.0;
         }
 
@@ -143,19 +145,24 @@ class PayrollMandatoryAllocator
             case 'PercentageOnBasic':
             case 'PercentageOnGross':
                 $amount = $basicSalary * ((float)($rule->Rate ?? 0) / 100);
+
                 break;
             case 'Flat':
                 $amount = (float)($rule->Amount ?? 0);
+
                 break;
             case 'PercentageOnBand':
                 $amount = $basicSalary * ((float)($rule->Rate ?? 0) / 100);
+
                 break;
             case 'FlatOnBand':
                 $amount = (float)($rule->Amount ?? 0);
+
                 break;
             case 'PercentageOfActingReference':
                 // Not used for mandatory allocation.
                 $amount = 0.0;
+
                 break;
             default:
                 $amount = 0.0;

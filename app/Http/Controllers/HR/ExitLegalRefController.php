@@ -11,6 +11,7 @@ class ExitLegalRefController extends Controller
     public function index()
     {
         $refs = ExitLegalRef::orderBy('Section')->get();
+
         return view('hr.exit.config.legal_refs.index', compact('refs'));
     }
 
@@ -45,6 +46,7 @@ class ExitLegalRefController extends Controller
     public function edit($id)
     {
         $ref = ExitLegalRef::findOrFail($id);
+
         return view('hr.exit.config.legal_refs.edit', compact('ref'));
     }
 

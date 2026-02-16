@@ -40,7 +40,7 @@ class KpiAppraisalController extends Controller
         $employees = \App\Models\HR\Employee::orderBy('FirstName')->get(['Id','FirstName','LastName','EmployeeNo']);
         $ratingScaleMap = KpiRatingScale::pluck('MaxScore', 'Id');
 
-        return view('hr.kpi.appraisals.index', compact('appraisals','years','employees','ratingScaleMap'));
+        return view('hr.kpi.appraisals.index', compact('appraisals', 'years', 'employees', 'ratingScaleMap'));
     }
 
     public function create(Request $request)
@@ -105,6 +105,7 @@ class KpiAppraisalController extends Controller
             if ($length > 0 && 12 % $length === 0) {
                 $segmentCount = (int)(12 / $length);
             }
+
             return [
                 'Id' => $period->Id,
                 'Name' => $period->Name,
@@ -237,6 +238,7 @@ class KpiAppraisalController extends Controller
         $appraisal->update([
             'TotalScore' => $totalScore,
         ]);
+
         return redirect()->route('hr.kpi.appraisals.show', $appraisal->Id)->with('success', 'KPI appraisal saved.');
     }
 
@@ -264,7 +266,7 @@ class KpiAppraisalController extends Controller
         $scales = KpiRatingScale::where('IsActive', 1)->orderBy('MinScore')->get(['Id','Name','MinScore','MaxScore']);
         $overallScale = $scales->firstWhere('Id', $appraisal->OverallRatingID);
         $overallMax = $overallScale?->MaxScore ? (float)$overallScale->MaxScore : null;
-        $rawTotalScore = $appraisal->items->sum(fn($item) => (float)($item->FinalScore ?? $item->Score));
+        $rawTotalScore = $appraisal->items->sum(fn ($item) => (float)($item->FinalScore ?? $item->Score));
         $totalScorePercent = $overallMax ? ($rawTotalScore / $overallMax) * 100 : (float)$appraisal->TotalScore;
 
         $chartRows = KpiScoreChart::where('IsActive', 1)
@@ -280,6 +282,7 @@ class KpiAppraisalController extends Controller
         $finalRating = $chartRows->first(function ($row) use ($totalScorePercent) {
             $min = (float)$row->MinPercent;
             $max = $row->MaxPercent !== null ? (float)$row->MaxPercent : null;
+
             return $totalScorePercent >= $min && ($max === null || $totalScorePercent <= $max);
         });
 
@@ -299,7 +302,7 @@ class KpiAppraisalController extends Controller
     public function edit($id)
     {
         $appraisal = KpiAppraisal::with(['items.goalItem.kpiItem.perspective'])->findOrFail($id);
-        if (!in_array($appraisal->Status, ['Draft','Returned','Rejected','Submitted'], true)) {
+        if (! in_array($appraisal->Status, ['Draft','Returned','Rejected','Submitted'], true)) {
             return redirect()->route('hr.kpi.appraisals.show', $appraisal->Id)->withErrors([
                 'status' => 'Only draft/returned/rejected/submitted appraisals can be edited.',
             ]);
@@ -321,13 +324,13 @@ class KpiAppraisalController extends Controller
             ];
         })->values();
 
-        return view('hr.kpi.appraisals.edit', compact('appraisal','scales','perspectiveGroups','perspectives','weightMap','ratingScalePayload'));
+        return view('hr.kpi.appraisals.edit', compact('appraisal', 'scales', 'perspectiveGroups', 'perspectives', 'weightMap', 'ratingScalePayload'));
     }
 
     public function update(Request $request, $id)
     {
         $appraisal = KpiAppraisal::findOrFail($id);
-        if (!in_array($appraisal->Status, ['Draft','Returned','Rejected','Submitted'], true)) {
+        if (! in_array($appraisal->Status, ['Draft','Returned','Rejected','Submitted'], true)) {
             return redirect()->route('hr.kpi.appraisals.show', $appraisal->Id)->withErrors([
                 'status' => 'Only draft/returned/rejected/submitted appraisals can be updated.',
             ]);
@@ -376,7 +379,7 @@ class KpiAppraisalController extends Controller
         foreach ($data['Items'] as $item) {
             $selfRating = $item['SelfRatingValue'] ?? null;
             $supervisorRating = $item['SupervisorRatingValue'] ?? null;
-            if ($isSubmitting && !$isSupervisorStage && $selfRating === null) {
+            if ($isSubmitting && ! $isSupervisorStage && $selfRating === null) {
                 throw ValidationException::withMessages([
                     'Items' => 'Self rating is required for all items before submitting.',
                 ]);
@@ -432,12 +435,12 @@ class KpiAppraisalController extends Controller
     public function submit($id)
     {
         $appraisal = KpiAppraisal::findOrFail($id);
-        if (!in_array($appraisal->Status, ['Draft','Returned','Rejected'], true)) {
+        if (! in_array($appraisal->Status, ['Draft','Returned','Rejected'], true)) {
             return redirect()->route('hr.kpi.appraisals.show', $appraisal->Id)->withErrors([
                 'status' => 'Only draft/returned/rejected appraisals can be submitted.',
             ]);
         }
-        if (!$appraisal->OverallRatingID) {
+        if (! $appraisal->OverallRatingID) {
             return redirect()->route('hr.kpi.appraisals.show', $appraisal->Id)->withErrors([
                 'status' => 'Overall rating is required before submitting.',
             ]);

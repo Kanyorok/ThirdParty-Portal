@@ -22,12 +22,14 @@ class ApplicantController extends Controller
         }
 
         $applicants = $query->paginate(20);
+
         return view('hr.recruitment.applicants.index', compact('applicants'));
     }
 
     public function show($id)
     {
         $applicant = Applicant::with(['applications.opening'])->findOrFail($id);
+
         return view('hr.recruitment.applicants.show', compact('applicant'));
     }
 }

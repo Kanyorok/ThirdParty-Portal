@@ -10,7 +10,6 @@ use App\Models\Core\Currency;
 use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Services\Finance\ContractInvoiceEligibilityService;
-use App\Services\Finance\TransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -97,6 +96,7 @@ class InvoiceEntryV2Controller extends Controller
     public function getContracts()
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
+
         return response()->json($this->buildContractOptions());
     }
 
@@ -104,7 +104,7 @@ class InvoiceEntryV2Controller extends Controller
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
 
-        if (!in_array($type, ['tender', 'rfq'], true)) {
+        if (! in_array($type, ['tender', 'rfq'], true)) {
             return response()->json(['error' => 'Invalid contract type.'], 422);
         }
 
@@ -122,43 +122,43 @@ class InvoiceEntryV2Controller extends Controller
         );
 
         $milestones = $milestonesCollection->map(function ($m) use ($billedByMilestone, $contractValue) {
-                $requiredTotal = $m->checklistItems->where('Required', true)->count();
-                $requiredDone = $m->checklistItems->where('Required', true)->where('IsFulfilled', true)->count();
-                $workflowEligible = $m->Status === 'Waived'
-                    || ($m->Status === 'Accepted' && $requiredTotal === $requiredDone);
-                $valueAmount = $this->getMilestoneTargetAmount($m, $contractValue);
-                $billedAmount = (float) ($billedByMilestone[(int) $m->Id] ?? 0);
-                $remainingAmount = round(max(0, $valueAmount - $billedAmount), 2);
-                $eligible = $workflowEligible && $remainingAmount > 0;
+            $requiredTotal = $m->checklistItems->where('Required', true)->count();
+            $requiredDone = $m->checklistItems->where('Required', true)->where('IsFulfilled', true)->count();
+            $workflowEligible = $m->Status === 'Waived'
+                || ($m->Status === 'Accepted' && $requiredTotal === $requiredDone);
+            $valueAmount = $this->getMilestoneTargetAmount($m, $contractValue);
+            $billedAmount = (float) ($billedByMilestone[(int) $m->Id] ?? 0);
+            $remainingAmount = round(max(0, $valueAmount - $billedAmount), 2);
+            $eligible = $workflowEligible && $remainingAmount > 0;
 
-                return [
-                    'Id' => $m->Id,
-                    'MilestoneNo' => $m->MilestoneNo,
-                    'Title' => $m->Title,
-                    'Status' => $m->Status,
-                    'PlannedDueDate' => $m->PlannedDueDate ? $m->PlannedDueDate->format('Y-m-d') : null,
-                    'ValueType' => $m->ValueType,
-                    'ValuePercent' => $m->ValuePercent,
-                    'ValueAmount' => $valueAmount,
-                    'ConfiguredValueAmount' => $m->ValueAmount,
-                    'BilledAmount' => $billedAmount,
-                    'RemainingAmount' => $remainingAmount,
-                    'BillableAmount' => $remainingAmount,
-                    'IsFullyBilled' => $remainingAmount <= 0.0,
-                    'RequiredChecklistTotal' => $requiredTotal,
-                    'RequiredChecklistFulfilled' => $requiredDone,
-                    'ChecklistItems' => $m->checklistItems->map(function ($item) {
-                        return [
-                            'Id' => $item->Id,
-                            'ItemDescription' => $item->ItemDescription,
-                            'Required' => (bool) $item->Required,
-                            'IsFulfilled' => (bool) $item->IsFulfilled,
-                            'Notes' => $item->Notes,
-                        ];
-                    })->values(),
-                    'Eligible' => $eligible,
-                ];
-            });
+            return [
+                'Id' => $m->Id,
+                'MilestoneNo' => $m->MilestoneNo,
+                'Title' => $m->Title,
+                'Status' => $m->Status,
+                'PlannedDueDate' => $m->PlannedDueDate ? $m->PlannedDueDate->format('Y-m-d') : null,
+                'ValueType' => $m->ValueType,
+                'ValuePercent' => $m->ValuePercent,
+                'ValueAmount' => $valueAmount,
+                'ConfiguredValueAmount' => $m->ValueAmount,
+                'BilledAmount' => $billedAmount,
+                'RemainingAmount' => $remainingAmount,
+                'BillableAmount' => $remainingAmount,
+                'IsFullyBilled' => $remainingAmount <= 0.0,
+                'RequiredChecklistTotal' => $requiredTotal,
+                'RequiredChecklistFulfilled' => $requiredDone,
+                'ChecklistItems' => $m->checklistItems->map(function ($item) {
+                    return [
+                        'Id' => $item->Id,
+                        'ItemDescription' => $item->ItemDescription,
+                        'Required' => (bool) $item->Required,
+                        'IsFulfilled' => (bool) $item->IsFulfilled,
+                        'Notes' => $item->Notes,
+                    ];
+                })->values(),
+                'Eligible' => $eligible,
+            ];
+        });
 
         $contractTotals = $this->getContractBillingSummary($type, $id);
 
@@ -219,7 +219,7 @@ class InvoiceEntryV2Controller extends Controller
                     'GRNID' => $grnData->GRNID,
                     'POID' => $grnData->POID ?? null,
                     'ReceivedDate' => $grnData->ReceivedDate ?? null,
-                    'SupplierId' => $grnData->SupplierId ?? null
+                    'SupplierId' => $grnData->SupplierId ?? null,
                 ];
                 // Log::info('GRN data loaded', ['grn_id' => $grnData->GRNID]);
             } else {
@@ -265,10 +265,10 @@ class InvoiceEntryV2Controller extends Controller
                         : ('Milestone ' . $allocation->MilestoneID);
 
                     $descriptionParts = [];
-                    if ($milestone && !empty($milestone->PlannedDueDate)) {
+                    if ($milestone && ! empty($milestone->PlannedDueDate)) {
                         $descriptionParts[] = 'Due ' . \Carbon\Carbon::parse($milestone->PlannedDueDate)->format('d M Y');
                     }
-                    if ($milestone && !empty($milestone->Status)) {
+                    if ($milestone && ! empty($milestone->Status)) {
                         $descriptionParts[] = 'Status: ' . $milestone->Status;
                     }
 
@@ -319,7 +319,7 @@ class InvoiceEntryV2Controller extends Controller
                 )
                 ->get();
 
-            $poSub = $poItems->sum(fn($li) => (float)($li->UnitCost ?? 0) * (float)($li->Quantity ?? 0));
+            $poSub = $poItems->sum(fn ($li) => (float)($li->UnitCost ?? 0) * (float)($li->Quantity ?? 0));
             $sourceReferenceLabel = 'From PO: ' . ($invoice->order->OrderNo ?? '—');
 
             $ordTotExcl = (float) ($invoice->order->OrdTotExcl ?? 0);
@@ -397,12 +397,12 @@ class InvoiceEntryV2Controller extends Controller
             'invDate' => $invoice->InvoiceDate
                 ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d M Y')
                 : '—',
-            'amount'         => number_format((float)($invoice->TotalAmount ?? 0), 2),
-            'exRate'         => $invoice->ExchangeRate ?? 1.0,
-            'vendorName'     => ($invoice->thirdParty->TradingName ?? $invoice->thirdParty->ThirdPartyName) ?? '—',
-            'poNo'           => $invoice->order->OrderNo ?? '—',
-            'grnNo'          => $invoice->grn->GRNID ?? '—',
-            'poSub'          => $poSub,
+            'amount' => number_format((float)($invoice->TotalAmount ?? 0), 2),
+            'exRate' => $invoice->ExchangeRate ?? 1.0,
+            'vendorName' => ($invoice->thirdParty->TradingName ?? $invoice->thirdParty->ThirdPartyName) ?? '—',
+            'poNo' => $invoice->order->OrderNo ?? '—',
+            'grnNo' => $invoice->grn->GRNID ?? '—',
+            'poSub' => $poSub,
             'isContractInvoice' => $isContractInvoice,
             'contractReference' => $contractReference,
             'sourceReferenceLabel' => $sourceReferenceLabel,
@@ -448,7 +448,7 @@ class InvoiceEntryV2Controller extends Controller
             $suppliers = DB::table('t_Suppliers as s')
                 ->join('t_SupplierMaster as sm', 'sm.Id', '=', 's.SupplierMasterId')
                 ->join('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
-                ->where(function($query) use ($q) {
+                ->where(function ($query) use ($q) {
                     $query->where('tp.RegistrationNumber', 'like', "%{$q}%")
                           ->orWhere('tp.Email', 'like', "%{$q}%")
                           ->orWhere('tp.Phone', 'like', "%{$q}%")
@@ -561,7 +561,7 @@ class InvoiceEntryV2Controller extends Controller
                 $supplier = DB::table('t_Suppliers as s')
                     ->join('t_SupplierMaster as sm', 'sm.Id', '=', 's.SupplierMasterId')
                     ->join('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
-                    ->where(function($query) use ($q) {
+                    ->where(function ($query) use ($q) {
                         $query->where('tp.RegistrationNumber', $q)
                               ->orWhere('tp.Email', $q)
                               ->orWhere('tp.Phone', $q)
@@ -837,13 +837,13 @@ class InvoiceEntryV2Controller extends Controller
                 $contractType = strtolower($validated['ContractSourceType']);
                 $contractId = (int) $validated['ContractSourceID'];
                 $milestoneIds = array_values(array_unique(array_map('intval', $validated['MilestoneIDs'] ?? [])));
-                $requestedTaxId = !empty($validated['TaxID']) ? (int) $validated['TaxID'] : null;
-                if (!empty($requestedTaxId) && !FinanceTaxRuleConfiguration::where('Id', $requestedTaxId)->exists()) {
+                $requestedTaxId = ! empty($validated['TaxID']) ? (int) $validated['TaxID'] : null;
+                if (! empty($requestedTaxId) && ! FinanceTaxRuleConfiguration::where('Id', $requestedTaxId)->exists()) {
                     $requestedTaxId = null;
                 }
 
                 $party = $this->resolveContractParty($contractType, $contractId);
-                if (!$party) {
+                if (! $party) {
                     throw ValidationException::withMessages([
                         'ContractSourceID' => 'Could not resolve the contract supplier for this contract.',
                     ]);
@@ -919,10 +919,10 @@ class InvoiceEntryV2Controller extends Controller
                     'ContractSourceType' => $contractType,
                     'ContractSourceID' => $contractId,
                     'MilestoneEligibilityStatus' => $eligibility['eligible'] ? 'Eligible' : 'Pending',
-                    'IsOnHold' => !$eligibility['eligible'],
+                    'IsOnHold' => ! $eligibility['eligible'],
                     'HoldReason' => $eligibility['hold_reason'],
-                    'HoldSetBy' => !$eligibility['eligible'] ? Auth::id() : null,
-                    'HoldSetOn' => !$eligibility['eligible'] ? now() : null,
+                    'HoldSetBy' => ! $eligibility['eligible'] ? Auth::id() : null,
+                    'HoldSetOn' => ! $eligibility['eligible'] ? now() : null,
                     'PenaltySuggestedAmount' => $eligibility['penalty_suggested_amount'],
                     'CreatedBy' => Auth::id(),
                     'CreatedOn' => now(),
@@ -1008,25 +1008,27 @@ class InvoiceEntryV2Controller extends Controller
                 ->where('GRNID', $validated['GRNReference'])
                 ->value('id');
 
-            if (!$grnReferenceId) {
+            if (! $grnReferenceId) {
                 $grnReferenceId = DB::table('t_GoodsReceipts')->value('id');
             }
 
-            if (!$grnReferenceId) {
+            if (! $grnReferenceId) {
                 throw ValidationException::withMessages([
                     'GRNReference' => 'No valid GRN reference could be resolved for invoice creation.',
                 ]);
             }
 
             $poAmount = (function () use ($validated) {
-                if (!empty($validated['POReference'])) {
+                if (! empty($validated['POReference'])) {
                     $order = DB::table('t_Orders')->where('Id', (int) $validated['POReference'])->first();
                     if ($order) {
                         $excl = (float) ($order->OrdTotExcl ?? 0);
                         $taxPct = (float) ($order->TaxPercentage ?? 0);
+
                         return $excl + ($excl * ($taxPct / 100));
                     }
                 }
+
                 return (float) $validated['Amount'];
             })();
 
@@ -1088,6 +1090,7 @@ class InvoiceEntryV2Controller extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Error creating invoice', ['error' => $th->getMessage()]);
+
             return back()->with('error', 'Failed to create invoice: ' . $th->getMessage())->withInput();
         }
     }
@@ -1103,6 +1106,7 @@ class InvoiceEntryV2Controller extends Controller
                 $summary = $this->getContractBillingSummary('tender', (int) $award->Id);
                 $resolvedTaxId = $this->resolveContractTaxId('tender', (int) $award->Id);
                 $taxRule = $resolvedTaxId ? $award->contractTaxRule : null;
+
                 return [
                     'type' => 'tender',
                     'id' => $award->Id,
@@ -1129,6 +1133,7 @@ class InvoiceEntryV2Controller extends Controller
                 $summary = $this->getContractBillingSummary('rfq', (int) $award->Id);
                 $resolvedTaxId = $this->resolveContractTaxId('rfq', (int) $award->Id);
                 $taxRule = $resolvedTaxId ? $award->contractTaxRule : null;
+
                 return [
                     'type' => 'rfq',
                     'id' => $award->Id,
@@ -1158,13 +1163,13 @@ class InvoiceEntryV2Controller extends Controller
     {
         if ($type === 'tender') {
             $award = TenderAward::find($contractId);
-            if (!$award) {
+            if (! $award) {
                 return null;
             }
             $supplierId = (int) ($award->WinningSupplierID ?? 0);
         } else {
             $award = RFQAward::find($contractId);
-            if (!$award) {
+            if (! $award) {
                 return null;
             }
             $supplierId = (int) ($award->SupplierId ?? 0);
@@ -1180,7 +1185,7 @@ class InvoiceEntryV2Controller extends Controller
             ->value('sm.ThirdPartyId');
 
         // Fallback: some contract records may already carry SupplierMaster.Id.
-        if (!$thirdPartyId) {
+        if (! $thirdPartyId) {
             $thirdPartyId = DB::table('t_SupplierMaster')
                 ->where('Id', $supplierId)
                 ->value('ThirdPartyId');
@@ -1205,11 +1210,12 @@ class InvoiceEntryV2Controller extends Controller
         }
 
         $taxId = $taxId ? (int) $taxId : null;
-        if (!$taxId) {
+        if (! $taxId) {
             return null;
         }
 
         $exists = FinanceTaxRuleConfiguration::where('Id', $taxId)->exists();
+
         return $exists ? $taxId : null;
     }
 
@@ -1228,10 +1234,10 @@ class InvoiceEntryV2Controller extends Controller
         if (Schema::hasColumn('t_FinanceInvoiceEntry', 'InvoiceSourceType')) {
             $query->where('fi.InvoiceSourceType', 'CONTRACT');
         }
-        if (!empty($contractType) && Schema::hasColumn('t_FinanceInvoiceEntry', 'ContractSourceType')) {
+        if (! empty($contractType) && Schema::hasColumn('t_FinanceInvoiceEntry', 'ContractSourceType')) {
             $query->where('fi.ContractSourceType', $contractType);
         }
-        if (!empty($contractId) && Schema::hasColumn('t_FinanceInvoiceEntry', 'ContractSourceID')) {
+        if (! empty($contractId) && Schema::hasColumn('t_FinanceInvoiceEntry', 'ContractSourceID')) {
             $query->where('fi.ContractSourceID', (int) $contractId);
         }
 
@@ -1258,6 +1264,7 @@ class InvoiceEntryV2Controller extends Controller
     {
         if (strtoupper((string) $milestone->ValueType) === 'PERCENT') {
             $percent = (float) ($milestone->ValuePercent ?? 0);
+
             return round(max(0, $contractValue * ($percent / 100)), 2);
         }
 
@@ -1321,7 +1328,7 @@ class InvoiceEntryV2Controller extends Controller
             $isAccepted = in_array($milestone->Status, ['Accepted', 'Waived'], true);
             $isWaived = $milestone->Status === 'Waived';
 
-            if (!$isAccepted || (!$isWaived && $requiredTotal !== $requiredDone)) {
+            if (! $isAccepted || (! $isWaived && $requiredTotal !== $requiredDone)) {
                 $eligible = false;
                 $reasons[] = "M{$milestone->MilestoneNo} - {$milestone->Title} not accepted/complete.";
             }
@@ -1336,7 +1343,7 @@ class InvoiceEntryV2Controller extends Controller
             if ($rule && $milestone->PlannedDueDate) {
                 $graceDays = (int) ($rule->GraceDays ?? 0);
                 $dueDate = \Carbon\Carbon::parse($milestone->PlannedDueDate)->addDays($graceDays)->startOfDay();
-                if ($today->greaterThan($dueDate) && !$isAccepted) {
+                if ($today->greaterThan($dueDate) && ! $isAccepted) {
                     $delayDays = $dueDate->diffInDays($today);
                     $penaltySuggested += $this->computeMilestonePenalty($rule, $delayDays, $invoiceAmount);
                 }
@@ -1361,10 +1368,10 @@ class InvoiceEntryV2Controller extends Controller
             $base = (float) ($rule->Rate ?? 0);
         }
 
-        if (!empty($rule->CapAmount)) {
+        if (! empty($rule->CapAmount)) {
             $base = min($base, (float) $rule->CapAmount);
         }
-        if (!empty($rule->CapPercent)) {
+        if (! empty($rule->CapPercent)) {
             $capPercentAmount = $invoiceAmount * (((float) $rule->CapPercent) / 100);
             $base = min($base, $capPercentAmount);
         }
@@ -1377,7 +1384,7 @@ class InvoiceEntryV2Controller extends Controller
         $taxAmount = 0.0;
         $taxPercentage = 0.0;
 
-        if (!empty($taxId)) {
+        if (! empty($taxId)) {
             $taxConfig = FinanceTaxRuleConfiguration::find($taxId);
             if ($taxConfig) {
                 $taxPercentage = (float) $taxConfig->Rate;
@@ -1395,12 +1402,12 @@ class InvoiceEntryV2Controller extends Controller
     private function resolveFallbackReferences(?int $preferredSupplierId = null): array
     {
         $poId = DB::table('t_Orders')->orderBy('Id')->value('Id');
-        if (!$poId) {
+        if (! $poId) {
             $poId = $this->createContractFallbackOrder();
         }
 
         $grnId = DB::table('t_GoodsReceipts')->orderBy('id')->value('id');
-        if (!$grnId) {
+        if (! $grnId) {
             $grnId = $this->createContractFallbackGrn($preferredSupplierId, $poId ? (int) $poId : null);
         }
 
@@ -1410,8 +1417,9 @@ class InvoiceEntryV2Controller extends Controller
     private function createContractFallbackOrder(): ?int
     {
         $actorId = Auth::id() ?: DB::table('t_Users')->orderBy('Id')->value('Id');
-        if (!$actorId) {
+        if (! $actorId) {
             Log::warning('Unable to create contract fallback order: no user available.');
+
             return null;
         }
 
@@ -1430,6 +1438,7 @@ class InvoiceEntryV2Controller extends Controller
             ], 'Id');
         } catch (\Throwable $e) {
             Log::error('Failed to create contract fallback order', ['error' => $e->getMessage()]);
+
             return null;
         }
     }
@@ -1437,14 +1446,16 @@ class InvoiceEntryV2Controller extends Controller
     private function createContractFallbackGrn(?int $preferredSupplierId, ?int $poId): ?int
     {
         $actorId = Auth::id() ?: DB::table('t_Users')->orderBy('Id')->value('Id');
-        if (!$actorId) {
+        if (! $actorId) {
             Log::warning('Unable to create contract fallback GRN: no user available.');
+
             return null;
         }
 
         $supplierId = $this->resolveFallbackSupplierId($preferredSupplierId);
-        if (!$supplierId) {
+        if (! $supplierId) {
             Log::warning('Unable to create contract fallback GRN: no supplier available.', ['preferred_supplier_id' => $preferredSupplierId]);
+
             return null;
         }
 
@@ -1466,13 +1477,14 @@ class InvoiceEntryV2Controller extends Controller
             ], 'id');
         } catch (\Throwable $e) {
             Log::error('Failed to create contract fallback GRN', ['error' => $e->getMessage()]);
+
             return null;
         }
     }
 
     private function resolveFallbackSupplierId(?int $preferredSupplierId): ?int
     {
-        if (!empty($preferredSupplierId)) {
+        if (! empty($preferredSupplierId)) {
             $direct = DB::table('t_Suppliers')->where('Id', (int) $preferredSupplierId)->value('Id');
             if ($direct) {
                 return (int) $direct;
@@ -1488,6 +1500,7 @@ class InvoiceEntryV2Controller extends Controller
         }
 
         $first = DB::table('t_Suppliers')->orderBy('Id')->value('Id');
+
         return $first ? (int) $first : null;
     }
 

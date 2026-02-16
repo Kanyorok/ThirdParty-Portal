@@ -33,15 +33,17 @@ class BulkAllowancesImport implements OnEachRow, WithHeadingRow
         $allowanceCode = $data['allowancecode'] ?? $data['allowance_code'] ?? null;
         $allowanceName = $data['allowancename'] ?? $data['allowance_name'] ?? null;
 
-        if (!$employeeNo || (!$allowanceCode && !$allowanceName)) {
+        if (! $employeeNo || (! $allowanceCode && ! $allowanceName)) {
             $this->skipped++;
+
             return;
         }
 
         $employee = Employee::where('EmployeeNo', $employeeNo)->first();
-        if (!$employee) {
+        if (! $employee) {
             $this->skipped++;
             Log::warning('Allowance import skipped: employee not found.', ['employee_no' => $employeeNo]);
+
             return;
         }
 
@@ -49,22 +51,24 @@ class BulkAllowancesImport implements OnEachRow, WithHeadingRow
             ->when($allowanceCode, function ($q) use ($allowanceCode) {
                 $q->where('Code', $allowanceCode);
             })
-            ->when(!$allowanceCode && $allowanceName, function ($q) use ($allowanceName) {
+            ->when(! $allowanceCode && $allowanceName, function ($q) use ($allowanceName) {
                 $q->where('Name', $allowanceName);
             })
             ->first();
 
-        if (!$allowance) {
+        if (! $allowance) {
             $this->skipped++;
             Log::warning('Allowance import skipped: allowance not found.', [
                 'employee_no' => $employeeNo,
                 'allowance' => $allowanceCode ?: $allowanceName,
             ]);
+
             return;
         }
 
         if ($allowance->IsMandatory) {
             $this->skipped++;
+
             return;
         }
 
@@ -72,6 +76,7 @@ class BulkAllowancesImport implements OnEachRow, WithHeadingRow
         $year = (int)($data['year'] ?? now()->year);
         if ($month < 1 || $month > 12 || $year < 2000) {
             $this->skipped++;
+
             return;
         }
 
@@ -120,6 +125,7 @@ class BulkAllowancesImport implements OnEachRow, WithHeadingRow
             }
             $existing->update($payload);
             $this->updated++;
+
             return;
         }
 
@@ -139,7 +145,7 @@ class BulkAllowancesImport implements OnEachRow, WithHeadingRow
             ->where('IsActive', 1)
             ->orderByDesc('EffectiveFrom')
             ->first();
-        if (!$rule) {
+        if (! $rule) {
             return 0.0;
         }
 
@@ -149,13 +155,16 @@ class BulkAllowancesImport implements OnEachRow, WithHeadingRow
             case 'PercentageOnGross':
             case 'PercentageOnBand':
                 $amount = $basicSalary * ((float)($rule->Rate ?? 0) / 100);
+
                 break;
             case 'Flat':
             case 'FlatOnBand':
                 $amount = (float)($rule->Amount ?? 0);
+
                 break;
             case 'PercentageOfActingReference':
                 $amount = 0.0;
+
                 break;
             default:
                 $amount = 0.0;

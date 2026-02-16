@@ -61,6 +61,7 @@ class JobInterviewController extends Controller
                     ->get();
                 $candidates = $sessionCandidates->map(function ($candidate) {
                     $name = trim(($candidate->application?->applicant?->FirstName ?? '') . ' ' . ($candidate->application?->applicant?->LastName ?? ''));
+
                     return (object) [
                         'ApplicationID' => $candidate->ApplicationID,
                         'Name' => $name,
@@ -75,6 +76,7 @@ class JobInterviewController extends Controller
                     ->get();
                 $candidates = $applications->map(function ($application) {
                     $name = trim(($application->applicant?->FirstName ?? '') . ' ' . ($application->applicant?->LastName ?? ''));
+
                     return (object) [
                         'ApplicationID' => $application->Id,
                         'Name' => $name,
@@ -136,7 +138,7 @@ class JobInterviewController extends Controller
         $applications = JobApplication::whereIn('Id', $data['CandidateIDs'])->get()->keyBy('Id');
         foreach ($data['CandidateIDs'] as $candidateId) {
             $application = $applications->get((int)$candidateId);
-            if (!$application) {
+            if (! $application) {
                 continue;
             }
             $slot = \Carbon\Carbon::parse($data['InterviewDate'].' '.$slotTimes[$candidateId])->format('Y-m-d H:i:s');
@@ -150,7 +152,7 @@ class JobInterviewController extends Controller
                 'CreatedOn' => now(),
             ]);
 
-            if (!in_array($application->Status, ['Rejected', 'Hired'], true)) {
+            if (! in_array($application->Status, ['Rejected', 'Hired'], true)) {
                 $application->update([
                     'Status' => 'Interview',
                     'ModifiedBy' => auth()->id(),
@@ -342,17 +344,18 @@ class JobInterviewController extends Controller
             ->all();
 
         foreach ($data['Assignments'] as $questionId => $panelistId) {
-            if (!in_array((int)$questionId, $sessionQuestionIds, true)) {
+            if (! in_array((int)$questionId, $sessionQuestionIds, true)) {
                 continue;
             }
 
             $existing = InterviewSessionQuestionAssignment::where('SessionID', $session->Id)
                 ->where('QuestionID', $questionId)
                 ->first();
-            if (!$panelistId) {
+            if (! $panelistId) {
                 if ($existing) {
                     $existing->delete();
                 }
+
                 continue;
             }
 
@@ -399,6 +402,7 @@ class JobInterviewController extends Controller
         if ($panelistId && $assignments->isNotEmpty()) {
             $questions = $questions->filter(function ($question) use ($assignments, $panelistId) {
                 $assigned = $assignments[$question->Id]->PanelistID ?? null;
+
                 return (int)$assigned === (int)$panelistId;
             })->values();
         }
@@ -513,7 +517,7 @@ class JobInterviewController extends Controller
                     'ModifiedBy' => auth()->id(),
                     'ModifiedOn' => now(),
                 ]);
-                if ($candidate->application && !in_array($candidate->application->Status, ['Rejected', 'Withdrawn', 'Hired'], true)) {
+                if ($candidate->application && ! in_array($candidate->application->Status, ['Rejected', 'Withdrawn', 'Hired'], true)) {
                     $candidate->application->update([
                         'Status' => 'Offer',
                         'ModifiedBy' => auth()->id(),

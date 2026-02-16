@@ -12,7 +12,7 @@ class MonthlyDeduction extends Model
 
     protected $fillable = [
         'EmployeeID','DeductionID','StaffLoanID','Name','Amount','Month','Year','IsRecurring','IsAutoCalculated','Status',
-        'CreatedBy','CreatedOn','ApprovedBy','ApprovedOn','ModifiedBy','ModifiedOn'
+        'CreatedBy','CreatedOn','ApprovedBy','ApprovedOn','ModifiedBy','ModifiedOn',
     ];
 
     protected $casts = [

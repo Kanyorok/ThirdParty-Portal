@@ -12,7 +12,7 @@ class StaffLoan extends Model
 
     protected $fillable = [
         'EmployeeID','LoanRef','Name','Principal','InterestRate','TenureMonths','InstallmentAmount','Balance',
-        'StartDate','EndDate','Status','CreatedBy','CreatedOn','ApprovedBy','ApprovedOn','ModifiedBy','ModifiedOn'
+        'StartDate','EndDate','Status','CreatedBy','CreatedOn','ApprovedBy','ApprovedOn','ModifiedBy','ModifiedOn',
     ];
 
     protected $casts = [

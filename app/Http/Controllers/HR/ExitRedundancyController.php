@@ -17,6 +17,7 @@ class ExitRedundancyController extends Controller
         }
 
         $redundancies = $query->paginate(30);
+
         return view('hr.exit.redundancies.index', compact('redundancies'));
     }
 
@@ -59,6 +60,7 @@ class ExitRedundancyController extends Controller
     public function show($id)
     {
         $redundancy = ExitRedundancy::findOrFail($id);
+
         return view('hr.exit.redundancies.show', compact('redundancy'));
     }
 

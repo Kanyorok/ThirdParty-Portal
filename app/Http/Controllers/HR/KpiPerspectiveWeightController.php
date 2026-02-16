@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\HR;
 
 use App\Http\Controllers\Controller;
-use App\Models\HR\KpiPerspective;
-use App\Models\HR\KpiPerspectiveWeight;
-use App\Models\HR\KpiPeriod;
 use App\Models\HR\JobGrade;
 use App\Models\HR\JobRole;
+use App\Models\HR\KpiPeriod;
+use App\Models\HR\KpiPerspective;
+use App\Models\HR\KpiPerspectiveWeight;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
