@@ -29,8 +29,9 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    <div class="table-responsive">
                     <table id="loansListsTable"
-                           class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                           class="table table-striped dataTable no-footer dtr-inline w-100 ">
                         <thead>
                         <tr>
                             <th>#</th>
@@ -42,6 +43,7 @@
                         </thead>
                         <tbody></tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>

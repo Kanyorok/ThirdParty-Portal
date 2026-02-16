@@ -2,7 +2,7 @@
 @extends('layouts.app')
 
 @section('title')
-    Campaign {{ Str::limit($campaign->Label,50) }}
+     {{ Str::of($campaign->Label)->contains('Campaign', true)? $campaign->Label : $campaign->Label.' Campaign' }}
 @endsection
 @section('styles')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs5.min.css"

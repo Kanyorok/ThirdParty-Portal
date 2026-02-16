@@ -393,7 +393,7 @@
                         </form>
                     </div>
                     <div class="onboarding-content with-gradient d-none modal-item text-center" id="submitSurveyModal">
-                        <h4 class="text-$holds">Submit Survey <b>{{ $survey->SurveyID }}</b> : {{ $survey->Label }} for
+                        <h4 class="text-success">Submit Survey <b>{{ $survey->SurveyID }}</b> : {{ $survey->Label }} for
                             Approval ? </h4>
                         <p class="text-muted">This action is non reversible, are you sure ?</p>
                         <form id="submitSurveyForm" method="post"
@@ -403,7 +403,7 @@
                                         data-bs-dismiss="modal">
                                     no, cancel
                                 </button>
-                                <button class="btn btn-$holds float-end" id="submitSurveyBtn"
+                                <button class="btn btn-success float-end" id="submitSurveyBtn"
                                         type="submit"><i
                                         class="fas fa-check"></i> yes, submit
                                 </button>
@@ -500,7 +500,7 @@
             });
 
             $(document).on('click', '.data-update-question', function () {
-                $(".modal-title").html('<b class="text-$holds">Update</b> a question to survey : {{ $survey->SurveyID }}');
+                $(".modal-title").html('<b class="text-success">Update</b> a question to survey : {{ $survey->SurveyID }}');
                 $(".modal-item").addClass('d-none');
                 const stuff = $(this).data('info').split('~');
                 $("#updateSurveyQuestionForm").attr('action', stuff[0]);
@@ -533,7 +533,7 @@
             });
 
             $(document).on('click', '.survey-add-question', function () {
-                $(".modal-title").html('<b class="text-$holds">Add</b> a question to survey : {{ $survey->SurveyID }}');
+                $(".modal-title").html('<b class="text-success">Add</b> a question to survey : {{ $survey->SurveyID }}');
                 $(".modal-item").addClass('d-none');
                 $('#addSurveyQuestionModal').removeClass('d-none');
                 $Modal.modal('show');

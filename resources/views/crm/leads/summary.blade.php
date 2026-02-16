@@ -1,4 +1,4 @@
-<div class="d-flex flex-column" style="height: 87%">
+<div>
     @include('snippets.lead_summary', ['lead'=>$lead])
     <hr class="m-0">
     <p class="mb-1 h4">Contacts</p>
@@ -13,7 +13,7 @@
 
     @if(!empty($lead->Notes))
         <p class="mb-1 h4">Note</p>
-        <p class="justify-content-around">
+        <p class="justify-content-around" style="text-align: justify">
             {{ $lead->Notes }}
         </p>
     @endif

@@ -59,7 +59,7 @@
                 <option value="">All Items</option>
                 @foreach($items as $item)
                 <option value="{{ $item->Id }}" {{ request('item') == $item->Id ? 'selected' : '' }}>
-                    {{ $item->ItemName ?? $item->Description }}
+                    {{ $item->ItemName ?? $item->ItemDescription }}
                 </option>
                 @endforeach
             </select>
@@ -284,7 +284,6 @@
     let dailyChart, branchChart;
     let currentChartType = 'line';
     let branchChartType = 'pie';
-
     function createMovementSection(title, opening, valueIn, valueOut, closing, isValue = false) {
         const format = isValue ? 
             num => `KES ${num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 
@@ -577,13 +576,72 @@
         document.getElementById('toDate').value = '{{ now()->format("Y-m-d") }}';
         document.getElementById('filterForm').submit();
     }
+    @if($isHeadOffice)
+    function loadStores(branchId) {
+        const storeSelect = document.getElementById('storeSelect');
+        storeSelect.innerHTML = '<option value="">Loading stores...</option>';
+        storeSelect.disabled = true;
 
+        fetch(`/inventory/stores-by-branch/${branchId || 0}`)
+            .then(response => response.json())
+            .then(stores => {
+                storeSelect.innerHTML = '<option value="">All Stores</option>';
+                stores.forEach(store => {
+                    const option = document.createElement('option');
+                    option.value = store.Id;
+                    option.textContent = store.StoreName;
+                    storeSelect.appendChild(option);
+                });
+                storeSelect.disabled = false;
+            })
+            .catch(() => {
+                storeSelect.innerHTML = '<option value="">Error loading stores</option>';
+                storeSelect.disabled = false;
+            });
+    }
+    function loadItems(storeId) {
+        const itemSelect = document.getElementById('itemSelect');
+        itemSelect.innerHTML = '<option value="">Loading items...</option>';
+        itemSelect.disabled = true;
+
+        fetch(`/inventory/items-by-store/${storeId || 0}`)
+            .then(response => response.json())
+            .then(items => {
+                itemSelect.innerHTML = '<option value="">All Items</option>';
+                items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.Id;
+                    option.textContent = item.ItemName ?? item.ItemDescription;
+                    itemSelect.appendChild(option);
+                });
+                itemSelect.disabled = false;
+            })
+            .catch(() => {
+                itemSelect.innerHTML = '<option value="">Error loading items</option>';
+                itemSelect.disabled = false;
+            });
+    }
+    @endif
     document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('itemSelect').addEventListener('change', updateUI);
+
+        @if($isHeadOffice)
+        const branchSelect = document.getElementById('branchSelect');
+        const storeSelect = document.getElementById('storeSelect');
+        branchSelect.addEventListener('change', function() {
+            const branchId = this.value;
+            loadStores(branchId);
+            const itemSelect = document.getElementById('itemSelect');
+            itemSelect.innerHTML = '<option value="">All Items</option>';
+            itemSelect.disabled = false;
+        });
+        storeSelect.addEventListener('change', function() {
+            const storeId = this.value;
+            loadItems(storeId);
+        });
+        @endif
         updateUI();
         initializeCharts();
-        
-        document.getElementById('itemSelect').addEventListener('change', updateUI);
-        
         document.querySelectorAll('.btn-group .btn').forEach(button => {
             button.addEventListener('click', function() {
                 const parent = this.parentElement;

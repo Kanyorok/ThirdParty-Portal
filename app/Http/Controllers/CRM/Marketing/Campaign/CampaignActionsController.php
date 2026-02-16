@@ -128,10 +128,10 @@ class CampaignActionsController extends Controller
         }
 
         return $this->succeeded('ok', data: [
-                                             'progress' => (int) ($total > 0) ? (($done / $total) * 100) : 100,
-                                             'done' => (int) $done,
-                                             'total' => (int) $total,
-                                             'description' => $description . ' (' . number_format($done) . ' / ' . number_format($total) . ')',
-                                            ]);
+             'progress' => (int) ($total > 0) ? (($done / $total) * 100) : 100,
+             'done' => (int) $done,
+             'total' => (int) $total,
+             'description' => $description . ' (' . number_format($done) . ' / ' . number_format($total) . ')',
+        ]);
     }
 }
