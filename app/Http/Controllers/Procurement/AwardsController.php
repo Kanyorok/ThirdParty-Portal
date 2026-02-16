@@ -1669,18 +1669,7 @@ class AwardsController extends Controller
             ->with('user')
             ->get();
 
-        Log::info('DEBUG: Committee Members Query Result', [
-        'count' => $members->count(),
-        'members' => $members->map(function ($m) {
-            return [
-                'id' => $m->id,
-                'getKey' => $m->getKey(),
-                'Id_attribute' => $m->Id ?? 'NULL',
-                'UserID' => $m->UserID,
-                'user_name' => $m->user->Name ?? 'NULL',
-            ];
-        })->toArray(),
-    ]);
+
 
         $totalMembers = $members->count();
         if ($totalMembers === 0) {
@@ -1722,11 +1711,6 @@ class AwardsController extends Controller
             ->get()
             ->groupBy('MemberID');
 
-        Log::info('DEBUG: Evaluations Query Result', [
-          'count' => $allEvaluations->count(),
-          'evaluations' => $allEvaluations->toArray(),
-    ]);
-
 
         $pendingMembers = [];
         $membersCompleted = 0;
@@ -1734,15 +1718,6 @@ class AwardsController extends Controller
         foreach ($members as $member) {
             $memberEvaluations = $allEvaluations->get($member->id, collect());
             $actualCombinations = $memberEvaluations->count();
-
-            // ADD THIS LOGGING
-            Log::info('DEBUG: Checking member', [
-                'member_id' => $member->id,
-                'user_name' => $member->user->Name ?? 'NULL',
-                'actual_combinations' => $actualCombinations,
-                'required_combinations' => $requiredCombinations,
-                'is_complete' => $actualCombinations >= $requiredCombinations,
-            ]);
 
             if ($actualCombinations >= $requiredCombinations) {
                 $membersCompleted++;
