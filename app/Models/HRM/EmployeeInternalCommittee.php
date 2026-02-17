@@ -4,6 +4,7 @@ namespace App\Models\HRM;
 
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\HR\Employee;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EmployeeInternalCommittee extends Model

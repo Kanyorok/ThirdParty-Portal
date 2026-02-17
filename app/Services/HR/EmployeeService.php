@@ -3,7 +3,12 @@
 namespace App\Services\HR;
 
 use App\Models\Auth\User;
+use App\Models\Core\Branch;
+use App\Models\HRM\Department;
 use App\Models\HR\Employee;
+use App\Models\HR\JobGrade;
+use App\Models\HR\JobRole;
+use Illuminate\Support\Str;
 
 class EmployeeService
 {
@@ -19,12 +24,12 @@ class EmployeeService
     {
         // Get the count of all employees (including soft-deleted ones via DeletedOn check)
         $count = Employee::count();
-
+        
         do {
             $count++;
             $employeeNo = 'E' . str_pad($count, 5, '0', STR_PAD_LEFT);
         } while (Employee::where('EmployeeNo', $employeeNo)->exists());
-
+        
         return $employeeNo;
     }
 

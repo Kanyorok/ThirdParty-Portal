@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\HRM;
 
 use App\Http\Controllers\Controller;
-use App\Models\HRM\Committee;
-use App\Models\HRM\Employee;
 use Illuminate\Http\Request;
+use App\Models\HR\Employee;
+use App\Models\Auth\User;
+use App\Models\HRM\Committee;
+use App\Models\HR\EmployeeInternalCommittee;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 

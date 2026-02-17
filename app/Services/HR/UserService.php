@@ -21,7 +21,7 @@ class UserService
     {
         // Check if user already exists
         $existingUser = User::where('EmployeeId', $employee->Id)->first();
-
+        
         if ($existingUser) {
             // If user exists but was deleted, restore it
             if ($existingUser->trashed()) {
@@ -35,10 +35,10 @@ class UserService
                     'DeletedOn' => null,
                     'DeletedBy' => null,
                 ])->save();
-
+                
                 return new self($existingUser);
             }
-
+            
             return new self($existingUser);
         }
 
@@ -78,18 +78,18 @@ class UserService
     protected static function generateUserID(string $firstName, string $lastName): string
     {
         $baseId = strtoupper(
-            substr($firstName, 0, 1) .
+            substr($firstName, 0, 1) . 
             str_replace([' ', '-', '_'], '', $lastName)
         );
-
+        
         $userId = $baseId;
         $counter = 1;
-
+        
         while (User::withTrashed()->where('UserID', $userId)->exists()) {
             $counter++;
             $userId = $baseId . $counter;
         }
-
+        
         return $userId;
     }
 
@@ -103,7 +103,7 @@ class UserService
             $employee->OtherNames,
             $employee->LastName,
         ]);
-
+        
         return implode(' ', $parts);
     }
 

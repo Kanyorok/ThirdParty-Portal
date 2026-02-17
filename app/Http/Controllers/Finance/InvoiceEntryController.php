@@ -12,6 +12,8 @@ use App\Models\Procurement\GoodsReceipt;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\OrderLines;
 use App\Models\ThirdParies\Supplier;
+use App\Models\ThirdParty\ThirdParties;
+use App\Services\Finance\ContractInvoiceEligibilityService;
 use App\Services\Finance\TransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -36,10 +38,12 @@ class InvoiceEntryController extends Controller
 
         $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
 
-        // Vendors: fetch from suppliers joined to third parties (value = Supplier.Id, also return ThirdPartyID)
+        // Vendors: fetch via SupplierMaster path:
+        // t_Suppliers -> t_SupplierMaster -> t_ThirdParties
         $suppliers = Supplier::query()
-            ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 't_Suppliers.ThirdPartyID')
-            ->select('t_Suppliers.Id', 't_Suppliers.ThirdPartyID', DB::raw("ISNULL(tp.TradingName, tp.ThirdPartyName) as SupplierName"))
+            ->leftJoin('t_SupplierMaster as sm', 'sm.Id', '=', 't_Suppliers.SupplierMasterId')
+            ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
+            ->select('t_Suppliers.Id', DB::raw('sm.ThirdPartyId as ThirdPartyID'), DB::raw("ISNULL(tp.TradingName, tp.ThirdPartyName) as SupplierName"))
             ->get();
         $orders = Order::select('Id', 'AccountID', 'Description', 'OrdTotExcl', 'OrderNo')
             ->get();
@@ -112,7 +116,10 @@ class InvoiceEntryController extends Controller
 
             $thirdPartyId = (int)$validated['ThirdPartyID'];
             // Optionally resolve a SupplierID that maps to this ThirdParty (for legacy FK compatibility)
-            $legacySupplierId = FacadesDB::table('t_Suppliers')->where('ThirdPartyID', $thirdPartyId)->value('Id');
+            $legacySupplierId = FacadesDB::table('t_Suppliers as s')
+                ->join('t_SupplierMaster as sm', 'sm.Id', '=', 's.SupplierMasterId')
+                ->where('sm.ThirdPartyId', $thirdPartyId)
+                ->value('s.Id');
 
             $invoice = FinanceInvoiceEntry::create([
                 'InvoiceNumber' => $validated['InvoiceNumber'],
@@ -193,7 +200,8 @@ class InvoiceEntryController extends Controller
 
         // Get supplier third party name
         $supplier = FacadesDB::table('t_Suppliers as s')
-            ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+            ->leftJoin('t_SupplierMaster as sm', 'sm.Id', '=', 's.SupplierMasterId')
+            ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 'sm.ThirdPartyId')
             ->where('s.Id', $po->AccountID)
             ->select(DB::raw("ISNULL(tp.TradingName, tp.ThirdPartyName) as SupplierName"))
             ->first();
@@ -229,7 +237,8 @@ class InvoiceEntryController extends Controller
             ->leftJoin('t_Items as i', 'gr.ItemNo', '=', 'i.Id')
             ->leftJoin('t_Orders as o', 'gr.POID', '=', 'o.OrderNo')
             ->leftJoin('t_Suppliers as s', 'o.AccountID', '=', 's.Id')
-            ->leftJoin('t_ThirdParties as tp', 's.ThirdPartyID', '=', 'tp.Id')
+            ->leftJoin('t_SupplierMaster as sm', 'sm.Id', '=', 's.SupplierMasterId')
+            ->leftJoin('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
             ->where('gr.GRNID', $grnId)
             ->select(
                 'gr.GRNID',
@@ -390,6 +399,11 @@ class InvoiceEntryController extends Controller
                 // Guard: already posted?
                 if (strtolower((string)$invoice->ApprovalStatus) === 'posted') {
                     return back()->with('error', "Invoice $invoice->InvoiceNumber is already posted.");
+                }
+
+                if (strtoupper((string) ($invoice->InvoiceSourceType ?? 'PO')) === 'CONTRACT') {
+                    app(ContractInvoiceEligibilityService::class)->refreshInvoiceHoldStatus($invoice);
+                    $invoice->refresh();
                 }
 
                 // Build payload for TransactionService (service does idempotency)

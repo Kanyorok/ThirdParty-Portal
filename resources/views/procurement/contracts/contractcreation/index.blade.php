@@ -263,7 +263,7 @@
                         <div class="card bg-primary text-white">
                             <div class="card-body text-center">
                                 <i class="fas fa-file-contract fa-2x mb-2"></i>
-                                <h5>{{ $contracts->total() }}</h5>
+                                <h5>{{ $summary['total'] ?? $contracts->total() }}</h5>
                                 <small>Total Contracts</small>
                             </div>
                         </div>
@@ -272,7 +272,7 @@
                         <div class="card bg-warning text-white">
                             <div class="card-body text-center">
                                 <i class="fas fa-clock fa-2x mb-2"></i>
-                                <h5>{{ $contracts->where('ContractStatus', 'Draft Created')->count() + $contracts->where('ContractStatus', 'Under Review')->count() }}</h5>
+                                <h5>{{ $summary['pending'] ?? 0 }}</h5>
                                 <small>Pending</small>
                             </div>
                         </div>
@@ -281,7 +281,7 @@
                         <div class="card bg-success text-white">
                             <div class="card-body text-center">
                                 <i class="fas fa-check-circle fa-2x mb-2"></i>
-                                <h5>{{ $contracts->where('ContractStatus', 'Executed')->count() }}</h5>
+                                <h5>{{ $summary['active'] ?? 0 }}</h5>
                                 <small>Active</small>
                             </div>
                         </div>
@@ -290,7 +290,7 @@
                         <div class="card bg-info text-white">
                             <div class="card-body text-center">
                                 <i class="fas fa-balance-scale fa-2x mb-2"></i>
-                                <h5>{{ $contracts->where('ContractStatus', 'Sent to Legal')->count() }}</h5>
+                                <h5>{{ $summary['with_legal'] ?? 0 }}</h5>
                                 <small>With Legal</small>
                             </div>
                         </div>

@@ -208,9 +208,7 @@
                     </div>
                 </div>
             </div>
-            @if (View::hasSection('page-alerts'))
-                @yield('page-alerts')
-            @endif
+
             @yield('content')
         </div>
     </div>
@@ -223,7 +221,7 @@
                 <div class="col-auto my-1 d-flex align-items-center gap-3">
                     <span id="footer-datetime" class="text-muted small"></span>
                     <span class="text-muted small">|</span>
-                    <span class="text-muted small">version v1.0.0</span>
+                    <span class="text-muted small">version v1.0.1</span>
                 </div>
             </div>
         </div>

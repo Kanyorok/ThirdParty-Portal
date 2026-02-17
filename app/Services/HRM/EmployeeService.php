@@ -6,7 +6,7 @@ use App\Enums\Employee\GenderEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
@@ -33,7 +33,7 @@ class EmployeeService
         Carbon $DateOfBirth = null,
     ): self {
         $employee = Employee::create([
-            'EmployeeID' => self::_id(),
+            'EmployeeNo' => self::_id(),
             'FirstName' => $FirstName,
             'LastName' => $Surname,
             'MiddleName' => $MiddleName,
@@ -51,8 +51,7 @@ class EmployeeService
             'ModifiedBy' => $actor->Id,
         ]);
 
-        activity()->causedBy($actor)->performedOn($employee)->event('create')->log("Added employee {$employee->EmployeeID}.");
-
+        activity()->causedBy($actor)->performedOn($employee)->event('create')->log("Added employee {$employee->EmployeeNo}.");
         return new self($employee);
     }
 
@@ -65,8 +64,7 @@ class EmployeeService
     {
         $this->employee->setImage($file, $actor, 'ImageId');
 
-        activity()->causedBy($actor)->performedOn($this->employee)->event('update')->log("Updated employee Image {$this->employee->EmployeeID}.");
-
+        activity()->causedBy($actor)->performedOn($this->employee)->event('update')->log("Updated employee Image {$this->employee->EmployeeNo}.");
         return $this;
     }
 
@@ -75,8 +73,8 @@ class EmployeeService
         $number = Employee::query()->withTrashed()->count();
         do {
             $number++;
-            $slug = Str::slug('E' . Str::padLeft(($number), 5, '0'));
-        } while (Employee::query()->where('EmployeeID', $slug)->withTrashed()->exists());
+            $slug = 'E' . Str::padLeft(($number), 5, '0');
+        } while (Employee::query()->where('EmployeeNo', $slug)->withTrashed()->exists());
 
         return $slug;
     }

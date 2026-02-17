@@ -60,6 +60,74 @@
         </div>
     </div>
 
+    @php
+        $pendingNames = collect($pendingEvaluators ?? [])->pluck('name')->implode(', ');
+    @endphp
+
+    @if((($pendingEvaluatorCount ?? 0) > 0) && (empty($awardBlocks) || !$awardBlocks))
+        <div class="alert alert-warning">
+            <strong>Evaluation pending:</strong> {{ $pendingNames }}.
+            Awarding is disabled until all evaluators complete evaluation or are marked as skipped.
+        </div>
+    @elseif(!empty($canAward) && (empty($awardBlocks) || !$awardBlocks))
+        <div class="alert alert-success">
+            All evaluator actions are complete. You can proceed with awarding.
+        </div>
+    @endif
+
+    @if(($evaluators->count() ?? 0) > 0 && (empty($awardBlocks) || !$awardBlocks))
+        <div class="card mb-3">
+            <div class="card-header fw-bold">Evaluator Status</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Evaluator</th>
+                            <th>Status</th>
+                            <th style="width: 45%">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($evaluators as $ev)
+                            <tr>
+                                <td>{{ $ev['name'] }}</td>
+                                <td>
+                                    @if(!empty($ev['is_pending']))
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    @elseif(!empty($ev['is_skipped']))
+                                        <span class="badge bg-secondary">Skipped</span>
+                                    @else
+                                        <span class="badge bg-success">Completed</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if(!empty($ev['is_pending']))
+                                        <form method="POST" action="{{ route('bidscores.skip-evaluator', ['tenderId' => $tender->Id, 'memberId' => $ev['id']]) }}" class="d-flex gap-2">
+                                            @csrf
+                                            <input type="text"
+                                                   name="reason"
+                                                   class="form-control form-control-sm"
+                                                   placeholder="Reason for skipping evaluator (optional)">
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-warning"
+                                                    onclick="return confirm('Mark {{ $ev['name'] }} as skipped for this tender?');">
+                                                Skip Evaluator
+                                            </button>
+                                        </form>
+                                    @elseif(!empty($ev['is_skipped']) && !empty($ev['skip_reason']))
+                                        <small class="text-muted">Reason: {{ $ev['skip_reason'] }}</small>
+                                    @else
+                                        <small class="text-muted">No action required</small>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+
     <div class="table-responsive mb-3">
         <table class="table table-bordered align-middle">
             <thead class="table-light">
@@ -114,19 +182,18 @@
                                     </form>
                                 @endif
                             @else
-                                @if($row['is_awarded'])
-                                    <span class="badge bg-success"><i class="fas fa-trophy"></i> Awarded</span>
-                                @else
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Tender already awarded">
-                                        <i class="fas fa-ban"></i> Award
-                                    </button>
-                                @endif
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-secondary"
+                                        disabled
+                                        title="Evaluation pending for: {{ $pendingNames }}">
+                                    <i class="fas fa-hourglass-half"></i> Award
+                                </button>
                             @endif
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ 4 + count($evaluators) }}" class="text-center">No evaluation data found</td>
+                        <td colspan="{{ 5 + count($evaluators) }}" class="text-center">No evaluation data found</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -136,7 +203,10 @@
     <div class="d-flex justify-content-end">
         <form method="POST" action="{{ route('bidscores.consolidate', ['tenderId' => $tender->Id]) }}">
             @csrf
-            <button type="submit" class="btn btn-primary">
+            <button type="submit"
+                    class="btn btn-primary"
+                    {{ (($pendingEvaluatorCount ?? 0) > 0) ? 'disabled' : '' }}
+                    title="{{ (($pendingEvaluatorCount ?? 0) > 0) ? ('Evaluation pending for: ' . $pendingNames) : 'Consolidate Scores' }}">
                 <i class="fas fa-check-double"></i> Consolidate Scores
             </button>
         </form>

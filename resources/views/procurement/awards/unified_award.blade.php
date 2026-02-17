@@ -205,7 +205,12 @@
                             @endif
                         </div>
                         <div>
-                            @if($existingAward && ($existingAward->AwardStatus === \App\Models\Procurement\TenderAward::STATUS_PENDING))
+                            @if($existingAward && in_array($existingAward->AwardStatus, [
+                                \App\Models\Procurement\TenderAward::STATUS_DRAFT,
+                                \App\Models\Procurement\TenderAward::STATUS_PENDING,
+                                \App\Models\Procurement\TenderAward::STATUS_SUBMITTED,
+                                \App\Models\Procurement\TenderAward::STATUS_UNDER_REVIEW
+                            ]))
                                 <form action="{{ route('awards.cancel', $existingAward->Id) }}" method="POST" class="d-inline" onsubmit="return confirm('Cancel this pending award and re-open for re-award?');">
                                     @csrf
                                     <input type="hidden" name="cancel_reason" value="Cancelled to re-award">

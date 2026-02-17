@@ -130,10 +130,10 @@
                                 </div>
 
                                 <!-- Contract Basic Information -->
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Contract Title <span
-                                                class="text-danger">*</span></label>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Contract Title <span
+                        class="text-danger">*</span></label>
                                         <input type="text" name="contract_title" class="form-control"
                                                value="{{ old('contract_title', $award->tender?->Title ?? '') }}"
                                                placeholder="Enter contract title">
@@ -147,6 +147,22 @@
                         <span
                             class="input-group-text">{{ optional($award->tender?->Currency)->Code ?? $award->tender?->Currency ?? 'KES' }}</span>
                     </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Contract Tax Rule</label>
+                    <select name="contract_tax_id" class="form-select">
+                        <option value="">-- No tax --</option>
+                        @foreach(($taxRules ?? []) as $taxRule)
+                            <option value="{{ $taxRule->Id }}"
+                                @selected((string) old('contract_tax_id', $award->ContractTaxID ?? '') === (string) $taxRule->Id)>
+                                {{ $taxRule->taxType->TaxTypeName ?? 'Tax' }} ({{ number_format((float) $taxRule->Rate, 2) }}%)
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="text-muted">This rule is used by default for contract-originating AP invoices.</small>
                 </div>
             </div>
 
@@ -192,6 +208,64 @@
                 <textarea name="special_conditions" class="form-control" rows="3"
                           placeholder="Any special conditions, penalties, or additional requirements">{{ old('special_conditions', $award->SpecialConditions ?? '') }}</textarea>
             </div>
+
+                                <div class="card border mb-3">
+                                    <div class="card-header bg-light">
+                                        <strong>Penalty Rule (for missed/unaccepted milestones)</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-md-3">
+                                                <label class="form-label">Penalty Type</label>
+                                                <select name="penalty_type" class="form-select">
+                                                    <option value="">-- None --</option>
+                                                    <option value="PER_DAY_DELAY" @selected(old('penalty_type') === 'PER_DAY_DELAY')>Per Day Delay</option>
+                                                    <option value="PERCENT" @selected(old('penalty_type') === 'PERCENT')>Percent</option>
+                                                    <option value="FIXED" @selected(old('penalty_type') === 'FIXED')>Fixed</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Rate</label>
+                                                <input type="number" step="0.0001" min="0" name="penalty_rate" class="form-control" value="{{ old('penalty_rate') }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Grace Days</label>
+                                                <input type="number" min="0" name="grace_days" class="form-control" value="{{ old('grace_days', 0) }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Cap Amount</label>
+                                                <input type="number" step="0.01" min="0" name="cap_amount" class="form-control" value="{{ old('cap_amount') }}">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Apply Method</label>
+                                                <select name="apply_method" class="form-select">
+                                                    <option value="DEDUCT_FROM_PAYMENT" @selected(old('apply_method', 'DEDUCT_FROM_PAYMENT') === 'DEDUCT_FROM_PAYMENT')>Deduct From Payment</option>
+                                                    <option value="DEBIT_NOTE" @selected(old('apply_method') === 'DEBIT_NOTE')>Debit Note</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Cap Percent</label>
+                                                <input type="number" step="0.0001" min="0" name="cap_percent" class="form-control" value="{{ old('cap_percent') }}">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check mt-4">
+                                                    <input class="form-check-input" type="checkbox" value="1" id="requires_approval_to_apply" name="requires_approval_to_apply" @checked(old('requires_approval_to_apply'))>
+                                                    <label class="form-check-label" for="requires_approval_to_apply">
+                                                        Approval required to apply
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check mt-4">
+                                                    <input class="form-check-input" type="checkbox" value="1" id="requires_approval_to_waive" name="requires_approval_to_waive" @checked(old('requires_approval_to_waive', true))>
+                                                    <label class="form-check-label" for="requires_approval_to_waive">
+                                                        Approval required to waive
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <!-- Action Buttons -->
                                 <div class="row">
