@@ -27,7 +27,7 @@ class EmployeeInternalCommitteeController extends Controller
     {
 
         $request->validate([
-            'Employee' => 'required|exists:t_Employees,Id',
+            'Employee' => 'required|exists:t_HREmployees,Id',
             'Committee' => 'required|exists:t_Committees,Id',
         ]);
 
@@ -63,7 +63,7 @@ class EmployeeInternalCommitteeController extends Controller
     {
         $request->validate([
             'committee_id' => 'required|exists:t_Committees,Id',
-            'employee_id' => 'required|exists:t_Employees,Id',
+            'employee_id' => 'required|exists:t_HREmployees,Id',
         ]);
 
         DB::table('t_Committee_Employee')

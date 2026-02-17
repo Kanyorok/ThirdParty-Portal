@@ -172,7 +172,7 @@ class BancassuranceReferralController extends Controller
     {
         $this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
         $request->validate([
-            'AssignedTo' => 'required|exists:t_Employees,Id',
+            'AssignedTo' => 'required|exists:t_HREmployees,Id',
         ]);
 
         $referral = BancAssuranceReferral::findOrFail($Id);

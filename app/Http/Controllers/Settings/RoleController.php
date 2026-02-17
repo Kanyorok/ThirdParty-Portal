@@ -89,16 +89,13 @@ class RoleController extends Controller
             return in_array($perm->name, $enumPermissions);
         });
 
-        // Get distinct Job Titles from t_Employees, excluding those already used as role names
+        // Get active Job Roles from t_HRJobRoles, excluding those already used as role names
         $existingRoleNames = Role::pluck('name')->map(fn ($n) => strtolower($n))->toArray();
-        $jobTitles = DB::table('t_Employees')
-            ->select('JobTitle')
-            ->distinct()
-            ->whereNotNull('JobTitle')
-            ->where('JobTitle', '!=', '')
-            ->orderBy('JobTitle')
-            ->pluck('JobTitle')
-            ->filter(fn ($title) => ! in_array(strtolower($title), $existingRoleNames))
+        $jobTitles = \App\Models\HR\JobRole::where('IsActive', 1)
+            ->whereNull('DeletedOn')
+            ->orderBy('Name')
+            ->pluck('Name')
+            ->filter(fn ($name) => ! in_array(strtolower($name), $existingRoleNames))
             ->values();
 
         return view('settings.roles.create', compact('dynamicPermissions', 'jobTitles'));

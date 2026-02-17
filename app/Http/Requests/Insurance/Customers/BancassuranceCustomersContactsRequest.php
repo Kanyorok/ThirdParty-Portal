@@ -26,7 +26,7 @@ class BancassuranceCustomersContactsRequest extends FormRequest
             'ContactDate' => 'required|date|max:100',
             'ContactType' => 'required|exists:t_CodeDetails,ID',
             'Summary' => 'required|string|max:100',
-            'HandledBy' => 'required|nullable|exists:t_Employees,Id',
+            'HandledBy' => 'required|nullable|exists:t_HREmployees,Id',
             'Notes' => 'required|string|max:100',
         ];
     }
