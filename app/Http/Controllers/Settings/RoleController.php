@@ -89,13 +89,15 @@ class RoleController extends Controller
             return in_array($perm->name, $enumPermissions);
         });
 
-        // Get active Job Roles from t_HRJobRoles, excluding those already used as role names
-        $existingRoleNames = Role::pluck('name')->map(fn ($n) => strtolower($n))->toArray();
+        // Get active Job Roles that do NOT yet have any permissions assigned.
+        $rolesWithPermissions = DB::table('t_RolePermissions')
+            ->distinct()
+            ->pluck('role_id');
         $jobTitles = \App\Models\HR\JobRole::where('IsActive', 1)
             ->whereNull('DeletedOn')
-            ->orderBy('Name')
-            ->pluck('Name')
-            ->filter(fn ($name) => ! in_array(strtolower($name), $existingRoleNames))
+            ->whereNotIn('id', $rolesWithPermissions)
+            ->orderBy('name')
+            ->pluck('name')
             ->values();
 
         return view('settings.roles.create', compact('dynamicPermissions', 'jobTitles'));
@@ -109,11 +111,23 @@ class RoleController extends Controller
 
         try {
             DB::transaction(function () use ($actor, $name, $permissions) {
-                $role = Role::create([
-                    'name' => $name,
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedBy' => $actor->Id,
-                ]);
+                // Check if a job role with this name already exists — reuse it
+                $role = Role::where('name', $name)->where('role_type', 'job')->first();
+
+                if ($role) {
+                    // Job role exists — just assign permissions to it (keep role_type as 'job'
+                    // so it stays visible in HR dropdowns like Employee create/edit).
+                    $role->update([
+                        'ModifiedBy' => $actor->Id,
+                    ]);
+                } else {
+                    // Create a brand-new system role
+                    $role = Role::create([
+                        'name' => $name,
+                        'CreatedBy' => $actor->Id,
+                        'ModifiedBy' => $actor->Id,
+                    ]);
+                }
 
                 $role->permissions()->syncWithPivotValues(
                     $permissions,
@@ -122,8 +136,6 @@ class RoleController extends Controller
                 );
 
                 activity()->causedBy($actor)->performedOn($role)->event('create')->log('create role ' . $role->name);
-
-                // Clear navbar caches for all users who might use this role in the future? (noop for create)
             });
         } catch (Exception $e) {
             Log::error('Error creating role: ' . $e->getMessage());
@@ -149,11 +161,11 @@ class RoleController extends Controller
             return in_array($perm->name, $enumPermissions);
         });
 
-        // Get active job roles from HR module
+        // Get active job roles from unified roles table
         $jobRoles = \App\Models\HR\JobRole::where('IsActive', 1)
             ->whereNull('DeletedOn')
-            ->orderBy('Name')
-            ->get(['Id', 'Code', 'Name']);
+            ->orderBy('name')
+            ->get(['id', 'Code', 'name']);
 
         return view('settings.roles.edit', compact('role', 'permissions', 'dynamicPermissions', 'jobRoles'));
     }

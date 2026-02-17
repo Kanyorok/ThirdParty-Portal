@@ -131,7 +131,7 @@ class OnboardingController extends Controller
             'BranchID' => 'required|integer|exists:t_Branches,Id',
             'DepartmentID' => 'required|integer|exists:t_Departments,Id',
             'GradeID' => 'nullable|integer|exists:t_HRJobGrades,Id',
-            'RoleID' => 'nullable|integer|exists:t_HRJobRoles,Id',
+            'RoleID' => 'nullable|integer|exists:t_Roles,id',
             'EmploymentDate' => 'nullable|date',
             'EmploymentType' => 'nullable|string|max:50',
             'ContractType' => 'nullable|string|max:50',

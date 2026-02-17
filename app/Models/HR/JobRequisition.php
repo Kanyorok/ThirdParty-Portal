@@ -58,7 +58,8 @@ class JobRequisition extends Model
 
     public function role()
     {
-        return $this->belongsTo(JobRole::class, 'RoleID');
+        return $this->belongsTo(JobRole::class, 'RoleID', 'id')
+            ->withoutGlobalScope('job_roles');
     }
 
     public function openings()

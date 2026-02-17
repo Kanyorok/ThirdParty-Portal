@@ -76,7 +76,7 @@ class SharedDocumentController extends Controller
             'Departments' => ['array'],
             'Departments.*' => ['integer', 'exists:t_Departments,Id'],
             'Roles' => ['array'],
-            'Roles.*' => ['integer', 'exists:t_HRJobRoles,Id'],
+            'Roles.*' => ['integer', 'exists:t_Roles,id'],
         ]);
 
         $data['IsDownloadable'] = $request->boolean('IsDownloadable', true);
@@ -173,7 +173,7 @@ class SharedDocumentController extends Controller
             'Departments' => ['array'],
             'Departments.*' => ['integer', 'exists:t_Departments,Id'],
             'Roles' => ['array'],
-            'Roles.*' => ['integer', 'exists:t_HRJobRoles,Id'],
+            'Roles.*' => ['integer', 'exists:t_Roles,id'],
         ]);
 
         $data['IsDownloadable'] = $request->boolean('IsDownloadable', true);

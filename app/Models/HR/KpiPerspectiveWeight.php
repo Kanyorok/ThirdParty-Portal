@@ -50,7 +50,8 @@ class KpiPerspectiveWeight extends Model
 
     public function role()
     {
-        return $this->belongsTo(JobRole::class, 'RoleID', 'Id');
+        return $this->belongsTo(JobRole::class, 'RoleID', 'id')
+            ->withoutGlobalScope('job_roles');
     }
 
     public static function resolveWeights(int $periodId, ?int $gradeId = null, ?int $roleId = null)

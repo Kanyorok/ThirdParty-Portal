@@ -76,7 +76,8 @@ class SharedDocument extends Model
 
     public function roles()
     {
-        return $this->belongsToMany(JobRole::class, 't_HRSharedDocumentRoles', 'DocumentID', 'RoleID');
+        return $this->belongsToMany(JobRole::class, 't_HRSharedDocumentRoles', 'DocumentID', 'RoleID')
+            ->withoutGlobalScope('job_roles');
     }
 
     public function acknowledgements()

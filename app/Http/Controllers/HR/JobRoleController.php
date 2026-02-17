@@ -29,7 +29,7 @@ class JobRoleController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'Code' => ['required', 'string', 'max:50', 'unique:t_HRJobRoles,Code'],
+            'Code' => ['required', 'string', 'max:50', 'unique:t_Roles,Code'],
             'Name' => ['required', 'string', 'max:150'],
             'GradeID' => ['nullable', 'integer', 'exists:t_HRJobGrades,Id'],
             'DepartmentID' => ['nullable', 'integer', 'exists:t_Departments,Id'],
@@ -60,7 +60,7 @@ class JobRoleController extends Controller
         $role = JobRole::findOrFail($id);
 
         $data = $request->validate([
-            'Code' => ['required', 'string', 'max:50', Rule::unique('t_HRJobRoles', 'Code')->ignore($role->Id, 'Id')],
+            'Code' => ['required', 'string', 'max:50', Rule::unique('t_Roles', 'Code')->ignore($role->Id, 'id')],
             'Name' => ['required', 'string', 'max:150'],
             'GradeID' => ['nullable', 'integer', 'exists:t_HRJobGrades,Id'],
             'DepartmentID' => ['nullable', 'integer', 'exists:t_Departments,Id'],

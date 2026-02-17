@@ -82,7 +82,7 @@ class TrainingSessionController extends Controller
             'EnrollGrades' => ['array'],
             'EnrollGrades.*' => ['integer', 'exists:t_HRJobGrades,Id'],
             'EnrollRoles' => ['array'],
-            'EnrollRoles.*' => ['integer', 'exists:t_HRJobRoles,Id'],
+            'EnrollRoles.*' => ['integer', 'exists:t_Roles,id'],
         ]);
 
         $program = TrainingProgram::find($data['ProgramID']);
