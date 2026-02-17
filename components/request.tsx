@@ -174,7 +174,7 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             title: "Active Rounds",
             count: resolved.activePreq,
             icon: ClipboardCheck,
-            description: "In progress or under review.",
+            description: "Open prequalification opportunities.",
             tone: "primary",
             href: "/dashboard/supplier/prequalification",
         },

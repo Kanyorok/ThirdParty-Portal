@@ -15,6 +15,10 @@ import { cn } from "@/lib/utils"
 import { useDashboardStore } from "@/store/use-dashboard-store"
 import type { ProfileType } from "@/store/use-profile-store"
 import { Skeleton } from "@/components/common/skeleton"
+import {
+  buildPriorityActions,
+  type PriorityActionIconKey,
+} from "@/lib/priority-actions"
 
 type PriorityAction = {
   id: string
@@ -24,6 +28,14 @@ type PriorityAction = {
   href: string
   tone: "danger" | "warning" | "info"
   icon: React.ElementType
+}
+
+const iconByKey: Record<PriorityActionIconKey, React.ElementType> = {
+  alert_triangle: AlertTriangle,
+  calendar_clock: CalendarClock,
+  file_text: FileText,
+  clipboard_check: ClipboardCheck,
+  layers: Layers,
 }
 
 const toneStyles: Record<PriorityAction["tone"], string> = {
@@ -128,88 +140,16 @@ export function PriorityActions({
   const tenders = summary?.breakdowns?.tenders
   const tenant = summary?.breakdowns?.tenant
 
-  const isTenant = profile === "Tenant"
-  const isSupplier = profile === "Supplier"
-
-  const overdueInvoices = tenant?.invoices?.overdue ?? 0
-  const pendingInvoices = tenant?.invoices?.pending ?? 0
-  const expiringLeases = tenant?.leases?.expiringSoon ?? 0
-
-  const preqReview = preq?.under_review ?? 0
-  const rfqAwaiting = (rfqs?.invited ?? 0) + (rfqs?.draft ?? 0)
-  const openTenders = tenders?.open ?? 0
-
-  const actions: PriorityAction[] = []
-
-  if (isTenant) {
-    actions.push(
-      {
-        id: "overdue-invoices",
-        title: "Overdue invoices",
-        value: overdueInvoices,
-        description: "Resolve overdue balances to avoid penalties.",
-        href: "/dashboard/tenant/invoices",
-        tone: "danger",
-        icon: AlertTriangle,
-      },
-      {
-        id: "expiring-leases",
-        title: "Leases expiring soon",
-        value: expiringLeases,
-        description: "Renew expiring leases to avoid gaps.",
-        href: "/dashboard/tenant/leases",
-        tone: "warning",
-        icon: CalendarClock,
-      },
-      {
-        id: "pending-invoices",
-        title: "Pending payments",
-        value: pendingInvoices,
-        description: "Upcoming invoices awaiting payment.",
-        href: "/dashboard/tenant/invoices",
-        tone: "info",
-        icon: FileText,
-      }
-    )
-  } else {
-    actions.push({
-      id: "preq-review",
-      title: "Prequalification review",
-      value: preqReview,
-      description: "Rounds awaiting review or follow-up.",
-      href: "/dashboard/supplier/prequalification",
-      tone: "warning",
-      icon: ClipboardCheck,
-    })
-
-    if (isSupplier) {
-      actions.push(
-        {
-          id: "rfq-awaiting",
-          title: "RFQs awaiting response",
-          value: rfqAwaiting,
-          description: "Invites and drafts that need action.",
-          href: "/dashboard/supplier/rfqs",
-          tone: "info",
-          icon: FileText,
-        },
-        {
-          id: "open-tenders",
-          title: "Open tenders",
-          value: openTenders,
-          description: "Opportunities you can still submit.",
-          href: "/dashboard/supplier/tenders",
-          tone: "info",
-          icon: Layers,
-        }
-      )
-    }
-  }
-
-  const rankedActions = actions
-    .filter((action) => action.value > 0)
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 3)
+  const rankedActions: PriorityAction[] = buildPriorityActions({
+    profile,
+    prequalification: preq,
+    rfqs,
+    tenders,
+    tenant,
+  }).map((action) => ({
+    ...action,
+    icon: iconByKey[action.iconKey],
+  }))
 
   return (
     <div className="rounded-3xl border border-border/50 px-4 py-3">

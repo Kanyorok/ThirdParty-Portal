@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
 import { isClosedByDeadline } from "@/lib/deadline"
 import { resolveTenantIdFromSessionUser } from "@/lib/profile/resolve-tenant-id"
+import { isRoundActive, mapApiRound } from "@/lib/rounds"
 
 export type PreqBreakdown = Record<
     "approved" | "submitted" | "under_review" | "rejected" | "not_applied",
@@ -42,6 +43,37 @@ export type TenantBreakdown = {
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL
+
+type NormalizedPreqStatus = keyof PreqBreakdown
+
+function classifyPrequalificationRound(round: any): NormalizedPreqStatus {
+    const normalizedRound = mapApiRound(round)
+    const categories = Array.isArray(normalizedRound.categories)
+        ? normalizedRound.categories
+        : []
+
+    if (categories.length === 0) return "not_applied"
+
+    const appliedCategories = categories.filter((category) => category.has_applied)
+    if (appliedCategories.length === 0) return "not_applied"
+
+    const statuses = appliedCategories.map((category) =>
+        String(category.status || "").toUpperCase()
+    )
+
+    const hasStatus = (values: string[]) => statuses.some((status) => values.includes(status))
+    const allStatuses = (values: string[]) => statuses.every((status) => values.includes(status))
+
+    if (hasStatus(["UNDER_REVIEW"])) return "under_review"
+    if (hasStatus(["SUBMITTED", "DRAFT"])) return "submitted"
+    if (allStatuses(["APPROVED"])) return "approved"
+    if (allStatuses(["REJECTED"])) return "rejected"
+    if (hasStatus(["APPROVED"]) && !hasStatus(["REJECTED"])) return "approved"
+    if (hasStatus(["REJECTED"]) && !hasStatus(["APPROVED"])) return "rejected"
+    if (hasStatus(["APPROVED"]) && hasStatus(["REJECTED"])) return "approved"
+
+    return "submitted"
+}
 
 function computeRFQBreakdown(rfqs: any[]): RFQBreakdown {
     return rfqs.reduce(
@@ -86,9 +118,9 @@ export async function getDashboardData() {
     }
 
     const [preqRes, rfqRes, tendersRes, bidsRes] = await Promise.allSettled([
-        fetch(`${API_BASE}/api/prequalification/rounds`, {
+        fetch(`${API_BASE}/api/v1/supplier/prequalification/rounds`, {
             headers,
-            next: { revalidate: 60 },
+            cache: "no-store",
         }).then(r => r.json()),
 
         fetch(`${API_BASE}/api/v1/supplier/rfqs`, {
@@ -107,8 +139,6 @@ export async function getDashboardData() {
         ).then(r => r.json()),
     ])
 
-    let activePreq = 0
-    let completedPreq = 0
     const user = session?.user as any
     const preqBreakdown: PreqBreakdown = {
         approved: 0, submitted: 0, under_review: 0, rejected: 0, not_applied: 0,
@@ -119,33 +149,26 @@ export async function getDashboardData() {
         (user?.isTenant ?? user?.is_tenant) && tenantId
     )
 
-    if (preqRes.status === "fulfilled" && Array.isArray(preqRes.value?.data)) {
-        preqRes.value.data.forEach((round: any) => {
-            round.categories?.forEach((c: any) => {
-                const status = String(c.status || "").toUpperCase()
-                const applied = c.hasApplied ?? c.has_applied
+    const preqItems =
+        preqRes.status === "fulfilled"
+            ? Array.isArray(preqRes.value?.data)
+                ? preqRes.value.data
+                : Array.isArray(preqRes.value)
+                    ? preqRes.value
+                    : []
+            : []
 
-                if (!applied) {
-                    preqBreakdown.not_applied++
-                    return
-                }
-
-                if (status === "FINAL" || status === "SUBMITTED") {
-                    preqBreakdown.submitted++
-                    activePreq++
-                } else if (status === "APPROVED") {
-                    preqBreakdown.approved++
-                    completedPreq++
-                } else if (status === "REJECTED") {
-                    preqBreakdown.rejected++
-                    completedPreq++
-                } else if (status === "UNDER_REVIEW") {
-                    preqBreakdown.under_review++
-                    activePreq++
-                }
-            })
+    if (preqItems.length > 0) {
+        preqItems.forEach((round: any) => {
+            const classification = classifyPrequalificationRound(round)
+            preqBreakdown[classification] += 1
         })
     }
+
+    const activePreq = preqItems.filter((round: any) =>
+        isRoundActive(mapApiRound(round))
+    ).length
+    const completedPreq = preqBreakdown.approved + preqBreakdown.rejected
 
     const rfqData =
         rfqRes.status === "fulfilled" && Array.isArray(rfqRes.value?.data)

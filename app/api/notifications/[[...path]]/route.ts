@@ -3,19 +3,12 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
 
 export const dynamic = "force-dynamic"
-
-function resolveUpstreamBase(pathParts: string[] | undefined): string {
-  const explicit = process.env.NEXT_PUBLIC_API_URL
-  if (explicit) return explicit
-  return "/api/v1/portal/notifications"
-}
+const NOTIFICATIONS_BASE_PATH = "/api/v1/portal/notifications"
 
 function buildUpstreamUrl(req: NextRequest, pathParts: string[] | undefined) {
-  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? ""
-  const base = resolveUpstreamBase(pathParts)
-
-  const baseUrl = base.startsWith("http") ? new URL(base) : new URL(base, apiBase)
-  const cleanBasePath = baseUrl.pathname.replace(/\/+$/, "")
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || req.nextUrl.origin
+  const baseUrl = new URL(NOTIFICATIONS_BASE_PATH, apiBase)
+  const cleanBasePath = NOTIFICATIONS_BASE_PATH.replace(/\/+$/, "")
   const extraPath = (pathParts ?? []).map((p) => p.replace(/^\/+|\/+$/g, "")).filter(Boolean).join("/")
   baseUrl.pathname = extraPath ? `${cleanBasePath}/${extraPath}` : cleanBasePath
 

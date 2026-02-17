@@ -63,6 +63,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="overflow-x-hidden">
       <body
+        suppressHydrationWarning
         className={`${geist.variable} antialiased min-h-screen overflow-x-hidden`}
       >
         <ThemeProvider

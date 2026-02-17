@@ -60,7 +60,7 @@ async function requestProfile(method: "PUT" | "PATCH" | "DELETE", values?: Third
 }
 
 export function useThirdPartyProfile() {
-    const { data, mutate, isLoading } = useSWR<ThirdPartyProfileResponse>("/api/third-party-profile", fetcher)
+    const { data, mutate, isLoading, error } = useSWR<ThirdPartyProfileResponse>("/api/third-party-profile", fetcher)
 
     const updateProfile = async (values: ThirdPartyInputs) => {
         return toast.promise(
@@ -129,5 +129,6 @@ export function useThirdPartyProfile() {
         toggleRole,
         mutateProfile: mutate,
         isLoading,
+        error,
     }
 }

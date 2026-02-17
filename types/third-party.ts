@@ -38,6 +38,8 @@ export type ThirdPartyInputs = {
     countryId?: number | null
     physicalAddress?: string | null
     website?: string | null
+    receiveSmsNotifications?: boolean | null
+    receiveNewsletter?: boolean | null
 
     // Backward-compatible fields still used in older UI forms.
     thirdPartyName?: string
