@@ -19,6 +19,7 @@ export type RFQBreakdown = Record<
 >
 
 export type TenderBreakdown = Record<"open" | "draft" | "closed", number>
+export type BidBreakdown = Record<"draft" | "submitted" | "unknown", number>
 
 export type TenantLeaseSummary = {
     total: number
@@ -84,7 +85,7 @@ export async function getDashboardData() {
         Authorization: `Bearer ${accessToken}`,
     }
 
-    const [preqRes, rfqRes, tendersRes] = await Promise.allSettled([
+    const [preqRes, rfqRes, tendersRes, bidsRes] = await Promise.allSettled([
         fetch(`${API_BASE}/api/prequalification/rounds`, {
             headers,
             next: { revalidate: 60 },
@@ -97,6 +98,11 @@ export async function getDashboardData() {
 
         fetch(
             `${API_BASE}/api/tenders?enforce_invites=true&third_party_id=${thirdPartyId}`,
+            { headers, cache: "no-store" }
+        ).then(r => r.json()),
+
+        fetch(
+            `${API_BASE}/api/v1/supplier/bid-submissions?third_party_id=${thirdPartyId}`,
             { headers, cache: "no-store" }
         ).then(r => r.json()),
     ])
@@ -167,6 +173,22 @@ export async function getDashboardData() {
     })
 
     const tendersAvailable = tenderVal?.total ?? tenderItems.length
+    const bidsVal = bidsRes.status === "fulfilled" ? bidsRes.value : null
+    const bidItems = Array.isArray(bidsVal?.data) ? bidsVal.data : []
+    const bidBreakdown: BidBreakdown = { draft: 0, submitted: 0, unknown: 0 }
+    bidItems.forEach((bid: any) => {
+        const status = String(bid?.bid_status || bid?.status || "").toLowerCase()
+        if (status === "submitted") {
+            bidBreakdown.submitted++
+        } else if (status === "draft") {
+            bidBreakdown.draft++
+        } else {
+            bidBreakdown.unknown++
+        }
+    })
+    const myBids = Number.isFinite(Number(bidsVal?.total))
+        ? Number(bidsVal?.total)
+        : bidItems.length
 
     let tenantBreakdown: TenantBreakdown | null = null
 
@@ -236,8 +258,6 @@ export async function getDashboardData() {
 
             const isPaid = status === "paid"
             const isOverdue = status === "o" || status === "overdue"
-            const isPending = status === "p" || status === "pending"
-
             if (isPaid) {
                 invoicePaid++
             } else if (isOverdue) {
@@ -275,11 +295,15 @@ export async function getDashboardData() {
             directInvites: rfqData.length,
             tendersAvailable,
             rfqsInvited: rfqBreakdown.invited,
+            myBids,
+            submittedBids: bidBreakdown.submitted,
+            draftBids: bidBreakdown.draft,
         },
         breakdowns: {
             prequalification: preqBreakdown,
             rfqs: rfqBreakdown,
             tenders: tenderBreakdown,
+            bids: bidBreakdown,
             tenant: tenantBreakdown ?? undefined,
             invitations: { pending: 0, accepted: 0, declined: 0, submitted: 0 },
         },

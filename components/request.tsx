@@ -1,16 +1,18 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import { Card, CardContent } from "@/components/common/card"
 import {
     ClipboardCheck,
+    FileCheck2,
     FileSearch,
     MailCheck,
-    Sparkles,
     Trophy,
 } from "lucide-react"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { useProfileStore } from "@/store/use-profile-store"
 
 type DashboardSummaryResponse = {
     summary?: Record<string, any>
@@ -21,7 +23,8 @@ type SummaryCardItem = {
     count: number
     icon: React.ElementType
     description: string
-    tone: "primary" | "emerald" | "sky" | "amber"
+    tone: "primary" | "emerald" | "sky" | "amber" | "indigo"
+    href: string
 }
 
 function resolveCounts(raw?: DashboardSummaryResponse | null) {
@@ -51,47 +54,96 @@ function resolveCounts(raw?: DashboardSummaryResponse | null) {
         summary.completed ??
         0
 
+    const myBids =
+        summary.myBids ??
+        summary.totalBids ??
+        summary.bidSubmissions ??
+        0
+
+    const submittedBids =
+        summary.submittedBids ??
+        summary.bidsSubmitted ??
+        0
+
+    const draftBids =
+        summary.draftBids ??
+        summary.bidsDraft ??
+        0
+
     return {
         activePreq: Number(activePreq) || 0,
         directInvites: Number(directInvites) || 0,
         tendersAvailable: Number(tendersAvailable) || 0,
         completedPreq: Number(completedPreq) || 0,
+        myBids: Number(myBids) || 0,
+        submittedBids: Number(submittedBids) || 0,
+        draftBids: Number(draftBids) || 0,
     }
 }
 
 const toneClasses: Record<
     SummaryCardItem["tone"],
-    { icon: string; chip: string; ring: string; card: string }
+    {
+        card: string
+        accent: string
+        iconWrap: string
+        icon: string
+        label: string
+        value: string
+        description: string
+    }
 > = {
     primary: {
-        icon: "text-white",
-        chip: "bg-white/15 text-white border-white/25",
-        ring: "ring-white/20",
-        card: "bg-gradient-to-br from-primary/90 via-primary/70 to-primary/60 border-primary/60 text-white",
+        card: "border-primary/30 bg-gradient-to-br from-primary/8 via-transparent to-transparent",
+        accent: "bg-primary/50",
+        iconWrap: "border-primary/30 bg-primary/10",
+        icon: "text-primary",
+        label: "text-foreground/70",
+        value: "text-foreground",
+        description: "text-muted-foreground",
     },
     emerald: {
-        icon: "text-white",
-        chip: "bg-emerald-500/30 text-white border-emerald-500/40",
-        ring: "ring-emerald-500/30",
-        card: "bg-gradient-to-br from-emerald-600 via-emerald-500 to-emerald-400 border-emerald-500/70 text-white",
+        card: "border-emerald-400/30 bg-gradient-to-br from-emerald-500/8 via-transparent to-transparent",
+        accent: "bg-emerald-500/50",
+        iconWrap: "border-emerald-400/30 bg-emerald-500/10",
+        icon: "text-emerald-600",
+        label: "text-foreground/70",
+        value: "text-foreground",
+        description: "text-muted-foreground",
     },
     sky: {
-        icon: "text-white",
-        chip: "bg-sky-500/20 text-white border-sky-500/40",
-        ring: "ring-sky-500/30",
-        card: "bg-gradient-to-br from-sky-600 via-sky-500 to-sky-400 border-sky-500/60 text-white",
+        card: "border-sky-400/30 bg-gradient-to-br from-sky-500/8 via-transparent to-transparent",
+        accent: "bg-sky-500/50",
+        iconWrap: "border-sky-400/30 bg-sky-500/10",
+        icon: "text-sky-600",
+        label: "text-foreground/70",
+        value: "text-foreground",
+        description: "text-muted-foreground",
     },
     amber: {
-        icon: "text-white",
-        chip: "bg-amber-500/25 text-white border-amber-500/40",
-        ring: "ring-amber-500/30",
-        card: "bg-gradient-to-br from-amber-600 via-amber-500 to-amber-400 border-amber-500/60 text-white",
+        card: "border-amber-400/30 bg-gradient-to-br from-amber-500/8 via-transparent to-transparent",
+        accent: "bg-amber-500/50",
+        iconWrap: "border-amber-400/30 bg-amber-500/10",
+        icon: "text-amber-600",
+        label: "text-foreground/70",
+        value: "text-foreground",
+        description: "text-muted-foreground",
+    },
+    indigo: {
+        card: "border-indigo-400/30 bg-gradient-to-br from-indigo-500/8 via-transparent to-transparent",
+        accent: "bg-indigo-500/50",
+        iconWrap: "border-indigo-400/30 bg-indigo-500/10",
+        icon: "text-indigo-600",
+        label: "text-foreground/70",
+        value: "text-foreground",
+        description: "text-muted-foreground",
     },
 }
 
 export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSummaryResponse | null; isLoading?: boolean }) {
     const [fetched, setFetched] = useState<DashboardSummaryResponse | null>(null)
     const [loading, setLoading] = useState(false)
+    const activeProfile = useProfileStore(state => state.activeProfile)
 
     useEffect(() => {
         if (typeof isLoading !== "undefined") return
@@ -124,6 +176,7 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             icon: ClipboardCheck,
             description: "In progress or under review.",
             tone: "primary",
+            href: "/dashboard/supplier/prequalification",
         },
         {
             title: "Direct invites (RFQs)",
@@ -131,6 +184,7 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             icon: MailCheck,
             description: "Invitations that need your response.",
             tone: "sky",
+            href: "/dashboard/supplier/rfqs",
         },
         {
             title: "Available tenders",
@@ -138,6 +192,7 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             icon: FileSearch,
             description: "Open tenders you can apply to.",
             tone: "amber",
+            href: "/dashboard/supplier/tenders",
         },
         {
             title: "Completed",
@@ -145,19 +200,31 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             icon: Trophy,
             description: "Approved or completed outcomes.",
             tone: "emerald",
+            href: "/dashboard/supplier/prequalification",
         },
     ]
 
+    if (activeProfile === "Supplier") {
+        cards.push({
+            title: "My bids",
+            count: resolved.myBids,
+            icon: FileCheck2,
+            description: `${resolved.submittedBids} submitted • ${resolved.draftBids} draft`,
+            tone: "indigo",
+            href: "/dashboard/supplier/bids",
+        })
+    }
+
     return (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
             {effectiveLoading
-                ? Array.from({ length: 4 }).map((_, i) => (
+                ? Array.from({ length: cards.length }).map((_, i) => (
                     <Card key={i} className="rounded-2xl border border-border/50 bg-card shadow-none">
-                        <CardContent className="p-5">
-                            <div className="h-10 w-10 rounded-xl bg-muted/40" />
-                            <div className="mt-4 h-3 w-40 rounded bg-muted/40" />
-                            <div className="mt-3 h-8 w-20 rounded bg-muted/40" />
-                            <div className="mt-3 h-3 w-56 rounded bg-muted/40" />
+                        <CardContent className="p-3">
+                            <div className="h-9 w-9 rounded-lg bg-muted/40" />
+                            <div className="mt-2.5 h-3 w-36 rounded bg-muted/40" />
+                            <div className="mt-2 h-7 w-20 rounded bg-muted/40" />
+                            <div className="mt-2 h-3 w-48 rounded bg-muted/40" />
                         </CardContent>
                     </Card>
                 ))
@@ -171,37 +238,42 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
                             transition={{ delay: index * 0.05, duration: 0.25, ease: "easeOut" }}
                             className="h-full"
                         >
-                            <Card
-                                className={cn(
-                                    "h-full rounded-2xl border border-border/60 shadow-none bg-transparent transition hover:-translate-y-0.5 focus-visible:-translate-y-0.5",
-                                    t.card
-                                )}
+                            <Link
+                                href={item.href}
+                                aria-label={`${item.title} details`}
+                                className="group block h-full focus-visible:outline-none"
                             >
-                                <CardContent className="flex h-full flex-col gap-3 p-5">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div
-                                            className={cn(
-                                                "flex h-10 w-10 items-center justify-center rounded-xl border ring-1 ring-transparent",
-                                                t.chip,
-                                                t.ring,
-                                            )}
-                                        >
-                                            <item.icon className={cn("h-5 w-5", t.icon)} />
+                                <Card
+                                    className={cn(
+                                        "relative h-full overflow-hidden rounded-2xl border shadow-none transition group-hover:-translate-y-0.5 group-hover:border-border/80 group-hover:bg-muted/10 focus-visible:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring/40",
+                                        t.card
+                                    )}
+                                >
+                                    <span className={cn("pointer-events-none absolute inset-x-0 top-0 h-0.5 transition group-hover:h-1", t.accent)} />
+                                    <CardContent className="flex h-full flex-col gap-2 p-3">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className={cn("text-[11px] font-semibold uppercase tracking-[0.32em]", t.label)}>
+                                                {item.title}
+                                            </div>
+                                            <div
+                                                className={cn(
+                                                    "flex h-9 w-9 items-center justify-center rounded-lg border",
+                                                    t.iconWrap,
+                                                )}
+                                            >
+                                                <item.icon className={cn("h-4 w-4", t.icon)} />
+                                            </div>
                                         </div>
-                                        <div className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-muted/20 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-                                            <Sparkles className="h-3.5 w-3.5 text-white/70" />
-                                            Updated
-                                        </div>
-                                    </div>
 
-                                    <div className="mt-4 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
-                                        {item.title}
-                                    </div>
-                                    <div className="mt-1 text-3xl font-black tracking-tight text-white tabular-nums">
-                                        {item.count.toLocaleString()}
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                        <div className={cn("text-3xl font-semibold tracking-tight tabular-nums", t.value)}>
+                                            {item.count.toLocaleString()}
+                                        </div>
+                                        <div className={cn("text-xs truncate", t.description)}>
+                                            {item.description}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </Link>
                         </motion.div>
                     )
                 })}

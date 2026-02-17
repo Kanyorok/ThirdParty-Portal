@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { useProcurementStore } from "@/store/use-procurement-store"
 import { useParams, useRouter } from "next/navigation"
 import { Badge } from "@/components/common/badge"
@@ -24,6 +25,7 @@ export default function RoundDetailPage() {
     const params = useParams()
     const router = useRouter()
     const id = Number(params.id)
+    const [starting, setStarting] = useState(false)
 
     const { rounds, selectedRound, applicationStatus, updateApplicationStatus } = useProcurementStore()
 
@@ -41,6 +43,8 @@ export default function RoundDetailPage() {
     }
 
     const handleAction = () => {
+        if (starting) return
+        setStarting(true)
         if (!userStatus) {
             updateApplicationStatus(id, "draft")
         }
@@ -57,6 +61,12 @@ export default function RoundDetailPage() {
 
     return (
         <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-[1600px] mx-auto">
+            {starting ? (
+                <Loading
+                    message="Preparing your application"
+                    className="bg-white/90 backdrop-blur-sm"
+                />
+            ) : null}
             <div className="flex items-center justify-between">
                 <Button
                     variant="ghost"

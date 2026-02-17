@@ -22,6 +22,12 @@ export type TenderBreakdown = {
     closed: number
 }
 
+export type BidBreakdown = {
+    draft: number
+    submitted: number
+    unknown: number
+}
+
 export type TenantLeaseSummary = {
     total: number
     active: number
@@ -42,6 +48,16 @@ export type TenantBreakdown = {
     invoices: TenantInvoiceSummary
 }
 
+export type DashboardTrends = {
+    prequalification?: Partial<Record<keyof PreqBreakdown, number>>
+    rfqs?: Partial<Record<keyof RFQBreakdown, number>>
+    tenders?: Partial<Record<keyof TenderBreakdown, number>>
+    tenant?: {
+        leases?: Partial<Record<keyof TenantLeaseSummary, number>>
+        invoices?: Partial<Record<keyof TenantInvoiceSummary, number>>
+    }
+}
+
 export type RFQItem = {
     submissionDeadline?: string | null
     supplierResponse?: {
@@ -56,13 +72,18 @@ export type DashboardSummary = {
         directInvites?: number
         tendersAvailable?: number
         rfqsInvited?: number
+        myBids?: number
+        submittedBids?: number
+        draftBids?: number
     }
     breakdowns?: {
         prequalification?: PreqBreakdown
         rfqs?: RFQBreakdown
         tenders?: TenderBreakdown
+        bids?: BidBreakdown
         tenant?: TenantBreakdown
     }
+    trends?: DashboardTrends
     rfqs?: RFQItem[]
 }
 

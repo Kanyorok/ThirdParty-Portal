@@ -25,10 +25,10 @@ export default function Loading({
         >
             <div className="flex flex-col items-center gap-3 text-center">
                 <div className="relative flex h-12 w-12 items-center justify-center">
-                    <span className="absolute inset-0 rounded-full border-2 border-muted-foreground/30" />
-                    <span className="absolute inset-0 rounded-full border-2 border-t-emerald-500/80 border-muted-foreground animate-spin" />
+                    <span className="absolute inset-0 rounded-full border-2 border-slate-200/80" />
+                    <span className="absolute inset-0 rounded-full border-2 border-t-indigo-500/80 border-slate-300/80 animate-spin" />
                 </div>
-                <p className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground">
+                <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500">
                     {message}
                 </p>
             </div>

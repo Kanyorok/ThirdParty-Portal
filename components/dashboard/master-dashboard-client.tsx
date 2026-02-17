@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
+import { Info } from "lucide-react"
 import { useShallow } from "zustand/react/shallow"
 
 import { useProfileStore, type ProfileType } from "@/store/use-profile-store"
@@ -14,6 +15,7 @@ import { WelcomeHeader } from "@/components/dashboard/welcome-header"
 import { ErrorState } from "@/components/dashboard/error-state"
 import { RequestSummaryCards } from "@/components/request"
 import SummaryCharts from "@/components/dashboard/summary-charts"
+import { PriorityActions } from "@/components/dashboard/priority-actions"
 import {
   Card,
   CardContent,
@@ -21,10 +23,63 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/common/card"
+import { Button } from "@/components/common/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/common/dialog"
+import { Label } from "@/components/common/label"
+import { Checkbox } from "@/components/common/checkbox"
 
 type DashboardSummaryResponse = {
   summary?: Record<string, any>
   breakdowns?: Record<string, any>
+}
+
+type WidgetKey = "priority" | "overview" | "activity"
+type WidgetPreferences = Record<WidgetKey, boolean>
+
+const WIDGET_STORAGE_PREFIX = "dashboard-widgets"
+const DEFAULT_WIDGET_PREFERENCES: WidgetPreferences = {
+  priority: true,
+  overview: true,
+  activity: true,
+}
+
+const DASHBOARD_WIDGETS: Array<{
+  key: WidgetKey
+  title: string
+  description: string
+}> = [
+  {
+    key: "priority",
+    title: "Priority actions",
+    description: "Urgent items that need attention first.",
+  },
+  {
+    key: "overview",
+    title: "At-a-glance totals",
+    description: "Key totals to track momentum and priorities.",
+  },
+  {
+    key: "activity",
+    title: "Insights & trends",
+    description: "Visual performance signals across your pipeline.",
+  },
+]
+
+function normalizeWidgetPreferences(
+  value?: Partial<WidgetPreferences> | null
+): WidgetPreferences {
+  return {
+    priority: value?.priority ?? DEFAULT_WIDGET_PREFERENCES.priority,
+    overview: value?.overview ?? DEFAULT_WIDGET_PREFERENCES.overview,
+    activity: value?.activity ?? DEFAULT_WIDGET_PREFERENCES.activity,
+  }
 }
 
 export function MasterDashboardClient({
@@ -40,6 +95,11 @@ export function MasterDashboardClient({
 
   const activeProfile = useProfileStore(s => s.activeProfile)
   const setActiveProfile = useProfileStore(s => s.setActiveProfile)
+  const [isWidgetDialogOpen, setIsWidgetDialogOpen] = useState(false)
+  const [widgetPreferences, setWidgetPreferences] = useState<WidgetPreferences>(
+    DEFAULT_WIDGET_PREFERENCES
+  )
+  const [widgetsHydrated, setWidgetsHydrated] = useState(false)
 
   const { setSummary, fetchSummary, error } = useDashboardStore(
     useShallow(s => ({
@@ -63,9 +123,43 @@ export function MasterDashboardClient({
     }
   }, [dashboardData, setSummary, fetchSummary])
 
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    setWidgetsHydrated(false)
+    const storageKey = `${WIDGET_STORAGE_PREFIX}:${activeProfile}`
+
+    try {
+      const storedValue = window.localStorage.getItem(storageKey)
+      if (!storedValue) {
+        setWidgetPreferences(DEFAULT_WIDGET_PREFERENCES)
+      } else {
+        const parsed = JSON.parse(storedValue) as Partial<WidgetPreferences>
+        const normalized = normalizeWidgetPreferences(parsed)
+        setWidgetPreferences(normalized)
+      }
+    } catch {
+      setWidgetPreferences(DEFAULT_WIDGET_PREFERENCES)
+    } finally {
+      setWidgetsHydrated(true)
+    }
+  }, [activeProfile])
+
+  useEffect(() => {
+    if (!widgetsHydrated || typeof window === "undefined") return
+
+    const storageKey = `${WIDGET_STORAGE_PREFIX}:${activeProfile}`
+    window.localStorage.setItem(storageKey, JSON.stringify(widgetPreferences))
+  }, [widgetPreferences, activeProfile, widgetsHydrated])
+
   const registry = useMemo(
     () => getDashboardRegistryEntry(activeProfile),
     [activeProfile]
+  )
+
+  const visibleWidgetsCount = useMemo(
+    () => Object.values(widgetPreferences).filter(Boolean).length,
+    [widgetPreferences]
   )
 
   if (error) {
@@ -82,7 +176,7 @@ export function MasterDashboardClient({
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="w-full space-y-8"
+      className="w-full space-y-3"
     >
       <motion.div variants={itemVariants}>
         <WelcomeHeader
@@ -93,37 +187,131 @@ export function MasterDashboardClient({
         />
       </motion.div>
 
-      <motion.section variants={itemVariants}>
-        <Card className="bg-card rounded-2xl border border-border/50 shadow-none">
-          <CardHeader className="border-b border-border/40 py-5 grid-rows-[auto]">
-            <div className="flex items-baseline gap-3">
-              <CardTitle className="text-base font-semibold">Overview</CardTitle>
-              <span className="text-xs font-semibold tracking-[0.4em] text-muted-foreground">
-                Quick totals across your profiles.
-              </span>
+      <motion.div variants={itemVariants}>
+        <div className="rounded-2xl border border-border/60 px-4 py-2.5">
+          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold tracking-tight text-foreground">
+                Dashboard focus
+              </p>
             </div>
-          </CardHeader>
-          <CardContent className="pb-6">
-            <RequestSummaryCards />
-          </CardContent>
-        </Card>
-      </motion.section>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/10 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                <Info className="h-3.5 w-3.5" />
+                Layout saves per profile
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/20 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+                {visibleWidgetsCount} visible
+              </div>
+              <Button size="sm" onClick={() => setIsWidgetDialogOpen(true)}>
+                Add widget
+              </Button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
-      <motion.section variants={itemVariants}>
-        <Card className="bg-card rounded-2xl border border-border/50 shadow-none">
-          <CardHeader className="border-b border-border/40 py-5">
-            <CardTitle className="text-base font-semibold">
-              Activity
-            </CardTitle>
-            <CardDescription>
-              Where your requests and invitations currently stand.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pb-6">
-            <SummaryCharts profile={activeProfile} />
-          </CardContent>
-        </Card>
-      </motion.section>
+      {widgetPreferences.priority && (
+        <motion.section variants={itemVariants}>
+          <PriorityActions profile={activeProfile} />
+        </motion.section>
+      )}
+
+      {widgetPreferences.overview && (
+        <motion.section variants={itemVariants}>
+          <Card className="rounded-3xl border border-border/50 bg-transparent shadow-none">
+            <CardContent className="py-3">
+              <RequestSummaryCards />
+            </CardContent>
+          </Card>
+        </motion.section>
+      )}
+
+      {widgetPreferences.activity && (
+        <motion.section variants={itemVariants}>
+          <Card className="rounded-3xl border border-border/50 bg-transparent shadow-none">
+            <CardContent className="py-3">
+              <SummaryCharts profile={activeProfile} />
+            </CardContent>
+          </Card>
+        </motion.section>
+      )}
+
+      {visibleWidgetsCount === 0 && (
+        <motion.section variants={itemVariants}>
+          <Card className="rounded-3xl border border-dashed border-border/60 bg-transparent shadow-none">
+            <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                No widgets yet. Add insights to tailor your dashboard.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsWidgetDialogOpen(true)}
+              >
+                Choose widgets
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.section>
+      )}
+
+      <Dialog open={isWidgetDialogOpen} onOpenChange={setIsWidgetDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Customize dashboard</DialogTitle>
+            <DialogDescription>
+              Toggle widgets to focus on what drives results.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2.5">
+            {DASHBOARD_WIDGETS.map(widget => {
+              const inputId = `widget-${widget.key}`
+
+              return (
+                <div
+                  key={widget.key}
+                  className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2"
+                >
+                  <div className="space-y-0.5 pr-4">
+                    <Label htmlFor={inputId} className="font-medium">
+                      {widget.title}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {widget.description}
+                    </p>
+                  </div>
+                  <Checkbox
+                    id={inputId}
+                    checked={widgetPreferences[widget.key]}
+                    onCheckedChange={checked =>
+                      setWidgetPreferences(current => ({
+                        ...current,
+                        [widget.key]: checked === true,
+                      }))
+                    }
+                  />
+                </div>
+              )
+            })}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setWidgetPreferences(DEFAULT_WIDGET_PREFERENCES)}
+            >
+              Reset layout
+            </Button>
+            <Button
+              onClick={() => setIsWidgetDialogOpen(false)}
+            >
+              Save changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   )
 }

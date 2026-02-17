@@ -28,27 +28,19 @@ export async function GET(req: NextRequest) {
   if (!API_URL) return jsonError("Service misconfigured", 500)
 
   const params = req.nextUrl.searchParams
-  const tenderId = params.get("tenderId")
+  const tenderId = params.get("tenderId") ?? params.get("tender_id")
   if (!tenderId) return jsonError("Tender ID is required", 400)
 
-  const status = params.get("status") ?? "all"
-  const page = Number(params.get("page") ?? 1)
-  const limit = Number(params.get("limit") ?? 20)
-
   const query = new URLSearchParams({
-    tender_id: tenderId,
-    page: String(page),
-    limit: String(limit)
+    tender_id: tenderId
   })
 
-  if (status !== "all") query.set("status", status)
-  if (session.user.thirdPartyId) {
-    query.set("third_party_id", String(session.user.thirdPartyId))
-  }
+  if (session.user.thirdPartyId) query.set("third_party_id", String(session.user.thirdPartyId))
+  if (session.user.supplierId) query.set("supplier_id", String(session.user.supplierId))
 
   try {
     const res = await fetch(
-      `${API_URL}/api/tender-clarifications?${query.toString()}`,
+      `${API_URL}/api/v1/supplier/tender-clarifications?${query.toString()}`,
       {
         headers: {
           Authorization: `Bearer ${session.accessToken}`,
@@ -63,13 +55,11 @@ export async function GET(req: NextRequest) {
     if (!res.ok) return NextResponse.json(body, { status: res.status })
 
     return NextResponse.json({
+      success: body.success ?? true,
+      message: body.message ?? "Clarifications retrieved successfully.",
       data: body.data ?? [],
-      pagination: {
-        total: body.total ?? 0,
-        page: body.page ?? page,
-        limit: body.limit ?? limit,
-        pages: body.total ? Math.ceil(body.total / limit) : 0
-      }
+      total: body.total ?? 0,
+      tender_id: body.tender_id ?? Number(tenderId)
     })
   } catch (e) {
     return jsonError("Upstream request failed", 502)
@@ -97,16 +87,11 @@ export async function POST(req: NextRequest) {
     tender_id: Number(tenderId),
     third_party_id: session.user.thirdPartyId,
     question,
-    is_public: Boolean(body.isPublic),
-    attachments: Array.isArray(body.attachments) ? body.attachments : [],
-    question_date: new Date().toISOString(),
-    status: "pending",
-    created_by: session.user.id,
-    created_on: new Date().toISOString()
+    is_public: Boolean(body.isPublic)
   }
 
   try {
-    const res = await fetch(`${API_URL}/api/tender-clarifications`, {
+  const res = await fetch(`${API_URL}/api/v1/supplier/tender-clarifications`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
@@ -120,7 +105,7 @@ export async function POST(req: NextRequest) {
     const data = await res.json()
     if (!res.ok) return NextResponse.json(data, { status: res.status })
 
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ success: true, message: data.message ?? "Clarification Sent!", data: data.data ?? data })
   } catch {
     return jsonError("Submission failed", 502)
   }

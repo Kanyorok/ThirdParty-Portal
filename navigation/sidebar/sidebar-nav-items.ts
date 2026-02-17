@@ -4,7 +4,8 @@ import {
     ClipboardList, FolderOpen, ShieldCheck, BookOpen,
     Settings, HelpCircle, Send,
     Construction,
-    LandPlot
+    LandPlot,
+    FileCheck2
 } from "lucide-react"
 
 const allProfiles: readonly UserProfile[] = ["Supplier", "Tenant", "Customer"]
@@ -45,6 +46,7 @@ export const sidebarItems: readonly NavSection[] = [
             withProfiles({ title: "Prequalification", url: "/dashboard/prequalification", icon: ShieldCheck, description: "XYZ" }, ["Supplier"]),
             withProfiles({ title: "Find RFQs", url: "/dashboard/supplier/rfqs", icon: ClipboardList, description: "Browse requests for quotation" }, ["Supplier"]),
             withProfiles({ title: "Find Tenders", url: "/dashboard/supplier/tenders", icon: FileText, description: "Explore available tenders" }, ["Supplier"]),
+            withProfiles({ title: "My Bids", url: "/dashboard/supplier/bids", icon: FileCheck2, description: "Track draft and submitted bids" }, ["Supplier"]),
             withProfiles({ title: "All Documents", url: "/dashboard/supplier/documents", icon: FolderOpen, description: "Contracts, files & uploads" }, ["Supplier"]),
         ],
     },
