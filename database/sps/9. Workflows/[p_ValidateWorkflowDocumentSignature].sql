@@ -31,8 +31,8 @@ BEGIN
 
     SELECT TOP 1
         @IsDocRequired = ISNULL(a.IsDocRequired, 0)
-    FROM t_WorkFlowStagesTest a WITH (NOLOCK)
-    JOIN t_WorkFlowPendingTest c WITH (NOLOCK) ON TRY_CAST(c.Stage AS BIGINT) = a.Id
+    FROM t_WorkFlowStages a WITH (NOLOCK)
+    JOIN t_WorkFlowPending c WITH (NOLOCK) ON TRY_CAST(c.Stage AS BIGINT) = a.Id
     WHERE c.Source = @Source
         AND c.SourceID = @SourceID
         AND c.UserId = @UserID

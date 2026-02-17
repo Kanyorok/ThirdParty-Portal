@@ -1,6 +1,6 @@
 
 CREATE or ALTER     PROCEDURE [dbo].[p_CreateWorkflowLimitWithPermission]
-    @WorkFlowStageId         [bigint] NULL,
+    @WorkFlowStageId         [bigint],
     @MaxAmount       DECIMAL(20, 4),
     @PermissionName  NVARCHAR(250),
     @ModuleID        INT,
@@ -10,6 +10,7 @@ CREATE or ALTER     PROCEDURE [dbo].[p_CreateWorkflowLimitWithPermission]
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON;
 
     BEGIN TRY
         BEGIN TRAN; 
@@ -17,11 +18,26 @@ BEGIN
         DECLARE @ExistingPermissionID BIGINT,
                 @ExistingLimitID BIGINT;
 
+        -- Validate required inputs
+        IF @WorkFlowStageId IS NULL
+        BEGIN
+            ROLLBACK TRAN;
+            RAISERROR('WorkFlowStageId is required.', 16, 1);
+            RETURN;
+        END
+
+        IF NOT EXISTS (SELECT 1 FROM t_WorkFlowStages WHERE Id = @WorkFlowStageId AND DeletedOn IS NULL)
+        BEGIN
+            ROLLBACK TRAN;
+            RAISERROR('WorkFlowStageId does not exist or has been deleted.', 16, 1);
+            RETURN;
+        END
+
         -- Check for duplicate permission name
         SELECT @ExistingPermissionID = id
         FROM t_Permissions 
         WHERE name = @PermissionName 
-          AND ModuleId = @ModuleID
+          AND ModuleId = @ModuleID;
 
         IF @ExistingPermissionID IS NOT NULL
         BEGIN

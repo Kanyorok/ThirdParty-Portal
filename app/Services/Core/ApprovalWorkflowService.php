@@ -537,11 +537,12 @@ abstract class ApprovalWorkflowService
 
             // Call stored procedure (still within the same transaction)
             $result = DB::select(
-                'EXEC p_ProcessWorkflowPending @Source = ?, @SourceID = ?, @StageID = ?',
+                'EXEC p_ProcessWorkflowPending @Source = ?, @SourceID = ?, @StageID = ?, @Amount = ?',
                 [
                     $table,
                     (string)$sourceId,
                     (int)$stage->Id,
+                    $amount,
                 ]
             );
 
@@ -1017,8 +1018,8 @@ abstract class ApprovalWorkflowService
 
                 try {
                     $spResult = DB::select(
-                        'EXEC p_ProcessWorkflowPending @Source = ?, @SourceID = ?, @StageID = ?',
-                        [$table, (string)$sourceId, (int)$nextStage->Id]
+                        'EXEC p_ProcessWorkflowPending @Source = ?, @SourceID = ?, @StageID = ?, @Amount = ?',
+                        [$table, (string)$sourceId, (int)$nextStage->Id, $amount]
                     );
 
 
@@ -1033,20 +1034,8 @@ abstract class ApprovalWorkflowService
                         }
                     }
 
-                    // Get the users who were just inserted for notification
-                    $insertedUsers = DB::table('t_WorkFlowPending as p')
-                        ->join('t_Users as u', 'p.UserId', '=', 'u.Id')
-                        ->where('p.Source', $table)
-                        ->where('p.SourceID', (string)$sourceId)
-                        ->where('p.Stage', (string)$nextStage->Id)
-                        ->whereNull('p.DeletedOn')
-                        ->select('u.Id', 'u.Name', 'u.Email')
-                        ->get();
-
-                    // Notify next-stage approvers
-                    if ($insertedUsers->count() > 0) {
-                        $this->notifyNextStageApprovers($insertedUsers, $nextStage, $table, $sourceId);
-                    }
+                    // SP already sends email notifications to next-stage approvers
+                    // No need for duplicate notification from PHP side
                 } catch (ErroredException $e) {
                     throw $e;
                 } catch (\Throwable $e) {

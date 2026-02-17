@@ -8,7 +8,8 @@ CREATE OR ALTER PROCEDURE [dbo].[p_ProcessWorkflowAction]
     @StatusID BIGINT,
     @IsApproved BIT = NULL,
     @DocumentId BIGINT = NULL,
-    @SignatureID BIGINT = NULL
+    @SignatureID BIGINT = NULL,
+    @StatusValueToSet NVARCHAR(50) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -349,14 +350,18 @@ BEGIN
                     END
 
                     SET @UpdateSQL = N'UPDATE ' + QUOTENAME(@TableName) + ' SET ' +
-                        QUOTENAME(@StatusColumn) + ' = @StatusID, ' +
+                        QUOTENAME(@StatusColumn) + ' = @StatusVal, ' +
                         'ModifiedBy = @UserID, ModifiedOn = GETDATE()' +
                         @LastApproverColumn +
                         ' WHERE ' + QUOTENAME(@KeyColumn) + ' = @SourceID';
 
+                    -- Use @StatusValueToSet if provided (module-specific value like 'r', 'RE'),
+                    -- otherwise fall back to @StatusID (CodeDetails ID)
+                    DECLARE @RejectStatusVal NVARCHAR(50) = ISNULL(@StatusValueToSet, CAST(@StatusID AS NVARCHAR(50)));
+
                     EXEC sp_executesql @UpdateSQL,
-                        N'@StatusID BIGINT, @UserName NVARCHAR(255), @SourceID NVARCHAR(100), @UserID BIGINT',
-                        @StatusID, @UserName, @SourceID, @UserID;
+                        N'@StatusVal NVARCHAR(50), @UserName NVARCHAR(255), @SourceID NVARCHAR(100), @UserID BIGINT',
+                        @RejectStatusVal, @UserName, @SourceID, @UserID;
                 END
             END
 
@@ -384,7 +389,7 @@ BEGIN
             SELECT 'SUCCESS' AS Status,
                    @Description + ' Recorded' AS Message,
                    @Description AS WorkflowStatus,
-                   CAST(1) AS StageCompleted,
+                   CAST(1 AS BIT) AS StageCompleted,
                    0 AS CurrentApprovals,
                    0 AS RequiredApprovals;
             RETURN;
@@ -507,14 +512,18 @@ BEGIN
                     END
 
                     SET @UpdateSQL = N'UPDATE ' + QUOTENAME(@TableName) + ' SET ' +
-                        QUOTENAME(@StatusColumn) + ' = @StatusID, ' +
+                        QUOTENAME(@StatusColumn) + ' = @StatusVal, ' +
                         'ModifiedBy = @UserID, ModifiedOn = GETDATE()' +
                         @LastApproverColumn +
                         ' WHERE ' + QUOTENAME(@KeyColumn) + ' = @SourceID';
 
+                    -- Use @StatusValueToSet if provided (module-specific value),
+                    -- otherwise fall back to @StatusID (CodeDetails ID)
+                    DECLARE @ApproveStatusVal NVARCHAR(50) = ISNULL(@StatusValueToSet, CAST(@StatusID AS NVARCHAR(50)));
+
                     EXEC sp_executesql @UpdateSQL,
-                        N'@StatusID BIGINT, @UserName NVARCHAR(255), @SourceID NVARCHAR(100), @UserID BIGINT',
-                        @StatusID, @UserName, @SourceID, @UserID;
+                        N'@StatusVal NVARCHAR(50), @UserName NVARCHAR(255), @SourceID NVARCHAR(100), @UserID BIGINT',
+                        @ApproveStatusVal, @UserName, @SourceID, @UserID;
                 END
                 ELSE
                 BEGIN
