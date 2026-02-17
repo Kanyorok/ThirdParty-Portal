@@ -179,7 +179,7 @@ class PropertyNewLeaseController extends Controller
                 $request->user(),
                 $CurrencyId,
                 $TaxId,
-                $uploadedFile
+                $uploadedFile ?? null
             );
         }
 
