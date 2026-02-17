@@ -29,21 +29,24 @@ class BulkSalaryImport implements OnEachRow, WithHeadingRow
         $employeeNo = $data['employeeno'] ?? $data['employee_no'] ?? null;
         $basicSalary = $data['basicsalary'] ?? $data['basic_salary'] ?? null;
 
-        if (!$employeeNo || $basicSalary === null) {
+        if (! $employeeNo || $basicSalary === null) {
             $this->skipped++;
+
             return;
         }
 
         $employee = Employee::where('EmployeeNo', $employeeNo)->first();
-        if (!$employee) {
+        if (! $employee) {
             $this->skipped++;
             Log::warning('Salary import skipped: employee not found.', ['employee_no' => $employeeNo]);
+
             return;
         }
 
         $newSalary = (float)$basicSalary;
         if ((float)$employee->BasicSalary === $newSalary) {
             $this->skipped++;
+
             return;
         }
 

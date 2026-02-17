@@ -5,14 +5,14 @@ namespace Database\Seeders;
 use App\Models\Core\Branch;
 use App\Models\HR\Applicant;
 use App\Models\HR\JobApplication;
+use App\Models\HR\JobGrade;
 use App\Models\HR\JobInterview;
 use App\Models\HR\JobOffer;
 use App\Models\HR\JobOpening;
 use App\Models\HR\JobRequisition;
+use App\Models\HR\JobRole;
 use App\Models\HR\OnboardingQueue;
 use App\Models\HR\OnboardingTask;
-use App\Models\HR\JobGrade;
-use App\Models\HR\JobRole;
 use App\Models\HRM\Department;
 use Illuminate\Database\Seeder;
 

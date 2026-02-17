@@ -29,6 +29,7 @@ class StatutoryReturnExport implements FromArray, WithHeadings
         foreach ($this->rows as $row) {
             $data[] = array_map(function ($column) use ($row) {
                 $key = $column['key'] ?? '';
+
                 return $row[$key] ?? '';
             }, $this->columns);
         }

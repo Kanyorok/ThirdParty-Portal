@@ -12,6 +12,7 @@ class StatutoryFringeBenefitController extends Controller
     public function index()
     {
         $benefits = StatutoryFringeBenefit::orderBy('Name')->paginate(20);
+
         return view('hr.statutory.fringe.index', compact('benefits'));
     }
 
@@ -23,14 +24,14 @@ class StatutoryFringeBenefitController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'Code'          => ['required', 'string', 'max:50', 'unique:t_HRStatutoryFringeBenefits,Code'],
-            'Name'          => ['required', 'string', 'max:150'],
-            'RateType'      => ['required', 'string', 'max:50', Rule::in(['Percentage', 'Fixed'])],
-            'Rate'          => ['required', 'numeric', 'min:0'],
-            'CapAmount'     => ['nullable', 'numeric', 'min:0'],
+            'Code' => ['required', 'string', 'max:50', 'unique:t_HRStatutoryFringeBenefits,Code'],
+            'Name' => ['required', 'string', 'max:150'],
+            'RateType' => ['required', 'string', 'max:50', Rule::in(['Percentage', 'Fixed'])],
+            'Rate' => ['required', 'numeric', 'min:0'],
+            'CapAmount' => ['nullable', 'numeric', 'min:0'],
             'EffectiveFrom' => ['required', 'date'],
-            'EffectiveTo'   => ['nullable', 'date', 'after:EffectiveFrom'],
-            'Description'   => ['nullable', 'string', 'max:255'],
+            'EffectiveTo' => ['nullable', 'date', 'after:EffectiveFrom'],
+            'Description' => ['nullable', 'string', 'max:255'],
         ]);
 
         $data['IsActive'] = 1;
@@ -45,6 +46,7 @@ class StatutoryFringeBenefitController extends Controller
     public function edit($id)
     {
         $benefit = StatutoryFringeBenefit::findOrFail($id);
+
         return view('hr.statutory.fringe.edit', compact('benefit'));
     }
 
@@ -52,15 +54,15 @@ class StatutoryFringeBenefitController extends Controller
     {
         $benefit = StatutoryFringeBenefit::findOrFail($id);
         $data = $request->validate([
-            'Code'          => ['required', 'string', 'max:50', Rule::unique('t_HRStatutoryFringeBenefits', 'Code')->ignore($benefit->Id, 'Id')],
-            'Name'          => ['required', 'string', 'max:150'],
-            'RateType'      => ['required', 'string', 'max:50', Rule::in(['Percentage', 'Fixed'])],
-            'Rate'          => ['required', 'numeric', 'min:0'],
-            'CapAmount'     => ['nullable', 'numeric', 'min:0'],
+            'Code' => ['required', 'string', 'max:50', Rule::unique('t_HRStatutoryFringeBenefits', 'Code')->ignore($benefit->Id, 'Id')],
+            'Name' => ['required', 'string', 'max:150'],
+            'RateType' => ['required', 'string', 'max:50', Rule::in(['Percentage', 'Fixed'])],
+            'Rate' => ['required', 'numeric', 'min:0'],
+            'CapAmount' => ['nullable', 'numeric', 'min:0'],
             'EffectiveFrom' => ['required', 'date'],
-            'EffectiveTo'   => ['nullable', 'date', 'after:EffectiveFrom'],
-            'Description'   => ['nullable', 'string', 'max:255'],
-            'IsActive'      => ['nullable', 'boolean'],
+            'EffectiveTo' => ['nullable', 'date', 'after:EffectiveFrom'],
+            'Description' => ['nullable', 'string', 'max:255'],
+            'IsActive' => ['nullable', 'boolean'],
         ]);
 
         $data['IsActive'] = $request->has('IsActive') ? $request->boolean('IsActive') : $benefit->IsActive;
@@ -76,7 +78,7 @@ class StatutoryFringeBenefitController extends Controller
     {
         $benefit = StatutoryFringeBenefit::findOrFail($id);
         $benefit->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);

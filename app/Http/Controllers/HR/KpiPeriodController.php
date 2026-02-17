@@ -12,6 +12,7 @@ class KpiPeriodController extends Controller
     public function index()
     {
         $periods = KpiPeriod::orderBy('Name')->paginate(20);
+
         return view('hr.config.kpi.periods.index', compact('periods'));
     }
 
@@ -23,10 +24,10 @@ class KpiPeriodController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'Code'        => ['required', 'string', 'max:50', 'unique:t_HRKPIPeriods,Code'],
-            'Name'        => ['required', 'string', 'max:150'],
-            'StartMonth'  => ['required', 'integer', 'between:1,12'],
-            'EndMonth'    => ['required', 'integer', 'between:1,12', 'gte:StartMonth'],
+            'Code' => ['required', 'string', 'max:50', 'unique:t_HRKPIPeriods,Code'],
+            'Name' => ['required', 'string', 'max:150'],
+            'StartMonth' => ['required', 'integer', 'between:1,12'],
+            'EndMonth' => ['required', 'integer', 'between:1,12', 'gte:StartMonth'],
             'Description' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -42,6 +43,7 @@ class KpiPeriodController extends Controller
     public function edit($id)
     {
         $period = KpiPeriod::findOrFail($id);
+
         return view('hr.config.kpi.periods.edit', compact('period'));
     }
 
@@ -50,12 +52,12 @@ class KpiPeriodController extends Controller
         $period = KpiPeriod::findOrFail($id);
 
         $data = $request->validate([
-            'Code'        => ['required', 'string', 'max:50', Rule::unique('t_HRKPIPeriods', 'Code')->ignore($period->Id, 'Id')],
-            'Name'        => ['required', 'string', 'max:150'],
-            'StartMonth'  => ['required', 'integer', 'between:1,12'],
-            'EndMonth'    => ['required', 'integer', 'between:1,12', 'gte:StartMonth'],
+            'Code' => ['required', 'string', 'max:50', Rule::unique('t_HRKPIPeriods', 'Code')->ignore($period->Id, 'Id')],
+            'Name' => ['required', 'string', 'max:150'],
+            'StartMonth' => ['required', 'integer', 'between:1,12'],
+            'EndMonth' => ['required', 'integer', 'between:1,12', 'gte:StartMonth'],
             'Description' => ['nullable', 'string', 'max:255'],
-            'IsActive'    => ['nullable', 'boolean'],
+            'IsActive' => ['nullable', 'boolean'],
         ]);
 
         $data['IsActive'] = $request->has('IsActive') ? $request->boolean('IsActive') : $period->IsActive;
@@ -71,7 +73,7 @@ class KpiPeriodController extends Controller
     {
         $period = KpiPeriod::findOrFail($id);
         $period->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);

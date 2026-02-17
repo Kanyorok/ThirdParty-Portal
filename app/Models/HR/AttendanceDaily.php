@@ -30,13 +30,13 @@ class AttendanceDaily extends Model
     ];
 
     protected $casts = [
-        'WorkDate'      => 'date',
-        'FirstInTime'   => 'datetime',
-        'LastOutTime'   => 'datetime',
-        'TotalHours'    => 'decimal:2',
+        'WorkDate' => 'date',
+        'FirstInTime' => 'datetime',
+        'LastOutTime' => 'datetime',
+        'TotalHours' => 'decimal:2',
         'OvertimeHours' => 'decimal:2',
-        'CreatedOn'     => 'datetime',
-        'ModifiedOn'    => 'datetime',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
     ];
 
     public function employee()

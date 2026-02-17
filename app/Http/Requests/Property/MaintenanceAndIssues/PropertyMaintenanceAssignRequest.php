@@ -26,7 +26,7 @@ class PropertyMaintenanceAssignRequest extends FormRequest
             'AssignmentDate' => 'required|date|after_or_equal:ExpectedStartDate|before_or_equal:ExpectedCompletion',
             'AssignmentType' => 'required|exists:t_CodeDetails,Id',
 
-            'InternalTechnician' => 'nullable|exists:t_Employees,Id|required_without:PrequalifiedVendor',
+            'InternalTechnician' => 'nullable|exists:t_HREmployees,Id|required_without:PrequalifiedVendor',
             'PrequalifiedVendor' => 'nullable|exists:t_SupplierMaster,Id|required_without:InternalTechnician',
 
             'ExpectedStartDate' => 'required|date|after_or_equal:today',

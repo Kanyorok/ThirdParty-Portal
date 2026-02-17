@@ -24,9 +24,9 @@ class TrainingCategory extends Model
     ];
 
     protected $casts = [
-        'IsActive'   => 'boolean',
-        'CreatedOn'  => 'datetime',
+        'IsActive' => 'boolean',
+        'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
-        'DeletedOn'  => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 }

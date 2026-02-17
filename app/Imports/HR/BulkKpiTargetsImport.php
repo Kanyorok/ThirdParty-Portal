@@ -10,7 +10,6 @@ use App\Models\HR\KpiPeriod;
 use App\Models\HR\KpiPerspectiveWeight;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
@@ -41,14 +40,16 @@ class BulkKpiTargetsImport implements ToCollection, WithHeadingRow
             $kpiName = $data['kpiname'] ?? $data['kpi_name'] ?? null;
             $weight = $data['weight'] ?? null;
 
-            if (!$employeeNo || !$periodValue || !$year || (!$kpiCode && !$kpiName) || $weight === null) {
+            if (! $employeeNo || ! $periodValue || ! $year || (! $kpiCode && ! $kpiName) || $weight === null) {
                 $this->skipped++;
+
                 continue;
             }
 
             $employee = Employee::where('EmployeeNo', $employeeNo)->first();
-            if (!$employee) {
+            if (! $employee) {
                 $this->skipped++;
+
                 continue;
             }
 
@@ -57,14 +58,16 @@ class BulkKpiTargetsImport implements ToCollection, WithHeadingRow
                     $q->where('Name', $periodValue)->orWhere('Code', $periodValue);
                 })
                 ->first();
-            if (!$period) {
+            if (! $period) {
                 $this->skipped++;
+
                 continue;
             }
 
             $segmentCount = $this->segmentCount($period);
             if ($segment < 1 || $segment > $segmentCount) {
                 $this->skipped++;
+
                 continue;
             }
 
@@ -72,24 +75,26 @@ class BulkKpiTargetsImport implements ToCollection, WithHeadingRow
                 ->when($kpiCode, function ($q) use ($kpiCode) {
                     $q->where('Code', $kpiCode);
                 })
-                ->when(!$kpiCode && $kpiName, function ($q) use ($kpiName) {
+                ->when(! $kpiCode && $kpiName, function ($q) use ($kpiName) {
                     $q->where('Name', $kpiName);
                 })
                 ->first();
 
-            if (!$kpiItem) {
+            if (! $kpiItem) {
                 $this->skipped++;
+
                 continue;
             }
 
             $weights = KpiPerspectiveWeight::resolveWeights($period->Id, $employee->GradeID, $employee->RoleID);
-            if ($weights->isNotEmpty() && !$weights->has($kpiItem->PerspectiveID)) {
+            if ($weights->isNotEmpty() && ! $weights->has($kpiItem->PerspectiveID)) {
                 $this->skipped++;
+
                 continue;
             }
 
             $key = implode('|', [$employee->Id, $period->Id, (int)$year, $segment]);
-            if (!isset($groups[$key])) {
+            if (! isset($groups[$key])) {
                 $groups[$key] = [
                     'employee' => $employee,
                     'period' => $period,
@@ -119,12 +124,13 @@ class BulkKpiTargetsImport implements ToCollection, WithHeadingRow
                 ->where('PeriodSegment', $group['segment'])
                 ->first();
 
-            if ($goal && !in_array($goal->Status, ['Draft', 'Returned', 'Rejected'], true)) {
+            if ($goal && ! in_array($goal->Status, ['Draft', 'Returned', 'Rejected'], true)) {
                 $this->skipped++;
+
                 continue;
             }
 
-            if (!$goal) {
+            if (! $goal) {
                 $goal = KpiGoal::create([
                     'EmployeeID' => $group['employee']->Id,
                     'PeriodID' => $group['period']->Id,
@@ -189,6 +195,7 @@ class BulkKpiTargetsImport implements ToCollection, WithHeadingRow
         if ($length <= 0 || 12 % $length !== 0) {
             return 1;
         }
+
         return (int)(12 / $length);
     }
 

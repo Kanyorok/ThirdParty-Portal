@@ -49,4 +49,3 @@ class ContractPenaltyEvent extends Model
         return $this->belongsTo(User::class, 'ActionBy', 'Id');
     }
 }
-

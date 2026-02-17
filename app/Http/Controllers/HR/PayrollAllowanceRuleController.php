@@ -16,12 +16,14 @@ class PayrollAllowanceRuleController extends Controller
     {
         $allowance = PayrollAllowance::findOrFail($allowanceId);
         $rules = $allowance->rules()->orderBy('IncomeFrom')->paginate(20);
+
         return view('hr.statutory.allowances.rules.index', compact('allowance', 'rules'));
     }
 
     public function create($allowanceId)
     {
         $allowance = PayrollAllowance::findOrFail($allowanceId);
+
         return view('hr.statutory.allowances.rules.create', compact('allowance'));
     }
 
@@ -43,6 +45,7 @@ class PayrollAllowanceRuleController extends Controller
     {
         $allowance = PayrollAllowance::findOrFail($allowanceId);
         $rule = PayrollAllowanceRule::where('AllowanceID', $allowanceId)->findOrFail($id);
+
         return view('hr.statutory.allowances.rules.edit', compact('allowance', 'rule'));
     }
 
@@ -64,7 +67,7 @@ class PayrollAllowanceRuleController extends Controller
     {
         $rule = PayrollAllowanceRule::where('AllowanceID', $allowanceId)->findOrFail($id);
         $rule->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);
@@ -76,7 +79,7 @@ class PayrollAllowanceRuleController extends Controller
     {
         $rule = PayrollAllowanceRule::where('AllowanceID', $allowanceId)->findOrFail($id);
         $rule->update([
-            'IsActive'   => 1,
+            'IsActive' => 1,
             'ModifiedBy' => auth()->id(),
             'ModifiedOn' => now(),
         ]);
@@ -87,17 +90,17 @@ class PayrollAllowanceRuleController extends Controller
     protected function validateRule(Request $request): array
     {
         return $request->validate([
-            'CalcMethod'   => ['required', 'string', 'max:50', Rule::in(self::ALLOWED_METHODS)],
-            'Rate'         => ['nullable', 'numeric', 'min:0'],
-            'Amount'       => ['nullable', 'numeric', 'min:0'],
-            'IncomeFrom'   => ['nullable', 'numeric', 'min:0'],
-            'IncomeTo'     => ['nullable', 'numeric', 'gte:IncomeFrom'],
-            'MinAmount'    => ['nullable', 'numeric', 'min:0'],
-            'MaxAmount'    => ['nullable', 'numeric', 'min:0'],
-            'FormulaText'  => ['nullable', 'string'],
-            'EffectiveFrom'=> ['required', 'date'],
-            'EffectiveTo'  => ['nullable', 'date', 'after:EffectiveFrom'],
-            'Description'  => ['nullable', 'string', 'max:255'],
+            'CalcMethod' => ['required', 'string', 'max:50', Rule::in(self::ALLOWED_METHODS)],
+            'Rate' => ['nullable', 'numeric', 'min:0'],
+            'Amount' => ['nullable', 'numeric', 'min:0'],
+            'IncomeFrom' => ['nullable', 'numeric', 'min:0'],
+            'IncomeTo' => ['nullable', 'numeric', 'gte:IncomeFrom'],
+            'MinAmount' => ['nullable', 'numeric', 'min:0'],
+            'MaxAmount' => ['nullable', 'numeric', 'min:0'],
+            'FormulaText' => ['nullable', 'string'],
+            'EffectiveFrom' => ['required', 'date'],
+            'EffectiveTo' => ['nullable', 'date', 'after:EffectiveFrom'],
+            'Description' => ['nullable', 'string', 'max:255'],
         ]);
     }
 }

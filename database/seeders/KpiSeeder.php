@@ -182,7 +182,7 @@ class KpiSeeder extends Seeder
 
             foreach ($weights as $weight) {
                 $perspectiveId = DB::table('t_HRKPIPerspectives')->where('Code', $weight['Code'])->value('Id');
-                if (!$perspectiveId) {
+                if (! $perspectiveId) {
                     continue;
                 }
                 DB::table('t_HRKPIPerspectiveWeights')->updateOrInsert(

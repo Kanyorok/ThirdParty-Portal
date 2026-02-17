@@ -6,30 +6,30 @@ use App\Http\Controllers\Controller;
 use App\Models\Finance\SystemBankSetting;
 use App\Models\HR\WorkingDaySetting;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class ConfigController extends Controller
 {
     public function orgProfile()
     {
         $profile = SystemBankSetting::query()->orderByDesc('Id')->first();
+
         return view('hr.config.org', compact('profile'));
     }
 
     public function orgProfileUpdate(Request $request)
     {
         $data = $request->validate([
-            'BankName'      => ['required', 'string', 'max:150'],
-            'ShortName'     => ['nullable', 'string', 'max:50'],
-            'BankCode'      => ['nullable', 'string', 'max:50'],
-            'SwiftCode'     => ['nullable', 'string', 'max:50'],
-            'ClearingCode'  => ['nullable', 'string', 'max:50'],
-            'Address1'      => ['nullable', 'string', 'max:255'],
-            'Address2'      => ['nullable', 'string', 'max:255'],
-            'ZipCode'       => ['nullable', 'string', 'max:50'],
-            'Phone1'        => ['nullable', 'string', 'max:50'],
-            'EmailID'       => ['nullable', 'email', 'max:150'],
-            'Website'       => ['nullable', 'string', 'max:150'],
+            'BankName' => ['required', 'string', 'max:150'],
+            'ShortName' => ['nullable', 'string', 'max:50'],
+            'BankCode' => ['nullable', 'string', 'max:50'],
+            'SwiftCode' => ['nullable', 'string', 'max:50'],
+            'ClearingCode' => ['nullable', 'string', 'max:50'],
+            'Address1' => ['nullable', 'string', 'max:255'],
+            'Address2' => ['nullable', 'string', 'max:255'],
+            'ZipCode' => ['nullable', 'string', 'max:50'],
+            'Phone1' => ['nullable', 'string', 'max:50'],
+            'EmailID' => ['nullable', 'email', 'max:150'],
+            'Website' => ['nullable', 'string', 'max:150'],
             'BankRegNumber' => ['nullable', 'string', 'max:100'],
             'EmployerTaxPIN' => ['nullable', 'string', 'max:50'],
         ]);
@@ -57,7 +57,7 @@ class ConfigController extends Controller
 
         $forceEdit = $request->boolean('edit');
 
-        if ($days->isNotEmpty() && !$forceEdit) {
+        if ($days->isNotEmpty() && ! $forceEdit) {
             return view('hr.config.working-days-view', compact('days', 'weekdays'));
         }
 
@@ -90,7 +90,7 @@ class ConfigController extends Controller
             if ($isWorking) {
                 $request->validate([
                     "start_time.$day" => ['required', 'date_format:H:i'],
-                    "end_time.$day"   => ['required', 'date_format:H:i', "after:start_time.$day"],
+                    "end_time.$day" => ['required', 'date_format:H:i', "after:start_time.$day"],
                 ], [], ['start_time.' . $day => "{$weekdays[$day]} start time", 'end_time.' . $day => "{$weekdays[$day]} end time"]);
                 $request->validate([
                     "day_fraction.$day" => ['required', 'in:1,0.5'],
@@ -104,7 +104,7 @@ class ConfigController extends Controller
             }
 
             $record = WorkingDaySetting::firstOrNew(['DayOfWeek' => $day]);
-            if (!$record->exists) {
+            if (! $record->exists) {
                 $record->CreatedBy = $request->user()->Id ?? $request->user()->id ?? null;
                 $record->CreatedOn = now();
             }
@@ -119,5 +119,4 @@ class ConfigController extends Controller
 
         return redirect()->route('hr.config.workingdays.view')->with('success', 'Working days updated.');
     }
-
 }

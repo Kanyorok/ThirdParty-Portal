@@ -32,15 +32,17 @@ class BulkDeductionsImport implements OnEachRow, WithHeadingRow
         $deductionCode = $data['deductioncode'] ?? $data['deduction_code'] ?? null;
         $deductionName = $data['deductionname'] ?? $data['deduction_name'] ?? null;
 
-        if (!$employeeNo || (!$deductionCode && !$deductionName)) {
+        if (! $employeeNo || (! $deductionCode && ! $deductionName)) {
             $this->skipped++;
+
             return;
         }
 
         $employee = Employee::where('EmployeeNo', $employeeNo)->first();
-        if (!$employee) {
+        if (! $employee) {
             $this->skipped++;
             Log::warning('Deduction import skipped: employee not found.', ['employee_no' => $employeeNo]);
+
             return;
         }
 
@@ -48,22 +50,24 @@ class BulkDeductionsImport implements OnEachRow, WithHeadingRow
             ->when($deductionCode, function ($q) use ($deductionCode) {
                 $q->where('Code', $deductionCode);
             })
-            ->when(!$deductionCode && $deductionName, function ($q) use ($deductionName) {
+            ->when(! $deductionCode && $deductionName, function ($q) use ($deductionName) {
                 $q->where('Name', $deductionName);
             })
             ->first();
 
-        if (!$deduction) {
+        if (! $deduction) {
             $this->skipped++;
             Log::warning('Deduction import skipped: deduction not found.', [
                 'employee_no' => $employeeNo,
                 'deduction' => $deductionCode ?: $deductionName,
             ]);
+
             return;
         }
 
         if ($deduction->IsMandatory) {
             $this->skipped++;
+
             return;
         }
 
@@ -71,6 +75,7 @@ class BulkDeductionsImport implements OnEachRow, WithHeadingRow
         $year = (int)($data['year'] ?? now()->year);
         if ($month < 1 || $month > 12 || $year < 2000) {
             $this->skipped++;
+
             return;
         }
 
@@ -113,6 +118,7 @@ class BulkDeductionsImport implements OnEachRow, WithHeadingRow
             }
             $existing->update($payload);
             $this->updated++;
+
             return;
         }
 

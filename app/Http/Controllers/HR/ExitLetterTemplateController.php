@@ -38,6 +38,7 @@ class ExitLetterTemplateController extends Controller
     public function create()
     {
         $legalTemplates = LegalTemplate::orderBy('Title')->get(['Id', 'Title', 'DocumentType', 'Status']);
+
         return view('hr.exit.config.letter_templates.create', [
             'legalTemplates' => $legalTemplates,
             'letterTypes' => $this->letterTypes(),
@@ -67,6 +68,7 @@ class ExitLetterTemplateController extends Controller
     {
         $template = ExitLetterTemplate::findOrFail($id);
         $legalTemplates = LegalTemplate::orderBy('Title')->get(['Id', 'Title', 'DocumentType', 'Status']);
+
         return view('hr.exit.config.letter_templates.edit', [
             'template' => $template,
             'legalTemplates' => $legalTemplates,

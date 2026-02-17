@@ -13,7 +13,7 @@ class PayrollRunLine extends Model
     protected $fillable = [
         'PayrollRunID','EmployeeID','BasicSalary','TotalAllowances','TotalDeductions','StatutoryDeductions','LoanDeductions',
         'Overtime','AttendanceAdjustments','LeaveAdjustments','GrossPay','NetPay','Currency',
-        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn'
+        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn',
     ];
 
     protected $casts = [

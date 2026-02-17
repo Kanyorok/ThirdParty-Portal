@@ -24,9 +24,9 @@ class WorkSchedule extends Model
     ];
 
     protected $casts = [
-        'WorkDate'  => 'date',
+        'WorkDate' => 'date',
         'CreatedOn' => 'datetime',
-        'ModifiedOn'=> 'datetime',
+        'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
     ];
 

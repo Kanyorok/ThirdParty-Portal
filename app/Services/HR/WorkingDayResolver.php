@@ -54,6 +54,7 @@ class WorkingDayResolver
         }
 
         $this->workingMapCache[$cacheKey] = $map;
+
         return $map;
     }
 
@@ -61,7 +62,7 @@ class WorkingDayResolver
     {
         $start = $this->normalizeTime($start);
         $end = $this->normalizeTime($end);
-        if (!$start || !$end) {
+        if (! $start || ! $end) {
             return 0.0;
         }
         $startTime = Carbon::createFromFormat('H:i:s', $start);
@@ -70,6 +71,7 @@ class WorkingDayResolver
         if ($minutes <= 0) {
             return 0.0;
         }
+
         return round($minutes / 60, 2);
     }
 
@@ -83,6 +85,7 @@ class WorkingDayResolver
             return null;
         }
         $value = explode('.', $value)[0];
+
         return $value;
     }
 }

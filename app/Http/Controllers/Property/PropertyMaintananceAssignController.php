@@ -6,7 +6,7 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\MaintenanceAndIssues\PropertyMaintenanceAssignRequest;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\PropertyManagement\PropertyMaintenanceAssign;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
 use App\Models\ThirdParies\Supplier;

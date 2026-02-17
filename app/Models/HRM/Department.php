@@ -2,7 +2,6 @@
 
 namespace App\Models\HRM;
 
-use App\Models\Auth\User;
 use App\Models\HR\Employee;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;

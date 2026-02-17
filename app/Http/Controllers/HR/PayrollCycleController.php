@@ -13,6 +13,7 @@ class PayrollCycleController extends Controller
     public function index()
     {
         $cycles = PayrollCycle::orderByDesc('Year')->orderByDesc('Month')->paginate(30);
+
         return view('hr.payroll.cycles.index', compact('cycles'));
     }
 
@@ -25,13 +26,14 @@ class PayrollCycleController extends Controller
     {
         $data = $request->validate([
             'Year' => ['required','integer','min:2000','max:2100'],
-            'Month' => ['required','integer','min:1','max:12', Rule::unique('t_HRPayrollCycles')->where(fn($q) => $q->where('Year', $request->Year))],
+            'Month' => ['required','integer','min:1','max:12', Rule::unique('t_HRPayrollCycles')->where(fn ($q) => $q->where('Year', $request->Year))],
             'Notes' => ['nullable','string','max:500'],
         ]);
 
         $openCycle = PayrollCycle::whereIn('Status', ['Open', 'Reopened'])->first();
         if ($openCycle) {
             $period = str_pad((string)$openCycle->Month, 2, '0', STR_PAD_LEFT) . '/' . $openCycle->Year;
+
             throw ValidationException::withMessages([
                 'Year' => 'Payroll cycle ' . $period . ' is still open. Close it before opening another cycle.',
             ]);
@@ -51,6 +53,7 @@ class PayrollCycleController extends Controller
     public function show($id)
     {
         $cycle = PayrollCycle::with('runs')->findOrFail($id);
+
         return view('hr.payroll.cycles.show', compact('cycle'));
     }
 
@@ -64,6 +67,7 @@ class PayrollCycleController extends Controller
             'ModifiedOn' => now(),
             'ModifiedBy' => auth()->id(),
         ]);
+
         return redirect()->route('hr.payroll.cycles.index')->with('success', 'Payroll cycle closed.');
     }
 
@@ -77,6 +81,7 @@ class PayrollCycleController extends Controller
             'ModifiedOn' => now(),
             'ModifiedBy' => auth()->id(),
         ]);
+
         return redirect()->route('hr.payroll.cycles.index')->with('success', 'Payroll cycle reopened.');
     }
 }

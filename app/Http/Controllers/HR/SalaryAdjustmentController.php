@@ -13,12 +13,14 @@ class SalaryAdjustmentController extends Controller
     public function index()
     {
         $adjustments = SalaryAdjustment::with('employee')->orderByDesc('Id')->paginate(30);
+
         return view('hr.payroll.adjustments.index', compact('adjustments'));
     }
 
     public function create()
     {
         $employees = Employee::orderBy('FirstName')->get(['Id','FirstName','LastName']);
+
         return view('hr.payroll.adjustments.create', compact('employees'));
     }
 
@@ -80,6 +82,7 @@ class SalaryAdjustmentController extends Controller
             'ModifiedOn' => now(),
             'ModifiedBy' => auth()->id(),
         ]);
+
         return redirect()->route('hr.payroll.adjustments.index')->with('success', 'Adjustment approved.');
     }
 
@@ -93,6 +96,7 @@ class SalaryAdjustmentController extends Controller
             'ModifiedOn' => now(),
             'ModifiedBy' => auth()->id(),
         ]);
+
         return redirect()->route('hr.payroll.adjustments.index')->with('success', 'Adjustment rejected.');
     }
 }

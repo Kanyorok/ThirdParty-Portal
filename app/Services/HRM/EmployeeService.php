@@ -5,8 +5,8 @@ namespace App\Services\HRM;
 use App\Enums\Employee\GenderEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
-use App\Models\HRM\Department;
 use App\Models\HR\Employee;
+use App\Models\HRM\Department;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
@@ -52,6 +52,7 @@ class EmployeeService
         ]);
 
         activity()->causedBy($actor)->performedOn($employee)->event('create')->log("Added employee {$employee->EmployeeNo}.");
+
         return new self($employee);
     }
 
@@ -65,6 +66,7 @@ class EmployeeService
         $this->employee->setImage($file, $actor, 'ImageId');
 
         activity()->causedBy($actor)->performedOn($this->employee)->event('update')->log("Updated employee Image {$this->employee->EmployeeNo}.");
+
         return $this;
     }
 

@@ -45,13 +45,14 @@ class BulkEmployeesImport implements OnEachRow, WithHeadingRow
         $branchId = $this->resolveBranchId($branchValue);
         $departmentId = $this->resolveDepartmentId($departmentValue);
 
-        if (!$employeeNo || !$firstName || !$lastName || $basicSalary === null || !$branchId || !$departmentId) {
+        if (! $employeeNo || ! $firstName || ! $lastName || $basicSalary === null || ! $branchId || ! $departmentId) {
             $this->skipped++;
             Log::warning('Employee import skipped due to missing required fields.', [
                 'employee_no' => $employeeNo,
                 'first_name' => $firstName,
                 'last_name' => $lastName,
             ]);
+
             return;
         }
 
@@ -65,7 +66,7 @@ class BulkEmployeesImport implements OnEachRow, WithHeadingRow
 
         $bankId = $this->resolveBankId($data['bank'] ?? $data['bankid'] ?? $data['bank_id'] ?? null);
         $bankBranchId = $this->resolveBankBranchId($data['bankbranch'] ?? $data['bank_branch'] ?? $data['bankbranchid'] ?? $data['bankbranch_id'] ?? null, $bankId);
-        if ($bankBranchId && !$bankId) {
+        if ($bankBranchId && ! $bankId) {
             $bankId = BankBranch::where('BranchID', $bankBranchId)->value('BankID');
         }
 
@@ -76,7 +77,7 @@ class BulkEmployeesImport implements OnEachRow, WithHeadingRow
         }
 
         $paymentMode = $data['paymentmode'] ?? $data['payment_mode'] ?? null;
-        if (!$paymentMode) {
+        if (! $paymentMode) {
             $paymentMode = ($data['bankaccount'] ?? $data['bank_account'] ?? null) ? 'Bank' : 'Cash';
         }
 
@@ -116,6 +117,7 @@ class BulkEmployeesImport implements OnEachRow, WithHeadingRow
         if ($employee) {
             if ($employee->Status === 'Exited') {
                 $this->skipped++;
+
                 return;
             }
             $updates = $this->buildUpdatePayload($payload);
@@ -146,10 +148,11 @@ class BulkEmployeesImport implements OnEachRow, WithHeadingRow
             }
 
             $this->updated++;
+
             return;
         }
 
-        if (!$payload['Status']) {
+        if (! $payload['Status']) {
             $payload['Status'] = 'Pending';
         }
         if ($payload['IsActive'] === null) {
@@ -184,6 +187,7 @@ class BulkEmployeesImport implements OnEachRow, WithHeadingRow
                 $updates[$key] = $value;
             }
         }
+
         return $updates;
     }
 
@@ -199,6 +203,7 @@ class BulkEmployeesImport implements OnEachRow, WithHeadingRow
                     $q->where('Id', (int)$value)->orWhere('BranchID', (string)$value);
                 })
                 ->first();
+
             return $branch?->Id;
         }
 
@@ -207,6 +212,7 @@ class BulkEmployeesImport implements OnEachRow, WithHeadingRow
                 $q->where('Name', $value)->orWhere('BranchID', $value);
             })
             ->first();
+
         return $branch?->Id;
     }
 
@@ -222,6 +228,7 @@ class BulkEmployeesImport implements OnEachRow, WithHeadingRow
                     $q->where('Id', (int)$value)->orWhere('DepartmentID', (string)$value);
                 })
                 ->first();
+
             return $dept?->Id;
         }
 
@@ -230,6 +237,7 @@ class BulkEmployeesImport implements OnEachRow, WithHeadingRow
                 $q->where('Name', $value)->orWhere('DepartmentID', $value);
             })
             ->first();
+
         return $dept?->Id;
     }
 
@@ -247,6 +255,7 @@ class BulkEmployeesImport implements OnEachRow, WithHeadingRow
                 $q->where('Code', $value)->orWhere('Name', $value);
             });
         }
+
         return $query->value('Id');
     }
 
@@ -304,6 +313,7 @@ class BulkEmployeesImport implements OnEachRow, WithHeadingRow
             $employee = Employee::where('FirstName', $parts[0])
                 ->where('LastName', $parts[1])
                 ->first();
+
             return $employee?->Id;
         }
 
@@ -326,6 +336,7 @@ class BulkEmployeesImport implements OnEachRow, WithHeadingRow
                     ->orWhere('BankCode', $value);
             });
         }
+
         return $query->value('BankID');
     }
 
@@ -347,6 +358,7 @@ class BulkEmployeesImport implements OnEachRow, WithHeadingRow
                     ->orWhere('BranchCode', $value);
             });
         }
+
         return $query->value('BranchID');
     }
 

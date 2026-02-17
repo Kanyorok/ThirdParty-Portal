@@ -3,8 +3,8 @@
 namespace App\Traits\Controller;
 
 use App\Models\Core\Branch;
-use App\Models\HRM\Department;
 use App\Models\HR\Employee;
+use App\Models\HRM\Department;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;

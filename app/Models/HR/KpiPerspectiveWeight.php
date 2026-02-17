@@ -50,7 +50,8 @@ class KpiPerspectiveWeight extends Model
 
     public function role()
     {
-        return $this->belongsTo(JobRole::class, 'RoleID', 'Id');
+        return $this->belongsTo(JobRole::class, 'RoleID', 'id')
+            ->withoutGlobalScope('job_roles');
     }
 
     public static function resolveWeights(int $periodId, ?int $gradeId = null, ?int $roleId = null)
@@ -66,17 +67,17 @@ class KpiPerspectiveWeight extends Model
             $match = $rows->first(function ($row) use ($gradeId, $roleId) {
                 return $row->GradeID == $gradeId && $row->RoleID == $roleId;
             });
-            if (!$match && $gradeId !== null) {
+            if (! $match && $gradeId !== null) {
                 $match = $rows->first(function ($row) use ($gradeId) {
                     return $row->GradeID == $gradeId && $row->RoleID === null;
                 });
             }
-            if (!$match && $roleId !== null) {
+            if (! $match && $roleId !== null) {
                 $match = $rows->first(function ($row) use ($roleId) {
                     return $row->GradeID === null && $row->RoleID == $roleId;
                 });
             }
-            if (!$match) {
+            if (! $match) {
                 $match = $rows->first(function ($row) {
                     return $row->GradeID === null && $row->RoleID === null;
                 });

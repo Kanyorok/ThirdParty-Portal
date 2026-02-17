@@ -12,12 +12,14 @@ class OvertimeRateController extends Controller
     public function index()
     {
         $rates = OvertimeRate::with('grade')->orderBy('GradeID')->paginate(20);
+
         return view('hr.attendance.overtime-rates.index', compact('rates'));
     }
 
     public function create()
     {
         $grades = JobGrade::orderBy('Name')->get(['Id', 'Name']);
+
         return view('hr.attendance.overtime-rates.create', compact('grades'));
     }
 
@@ -49,6 +51,7 @@ class OvertimeRateController extends Controller
     {
         $rate = OvertimeRate::findOrFail($id);
         $grades = JobGrade::orderBy('Name')->get(['Id', 'Name']);
+
         return view('hr.attendance.overtime-rates.edit', compact('rate', 'grades'));
     }
 

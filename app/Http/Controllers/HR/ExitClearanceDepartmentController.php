@@ -13,6 +13,7 @@ class ExitClearanceDepartmentController extends Controller
     {
         ExitClearanceDepartment::syncFromDepartments(auth()->id());
         $departments = ExitClearanceDepartment::orderBy('Sequence')->orderBy('Name')->get();
+
         return view('hr.exit.config.clearance_departments.index', compact('departments'));
     }
 
@@ -43,6 +44,7 @@ class ExitClearanceDepartmentController extends Controller
     public function edit($id)
     {
         $department = ExitClearanceDepartment::findOrFail($id);
+
         return view('hr.exit.config.clearance_departments.edit', compact('department'));
     }
 

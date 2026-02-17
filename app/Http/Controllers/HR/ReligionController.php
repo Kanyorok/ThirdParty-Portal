@@ -12,6 +12,7 @@ class ReligionController extends Controller
     public function index()
     {
         $religions = Religion::orderBy('Name')->paginate(50);
+
         return view('hr.config.religions.index', compact('religions'));
     }
 
@@ -39,6 +40,7 @@ class ReligionController extends Controller
     public function edit($id)
     {
         $religion = Religion::findOrFail($id);
+
         return view('hr.config.religions.edit', compact('religion'));
     }
 
@@ -66,7 +68,7 @@ class ReligionController extends Controller
         $religion = Religion::findOrFail($id);
 
         $religion->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);

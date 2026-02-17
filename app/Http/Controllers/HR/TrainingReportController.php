@@ -5,10 +5,10 @@ namespace App\Http\Controllers\HR;
 use App\Http\Controllers\Controller;
 use App\Models\HR\Employee;
 use App\Models\HR\TrainingCertificate;
+use App\Models\HR\TrainingProgram;
 use App\Models\HR\TrainingSession;
 use App\Models\HR\TrainingSessionFeedback;
 use App\Models\HR\TrainingSessionParticipant;
-use App\Models\HR\TrainingProgram;
 use Illuminate\Support\Facades\DB;
 
 class TrainingReportController extends Controller
@@ -102,11 +102,11 @@ class TrainingReportController extends Controller
             ->get(['Title', 'BudgetedCost', 'ActualCost']);
 
         $feedbackSummary = TrainingSessionFeedback::select(
-                'SessionID',
-                DB::raw('AVG(CAST(RatingContent as float)) as AvgContent'),
-                DB::raw('AVG(CAST(RatingTrainer as float)) as AvgTrainer'),
-                DB::raw('AVG(CAST(RatingRelevance as float)) as AvgRelevance')
-            )
+            'SessionID',
+            DB::raw('AVG(CAST(RatingContent as float)) as AvgContent'),
+            DB::raw('AVG(CAST(RatingTrainer as float)) as AvgTrainer'),
+            DB::raw('AVG(CAST(RatingRelevance as float)) as AvgRelevance')
+        )
             ->groupBy('SessionID')
             ->get()
             ->keyBy('SessionID');

@@ -14,6 +14,7 @@ class ExitChecklistTemplateController extends Controller
     public function index()
     {
         $templates = ExitChecklistTemplate::orderBy('Name')->get();
+
         return view('hr.exit.config.checklists.index', compact('templates'));
     }
 

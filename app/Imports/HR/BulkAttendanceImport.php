@@ -30,15 +30,17 @@ class BulkAttendanceImport implements OnEachRow, WithHeadingRow
         $logTime = $this->parseDateTime($data['logtime'] ?? $data['log_time'] ?? $data['timestamp'] ?? null);
         $logType = $data['logtype'] ?? $data['log_type'] ?? null;
 
-        if (!$employeeNo || !$logTime || !$logType) {
+        if (! $employeeNo || ! $logTime || ! $logType) {
             $this->skipped++;
+
             return;
         }
 
         $employee = Employee::where('EmployeeNo', $employeeNo)->first();
-        if (!$employee) {
+        if (! $employee) {
             $this->skipped++;
             Log::warning('Attendance import skipped: employee not found.', ['employee_no' => $employeeNo]);
+
             return;
         }
 
@@ -55,6 +57,7 @@ class BulkAttendanceImport implements OnEachRow, WithHeadingRow
 
         if ($exists) {
             $this->skipped++;
+
             return;
         }
 
@@ -84,6 +87,7 @@ class BulkAttendanceImport implements OnEachRow, WithHeadingRow
         if (in_array($value, ['out', 'clockout', 'checkout', 'clock-out', 'check-out'], true)) {
             return 'OUT';
         }
+
         return strtoupper($value);
     }
 

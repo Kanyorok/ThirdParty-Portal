@@ -37,7 +37,7 @@ class DisciplinaryResponseController extends Controller
         ]);
 
         $notice = DisciplinaryNotice::where('CaseID', $case->Id)->where('Id', $data['NoticeID'])->first();
-        if (!$notice) {
+        if (! $notice) {
             return back()->withErrors(['NoticeID' => 'Selected notice does not belong to this case.'])->withInput();
         }
 
@@ -78,7 +78,7 @@ class DisciplinaryResponseController extends Controller
         } catch (\Throwable $e) {
             $extension = strtolower(pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION));
             $enum = \App\Enums\Core\ExtensionsEnum::tryFrom($extension);
-            if (!$enum) {
+            if (! $enum) {
                 throw $e;
             }
             $document = DocumentService::createContent(
@@ -88,6 +88,7 @@ class DisciplinaryResponseController extends Controller
                 $file->getContent(),
                 $actor
             )->document;
+
             return $document->Id;
         }
     }

@@ -326,5 +326,3 @@ Route::middleware(['module:200000'])->namespace('CRM')->prefix('crm')->group(fun
         Route::resource('reports', ReportsController::class)->only(['index', 'show']);
     });
 });
-
-

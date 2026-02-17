@@ -47,6 +47,7 @@ class DepartmentController extends Controller
                         if ($department->head) {
                             return '<span class="badge bg-info">' . $department->head->FirstName . ' ' . $department->head->LastName . '</span>';
                         }
+
                         return '<span class="text-muted">Not Assigned</span>';
                     })->editColumn('DepartmentID', function (Department $department) {
                         return Str::upper($department->DepartmentID);
@@ -69,7 +70,7 @@ class DepartmentController extends Controller
         try {
             return DB::transaction(function () use ($request) {
                 $dpt = DepartmentService::create(
-                    name: $request->string('Name')->trim()->toString(), 
+                    name: $request->string('Name')->trim()->toString(),
                     actor: $request->user(),
                     description: $request->string('Description')->trim()->toString()
                 )->department;
@@ -110,6 +111,7 @@ class DepartmentController extends Controller
             ->get()
             ->map(function ($employee) {
                 $employee->FullName = $employee->FirstName . ' ' . $employee->LastName . ' (' . $employee->EmployeeNo . ')';
+
                 return $employee;
             });
 
@@ -130,6 +132,7 @@ class DepartmentController extends Controller
             ->get()
             ->map(function ($employee) {
                 $employee->FullName = $employee->FirstName . ' ' . $employee->LastName . ' (' . $employee->EmployeeNo . ')';
+
                 return $employee;
             });
 

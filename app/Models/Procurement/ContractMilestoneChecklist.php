@@ -37,4 +37,3 @@ class ContractMilestoneChecklist extends Model
         return $this->belongsTo(User::class, 'FulfilledBy', 'Id');
     }
 }
-

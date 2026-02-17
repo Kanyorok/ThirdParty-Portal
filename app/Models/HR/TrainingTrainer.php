@@ -29,11 +29,11 @@ class TrainingTrainer extends Model
     ];
 
     protected $casts = [
-        'Rate'       => 'decimal:2',
-        'IsActive'   => 'boolean',
-        'CreatedOn'  => 'datetime',
+        'Rate' => 'decimal:2',
+        'IsActive' => 'boolean',
+        'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
-        'DeletedOn'  => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
     public function employee()

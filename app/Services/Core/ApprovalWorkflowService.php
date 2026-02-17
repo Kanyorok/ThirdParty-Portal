@@ -508,6 +508,7 @@ abstract class ApprovalWorkflowService
 
             if ($hasActivePending) {
                 Log::warning("Already submitted (active pending exists)", ['table' => $table, 'sourceId' => $sourceId]);
+
                 throw new ErroredException("This item has already been submitted for approval");
             }
 

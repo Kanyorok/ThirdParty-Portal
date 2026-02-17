@@ -28,7 +28,7 @@ class MonthlyAllowanceController extends Controller
 
         // Filter by employee name if provided
         if ($employeeSearch) {
-            $query->whereHas('employee', function($q) use ($employeeSearch) {
+            $query->whereHas('employee', function ($q) use ($employeeSearch) {
                 $q->where('FirstName', 'LIKE', "%{$employeeSearch}%")
                   ->orWhere('LastName', 'LIKE', "%{$employeeSearch}%");
             });
@@ -39,7 +39,7 @@ class MonthlyAllowanceController extends Controller
             ->orderByDesc('Month')
             ->get()
             ->groupBy('EmployeeID');
-        
+
         return view('hr.payroll.allowances.index', compact('allowances', 'month', 'year', 'employeeSearch'));
     }
 
@@ -51,7 +51,8 @@ class MonthlyAllowanceController extends Controller
             ->where('IsMandatory', 0)
             ->orderBy('Name')
             ->get();
-        return view('hr.payroll.allowances.create', compact('employees','allowances'));
+
+        return view('hr.payroll.allowances.create', compact('employees', 'allowances'));
     }
 
     public function store(Request $request)
@@ -92,6 +93,7 @@ class MonthlyAllowanceController extends Controller
             'ModifiedBy' => auth()->id(),
             'ModifiedOn' => now(),
         ]);
+
         return redirect()->route('hr.payroll.allowances.index')->with('success', 'Allowance approved.');
     }
 
@@ -105,6 +107,7 @@ class MonthlyAllowanceController extends Controller
             'ModifiedBy' => auth()->id(),
             'ModifiedOn' => now(),
         ]);
+
         return redirect()->route('hr.payroll.allowances.index')->with('success', 'Allowance rejected.');
     }
 
@@ -112,6 +115,7 @@ class MonthlyAllowanceController extends Controller
     {
         $row = MonthlyAllowance::findOrFail($id);
         $row->delete();
+
         return redirect()->route('hr.payroll.allowances.index')->with('success', 'Allowance removed.');
     }
 }

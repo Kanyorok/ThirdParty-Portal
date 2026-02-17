@@ -32,14 +32,14 @@ class LeaveType extends Model
     ];
 
     protected $casts = [
-        'AllowCarryForward'  => 'boolean',
+        'AllowCarryForward' => 'boolean',
         'RequiresAttachment' => 'boolean',
-        'IsPaid'             => 'boolean',
-        'IsActive'           => 'boolean',
-        'CreatedOn'          => 'datetime',
-        'ModifiedOn'         => 'datetime',
-        'ApprovedOn'         => 'datetime',
-        'DeletedOn'          => 'datetime',
+        'IsPaid' => 'boolean',
+        'IsActive' => 'boolean',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'ApprovedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
     public function grades()

@@ -4,8 +4,8 @@ namespace App\Http\Controllers\HR;
 
 use App\Http\Controllers\Controller;
 use App\Models\Finance\FinanceGLAccounts;
-use App\Models\HR\PayrollAllowance;
 use App\Models\HR\JobGrade;
+use App\Models\HR\PayrollAllowance;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -14,6 +14,7 @@ class PayrollAllowanceController extends Controller
     public function index()
     {
         $allowances = PayrollAllowance::orderBy('Name')->paginate(20);
+
         return view('hr.statutory.allowances.index', compact('allowances'));
     }
 
@@ -65,7 +66,8 @@ class PayrollAllowanceController extends Controller
             ->orderBy('GLCode')
             ->get(['Id','GLCode','GLName','CBSAccountCode']);
         $selectedGrades = $allowance->grades()->pluck('t_HRJobGrades.Id')->toArray();
-        return view('hr.statutory.allowances.edit', compact('allowance','grades','selectedGrades','glAccounts'));
+
+        return view('hr.statutory.allowances.edit', compact('allowance', 'grades', 'selectedGrades', 'glAccounts'));
     }
 
     public function update(Request $request, $id)

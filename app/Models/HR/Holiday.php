@@ -33,10 +33,10 @@ class Holiday extends Model
     protected $casts = [
         'HolidayDate' => 'date',
         'IsRecurring' => 'boolean',
-        'IsActive'    => 'boolean',
-        'CreatedOn'   => 'datetime',
-        'ModifiedOn'  => 'datetime',
-        'ApprovedOn'  => 'datetime',
-        'DeletedOn'   => 'datetime',
+        'IsActive' => 'boolean',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'ApprovedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 }

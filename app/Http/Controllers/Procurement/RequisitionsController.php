@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Procurement;
 use App\Enums\WorkflowStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\Requisition\RequisitionRequest;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Procurement\Requisitions;
 use App\Services\Procurement\Requisition\RequisitionItemService;

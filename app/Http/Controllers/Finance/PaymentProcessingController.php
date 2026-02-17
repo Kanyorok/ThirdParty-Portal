@@ -154,8 +154,8 @@ class PaymentProcessingController extends Controller
                 'invoice_number' => $invoice->InvoiceNumber,
                 'source_type' => $sourceType,
                 'view_url' => route('invoiceentry.show', $invoice->Id),
-                'invoice_date' => !empty($invoice->InvoiceDate) ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') : null,
-                'due_date' => !empty($invoice->DueDate) ? \Carbon\Carbon::parse($invoice->DueDate)->format('Y-m-d') : null,
+                'invoice_date' => ! empty($invoice->InvoiceDate) ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') : null,
+                'due_date' => ! empty($invoice->DueDate) ? \Carbon\Carbon::parse($invoice->DueDate)->format('Y-m-d') : null,
                 'before_tax' => $invoiceBeforeTax,
                 'tax_amount' => $invoiceTaxAmount,
                 'tax_percentage' => $invoiceTaxPct,
@@ -196,7 +196,7 @@ class PaymentProcessingController extends Controller
                         'milestone_no' => (int) ($milestone->MilestoneNo ?? 0),
                         'title' => $milestone->Title ?? ('Milestone ' . (int) ($allocation->MilestoneID ?? 0)),
                         'status' => $milestone->Status,
-                        'due_date' => !empty($milestone?->PlannedDueDate) ? \Carbon\Carbon::parse($milestone->PlannedDueDate)->format('Y-m-d') : null,
+                        'due_date' => ! empty($milestone?->PlannedDueDate) ? \Carbon\Carbon::parse($milestone->PlannedDueDate)->format('Y-m-d') : null,
                         'billed_amount' => round((float) ($allocation->BilledAmount ?? 0), 2),
                         'required_checklist_total' => (int) $requiredTotal,
                         'required_checklist_fulfilled' => (int) $requiredDone,
@@ -241,7 +241,7 @@ class PaymentProcessingController extends Controller
                     ->select('id', 'GRNID', 'POID', 'ReceivedDate')
                     ->first();
 
-                if ($grn && !empty($grn->GRNID)) {
+                if ($grn && ! empty($grn->GRNID)) {
                     $grnItems = DB::table('t_GoodsReceipts as gr')
                         ->leftJoin('t_Items as i', 'gr.iStockCodeID', '=', 'i.Id')
                         ->where('gr.GRNID', $grn->GRNID)
@@ -272,7 +272,7 @@ class PaymentProcessingController extends Controller
                 'order' => $po ? [
                     'id' => (int) $po->Id,
                     'order_no' => $po->OrderNo,
-                    'order_date' => !empty($po->OrderDate) ? \Carbon\Carbon::parse($po->OrderDate)->format('Y-m-d') : null,
+                    'order_date' => ! empty($po->OrderDate) ? \Carbon\Carbon::parse($po->OrderDate)->format('Y-m-d') : null,
                     'description' => $po->Description,
                     'before_tax' => $ordTotExcl,
                     'tax_percentage' => $taxPct,
@@ -282,7 +282,7 @@ class PaymentProcessingController extends Controller
                     'id' => (int) $grn->id,
                     'grn_id' => $grn->GRNID,
                     'po_ref' => $grn->POID,
-                    'received_date' => !empty($grn->ReceivedDate) ? \Carbon\Carbon::parse($grn->ReceivedDate)->format('Y-m-d') : null,
+                    'received_date' => ! empty($grn->ReceivedDate) ? \Carbon\Carbon::parse($grn->ReceivedDate)->format('Y-m-d') : null,
                     'ordered_qty_total' => (float) $grnItems->sum('po_qty'),
                     'received_qty_total' => (float) $grnItems->sum('received_qty'),
                     'items' => $grnItems,
@@ -327,9 +327,9 @@ class PaymentProcessingController extends Controller
                 $voucher = FinanceVoucher::findOrFail($voucherID);
 
                 //Record as Scheduled or Not scheduled Voucher
-                $isScheduled=false;
-                if($voucher->PaymentType==='Scheduled'){
-                    $isScheduled=true;
+                $isScheduled = false;
+                if ($voucher->PaymentType === 'Scheduled') {
+                    $isScheduled = true;
                 }
 
                 $contractHoldPending = false;

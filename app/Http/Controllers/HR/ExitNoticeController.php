@@ -16,7 +16,6 @@ use App\Services\DMS\DocumentService;
 use App\Services\DMS\RepositoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 
 class ExitNoticeController extends Controller
 {
@@ -28,7 +27,7 @@ class ExitNoticeController extends Controller
                 'notice' => 'Exit notice is only required for employer-initiated exits.',
             ]);
         }
-        if (($exit->exitType?->RequiresCase || $exit->exitType?->IsSummaryDismissal) && !$exit->CaseID) {
+        if (($exit->exitType?->RequiresCase || $exit->exitType?->IsSummaryDismissal) && ! $exit->CaseID) {
             return redirect()->route('hr.exit.requests.show', $exit->Id)->withErrors([
                 'notice' => 'This exit requires a disciplinary case reference before issuing a notice.',
             ]);
@@ -48,7 +47,7 @@ class ExitNoticeController extends Controller
                 'notice' => 'Exit notice is only required for employer-initiated exits.',
             ]);
         }
-        if (($exit->exitType?->RequiresCase || $exit->exitType?->IsSummaryDismissal) && !$exit->CaseID) {
+        if (($exit->exitType?->RequiresCase || $exit->exitType?->IsSummaryDismissal) && ! $exit->CaseID) {
             return redirect()->route('hr.exit.requests.show', $exit->Id)->withErrors([
                 'notice' => 'This exit requires a disciplinary case reference before issuing a notice.',
             ]);
@@ -71,20 +70,20 @@ class ExitNoticeController extends Controller
         $mapping = ExitLetterTemplate::where('LetterType', $data['NoticeType'])->first();
         $templateId = $data['TemplateID'] ?? $mapping?->TemplateID;
 
-        if ($data['DeliveryMethod'] === 'Auto' && !$templateId) {
+        if ($data['DeliveryMethod'] === 'Auto' && ! $templateId) {
             return back()->withErrors(['TemplateID' => 'Select a template or map one for this notice type.'])->withInput();
         }
 
         $notice = ExitNotice::where('ExitID', $exit->Id)->latest('CreatedOn')->first();
         $documentId = $notice?->DocumentId;
 
-        if ($data['DeliveryMethod'] === 'Upload' && !$request->hasFile('NoticeDocument') && !$documentId) {
+        if ($data['DeliveryMethod'] === 'Upload' && ! $request->hasFile('NoticeDocument') && ! $documentId) {
             return back()->withErrors(['NoticeDocument' => 'Upload a signed notice document.'])->withInput();
         }
 
         if ($data['DeliveryMethod'] === 'Auto') {
             $template = $templateId ? LegalTemplate::find($templateId) : null;
-            if (!$documentId || $request->boolean('Regenerate')) {
+            if (! $documentId || $request->boolean('Regenerate')) {
                 try {
                     $documentId = $this->generateNoticeDocument($exit, $template, $data, $actor);
                 } catch (\Throwable $e) {
@@ -196,14 +195,14 @@ class ExitNoticeController extends Controller
     private function sendNoticeEmail(ExitRequest $exit, ?int $documentId, array $data): bool
     {
         $employee = $exit->employee;
-        if (!$employee?->Email) {
+        if (! $employee?->Email) {
             return false;
         }
 
         $subject = 'Exit Notice - ' . $exit->ExitNo;
         $body = '<p>Dear ' . e(trim(($employee->FirstName ?? '') . ' ' . ($employee->LastName ?? ''))) . ',</p>';
         $body .= '<p>This is an exit notice regarding <strong>' . e($exit->exitType?->Name ?? 'exit') . '</strong>.</p>';
-        if (!empty($data['Summary'])) {
+        if (! empty($data['Summary'])) {
             $body .= '<p><strong>Summary:</strong><br>' . nl2br(e($data['Summary'])) . '</p>';
         }
         if ($documentId) {
@@ -224,6 +223,7 @@ class ExitNoticeController extends Controller
                 (string)$employee->Id
             );
             $service->send(true);
+
             return $service->crmEmail->Status === EmailStatusEnum::Sent;
         } catch (\Throwable $e) {
             return false;
@@ -239,7 +239,7 @@ class ExitNoticeController extends Controller
         } catch (\Throwable $e) {
             $extension = strtolower(pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION));
             $enum = ExtensionsEnum::tryFrom($extension);
-            if (!$enum) {
+            if (! $enum) {
                 throw $e;
             }
             $document = DocumentService::createContent(
@@ -249,6 +249,7 @@ class ExitNoticeController extends Controller
                 $file->getContent(),
                 $actor
             )->document;
+
             return $document->Id;
         }
     }

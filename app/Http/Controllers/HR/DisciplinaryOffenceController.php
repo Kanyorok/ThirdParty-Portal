@@ -13,6 +13,7 @@ class DisciplinaryOffenceController extends Controller
     public function index()
     {
         $offences = DisciplinaryOffence::with(['category', 'recommendedSanction'])->orderBy('Name')->get();
+
         return view('hr.discipline.offences.index', compact('offences'));
     }
 
@@ -20,6 +21,7 @@ class DisciplinaryOffenceController extends Controller
     {
         $categories = DisciplinaryOffenceCategory::orderBy('Name')->get();
         $sanctions = DisciplinarySanction::orderBy('Name')->get();
+
         return view('hr.discipline.offences.create', compact('categories', 'sanctions'));
     }
 
@@ -61,6 +63,7 @@ class DisciplinaryOffenceController extends Controller
         $offence = DisciplinaryOffence::findOrFail($id);
         $categories = DisciplinaryOffenceCategory::orderBy('Name')->get();
         $sanctions = DisciplinarySanction::orderBy('Name')->get();
+
         return view('hr.discipline.offences.edit', compact('offence', 'categories', 'sanctions'));
     }
 

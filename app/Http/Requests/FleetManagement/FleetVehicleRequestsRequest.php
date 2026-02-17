@@ -23,7 +23,7 @@ class FleetVehicleRequestsRequest extends FormRequest
     {
 
         return [
-            'RequestedBy' => 'required|exists:t_Employees,Id',
+            'RequestedBy' => 'required|exists:t_HREmployees,Id',
             'Department' => 'required|exists:t_Departments,Id',
             'RequestDate' => 'required|date',
             'TripNo' => 'required|exists:t_TripLogs,Id',
@@ -34,7 +34,7 @@ class FleetVehicleRequestsRequest extends FormRequest
             'PassengerCount' => 'nullable|integer|min:1',
             'PreferredVehicleType' => 'nullable|string|exists:t_CodeDetails,ID',
             'Status' => 'nullable|string|exists:t_CodeDetails,ID',
-            'ApprovedBy' => 'nullable|exists:t_Employees,Id',
+            'ApprovedBy' => 'nullable|exists:t_HREmployees,Id',
             'ApprovedOn' => 'nullable|date|after_or_equal:today',
             'RejectionReason' => 'nullable|string|max:255',
         ];

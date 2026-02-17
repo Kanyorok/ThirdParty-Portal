@@ -36,9 +36,9 @@ class TrainingSession extends Model
 
     protected $casts = [
         'StartDate' => 'date',
-        'EndDate'   => 'date',
+        'EndDate' => 'date',
         'CreatedOn' => 'datetime',
-        'ModifiedOn'=> 'datetime',
+        'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
     ];
 

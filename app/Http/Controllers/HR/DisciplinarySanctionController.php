@@ -11,6 +11,7 @@ class DisciplinarySanctionController extends Controller
     public function index()
     {
         $sanctions = DisciplinarySanction::orderBy('Name')->get();
+
         return view('hr.discipline.sanctions.index', compact('sanctions'));
     }
 
@@ -57,6 +58,7 @@ class DisciplinarySanctionController extends Controller
     public function edit($id)
     {
         $sanction = DisciplinarySanction::findOrFail($id);
+
         return view('hr.discipline.sanctions.edit', compact('sanction'));
     }
 

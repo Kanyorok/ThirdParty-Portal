@@ -12,7 +12,7 @@ class MonthlyAllowance extends Model
 
     protected $fillable = [
         'EmployeeID','AllowanceID','Name','Amount','Month','Year','IsTaxable','IsRecurring','Status',
-        'CreatedBy','CreatedOn','ApprovedBy','ApprovedOn','ModifiedBy','ModifiedOn'
+        'CreatedBy','CreatedOn','ApprovedBy','ApprovedOn','ModifiedBy','ModifiedOn',
     ];
 
     protected $casts = [

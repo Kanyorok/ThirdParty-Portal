@@ -14,8 +14,10 @@ trait ImportHelper
         }
         if (is_string($value)) {
             $trimmed = trim($value);
+
             return $trimmed === '' ? null : $trimmed;
         }
+
         return $value;
     }
 
@@ -29,6 +31,7 @@ trait ImportHelper
         try {
             if (is_numeric($value)) {
                 $dateTime = ExcelDate::excelToDateTimeObject((float)$value);
+
                 return Carbon::instance($dateTime)->format('Y-m-d');
             }
 
@@ -48,6 +51,7 @@ trait ImportHelper
         try {
             if (is_numeric($value)) {
                 $dateTime = ExcelDate::excelToDateTimeObject((float)$value);
+
                 return Carbon::instance($dateTime)->format('Y-m-d H:i:s');
             }
 
@@ -75,6 +79,7 @@ trait ImportHelper
         if (in_array($normalized, ['0', 'false', 'no', 'n', 'off'], true)) {
             return false;
         }
+
         return null;
     }
 
@@ -97,6 +102,7 @@ trait ImportHelper
         if (preg_match('/(\\d+)/', $upper, $matches)) {
             return (int)$matches[1];
         }
+
         return null;
     }
 
@@ -116,6 +122,7 @@ trait ImportHelper
         if (in_array($normalized, ['other', 'o'], true)) {
             return 'Other';
         }
+
         return null;
     }
 }

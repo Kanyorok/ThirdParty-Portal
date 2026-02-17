@@ -11,6 +11,7 @@ class DisciplinaryPolicyController extends Controller
     public function index()
     {
         $policies = DisciplinaryPolicy::orderByDesc('EffectiveFrom')->get();
+
         return view('hr.discipline.policies.index', compact('policies'));
     }
 
@@ -55,6 +56,7 @@ class DisciplinaryPolicyController extends Controller
     public function edit($id)
     {
         $policy = DisciplinaryPolicy::findOrFail($id);
+
         return view('hr.discipline.policies.edit', compact('policy'));
     }
 

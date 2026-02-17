@@ -11,6 +11,7 @@ class DisciplinaryOffenceCategoryController extends Controller
     public function index()
     {
         $categories = DisciplinaryOffenceCategory::orderBy('Name')->get();
+
         return view('hr.discipline.offence_categories.index', compact('categories'));
     }
 
@@ -41,6 +42,7 @@ class DisciplinaryOffenceCategoryController extends Controller
     public function edit($id)
     {
         $category = DisciplinaryOffenceCategory::findOrFail($id);
+
         return view('hr.discipline.offence_categories.edit', compact('category'));
     }
 

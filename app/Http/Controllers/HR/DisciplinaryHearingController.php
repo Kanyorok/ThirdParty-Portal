@@ -40,9 +40,9 @@ class DisciplinaryHearingController extends Controller
     public function store(Request $request, $caseId)
     {
         $case = DisciplinaryCase::with('policy')->findOrFail($caseId);
-        if (!$case->policy?->AllowDirectHearing) {
+        if (! $case->policy?->AllowDirectHearing) {
             $hasApprovedInvestigation = $case->investigations()->where('Status', 'Approved')->exists();
-            if (!$hasApprovedInvestigation) {
+            if (! $hasApprovedInvestigation) {
                 return redirect()->route('hr.discipline.cases.hearing.edit', $case->Id)->withErrors([
                     'status' => 'Investigation approval is required before scheduling a hearing.',
                 ]);
@@ -64,7 +64,7 @@ class DisciplinaryHearingController extends Controller
 
         $hearing = DisciplinaryHearing::where('CaseID', $case->Id)->latest('CreatedOn')->first();
         $createSubsequent = $request->boolean('CreateSubsequent', false);
-        if ($hearing && !$createSubsequent) {
+        if ($hearing && ! $createSubsequent) {
             $hearing->update([
                 'HearingDate' => $data['HearingDate'],
                 'Venue' => $data['Venue'] ?? null,
@@ -96,7 +96,7 @@ class DisciplinaryHearingController extends Controller
     {
         $case = DisciplinaryCase::findOrFail($caseId);
         $hearing = DisciplinaryHearing::where('CaseID', $case->Id)->latest('CreatedOn')->first();
-        if (!$hearing) {
+        if (! $hearing) {
             return redirect()->route('hr.discipline.cases.hearing.edit', $case->Id)->withErrors([
                 'status' => 'Save hearing details first.',
             ]);
@@ -127,7 +127,7 @@ class DisciplinaryHearingController extends Controller
     {
         $case = DisciplinaryCase::findOrFail($caseId);
         $hearing = DisciplinaryHearing::where('CaseID', $case->Id)->latest('CreatedOn')->first();
-        if (!$hearing) {
+        if (! $hearing) {
             return redirect()->route('hr.discipline.cases.hearing.edit', $case->Id)->withErrors([
                 'status' => 'Save hearing details first.',
             ]);

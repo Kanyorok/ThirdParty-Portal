@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\HR;
 
 use App\Http\Controllers\Controller;
+use App\Models\HR\Employee;
 use App\Models\HR\Gratuity;
 use App\Models\HR\PayrollRunLine;
-use App\Models\HR\Employee;
 use Illuminate\Http\Request;
 
 class GratuityController extends Controller
@@ -20,12 +20,14 @@ class GratuityController extends Controller
             $query->where('Status', $request->status);
         }
         $rows = $query->paginate(50);
+
         return view('hr.payroll.gratuity.index', compact('rows'));
     }
 
     public function create()
     {
         $year = now()->year;
+
         return view('hr.payroll.gratuity.create', compact('year'));
     }
 
@@ -41,8 +43,8 @@ class GratuityController extends Controller
         $rate = (float)$data['RatePercent'];
 
         $grossByEmployee = PayrollRunLine::whereHas('run.cycle', function ($q) use ($year) {
-                $q->where('Year', $year);
-            })
+            $q->where('Year', $year);
+        })
             ->groupBy('EmployeeID')
             ->selectRaw('EmployeeID, SUM(GrossPay) as GrossPay')
             ->get()

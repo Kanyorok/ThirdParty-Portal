@@ -66,7 +66,7 @@ class TrainingProgramController extends Controller
             'TargetGrades' => ['array'],
             'TargetGrades.*' => ['integer', 'exists:t_HRJobGrades,Id'],
             'TargetRoles' => ['array'],
-            'TargetRoles.*' => ['integer', 'exists:t_HRJobRoles,Id'],
+            'TargetRoles.*' => ['integer', 'exists:t_Roles,id'],
         ]);
 
         $data['IsMandatory'] = $request->boolean('IsMandatory', false);
@@ -147,7 +147,7 @@ class TrainingProgramController extends Controller
             'TargetGrades' => ['array'],
             'TargetGrades.*' => ['integer', 'exists:t_HRJobGrades,Id'],
             'TargetRoles' => ['array'],
-            'TargetRoles.*' => ['integer', 'exists:t_HRJobRoles,Id'],
+            'TargetRoles.*' => ['integer', 'exists:t_Roles,id'],
         ]);
 
         $data['IsMandatory'] = $request->boolean('IsMandatory', false);

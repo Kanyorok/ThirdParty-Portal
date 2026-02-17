@@ -12,6 +12,7 @@ class KpiRatingScaleController extends Controller
     public function index()
     {
         $scales = KpiRatingScale::orderBy('Name')->paginate(20);
+
         return view('hr.config.kpi.rating-scales.index', compact('scales'));
     }
 
@@ -23,10 +24,10 @@ class KpiRatingScaleController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'Code'        => ['required', 'string', 'max:50', 'unique:t_HRKPIRatingScales,Code'],
-            'Name'        => ['required', 'string', 'max:150'],
-            'MinScore'    => ['required', 'numeric'],
-            'MaxScore'    => ['required', 'numeric', 'gt:MinScore'],
+            'Code' => ['required', 'string', 'max:50', 'unique:t_HRKPIRatingScales,Code'],
+            'Name' => ['required', 'string', 'max:150'],
+            'MinScore' => ['required', 'numeric'],
+            'MaxScore' => ['required', 'numeric', 'gt:MinScore'],
             'Description' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -42,6 +43,7 @@ class KpiRatingScaleController extends Controller
     public function edit($id)
     {
         $scale = KpiRatingScale::findOrFail($id);
+
         return view('hr.config.kpi.rating-scales.edit', compact('scale'));
     }
 
@@ -49,12 +51,12 @@ class KpiRatingScaleController extends Controller
     {
         $scale = KpiRatingScale::findOrFail($id);
         $data = $request->validate([
-            'Code'        => ['required', 'string', 'max:50', Rule::unique('t_HRKPIRatingScales', 'Code')->ignore($scale->Id, 'Id')],
-            'Name'        => ['required', 'string', 'max:150'],
-            'MinScore'    => ['required', 'numeric'],
-            'MaxScore'    => ['required', 'numeric', 'gt:MinScore'],
+            'Code' => ['required', 'string', 'max:50', Rule::unique('t_HRKPIRatingScales', 'Code')->ignore($scale->Id, 'Id')],
+            'Name' => ['required', 'string', 'max:150'],
+            'MinScore' => ['required', 'numeric'],
+            'MaxScore' => ['required', 'numeric', 'gt:MinScore'],
             'Description' => ['nullable', 'string', 'max:255'],
-            'IsActive'    => ['nullable', 'boolean'],
+            'IsActive' => ['nullable', 'boolean'],
         ]);
 
         $data['IsActive'] = $request->has('IsActive') ? $request->boolean('IsActive') : $scale->IsActive;
@@ -70,7 +72,7 @@ class KpiRatingScaleController extends Controller
     {
         $scale = KpiRatingScale::findOrFail($id);
         $scale->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);

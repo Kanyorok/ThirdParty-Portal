@@ -2,16 +2,8 @@
     <form action="{{ route('roles.update',[$role->id]) }}" method="post" id="updateRoleForm"> @csrf
         <div class="col-12 mb-3">@method('put')
             <label class="form-label" for="RoleName">Role Name <span class="text-danger">*</span></label>
-            <select class="form-select" id="RoleName" name="RoleName" required>
-                <option value="">Select Job Role</option>
-                @foreach(($jobRoles ?? []) as $jobRole)
-                    <option value="{{ $jobRole->Name }}" {{ $role->name == $jobRole->Name ? 'selected' : '' }}>
-                        {{ $jobRole->Code }} - {{ $jobRole->Name }}
-                    </option>
-                @endforeach
-            </select>
+            <input type="text" class="form-control" id="RoleName" name="RoleName" value="{{ $role->name }}" readonly>
             <p id="RoleName_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-            <div class="form-text">Select a job role from the Human Capital Suite module</div>
         </div>
 
         <div class="col-12 mb-3">

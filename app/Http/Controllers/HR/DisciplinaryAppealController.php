@@ -68,7 +68,7 @@ class DisciplinaryAppealController extends Controller
             ]);
         }
 
-        if (!empty($data['PanelMembers'])) {
+        if (! empty($data['PanelMembers'])) {
             foreach ($data['PanelMembers'] as $index => $employeeId) {
                 DisciplinaryAppealPanel::firstOrCreate([
                     'AppealID' => $appeal->Id,
@@ -106,7 +106,7 @@ class DisciplinaryAppealController extends Controller
     {
         $case = DisciplinaryCase::findOrFail($caseId);
         $appeal = DisciplinaryAppeal::where('CaseID', $case->Id)->latest('CreatedOn')->first();
-        if (!$appeal) {
+        if (! $appeal) {
             return redirect()->route('hr.discipline.cases.appeal.edit', $case->Id)->withErrors([
                 'status' => 'No appeal record found.',
             ]);

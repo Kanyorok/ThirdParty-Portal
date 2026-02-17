@@ -11,6 +11,7 @@ class StatutoryHousingLevyController extends Controller
     public function index()
     {
         $rates = StatutoryHousingLevyRate::orderByDesc('EffectiveFrom')->paginate(20);
+
         return view('hr.statutory.housinglevy.index', compact('rates'));
     }
 
@@ -22,11 +23,11 @@ class StatutoryHousingLevyController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'Rate'          => ['required', 'numeric', 'min:0'],
-            'CapAmount'     => ['nullable', 'numeric', 'min:0'],
+            'Rate' => ['required', 'numeric', 'min:0'],
+            'CapAmount' => ['nullable', 'numeric', 'min:0'],
             'EffectiveFrom' => ['required', 'date'],
-            'EffectiveTo'   => ['nullable', 'date', 'after:EffectiveFrom'],
-            'Description'   => ['nullable', 'string', 'max:255'],
+            'EffectiveTo' => ['nullable', 'date', 'after:EffectiveFrom'],
+            'Description' => ['nullable', 'string', 'max:255'],
         ]);
 
         $data['IsActive'] = 1;
@@ -41,6 +42,7 @@ class StatutoryHousingLevyController extends Controller
     public function edit($id)
     {
         $rate = StatutoryHousingLevyRate::findOrFail($id);
+
         return view('hr.statutory.housinglevy.edit', compact('rate'));
     }
 
@@ -48,12 +50,12 @@ class StatutoryHousingLevyController extends Controller
     {
         $rate = StatutoryHousingLevyRate::findOrFail($id);
         $data = $request->validate([
-            'Rate'          => ['required', 'numeric', 'min:0'],
-            'CapAmount'     => ['nullable', 'numeric', 'min:0'],
+            'Rate' => ['required', 'numeric', 'min:0'],
+            'CapAmount' => ['nullable', 'numeric', 'min:0'],
             'EffectiveFrom' => ['required', 'date'],
-            'EffectiveTo'   => ['nullable', 'date', 'after:EffectiveFrom'],
-            'Description'   => ['nullable', 'string', 'max:255'],
-            'IsActive'      => ['nullable', 'boolean'],
+            'EffectiveTo' => ['nullable', 'date', 'after:EffectiveFrom'],
+            'Description' => ['nullable', 'string', 'max:255'],
+            'IsActive' => ['nullable', 'boolean'],
         ]);
 
         $data['IsActive'] = $request->has('IsActive') ? $request->boolean('IsActive') : $rate->IsActive;
@@ -69,7 +71,7 @@ class StatutoryHousingLevyController extends Controller
     {
         $rate = StatutoryHousingLevyRate::findOrFail($id);
         $rate->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);

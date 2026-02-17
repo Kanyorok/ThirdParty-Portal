@@ -54,7 +54,7 @@ class DisciplinaryDecisionController extends Controller
         $response = $notice
             ? DisciplinaryResponse::where('NoticeID', $notice->Id)->latest('SubmittedOn')->first()
             : DisciplinaryResponse::where('CaseID', $case->Id)->latest('SubmittedOn')->first();
-        if (!$response && $notice?->ResponseDueOn) {
+        if (! $response && $notice?->ResponseDueOn) {
             $deadline = Carbon::parse($notice->ResponseDueOn)->endOfDay();
             if (now()->lessThan($deadline)) {
                 return back()->withErrors(['Response' => 'Response deadline has not passed.'])->withInput();
@@ -62,10 +62,10 @@ class DisciplinaryDecisionController extends Controller
         }
 
         $hearing = DisciplinaryHearing::where('CaseID', $case->Id)->latest('CreatedOn')->first();
-        if (($case->HearingRequired || $sanction?->IsSuspension || $sanction?->UpdatesEmploymentStatus) && !$hearing) {
+        if (($case->HearingRequired || $sanction?->IsSuspension || $sanction?->UpdatesEmploymentStatus) && ! $hearing) {
             return back()->withErrors(['Hearing' => 'Hearing must be scheduled before this decision.'])->withInput();
         }
-        if (($sanction?->IsSuspension || $sanction?->UpdatesEmploymentStatus) && !$hearing?->MinutesDocumentId) {
+        if (($sanction?->IsSuspension || $sanction?->UpdatesEmploymentStatus) && ! $hearing?->MinutesDocumentId) {
             return back()->withErrors(['Hearing' => 'Hearing minutes are required for suspension/termination.'])->withInput();
         }
 

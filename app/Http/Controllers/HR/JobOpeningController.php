@@ -60,7 +60,7 @@ class JobOpeningController extends Controller
         if ($request->filled('requisition_id')) {
             $requisition = $requisitions->firstWhere('Id', (int)$request->requisition_id);
         }
-        
+
         // Auto-generate opening code
         $generatedCode = $this->generateOpeningCode();
 
@@ -87,7 +87,7 @@ class JobOpeningController extends Controller
             'DepartmentID' => ['nullable', 'integer', 'exists:t_Departments,Id'],
             'BranchID' => ['nullable', 'integer', 'exists:t_Branches,Id'],
             'GradeID' => ['nullable', 'integer', 'exists:t_HRJobGrades,Id'],
-            'RoleID' => ['nullable', 'integer', 'exists:t_HRJobRoles,Id'],
+            'RoleID' => ['nullable', 'integer', 'exists:t_Roles,id'],
             'EmploymentType' => ['nullable', 'string', 'max:50'],
             'ContractType' => ['nullable', 'string', 'max:50'],
             'Vacancies' => ['required', 'integer', 'min:1'],
@@ -166,7 +166,7 @@ class JobOpeningController extends Controller
             'DepartmentID' => ['nullable', 'integer', 'exists:t_Departments,Id'],
             'BranchID' => ['nullable', 'integer', 'exists:t_Branches,Id'],
             'GradeID' => ['nullable', 'integer', 'exists:t_HRJobGrades,Id'],
-            'RoleID' => ['nullable', 'integer', 'exists:t_HRJobRoles,Id'],
+            'RoleID' => ['nullable', 'integer', 'exists:t_Roles,id'],
             'EmploymentType' => ['nullable', 'string', 'max:50'],
             'ContractType' => ['nullable', 'string', 'max:50'],
             'Vacancies' => ['required', 'integer', 'min:1'],
@@ -225,12 +225,12 @@ class JobOpeningController extends Controller
     {
         $year = now()->year;
         $prefix = "JOB-{$year}-";
-        
+
         // Get the last opening for this year
         $lastOpening = JobOpening::where('Code', 'like', "{$prefix}%")
             ->orderByDesc('Code')
             ->first();
-        
+
         if ($lastOpening) {
             // Extract the number from the last code and increment
             $lastNumber = (int) substr($lastOpening->Code, -4);
@@ -239,7 +239,7 @@ class JobOpeningController extends Controller
             // First opening of the year
             $newNumber = 1;
         }
-        
+
         // Format with leading zeros (4 digits)
         return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }

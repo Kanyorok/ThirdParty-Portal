@@ -74,10 +74,10 @@ class PaymentVoucherController extends Controller
 
         $year = now()->year;
         $lastId = FinanceVoucher::max('Id') + 1;
-        $VoucherNo = 'VCN-' . $year .'-'. str_pad($lastId, 6,'0', STR_PAD_LEFT);
-        $invoices=[];
+        $VoucherNo = 'VCN-' . $year .'-'. str_pad($lastId, 6, '0', STR_PAD_LEFT);
+        $invoices = [];
         $contractExceptions = [];
-        $data=FinanceInvoiceEntry::with('currency:Id,Code')
+        $data = FinanceInvoiceEntry::with('currency:Id,Code')
                 ->select(
                     'Id',
                     'InvoiceNumber',
@@ -103,9 +103,9 @@ class PaymentVoucherController extends Controller
             }
 
             //Get the invoice balance
-            $invoiceAmt=(float) ($value->TotalAmount ?? $value->InvoiceAmount ?? 0);
-            $amtPaidOnInvoice=FinanceVoucher::where('InvoiceNo', $value->Id)->where('ApprovalStatus','posted')->sum('TotalAmount');
-            $balance=round($invoiceAmt-(float)$amtPaidOnInvoice, 2);
+            $invoiceAmt = (float) ($value->TotalAmount ?? $value->InvoiceAmount ?? 0);
+            $amtPaidOnInvoice = FinanceVoucher::where('InvoiceNo', $value->Id)->where('ApprovalStatus', 'posted')->sum('TotalAmount');
+            $balance = round($invoiceAmt - (float)$amtPaidOnInvoice, 2);
             //Dont store invoies that are fully paid already
             if ($balance <= 0) {
                 continue;
@@ -124,15 +124,15 @@ class PaymentVoucherController extends Controller
                     'CurrencyCode' => $value->currency->Code ?? 'KES',
                 ];
             }
-            $invoices[]=[
-                'Id'=>$value->Id,
-                'InvoiceNumber'=>$value->InvoiceNumber,
+            $invoices[] = [
+                'Id' => $value->Id,
+                'InvoiceNumber' => $value->InvoiceNumber,
                 // ThirdPartyID is stored in SupplierID field for AP module
                 'ThirdPartyID' => $value->SupplierID,
-                'CurrencyID'=>$value->CurrencyID,
-                'InvoiceAmount'=>$invoiceAmt,
-                'CurrencyCode'=>$value->currency->Code ?? 'KES',
-                'Balance'=>$balance,
+                'CurrencyID' => $value->CurrencyID,
+                'InvoiceAmount' => $invoiceAmt,
+                'CurrencyCode' => $value->currency->Code ?? 'KES',
+                'Balance' => $balance,
                 'InvoiceSourceType' => $value->InvoiceSourceType ?? 'PO',
                 'IsOnHold' => (bool) ($value->IsOnHold ?? false),
                 'MilestoneEligibilityStatus' => (string) ($value->MilestoneEligibilityStatus ?? ''),
@@ -169,15 +169,15 @@ class PaymentVoucherController extends Controller
         ]);
 
         //Check if the Voucher amt exceeds the Invoice Balance and return back with an error
-        $invoice=FinanceInvoiceEntry::find($validated['InvoiceNo']);
+        $invoice = FinanceInvoiceEntry::find($validated['InvoiceNo']);
         if (strtoupper((string) ($invoice->InvoiceSourceType ?? 'PO')) === 'CONTRACT') {
             app(ContractInvoiceEligibilityService::class)->refreshInvoiceHoldStatus($invoice);
             $invoice->refresh();
         }
-        $invoiceAmt=(float) ($invoice->TotalAmount ?? $invoice->InvoiceAmount ?? 0);
-        $amtPaidOnInvoice=FinanceVoucher::where('InvoiceNo', $invoice->Id)->where('ApprovalStatus','posted')->sum('TotalAmount');
-        $balance=round($invoiceAmt-(float)$amtPaidOnInvoice, 2);
-        if($balance==0){
+        $invoiceAmt = (float) ($invoice->TotalAmount ?? $invoice->InvoiceAmount ?? 0);
+        $amtPaidOnInvoice = FinanceVoucher::where('InvoiceNo', $invoice->Id)->where('ApprovalStatus', 'posted')->sum('TotalAmount');
+        $balance = round($invoiceAmt - (float)$amtPaidOnInvoice, 2);
+        if ($balance == 0) {
             return back()->with('error', 'This Invoice is already settled. Current balance is '.$balance);
         }
         if ($balance < $validated['TotAmnt']) {
@@ -240,17 +240,17 @@ class PaymentVoucherController extends Controller
 
         $year = now()->year;
         $lastId = FinanceVoucher::max('Id') + 1;
-        $VoucherNo = 'VCN-' . $year .'-'. str_pad($lastId, 6,'0', STR_PAD_LEFT);
-        $invoices=[];
-        $data=FinanceInvoiceEntry::with('currency:Id,Code')
-                ->select('Id', 'InvoiceNumber','SupplierID','CurrencyID', 'InvoiceAmount', 'TotalAmount')
+        $VoucherNo = 'VCN-' . $year .'-'. str_pad($lastId, 6, '0', STR_PAD_LEFT);
+        $invoices = [];
+        $data = FinanceInvoiceEntry::with('currency:Id,Code')
+                ->select('Id', 'InvoiceNumber', 'SupplierID', 'CurrencyID', 'InvoiceAmount', 'TotalAmount')
                 ->where('ApprovalStatus', 'posted')
                 ->get();
         foreach ($data as $value) {
             //Get the invoice balance
-            $invoiceAmt=(float) ($value->TotalAmount ?? $value->InvoiceAmount ?? 0);
-            $amtPaidOnInvoice=FinanceVoucher::where('InvoiceNo', $value->Id)->where('ApprovalStatus','posted')->sum('TotalAmount');
-            $balance=round($invoiceAmt-(float)$amtPaidOnInvoice, 2);
+            $invoiceAmt = (float) ($value->TotalAmount ?? $value->InvoiceAmount ?? 0);
+            $amtPaidOnInvoice = FinanceVoucher::where('InvoiceNo', $value->Id)->where('ApprovalStatus', 'posted')->sum('TotalAmount');
+            $balance = round($invoiceAmt - (float)$amtPaidOnInvoice, 2);
             //Dont store invoies that are fully paid already
             if ($balance <= 0) {
                 continue;
@@ -259,10 +259,10 @@ class PaymentVoucherController extends Controller
                 'Id' => $value->Id,
                 'InvoiceNumber' => $value->InvoiceNumber,
                 'ThirdPartyID' => $value->SupplierID,
-                'CurrencyID'=>$value->CurrencyID,
-                'InvoiceAmount'=>$invoiceAmt,
-                'CurrencyCode'=>$value->currency->Code ?? 'KES',
-                'Balance'=>$balance
+                'CurrencyID' => $value->CurrencyID,
+                'InvoiceAmount' => $invoiceAmt,
+                'CurrencyCode' => $value->currency->Code ?? 'KES',
+                'Balance' => $balance,
             ];
         }
         $paymentMethods = CodeDetail::where('CodeID', 'PaymentMethod')->get();
@@ -295,15 +295,15 @@ class PaymentVoucherController extends Controller
             'Description' => 'required|string',
         ]);
 
-        $invoice=FinanceInvoiceEntry::find($validated['InvoiceNo']);
+        $invoice = FinanceInvoiceEntry::find($validated['InvoiceNo']);
         if (strtoupper((string) ($invoice->InvoiceSourceType ?? 'PO')) === 'CONTRACT') {
             app(ContractInvoiceEligibilityService::class)->refreshInvoiceHoldStatus($invoice);
             $invoice->refresh();
         }
-        $invoiceAmt=(float) ($invoice->TotalAmount ?? $invoice->InvoiceAmount ?? 0);
-        $amtPaidOnInvoice=FinanceVoucher::where('InvoiceNo', $invoice->Id)->where('ApprovalStatus','posted')->sum('TotalAmount');
-        $balance=round($invoiceAmt-(float)$amtPaidOnInvoice, 2);
-        if($balance==0){
+        $invoiceAmt = (float) ($invoice->TotalAmount ?? $invoice->InvoiceAmount ?? 0);
+        $amtPaidOnInvoice = FinanceVoucher::where('InvoiceNo', $invoice->Id)->where('ApprovalStatus', 'posted')->sum('TotalAmount');
+        $balance = round($invoiceAmt - (float)$amtPaidOnInvoice, 2);
+        if ($balance == 0) {
             return back()->with('error', 'This Invoice is already settled. Current balance is '.$balance);
         }
         if ($balance < $validated['TotAmnt']) {
@@ -370,7 +370,7 @@ class PaymentVoucherController extends Controller
             ? $this->buildInvoicePreviewPayload($voucher->invoice)
             : null;
 
-        $amtPaidOnInvoice=FinanceVoucher::where('InvoiceNo', $voucher->InvoiceNo)->where('ApprovalStatus','posted')->sum('TotalAmount');
+        $amtPaidOnInvoice = FinanceVoucher::where('InvoiceNo', $voucher->InvoiceNo)->where('ApprovalStatus', 'posted')->sum('TotalAmount');
         $invoiceReferenceAmount = (float) ($voucher->invoice->TotalAmount ?? $voucher->invoice->InvoiceAmount ?? 0);
         $invoiceBalance = round($invoiceReferenceAmount - (float) $amtPaidOnInvoice, 2);
         $statusClass = match($voucher->ApprovalStatus) {
@@ -383,7 +383,8 @@ class PaymentVoucherController extends Controller
         // Convert Amount into words using inbuilt php function
 
         $amountInWords = $this->numberToWords($voucher->TotalAmount);
-        return view('finance.accountspayable.paymentvoucher.show', compact('voucher', 'amtPaidOnInvoice','statusClass', 'amountInWords', 'invoiceReferenceAmount', 'invoiceBalance', 'invoicePayload'));
+
+        return view('finance.accountspayable.paymentvoucher.show', compact('voucher', 'amtPaidOnInvoice', 'statusClass', 'amountInWords', 'invoiceReferenceAmount', 'invoiceBalance', 'invoicePayload'));
     }
 
     public function invoicePreview(int $invoiceId)
@@ -436,8 +437,8 @@ class PaymentVoucherController extends Controller
                 'invoice_number' => $invoice->InvoiceNumber,
                 'source_type' => $sourceType,
                 'view_url' => route('invoiceentry.show', $invoice->Id),
-                'invoice_date' => !empty($invoice->InvoiceDate) ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') : null,
-                'due_date' => !empty($invoice->DueDate) ? \Carbon\Carbon::parse($invoice->DueDate)->format('Y-m-d') : null,
+                'invoice_date' => ! empty($invoice->InvoiceDate) ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') : null,
+                'due_date' => ! empty($invoice->DueDate) ? \Carbon\Carbon::parse($invoice->DueDate)->format('Y-m-d') : null,
                 'before_tax' => $invoiceBeforeTax,
                 'tax_amount' => $invoiceTaxAmount,
                 'tax_percentage' => $invoiceTaxPct,
@@ -478,7 +479,7 @@ class PaymentVoucherController extends Controller
                         'milestone_no' => (int) ($milestone->MilestoneNo ?? 0),
                         'title' => $milestone->Title ?? ('Milestone ' . (int) ($allocation->MilestoneID ?? 0)),
                         'status' => $milestone->Status,
-                        'due_date' => !empty($milestone?->PlannedDueDate) ? \Carbon\Carbon::parse($milestone->PlannedDueDate)->format('Y-m-d') : null,
+                        'due_date' => ! empty($milestone?->PlannedDueDate) ? \Carbon\Carbon::parse($milestone->PlannedDueDate)->format('Y-m-d') : null,
                         'billed_amount' => round((float) ($allocation->BilledAmount ?? 0), 2),
                         'required_checklist_total' => (int) $requiredTotal,
                         'required_checklist_fulfilled' => (int) $requiredDone,
@@ -523,7 +524,7 @@ class PaymentVoucherController extends Controller
                     ->select('id', 'GRNID', 'POID', 'ReceivedDate')
                     ->first();
 
-                if ($grn && !empty($grn->GRNID)) {
+                if ($grn && ! empty($grn->GRNID)) {
                     $grnItems = DB::table('t_GoodsReceipts as gr')
                         ->leftJoin('t_Items as i', 'gr.iStockCodeID', '=', 'i.Id')
                         ->where('gr.GRNID', $grn->GRNID)
@@ -554,7 +555,7 @@ class PaymentVoucherController extends Controller
                 'order' => $po ? [
                     'id' => (int) $po->Id,
                     'order_no' => $po->OrderNo,
-                    'order_date' => !empty($po->OrderDate) ? \Carbon\Carbon::parse($po->OrderDate)->format('Y-m-d') : null,
+                    'order_date' => ! empty($po->OrderDate) ? \Carbon\Carbon::parse($po->OrderDate)->format('Y-m-d') : null,
                     'description' => $po->Description,
                     'before_tax' => $ordTotExcl,
                     'tax_percentage' => $taxPct,
@@ -564,7 +565,7 @@ class PaymentVoucherController extends Controller
                     'id' => (int) $grn->id,
                     'grn_id' => $grn->GRNID,
                     'po_ref' => $grn->POID,
-                    'received_date' => !empty($grn->ReceivedDate) ? \Carbon\Carbon::parse($grn->ReceivedDate)->format('Y-m-d') : null,
+                    'received_date' => ! empty($grn->ReceivedDate) ? \Carbon\Carbon::parse($grn->ReceivedDate)->format('Y-m-d') : null,
                     'ordered_qty_total' => (float) $grnItems->sum('po_qty'),
                     'received_qty_total' => (float) $grnItems->sum('received_qty'),
                     'items' => $grnItems,
@@ -723,7 +724,7 @@ class PaymentVoucherController extends Controller
         if (strtoupper((string) ($invoice->InvoiceSourceType ?? 'PO')) !== 'CONTRACT') {
             return back()->with('error', 'Penalty can only be applied to contract invoices.');
         }
-        if (!(bool) $invoice->IsOnHold && strtolower((string) ($invoice->MilestoneEligibilityStatus ?? '')) !== 'pending') {
+        if (! (bool) $invoice->IsOnHold && strtolower((string) ($invoice->MilestoneEligibilityStatus ?? '')) !== 'pending') {
             return back()->with('error', 'This invoice is not on a milestone hold.');
         }
 
@@ -766,7 +767,7 @@ class PaymentVoucherController extends Controller
         if (strtoupper((string) ($invoice->InvoiceSourceType ?? 'PO')) !== 'CONTRACT') {
             return back()->with('error', 'Waiver is only available for contract invoices.');
         }
-        if (!(bool) $invoice->IsOnHold && strtolower((string) ($invoice->MilestoneEligibilityStatus ?? '')) !== 'pending') {
+        if (! (bool) $invoice->IsOnHold && strtolower((string) ($invoice->MilestoneEligibilityStatus ?? '')) !== 'pending') {
             return back()->with('error', 'This invoice is not on a milestone hold.');
         }
 

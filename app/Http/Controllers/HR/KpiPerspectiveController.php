@@ -12,6 +12,7 @@ class KpiPerspectiveController extends Controller
     public function index()
     {
         $perspectives = KpiPerspective::orderBy('Name')->paginate(20);
+
         return view('hr.config.kpi.perspectives.index', compact('perspectives'));
     }
 
@@ -40,6 +41,7 @@ class KpiPerspectiveController extends Controller
     public function edit($id)
     {
         $perspective = KpiPerspective::findOrFail($id);
+
         return view('hr.config.kpi.perspectives.edit', compact('perspective'));
     }
 

@@ -18,7 +18,7 @@ class StaffLoanService
 
         $tenure = (int)($loan->TenureMonths ?? 0);
         $installment = (float)($loan->InstallmentAmount ?? 0);
-        if ($tenure <= 0 || $installment <= 0 || !$loan->StartDate) {
+        if ($tenure <= 0 || $installment <= 0 || ! $loan->StartDate) {
             return;
         }
 
@@ -93,11 +93,11 @@ class StaffLoanService
 
         foreach ($loanIds as $loanId) {
             $loan = $loans->get($loanId);
-            if (!$loan) {
+            if (! $loan) {
                 continue;
             }
 
-            if (!isset($schedules[$loanId])) {
+            if (! isset($schedules[$loanId])) {
                 $this->ensureSchedule($loan);
                 $schedules = StaffLoanSchedule::whereIn('StaffLoanID', $loanIds)
                     ->whereMonth('DueDate', $month)
@@ -107,7 +107,7 @@ class StaffLoanService
             }
 
             $schedule = $schedules->get($loanId, collect())->firstWhere('Status', 'Pending');
-            if (!$schedule) {
+            if (! $schedule) {
                 continue;
             }
 

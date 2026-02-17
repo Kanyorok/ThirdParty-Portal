@@ -32,7 +32,7 @@ class TrainingCertificateController extends Controller
 
         $certificates = $query->orderByDesc('IssuedOn')->paginate(30);
         $certificates->getCollection()->transform(function ($certificate) use ($today, $expiringCutoff) {
-            if (!$certificate->ExpiresOn) {
+            if (! $certificate->ExpiresOn) {
                 $certificate->ComputedStatus = 'Valid';
 
                 return $certificate;

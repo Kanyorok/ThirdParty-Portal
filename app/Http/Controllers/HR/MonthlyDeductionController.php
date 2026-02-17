@@ -35,7 +35,8 @@ class MonthlyDeductionController extends Controller
             ->where('Code', '<>', 'LOAN-REP')
             ->orderBy('Name')
             ->get();
-        return view('hr.payroll.deductions.create', compact('employees','deductions'));
+
+        return view('hr.payroll.deductions.create', compact('employees', 'deductions'));
     }
 
     public function store(Request $request)
@@ -57,7 +58,7 @@ class MonthlyDeductionController extends Controller
             ]);
         }
 
-        if (!$deduction) {
+        if (! $deduction) {
             throw ValidationException::withMessages([
                 'DeductionID' => 'Invalid deduction selected.',
             ]);
@@ -82,7 +83,7 @@ class MonthlyDeductionController extends Controller
         $data['IsRecurring'] = $request->boolean('IsRecurring', false);
 
         $overrideAmount = $request->boolean('OverrideAmount', false);
-        $data['IsAutoCalculated'] = !$overrideAmount;
+        $data['IsAutoCalculated'] = ! $overrideAmount;
         $data['Amount'] = $overrideAmount ? (float)($data['Amount'] ?? 0) : 0;
 
         $now = now();
@@ -115,6 +116,7 @@ class MonthlyDeductionController extends Controller
             'ModifiedBy' => auth()->id(),
             'ModifiedOn' => now(),
         ]);
+
         return redirect()->route('hr.payroll.deductions.index')->with('success', 'Deduction approved.');
     }
 
@@ -128,6 +130,7 @@ class MonthlyDeductionController extends Controller
             'ModifiedBy' => auth()->id(),
             'ModifiedOn' => now(),
         ]);
+
         return redirect()->route('hr.payroll.deductions.index')->with('success', 'Deduction rejected.');
     }
 }

@@ -345,7 +345,7 @@ class ContractsLifecycleController extends Controller
             ->firstOrFail();
 
         $action = $request->input('action');
-        if (!in_array($action, ['submit', 'accept', 'reject', 'waive'], true)) {
+        if (! in_array($action, ['submit', 'accept', 'reject', 'waive'], true)) {
             return redirect()
                 ->route('contracts.lifecycle.execution', $contract->Id)
                 ->with('error', 'Invalid milestone action.');
@@ -355,11 +355,11 @@ class ContractsLifecycleController extends Controller
         $canTransition = match ($action) {
             'submit' => in_array($currentStatus, ['Draft', 'In Progress', 'Rejected'], true),
             'accept', 'reject' => $currentStatus === 'Submitted',
-            'waive' => !in_array($currentStatus, ['Accepted', 'Waived'], true),
+            'waive' => ! in_array($currentStatus, ['Accepted', 'Waived'], true),
             default => false,
         };
 
-        if (!$canTransition) {
+        if (! $canTransition) {
             $message = match ($action) {
                 'submit' => 'Milestone can only be submitted from Draft, In Progress, or Rejected status.',
                 'accept' => 'Milestone must be Submitted before it can be accepted.',

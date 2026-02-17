@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Procurement\Criteria;
 use App\Models\Procurement\Section;
 use App\Models\Procurement\Tender;
-use App\Models\Procurement\TenderCommitteeMember;
 use App\Models\Procurement\TenderCommitteeEvaluation;
+use App\Models\Procurement\TenderCommitteeMember;
 use App\Models\Procurement\TenderSection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -130,16 +130,16 @@ class BidScoreConsolidationController extends Controller
                     'name' => $name,
                     'is_skipped' => $isSkipped,
                     'is_completed' => $isCompleted,
-                    'is_pending' => !$isCompleted,
+                    'is_pending' => ! $isCompleted,
                     'skip_reason' => $this->extractSkippedReason($row->reason ?? null),
                 ];
             })->values();
 
         $pendingEvaluators = $evaluators
-            ->filter(fn ($ev) => !empty($ev['is_pending']))
+            ->filter(fn ($ev) => ! empty($ev['is_pending']))
             ->values();
         $pendingEvaluatorCount = $pendingEvaluators->count();
-        $canAward = !$awardBlocks && $evaluators->count() > 0 && $pendingEvaluatorCount === 0;
+        $canAward = ! $awardBlocks && $evaluators->count() > 0 && $pendingEvaluatorCount === 0;
 
         // Group evaluations by Supplier -> Member -> Section
         $grouped = $rawEvaluations->groupBy(['SupplierId', 'MemberID', 'SectionID']);
@@ -571,6 +571,7 @@ class BidScoreConsolidationController extends Controller
             $pendingNames = collect($data['pendingEvaluators'] ?? [])
                 ->pluck('name')
                 ->implode(', ');
+
             return back()->with(
                 'error',
                 'Evaluation pending for: ' . $pendingNames . '. Skip pending evaluator(s) or wait for completion before consolidating.'
@@ -595,7 +596,7 @@ class BidScoreConsolidationController extends Controller
             ->where('Response', 1)
             ->first();
 
-        if (!$member) {
+        if (! $member) {
             return back()->with('error', 'Evaluator not found for this tender.');
         }
 
@@ -638,18 +639,19 @@ class BidScoreConsolidationController extends Controller
 
     private function isSkippedEvaluatorReason(?string $reason): bool
     {
-        if (!is_string($reason) || trim($reason) === '') {
+        if (! is_string($reason) || trim($reason) === '') {
             return false;
         }
 
         $normalized = strtoupper(trim($reason));
+
         return str_starts_with($normalized, 'SKIPPED:')
             || str_starts_with($normalized, '[SKIPPED]');
     }
 
     private function extractSkippedReason(?string $reason): ?string
     {
-        if (!$this->isSkippedEvaluatorReason($reason)) {
+        if (! $this->isSkippedEvaluatorReason($reason)) {
             return null;
         }
 

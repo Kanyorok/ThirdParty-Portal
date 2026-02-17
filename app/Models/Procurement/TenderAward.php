@@ -4,9 +4,9 @@ namespace App\Models\Procurement;
 
 use App\Enums\TenderStatusEnum;
 use App\Models\Auth\User;
+use App\Models\Core\Approval\WorkflowHistory;
 use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Models\ThirdParies\Supplier;
-use App\Models\Core\Approval\WorkflowHistory;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

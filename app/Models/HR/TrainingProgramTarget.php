@@ -23,9 +23,9 @@ class TrainingProgramTarget extends Model
     ];
 
     protected $casts = [
-        'CreatedOn'  => 'datetime',
+        'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
-        'DeletedOn'  => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
     public function program()

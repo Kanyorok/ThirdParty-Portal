@@ -606,6 +606,9 @@ class AwardsController extends Controller
                 );
             }
 
+            $user = Auth::user();
+            $id = $request->tender_id;
+
                 $awardData = [
                     'TenderID' => $id,
                     'WinningSupplierID' => $request->winning_supplier_id,
@@ -957,6 +960,7 @@ class AwardsController extends Controller
 
             $this->deactivateTenderCommittee((int) $award->TenderID, (int) $user->Id);
 
+            if ($type === 'tender') {
                 // Update Tender Status
                 if ($award->tender) {
                     $award->tender->update(['Status' => \App\Enums\TenderStatusEnum::Awarded->value]);
@@ -1047,6 +1051,9 @@ class AwardsController extends Controller
         }
     }
 
+    /**
+     * Reject award
+     */
     public function reject(Request $request, $id = null)
     {
        $request->validate([

@@ -108,6 +108,7 @@ class RFQCommitteeMember extends Model
     public function employee()
     {
         $user = $this->user ?: $this->userByEmployee;
+
         return $user?->employee();
     }
 

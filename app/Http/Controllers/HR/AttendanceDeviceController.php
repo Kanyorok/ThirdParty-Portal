@@ -11,6 +11,7 @@ class AttendanceDeviceController extends Controller
     public function index()
     {
         $devices = AttendanceDevice::orderBy('Name')->paginate(20);
+
         return view('hr.attendance.devices.index', compact('devices'));
     }
 
@@ -33,12 +34,14 @@ class AttendanceDeviceController extends Controller
         $data['CreatedBy'] = auth()->id();
         $data['CreatedOn'] = now();
         AttendanceDevice::create($data);
+
         return redirect()->route('hr.attendance.devices.index')->with('success', 'Device saved.');
     }
 
     public function edit($id)
     {
         $device = AttendanceDevice::findOrFail($id);
+
         return view('hr.attendance.devices.edit', compact('device'));
     }
 
@@ -56,6 +59,7 @@ class AttendanceDeviceController extends Controller
         $data['ModifiedBy'] = auth()->id();
         $data['ModifiedOn'] = now();
         $device->update($data);
+
         return redirect()->route('hr.attendance.devices.index')->with('success', 'Device updated.');
     }
 }

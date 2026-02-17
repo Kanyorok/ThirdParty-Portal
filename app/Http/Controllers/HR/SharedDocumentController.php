@@ -76,7 +76,7 @@ class SharedDocumentController extends Controller
             'Departments' => ['array'],
             'Departments.*' => ['integer', 'exists:t_Departments,Id'],
             'Roles' => ['array'],
-            'Roles.*' => ['integer', 'exists:t_HRJobRoles,Id'],
+            'Roles.*' => ['integer', 'exists:t_Roles,id'],
         ]);
 
         $data['IsDownloadable'] = $request->boolean('IsDownloadable', true);
@@ -107,7 +107,7 @@ class SharedDocumentController extends Controller
 
     public function show($id)
     {
-        if (!ctype_digit((string)$id)) {
+        if (! ctype_digit((string)$id)) {
             return redirect()->route('hr.shared-docs.categories.index');
         }
 
@@ -127,7 +127,7 @@ class SharedDocumentController extends Controller
 
     public function edit($id)
     {
-        if (!ctype_digit((string)$id)) {
+        if (! ctype_digit((string)$id)) {
             return redirect()->route('hr.shared-docs.categories.index');
         }
 
@@ -173,7 +173,7 @@ class SharedDocumentController extends Controller
             'Departments' => ['array'],
             'Departments.*' => ['integer', 'exists:t_Departments,Id'],
             'Roles' => ['array'],
-            'Roles.*' => ['integer', 'exists:t_HRJobRoles,Id'],
+            'Roles.*' => ['integer', 'exists:t_Roles,id'],
         ]);
 
         $data['IsDownloadable'] = $request->boolean('IsDownloadable', true);
@@ -207,7 +207,7 @@ class SharedDocumentController extends Controller
         $document = SharedDocument::findOrFail($id);
         $employeeId = $this->resolveEmployeeId(auth()->user());
 
-        if (!$employeeId) {
+        if (! $employeeId) {
             return back()->withErrors(['ack' => 'Unable to link your user to an employee record.']);
         }
 
@@ -225,7 +225,7 @@ class SharedDocumentController extends Controller
             'ModifiedOn' => now(),
         ]);
 
-        if (!$ack->exists) {
+        if (! $ack->exists) {
             $ack->CreatedBy = auth()->id();
             $ack->CreatedOn = now();
             $ack->DueOn = $document->AcknowledgementDueOn ?? $document->EffectiveDate;
@@ -238,7 +238,7 @@ class SharedDocumentController extends Controller
 
     private function storeDocumentFile(SharedDocument $document, Request $request): void
     {
-        if (!$request->hasFile('DocumentFile')) {
+        if (! $request->hasFile('DocumentFile')) {
             return;
         }
 
@@ -272,7 +272,7 @@ class SharedDocumentController extends Controller
 
     private function syncAcknowledgements(SharedDocument $document, array $employeeIds): void
     {
-        if (!$document->IsMandatory || empty($employeeIds)) {
+        if (! $document->IsMandatory || empty($employeeIds)) {
             return;
         }
 
@@ -304,12 +304,12 @@ class SharedDocumentController extends Controller
 
     private function syncDocumentPermissions(SharedDocument $document, array $employeeIds): void
     {
-        if (!$document->DocumentId) {
+        if (! $document->DocumentId) {
             return;
         }
 
         $doc = Document::find($document->DocumentId);
-        if (!$doc) {
+        if (! $doc) {
             return;
         }
 
@@ -318,6 +318,7 @@ class SharedDocumentController extends Controller
 
         if ($document->AccessLevel === 'Public') {
             $service->visibility(VisibilityEnum::Public, $system);
+
             return;
         }
 
@@ -338,7 +339,7 @@ class SharedDocumentController extends Controller
 
     private function resolveEmployeeId(?User $user): ?int
     {
-        if (!$user) {
+        if (! $user) {
             return null;
         }
         if ($user->EmployeeId) {

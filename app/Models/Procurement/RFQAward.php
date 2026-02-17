@@ -2,7 +2,6 @@
 
 namespace App\Models\Procurement;
 
-use App\Models\Auth\User;
 use App\Models\Core\Approval\WorkflowHistory;
 use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Traits\Model\UserActorTrait;

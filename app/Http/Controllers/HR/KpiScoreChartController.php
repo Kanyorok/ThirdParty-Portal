@@ -6,19 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Models\HR\KpiRatingScale;
 use App\Models\HR\KpiScoreChart;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class KpiScoreChartController extends Controller
 {
     public function index()
     {
         $charts = KpiScoreChart::with('ratingScale')->orderBy('MinPercent')->paginate(30);
+
         return view('hr.config.kpi.score-charts.index', compact('charts'));
     }
 
     public function create()
     {
         $scales = KpiRatingScale::orderBy('Name')->get(['Id','Name','MinScore','MaxScore']);
+
         return view('hr.config.kpi.score-charts.create', compact('scales'));
     }
 
@@ -59,7 +60,8 @@ class KpiScoreChartController extends Controller
     {
         $chart = KpiScoreChart::findOrFail($id);
         $scales = KpiRatingScale::orderBy('Name')->get(['Id','Name','MinScore','MaxScore']);
-        return view('hr.config.kpi.score-charts.edit', compact('chart','scales'));
+
+        return view('hr.config.kpi.score-charts.edit', compact('chart', 'scales'));
     }
 
     public function update(Request $request, $id)

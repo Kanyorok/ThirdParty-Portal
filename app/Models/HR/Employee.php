@@ -5,13 +5,6 @@ namespace App\Models\HR;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\DMS\Image;
-use App\Models\HR\EmployeeContact;
-use App\Models\HR\EmployeeDocument;
-use App\Models\HR\EmployeeSalaryHistory;
-use App\Models\HR\EmployeeEducation;
-use App\Models\HR\EmployeeWorkingDaySetting;
-use App\Models\HR\JobGrade;
-use App\Models\HR\JobRole;
 use App\Models\HRM\Committee;
 use App\Models\HRM\Department;
 use App\Traits\Model\DocumentsTrait;
@@ -25,11 +18,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
 {
-    use UserActorTrait, SoftDeletes, ImageTrait, DocumentsTrait;
+    use UserActorTrait;
+    use SoftDeletes;
+    use ImageTrait;
+    use DocumentsTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_HREmployees';
     protected $primaryKey = 'Id';
@@ -77,12 +73,12 @@ class Employee extends Model
 
     protected $casts = [
         'EmploymentDate' => 'date',
-        'DateOfBirth'   => 'date',
-        'BasicSalary'    => 'decimal:2',
-        'StatusChangedOn'=> 'datetime',
-        'CreatedOn'      => 'datetime',
-        'ModifiedOn'     => 'datetime',
-        'DeletedOn'      => 'datetime',
+        'DateOfBirth' => 'date',
+        'BasicSalary' => 'decimal:2',
+        'StatusChangedOn' => 'datetime',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
     /**
@@ -152,7 +148,8 @@ class Employee extends Model
 
     public function role()
     {
-        return $this->belongsTo(JobRole::class, 'RoleID');
+        return $this->belongsTo(JobRole::class, 'RoleID', 'id')
+            ->withoutGlobalScope('job_roles');
     }
 
     public function supervisor()

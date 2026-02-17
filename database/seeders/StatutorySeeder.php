@@ -207,7 +207,7 @@ class StatutorySeeder extends Seeder
                 'ModifiedOn' => $now,
             ]
         );
-        $actingId = DB::table('t_HRPayrollAllowances')->where('Code','ACTING')->value('Id');
+        $actingId = DB::table('t_HRPayrollAllowances')->where('Code', 'ACTING')->value('Id');
         if ($actingId) {
             DB::table('t_HRPayrollAllowanceRules')->updateOrInsert(
                 ['AllowanceID' => $actingId, 'EffectiveFrom' => '2025-01-01'],
@@ -261,7 +261,7 @@ class StatutorySeeder extends Seeder
                 'ModifiedOn' => $now,
             ]
         );
-        $payeDedId = DB::table('t_HRPayrollDeductions')->where('Code','PAYE')->value('Id');
+        $payeDedId = DB::table('t_HRPayrollDeductions')->where('Code', 'PAYE')->value('Id');
         if ($payeDedId) {
             DB::table('t_HRPayrollDeductionRules')->updateOrInsert(
                 [

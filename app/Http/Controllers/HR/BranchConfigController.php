@@ -12,6 +12,7 @@ class BranchConfigController extends Controller
     public function index()
     {
         $branches = Branch::orderBy('Name')->paginate(20);
+
         return view('hr.config.branches.index', compact('branches'));
     }
 
@@ -23,13 +24,13 @@ class BranchConfigController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'BranchID'  => ['required', 'string', 'max:50', 'unique:t_Branches,BranchID'],
-            'Name'      => ['required', 'string', 'max:150'],
-            'Address'   => ['nullable', 'string', 'max:255'],
-            'City'      => ['nullable', 'string', 'max:100'],
-            'Country'   => ['nullable', 'string', 'max:100'],
-            'Phone'     => ['nullable', 'string', 'max:50'],
-            'Email'     => ['nullable', 'string', 'max:150'],
+            'BranchID' => ['required', 'string', 'max:50', 'unique:t_Branches,BranchID'],
+            'Name' => ['required', 'string', 'max:150'],
+            'Address' => ['nullable', 'string', 'max:255'],
+            'City' => ['nullable', 'string', 'max:100'],
+            'Country' => ['nullable', 'string', 'max:100'],
+            'Phone' => ['nullable', 'string', 'max:50'],
+            'Email' => ['nullable', 'string', 'max:150'],
         ]);
 
         $data['CreatedBy'] = auth()->id();
@@ -47,6 +48,7 @@ class BranchConfigController extends Controller
     public function edit($id)
     {
         $branch = Branch::findOrFail($id);
+
         return view('hr.config.branches.edit', compact('branch'));
     }
 
@@ -55,13 +57,13 @@ class BranchConfigController extends Controller
         $branch = Branch::findOrFail($id);
 
         $data = $request->validate([
-            'BranchID'  => ['required', 'string', 'max:50', Rule::unique('t_Branches', 'BranchID')->ignore($branch->Id, 'Id')],
-            'Name'      => ['required', 'string', 'max:150'],
-            'Address'   => ['nullable', 'string', 'max:255'],
-            'City'      => ['nullable', 'string', 'max:100'],
-            'Country'   => ['nullable', 'string', 'max:100'],
-            'Phone'     => ['nullable', 'string', 'max:50'],
-            'Email'     => ['nullable', 'string', 'max:150'],
+            'BranchID' => ['required', 'string', 'max:50', Rule::unique('t_Branches', 'BranchID')->ignore($branch->Id, 'Id')],
+            'Name' => ['required', 'string', 'max:150'],
+            'Address' => ['nullable', 'string', 'max:255'],
+            'City' => ['nullable', 'string', 'max:100'],
+            'Country' => ['nullable', 'string', 'max:100'],
+            'Phone' => ['nullable', 'string', 'max:50'],
+            'Email' => ['nullable', 'string', 'max:150'],
         ]);
 
         $data['ModifiedBy'] = auth()->id();
@@ -80,7 +82,7 @@ class BranchConfigController extends Controller
         $branch->update([
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
-            'IsActive'  => 0,
+            'IsActive' => 0,
         ]);
 
         return redirect()->route('hr.config.branches.index')

@@ -14,6 +14,7 @@ class JobRoleController extends Controller
     public function index()
     {
         $roles = JobRole::with(['grade', 'department'])->orderBy('Name')->paginate(20);
+
         return view('hr.config.jobroles.index', compact('roles'));
     }
 
@@ -28,11 +29,11 @@ class JobRoleController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'Code'         => ['required', 'string', 'max:50', 'unique:t_HRJobRoles,Code'],
-            'Name'         => ['required', 'string', 'max:150'],
-            'GradeID'      => ['nullable', 'integer', 'exists:t_HRJobGrades,Id'],
+            'Code' => ['required', 'string', 'max:50', 'unique:t_Roles,Code'],
+            'Name' => ['required', 'string', 'max:150'],
+            'GradeID' => ['nullable', 'integer', 'exists:t_HRJobGrades,Id'],
             'DepartmentID' => ['nullable', 'integer', 'exists:t_Departments,Id'],
-            'Description'  => ['nullable', 'string', 'max:255'],
+            'Description' => ['nullable', 'string', 'max:255'],
         ]);
 
         $data['IsActive'] = 1;
@@ -59,12 +60,12 @@ class JobRoleController extends Controller
         $role = JobRole::findOrFail($id);
 
         $data = $request->validate([
-            'Code'         => ['required', 'string', 'max:50', Rule::unique('t_HRJobRoles', 'Code')->ignore($role->Id, 'Id')],
-            'Name'         => ['required', 'string', 'max:150'],
-            'GradeID'      => ['nullable', 'integer', 'exists:t_HRJobGrades,Id'],
+            'Code' => ['required', 'string', 'max:50', Rule::unique('t_Roles', 'Code')->ignore($role->Id, 'id')],
+            'Name' => ['required', 'string', 'max:150'],
+            'GradeID' => ['nullable', 'integer', 'exists:t_HRJobGrades,Id'],
             'DepartmentID' => ['nullable', 'integer', 'exists:t_Departments,Id'],
-            'Description'  => ['nullable', 'string', 'max:255'],
-            'IsActive'     => ['nullable', 'boolean'],
+            'Description' => ['nullable', 'string', 'max:255'],
+            'IsActive' => ['nullable', 'boolean'],
         ]);
 
         $data['IsActive'] = $request->has('IsActive') ? $request->boolean('IsActive') : $role->IsActive;
@@ -82,7 +83,7 @@ class JobRoleController extends Controller
         $role = JobRole::findOrFail($id);
 
         $role->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);
@@ -96,7 +97,7 @@ class JobRoleController extends Controller
         $role = JobRole::findOrFail($id);
 
         $role->update([
-            'IsActive'   => 1,
+            'IsActive' => 1,
             'ModifiedBy' => auth()->id(),
             'ModifiedOn' => now(),
         ]);

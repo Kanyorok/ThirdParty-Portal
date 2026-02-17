@@ -9,7 +9,6 @@ use App\Models\HR\JobApplicationDocument;
 use App\Models\HR\JobApplicationScreening;
 use App\Models\HR\JobOpening;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class JobApplicationController extends Controller
 {
@@ -78,11 +77,11 @@ class JobApplicationController extends Controller
         ]);
 
         $applicant = Applicant::query()
-            ->when($data['Email'] ?? null, fn($q) => $q->where('Email', $data['Email']))
-            ->when(!$data['Email'] && ($data['Phone'] ?? null), fn($q) => $q->where('Phone', $data['Phone']))
+            ->when($data['Email'] ?? null, fn ($q) => $q->where('Email', $data['Email']))
+            ->when(! $data['Email'] && ($data['Phone'] ?? null), fn ($q) => $q->where('Phone', $data['Phone']))
             ->first();
 
-        if (!$applicant) {
+        if (! $applicant) {
             $applicant = Applicant::create([
                 'FirstName' => $data['FirstName'],
                 'LastName' => $data['LastName'],
@@ -122,7 +121,7 @@ class JobApplicationController extends Controller
         ]);
 
         foreach ($request->file('documents', []) as $idx => $file) {
-            if (!$file) {
+            if (! $file) {
                 continue;
             }
             $storedPath = $file->store('job-applications', 'public');
@@ -159,7 +158,7 @@ class JobApplicationController extends Controller
 
         $application = JobApplication::findOrFail($id);
         $status = $data['Status'];
-        if (!in_array($status, ['Shortlisted', 'Rejected', 'Under Screening'], true)) {
+        if (! in_array($status, ['Shortlisted', 'Rejected', 'Under Screening'], true)) {
             $status = 'Under Screening';
         }
         $appStatus = match ($status) {
@@ -218,7 +217,7 @@ class JobApplicationController extends Controller
             ->sortByDesc(fn ($item) => $item->ScreenedOn ?? $item->CreatedOn)
             ->first();
 
-        if (!$latest || $latest->Status !== 'Shortlisted') {
+        if (! $latest || $latest->Status !== 'Shortlisted') {
             return redirect()->route('hr.recruitment.applications.show', $application->Id)
                 ->withErrors(['status' => 'Only shortlisted screenings can be approved.']);
         }

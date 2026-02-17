@@ -87,7 +87,7 @@ class TrainingCertificateTemplateController extends Controller
         }
 
         TrainingCertificateTemplate::create([
-            'ProgramID' => !empty($data['ProgramID']) ? (int) $data['ProgramID'] : null,
+            'ProgramID' => ! empty($data['ProgramID']) ? (int) $data['ProgramID'] : null,
             'Name' => $data['Name'],
             'Description' => $data['Description'] ?? null,
             'TemplateBody' => $data['TemplateBody'] ?? null,
@@ -133,7 +133,7 @@ class TrainingCertificateTemplateController extends Controller
         ]);
 
         $update = [
-            'ProgramID' => !empty($data['ProgramID']) ? (int) $data['ProgramID'] : null,
+            'ProgramID' => ! empty($data['ProgramID']) ? (int) $data['ProgramID'] : null,
             'Name' => $data['Name'],
             'Description' => $data['Description'] ?? null,
             'TemplateBody' => $data['TemplateBody'] ?? null,

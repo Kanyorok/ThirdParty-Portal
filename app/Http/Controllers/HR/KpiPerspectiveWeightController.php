@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\HR;
 
 use App\Http\Controllers\Controller;
-use App\Models\HR\KpiPerspective;
-use App\Models\HR\KpiPerspectiveWeight;
-use App\Models\HR\KpiPeriod;
 use App\Models\HR\JobGrade;
 use App\Models\HR\JobRole;
+use App\Models\HR\KpiPeriod;
+use App\Models\HR\KpiPerspective;
+use App\Models\HR\KpiPerspectiveWeight;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -39,7 +39,7 @@ class KpiPerspectiveWeightController extends Controller
             'PerspectiveID' => ['required', 'integer', 'exists:t_HRKPIPerspectives,Id'],
             'PeriodID' => ['required', 'integer', 'exists:t_HRKPIPeriods,Id'],
             'GradeID' => ['nullable', 'integer', 'exists:t_HRJobGrades,Id'],
-            'RoleID' => ['nullable', 'integer', 'exists:t_HRJobRoles,Id'],
+            'RoleID' => ['nullable', 'integer', 'exists:t_Roles,id'],
             'Weight' => ['required', 'numeric', 'min:0', 'max:1'],
         ]);
 
@@ -81,7 +81,7 @@ class KpiPerspectiveWeightController extends Controller
             'PerspectiveID' => ['required', 'integer', 'exists:t_HRKPIPerspectives,Id'],
             'PeriodID' => ['required', 'integer', 'exists:t_HRKPIPeriods,Id'],
             'GradeID' => ['nullable', 'integer', 'exists:t_HRJobGrades,Id'],
-            'RoleID' => ['nullable', 'integer', 'exists:t_HRJobRoles,Id'],
+            'RoleID' => ['nullable', 'integer', 'exists:t_Roles,id'],
             'Weight' => ['required', 'numeric', 'min:0', 'max:1'],
             'IsActive' => ['nullable', 'boolean'],
         ]);

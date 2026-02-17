@@ -68,8 +68,6 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 207100, 'Name' => 'Surveys', 'Icon' => '<i class="fa-regular fa-circle-check"></i>', 'Description' => '', 'ParentID' => 207000, 'Route' => 'surveys.index', 'RequiredPermission' => PermissionEnum::SurveyRead->value],
             ['ModuleID' => 207200, 'Name' => 'Reviews', 'Icon' => '<i class="fa-regular fa-comment"></i>', 'Description' => '', 'ParentID' => 207000, 'Route' => 'reviews.index', 'RequiredPermission' => PermissionEnum::ReviewsView->value],
 
-            //  ['ModuleID' => 208000, 'Name' => 'Product Development', 'Icon' => '<i class="fa-solid fa-cubes"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'product-development.index'],
-
             ['ModuleID' => 209000, 'Name' => 'Debt Collection', 'Icon' => null, 'Description' => '', 'ParentID' => 200000, 'Route' => null],
             ['ModuleID' => 209100, 'Name' => 'Notifications', 'Icon' => '<i class="fas fa-comment-dollar"></i>', 'Description' => '', 'ParentID' => 209000, 'Route' => 'debt-notification.index', 'RequiredPermission' => PermissionEnum::DebtNotificationView->value],
             ['ModuleID' => 209200, 'Name' => 'Loans', 'Icon' => '<i class="fas fa-hands-helping"></i>', 'Description' => '', 'ParentID' => 209000, 'Route' => null],
@@ -759,7 +757,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1009260, 'Name' => 'Training Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 1009200, 'Route' => 'hr.training.reports.index'],
 
             ['ModuleID' => 1002000, 'Name' => 'Departments', 'Icon' => '<i class="fas fa-building"></i>', 'Description' => '', 'ParentID' => 1000000, 'Route' => 'hr.departments.index'],
-            
+
             ['ModuleID' => 1010000, 'Name' => 'Settings', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 1000000, 'Route' => null],
             ['ModuleID' => 1010050, 'Name' => 'Organization Profile', 'Icon' => null, 'Description' => '', 'ParentID' => 1010000, 'Route' => 'hr.config.org.index'],
             ['ModuleID' => 1010060, 'Name' => 'Working Days & Hours', 'Icon' => null, 'Description' => '', 'ParentID' => 1010000, 'Route' => 'hr.config.workingdays.index'],
@@ -790,7 +788,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1010690, 'Name' => 'Exit Legal Refs', 'Icon' => null, 'Description' => '', 'ParentID' => 1010000, 'Route' => 'hr.config.exit-legal-refs.index'],
             ['ModuleID' => 1010695, 'Name' => 'Exit Letter Templates', 'Icon' => null, 'Description' => '', 'ParentID' => 1010000, 'Route' => 'hr.config.exit-letter-templates.index'],
             ['ModuleID' => 1010696, 'Name' => 'Exit Interview Questions', 'Icon' => null, 'Description' => '', 'ParentID' => 1010000, 'Route' => 'hr.config.exit-interview-questions.index'],
-            
+
             ['ModuleID' => 1099000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'ParentID' => 1000000, 'Route' => null],
         ]);
 

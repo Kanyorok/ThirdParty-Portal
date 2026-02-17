@@ -12,6 +12,7 @@ class ExitTypeController extends Controller
     public function index()
     {
         $types = ExitType::orderBy('Name')->get();
+
         return view('hr.exit.config.exit_types.index', compact('types'));
     }
 
@@ -54,6 +55,7 @@ class ExitTypeController extends Controller
     public function edit($id)
     {
         $type = ExitType::findOrFail($id);
+
         return view('hr.exit.config.exit_types.edit', compact('type'));
     }
 

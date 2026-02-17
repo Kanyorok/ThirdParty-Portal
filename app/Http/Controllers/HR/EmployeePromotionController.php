@@ -15,6 +15,7 @@ class EmployeePromotionController extends Controller
     public function index()
     {
         $promotions = EmployeePromotion::with(['employee'])->orderByDesc('Id')->paginate(20);
+
         return view('hr.movements.promotions.index', compact('promotions'));
     }
 
@@ -23,6 +24,7 @@ class EmployeePromotionController extends Controller
         $employees = Employee::where('IsActive', 1)->orderBy('FirstName')->get();
         $grades = JobGrade::where('IsActive', 1)->orderBy('Name')->get();
         $roles = JobRole::where('IsActive', 1)->orderBy('Name')->get();
+
         return view('hr.movements.promotions.create', compact('employees', 'grades', 'roles'));
     }
 
@@ -35,12 +37,14 @@ class EmployeePromotionController extends Controller
         $data['CreatedOn'] = now();
 
         EmployeePromotion::create($data);
+
         return redirect()->route('hr.movements.promotions.index')->with('success', 'Promotion request submitted.');
     }
 
     public function show($id)
     {
         $promotion = EmployeePromotion::with('employee')->findOrFail($id);
+
         return view('hr.movements.promotions.show', compact('promotion'));
     }
 
@@ -50,6 +54,7 @@ class EmployeePromotionController extends Controller
         $employees = Employee::where('IsActive', 1)->orderBy('FirstName')->get();
         $grades = JobGrade::where('IsActive', 1)->orderBy('Name')->get();
         $roles = JobRole::where('IsActive', 1)->orderBy('Name')->get();
+
         return view('hr.movements.promotions.edit', compact('promotion', 'employees', 'grades', 'roles'));
     }
 
@@ -61,6 +66,7 @@ class EmployeePromotionController extends Controller
             'ModifiedBy' => auth()->id(),
             'ModifiedOn' => now(),
         ]);
+
         return redirect()->route('hr.movements.promotions.index')->with('success', 'Promotion updated.');
     }
 
@@ -72,6 +78,7 @@ class EmployeePromotionController extends Controller
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);
+
         return redirect()->route('hr.movements.promotions.index')->with('success', 'Promotion marked rejected.');
     }
 
@@ -84,6 +91,7 @@ class EmployeePromotionController extends Controller
             'ApprovedOn' => now(),
             'ApprovalComment' => $request->input('ApprovalComment'),
         ]);
+
         return redirect()->route('hr.movements.promotions.index')->with('success', 'Promotion approved.');
     }
 
@@ -96,22 +104,23 @@ class EmployeePromotionController extends Controller
             'ApprovedOn' => now(),
             'ApprovalComment' => $request->input('ApprovalComment'),
         ]);
+
         return redirect()->route('hr.movements.promotions.index')->with('success', 'Promotion rejected.');
     }
 
     private function validateData(Request $request, bool $requireEmployee = false): array
     {
         return $request->validate([
-            'EmployeeID'   => [$requireEmployee ? 'required' : 'nullable', 'integer'],
-            'FromGradeID'  => 'nullable|integer',
-            'ToGradeID'    => 'nullable|integer',
-            'FromRoleID'   => 'nullable|integer',
-            'ToRoleID'     => 'nullable|integer',
-            'FromSalary'   => 'nullable|numeric|min:0',
-            'ToSalary'     => 'nullable|numeric|min:0',
-            'EffectiveDate'=> 'required|date',
-            'Reason'       => 'nullable|string|max:255',
-            'Status'       => ['nullable', Rule::in(['Pending','Approved','Rejected'])],
+            'EmployeeID' => [$requireEmployee ? 'required' : 'nullable', 'integer'],
+            'FromGradeID' => 'nullable|integer',
+            'ToGradeID' => 'nullable|integer',
+            'FromRoleID' => 'nullable|integer',
+            'ToRoleID' => 'nullable|integer',
+            'FromSalary' => 'nullable|numeric|min:0',
+            'ToSalary' => 'nullable|numeric|min:0',
+            'EffectiveDate' => 'required|date',
+            'Reason' => 'nullable|string|max:255',
+            'Status' => ['nullable', Rule::in(['Pending','Approved','Rejected'])],
         ]);
     }
 }

@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\HR;
 
 use App\Http\Controllers\Controller;
-use App\Models\HR\KpiItem;
 use App\Models\HR\KpiCategory;
-use App\Models\HR\KpiUnit;
+use App\Models\HR\KpiItem;
 use App\Models\HR\KpiPerspective;
+use App\Models\HR\KpiUnit;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -15,6 +15,7 @@ class KpiItemController extends Controller
     public function index()
     {
         $items = KpiItem::with(['category', 'unit'])->orderBy('Name')->paginate(20);
+
         return view('hr.config.kpi.library.index', compact('items'));
     }
 
@@ -23,19 +24,20 @@ class KpiItemController extends Controller
         $categories = KpiCategory::where('IsActive', 1)->orderBy('Name')->get();
         $units = KpiUnit::where('IsActive', 1)->orderBy('Name')->get();
         $perspectives = KpiPerspective::where('IsActive', 1)->orderBy('Name')->get();
+
         return view('hr.config.kpi.library.create', compact('categories', 'units', 'perspectives'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'Code'          => ['required', 'string', 'max:50', 'unique:t_HRKPIItems,Code'],
-            'Name'          => ['required', 'string', 'max:200'],
-            'CategoryID'    => ['required', 'integer', 'exists:t_HRKPICategories,Id'],
-            'UnitID'        => ['required', 'integer', 'exists:t_HRKPIUnits,Id'],
+            'Code' => ['required', 'string', 'max:50', 'unique:t_HRKPIItems,Code'],
+            'Name' => ['required', 'string', 'max:200'],
+            'CategoryID' => ['required', 'integer', 'exists:t_HRKPICategories,Id'],
+            'UnitID' => ['required', 'integer', 'exists:t_HRKPIUnits,Id'],
             'PerspectiveID' => ['nullable', 'integer', 'exists:t_HRKPIPerspectives,Id'],
             'DefaultWeight' => ['nullable', 'numeric', 'min:0'],
-            'Description'   => ['nullable', 'string', 'max:500'],
+            'Description' => ['nullable', 'string', 'max:500'],
         ]);
 
         $data['IsActive'] = 1;
@@ -60,6 +62,7 @@ class KpiItemController extends Controller
         $categories = KpiCategory::where('IsActive', 1)->orderBy('Name')->get();
         $units = KpiUnit::where('IsActive', 1)->orderBy('Name')->get();
         $perspectives = KpiPerspective::where('IsActive', 1)->orderBy('Name')->get();
+
         return view('hr.config.kpi.library.edit', compact('item', 'categories', 'units', 'perspectives'));
     }
 
@@ -67,14 +70,14 @@ class KpiItemController extends Controller
     {
         $item = KpiItem::findOrFail($id);
         $data = $request->validate([
-            'Code'          => ['required', 'string', 'max:50', Rule::unique('t_HRKPIItems', 'Code')->ignore($item->Id, 'Id')],
-            'Name'          => ['required', 'string', 'max:200'],
-            'CategoryID'    => ['required', 'integer', 'exists:t_HRKPICategories,Id'],
-            'UnitID'        => ['required', 'integer', 'exists:t_HRKPIUnits,Id'],
+            'Code' => ['required', 'string', 'max:50', Rule::unique('t_HRKPIItems', 'Code')->ignore($item->Id, 'Id')],
+            'Name' => ['required', 'string', 'max:200'],
+            'CategoryID' => ['required', 'integer', 'exists:t_HRKPICategories,Id'],
+            'UnitID' => ['required', 'integer', 'exists:t_HRKPIUnits,Id'],
             'PerspectiveID' => ['nullable', 'integer', 'exists:t_HRKPIPerspectives,Id'],
             'DefaultWeight' => ['nullable', 'numeric', 'min:0'],
-            'Description'   => ['nullable', 'string', 'max:500'],
-            'IsActive'      => ['nullable', 'boolean'],
+            'Description' => ['nullable', 'string', 'max:500'],
+            'IsActive' => ['nullable', 'boolean'],
         ]);
 
         $data['IsActive'] = $request->has('IsActive') ? $request->boolean('IsActive') : $item->IsActive;
@@ -97,7 +100,7 @@ class KpiItemController extends Controller
     {
         $item = KpiItem::findOrFail($id);
         $item->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);

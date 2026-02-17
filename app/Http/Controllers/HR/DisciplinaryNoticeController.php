@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\HR;
 
-use App\Http\Controllers\Controller;
 use App\Enums\Core\ExtensionsEnum;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\EmailStatusEnum;
+use App\Http\Controllers\Controller;
+use App\Models\DMS\Document;
 use App\Models\HR\Discipline\DisciplinaryCase;
 use App\Models\HR\Discipline\DisciplinaryCaseStatusLog;
 use App\Models\HR\Discipline\DisciplinaryLetterTemplate;
 use App\Models\HR\Discipline\DisciplinaryNotice;
-use App\Models\DMS\Document;
 use App\Models\Legal\LegalTemplate;
 use App\Services\CRMEmailService;
 use App\Services\DMS\DocumentService;
@@ -54,13 +54,13 @@ class DisciplinaryNoticeController extends Controller
         $notice = DisciplinaryNotice::where('CaseID', $case->Id)->latest('CreatedOn')->first();
         $documentId = $notice?->NoticeDocumentId;
 
-        if ($data['DeliveryMethod'] === 'Upload' && !$request->hasFile('NoticeDocument') && !$documentId) {
+        if ($data['DeliveryMethod'] === 'Upload' && ! $request->hasFile('NoticeDocument') && ! $documentId) {
             return back()->withErrors(['NoticeDocument' => 'Upload a signed notice document.'])->withInput();
         }
 
         if ($data['DeliveryMethod'] === 'Auto') {
             $template = LegalTemplate::find($data['TemplateID']);
-            if (!$documentId || $request->boolean('Regenerate')) {
+            if (! $documentId || $request->boolean('Regenerate')) {
                 try {
                     $documentId = $this->generateNoticeDocument($case, $template, $data, $actor);
                 } catch (\Throwable $e) {
@@ -173,17 +173,17 @@ class DisciplinaryNoticeController extends Controller
     private function sendNoticeEmail(DisciplinaryCase $case, ?int $documentId, array $data): bool
     {
         $employee = $case->employee;
-        if (!$employee?->Email) {
+        if (! $employee?->Email) {
             return false;
         }
 
         $subject = 'Show Cause Notice - ' . $case->CaseNo;
         $body = '<p>Dear ' . e(trim(($employee->FirstName ?? '') . ' ' . ($employee->LastName ?? ''))) . ',</p>';
         $body .= '<p>You are hereby issued with a show cause notice in relation to case <strong>' . e($case->CaseNo) . '</strong>.</p>';
-        if (!empty($data['Summary'])) {
+        if (! empty($data['Summary'])) {
             $body .= '<p><strong>Summary:</strong><br>' . nl2br(e($data['Summary'])) . '</p>';
         }
-        if (!empty($data['ResponseDueOn'])) {
+        if (! empty($data['ResponseDueOn'])) {
             $body .= '<p>Response due by: <strong>' . e($data['ResponseDueOn']) . '</strong>.</p>';
         }
         if ($documentId) {
@@ -204,6 +204,7 @@ class DisciplinaryNoticeController extends Controller
                 (string)$employee->Id
             );
             $service->send(true);
+
             return $service->crmEmail->Status === EmailStatusEnum::Sent;
         } catch (\Throwable $e) {
             return false;
@@ -219,7 +220,7 @@ class DisciplinaryNoticeController extends Controller
         } catch (\Throwable $e) {
             $extension = strtolower(pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION));
             $enum = ExtensionsEnum::tryFrom($extension);
-            if (!$enum) {
+            if (! $enum) {
                 throw $e;
             }
             $document = DocumentService::createContent(
@@ -229,6 +230,7 @@ class DisciplinaryNoticeController extends Controller
                 $file->getContent(),
                 $actor
             )->document;
+
             return $document->Id;
         }
     }

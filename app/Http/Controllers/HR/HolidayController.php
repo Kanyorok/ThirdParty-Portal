@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\HR;
 
 use App\Http\Controllers\Controller;
-use App\Models\HR\Holiday;
 use App\Models\Core\Country;
+use App\Models\HR\Holiday;
 use App\Models\HR\Religion;
 use Illuminate\Http\Request;
 
@@ -39,11 +39,11 @@ class HolidayController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'Name'        => 'required|string|max:150',
+            'Name' => 'required|string|max:150',
             'HolidayDate' => 'required|date',
             'AppliesToReligion' => 'nullable|string|max:100',
             'IsRecurring' => 'nullable|boolean',
-            'CountryId'   => 'nullable|integer|exists:t_Countries,Id',
+            'CountryId' => 'nullable|integer|exists:t_Countries,Id',
         ]);
 
         $regionScope = $request->boolean('IsRegional') ? 'Regional' : 'Global';
@@ -54,10 +54,10 @@ class HolidayController extends Controller
         $data['IsRecurring'] = $request->boolean('IsRecurring');
         $data['RegionScope'] = $regionScope;
         $data['CountryId'] = $regionScope === 'Regional' ? $request->input('CountryId') : null;
-        $data['IsActive']    = 1;
-        $data['Status']      = 'Pending';
-        $data['CreatedBy']   = auth()->id();
-        $data['CreatedOn']   = now();
+        $data['IsActive'] = 1;
+        $data['Status'] = 'Pending';
+        $data['CreatedBy'] = auth()->id();
+        $data['CreatedOn'] = now();
 
         Holiday::create($data);
 
@@ -81,12 +81,12 @@ class HolidayController extends Controller
         $holiday = Holiday::findOrFail($id);
 
         $data = $request->validate([
-            'Name'        => 'required|string|max:150',
+            'Name' => 'required|string|max:150',
             'HolidayDate' => 'required|date',
             'AppliesToReligion' => 'nullable|string|max:100',
             'IsRecurring' => 'nullable|boolean',
-            'IsActive'    => 'nullable|boolean',
-            'CountryId'   => 'nullable|integer|exists:t_Countries,Id',
+            'IsActive' => 'nullable|boolean',
+            'CountryId' => 'nullable|integer|exists:t_Countries,Id',
         ]);
 
         $regionScope = $request->boolean('IsRegional') ? 'Regional' : 'Global';
@@ -97,9 +97,9 @@ class HolidayController extends Controller
         $data['IsRecurring'] = $request->boolean('IsRecurring');
         $data['RegionScope'] = $regionScope;
         $data['CountryId'] = $regionScope === 'Regional' ? $request->input('CountryId') : null;
-        $data['IsActive']    = $request->has('IsActive') ? $request->boolean('IsActive') : $holiday->IsActive;
-        $data['ModifiedBy']  = auth()->id();
-        $data['ModifiedOn']  = now();
+        $data['IsActive'] = $request->has('IsActive') ? $request->boolean('IsActive') : $holiday->IsActive;
+        $data['ModifiedBy'] = auth()->id();
+        $data['ModifiedOn'] = now();
 
         $holiday->update($data);
 
@@ -113,7 +113,7 @@ class HolidayController extends Controller
         $holiday = Holiday::findOrFail($id);
 
         $holiday->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);
@@ -128,7 +128,7 @@ class HolidayController extends Controller
         $holiday = Holiday::findOrFail($id);
 
         $holiday->update([
-            'Status'     => 'Approved',
+            'Status' => 'Approved',
             'ApprovedBy' => auth()->id(),
             'ApprovedOn' => now(),
         ]);

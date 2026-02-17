@@ -35,6 +35,6 @@ class JobGrade extends Model
 
     public function roles()
     {
-        return $this->hasMany(JobRole::class, 'GradeID');
+        return $this->hasMany(JobRole::class, 'GradeID', 'Id');
     }
 }

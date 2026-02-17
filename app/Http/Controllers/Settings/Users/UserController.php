@@ -81,7 +81,7 @@ class UserController extends Controller
 
         // Use employee's existing branch
         $branch = $employee->branch;
-        if (!$branch instanceof Branch) {
+        if (! $branch instanceof Branch) {
             throw ValidationException::withMessages(['Employee' => 'employee does not have a branch assigned.']);
         }
 

@@ -3,19 +3,19 @@
 namespace App\Http\Controllers\HR;
 
 use App\Http\Controllers\Controller;
-use App\Models\HR\LeaveRequest;
-use App\Models\HR\LeaveType;
-use App\Models\HR\Employee;
 use App\Models\Core\Branch;
 use App\Models\Core\Country;
+use App\Models\HR\AttendanceDaily;
+use App\Models\HR\Employee;
+use App\Models\HR\Holiday;
+use App\Models\HR\LeaveBalance;
+use App\Models\HR\LeaveRequest;
+use App\Models\HR\LeaveType;
+use App\Services\HR\WorkingDayResolver;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use App\Models\HR\LeaveBalance;
-use App\Models\HR\AttendanceDaily;
-use App\Models\HR\Holiday;
-use App\Services\HR\WorkingDayResolver;
 use Illuminate\Validation\ValidationException;
-use Carbon\Carbon;
 
 class LeaveRequestController extends Controller
 {
@@ -30,20 +30,23 @@ class LeaveRequestController extends Controller
         }
         $requests = $query->paginate(50);
         $employees = Employee::orderBy('FirstName')->get(['Id','FirstName','LastName','DepartmentID']);
-        return view('hr.leave.requests.index', compact('requests','employees'));
+
+        return view('hr.leave.requests.index', compact('requests', 'employees'));
     }
 
     public function create()
     {
         $employees = Employee::orderBy('FirstName')->get(['Id','FirstName','LastName','DepartmentID']);
         $types = $this->eligibleLeaveTypesForEmployee(optional($employees->first())->Id);
-        return view('hr.leave.requests.create', compact('employees','types'));
+
+        return view('hr.leave.requests.create', compact('employees', 'types'));
     }
 
     public function eligibleTypes(Request $request)
     {
         $employeeId = $request->query('employee_id');
         $types = $this->eligibleLeaveTypesForEmployee($employeeId);
+
         return response()->json($types);
     }
 
@@ -66,6 +69,7 @@ class LeaveRequestController extends Controller
         }
 
         LeaveRequest::create($data);
+
         return redirect()->route('hr.leave.requests.index')->with('success', 'Leave request submitted.');
     }
 
@@ -95,6 +99,7 @@ class LeaveRequestController extends Controller
             'ApprovedOn' => now(),
             'ApprovalComment' => $request->input('ApprovalComment'),
         ]);
+
         return redirect()->route('hr.leave.requests.index')->with('success', 'Leave rejected.');
     }
 
@@ -110,6 +115,7 @@ class LeaveRequestController extends Controller
         if ($leave->Status === 'Approved') {
             $this->applyBalanceAdjustment($leave->EmployeeID, $leave->LeaveTypeID, $totalDays);
         }
+
         return redirect()->route('hr.leave.requests.index')->with('success', 'Leave cancelled.');
     }
 
@@ -126,10 +132,10 @@ class LeaveRequestController extends Controller
         // Fetch leaves in range
         $leaves = LeaveRequest::with(['employee', 'type', 'reliever'])
             ->whereIn('Status', ['Approved', 'Pending'])
-            ->where(function($q) use ($start, $end) {
+            ->where(function ($q) use ($start, $end) {
                 $q->whereBetween('StartDate', [$start, $end])
                   ->orWhereBetween('EndDate', [$start, $end])
-                  ->orWhere(function($sq) use ($start, $end) {
+                  ->orWhere(function ($sq) use ($start, $end) {
                       $sq->where('StartDate', '<=', $start)
                          ->where('EndDate', '>=', $end);
                   });
@@ -148,10 +154,12 @@ class LeaveRequestController extends Controller
             };
 
             $empName = trim(($leaf->employee->FirstName ?? '') . ' ' . ($leaf->employee->LastName ?? ''));
-            if (!$empName) $empName = 'Unknown Employee';
+            if (! $empName) {
+                $empName = 'Unknown Employee';
+            }
 
             $typeName = $leaf->type->Name ?? 'Leave';
-            
+
             $events[] = [
                 'id' => $leaf->Id,
                 'title' => $empName . ' - ' . $typeName,
@@ -165,40 +173,48 @@ class LeaveRequestController extends Controller
                     'days' => $leaf->TotalDays,
                     'reliever' => ($leaf->reliever->FirstName ?? '') . ' ' . ($leaf->reliever->LastName ?? ''),
                     'startDate' => Carbon::parse($leaf->StartDate)->toDateString(), // Explicit date for frontend
-                ]
+                ],
             ];
 
             // Daily Counts Logic
             $s = Carbon::parse($leaf->StartDate);
             $e = Carbon::parse($leaf->EndDate);
-            
+
             // Clamp to requested view range for stats
-            if ($s->lt($start)) $s = $start->copy();
-            if ($e->gt($end)) $e = $start->copy(); // Wait, if leaf ends after view end, we shouldn't clamp E to START. We should clamp to END.
+            if ($s->lt($start)) {
+                $s = $start->copy();
+            }
+            if ($e->gt($end)) {
+                $e = $start->copy();
+            } // Wait, if leaf ends after view end, we shouldn't clamp E to START. We should clamp to END.
             // FIXED BUG: Clamping logic was checking $e > $end then setting $e = $start (in my head).
             // Actually previous code was: if ($e->gt($end)) $e = Carbon::parse($end);
             // Correct logic:
-            if ($e->gt($end)) $e = $end->copy();
+            if ($e->gt($end)) {
+                $e = $end->copy();
+            }
 
             // Ensure s <= e after clamping. If clamping makes s > e, then the leave is outside range (shouldn't happen with query but safe to check)
-            if ($s->gt($e)) continue;
+            if ($s->gt($e)) {
+                continue;
+            }
 
             for ($d = $s->copy(); $d->lte($e); $d->addDay()) {
                 $dateStr = $d->toDateString();
-                if (!isset($dailyCounts[$dateStr])) {
+                if (! isset($dailyCounts[$dateStr])) {
                     $dailyCounts[$dateStr] = [
                         'count' => 0,
-                        'employees' => []
+                        'employees' => [],
                     ];
                 }
                 $dailyCounts[$dateStr]['count']++;
                 $dailyCounts[$dateStr]['employees'][] = [
                     'name' => $empName,
                     'type' => $typeName,
-                    'avatar' => $leaf->employee->PhotoPath ?? null
+                    'avatar' => $leaf->employee->PhotoPath ?? null,
                 ];
             }
-            
+
             // Stats Logic
             // We should only count days relevant to the view? Or TotalDays of the request?
             // The requirement says "Leave statistics... populated". Usually means visible days.
@@ -208,9 +224,9 @@ class LeaveRequestController extends Controller
             $daysInView = $s->diffInDays($e) + 1; // Inclusive
             // Adjust for working days? That's expensive. Let's stick to calendar days for visual stats or use simple diff.
             // The user wants "Tabulations". simple count is okay.
-            
+
             $statsName = $leaf->type->Name ?? 'Other';
-            if (!isset($leaveTypeStats[$statsName])) {
+            if (! isset($leaveTypeStats[$statsName])) {
                 $leaveTypeStats[$statsName] = 0;
             }
             $leaveTypeStats[$statsName] += $daysInView;
@@ -219,7 +235,7 @@ class LeaveRequestController extends Controller
         return response()->json([
             'events' => $events,
             'daily_counts' => $dailyCounts,
-            'stats' => $leaveTypeStats
+            'stats' => $leaveTypeStats,
         ]);
     }
 
@@ -231,7 +247,7 @@ class LeaveRequestController extends Controller
         try {
             $data = $request->validate([
                 'StartDate' => 'required|date',
-                'EndDate'   => 'required|date|after_or_equal:StartDate',
+                'EndDate' => 'required|date|after_or_equal:StartDate',
                 'TotalDays' => 'nullable|numeric|min:0',
                 'EmployeeID' => 'nullable|integer',
             ]);
@@ -241,6 +257,7 @@ class LeaveRequestController extends Controller
                 $request->input('TotalDays'),
                 $data['EmployeeID'] ?? null
             );
+
             return response()->json(['days' => $days]);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
@@ -262,7 +279,7 @@ class LeaveRequestController extends Controller
             'Status' => ['nullable', Rule::in(['Pending','Approved','Rejected','Cancelled'])],
         ]);
 
-        if (!empty($data['EmployeeID'])) {
+        if (! empty($data['EmployeeID'])) {
             $this->assertEmployeeEligibleForLeaveType($data['EmployeeID'], $data['LeaveTypeID']);
             $type = LeaveType::find($data['LeaveTypeID']);
             if ($type && $type->AllowedGender) {
@@ -274,7 +291,7 @@ class LeaveRequestController extends Controller
                 }
             }
 
-            if (!empty($data['RelieverID'])) {
+            if (! empty($data['RelieverID'])) {
                 if ($data['RelieverID'] == $data['EmployeeID']) {
                     throw ValidationException::withMessages([
                         'RelieverID' => 'Reliever cannot be the same employee.',
@@ -314,6 +331,7 @@ class LeaveRequestController extends Controller
                         'TotalDays' => 'Total days must be greater than zero.',
                     ]);
                 }
+
                 return round($requestedSingleDay, 2);
             }
             if ($allowed <= 0) {
@@ -321,6 +339,7 @@ class LeaveRequestController extends Controller
                     'TotalDays' => 'Selected day is non-working or holiday.',
                 ]);
             }
+
             return round($allowed, 2);
         }
 
@@ -341,6 +360,7 @@ class LeaveRequestController extends Controller
                 'TotalDays' => 'Selected range has no working days.',
             ]);
         }
+
         return round($total, 2);
     }
 
@@ -377,34 +397,38 @@ class LeaveRequestController extends Controller
             $dateStr = $d->toDateString();
             if ($rows->firstWhere('HolidayDate', $dateStr)) {
                 $dates->push($dateStr);
+
                 continue;
             }
-            if ($recurring->firstWhere(fn($h) => Carbon::parse($h->HolidayDate)->format('m-d') === $d->format('m-d'))) {
+            if ($recurring->firstWhere(fn ($h) => Carbon::parse($h->HolidayDate)->format('m-d') === $d->format('m-d'))) {
                 $dates->push($dateStr);
             }
         }
+
         return $dates->unique();
     }
 
     private function getEmployeeReligion(?int $employeeId): ?string
     {
-        if (!$employeeId) {
+        if (! $employeeId) {
             return null;
         }
         $religion = Employee::where('Id', $employeeId)->value('Religion');
+
         return $this->normalizeReligion($religion);
     }
 
     private function getEmployeeCountry(?int $employeeId): ?string
     {
-        if (!$employeeId) {
+        if (! $employeeId) {
             return null;
         }
         $branchId = Employee::where('Id', $employeeId)->value('BranchID');
-        if (!$branchId) {
+        if (! $branchId) {
             return null;
         }
         $country = Branch::where('Id', $branchId)->value('Country');
+
         return $this->normalizeCountry($country);
     }
 
@@ -417,12 +441,13 @@ class LeaveRequestController extends Controller
     private function holidayAppliesToReligion(?string $employeeReligion, ?string $holidayReligion): bool
     {
         $holiday = $this->normalizeReligion($holidayReligion);
-        if (!$holiday) {
+        if (! $holiday) {
             return true;
         }
-        if (!$employeeReligion) {
+        if (! $employeeReligion) {
             return false;
         }
+
         return $holiday === $employeeReligion;
     }
 
@@ -435,18 +460,18 @@ class LeaveRequestController extends Controller
         if ($scope !== 'regional') {
             return true;
         }
-        if (!$employeeCountry || !$holidayCountryId) {
+        if (! $employeeCountry || ! $holidayCountryId) {
             return false;
         }
 
         $countries = $this->getCountryLookup();
         $country = $countries[$holidayCountryId] ?? null;
-        if (!$country) {
+        if (! $country) {
             return false;
         }
 
         $employee = $this->normalizeCountry($employeeCountry);
-        if (!$employee) {
+        if (! $employee) {
             return false;
         }
 
@@ -467,6 +492,7 @@ class LeaveRequestController extends Controller
             return $lookup;
         }
         $lookup = Country::select(['Id', 'Name', 'CountryCode', 'Iso3'])->get()->keyBy('Id')->all();
+
         return $lookup;
     }
 
@@ -476,6 +502,7 @@ class LeaveRequestController extends Controller
         if ($value === '') {
             return null;
         }
+
         return strtolower($value);
     }
 
@@ -485,30 +512,32 @@ class LeaveRequestController extends Controller
         if ($value === '') {
             return null;
         }
+
         return strtolower($value);
     }
 
     private function eligibleLeaveTypesForEmployee(?int $employeeId)
     {
         $query = LeaveType::query();
-        if (!$employeeId) {
+        if (! $employeeId) {
             return $query->orderBy('Name')->get();
         }
         $emp = Employee::find($employeeId);
         $gradeId = $emp->GradeID ?? null;
         $gender = $emp->Gender ?? null;
-        $query->where(function($q) use ($gradeId) {
+        $query->where(function ($q) use ($gradeId) {
             $q->whereDoesntHave('grades');
             if ($gradeId) {
-                $q->orWhereHas('grades', fn($g) => $g->where('t_HRLeaveTypeGrades.GradeID', $gradeId));
+                $q->orWhereHas('grades', fn ($g) => $g->where('t_HRLeaveTypeGrades.GradeID', $gradeId));
             }
         });
         if ($gender) {
-            $query->where(function($q) use ($gender) {
+            $query->where(function ($q) use ($gender) {
                 $q->whereNull('AllowedGender')
                   ->orWhere('AllowedGender', $gender);
             });
         }
+
         return $query->orderBy('Name')->get();
     }
 
@@ -517,14 +546,14 @@ class LeaveRequestController extends Controller
         $emp = Employee::find($employeeId);
         $gradeId = $emp->GradeID ?? null;
         $type = LeaveType::with('grades')->find($leaveTypeId);
-        if (!$type) {
+        if (! $type) {
             throw ValidationException::withMessages([
                 'LeaveTypeID' => 'Invalid leave type.',
             ]);
         }
         // Check grade eligibility
         if ($type->grades()->exists()) {
-            if (!$gradeId || !$type->grades()->where('t_HRLeaveTypeGrades.GradeID', $gradeId)->exists()) {
+            if (! $gradeId || ! $type->grades()->where('t_HRLeaveTypeGrades.GradeID', $gradeId)->exists()) {
                 throw ValidationException::withMessages([
                     'LeaveTypeID' => 'This leave type is not eligible for the employee’s job grade.',
                 ]);
@@ -543,10 +572,10 @@ class LeaveRequestController extends Controller
         if ($start && $end) {
             $overlap = LeaveRequest::where('EmployeeID', $employeeId)
                 ->whereIn('Status', ['Pending','Approved'])
-                ->where(function($q) use ($start, $end) {
+                ->where(function ($q) use ($start, $end) {
                     $q->whereBetween('StartDate', [$start, $end])
                       ->orWhereBetween('EndDate', [$start, $end])
-                      ->orWhere(function($inner) use ($start, $end) {
+                      ->orWhere(function ($inner) use ($start, $end) {
                           $inner->where('StartDate', '<=', $start)->where('EndDate', '>=', $end);
                       });
                 })
@@ -572,6 +601,7 @@ class LeaveRequestController extends Controller
             $balance->Taken = 0;
             $balance->Balance = ($balance->Accrued ?? 0);
         }
+
         return $balance;
     }
 

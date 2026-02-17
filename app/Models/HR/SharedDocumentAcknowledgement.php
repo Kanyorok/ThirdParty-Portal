@@ -27,11 +27,11 @@ class SharedDocumentAcknowledgement extends Model
     ];
 
     protected $casts = [
-        'DueOn'          => 'date',
+        'DueOn' => 'date',
         'AcknowledgedOn' => 'datetime',
-        'CreatedOn'      => 'datetime',
-        'ModifiedOn'     => 'datetime',
-        'DeletedOn'      => 'datetime',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
     public function document()

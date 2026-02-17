@@ -3,8 +3,8 @@
 namespace App\Models\HR\Discipline;
 
 use App\Models\DMS\Document;
-use App\Models\Legal\LegalTemplate;
 use App\Models\HR\Employee;
+use App\Models\Legal\LegalTemplate;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 

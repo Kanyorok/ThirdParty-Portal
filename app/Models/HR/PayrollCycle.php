@@ -12,7 +12,7 @@ class PayrollCycle extends Model
 
     protected $fillable = [
         'Year','Month','Status','OpenedOn','OpenedBy','ClosedOn','ClosedBy','ReopenedOn','ReopenedBy','Notes',
-        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn','DeletedBy','DeletedOn'
+        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn','DeletedBy','DeletedOn',
     ];
 
     protected $casts = [

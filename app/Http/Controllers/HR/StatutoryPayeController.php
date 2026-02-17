@@ -11,6 +11,7 @@ class StatutoryPayeController extends Controller
     public function index()
     {
         $bands = StatutoryPayeBand::orderBy('LowerLimit')->paginate(20);
+
         return view('hr.statutory.paye.index', compact('bands'));
     }
 
@@ -22,13 +23,13 @@ class StatutoryPayeController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'LowerLimit'    => ['required', 'numeric', 'min:0'],
-            'UpperLimit'    => ['nullable', 'numeric', 'gte:LowerLimit'],
-            'Rate'          => ['required', 'numeric', 'min:0'],
-            'FixedAmount'   => ['nullable', 'numeric', 'min:0'],
+            'LowerLimit' => ['required', 'numeric', 'min:0'],
+            'UpperLimit' => ['nullable', 'numeric', 'gte:LowerLimit'],
+            'Rate' => ['required', 'numeric', 'min:0'],
+            'FixedAmount' => ['nullable', 'numeric', 'min:0'],
             'EffectiveFrom' => ['required', 'date'],
-            'EffectiveTo'   => ['nullable', 'date', 'after:EffectiveFrom'],
-            'Description'   => ['nullable', 'string', 'max:255'],
+            'EffectiveTo' => ['nullable', 'date', 'after:EffectiveFrom'],
+            'Description' => ['nullable', 'string', 'max:255'],
         ]);
 
         $data['IsActive'] = 1;
@@ -43,6 +44,7 @@ class StatutoryPayeController extends Controller
     public function edit($id)
     {
         $band = StatutoryPayeBand::findOrFail($id);
+
         return view('hr.statutory.paye.edit', compact('band'));
     }
 
@@ -50,14 +52,14 @@ class StatutoryPayeController extends Controller
     {
         $band = StatutoryPayeBand::findOrFail($id);
         $data = $request->validate([
-            'LowerLimit'    => ['required', 'numeric', 'min:0'],
-            'UpperLimit'    => ['nullable', 'numeric', 'gte:LowerLimit'],
-            'Rate'          => ['required', 'numeric', 'min:0'],
-            'FixedAmount'   => ['nullable', 'numeric', 'min:0'],
+            'LowerLimit' => ['required', 'numeric', 'min:0'],
+            'UpperLimit' => ['nullable', 'numeric', 'gte:LowerLimit'],
+            'Rate' => ['required', 'numeric', 'min:0'],
+            'FixedAmount' => ['nullable', 'numeric', 'min:0'],
             'EffectiveFrom' => ['required', 'date'],
-            'EffectiveTo'   => ['nullable', 'date', 'after:EffectiveFrom'],
-            'Description'   => ['nullable', 'string', 'max:255'],
-            'IsActive'      => ['nullable', 'boolean'],
+            'EffectiveTo' => ['nullable', 'date', 'after:EffectiveFrom'],
+            'Description' => ['nullable', 'string', 'max:255'],
+            'IsActive' => ['nullable', 'boolean'],
         ]);
 
         $data['IsActive'] = $request->has('IsActive') ? $request->boolean('IsActive') : $band->IsActive;
@@ -73,7 +75,7 @@ class StatutoryPayeController extends Controller
     {
         $band = StatutoryPayeBand::findOrFail($id);
         $band->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);

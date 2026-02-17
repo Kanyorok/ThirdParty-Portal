@@ -12,6 +12,7 @@ class KpiFormulaController extends Controller
     public function index()
     {
         $formulas = KpiFormula::orderBy('Name')->paginate(20);
+
         return view('hr.config.kpi.formulas.index', compact('formulas'));
     }
 
@@ -23,9 +24,9 @@ class KpiFormulaController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'Code'        => ['required', 'string', 'max:50', 'unique:t_HRKPIFormulas,Code'],
-            'Name'        => ['required', 'string', 'max:150'],
-            'Expression'  => ['required', 'string'],
+            'Code' => ['required', 'string', 'max:50', 'unique:t_HRKPIFormulas,Code'],
+            'Name' => ['required', 'string', 'max:150'],
+            'Expression' => ['required', 'string'],
             'Description' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -41,6 +42,7 @@ class KpiFormulaController extends Controller
     public function edit($id)
     {
         $formula = KpiFormula::findOrFail($id);
+
         return view('hr.config.kpi.formulas.edit', compact('formula'));
     }
 
@@ -48,11 +50,11 @@ class KpiFormulaController extends Controller
     {
         $formula = KpiFormula::findOrFail($id);
         $data = $request->validate([
-            'Code'        => ['required', 'string', 'max:50', Rule::unique('t_HRKPIFormulas', 'Code')->ignore($formula->Id, 'Id')],
-            'Name'        => ['required', 'string', 'max:150'],
-            'Expression'  => ['required', 'string'],
+            'Code' => ['required', 'string', 'max:50', Rule::unique('t_HRKPIFormulas', 'Code')->ignore($formula->Id, 'Id')],
+            'Name' => ['required', 'string', 'max:150'],
+            'Expression' => ['required', 'string'],
             'Description' => ['nullable', 'string', 'max:255'],
-            'IsActive'    => ['nullable', 'boolean'],
+            'IsActive' => ['nullable', 'boolean'],
         ]);
 
         $data['IsActive'] = $request->has('IsActive') ? $request->boolean('IsActive') : $formula->IsActive;
@@ -68,7 +70,7 @@ class KpiFormulaController extends Controller
     {
         $formula = KpiFormula::findOrFail($id);
         $formula->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id(),
             'DeletedOn' => now(),
         ]);
