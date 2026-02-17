@@ -9,7 +9,7 @@ use App\Models\Fleet\FleetDriver;
 use App\Models\Fleet\FleetDriverAssignment;
 use App\Models\Fleet\FleetDriverLicenseTracking;
 use App\Models\Fleet\FleetVehicle;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Services\FleetManagement\FleetDriverService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

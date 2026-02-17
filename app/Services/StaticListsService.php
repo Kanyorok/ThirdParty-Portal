@@ -81,6 +81,8 @@ class StaticListsService
     public const Industries = 'Industries';
     public const CustomerType = 'CustomerTypes';
     public const TicketCategories = 'TicketCategories';
+    public const EmploymentTypes = 'EmploymentTypes';
+    public const ContractTypes = 'ContractTypes';
 
     public static function getLists(): Collection
     {
@@ -92,6 +94,8 @@ class StaticListsService
                         self::CustomerType,
                         self::TicketCategories,
                         self::ProductDevelopmentStages,
+                        self::EmploymentTypes,
+                        self::ContractTypes,
                        ]);
     }
 

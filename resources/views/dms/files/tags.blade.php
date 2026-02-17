@@ -43,7 +43,10 @@
 </div>
 <script>
     $(function () {
-        $('#DocumentTags').select2();
+        $('#DocumentTags').select2({
+            placeholder: "Select Tags",
+            dropdownParent: $("#offcanvasMain"),
+        });
 
         $('form#updateFileTagsForm').submit(async function (e) {
             e.preventDefault();

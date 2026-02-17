@@ -6,7 +6,7 @@ use App\Enums\ThirdParty\ThirdPartyTypeEnum;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 
-class ProfileCreatedEvent
+class ProfileCreated
 {
     use Dispatchable;
     use InteractsWithSockets;

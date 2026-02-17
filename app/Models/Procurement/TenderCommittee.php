@@ -56,6 +56,17 @@ class TenderCommittee extends Model
 
     protected $primaryKey = 'Id';
 
+    // Compatibility bridge: DB uses lowercase `id`, legacy code often reads/writes `Id`.
+    public function getIdAttribute()
+    {
+        return $this->attributes['id'] ?? null;
+    }
+
+    public function setIdAttribute($value): void
+    {
+        $this->attributes['id'] = $value;
+    }
+
     public static function getPrimaryKey(): string
     {
         return (new self())->getRouteKeyName();

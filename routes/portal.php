@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\Procurement\SupplierRFQController;
 use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
+use App\Http\Controllers\API\Procurement\TenderDocumentApiController;
 use App\Http\Controllers\API\Procurement\TenderInvitationResponseApiController;
 use App\Http\Controllers\API\Procurement\TenderSubmissionApiController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
@@ -67,18 +68,18 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
             ]);
         });
     });
+});
 
-    Route::prefix('profile')->middleware(['auth.thirdparty'])->group(function () {
-        Route::get('/', [ProfileController::class, 'show']);
-        Route::put('/', [ProfileController::class, 'updateProfile']);
-        Route::get('available', [ProfileController::class, 'getAvailableProfiles']);
-        Route::get('supplier', [ProfileController::class, 'getSupplierProfile']);
-        Route::put('supplier', [ProfileController::class, 'updateSupplierProfile']);
-        Route::get('tenant', [ProfileController::class, 'getTenantProfile']);
-        Route::put('tenant', [ProfileController::class, 'updateTenantProfile']);
-        Route::get('customer', [ProfileController::class, 'getCustomerProfile']);
-        Route::put('customer', [ProfileController::class, 'updateCustomerProfile']);
-    });
+Route::prefix('profile')->middleware(['auth.thirdparty'])->group(function () {
+    Route::get('/', [ProfileController::class, 'show']);
+    Route::put('/', [ProfileController::class, 'updateProfile']);
+    Route::get('available', [ProfileController::class, 'getAvailableProfiles']);
+    Route::get('supplier', [ProfileController::class, 'getSupplierProfile']);
+    Route::put('supplier', [ProfileController::class, 'updateSupplierProfile']);
+    Route::get('tenant', [ProfileController::class, 'getTenantProfile']);
+    Route::put('tenant', [ProfileController::class, 'updateTenantProfile']);
+    Route::get('customer', [ProfileController::class, 'getCustomerProfile']);
+    Route::put('customer', [ProfileController::class, 'updateCustomerProfile']);
 });
 
 Route::middleware(['auth.thirdparty'])->prefix('portal')->group(function () {
@@ -103,7 +104,10 @@ Route::middleware(['auth.thirdparty'])->prefix('supplier')->group(function () {
 
     Route::prefix('tenders')->group(function () {
         Route::get('/', [TenderApiController::class, 'index']);
+        Route::get('invitations', [TenderInvitationResponseApiController::class, 'index']);
         Route::get('{tender}', [TenderApiController::class, 'show'])->whereNumber('tender');
+        Route::get('{tender}/documents/{document}/download', [TenderDocumentApiController::class, 'download'])
+            ->whereNumber('tender');
         Route::post('respond', [TenderInvitationResponseApiController::class, 'respond']);
     });
 
