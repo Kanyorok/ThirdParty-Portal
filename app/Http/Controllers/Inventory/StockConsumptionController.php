@@ -8,7 +8,7 @@ use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\Inventory\StockConsumption;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\Store;

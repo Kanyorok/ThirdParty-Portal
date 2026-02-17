@@ -8,7 +8,7 @@ use App\Models\Core\Approval\CodeDetail;
 use App\Models\Fleet\FleetTripLog;
 use App\Models\Fleet\FleetVehicleRequest;
 use App\Models\HRM\Department;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Services\FleetManagement\FleetVehicleRequestService;
 use Exception;
 use Illuminate\Http\Request;

@@ -8,7 +8,7 @@ use App\Http\Requests\HRM\AddEmployeeRequest;
 use App\Http\Requests\HRM\EmployeePersonalRequest;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Services\HRM\EmployeeService;
 use App\Traits\Controller\EmployeeTrait;
 use Exception;
