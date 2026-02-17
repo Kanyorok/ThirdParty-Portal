@@ -699,6 +699,51 @@
                                             </div>
                                         </form>
                                         @break
+                                    @case(IntegrationsEnum::GoogleMaps->value)
+                                        <form id="gMapsConfigurationForm" method="post"
+                                              action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
+                                            <input type="hidden" name="Integration" value="{{ $integration->value }}"
+                                                   class="d-none" style="display: none;">
+                                            @if(!is_null($gmaps))
+                                                <div class="col-12">
+                                                    <div class="alert alert-info" role="alert">
+                                                        <i class="fas fa-check-circle me-2"></i>
+                                                        <strong>Configuration:</strong> There are existings setting already set
+                                                    </div>
+                                                </div>
+                                            @endif
+                                            <div class="mb-3 col-12">
+                                                <label class="form-label" for="GMaps_Key">API Key <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="text" class="form-control config-gmaps-form"
+                                                       id="GMaps_Key" disabled
+                                                       placeholder="Consumer Secret" required autocomplete="off"
+                                                       name="GMaps_Key">
+                                                <span id="GMaps_Key_error"
+                                                      class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <hr class="mb-1">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <button type="button" class="btn btn-secondary d-none float-start"
+                                                            id="gMapsConfigurationCancelBtn">
+                                                        cancel
+                                                    </button>
+                                                    <button type="button" class="btn btn-primary float-start"
+                                                            id="gMapsConfigurationEditBtn">
+                                                        edit config
+                                                    </button>
+                                                </div>
+                                                <div class="col-6">
+                                                    <button type="submit" class="btn btn-success d-none float-end"
+                                                            id="gMapsConfigurationBtn">
+                                                        save new key
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                        @break
                                     @case(IntegrationsEnum::Facebook->value)
                                         <form id="facebookConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf

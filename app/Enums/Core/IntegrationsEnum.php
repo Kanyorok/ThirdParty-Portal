@@ -15,6 +15,7 @@ enum IntegrationsEnum: string
     case SMS = 'sms';
     case InfoBip = 'ibp';
     case iTrack = 'itk';
+    case GoogleMaps = 'gmp';
     case PBX = 'pbx';
     case CoreBanking = 'cbs';
     case Channels = 'imb';
@@ -44,6 +45,7 @@ enum IntegrationsEnum: string
             self::ReportService => "SQL Server Reporting Service",
             self::DMSCoreBanking => "DMS Core Banking",
             self::CRDB => "Central Report Unit (CRU)",
+            self::GoogleMaps => "Google Maps Integration",
         };
     }
 

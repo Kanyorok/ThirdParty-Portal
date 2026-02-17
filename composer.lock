@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c04d67a7237ef8b3ab34f4ad7c5a7fd9",
+    "content-hash": "f4e7a47c489ae8fa0175e31700f0dcf2",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -6569,6 +6569,75 @@
                 }
             ],
             "time": "2022-04-22T08:51:55+00:00"
+        },
+        {
+            "name": "spatie/geocoder",
+            "version": "3.16.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/spatie/geocoder.git",
+                "reference": "e96eb56b6d1bdf20e8420e28c1156a99b6be8f39"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/spatie/geocoder/zipball/e96eb56b6d1bdf20e8420e28c1156a99b6be8f39",
+                "reference": "e96eb56b6d1bdf20e8420e28c1156a99b6be8f39",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^6.5|^7.0",
+                "illuminate/support": "^6.0|^7.0|^8.67|^9.0|^10.0|^11.0|^12.0",
+                "php": "^7.2|^8.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^4.0|^5.0|^6.0|^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^8.5.21|^9.0|^9.4.4|^10.5|^11.5.3"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "Geocoder": "Spatie\\Geocoder\\Facades\\Geocoder"
+                    },
+                    "providers": [
+                        "Spatie\\Geocoder\\GeocoderServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Spatie\\Geocoder\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Freek Van der Herten",
+                    "email": "freek@spatie.be"
+                }
+            ],
+            "description": "Geocoding addresses to coordinates",
+            "homepage": "https://github.com/spatie/geocoder",
+            "keywords": [
+                "coordinate",
+                "geocode",
+                "laravel",
+                "location",
+                "map"
+            ],
+            "support": {
+                "source": "https://github.com/spatie/geocoder/tree/3.16.2"
+            },
+            "funding": [
+                {
+                    "url": "https://spatie.be/open-source/support-us",
+                    "type": "custom"
+                }
+            ],
+            "time": "2025-11-20T10:14:50+00:00"
         },
         {
             "name": "spatie/icalendar-generator",
@@ -16693,5 +16762,5 @@
         "ext-zlib": "*"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
