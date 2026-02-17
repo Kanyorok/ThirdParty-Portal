@@ -1,13 +1,14 @@
-CREATE or alter PROCEDURE [dbo].[p_ProcessWorkflowActionTest]
-   -- @ActionType NVARCHAR(20), -- 'approve' or 'reject'
+CREATE OR ALTER PROCEDURE [dbo].[p_ProcessWorkflowAction]
     @Source NVARCHAR(255),
     @SourceID NVARCHAR(100),
     @UserID BIGINT,
     @UserName NVARCHAR(255) = NULL,
     @Notes NVARCHAR(MAX) = NULL,
     @StatusColumn NVARCHAR(100) = 'Status',
-	@StatusID BIGINT,
-	@IsApproved bit = Null
+    @StatusID BIGINT,
+    @IsApproved BIT = NULL,
+    @DocumentId BIGINT = NULL,
+    @SignatureID BIGINT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -15,98 +16,270 @@ BEGIN
 
     DECLARE
         @StageID NVARCHAR(200) = NULL,
+        @StageIDAsInt BIGINT = NULL,
         @WorkFlowID BIGINT = NULL,
-        @CurrentStatus NVARCHAR(50) = NULL,
-        @HasPendingApprovals BIT = 0,
-        @WorkflowStagePermission BIGINT = NULL, -- added to check perm
-        @Description NVARCHAR(50),
+        @WorkflowStagePermission BIGINT = NULL,
+        @Description NVARCHAR(100),
+        @StatusValue NVARCHAR(50),
         @UserHasPermissions SMALLINT = 0,
+        @IsMakerCheckerViolation BIT = 0,
+        @ViolationReason NVARCHAR(500) = NULL,
+        @SourceIDInt INT,
+        @ErrorMessage NVARCHAR(4000),
+        @ErrorSeverity INT,
+        @ErrorState INT,
+        -- Document/Signature
+        @IsDocRequired BIT = 0,
+        @ValidationErrorMessage NVARCHAR(500) = NULL,
+        -- Multi-approval
+        @WorkflowType NVARCHAR(100),
+        @StageName NVARCHAR(255),
+        @ConfiguredCount INT = 1,
+        @TotalApprovalsRequired INT = 0,
+        @CurrentApprovedCount INT = 0,
+        @TotalEligibleUsers INT = 0,
+        @PendingCountBeforeDelete INT = 0,
+        @RemainingPendingCount INT = 0,
+        @StageCompleted BIT = 0,
+        @HasPendingApprovals BIT = 0,
+        @SystemUserId BIGINT,
+        @EffectivePermissionId BIGINT,
+        @Amount DECIMAL(20, 4) = 0,
+        -- Action classification
+        @IsApprovalAction BIT = 0,
+        @IsRejectionAction BIT = 0,
+        -- Email
         @UserEmail NVARCHAR(255),
         @EmailMessage NVARCHAR(MAX),
-        @EmailSubject NVARCHAR(255);
+        @EmailSubject NVARCHAR(255),
+        -- Source table update
+        @LastApproverColumn NVARCHAR(100) = '',
+        @UpdateSQL NVARCHAR(MAX),
+        @KeyColumn NVARCHAR(50) = 'Id',
+        @TableName NVARCHAR(255);
 
     BEGIN TRY
-       BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
-        -- Get current workflow info and set status ID based on action
+        -- =====================================================================
+        -- 1. VALIDATE SOURCEID CONVERSION
+        -- =====================================================================
+        SET @SourceIDInt = TRY_CAST(@SourceID AS INT);
+        IF @SourceIDInt IS NULL
+        BEGIN
+            RAISERROR('SourceID must be a valid integer', 16, 1);
+            RETURN;
+        END
+
+        -- =====================================================================
+        -- 2. VALIDATE STATUS ID & CLASSIFY ACTION
+        -- =====================================================================
+        SELECT TOP 1
+            @StatusValue = Value,
+            @Description = Description
+        FROM t_CodeDetails WITH (NOLOCK)
+        WHERE ID = @StatusID;
+
+        IF @Description IS NULL
+        BEGIN
+            SET @ErrorMessage = 'Status ID not found: ' + CAST(@StatusID AS NVARCHAR(20));
+            RAISERROR(@ErrorMessage, 16, 1);
+            RETURN;
+        END
+
+        -- Classify action based on description
+        IF LOWER(@Description) LIKE '%approve%' OR LOWER(@Description) = 'approval'
+            SET @IsApprovalAction = 1;
+        ELSE IF LOWER(@Description) LIKE '%reject%'
+            SET @IsRejectionAction = 1;
+
+        -- =====================================================================
+        -- 3. MAKER-CHECKER VIOLATION CHECK
+        -- =====================================================================
         SELECT
+            @IsMakerCheckerViolation = IsViolation,
+            @ViolationReason = FailureReason
+        FROM dbo.f_CheckMakerCheckerViolation(@Source, @SourceIDInt, @UserID);
+
+        IF @IsMakerCheckerViolation = 1
+        BEGIN
+            SET @ErrorMessage = ISNULL(@ViolationReason, 'Maker-Checker violation detected');
+            RAISERROR(@ErrorMessage, 16, 1);
+            RETURN;
+        END
+
+        -- =====================================================================
+        -- 4. DOCUMENT & SIGNATURE VALIDATION
+        -- =====================================================================
+        IF @DocumentId IS NOT NULL OR @SignatureID IS NOT NULL
+        BEGIN
+            EXEC dbo.p_ValidateWorkflowDocumentSignature
+                @Source = @Source,
+                @SourceID = @SourceID,
+                @UserID = @UserID,
+                @DocumentId = @DocumentId,
+                @SignatureID = @SignatureID,
+                @IsDocRequired = @IsDocRequired OUTPUT,
+                @ErrorMessage = @ValidationErrorMessage OUTPUT;
+
+            IF @ValidationErrorMessage IS NOT NULL
+            BEGIN
+                RAISERROR(@ValidationErrorMessage, 16, 1);
+                RETURN;
+            END
+        END
+
+        -- =====================================================================
+        -- 5. GET CURRENT WORKFLOW STAGE INFO
+        -- =====================================================================
+        SELECT TOP 1
             @StageID = p.Stage,
             @WorkFlowID = ws.WorkFlowID,
-            @WorkflowStagePermission = ws.PermissionId -- added to check perm
-        FROM dbo.t_WorkFlowPending p
-        JOIN dbo.t_WorkFlowStages ws ON p.Stage = ws.Id
+            @WorkflowStagePermission = ws.PermissionId,
+            @ConfiguredCount = ISNULL(ws.Count, 1),
+            @StageName = ws.StageName,
+            @WorkflowType = wt.TypeID
+        FROM dbo.t_WorkFlowPending p WITH (NOLOCK)
+        JOIN dbo.t_WorkFlowStages ws WITH (NOLOCK) ON TRY_CAST(p.Stage AS BIGINT) = ws.Id
+        LEFT JOIN dbo.t_WorkFlowTypes wt WITH (NOLOCK) ON ws.WorkFlowTypeId = wt.Id
         WHERE p.Source = @Source
           AND p.SourceID = @SourceID
           AND p.UserId = @UserID
           AND p.DeletedOn IS NULL;
 
-        -- Check if user has permissions
-        DECLARE @permissionName NVARCHAR(100);
-        SELECT @permissionName = name FROM t_Permissions WHERE id = @WorkflowStagePermission;
-
-        SELECT @UserHasPermissions = CASE WHEN EXISTS (
-            SELECT 1 FROM [t_Users] WHERE
-            (EXISTS
-            (
-                SELECT * FROM [t_Roles]
-                INNER JOIN [t_ModelRoles] ON
-                    [t_Roles].[id] = [t_ModelRoles].[role_id]
-                WHERE [t_Users].[Id] = [t_ModelRoles].[model_id]
-                  AND [t_ModelRoles].[model_type] = 'UserID'
-                  AND EXISTS (
-                    SELECT * FROM [t_Permissions]
-                    INNER JOIN [t_RolePermissions] ON [t_Permissions].[id] = [t_RolePermissions].[permission_id]
-                    WHERE [t_Roles].[id] = [t_RolePermissions].[role_id]
-                      AND [name] IN (@permissionName)
-                    )
-            )
-            OR
-            EXISTS
-            (SELECT * FROM [t_Permissions]
-                INNER JOIN [t_ModelPermissions] ON
-                [t_Permissions].[id] = [t_ModelPermissions].[permission_id]
-                WHERE [t_Users].[Id] = [t_ModelPermissions].[model_id]
-                  AND [t_ModelPermissions].[model_type] = 'UserID'
-                  AND [name] IN (@permissionName)
-            )
-            )
-            AND [t_Users].[DeletedOn] IS NULL
-            AND [t_Users].Id = @UserID
-            ) THEN 1 ELSE 0 END;
-
-        -- Get status value from t_CodeDetails
-        DECLARE @StatusValue NVARCHAR(50);
-        SELECT @StatusValue = Value,
-               @Description = Description
-        FROM t_CodeDetails
-        WHERE ID = @StatusID;
-
-        -- Check if there are any pending approvals for this item
-        SELECT @HasPendingApprovals = CASE WHEN EXISTS (
-            SELECT 1 FROM dbo.t_WorkFlowPending
-            WHERE Source = @Source AND SourceID = @SourceID AND DeletedOn IS NULL
-        ) THEN 1 ELSE 0 END;
-
-        -- Set current status
-        SET @CurrentStatus = CASE WHEN @HasPendingApprovals = 1 THEN 'Pending' ELSE 'Completed' END;
-
-        -- Validate action
         IF @StageID IS NULL
         BEGIN
-            ROLLBACK TRANSACTION;
-            SELECT 'ERROR' AS Status, 'No pending approval found for this user' AS Message;
+            RAISERROR('No pending approval found for this user or already actioned', 16, 1);
             RETURN;
         END
 
-        -- Check if user has permission
+        SET @StageIDAsInt = TRY_CAST(@StageID AS BIGINT);
+
+        -- =====================================================================
+        -- 6. AMOUNT-BASED PERMISSION OVERRIDE
+        -- =====================================================================
+        SET @EffectivePermissionId = @WorkflowStagePermission;
+
+        -- Try to get amount from source table
+        BEGIN TRY
+            DECLARE @AmountSQL NVARCHAR(MAX);
+            SET @TableName = PARSENAME(@Source, 1);
+            SET @KeyColumn = 'Id';
+
+            -- Find key column
+            SELECT TOP 1 @KeyColumn = COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
+            WHERE TABLE_NAME = @TableName
+              AND COLUMN_NAME IN ('Id', 'ID', 'PlanID');
+
+            IF @KeyColumn IS NULL
+                SET @KeyColumn = 'Id';
+
+            -- Check if Amount column exists
+            IF EXISTS (
+                SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
+                WHERE TABLE_NAME = @TableName AND COLUMN_NAME = 'Amount'
+            )
+            BEGIN
+                SET @AmountSQL = N'SELECT @AmountOut = ISNULL(Amount, 0) FROM ' +
+                    QUOTENAME(@TableName) + ' WHERE ' + QUOTENAME(@KeyColumn) +
+                    ' = TRY_CAST(@SourceID AS BIGINT)';
+
+                EXEC sp_executesql @AmountSQL,
+                    N'@SourceID NVARCHAR(100), @AmountOut DECIMAL(20,4) OUTPUT',
+                    @SourceID, @Amount OUTPUT;
+            END
+        END TRY
+        BEGIN CATCH
+            SET @Amount = 0;
+        END CATCH
+
+        -- Override permission based on amount limits if configured
+        IF @StageIDAsInt IS NOT NULL
+            AND EXISTS (SELECT 1 FROM t_WorkFlowLimits WITH (NOLOCK)
+                        WHERE WorkFlowStageId = @StageIDAsInt AND DeletedOn IS NULL)
+        BEGIN
+            SELECT TOP 1 @EffectivePermissionId = PermissionId
+            FROM t_WorkFlowLimits WITH (NOLOCK)
+            WHERE WorkFlowStageId = @StageIDAsInt
+              AND DeletedOn IS NULL
+              AND @Amount <= MaxAmount
+            ORDER BY MaxAmount ASC;
+
+            -- Fallback to highest limit if amount exceeds all
+            IF @EffectivePermissionId IS NULL
+            BEGIN
+                SELECT TOP 1 @EffectivePermissionId = PermissionId
+                FROM t_WorkFlowLimits WITH (NOLOCK)
+                WHERE WorkFlowStageId = @StageIDAsInt AND DeletedOn IS NULL
+                ORDER BY MaxAmount DESC;
+            END
+
+            -- Final fallback to stage default
+            IF @EffectivePermissionId IS NULL
+                SET @EffectivePermissionId = @WorkflowStagePermission;
+        END
+
+        -- =====================================================================
+        -- 7. CHECK USER PERMISSIONS
+        -- =====================================================================
+        SET @UserHasPermissions = dbo.f_CheckUserPermission(@UserID, @EffectivePermissionId);
+
         IF @UserHasPermissions = 0
         BEGIN
-            ROLLBACK TRANSACTION;
-            SELECT 'ERROR' AS Status, 'User has no permissions' AS Message;
+            RAISERROR('User does not have required permissions for this workflow stage', 16, 1);
             RETURN;
         END
 
-        -- Record action in history
+        -- =====================================================================
+        -- 8. DUPLICATE ACTION PREVENTION
+        -- =====================================================================
+        IF EXISTS (
+            SELECT 1 FROM t_WorkFlowHistory WITH (NOLOCK)
+            WHERE Source = @Source
+              AND SourceID = @SourceID
+              AND Stage = @StageID
+              AND CreatedBy = @UserID
+              AND StatusId = @StatusID
+              AND DeletedOn IS NULL
+        )
+        BEGIN
+            RAISERROR('You have already acted on this approval', 16, 1);
+            RETURN;
+        END
+
+        -- =====================================================================
+        -- 9. COUNT PENDING BEFORE ACTION
+        -- =====================================================================
+        SELECT @PendingCountBeforeDelete = COUNT(*)
+        FROM dbo.t_WorkFlowPending WITH (NOLOCK)
+        WHERE Source = @Source
+          AND SourceID = @SourceID
+          AND Stage = @StageID
+          AND DeletedOn IS NULL;
+
+        -- =====================================================================
+        -- 10. SOFT-DELETE USER'S PENDING RECORD (BEFORE checking remaining)
+        -- =====================================================================
+        UPDATE dbo.t_WorkFlowPending
+        SET DeletedBy = @UserID,
+            DeletedOn = GETDATE(),
+            ModifiedBy = @UserID,
+            ModifiedOn = GETDATE()
+        WHERE Source = @Source
+          AND SourceID = @SourceID
+          AND UserId = @UserID
+          AND DeletedOn IS NULL;
+
+        IF @@ROWCOUNT = 0
+        BEGIN
+            RAISERROR('Failed to process pending approval entry', 16, 1);
+            RETURN;
+        END
+
+        -- =====================================================================
+        -- 11. RECORD ACTION IN HISTORY
+        -- =====================================================================
         INSERT INTO dbo.t_WorkFlowHistory (
             Source, SourceID, Stage, Notes, StatusId,
             CreatedBy, CreatedOn, ModifiedBy, ModifiedOn, IsApproved
@@ -116,53 +289,255 @@ BEGIN
             @UserID, GETDATE(), @UserID, GETDATE(), @IsApproved
         );
 
-        -- Mark approval as processed
-        UPDATE dbo.t_WorkFlowPending
-        SET DeletedBy = @UserID,
-            DeletedOn = GETDATE(),
-            ModifiedBy = @UserID,
-            ModifiedOn = GETDATE()
-        WHERE Source = @Source AND SourceID = @SourceID AND UserId = @UserID;
-
-        -- Update source table if rejected or final approval
-        IF @HasPendingApprovals = 1
+        -- =====================================================================
+        -- 12. HANDLE REJECTION — clear all pending, update source, return
+        -- =====================================================================
+        IF @IsRejectionAction = 1
         BEGIN
-            DECLARE @LastApproverColumn NVARCHAR(100) = '';
-            DECLARE @UpdateSQL NVARCHAR(MAX);
-            DECLARE @KeyColumn NVARCHAR(50) = 'Id';
+            -- Get system user for cleanup
+            SELECT TOP 1 @SystemUserId = Id
+            FROM t_Users WITH (NOLOCK)
+            WHERE UserID = 'ERPSYS' AND DeletedOn IS NULL;
 
-            -- Check if LastApprover column exists
-            IF EXISTS (
-                SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-                WHERE TABLE_NAME = PARSENAME(@Source, 1)
-                  AND COLUMN_NAME = 'LastApprover'
-            )
+            IF @SystemUserId IS NULL
+                SET @SystemUserId = @UserID;
+
+            -- Soft-delete ALL remaining pending records across all stages
+            UPDATE dbo.t_WorkFlowPending
+            SET DeletedBy = @SystemUserId,
+                DeletedOn = GETDATE(),
+                ModifiedBy = @SystemUserId,
+                ModifiedOn = GETDATE()
+            WHERE Source = @Source
+              AND SourceID = @SourceID
+              AND DeletedOn IS NULL;
+
+            -- Update source table with rejected status
+            SET @TableName = PARSENAME(@Source, 1);
+
+            IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @TableName)
             BEGIN
-                SET @LastApproverColumn = ', LastApprover = @UserName';
+                -- Reset key column
+                SET @KeyColumn = 'Id';
+                SELECT TOP 1 @KeyColumn = COLUMN_NAME
+                FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
+                WHERE TABLE_NAME = @TableName AND COLUMN_NAME IN ('Id', 'ID');
+
+                IF @KeyColumn IS NULL SET @KeyColumn = 'Id';
+
+                -- Validate required columns exist
+                IF EXISTS (
+                    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
+                    WHERE TABLE_NAME = @TableName AND COLUMN_NAME = @StatusColumn
+                )
+                AND EXISTS (
+                    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
+                    WHERE TABLE_NAME = @TableName AND COLUMN_NAME = 'ModifiedBy'
+                )
+                AND EXISTS (
+                    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
+                    WHERE TABLE_NAME = @TableName AND COLUMN_NAME = 'ModifiedOn'
+                )
+                BEGIN
+                    SET @LastApproverColumn = '';
+                    IF EXISTS (
+                        SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
+                        WHERE TABLE_NAME = @TableName AND COLUMN_NAME = 'LastApprover'
+                    )
+                    BEGIN
+                        SET @LastApproverColumn = ', LastApprover = @UserName';
+                    END
+
+                    SET @UpdateSQL = N'UPDATE ' + QUOTENAME(@TableName) + ' SET ' +
+                        QUOTENAME(@StatusColumn) + ' = @StatusID, ' +
+                        'ModifiedBy = @UserID, ModifiedOn = GETDATE()' +
+                        @LastApproverColumn +
+                        ' WHERE ' + QUOTENAME(@KeyColumn) + ' = @SourceID';
+
+                    EXEC sp_executesql @UpdateSQL,
+                        N'@StatusID BIGINT, @UserName NVARCHAR(255), @SourceID NVARCHAR(100), @UserID BIGINT',
+                        @StatusID, @UserName, @SourceID, @UserID;
+                END
             END
 
-            -- Find key column name (Id or ID)
-            SELECT TOP 1 @KeyColumn = COLUMN_NAME
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_NAME = PARSENAME(@Source, 1)
-              AND COLUMN_NAME IN ('Id', 'ID');
+            COMMIT TRANSACTION;
 
-            IF @KeyColumn IS NULL
+            -- Email notification for rejection
+            SELECT @UserEmail = Email FROM t_Users WITH (NOLOCK) WHERE Id = @UserID;
+            IF @UserEmail IS NOT NULL AND LEN(@UserEmail) > 5
+            BEGIN
+                SET @EmailSubject = 'Workflow Rejection - ' + ISNULL(@Description, '[Unknown]');
+                SET @EmailMessage =
+                    'Workflow for Source: ' + ISNULL(@Source, '[Unknown]') +
+                    ', ID: ' + ISNULL(@SourceID, '[Unknown]') +
+                    ' has been rejected. Reason: ' + ISNULL(@Notes, '[No notes provided]');
+
+                EXEC p_sendNotificationEmail
+                    @UserID = @UserID,
+                    @Subject = @EmailSubject,
+                    @Message = @EmailMessage,
+                    @SenderId = @UserID,
+                    @Source = @Source,
+                    @SourceID = @SourceID;
+            END
+
+            SELECT 'SUCCESS' AS Status,
+                   @Description + ' Recorded' AS Message,
+                   @Description AS WorkflowStatus,
+                   CAST(1) AS StageCompleted,
+                   0 AS CurrentApprovals,
+                   0 AS RequiredApprovals;
+            RETURN;
+        END
+
+        -- =====================================================================
+        -- 13. HANDLE APPROVAL — multi-approval logic
+        -- =====================================================================
+        IF @IsApprovalAction = 1
+        BEGIN
+            -- Count approvals already recorded for this stage
+            SELECT @CurrentApprovedCount = COUNT(*)
+            FROM t_WorkFlowHistory WITH (NOLOCK)
+            WHERE Source = @Source
+              AND SourceID = @SourceID
+              AND Stage = @StageID
+              AND IsApproved = 1
+              AND DeletedOn IS NULL;
+
+            -- Determine total approvals required based on workflow type
+            SET @WorkflowType = ISNULL(@WorkflowType, 'CNT');
+
+            IF @WorkflowType = 'ALL'
+            BEGIN
+                -- All eligible users must approve
+                SELECT @TotalEligibleUsers = COUNT(*)
+                FROM dbo.f_getUserWithPermission(@EffectivePermissionId);
+
+                SET @TotalApprovalsRequired = @TotalEligibleUsers;
+            END
+            ELSE IF @WorkflowType = 'MAJ'
+            BEGIN
+                -- Majority must approve
+                SELECT @TotalEligibleUsers = COUNT(*)
+                FROM dbo.f_getUserWithPermission(@EffectivePermissionId);
+
+                SET @TotalApprovalsRequired = (@TotalEligibleUsers / 2) + 1;
+            END
+            ELSE -- CNT or AMT or default
+            BEGIN
+                SET @TotalApprovalsRequired = @ConfiguredCount;
+            END
+
+            -- Ensure at least 1 approval is required
+            IF @TotalApprovalsRequired < 1
+                SET @TotalApprovalsRequired = 1;
+
+            -- Check if stage is complete
+            IF @CurrentApprovedCount >= @TotalApprovalsRequired
+            BEGIN
+                SET @StageCompleted = 1;
+
+                -- Get system user for cleanup
+                SELECT TOP 1 @SystemUserId = Id
+                FROM t_Users WITH (NOLOCK)
+                WHERE UserID = 'ERPSYS' AND DeletedOn IS NULL;
+
+                IF @SystemUserId IS NULL
+                    SET @SystemUserId = @UserID;
+
+                -- Clean up remaining pending records for this stage
+                UPDATE dbo.t_WorkFlowPending
+                SET DeletedBy = @SystemUserId,
+                    DeletedOn = GETDATE(),
+                    ModifiedBy = @SystemUserId,
+                    ModifiedOn = GETDATE()
+                WHERE Source = @Source
+                  AND SourceID = @SourceID
+                  AND Stage = @StageID
+                  AND DeletedOn IS NULL;
+            END
+        END
+
+        -- =====================================================================
+        -- 14. CHECK FOR REMAINING PENDING APPROVALS (any stage)
+        -- =====================================================================
+        SELECT @HasPendingApprovals = CASE WHEN EXISTS (
+            SELECT 1 FROM dbo.t_WorkFlowPending WITH (NOLOCK)
+            WHERE Source = @Source AND SourceID = @SourceID AND DeletedOn IS NULL
+        ) THEN 1 ELSE 0 END;
+
+        -- =====================================================================
+        -- 15. UPDATE SOURCE TABLE (only if no more pending approvals)
+        -- =====================================================================
+        IF @HasPendingApprovals = 0
+        BEGIN
+            SET @TableName = PARSENAME(@Source, 1);
+
+            IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @TableName)
+            BEGIN
+                -- Reset key column
                 SET @KeyColumn = 'Id';
+                SELECT TOP 1 @KeyColumn = COLUMN_NAME
+                FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
+                WHERE TABLE_NAME = @TableName AND COLUMN_NAME IN ('Id', 'ID');
 
-            -- Build dynamic update SQL
-            SET @UpdateSQL = N'UPDATE ' + QUOTENAME(@Source) + ' SET ' + QUOTENAME(@StatusColumn) + ' = @StatusID, ModifiedBy = @UserID, ModifiedOn = GETDATE()' + @LastApproverColumn + ' WHERE ' + QUOTENAME(@KeyColumn) + ' = @SourceID';
+                IF @KeyColumn IS NULL SET @KeyColumn = 'Id';
 
-            -- Execute dynamic SQL
-            EXEC sp_executesql @UpdateSQL,
-                N'@StatusID NVARCHAR(50), @UserName NVARCHAR(255), @SourceID NVARCHAR(100), @UserID BIGINT',
-                @StatusID, @UserName, @SourceID, @UserID;
+                -- Validate required columns
+                IF EXISTS (
+                    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
+                    WHERE TABLE_NAME = @TableName AND COLUMN_NAME = @StatusColumn
+                )
+                AND EXISTS (
+                    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
+                    WHERE TABLE_NAME = @TableName AND COLUMN_NAME = 'ModifiedBy'
+                )
+                AND EXISTS (
+                    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
+                    WHERE TABLE_NAME = @TableName AND COLUMN_NAME = 'ModifiedOn'
+                )
+                BEGIN
+                    SET @LastApproverColumn = '';
+                    IF EXISTS (
+                        SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
+                        WHERE TABLE_NAME = @TableName AND COLUMN_NAME = 'LastApprover'
+                    )
+                    BEGIN
+                        SET @LastApproverColumn = ', LastApprover = @UserName';
+                    END
+
+                    SET @UpdateSQL = N'UPDATE ' + QUOTENAME(@TableName) + ' SET ' +
+                        QUOTENAME(@StatusColumn) + ' = @StatusID, ' +
+                        'ModifiedBy = @UserID, ModifiedOn = GETDATE()' +
+                        @LastApproverColumn +
+                        ' WHERE ' + QUOTENAME(@KeyColumn) + ' = @SourceID';
+
+                    EXEC sp_executesql @UpdateSQL,
+                        N'@StatusID BIGINT, @UserName NVARCHAR(255), @SourceID NVARCHAR(100), @UserID BIGINT',
+                        @StatusID, @UserName, @SourceID, @UserID;
+                END
+                ELSE
+                BEGIN
+                    SET @ErrorMessage = 'Required columns missing in table: ' + @TableName +
+                        '. Need: ' + @StatusColumn + ', ModifiedBy, ModifiedOn';
+                    RAISERROR(@ErrorMessage, 16, 1);
+                    RETURN;
+                END
+            END
+            ELSE
+            BEGIN
+                SET @ErrorMessage = 'Source table does not exist: ' + @Source;
+                RAISERROR(@ErrorMessage, 16, 1);
+                RETURN;
+            END
         END
 
         COMMIT TRANSACTION;
 
-        -- ✅ EMAIL NOTIFICATION BLOCK STARTS HERE
-        SELECT @UserEmail = Email FROM t_Users WHERE Id = @UserID;
+        -- =====================================================================
+        -- 16. EMAIL NOTIFICATION (outside transaction)
+        -- =====================================================================
+        SELECT @UserEmail = Email FROM t_Users WITH (NOLOCK) WHERE Id = @UserID;
 
         IF @UserEmail IS NOT NULL AND LEN(@UserEmail) > 5
         BEGIN
@@ -182,18 +557,28 @@ BEGIN
                 @Source = @Source,
                 @SourceID = @SourceID;
         END
-        -- ✅ EMAIL NOTIFICATION BLOCK ENDS HERE
 
+        -- =====================================================================
+        -- 17. RETURN SUCCESS
+        -- =====================================================================
         SELECT 'SUCCESS' AS Status,
                @Description + ' Recorded' AS Message,
-               @Description AS WorkflowStatus;
+               @Description AS WorkflowStatus,
+               @StageCompleted AS StageCompleted,
+               @CurrentApprovedCount AS CurrentApprovals,
+               @TotalApprovalsRequired AS RequiredApprovals;
 
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
-        SELECT 'ERROR' AS Status,
-               ERROR_MESSAGE() AS Message,
-               NULL AS WorkflowStatus;
+
+        SELECT
+            @ErrorMessage = ERROR_MESSAGE(),
+            @ErrorSeverity = ERROR_SEVERITY(),
+            @ErrorState = ERROR_STATE();
+
+        RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
     END CATCH
 END
+GO
