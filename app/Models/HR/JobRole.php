@@ -18,8 +18,8 @@ class JobRole extends Model
     protected $primaryKey = 'id';
     public $timestamps = true;
 
-    const CREATED_AT = 'created_at';
-    const UPDATED_AT = 'updated_at';
+    public const CREATED_AT = 'created_at';
+    public const UPDATED_AT = 'updated_at';
 
     protected $fillable = [
         'name',
@@ -51,7 +51,7 @@ class JobRole extends Model
                 $model->guard_name = config('auth.defaults.guard', 'web');
             }
             // Map HR field names to Spatie field names
-            if (!empty($model->Name) && empty($model->name)) {
+            if (! empty($model->Name) && empty($model->name)) {
                 $model->name = $model->Name;
             }
         });

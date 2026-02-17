@@ -9,6 +9,9 @@ use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Currency;
 use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Finance\FinanceTaxRuleConfiguration;
+use App\Models\Procurement\ContractMilestone;
+use App\Models\Procurement\RFQAward;
+use App\Models\Procurement\TenderAward;
 use App\Services\Finance\ContractInvoiceEligibilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,9 +19,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
-use App\Models\Procurement\TenderAward;
-use App\Models\Procurement\ContractMilestone;
-use App\Models\Procurement\RFQAward;
 
 class InvoiceEntryV2Controller extends Controller
 {
