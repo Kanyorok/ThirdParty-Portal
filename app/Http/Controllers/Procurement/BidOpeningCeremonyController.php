@@ -68,8 +68,9 @@ class BidOpeningCeremonyController extends Controller
         $this->authorize(PermissionEnum::BidSubmissionWrite);
 
         $request->validate([
+            'officers_present' => 'required|string',
+            'ceremony_notes' => 'required|string|max:1000',
             'tender_ref' => 'required|exists:t_Tenders,TenderNo',
-            'opening_notes' => 'nullable|string|max:1000',
         ]);
 
         $tender = Tender::where('TenderNo', $request->tender_ref)->firstOrFail();

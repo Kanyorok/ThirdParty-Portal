@@ -11,15 +11,13 @@ use App\Models\Procurement\RFQCriteria;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\RFQSupplierResponseEvaluation;
-use App\Models\Procurement\RFQ;
 use App\Models\Procurement\TenderSupplier;
+use App\Models\Procurement\TenderAward;
+use App\Models\Procurement\Tender;
+use App\Models\Procurement\TenderCommitteeEvaluation;
 use App\Models\Procurement\TenderCommittee;
 use App\Models\Procurement\TenderCommitteeMember;
 use App\Models\Procurement\RFQCommittee;
-use App\Models\Procurement\RFQCommitteeMember;
-use App\Models\Procurement\TenderCommitteeEvaluation;
-use App\Models\Procurement\TenderCommitteeMember;
-use App\Models\Procurement\TenderSupplier;
 use App\Services\Procurement\TenderScoringService;
 use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\Request;
@@ -436,6 +434,8 @@ class AwardsController extends Controller
     public function store(Request $request)
     {
         // Consolidation can submit SupplierMaster/ThirdParty keys in some legacy records.
+
+        $type = $request->input('award_type', 'tender');
         // Normalize to t_Suppliers.Id before validation.
         $normalizedSupplierId = $this->resolveWinningSupplierId(
             $request->input('winning_supplier_id'),
@@ -447,6 +447,13 @@ class AwardsController extends Controller
 
         $request->validate([
             'tender_id' => 'required|exists:t_Tenders,Id',
+            'winning_supplier_id' => 'required|exists:t_Suppliers,Id',
+            'award_justification' => 'required|string|max:1000',
+            'awarded_amount' => 'nullable|numeric|min:0',
+            'contract_start_date' => 'nullable|date|after_or_equal:today',
+            'contract_end_date' => 'nullable|date|after:contract_start_date',
+            'notify_unsuccessful' => 'boolean',
+        ]);
 
         Log::info('Request data:', $request->all());
 
@@ -746,7 +753,25 @@ class AwardsController extends Controller
         try {
             DB::beginTransaction();
             $user = Auth::user();
+            $award = TenderAward::find($id);
+            $type = 'tender';
+            $workflowService = $this->workflow;
+            $statusEnum = \App\Enums\TenderAwardStatusEnum::SUBMITTED;
+            $statusSubmitted = TenderAward::STATUS_SUBMITTED;
+            $validStatuses = [TenderAward::STATUS_DRAFT, TenderAward::STATUS_PENDING];
+            // 2. Try RFQAward
+            if (! $award) {
+                $award = RFQAward::find($id);
+                $type = 'rfq';
+                $workflowService = $this->rfqWorkflow;
+                $statusEnum = \App\Enums\RFQAwardStatusEnum::SUBMITTED;
+                $statusSubmitted = \App\Models\Procurement\RFQAward::STATUS_SUBMITTED;
+                $validStatuses = [RFQAward::STATUS_PENDING, 'Pending'];
 
+                if (! $award) {
+                    return redirect()->back()->with('error', 'Award not found.');
+                }
+            }
             // Prevent submitting if another queued/active award already exists for this tender.
             $duplicateQueuedAward = TenderAward::where('TenderID', (int)$award->TenderID)
                 ->where('Id', '<>', (int)$award->Id)
@@ -776,7 +801,7 @@ class AwardsController extends Controller
                 throw new \Exception('Failed to submit award to workflow');
             }
 
-            // Manually update award status (workflow service doesn't auto-update the model)
+            
             $award->update([
                 'AwardStatus' => $statusSubmitted,
                 'ModifiedBy' => $user->Id,
@@ -791,7 +816,7 @@ class AwardsController extends Controller
                 ->withProperties(['action' => 'submit_for_approval', 'type' => $type])
                 ->log('Submitted ' . $type . ' award for approval: Award ID ' . $award->Id);
 
-            return redirect()->route('procawards.index') // Or back?
+            return redirect()->route('procawards.index') 
                 ->with('success', ucfirst($type) . ' Award submitted for approval successfully.');
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -920,11 +945,13 @@ class AwardsController extends Controller
 
             // Update award status model-side
             $award->refresh();
-            $award->update([
-                'AwardStatus' => 'Approved',
-                'ApprovedBy' => $user->Id,
-                'ApprovedOn' => now(),
-                'ModifiedBy' => $user->Id,
+            if($type === 'tender'){
+
+                $award->update([
+                    'AwardStatus' => 'Approved',
+                    'ApprovedBy' => $user->Id,
+                    'ApprovedOn' => now(),
+                    'ModifiedBy' => $user->Id,
                 'ModifiedOn' => now(),
             ]);
 
@@ -982,7 +1009,7 @@ class AwardsController extends Controller
 
                 // 2. Notify Suppliers
                 if ($type === 'tender') {
-                    $this->notifySuccessfulBidder($award);
+                    $this->notifySuccessfulBidders($award);
                     if ($award->NotifyUnsuccessfulBidders) {
                         $this->notifyUnsuccessfulBidders($award);
                     }
@@ -1022,7 +1049,7 @@ class AwardsController extends Controller
 
     public function reject(Request $request, $id = null)
     {
-        $request->validate([
+       $request->validate([
              'reason' => 'required|string|max:1000',
         ]);
 
@@ -1032,107 +1059,48 @@ class AwardsController extends Controller
             return redirect()->back()->with('error', 'Award ID is required.');
         }
 
-        // Load evaluations + criteria weights
-        $evaluations = RFQEvaluation::with([
-            'evaluations.rfqCriteriaUnscoped.criteria',
-            'evaluations.rfqCriteriaUnscoped.section',
-            'evaluations.supplier.thirdParty',
-        ])->where('RFQId', $rfq->Id)->get();
-
-        if ($evaluations->isEmpty()) {
-            return redirect()->route('procawards.index')->with('error', 'No evaluations found for this RFQ.');
-        }
-
-        // Section weights
-        $sectionWeights = \DB::table('t_RFQSection')
-            ->where('RFQID', $rfq->Id)
-            ->pluck('Weight', 'SectionID')
-            ->map(fn($w) => (float)$w)
-            ->toArray();
-
-        // Aggregate per supplier (similar to RFQEvaluationController@index logic)
-        $supplierTotals = []; // [supplierId] => [sumWeightedAcrossEvaluators, evaluatorCount]
-        foreach ($evaluations as $evaluation) {
-            $bySupplier = $evaluation->evaluations->groupBy('SupplierId');
-            foreach ($bySupplier as $supplierId => $entries) {
-                $sectionGroups = $entries->groupBy(fn($e) => $e->rfqCriteriaUnscoped?->SectionID);
-                $evaluatorWeightedTotal = 0.0;
-                foreach ($sectionGroups as $sectionId => $criteriaList) {
-                    $weight = (float)($sectionWeights[$sectionId] ?? 0);
-                    $maxTotal = $criteriaList->count() * 10; // each criteria out of 10
-                    $actualTotal = $criteriaList->sum('Score');
-                    $sectionWeighted = $maxTotal > 0 ? (($actualTotal / $maxTotal) * $weight) : 0.0;
-                    $evaluatorWeightedTotal += $sectionWeighted;
-                }
-                $supplierTotals[$supplierId]['sum'] = ($supplierTotals[$supplierId]['sum'] ?? 0) + $evaluatorWeightedTotal;
-                $supplierTotals[$supplierId]['count'] = ($supplierTotals[$supplierId]['count'] ?? 0) + 1;
-            }
-        }
-
-        // Determine top supplier (highest average weighted total)
-        $topSupplierId = null;
-        $topScore = -1;
-        foreach ($supplierTotals as $sid => $agg) {
-            $avg = $agg['count'] > 0 ? $agg['sum'] / $agg['count'] : 0.0;
-            if ($avg > $topScore) { $topScore = $avg; $topSupplierId = (int)$sid; }
-        }
-
-        if (!$topSupplierId) {
-            return redirect()->route('procawards.index')->with('error', 'Failed to determine top supplier for RFQ.');
-        }
-
-        DB::beginTransaction();
-
-        try {
-            // Persist award
-            $award = RFQAward::create([
-                'RFQId' => $rfq->Id,
-                'SupplierId' => $topSupplierId,
-                'Comments' => $request->input('approval_remarks'),
-                'CreatedBy' => Auth::id(),
-                'ModifiedBy' => Auth::id(),
-            ]);
-
-            $this->deactivateRfqCommittee((int) $rfq->Id, (int) Auth::id());
-
-            activity()
-                ->performedOn($award)
-                ->causedBy(Auth::user())
-                ->withProperties([
-                    'action' => 'approve-rfq',
-                    'rfq_id' => $rfq->Id,
-                    'supplier_id' => $topSupplierId,
-                    'score' => round($topScore,2),
-                ])
-                ->log('RFQ awarded to top ranked supplier.');
-
-            DB::commit();
-
-            return redirect()->route('procawards.index')->with('success', 'RFQ awarded successfully.');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::error('RFQ approval error: ' . $th->getMessage());
-            return redirect()->route('procawards.index')->with('error', 'Failed to award RFQ: ' . $th->getMessage());
-        }
-    }
-
-    /**
-     * Reject award
-     */
-    public function reject(Request $request)
-    {
-        $request->validate([
-            'award_id' => 'required|exists:t_TenderAward,Id',
-            'reason' => 'required|string|max:1000',
-        ]);
-
         try {
             DB::beginTransaction();
-
-            $award = TenderAward::findOrFail($request->award_id);
             $user = Auth::user();
 
-            Log::info("Starting award rejection", [
+            // Check for explicit type
+            $requestedType = $request->input('type') ?? $request->input('award_type');
+            $award = null;
+            $type = null;
+
+            if ($requestedType === 'rfq') {
+                $award = RFQAward::find($awardId);
+                $type = 'rfq';
+                $workflowService = $this->rfqWorkflow;
+                $statusEnum = \App\Enums\RFQAwardStatusEnum::REJECTED;
+            } elseif ($requestedType === 'tender') {
+                $award = TenderAward::find($awardId);
+                $type = 'tender';
+                $workflowService = $this->workflow;
+                $statusEnum = \App\Enums\TenderAwardStatusEnum::REJECTED;
+            } else {
+                // Fallback
+                $award = TenderAward::find($awardId);
+                if ($award) {
+                    $type = 'tender';
+                    $workflowService = $this->workflow;
+                    $statusEnum = \App\Enums\TenderAwardStatusEnum::REJECTED;
+                } else {
+                    $award = RFQAward::find($awardId);
+                    $type = 'rfq';
+                    $workflowService = $this->rfqWorkflow;
+                    $statusEnum = \App\Enums\RFQAwardStatusEnum::REJECTED;
+                }
+            }
+
+            $statusColumn = 'AwardStatus';
+
+            if (! $award) {
+                return redirect()->back()->with('error', 'Award not found.');
+            }
+
+            Log::info("Starting unified award rejection", [
+                'type' => $type,
                 'award_id' => $award->Id,
                 'user_id' => $user->Id,
             ]);
@@ -1173,8 +1141,11 @@ class AwardsController extends Controller
                     'ModifiedBy' => $user->Id,
                     'ModifiedOn' => now(),
                 ]);
+            $this->deactivateTenderCommittee((int) $award->TenderID, (int) $user->Id);
             } else {
                 $award->reject($user, $request->reason);
+              
+            $this->deactivateRfqCommittee((int) $award->RFQID, (int) $user->Id);
 
                 // Notify creator for RFQ
                 $creator = \App\Models\Auth\User::find($award->CreatedBy);
@@ -1225,6 +1196,8 @@ class AwardsController extends Controller
             return redirect()->back()->with('error', 'Failed to reject award: ' . $th->getMessage());
         }
     }
+
+
 
     /**
      * Cancel a pending award (re-open tender for re-award)
@@ -1658,10 +1631,44 @@ class AwardsController extends Controller
             return;
         }
 
-            $thirdParty = $winningSupplier->supplierMaster ? $winningSupplier->supplierMaster->thirdParty : null;
+        TenderCommittee::query()
+            ->whereIn('Id', $committeeIds->all())
+            ->update([
+                'IsActive' => false,
+                'ModifiedBy' => $actorId,
+                'ModifiedOn' => $now,
+            ]);
+
+        TenderCommitteeMember::query()
+            ->whereIn('CommitteeID', $committeeIds->all())
+            ->where('IsActive', true)
+            ->update([
+                'IsActive' => false,
+                'ModifiedBy' => $actorId,
+                'ModifiedOn' => $now,
+            ]);
+    }
+     
+
+    protected function notifySuccessfulBidders($award)
+    {
+        try {
+
+            $tenderTitle = $award->tender->Title ?? 'Tender';
+            $tenderNo = $award->tender->TenderNo;
+
+            // Get supplier contact info
+            $winningSupplier = \App\Models\ThirdParies\Supplier::find($award->WinningSupplierID);
+            if (! $winningSupplier) {
+                Log::warning("Winning supplier not found for award {$award->Id}");
+
+                return;
+            }
+
+            $thirdParty = $winningSupplier->supplierMaster?->thirdParty;
 
             if (! $thirdParty) {
-                Log::warning("ThirdParty record not found for winning supplier ID {$award->WinningSupplierID}");
+                Log::warning("ThirdParty record not found for winning supplier ID {$award->SupplierID}");
 
                 return;
             }
@@ -1707,23 +1714,9 @@ class AwardsController extends Controller
     /**
      * Send notifications to unsuccessful bidders
      */
-        TenderCommittee::query()
-            ->whereIn('Id', $committeeIds->all())
-            ->update([
-                'IsActive' => false,
-                'ModifiedBy' => $actorId,
-                'ModifiedOn' => $now,
-            ]);
+   
+    
 
-        TenderCommitteeMember::query()
-            ->whereIn('CommitteeID', $committeeIds->all())
-            ->where('IsActive', true)
-            ->update([
-                'IsActive' => false,
-                'ModifiedBy' => $actorId,
-                'ModifiedOn' => $now,
-            ]);
-    }
 
     protected function deactivateRfqCommittee(int $rfqId, int $actorId): void
     {
@@ -1756,6 +1749,7 @@ class AwardsController extends Controller
                 'ModifiedOn' => $now,
             ]);
     }
+
 
     protected function notifyUnsuccessfulBidders($award)
     {

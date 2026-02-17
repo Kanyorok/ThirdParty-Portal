@@ -34,6 +34,8 @@ class BranchConfigController extends Controller
 
         $data['CreatedBy'] = auth()->id();
         $data['CreatedOn'] = now();
+        $data['ModifiedBy'] = auth()->id();
+        $data['ModifiedOn'] = now();
         $data['IsActive'] = 1;
 
         Branch::create($data);
