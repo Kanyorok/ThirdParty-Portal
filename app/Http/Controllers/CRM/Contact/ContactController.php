@@ -34,7 +34,6 @@ class ContactController extends Controller
         return view('crm.contacts.index');
     }
 
-
     /**
      * Display the specified resource.
      */
@@ -59,6 +58,7 @@ class ContactController extends Controller
         }
 
         activity()->causedBy($request->user())->performedOn($contact)->event('view')->log('Viewed Unattached contact details');
+
         return view('crm.contacts.show', compact('contact', 'schedule', 'call'));
     }
 
@@ -67,7 +67,6 @@ class ContactController extends Controller
      */
     public function update(Request $request, Contact $contact)
     {
-        //
     }
 
     /**
@@ -75,6 +74,5 @@ class ContactController extends Controller
      */
     public function destroy(Contact $contact)
     {
-        //
     }
 }

@@ -42,6 +42,7 @@ class LoanListActionsController extends Controller
             } else {
                 $query = collect();
             }
+
             return $this->getLoans($query);
         }
 
@@ -64,6 +65,7 @@ class LoanListActionsController extends Controller
                     ? $service->removeLoans($loanIDs, $request->user())
                     : $service->addLoans($loanIDs, $request->user());
             }
+
             return $this->succeeded('processed successfully');
         }
 

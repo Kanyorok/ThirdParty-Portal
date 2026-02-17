@@ -2,34 +2,34 @@
 
 namespace App\Models\Insurance;
 
+use App\Models\Core\Approval\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Core\Approval\CodeDetail;
 
 class MedicalFundBeneficiary extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     protected $table = 't_MedicalFundBeneficiaries';
     protected $primaryKey = 'Id';
 
     public $timestamps = true;
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'FundId',
-        'ContributorId',   
+        'ContributorId',
         'FullName',
         'Relationship',
         'DateOfBirth',
         'NationalID',
         'Contact',
         'IsActive',
-        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn','DeletedBy','DeletedOn'
+        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn','DeletedBy','DeletedOn',
     ];
 
     public static function getPrimaryKey(): string
@@ -43,8 +43,8 @@ class MedicalFundBeneficiary extends Model
     }
 
     public function contributor()
-    { 
-        return $this->belongsTo(MedicalFundContributor::class, 'ContributorId','Id'); 
+    {
+        return $this->belongsTo(MedicalFundContributor::class, 'ContributorId', 'Id');
     }
 
     /**

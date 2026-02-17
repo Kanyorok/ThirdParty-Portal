@@ -2,29 +2,27 @@
 
 namespace App\Models\Inventory;
 
+use App\Models\Auth\User;
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\Core\Branch;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
-use App\Models\Core\Branch;
-use App\Models\Inventory\StockAdjustment;
-use App\Models\Auth\User;
 
 class StockAdjustmentItem extends Model
 {
     use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     public $timestamps = false;
     protected $table = 't_StockAdjustmentItems';
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
     protected $fillable = [
         'AdjustmentId', 'Item', 'AdjustmentQty', 'Remarks', 'UOM', 'UnitCost', 'Reason',
-        'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn'
+        'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn',
     ];
-
 
     public function adjustment()
     {
@@ -39,7 +37,6 @@ class StockAdjustmentItem extends Model
     public function modifier()
     {
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
-
     }
 
     public function reason()
@@ -66,5 +63,4 @@ class StockAdjustmentItem extends Model
     {
         return $this->belongsTo(ItemMasterList::class, 'Item', 'Id');
     }
-
 }

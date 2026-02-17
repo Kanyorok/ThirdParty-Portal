@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Procurement\Suppliers\Prequalification;
 
-use Illuminate\Foundation\Http\FormRequest;
 use App\Enums\Procurement\PrequalificationStatusEnum;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StorePrequalificationApplicationRequest extends FormRequest

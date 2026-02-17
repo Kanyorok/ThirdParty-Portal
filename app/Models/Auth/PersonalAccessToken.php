@@ -8,5 +8,3 @@ class PersonalAccessToken extends SanctumPersonalAccessToken
 {
     protected $table = 't_SYSPersonalAccessTokens';
 }
-
-

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\API\DMS;
 
+use App\Enums\Core\VisibilityEnum;
 use App\Http\Controllers\Controller;
 use App\Models\DMS\Document;
-use App\Enums\Core\VisibilityEnum;
 use App\Models\ThirdParty\ThirdPartyUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -83,5 +83,3 @@ class DocumentApiController extends Controller
         }
     }
 }
-
-

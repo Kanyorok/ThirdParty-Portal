@@ -4,16 +4,16 @@ namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FleetManagement\FleetDriverAssignmentRequest;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Fleet\ContractedDriver;
+use App\Models\Fleet\FleetDriverAssignment;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\FleetVehicleInspection;
-use App\Models\Fleet\FleetDriverAssignment;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Services\FleetManagement\FleetDriverAssignmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Core\Approval\CodeDetail;
 
 class FleetDriverAssignmentController extends Controller
 {
@@ -25,43 +25,43 @@ class FleetDriverAssignmentController extends Controller
     }
 
     // ================= CREATE =================
-   public function create(Request $request)
-{
-    $driverId = $request->get('DriverID');
-    if (!$driverId) {
-        abort(404, 'Driver ID is required.');
+    public function create(Request $request)
+    {
+        $driverId = $request->get('DriverID');
+        if (! $driverId) {
+            abort(404, 'Driver ID is required.');
+        }
+
+        $driver = \App\Models\Fleet\FleetDriver::findOrFail($driverId);
+
+        $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
+            ->where('Description', 'Active')
+            ->value('Id');
+
+        $vehicles = FleetVehicle::where('Status', $activeStatusId)
+            ->whereDoesntHave('assignments', function ($query) {
+                $query->whereNull('DeletedOn');
+            })
+            ->with('vehicleType')
+            ->get();
+
+        $assigners = Employee::select(
+            DB::raw("CONCAT(LastName, ' ', FirstName) AS name"),
+            'Id'
+        )->pluck('name', 'Id');
+
+        return view('fleet.driver_assignments.create', compact(
+            'driver',
+            'vehicles',
+            'assigners'
+        ));
     }
-
-    $driver = \App\Models\Fleet\FleetDriver::findOrFail($driverId);
-
-    $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
-        ->where('Description', 'Active')
-        ->value('Id');
-
-    $vehicles = FleetVehicle::where('Status', $activeStatusId)
-        ->whereDoesntHave('assignments', function ($query) {
-            $query->whereNull('DeletedOn'); 
-        })
-        ->with('vehicleType')
-        ->get();
-
-    $assigners = Employee::select(
-        DB::raw("CONCAT(LastName, ' ', FirstName) AS name"),
-        'Id'
-    )->pluck('name', 'Id');
-
-    return view('fleet.driver_assignments.create', compact(
-        'driver',
-        'vehicles',
-        'assigners'
-    ));
-}
 
     // ================= STORE =================
     public function store(FleetDriverAssignmentRequest $request)
     {
         $validated = $request->validated();
-        if (!isset($validated['AssignedBy'])) {
+        if (! isset($validated['AssignedBy'])) {
             $validated['AssignedBy'] = Auth::id();
         }
 
@@ -88,7 +88,7 @@ class FleetDriverAssignmentController extends Controller
         $assignment = FleetDriverAssignment::with(['vehicle', 'assignedBy', 'driver'])
             ->findOrFail($id);
 
-        if (!$assignment->driver) {
+        if (! $assignment->driver) {
             abort(404, 'Driver not found for this assignment.');
         }
 
@@ -101,7 +101,7 @@ class FleetDriverAssignmentController extends Controller
         $assignment = FleetDriverAssignment::findOrFail($id);
         $validated = $request->validated();
 
-        if (!isset($validated['AssignedBy'])) {
+        if (! isset($validated['AssignedBy'])) {
             $validated['AssignedBy'] = $assignment->AssignedBy ?? Auth::id();
         }
 
@@ -137,7 +137,7 @@ class FleetDriverAssignmentController extends Controller
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Assignment deleted successfully.'
+                'message' => 'Assignment deleted successfully.',
             ]);
         }
 
@@ -185,7 +185,7 @@ class FleetDriverAssignmentController extends Controller
             ->first();
 
         // Fallback also eager-loads inspectionType
-        if (!$parentInspection) {
+        if (! $parentInspection) {
             $parentInspection = FleetVehicleInspection::with('inspectionType')
                 ->where('VehicleID', $assignment->VehicleID)
                 ->orderByDesc('InspectionDate')

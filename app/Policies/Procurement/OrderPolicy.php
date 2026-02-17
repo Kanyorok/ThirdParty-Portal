@@ -2,9 +2,9 @@
 
 namespace App\Policies\Procurement;
 
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Procurement\Order;
-use App\Enums\Core\PermissionEnum;
 
 class OrderPolicy
 {
@@ -13,8 +13,8 @@ class OrderPolicy
      */
     public function __construct()
     {
-        //
     }
+
     /**
      * Determine whether the user can view any models.
      */

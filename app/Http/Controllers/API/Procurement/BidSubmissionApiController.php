@@ -2,24 +2,26 @@
 
 namespace App\Http\Controllers\API\Procurement;
 
+use App\Enums\TenderStatusEnum;
+use App\Enums\TenderTypeEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Procurement\BidSubmissions\GetExistingBidRequest;
+use App\Http\Requests\Procurement\BidSubmissions\LegacyBidSubmissionRequest;
+use App\Http\Requests\Procurement\BidSubmissions\ListBidSubmissionsRequest;
+use App\Http\Requests\Procurement\BidSubmissions\StoreBidSubmissionRequest;
+use App\Http\Resources\Procurement\BidSubmissionResource;
+use App\Models\Auth\User;
 use App\Models\Procurement\BidSubmission;
-
-// use App\Models\Procurement\Bid; // Using BidSubmission instead
 use App\Models\Procurement\Tender;
 use App\Models\ThirdParies\Supplier;
-use App\Models\Auth\User;
 use App\Services\Procurement\EncryptedBidDocumentService;
-use App\Enums\TenderStatusEnum;
-use App\Enums\Core\PermissionEnum;
-use App\Enums\Core\ModulesEnum;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class BidSubmissionApiController extends Controller
 {
@@ -27,74 +29,59 @@ class BidSubmissionApiController extends Controller
      * Store a new bid submission (Portal Compatible - Following Standard ERP Pattern)
      * Handles both draft and final bid submissions with file uploads
      */
-    public function store(Request $request)
+    public function store(StoreBidSubmissionRequest $request)
     {
         // Authorization check - TEMPORARILY DISABLED FOR PORTAL TESTING
-        // $this->authorize(PermissionEnum::BidSubmissionWrite, BidSubmission::class);
 
-        // Determine validation rules based on status
-        $status = $request->input('status', 'draft');
-        $isDraft = ($status === 'draft');
+        $validated = $request->validated();
+        $user = Auth::guard('sanctum')->user()
+            ?? Auth::guard('third_party')->user()
+            ?? Auth::user();
 
-        // Accept both Portal format (third_party_id) and direct format (supplier_id)
-        $supplierId = $request->input('supplier_id') ?? $request->input('third_party_id');
+        $thirdPartyId = $this->resolveThirdPartyId($request, $user);
 
-        $rules = [
-            'tender_id' => 'required|exists:t_Tenders,Id',
-            'bid_amount' => 'required|numeric|min:0',
-            'currency' => 'required|string|max:3',
-            'validity_period' => 'required|integer|min:1',
-            'delivery_period' => 'required|integer|min:1',
-            'status' => 'required|in:draft,submitted',
-            'payment_terms' => 'nullable|string|max:1000',
-        ];
-
-        // Add supplier validation based on what was provided
-        if ($request->has('supplier_id')) {
-            $rules['supplier_id'] = 'required|exists:t_Suppliers,Id';
-        } elseif ($request->has('third_party_id')) {
-            $rules['third_party_id'] = 'required|exists:t_ThirdParties,Id';
-        } else {
+        if (! $thirdPartyId && ! $request->has('supplier_id')) {
             return response()->json([
                 'success' => false,
-                'message' => 'Either supplier_id or third_party_id is required',
+                'message' => 'n.',
+                'debug' => [
+                    'user_type' => $user ? get_class($user) : 'No user',
+                    'user_id' => $user ? $user->Id : null,
+                ],
             ], 400);
         }
 
-        // File validation - stricter for final submissions
-        if ($isDraft) {
-            $rules['bid_documents.*'] = 'sometimes|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,png,jpg,jpeg';
-        } else {
-            $rules['bid_documents'] = 'required|array|min:1';
-            $rules['bid_documents.*'] = 'required|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,png,jpg,jpeg';
-        }
-
-        $validated = $request->validate($rules, [
-            'bid_documents.mimes' => 'Only PDF, Word, Excel, PNG, and JPEG files are allowed.',
-            'bid_documents.max' => 'File size must not exceed 10 MB.',
-            'bid_documents.required' => 'At least one document is required for final submissions.',
-        ]);
+        // Determine validation rules based on status
+        $status = $validated['status'] ?? 'draft';
+        $isDraft = ($status === 'draft');
 
         // Get tender and validate business rules
         $tender = Tender::findOrFail($validated['tender_id']);
 
-        // Handle both supplier_id and third_party_id formats
-        if (isset($validated['supplier_id'])) {
+        // Resolve supplier from supplier_id or thirdPartyId
+        $actualSupplierId = null;
+        $supplier = null;
+
+        if (array_key_exists('supplier_id', $validated) && $validated['supplier_id']) {
+            // Direct supplier_id provided
             $supplier = Supplier::findOrFail($validated['supplier_id']);
             $actualSupplierId = $validated['supplier_id'];
         } else {
-            // Convert third_party_id to supplier_id
-            $supplier = Supplier::whereHas('supplierMaster', function ($query) use ($validated) {
-                $query->where('ThirdPartyId', $validated['third_party_id']);
-            })->first();
+            // Use thirdPartyId from authenticated user
+            $supplier = $this->getSupplierByThirdPartyId($thirdPartyId);
 
-            if (!$supplier) {
+            if (! $supplier) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No supplier found for the provided third_party_id',
+                    'message' => 'No supplier found for your account. Please contact support.',
                 ], 404);
             }
             $actualSupplierId = $supplier->Id;
+        }
+
+        $invitationCheck = $this->ensureInvitationAccepted($tender, $actualSupplierId);
+        if ($invitationCheck) {
+            return $invitationCheck;
         }
 
         // Business rule validation
@@ -115,8 +102,8 @@ class BidSubmissionApiController extends Controller
                 'data' => [
                     'existing_bid_id' => $existingBid->Id,
                     'submitted_at' => $existingBid->CreatedOn,
-                    'status' => $existingBid->Status
-                ]
+                    'status' => $existingBid->Status,
+                ],
             ], 409);
         }
 
@@ -160,12 +147,12 @@ class BidSubmissionApiController extends Controller
                 // Enhanced tracking fields
                 'BidOpeningDate' => $tender->BidOpeningDate,
                 'EnvelopeStatus' => $isDraft ? 'Draft' : ($hasFiles ? 'Complete' : 'Incomplete'),
-                'IsComplete' => !$isDraft && $hasFiles ? 1 : 0,
+                'IsComplete' => ! $isDraft && $hasFiles ? 1 : 0,
                 'ReceivedOnTime' => $receivedOnTime ? 1 : 0,
 
                 // Document submission timestamps
-                'TechnicalSubmittedAt' => !$isDraft && $hasFiles ? now() : null,
-                'FinancialSubmittedAt' => !$isDraft && $hasFiles ? now() : null,
+                'TechnicalSubmittedAt' => ! $isDraft && $hasFiles ? now() : null,
+                'FinancialSubmittedAt' => ! $isDraft && $hasFiles ? now() : null,
 
                 'CreatedBy' => Auth::id() ?? 1,
                 'ModifiedBy' => Auth::id() ?? 1,
@@ -206,7 +193,7 @@ class BidSubmissionApiController extends Controller
                             'mime_type' => $file->getMimeType(),
                             'document_type' => $request->input("bid_documents.$index.document_type", 'other'),
                             'encrypted_at' => now()->toISOString(),
-                            'encryption_method' => 'Laravel-Crypt'
+                            'encryption_method' => 'Laravel-Crypt',
                         ];
 
                         $encryptedDocumentsData[] = $documentInfo;
@@ -215,13 +202,13 @@ class BidSubmissionApiController extends Controller
                             'bid_id' => $bid->Id,
                             'original_name' => $originalName,
                             'stored_path' => $storagePath,
-                            'file_size' => $file->getSize()
+                            'file_size' => $file->getSize(),
                         ]);
                     } catch (\Exception $e) {
                         Log::error("Failed to process document", [
                             'bid_id' => $bid->Id,
                             'file_name' => $file->getClientOriginalName(),
-                            'error' => $e->getMessage()
+                            'error' => $e->getMessage(),
                         ]);
 
                         // Continue processing other files
@@ -230,7 +217,7 @@ class BidSubmissionApiController extends Controller
                 }
 
                 // Update bid with encrypted document information
-                if (!empty($encryptedDocumentsData)) {
+                if (! empty($encryptedDocumentsData)) {
                     // Write human-readable JSON to EncryptedDocuments (NVARCHAR(MAX))
                     // Write base64 envelope for backward compatibility
                     // Write raw VARBINARY envelope to new column
@@ -248,7 +235,7 @@ class BidSubmissionApiController extends Controller
                     Log::info("Bid updated with encrypted document metadata", [
                         'bid_id' => $bid->Id,
                         'documents_count' => count($encryptedDocumentsData),
-                        'has_encryption_key' => !empty($masterEncryptionKey)
+                        'has_encryption_key' => ! empty($masterEncryptionKey),
                     ]);
                 }
             }
@@ -266,25 +253,15 @@ class BidSubmissionApiController extends Controller
                 ? 'Bid saved as draft successfully!'
                 : 'Bid submitted successfully!';
 
+            $bid->setAttribute('tender_no', $tender->TenderNo);
+            $bid->setAttribute('tender_id', $validated['tender_id']);
+            $bid->setAttribute('submission_reference', "BID-{$tender->TenderNo}-{$supplier->Id}-" . $bid->Id);
+            $bid->setAttribute('status_mode', 'bid');
+
             return response()->json([
                 'success' => true,
                 'message' => $message,
-                'data' => [
-                    'bid_id' => $bid->Id,
-                    'tender_ref' => $bid->TenderRef,
-                    'tender_no' => $tender->TenderNo,
-                    'supplier_id' => $bid->SupplierId,
-                    'supplier_name' => $bid->SupplierName,
-                    'bid_amount' => $bid->BidAmount,
-                    'currency' => $bid->Currency,
-                    'status' => $bid->BidStatus,
-                    'submitted_at' => $bid->CreatedOn->toISOString(),
-                    'received_at' => $bid->ReceivedAt->toISOString(),
-                    'documents_count' => $documentCount,
-                    'validity_period' => $bid->ValidityPeriod,
-                    'delivery_period' => $bid->DeliveryPeriod,
-                    'submission_source' => $bid->SubmissionSource
-                ]
+                'data' => (new BidSubmissionResource($bid))->toArray($request),
             ], $existingBid ? 200 : 201);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -293,7 +270,7 @@ class BidSubmissionApiController extends Controller
                 'supplier_id' => $actualSupplierId ?? null,
                 'third_party_id' => $validated['third_party_id'] ?? null,
                 'status' => $validated['status'] ?? null,
-                'trace' => $th->getTraceAsString()
+                'trace' => $th->getTraceAsString(),
             ]);
 
             return response()->json([
@@ -301,8 +278,8 @@ class BidSubmissionApiController extends Controller
                 'message' => 'Failed to save bid: ' . $th->getMessage(),
                 'error_details' => [
                     'error_type' => get_class($th),
-                    'timestamp' => now()->toISOString()
-                ]
+                    'timestamp' => now()->toISOString(),
+                ],
             ], 500);
         }
     }
@@ -318,7 +295,7 @@ class BidSubmissionApiController extends Controller
                 'success' => false,
                 'message' => 'This tender is not currently accepting submissions',
                 'tender_status' => $tender->Status,
-                'submission_deadline' => $tender->SubmissionDeadline
+                'submission_deadline' => $tender->SubmissionDeadline,
             ], 403);
         }
 
@@ -330,7 +307,7 @@ class BidSubmissionApiController extends Controller
                     'success' => false,
                     'message' => 'This tender is no longer accepting submissions',
                     'tender_status' => $tender->Status,
-                    'submission_deadline' => $tender->SubmissionDeadline->toISOString()
+                    'submission_deadline' => $tender->SubmissionDeadline->toISOString(),
                 ], 403);
             }
         }
@@ -338,41 +315,70 @@ class BidSubmissionApiController extends Controller
         return true;
     }
 
+    private function ensureInvitationAccepted(Tender $tender, int $supplierId): ?JsonResponse
+    {
+        if ($tender->TenderType !== TenderTypeEnum::Restricted->value) {
+            return null;
+        }
+
+        $invitation = DB::table('t_TenderInvitations')
+            ->where('TenderId', $tender->Id)
+            ->where('SupplierId', $supplierId)
+            ->whereNull('DeletedOn')
+            ->first();
+
+        if (! $invitation) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not invited to this restricted tender.',
+            ], 403);
+        }
+
+        $status = strtolower($invitation->ResponseStatus ?? 'pending');
+        if ($status !== 'accepted') {
+            return response()->json([
+                'success' => false,
+                'message' => 'You must accept the tender invitation before submitting a bid.',
+                'invitation_status' => $status,
+            ], 403);
+        }
+
+        return null;
+    }
+
     /**
      * Submit a bid from the portal with encrypted document storage
      */
-    public function submitBid(Request $request)
+    public function submitBid(LegacyBidSubmissionRequest $request)
     {
-        try {
-            // Validation
-            $validator = Validator::make($request->all(), [
-                'tender_id' => 'required|integer|exists:t_Tenders,Id',
-                'third_party_id' => 'required|integer|exists:t_ThirdParties,Id',
-                'bid_documents' => 'required|array|min:1',
-                'bid_documents.*' => 'file|mimes:pdf,doc,docx,zip|max:10240', // Max 10MB per file
-                'submission_notes' => 'nullable|string|max:500',
-            ]);
+        $validated = $request->validated();
 
-            if ($validator->fails()) {
+        try {
+            // Get tender and supplier information
+            $tender = Tender::find($validated['tender_id']);
+            $supplier = $this->getSupplierByThirdPartyId($validated['third_party_id']);
+
+            if (! $tender) {
                 return response()->json([
                     'success' => false,
-                    'errors' => $validator->errors(),
-                ], 422);
+                    'message' => 'Tender not found',
+                ], 404);
             }
 
-            // Get tender and supplier information
-            $tender = Tender::find($request->tender_id);
-            $supplier = $this->getSupplierByThirdPartyId($request->third_party_id);
-
-            if (!$supplier) {
+            if (! $supplier) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Supplier not found for the provided third_party_id',
                 ], 404);
             }
 
+            $invitationCheck = $this->ensureInvitationAccepted($tender, $supplier->Id);
+            if ($invitationCheck) {
+                return $invitationCheck;
+            }
+
             // Check if tender is still open for submissions
-            if (!$this->isTenderOpenForSubmissions($tender)) {
+            if (! $this->isTenderOpenForSubmissions($tender)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'This tender is no longer accepting submissions',
@@ -417,13 +423,13 @@ class BidSubmissionApiController extends Controller
 
                 // Enhanced error logging for file storage issues
                 Log::error('Error encrypting bid documents', [
-                    'tender_id' => $request->tender_id,
-                    'third_party_id' => $request->third_party_id,
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                    'files_received' => $request->hasFile('bid_documents') ? count($request->file('bid_documents')) : 0,
-                    'storage_writable' => is_writable(storage_path('app')),
-                    'timestamp' => now()
+                'tender_id' => $validated['tender_id'],
+                'third_party_id' => $validated['third_party_id'],
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'files_received' => $request->hasFile('bid_documents') ? count($request->file('bid_documents')) : 0,
+                'storage_writable' => is_writable(storage_path('app')),
+                    'timestamp' => now(),
                 ]);
 
                 return response()->json([
@@ -433,7 +439,7 @@ class BidSubmissionApiController extends Controller
                     'debug_info' => [
                         'error_type' => get_class($e),
                         'storage_status' => is_writable(storage_path('app')) ? 'writable' : 'permission_error',
-                        'timestamp' => now()->toISOString()
+                        'timestamp' => now()->toISOString(),
                     ],
                 ], 500);
             }
@@ -446,7 +452,7 @@ class BidSubmissionApiController extends Controller
                 'SubmissionMode' => $this->getPortalSubmissionModeId(),
                 'ReceivedAt' => now(),
                 'RecordedBy' => 'Portal Submission System',
-                'Remarks' => $request->submission_notes ?? 'Submitted via supplier portal',
+                'Remarks' => $validated['submission_notes'] ?? 'Submitted via supplier portal',
                 'EncryptedDocuments' => json_encode($encryptedDocs),
                 // Maintain EncryptionKey for backward compatibility (base64 string)
                 'EncryptionKey' => encrypt(Str::random(32)),
@@ -464,31 +470,27 @@ class BidSubmissionApiController extends Controller
                 'bid_submission_id' => $bidSubmission->Id,
                 'tender_ref' => $tender->TenderNo,
                 'supplier_id' => $supplier->Id,
-                'third_party_id' => $request->third_party_id,
+                'third_party_id' => $validated['third_party_id'],
                 'document_count' => count($encryptedDocs),
             ]);
+
+            $bidSubmission->setAttribute('tender_no', $tender->TenderNo);
+            $bidSubmission->setAttribute('tender_title', $tender->Title);
+            $bidSubmission->setAttribute('submission_reference', "BID-{$tender->TenderNo}-{$supplier->Id}-" . $bidSubmission->Id);
+            $bidSubmission->setAttribute('status_mode', 'access');
 
             return response()->json([
                 'success' => true,
                 'message' => 'Bid submitted successfully',
-                'data' => [
-                    'submission_id' => $bidSubmission->Id,
-                    'tender_ref' => $tender->TenderNo,
-                    'tender_title' => $tender->Title,
-                    'supplier_name' => $bidSubmission->SupplierName,
-                    'submitted_at' => $bidSubmission->ReceivedAt,
-                    'document_count' => count($encryptedDocs),
-                    'status' => 'sealed', // Documents are encrypted until bid opening
-                    'submission_reference' => "BID-{$tender->TenderNo}-{$supplier->Id}-" . $bidSubmission->Id,
-                ],
+                'data' => (new BidSubmissionResource($bidSubmission))->toArray($request),
             ], 201);
         } catch (\Exception $e) {
             DB::rollback();
 
             Log::error('Error submitting portal bid', [
                 'error' => $e->getMessage(),
-                'tender_id' => $request->tender_id ?? null,
-                'third_party_id' => $request->third_party_id ?? null,
+                'tender_id' => $validated['tender_id'] ?? null,
+                'third_party_id' => $validated['third_party_id'] ?? null,
             ]);
 
             return response()->json([
@@ -502,29 +504,36 @@ class BidSubmissionApiController extends Controller
     /**
      * Get existing bid for a specific tender and supplier (for draft editing)
      */
-    public function getExistingBid(Request $request)
+    public function getExistingBid(GetExistingBidRequest $request)
     {
-        try {
-            $validator = Validator::make($request->all(), [
-                'tender_id' => 'required|exists:t_Tenders,Id',
-                'third_party_id' => 'required|exists:t_ThirdParties,Id',
-            ]);
+        $validated = $request->validated();
 
-            if ($validator->fails()) {
+        try {
+            $user = Auth::guard('sanctum')->user()
+                ?? Auth::guard('third_party')->user()
+                ?? Auth::user();
+
+            $thirdPartyId = $this->resolveThirdPartyId($request, $user);
+
+            if (! $thirdPartyId) {
                 return response()->json([
                     'success' => false,
-                    'errors' => $validator->errors(),
-                ], 422);
+                    'message' => 'Unable to determine Third Party ID. Please ensure you are authenticated.',
+                    'debug' => [
+                        'user_type' => $user ? get_class($user) : 'No user',
+                        'user_id' => $user ? $user->Id : null,
+                    ],
+                ], 400);
             }
 
             // Get tender and supplier
-            $tender = Tender::findOrFail($request->tender_id);
-            $supplier = $this->getSupplierByThirdPartyId($request->third_party_id);
+            $tender = Tender::findOrFail($validated['tender_id']);
+            $supplier = $this->getSupplierByThirdPartyId($thirdPartyId);
 
-            if (!$supplier) {
+            if (! $supplier) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Supplier not found',
+                    'message' => 'Supplier not found for your account',
                 ], 404);
             }
 
@@ -533,40 +542,28 @@ class BidSubmissionApiController extends Controller
                 ->where('SupplierId', $supplier->Id)
                 ->first();
 
-            if (!$existingBid) {
+            if (! $existingBid) {
                 return response()->json([
                     'success' => true,
                     'data' => null,
-                    'message' => 'No existing bid found'
+                    'message' => 'No existing bid found',
                 ]);
             }
 
+            $existingBid->setAttribute('tender_id', $validated['tender_id']);
+            $existingBid->setAttribute('tender_no', $tender->TenderNo);
+            $existingBid->setAttribute('status_mode', 'bid');
+
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'Id' => $existingBid->Id,
-                    'TenderId' => $request->tender_id,
-                    'TenderRef' => $existingBid->TenderRef,
-                    'SupplierId' => $existingBid->SupplierId,
-                    'BidAmount' => $existingBid->BidAmount,
-                    'Currency' => $existingBid->Currency,
-                    'ValidityPeriod' => $existingBid->ValidityPeriod,
-                    'DeliveryPeriod' => $existingBid->DeliveryPeriod,
-                    'PaymentTerms' => $existingBid->PaymentTerms,
-                    'Status' => $existingBid->BidStatus,
-                    'IsComplete' => $existingBid->IsComplete,
-                    'EnvelopeStatus' => $existingBid->EnvelopeStatus,
-                    'ReceivedAt' => $existingBid->ReceivedAt,
-                    'CreatedOn' => $existingBid->CreatedOn,
-                    'ModifiedOn' => $existingBid->ModifiedOn,
-                ],
-                'message' => $existingBid->BidStatus === 'draft' ? 'Draft bid found' : 'Final bid already submitted'
+                'data' => (new BidSubmissionResource($existingBid))->toArray($request),
+                'message' => $existingBid->BidStatus === 'draft' ? 'Draft bid found' : 'Final bid already submitted',
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching existing bid', [
                 'error' => $e->getMessage(),
-                'tender_id' => $request->tender_id ?? null,
-                'third_party_id' => $request->third_party_id ?? null,
+                'tender_id' => $validated['tender_id'] ?? null,
+                'third_party_id' => $validated['third_party_id'] ?? null,
             ]);
 
             return response()->json([
@@ -580,58 +577,55 @@ class BidSubmissionApiController extends Controller
     /**
      * Get bid submissions for a supplier
      */
-    public function getSupplierBids(Request $request)
+    public function getSupplierBids(ListBidSubmissionsRequest $request)
     {
-        try {
-            $validator = Validator::make($request->all(), [
-                'third_party_id' => 'required|integer|exists:t_ThirdParties,Id',
-            ]);
+        $validated = $request->validated();
 
-            if ($validator->fails()) {
+        try {
+            $user = Auth::guard('sanctum')->user()
+                ?? Auth::guard('third_party')->user()
+                ?? Auth::user();
+
+            $thirdPartyId = $this->resolveThirdPartyId($request, $user);
+
+            if (! $thirdPartyId) {
                 return response()->json([
                     'success' => false,
-                    'errors' => $validator->errors(),
-                ], 422);
+                    'message' => 'Unable to determine Third Party ID. Please ensure you are authenticated.',
+                    'debug' => [
+                        'user_type' => $user ? get_class($user) : 'No user',
+                        'user_id' => $user ? $user->Id : null,
+                    ],
+                ], 400);
             }
 
-            $supplier = $this->getSupplierByThirdPartyId($request->third_party_id);
+            $supplier = $this->getSupplierByThirdPartyId($thirdPartyId);
 
-            if (!$supplier) {
+            if (! $supplier) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Supplier not found',
+                    'message' => 'Supplier not found for your account',
                 ], 404);
             }
 
             $submissions = BidSubmission::where('SupplierId', $supplier->Id)
                 ->with(['submissionMode', 'createdByUser'])
                 ->orderBy('CreatedOn', 'desc')
-                ->get()
-                ->map(function ($submission) {
-                    $encryptedDocs = json_decode($submission->EncryptedDocuments, true) ?? [];
+                ->get();
 
-                    return [
-                        'id' => $submission->Id,
-                        'tender_ref' => $submission->TenderRef,
-                        'submitted_at' => $submission->ReceivedAt,
-                        'submission_source' => $submission->SubmissionSource,
-                        'document_count' => count($encryptedDocs),
-                        'status' => $submission->status, // Uses the model accessor
-                        'can_access_documents' => $submission->canAccessDocuments(),
-                        'bid_opening_date' => $submission->BidOpeningDate,
-                        'remarks' => $submission->Remarks,
-                    ];
-                });
+            $submissions->each(function ($submission) {
+                $submission->setAttribute('status_mode', 'access');
+            });
 
             return response()->json([
                 'success' => true,
-                'data' => $submissions,
+                'data' => BidSubmissionResource::collection($submissions)->toArray($request),
                 'supplier_name' => $supplier->thirdParty->TradingName ?? $supplier->thirdParty->ThirdPartyName,
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching supplier bids', [
                 'error' => $e->getMessage(),
-                'third_party_id' => $request->third_party_id ?? null,
+                'third_party_id' => $validated['third_party_id'] ?? null,
             ]);
 
             return response()->json([
@@ -685,6 +679,23 @@ class BidSubmissionApiController extends Controller
             ->value('ID') ?? 1; // Fallback to first available mode
     }
 
+    private function resolveThirdPartyId(Request $request, $user = null): ?int
+    {
+        if ($request->has('third_party_id')) {
+            return (int)$request->input('third_party_id');
+        }
+
+        if ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
+            return (int)$user->ThirdPartyId;
+        }
+
+        if ($user && property_exists($user, 'ThirdPartyId') && $user->ThirdPartyId) {
+            return (int)$user->ThirdPartyId;
+        }
+
+        return null;
+    }
+
     /**
      * Get system user for operations
      */
@@ -693,12 +704,12 @@ class BidSubmissionApiController extends Controller
         // Get first available user from the database
         $user = User::whereNull('DeletedOn')->first();
 
-        if (!$user) {
+        if (! $user) {
             // Fallback: get any user (even if soft deleted)
             $user = User::first();
         }
 
-        if (!$user) {
+        if (! $user) {
             throw new \Exception('No users found in the system for bid processing');
         }
 

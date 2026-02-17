@@ -40,6 +40,7 @@ class IntegrationController extends Controller
     public function __invoke(IntegrationRequest $request): JsonResponse
     {
         $this->authorize('create', APICredential::class);
+
         try {
             $Integration = $request->getIntegration();
         } catch (ErroredException $e) {
@@ -112,7 +113,7 @@ class IntegrationController extends Controller
 
     private function _saveEmailConfiguration(IntegrationRequest $request, EmailEncryptionEnum $Incoming_Encryption, EmailEncryptionEnum $Outgoing_Encryption): JsonResponse
     {
-        if (!CRMEmailService::testConfig($request->validated('Outgoing_Server'), $request->validated('Outgoing_Port'), $Outgoing_Encryption, $request->validated('Outgoing_Username'), $request->validated('Outgoing_Password'))) {
+        if (! CRMEmailService::testConfig($request->validated('Outgoing_Server'), $request->validated('Outgoing_Port'), $Outgoing_Encryption, $request->validated('Outgoing_Username'), $request->validated('Outgoing_Password'))) {
             return $this->errored('invalid configuration check.');
         }
 
@@ -155,8 +156,9 @@ class IntegrationController extends Controller
 
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Set Updated Integration Config for: ' . $Integration->description());
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error updating ' . $Integration->name . ' config failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -176,6 +178,7 @@ class IntegrationController extends Controller
         } catch (Exception $e) {
             return $this->errored($e->getMessage());
         }
+
         return $this->errored('invalid configuration check.');
     }
 
@@ -192,12 +195,13 @@ class IntegrationController extends Controller
         } catch (Exception $e) {
             return $this->errored($e->getMessage());
         }
+
         return $this->errored('invalid configuration check.');
     }
 
     private function _saveSMSConfiguration(string $priority, string $messageType, #[SensitiveParameter] string $sender_id, #[SensitiveParameter] string $password, User $actor): JsonResponse
     {
-        if (!CSSMSService::testConfig($priority, $messageType, $sender_id, $password, $actor)) {
+        if (! CSSMSService::testConfig($priority, $messageType, $sender_id, $password, $actor)) {
             return $this->errored('invalid configuration check.');
         }
 
@@ -235,8 +239,9 @@ class IntegrationController extends Controller
 
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Generated a new channels api key.');
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error updating Channel config failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -258,6 +263,7 @@ class IntegrationController extends Controller
         } catch (ErroredException $e) {
             Log::error('Error updating facebook configuration failed: ');
             Log::error($e);
+
             return $this->errored('the given credentials are invalid.');
         }
 
@@ -278,6 +284,7 @@ class IntegrationController extends Controller
         } catch (ErroredException $e) {
             Log::error('Error updating twitter configuration failed: ');
             Log::error($e);
+
             return $this->errored('the given credentials are invalid.');
         }
 
@@ -307,6 +314,7 @@ class IntegrationController extends Controller
     {
         $key = base64_encode(Str::random(64));
         $actor = $request->user();
+
         try {
             DB::transaction(function () use ($Integration, $key, $actor) {
                 APICredential::query()->where('Integration', $Integration->value)->update([
@@ -334,11 +342,12 @@ class IntegrationController extends Controller
 
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Generated ' . $Integration->description() . ' api key.');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error updating ' . $Integration->description() . ' failed: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'integration' => $Integration->value,
             ]);
+
             return $this->errored('unexpected error, try again later: ' . (config('app.debug') ? $e->getMessage() : ''));
         }
 
@@ -350,9 +359,10 @@ class IntegrationController extends Controller
         $DisplayName = SSRSService::testConfig($Host, $Path, $Username, $password);
         if (is_null($DisplayName)) {
             throw ValidationException::withMessages([
-                'password' => ['invalid credentials']
+                'password' => ['invalid credentials'],
             ]);
         }
+
         return $this->_saveData(IntegrationsEnum::ReportService, [
             'host' => $Host,
             'username' => $Username,
@@ -365,12 +375,13 @@ class IntegrationController extends Controller
 
     private function _iTrackConfiguration(string $Host, string $Username, #[SensitiveParameter] string $password, User $actor): JsonResponse
     {
-        if (!iTrackService::testConfig($Host, $Username, $password)) {
+        if (! iTrackService::testConfig($Host, $Username, $password)) {
             throw ValidationException::withMessages([
                 'iTrack_Password' => ['invalid credentials'],
-                'iTrack_Username' => ['invalid credentials']
+                'iTrack_Username' => ['invalid credentials'],
             ]);
         }
+
         return $this->_saveData(IntegrationsEnum::iTrack, [
             'host' => $Host,
             'username' => $Username,
@@ -381,6 +392,7 @@ class IntegrationController extends Controller
     private function _saveOrganizationBranding(string $name, ?string $motto, ?string $logo, User $actor): JsonResponse
     {
         $path = null;
+
         try {
             if (is_string($logo) && str_starts_with($logo, 'data:image/')) {
                 // data URL: data:image/png;base64,xxxx

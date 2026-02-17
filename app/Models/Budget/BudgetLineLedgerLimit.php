@@ -9,9 +9,9 @@ class BudgetLineLedgerLimit extends Model
     protected $table = 't_BudgetLineLedgerLimits';
     public $timestamps = false;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     public static function getPrimaryKey(): string
     {
@@ -40,5 +40,4 @@ class BudgetLineLedgerLimit extends Model
     {
         return $this->belongsTo(BudgetLine::class, 'BudgetLineID');
     }
-
 }

@@ -24,6 +24,7 @@ class MarketingListFilterPolicy
         if ($marketingListFilter->CreatedBy === $user->Id) {
             return true;
         }
+
         return $user->can(PermissionEnum::MarketingListUpdate->value);
     }
 
@@ -43,6 +44,7 @@ class MarketingListFilterPolicy
         if ($marketingListFilter->CreatedBy === $user->Id) {
             return true;
         }
+
         return $user->can(PermissionEnum::MarketingListUpdate->value);
     }
 
@@ -54,6 +56,7 @@ class MarketingListFilterPolicy
         if ($marketingListFilter->CreatedBy === $user->Id) {
             return true;
         }
+
         return $user->can(PermissionEnum::MarketingListUpdate->value);
     }
 

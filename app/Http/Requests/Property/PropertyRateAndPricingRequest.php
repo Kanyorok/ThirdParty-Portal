@@ -23,27 +23,31 @@ class PropertyRateAndPricingRequest extends FormRequest
     {
         return [
             'PropertyId' => ['required', 'exists:t_PropertyRegistry,Id'],
-            'BlockId' => ['nullable', 'exists:t_PropertyBlock,Id'],
-            'FloorId' => ['nullable', 'exists:t_PropertyFloor,Id'],
-            'UnitId' => ['nullable', 'exists:t_PropertyUnit,Id'],
-            'Rent' => ['required', 'numeric', 'min:0'],
-            'ParkingFee' => ['nullable', 'numeric', 'min:0'],
-            'ServiceCharge' => ['nullable', 'numeric', 'min:0'],
-            'OtherCharges' => ['nullable', 'numeric', 'min:0'],
-            'DepositAmount' => ['nullable', 'numeric', 'min:0'],
+            'BlockId' => ['required', 'exists:t_PropertyBlock,Id'],
+            'FloorId' => ['required', 'exists:t_PropertyFloor,Id'],
+            'UnitId' => ['required', 'exists:t_PropertyUnit,Id'],
+            'Rent' => ['required', 'numeric', 'min:1'],
+            'ParkingFee' => ['required', 'numeric', 'min:0'],
+            'ServiceCharge' => ['required', 'numeric', 'min:0'],
+            'OtherCharges' => ['required', 'numeric', 'min:0'],
+            'DepositAmount' => ['required', 'numeric', 'min:0'],
             'CurrencyId' => [
                 'required',
                 'exists:t_Currencies,Id',
                 function ($attribute, $value, $fail) {
-                    $exists = \DB::table('t_PropertyRateAndPricing')
+                    $query = \DB::table('t_PropertyRateAndPricing')
                         ->where('PropertyId', $this->PropertyId)
                         ->where('BlockId', $this->BlockId)
                         ->where('FloorId', $this->FloorId)
                         ->where('UnitId', $this->UnitId)
-                        ->where('CurrencyId', $value)
-                        ->exists();
+                        ->where('CurrencyId', $value);
 
-                    if ($exists) {
+                    // Exclude current record during update
+                    if ($this->route('Id')) {
+                        $query->where('Id', '!=', $this->route('Id'));
+                    }
+
+                    if ($query->exists()) {
                         $fail('This combination of property, block, floor, unit, and currency already exists.');
                     }
                 },
@@ -51,5 +55,4 @@ class PropertyRateAndPricingRequest extends FormRequest
             'TaxId' => ['required', 'exists:t_FinanceTaxRuleConfiguration,Id'],
         ];
     }
-
 }

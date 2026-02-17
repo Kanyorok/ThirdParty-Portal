@@ -5,10 +5,9 @@ namespace App\Services\Property\MaintenanceAndIssues;
 use App\Enums\Core\PostingEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\PropertyManagement\PropertyMaintenanceAssign;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
-use App\Models\ThirdParies\Supplier;
 use App\Models\ThirdParty\SupplierMaster;
 use DateTime;
 
@@ -61,15 +60,15 @@ class PropertyMaintenanceAssignService
     }
 
     public function update(
-    DateTime $assignmentDate,
-    CodeDetail $assignmentType,
-    ?Employee $internalTechnician,
-    ?SupplierMaster $prequalifiedVendor,
-    DateTime $expectedStartDate,
-    DateTime $expectedCompletion,
-    CodeDetail $priorityLevel,
-    string $instructionNotes,
-    User $user
+        DateTime $assignmentDate,
+        CodeDetail $assignmentType,
+        ?Employee $internalTechnician,
+        ?SupplierMaster $prequalifiedVendor,
+        DateTime $expectedStartDate,
+        DateTime $expectedCompletion,
+        CodeDetail $priorityLevel,
+        string $instructionNotes,
+        User $user
     ): void {
         $this->assignment->update([
             'AssignmentDate' => $assignmentDate,
@@ -89,5 +88,4 @@ class PropertyMaintenanceAssignService
             ->event('update')
             ->log("Updated Property Assignment {$this->assignment->Id}.");
     }
-
 }

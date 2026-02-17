@@ -19,25 +19,22 @@ use Throwable;
 
 class BudgetTopDownAllocationController extends Controller
 {
-    //
     public function index()
     {
         $budgets = Budget::all();//Test network drive
         $branches = Branch::all();
 
         //Read data for GL master
-        // $glsMaster=BudgetGLMaster::select(
         //     'BudgetGLID',
         //     'AccountID',
         //     'Description',
         //     'GLAccountTypeID',
         //     'GLSubAccountTypeID'
-        // )->get();
 
         return view('budgetandanalytics.budgetworkspace.topdown.index', compact(
             'budgets',
             'branches',
-        //'glsMaster',
+            //'glsMaster',
         ));
     }
 
@@ -66,7 +63,6 @@ class BudgetTopDownAllocationController extends Controller
         $branchName = Branch::find($branchId)->Name;
 
         if ($check) { // records exist
-
             // Check if this budget is being edited by another user
             $isBeingEdited = BudgetGLMasterAllocations::where('BudgetID', $validated['BudgetID'])
                 ->where('BranchID', $validated['BranchID'])
@@ -86,6 +82,7 @@ class BudgetTopDownAllocationController extends Controller
                 } else {
                     // If another user is editing, return an error message
                     Log::info("User $editingUserName is currently editing BudgetID: $budgetId, BranchID: $branchId");
+
                     return back()->with('error', "This General Ledger is currently being edited by $editingUserName. Please try again later.");
                 }
             } else {
@@ -102,12 +99,11 @@ class BudgetTopDownAllocationController extends Controller
                 ->where('BranchID', $branchId)
                 ->get();
 
-//            $glsMaster = collect(DB::select("EXEC GetBudgetWorkspace :budgetId, :branchId", [
-//                'budgetId' => $budgetId,
-//                'branchId' => $branchId
-//            ]));
+            //                'budgetId' => $budgetId,
+            //                'branchId' => $branchId
 
             $isExisting = true;
+
             return view('budgetandanalytics.budgetworkspace.topdown.exist', compact(
                 'budgets',
                 'branches',
@@ -124,6 +120,7 @@ class BudgetTopDownAllocationController extends Controller
                 ->select('Id', 'AccountID', 'Description', 'GLAccountTypeID')
                 ->get();
             $isExisting = false;
+
             return view('budgetandanalytics.budgetworkspace.topdown.create', compact(
                 'budgets',
                 'branches',
@@ -136,7 +133,6 @@ class BudgetTopDownAllocationController extends Controller
             ));
         }
     }
-
 
     public function displayAllBranches($budgetID)
     {
@@ -173,7 +169,7 @@ class BudgetTopDownAllocationController extends Controller
         // Fields to be summed
         $monthFields = [
             'Month1', 'Month2', 'Month3', 'Month4', 'Month5', 'Month6',
-            'Month7', 'Month8', 'Month9', 'Month10', 'Month11', 'Month12', 'Total'
+            'Month7', 'Month8', 'Month9', 'Month10', 'Month11', 'Month12', 'Total',
         ];
 
         // Group by AccountID and sum all monthly fields
@@ -193,7 +189,7 @@ class BudgetTopDownAllocationController extends Controller
 
         //Call from SP
         return $glsMaster = collect(DB::select("EXEC GetBudgetWorkspaceAllBranches :budgetId", [
-            'budgetId' => $budgetId
+            'budgetId' => $budgetId,
         ]));
 
 
@@ -207,7 +203,6 @@ class BudgetTopDownAllocationController extends Controller
             'budgetId'
         ));
     }
-
 
     public function create(Request $request)
     {
@@ -291,15 +286,16 @@ class BudgetTopDownAllocationController extends Controller
             }
 
             DB::commit();
+
             return redirect()->route('topdownallocation.index')
                 ->with('success', 'GL Budget Allocations saved successfully.');
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Budget allocation failed: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'An error occurred while saving budget allocations. Please try again.');
         }
     }
-
 
     public function show($id)
     {
@@ -386,10 +382,8 @@ class BudgetTopDownAllocationController extends Controller
             // Remove this: return $th->getMessage(); // Debug only
 
             return back()->withInput()->withErrors([
-                'error' => 'An error occurred while updating budget allocations. Please try again.'
+                'error' => 'An error occurred while updating budget allocations. Please try again.',
             ]);
         }
     }
-
-
 }

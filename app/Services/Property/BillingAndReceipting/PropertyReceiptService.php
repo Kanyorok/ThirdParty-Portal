@@ -6,30 +6,27 @@ use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyReceipt;
-use Exception;
 
 class PropertyReceiptService
 {
-
     public static function create(
         PropertyInvoice $InvoiceID,
         string $BillingMonth,
         string $InvoiceDate,
-        float  $RentAmount,
-        float  $ServicesCharge,
-        float  $ParkingFee,
-        float  $OtherCharges,
-        float  $TotalDue,
-        float  $AmountPaidSoFar,
-        float  $Balance,
+        float $RentAmount,
+        float $ServicesCharge,
+        float $ParkingFee,
+        float $OtherCharges,
+        float $TotalDue,
+        float $AmountPaidSoFar,
+        float $Balance,
         string $PaymentDate,
-        int  $AmountPaidNow,
+        int $AmountPaidNow,
         CodeDetail $PaymentMethod,
         string $ReferenceNo,
         string $Remarks = null,
         User $user
-    ): PropertyReceipt
-    {
+    ): PropertyReceipt {
 
         $receipt = PropertyReceipt::create([
             'InvoiceID' => $InvoiceID->Id,
@@ -37,7 +34,7 @@ class PropertyReceiptService
             'InvoiceDate' => $InvoiceDate,
             'RentAmount' => $RentAmount,
             'ServicesCharge' => $ServicesCharge,
-            'ParkingFee'    =>  $ParkingFee,
+            'ParkingFee' => $ParkingFee,
             'OtherCharges' => $OtherCharges,
             'TotalDue' => $TotalDue,
             'AmountPaidSoFar' => $AmountPaidSoFar,
@@ -63,23 +60,22 @@ class PropertyReceiptService
     public static function update(
         PropertyReceipt $receipt,
         PropertyInvoice $InvoiceID,
-        string          $BillingMonth,
-        string          $InvoiceDate,
-        float           $RentAmount,
-        float           $ServicesCharge,
-        float           $ParkingFee,
-        float           $OtherCharges,
-        float           $TotalDue,
-        float           $AmountPaidSoFar,
-        float           $Balance,
-        string          $PaymentDate,
-        int             $AmountPaidNow,
-        CodeDetail      $PaymentMethod,
-        string          $ReferenceNo,
-        ?string         $Remarks,
-        User            $user
-    ): PropertyReceipt
-    {
+        string $BillingMonth,
+        string $InvoiceDate,
+        float $RentAmount,
+        float $ServicesCharge,
+        float $ParkingFee,
+        float $OtherCharges,
+        float $TotalDue,
+        float $AmountPaidSoFar,
+        float $Balance,
+        string $PaymentDate,
+        int $AmountPaidNow,
+        CodeDetail $PaymentMethod,
+        string $ReferenceNo,
+        ?string $Remarks,
+        User $user
+    ): PropertyReceipt {
         $receipt->update([
             'InvoiceID' => $InvoiceID->Id,
             'BillingMonth' => $BillingMonth,
@@ -108,5 +104,4 @@ class PropertyReceiptService
 
         return $receipt;
     }
-
 }

@@ -49,8 +49,8 @@ trait TasksTrait
     {
         DB::transaction(static function () use ($dated, $actor, $task, $notes) {
             $task->fill([
-                "Dated"      => $dated,
-                'Notes'      => $notes,
+                "Dated" => $dated,
+                'Notes' => $notes,
                 'ModifiedBy' => $actor->Id,
             ])->save();
         });
@@ -65,7 +65,7 @@ trait TasksTrait
         return DB::transaction(static function () use ($SourceID, $Source, $actor, $assignee, $description, $due, $model) {
             if ($model instanceof Lead) {
                 $service = TaskService::createLead(lead: $model, Due: $due, Description: $description, assignee: $assignee, actor: $actor, Source: $Source, SourceID: $SourceID);
-            } else if ($model instanceof Client) {
+            } elseif ($model instanceof Client) {
                 $service = TaskService::createClient(client: $model, Due: $due, Description: $description, assignee: $assignee, actor: $actor, Source: $Source, SourceID: $SourceID);
             } else {
                 throw new ErroredException('unknown party given');
@@ -80,11 +80,10 @@ trait TasksTrait
         DB::transaction(static function () use ($actor, $task) {
             $task->fill([
                 "CompletedOn" => is_null($task->CompletedOn) ? now() : null,
-                'ModifiedBy'  => $actor->Id,
+                'ModifiedBy' => $actor->Id,
             ])->save();
         });
     }
-
 
     public function cancel(Task $task, User $actor): array
     {
@@ -94,6 +93,7 @@ trait TasksTrait
         ])->save(['timestamps' => false]);
 
         $label = 'Task (' . Str::limit($task->Notes, 30) . ')';
+
         return ActivityService::task($task, $actor->UserID . ' Canceled ' . $label, $actor, $task->DeletedOn);
     }
 }

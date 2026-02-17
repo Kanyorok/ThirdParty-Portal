@@ -19,6 +19,5 @@ class NewScheduleEvent
      */
     public function __construct(public Schedule $schedule, public User $actor)
     {
-        //
     }
 }

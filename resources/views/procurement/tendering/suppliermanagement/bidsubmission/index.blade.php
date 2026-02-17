@@ -24,6 +24,13 @@ use Illuminate\Support\Facades\Storage;
         <a href="{{ route('tendersubmission.create') }}" class="btn btn-sm btn-success">+ Record Manual Submission</a>
     </div>
 
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="table-responsive">
         <table id="bidsubmissionTable" class="table table-bordered table-striped align-middle">
             <thead class="table-light">
@@ -44,7 +51,12 @@ use Illuminate\Support\Facades\Storage;
                 @forelse ($submissions as $index => $submission)
                 <tr>
                     <td>{{ $index + 1 }}</td>
-                    <td>{{ $submission->TenderRef }}</td>
+                    <td>
+                        <div>{{ $submission->TenderRef }}</div>
+                        @if($submission->tender)
+                            <div class="text-muted small">{{ $submission->tender->Title }}</div>
+                        @endif
+                    </td>
                     <td>
                         @if($submission->supplier && $submission->supplier->supplierMaster && $submission->supplier->supplierMaster->party)
                         {{ $submission->supplier->supplierMaster->party->TradingName ?? $submission->supplier->supplierMaster->party->ThirdPartyName }}
@@ -65,12 +77,21 @@ use Illuminate\Support\Facades\Storage;
                     <td>{{ $submission->createdByUser->Name ?? 'N/A' }}</td>
                     <td>{{ Str::limit($submission->Remarks ?? 'N/A', 30) }}</td>
                     <td>
-                        @if ($submission->Documents)
-                        <a href="{{ Storage::url($submission->Documents) }}" class="btn btn-sm btn-outline-secondary" download>
-                            <i class="fa fa-download"></i> Download
-                        </a>
+                        @if ($submission->EncryptedDocuments && count(json_decode($submission->EncryptedDocuments, true) ?? []) > 0)
+                            @php
+                                $docs = json_decode($submission->EncryptedDocuments, true) ?? [];
+                                $count = count($docs);
+                            @endphp
+                            <span class="badge bg-secondary" title="{{ $count }} documents encrypted">
+                                <i class="fa fa-lock"></i> Encrypted ({{ $count }})
+                            </span>
+                        @elseif ($submission->Documents)
+                             {{-- Fallback for old/unencrypted docs if any --}}
+                            <a href="{{ Storage::url($submission->Documents) }}" class="btn btn-sm btn-outline-secondary" download>
+                                <i class="fa fa-download"></i> Download
+                            </a>
                         @else
-                        <span class="text-muted">No Doc</span>
+                            <span class="text-muted">No Doc</span>
                         @endif
                     </td>
                     <td>

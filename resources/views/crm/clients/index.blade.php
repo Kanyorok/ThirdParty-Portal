@@ -117,7 +117,6 @@
                 $("#clientsTable_filter").addClass('d-none');
                 clientsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the list.");
-                    console.log(er);
                 });
             } else {
                 clientsTable.clear().destroy();

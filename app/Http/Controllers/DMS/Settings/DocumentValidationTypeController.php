@@ -35,6 +35,7 @@ class DocumentValidationTypeController extends Controller
                     })->rawColumns(['action'])->make();
             } catch (Exception $e) {
                 Log::error('fetching (DMS) Document Validation Types failed : ' . $e);
+
                 return $this->errored('fetching data failed, try again later');
             }
         }
@@ -48,6 +49,7 @@ class DocumentValidationTypeController extends Controller
     public function store(ValidationTypeRequest $request)
     {
         $approvers = $request->getApprovers();
+
         try {
             return DB::transaction(function () use ($request, $approvers) {
                 $type = ValidationTypeService::create($request->string('Name')->trim()->toString(), $request->user(), $request->string('Notes', null)->trim()->toString(), $approvers)->type;
@@ -57,6 +59,7 @@ class DocumentValidationTypeController extends Controller
         } catch (Throwable $e) {
             Log::error('creating (DMS) validation type failed : ' . $e);
         }
+
         return $this->errored('an unexpected error occurred, try again later');
     }
 
@@ -92,6 +95,7 @@ class DocumentValidationTypeController extends Controller
         } catch (Throwable $e) {
             Log::error('updating (DMS) validation type failed : ' . $e);
         }
+
         return $this->errored('an unexpected error occurred, try again later');
     }
 
@@ -107,11 +111,13 @@ class DocumentValidationTypeController extends Controller
                     'DeletedBy' => $request->user()->Id,
                 ])->save();
                 activity()->causedBy($request->user())->performedOn($documentValidationType)->event('delete')->log('deleted validation type ' . $documentValidationType->ValidationTypeId);
+
                 return $this->succeeded("validation type {$documentValidationType->ValidationTypeId} trashed successfully", route: route('document-validation-type.index'));
             });
         } catch (Throwable $e) {
             Log::error('deleting (DMS) validation type failed : ' . $e);
         }
+
         return $this->errored('an unexpected error occurred, try again later');
     }
 }

@@ -22,11 +22,11 @@ class MedicalFundContributionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ContributorType'  => 'required|exists:t_CodeDetails,ID',
-            'ContributorId'    => 'nullable|exists:t_ThirdParties,Id', // adjust if needed
-            'Amount'           => 'required|numeric|min:0.01',
+            'ContributorType' => 'required|exists:t_CodeDetails,ID',
+            'ContributorId' => 'nullable|exists:t_ThirdParties,Id', // adjust if needed
+            'Amount' => 'required|numeric|min:0.01',
             'ContributionDate' => 'required|date',
-            'Notes'            => 'nullable|string|max:500',
+            'Notes' => 'nullable|string|max:500',
         ];
     }
 }

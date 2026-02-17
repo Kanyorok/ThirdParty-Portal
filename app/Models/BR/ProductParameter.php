@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductParameter extends Model
 {
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
     public $incrementing = false;
     public $timestamps = false;
     protected $connection = 'sqlsrv';

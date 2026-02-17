@@ -2,27 +2,28 @@
 
 namespace App\Models\Inventory;
 
+use App\Models\Auth\User;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Branch;
-use App\Models\Core\User;
-use App\Models\Core\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StockTransaction extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_StockTransactions';
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
-    
+
     protected $dates = ['TransactionDate', 'DeletedOn'];
-    
+
     protected $fillable = [
         'SKUID',
         'TransactionType',
@@ -43,7 +44,7 @@ class StockTransaction extends Model
         'ModifiedBy',
         'ModifiedOn',
         'DeletedBy',
-        'DeletedOn'
+        'DeletedOn',
     ];
 
     public static function getPrimaryKey(): string
@@ -51,7 +52,6 @@ class StockTransaction extends Model
         return 'StockTransactionId';
     }
 
-    // Add these scopes for better query handling
     public function scopeActive($query)
     {
         return $query->whereNull('DeletedOn');
@@ -62,6 +62,7 @@ class StockTransaction extends Model
         if ($branchId) {
             return $query->where('BranchID', $branchId);
         }
+
         return $query;
     }
 
@@ -74,10 +75,10 @@ class StockTransaction extends Model
         } elseif ($toDate) {
             return $query->whereDate('TransactionDate', '<=', $toDate);
         }
+
         return $query;
     }
 
-    // Relationships - Fixed names
     public function item()
     {
         return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
@@ -98,7 +99,6 @@ class StockTransaction extends Model
         return $this->belongsTo(UnitOfMeasure::class, 'UOMID', 'Id');
     }
 
-    // Fixed: This should be named 'branch' not 'branchId'
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'BranchID', 'Id');

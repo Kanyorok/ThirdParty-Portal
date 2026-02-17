@@ -26,7 +26,7 @@
         <form action="{{ route('renewlease.store') }}" method="POST">
             @csrf
             <div class="card shadow">
-                <div class="card-header bg-light fw-bold">New Lease Terms</div>
+                <div class="card-header bg-primary fw-bold">New Lease Terms</div>
                 <div class="card-body">
 
                     {{-- Lease Selection --}}
@@ -37,7 +37,7 @@
                                 <option value="">-- Select Lease --</option>
                                 @foreach ($newleases as $lease)
                                     <option value="{{ $lease->Id }}"
-                                            data-leasenumber="{{ $lease->LeaseNumber }}"
+                                            data-leasenumber="{{ $lease->LeaseNumber ?? 'No.' }}"
                                             data-tenant-id="{{ $lease->Tenant }}"
                                             data-tenant-name="{{ $lease->tenant->thirdParty->ThirdPartyName ?? 'N/A' }}"
                                             data-property-id="{{ $lease->PropertyID }}"
@@ -45,10 +45,10 @@
                                             data-frequency-id="{{ $lease->PaymentFrequency }}"
                                             data-frequency-name="{{ $lease->code->Description ?? 'N/A' }}"
                                             data-end-date="{{ $lease->EndDate ? \Carbon\Carbon::parse($lease->EndDate)->format('Y-m-d') : '' }}"
-                                            data-rent="{{ $lease->MonthlyRent }}"
-                                            data-service="{{ $lease->ServiceCharge }}"
-                                            data-parking="{{ $lease->ParkingFee }}"
-                                            data-other="{{ $lease->OtherCharges }}">
+                                            data-rent="{{ $lease->MonthlyRent ?? '0' }}"
+                                            data-service="{{ $lease->ServiceCharge ?? '0'}}"
+                                            data-parking="{{ $lease->ParkingFee ?? '0' }}"
+                                            data-other="{{ $lease->OtherCharges ?? '0' }}">
                                         {{ $lease->LeaseNumber }}
                                     </option>
                                 @endforeach
@@ -139,7 +139,7 @@
 
                     {{-- Remarks --}}
                     <div class="mb-3">
-                        <label class="form-label">Remarks or Changes</label>
+                        <label class="form-label">Remarks or Changes <span class="text-danger">*</span></label>
                         <textarea class="form-control" name="Remarks" rows="2">{{ old('Remarks') }}</textarea>
                     </div>
 
@@ -161,7 +161,6 @@
         const leaseSelect = document.getElementById('lease-select');
 
         function populateFromOption(selected) {
-            console.log("DEBUG → selected dataset:", selected ? selected.dataset : null);
 
             if (!selected || !selected.value) {
                 ['lease-display', 'tenant-display', 'property-display', 'frequency-display', 'enddate-current', 'rent', 'service', 'parking', 'other'].forEach(id => {
@@ -193,7 +192,6 @@
                 selected.dataset.enddate ||
                 selected.getAttribute('data-enddate') || '';
 
-            console.log("DEBUG → end date found:", endDate);
             document.getElementById('enddate-current').value = endDate || '';
 
             // Financials

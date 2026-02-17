@@ -8,8 +8,8 @@ use App\Models\Finance\FinanceTaxRuleConfiguration;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class InvoiceIntakeService
 {
@@ -41,8 +41,8 @@ class InvoiceIntakeService
             'TaxAmount' => ['nullable', 'numeric'],
             'TaxPercentage' => ['nullable', 'numeric'],
             'InvoiceAmount' => ['nullable', 'numeric'],
-            'TotalAmount' => ['required', 'integer'],
-            'AmountPaid' => ['nullable', 'integer'],
+            'TotalAmount' => ['required', 'numeric'],
+            'AmountPaid' => ['nullable', 'numeric'],
             'IsPaid' => ['nullable', 'boolean'],
             'IsGenerated' => ['nullable', 'boolean'],
             'Status' => ['nullable', 'in:draft,queued,approved,posted,rejected'],
@@ -76,20 +76,20 @@ class InvoiceIntakeService
         // Compute IdempotencyKey if not provided
         $idk = $payload['IdempotencyKey'] ?? $this->computeIdempotencyKey($payload);
 
-        $lineSubtotal = array_sum(array_map(fn($l) => (int)$l['Total'], $payload['lines']));
+        $lineSubtotal = array_sum(array_map(fn ($l) => (float)$l['Total'], $payload['lines']));
 
         $invoiceAmount = $payload['InvoiceAmount'] ?? (float)$lineSubtotal;
         $taxAmount = $payload['TaxAmount'] ?? 0.0;
         $taxPercentage = $payload['TaxPercentage'] ?? null;
 
-        if (!empty($payload['TaxID'])) {
+        if (! empty($payload['TaxID'])) {
             $taxConfig = FinanceTaxRuleConfiguration::find($payload['TaxID']);
             if ($taxConfig) {
                 $taxPercentage = (float)$taxConfig->Rate;
-                if (!array_key_exists('TaxAmount', $payload)) {
+                if (! array_key_exists('TaxAmount', $payload)) {
                     $taxAmount = round($invoiceAmount * ($taxPercentage / 100), 2);
                 }
-                if (!array_key_exists('InvoiceAmount', $payload)) {
+                if (! array_key_exists('InvoiceAmount', $payload)) {
                     $invoiceAmount = $lineSubtotal + $taxAmount;
                 }
             }
@@ -98,7 +98,7 @@ class InvoiceIntakeService
         $effectiveTotal = $invoiceAmount - $taxAmount;
 
         if ($enforceHeaderTotalMatch) {
-            if ((int)$payload['TotalAmount'] !== (int)$lineSubtotal) {
+            if (abs((float)$payload['TotalAmount'] - (float)$lineSubtotal) > 0.01) {
                 return [
                     'message' => "Header TotalAmount does not match sum of lines.",
                     'request_id' => null,
@@ -106,7 +106,7 @@ class InvoiceIntakeService
             }
         }
 
-        $invoice = DB::transaction(function () use ($payload, $idk, $invoiceAmount, $taxAmount, $taxPercentage, $effectiveTotal) {
+        $persistInvoice = function () use ($payload, $idk, $invoiceAmount, $taxAmount, $taxPercentage, $effectiveTotal) {
             $now = Carbon::now();
 
             $header = [
@@ -124,10 +124,10 @@ class InvoiceIntakeService
                 'InvoiceRemarks' => $payload['InvoiceRemarks'] ?? null,
                 'TotalAmount' => round($invoiceAmount, 2),
                 'TaxAmount' => round($taxAmount, 2),
-                'InvoiceAmount' => (int)round($effectiveTotal),
+                'InvoiceAmount' => round($effectiveTotal, 2),
                 'TaxPercentage' => $taxPercentage !== null ? round($taxPercentage, 4) : null,
                 'TaxID' => $payload['TaxID'] ?? null,
-                'AmountPaid' => (int)($payload['AmountPaid'] ?? 0),
+                'AmountPaid' => round((float)($payload['AmountPaid'] ?? 0), 2),
                 'IsPaid' => (bool)($payload['IsPaid'] ?? false),
                 'IsGenerated' => (bool)($payload['IsGenerated'] ?? true),
                 'Status' => $payload['Status'] ?? 'draft',
@@ -141,7 +141,7 @@ class InvoiceIntakeService
             // check if invoice exists (handles double submits)
             $invoice = FinanceInvoice::where('IdempotencyKey', $idk)->first();
 
-            if (!$invoice) {
+            if (! $invoice) {
                 $invoice = new FinanceInvoice();
                 $invoice->fill(array_merge($header, [
                     'CreatedBy' => $payload['CreatedBy'],
@@ -172,7 +172,12 @@ class InvoiceIntakeService
             }
 
             return $invoice;
-        });
+        };
+
+        $connection = DB::connection();
+        $invoice = $connection->transactionLevel() > 0
+            ? $persistInvoice()
+            : $connection->transaction($persistInvoice);
 
         activity('finance.invoice.intake')
             ->causedBy($payload['CreatedBy'])
@@ -196,7 +201,8 @@ class InvoiceIntakeService
             'InvoiceTitle' => $payload['InvoiceTitle'] ?? null,
         ];
 
-        $norm = array_map(fn($v) => is_string($v) ? trim(mb_strtoupper($v)) : $v, $parts);
+        $norm = array_map(fn ($v) => is_string($v) ? trim(mb_strtoupper($v)) : $v, $parts);
+
         return hash('sha256', json_encode($norm));
     }
 }

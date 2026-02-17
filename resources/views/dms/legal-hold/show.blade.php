@@ -324,7 +324,6 @@
 
                 DocumentsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the list.");
-                    console.log(er);
                 });
             } else {
                 DocumentsTable.ajax.reload();
@@ -332,7 +331,7 @@
         }
 
         function fetchActivitiesTable() {
-            /*  if (!$.fn.DataTable.isDataTable('#holdActivitiesTable')) {
+              if (!$.fn.DataTable.isDataTable('#holdActivitiesTable')) {
                   $('#holdActivitiesTable').DataTable({
                       processing: true,
                       serverSide: true,
@@ -350,7 +349,7 @@
                           {"visible": false, "targets": [0, 1]}
                       ],
                       ajax: {
-                          url: '{ { route('file.activities',[$file->DocumentId]) }}',
+                          url: '{{ route('hold-files.activities',[$hold->Ref]) }}',
                           error: function (jqXHR) {
                               codeNotify(jqXHR.status);
                           }
@@ -366,11 +365,10 @@
                       }
                   }).on('error', function () {
                       nWarning("an issue occurred while loading activities.");
-                      // console.log(er);
                   });
               } else {
                   $('#holdActivitiesTable').DataTable().ajax.reload();
-              }*/
+              }
         }
     </script>
 @endsection

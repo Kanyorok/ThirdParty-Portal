@@ -2,11 +2,84 @@
 @section('title', 'Create New Store')
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    {{-- Font Awesome for icons --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        [data-bs-toggle="tooltip"] {
+            cursor: help;
+        }
+        
+        .btn-danger:disabled {
+            cursor: not-allowed !important;
+            opacity: 0.5;
+            pointer-events: auto !important;
+        }
+        
+        .tooltip-inner {
+            max-width: 300px;
+            padding: 8px 12px;
+            font-size: 0.875rem;
+            text-align: left;
+        }
+        
+        .alert-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            color: #004085;
+        }
+        
+        .alert-info .alert-heading {
+            color: #003366;
+        }
+        
+        .alert-info hr {
+            border-top-color: #b3d9ff;
+        }
+    </style>
 @endsection
 @section('content')
+@if($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
     <div class="container mt-5">
+        <div class="alert alert-info alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+            <div class="d-flex align-items-start">
+                <i class="fas fa-info-circle me-3 mt-1" style="font-size: 1.5rem;"></i>
+                <div>
+                    <p class="mb-2">
+                        <strong>Important:</strong> Stores that contain stock items cannot be deleted to maintain data integrity and prevent inventory discrepancies.
+                    </p>
+                    <hr class="my-2">
+                    <p class="mb-0 small">
+                        <i class="fas fa-lightbulb text-warning"></i> 
+                        <strong>Tip:</strong> To delete a store with existing stock items, you must first transfer or remove all stock items from that store.
+                    </p>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <div class="card shadow rounded-4">
             <div class="card-header text-dark rounded-top-4 d-flex justify-content-between align-items-center"
                  style="background-color: #add8e6;">
@@ -48,10 +121,25 @@
                                        class="btn btn-sm btn-warning" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button type="button" class="btn btn-sm btn-danger" 
-                                            onclick="confirmDelete('{{ $store->Id }}')" title="Delete">
+                                    
+                                    @php
+                                        $hasStockItems = $store->stock_items_count > 0;
+                                        $tooltipMessage = $hasStockItems 
+                                            ? '🚫 Cannot delete this store because it contains ' . $store->stock_items_count . ' stock item(s). Please transfer or remove all stock items before deletion.'
+                                            : '🗑️ Click to delete this store';
+                                    @endphp
+                                    
+                                    <button type="button" 
+                                            class="btn btn-sm btn-danger" 
+                                            onclick="confirmDelete('{{ $store->Id }}')" 
+                                            title="{{ $tooltipMessage }}"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            data-bs-html="true"
+                                            @if($hasStockItems) disabled @endif>
                                         <i class="fas fa-trash"></i>
                                     </button>
+                                    
                                     <form id="delete-form-{{ $store->Id }}"
                                           action="{{ route('stores.destroy', $store->Id) }}" method="POST"
                                           style="display:none;">
@@ -70,6 +158,7 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         $(document).ready(function () {
@@ -81,6 +170,11 @@
                 language: {
                     emptyTable: "No stores found"
                 }
+            });
+            
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
             });
         });
 

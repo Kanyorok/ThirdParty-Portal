@@ -73,7 +73,6 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     Route::resource('periodmanagement', PeriodManagementController::class);
     Route::resource('vendormaster', VendorMasterController::class);
     // Original invoice entry (kept for compatibility)
-    // Route::resource('invoiceentry', InvoiceEntryController::class);
 
     // New simplified invoice entry approach
     Route::resource('invoiceentry', InvoiceEntryV2Controller::class)->names([
@@ -89,6 +88,8 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     // AJAX routes for supplier search in new invoice entry
     Route::post('invoiceentry-v2/api/suppliers/quick-search', [InvoiceEntryV2Controller::class, 'quickSearchSuppliers'])->name('finance.invoiceentry-v2.api.suppliers.quick-search');
     Route::post('invoiceentry-v2/api/suppliers/search', [InvoiceEntryV2Controller::class, 'findSupplier'])->name('finance.invoiceentry-v2.api.suppliers.search');
+    Route::get('invoiceentry-v2/api/contracts', [InvoiceEntryV2Controller::class, 'getContracts'])->name('finance.invoiceentry-v2.api.contracts');
+    Route::get('invoiceentry-v2/api/contracts/{type}/{id}/milestones', [InvoiceEntryV2Controller::class, 'getContractMilestones'])->name('finance.invoiceentry-v2.api.contracts.milestones');
     Route::resource('customermaster', CustomerMasterController::class);
     Route::resource('invoicegeneration', InvoiceGenerationController::class);
     Route::resource('creditnote', CreditNoteController::class);
@@ -104,12 +105,12 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     Route::get('creditadjustment/create/{id}', [CreditAdjustmentController::class, 'createWithId'])->name('creditadjustment.createWithId');
     Route::post('creditadjustment/{id}/approve', [CreditAdjustmentController::class, 'approve'])->name('creditadjustment.approve');
 
-// Invoice generation with credit integration
+    // Invoice generation with credit integration
     Route::resource('invoicegeneration', InvoiceGenerationController::class);
     Route::post('invoicegeneration/check-credit', [InvoiceGenerationController::class, 'checkCredit'])->name('invoicegeneration.check-credit');
     Route::post('invoicegeneration/{id}/apply-credit', [InvoiceGenerationController::class, 'applyCredit'])->name('invoicegeneration.apply-credit');
 
-// Debug route to check credit utilization
+    // Debug route to check credit utilization
     Route::get('debug/credit-utilization/{creditId}', function ($creditId) {
         $credit = \App\Models\Finance\FinanceCreditManagement::with('customer')->findOrFail($creditId);
 
@@ -140,11 +141,11 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
                 'total_invoices_by_name' => $invoicesByName->count(),
                 'draft_with_credit_by_id' => $allInvoices->where('ApprovalStatus', 'draft')->where('UseCredit', true)->count(),
                 'draft_with_credit_by_name' => $invoicesByName->where('ApprovalStatus', 'draft')->where('UseCredit', true)->count(),
-            ]
+            ],
         ], 200, [], JSON_PRETTY_PRINT);
     });
 
-// Debug route to check invoices with credit applied
+    // Debug route to check invoices with credit applied
     Route::get('debug/invoices-with-credit', function () {
         $invoicesWithCredit = \App\Models\Finance\FinanceInvoice::with('customer')
             ->where('UseCredit', true)
@@ -153,7 +154,7 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
         return response()->json([
             'total_invoices_with_credit' => $invoicesWithCredit->count(),
             'total_amount' => $invoicesWithCredit->sum('TotalAmount'),
-            'invoices' => $invoicesWithCredit->toArray()
+            'invoices' => $invoicesWithCredit->toArray(),
         ], 200, [], JSON_PRETTY_PRINT);
     });
 
@@ -176,6 +177,11 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     Route::resource('incomestatement', IncomeStatementController::class);
 
     // Newly appended resource routes
+    Route::get('chartofaccounts/gl-sync', [ChartOfAccountsController::class, 'glSync'])->name('chartofaccounts.glsync');
+    Route::post('chartofaccounts/gl-sync', [ChartOfAccountsController::class, 'startThirdPartySync'])->name('chartofaccounts.glsync.start');
+    Route::get('chartofaccounts/gl-sync/progress/{syncRunId}', [ChartOfAccountsController::class, 'getThirdPartySyncProgress'])->name('chartofaccounts.glsync.progress');
+    Route::get('chartofaccounts/gl-sync/search/gl-accounts', [ChartOfAccountsController::class, 'searchSyncedGlAccounts'])->name('chartofaccounts.glsync.search');
+    Route::get('chartofaccounts/search/mapped-gl', [ChartOfAccountsController::class, 'searchMappedGlAccounts'])->name('chartofaccounts.mapping.search');
     Route::resource('coasegment', COASegmentController::class);
     Route::resource('chartofaccounts', ChartOfAccountsController::class);
     Route::resource('gldynamic', GLDynamicController::class);
@@ -247,27 +253,22 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     Route::post('/glAccountTypeSegmentValue/save', [COASegmentController::class, 'saveGLAccountTypeSegment'])->name('glAccountTypeSegmentValue.save');
     Route::post('/glSubAccountTypeSegmentValue/save', [COASegmentController::class, 'saveSubGLAccountTypeSegment'])->name('glSubAccountTypeSegmentValue.save');
 
-    // Route for getting Order
     Route::get('/finance/pos/{selectedVendor}', [InvoiceEntryController::class, 'getOrders'])->name('finance.orders');
-    // Route for getting GRNS
     Route::get('/finance/grns/{selectedPO}', [InvoiceEntryController::class, 'getGRNs'])->name('finance.grns');
-    // Route for viewingPOModal
     Route::get('/finance/viewpo/{selectedPO}', [InvoiceEntryController::class, 'viewPOModal'])->name('finance.viewPOModal');
     Route::get('/finance/viewgrn/{grnId}', [InvoiceEntryController::class, 'viewGRNModal'])->name('finance.viewGRNModal');
-    // Route for sAVING INVOICE
     Route::post('/finance/invoice/save', [InvoiceEntryController::class, 'saveInvoice'])->name('invoiceentry.save');
-    //Route for gettng suppliers from invoices
     Route::get('/finance/supplier/{selectedInvoice}', [PaymentVoucherController::class, 'getSuppliers'])->name('finance.getSuppliers');
-    //Route for getting Transaction Types
     Route::get('/finance/transactions/{selectedModule}', [GLMappingController::class, 'fetchTransactionTypes'])->name('glpostingmap.fetchTransactionTypes');
-    //Route for getting GLAccounts
     Route::get('/glaccounts/list', [GLMappingController::class, 'list'])->name('glpostingmap.list');
 
     Route::post('/paymentvoucher/{id}/approve', [PaymentVoucherController::class, 'approve'])->name('paymentvoucher.approve');
     Route::post('/paymentvoucher/{id}/reject', [PaymentVoucherController::class, 'reject'])->name('paymentvoucher.reject');
+    Route::get('/paymentvoucher/api/invoices/{invoiceId}/preview', [PaymentVoucherController::class, 'invoicePreview'])->name('paymentvoucher.invoice-preview');
+    Route::post('/paymentvoucher/contracts/{invoiceId}/apply-penalty', [PaymentVoucherController::class, 'applyContractPenalty'])->name('paymentvoucher.contracts.apply-penalty');
+    Route::post('/paymentvoucher/contracts/{invoiceId}/waive-hold', [PaymentVoucherController::class, 'waiveContractHold'])->name('paymentvoucher.contracts.waive-hold');
 
     //Approval Routes For simulations
-    //Route::patch('/journalentry/{id}/action', [FinanceJournalEntryController::class, 'action'])->name('journalentry.action');
 
     //////// Posting Routes ///////////
     Route::post('/journalApproval/{id}', [\App\Http\Controllers\Finance\PostingController::class, 'journalApproval'])->name('journalApproval');
@@ -429,10 +430,13 @@ Route::prefix('finance')->name('finance.')->middleware('auth')->group(function (
     // Optional: spoil a specific unused leaf (mark as not usable)
     Route::post('chequebooks/{book}/leaves/{leaf}/spoil', function ($book, $leaf) {
         $l = \App\Models\Finance\ChequeLeaf::where('ChequeBookID', $book)->findOrFail($leaf);
-        if ($l->Status !== 'Unused') return back()->with('error', 'Only Unused leaves can be spoiled.');
+        if ($l->Status !== 'Unused') {
+            return back()->with('error', 'Only Unused leaves can be spoiled.');
+        }
         $l->Status = 'Spoiled';
         $l->Notes = 'Manually spoiled';
         $l->save();
+
         return back()->with('success', 'Leaf spoiled.');
     })->name('chequebooks.leaves.spoil');
 });

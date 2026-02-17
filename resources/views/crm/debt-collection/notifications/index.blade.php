@@ -26,8 +26,9 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    <div class="table-responsive">
                     <table id="notificationTable"
-                           class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                           class="table table-striped dataTable no-footer dtr-inline w-100">
                         <thead>
                         <tr>
                             <th>No.</th>
@@ -40,6 +41,7 @@
                         </thead>
                         <tbody></tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -79,7 +81,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading notification.");
-                    // console.log(er);
                 });
             } else {
                 $('#notificationTable').DataTable().ajax.reload();

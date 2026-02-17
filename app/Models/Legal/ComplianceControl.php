@@ -13,7 +13,7 @@ class ComplianceControl extends Model
     protected $fillable = [
         'Title', 'Description', 'ComplianceAreaID', 'ControlTypeID',
         'OwnerID', 'IsActive', 'CreatedBy', 'CreatedOn',
-        'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn'
+        'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn',
     ];
 
     public function area()

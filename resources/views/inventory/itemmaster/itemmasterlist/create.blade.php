@@ -24,7 +24,6 @@
             <form action="{{ route('itemmasterlist.store') }}" method="POST" enctype="multipart/form-data" id="itemMasterListForm">
                 @csrf
  
-                {{-- Row 1 --}}
                 <div class="row mb-3">
                    
                     <div class="col-md-4">
@@ -66,7 +65,6 @@
                     </div>
                 </div>
  
-                {{-- Row 2 --}}
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label for="Category" class="form-label">Parent Category <span class="text-danger">*</span></label>
@@ -113,7 +111,6 @@
                     </div>
                 </div>
  
-                {{-- Row 3 --}}
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label for="InventoryType" class="form-label">Inventory Type <span class="text-danger">*</span></label>
@@ -147,7 +144,6 @@
                     </div>
                 </div>
                 
-                {{-- Full-width Row --}}
                 <div class="mb-3">
                     <label for="ItemDescription" class="form-label">Item Description <span class="text-danger">*</span></label>
                     <textarea name="ItemDescription" id="ItemDescription" class="form-control @error('ItemDescription') is-invalid @enderror" rows="3" required>{{ old('ItemDescription') }}</textarea>
@@ -176,7 +172,6 @@
 @section('scripts')
 <script>
     $(document).ready(function () {
-        // Category change for subcategories
         $('#category').change(function () {
             let categoryId = $(this).val();
             $('#subcategory').html('<option value="">Loading...</option>');
@@ -197,35 +192,29 @@
             });
         });
  
-        // Set old subcategory value if exists
         @if(old('SubCategory'))
             setTimeout(function() {
                 $('#subcategory').val('{{ old('SubCategory') }}');
             }, 500);
         @endif
 
-        // Form validation
         $('#itemMasterListForm').on('submit', function(e) {
             let isValid = true;
             
-            // Reset error states
             $(this).find('.is-invalid').removeClass('is-invalid');
             $('.invalid-feedback').hide();
             
-            // Check required fields
             $('#ItemName, #BarCode, #ItemType, #Category, #UOM, #InventoryType, #ItemDescription').each(function() {
                 if (!$(this).val() || $(this).val().trim() === '') {
                     isValid = false;
                     $(this).addClass('is-invalid');
                     
-                    // Show specific error for description
                     if ($(this).is('#ItemDescription')) {
                         $('#description-error').show();
                     }
                 }
             });
             
-            // Check if description is not just whitespace
             const description = $('#ItemDescription').val().trim();
             if (!description) {
                 isValid = false;
@@ -235,18 +224,15 @@
             
             if (!isValid) {
                 e.preventDefault();
-                // Show alert message
                 alert('Please fill in all required fields (marked with *) before submitting.');
                 return false;
             }
             
-            // Disable submit button to prevent double submission
             $('#submitBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...');
             
             return true;
         });
 
-        // Real-time validation for description
         $('#ItemDescription').on('input', function() {
             const value = $(this).val().trim();
             if (value) {
@@ -267,12 +253,10 @@
 .form-label {
     font-weight: 500;
 }
-/* Style for required field labels */
 .form-label span.text-danger {
     color: #dc3545 !important;
     font-weight: bold;
 }
-/* Style for invalid fields */
 .is-invalid {
     border-color: #dc3545 !important;
 }

@@ -2,35 +2,42 @@
 
 namespace App\Models\HRM;
 
-use App\Models\Auth\User;
+use App\Models\HR\Employee;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Department extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $table = 't_Departments';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
         'Name', 'DepartmentID', 'Description', 'HeadId', 'DeputyHeadId',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     public function head(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'HeadId', 'Id')->withTrashed();
+        return $this->belongsTo(Employee::class, 'HeadId', 'Id')->withTrashed();
     }
 
     public function deputy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'DeputyHeadId', 'Id')->withTrashed();
+        return $this->belongsTo(Employee::class, 'DeputyHeadId', 'Id')->withTrashed();
+    }
+
+    public function employees(): HasMany
+    {
+        return $this->hasMany(Employee::class, 'DepartmentID', 'Id');
     }
 
     public static function getPrimaryKey(): string
@@ -47,5 +54,4 @@ class Department extends Model
     {
         return $this->Name;
     }
-
 }

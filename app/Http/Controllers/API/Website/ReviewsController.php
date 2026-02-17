@@ -22,12 +22,14 @@ class ReviewsController extends Controller
     {
         $name = $request->getName();
         $actor = SystemHelper::user();
+
         try {
             DB::transaction(static function () use ($name, $actor, $request) {
                 ReviewService::anonymous($name, $request->getRate(), $request->getReview(), 'Website', $actor);
             });
         } catch (Exception $e) {
             Log::error('Error saving review from website : ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

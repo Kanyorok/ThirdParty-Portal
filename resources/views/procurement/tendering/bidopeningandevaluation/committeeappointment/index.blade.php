@@ -19,6 +19,7 @@
                 <th>Description</th>
                 <th>Members</th>
                 <th>Appointment Date</th>
+                <th>Status</th>
                 <th>Actions</th>
             </tr>
             </thead>
@@ -28,16 +29,16 @@
                     <td>{{ $committees->firstItem() + $index }}</td>
                     <td class="text-uppercase">{{ $item['type'] }}</td>
                     <td>{{ $item['ref'] }}</td>
+                    <td>{{ $item['description'] ?? 'N/A' }}</td>
+                    <td>{{ $item['members_count'] }}</td>
+                    <td>{{ $item['appointment_date'] ? \Carbon\Carbon::parse($item['appointment_date'])->format('d/m/Y') : 'N/A' }}</td>
                     <td>
-                        @if ($item['type'] === 'tender')
-                            {{ \App\Models\Procurement\Tender::find($item['refId'])->Title ?? 'N/A' }}
-                        @elseif ($item['type'] === 'rfq')
-                            {{ \App\Models\Procurement\RFQ::find($item['refId'])->RFQNumber ?? 'N/A' }}
+                        @if (!empty($item['is_active']))
+                            <span class="badge bg-success">Active</span>
+                        @else
+                            <span class="badge bg-secondary">Inactive</span>
                         @endif
                     </td>
-
-                    <td>{{ $item['members_count'] }}</td>
-                    <td>{{ \Carbon\Carbon::parse($item['appointment_date'])->format('d/m/Y') }}</td>
                     <td>
                         <a href="{{ route('tendercommittee.manual.show', ['id' => $item['refId'], 'type' => $item['type']]) }}"
                            class="btn btn-sm btn-outline-info">View</a>
@@ -45,7 +46,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="text-center py-4">No Committees Found.</td>
+                    <td colspan="8" class="text-center py-4">No Committees Found.</td>
                 </tr>
             @endforelse
             </tbody>
@@ -112,8 +113,9 @@
                         <select class="form-select" id="committeeMembers" multiple required name="committeeMembers[]">
                             <!-- Populate from system user list -->
                             @foreach ($employees as $item)
-                                <option value="{{$item['Id']}}">{{$item->FirstName}} {{$item->LastName}}.
-                                    – {{$item->JobTitle}}</option>
+                                <option value="{{ $item->Id }}">
+                                    {{ optional($item->employee)->full_name ?? $item->Name }} - {{ optional(optional($item->employee)->role)->Name ?? 'N/A' }}
+                                </option>
                             @endforeach
                         </select>
                         @error('committeeMembers')

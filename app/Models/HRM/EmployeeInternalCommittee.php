@@ -2,14 +2,13 @@
 
 namespace App\Models\HRM;
 
-use Illuminate\Database\Eloquent\Model;
-use App\Models\HRM\Employee;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\HR\Employee;
 use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EmployeeInternalCommittee extends Model
 {
-
     use SoftDeletes;
     use UserActorTrait;
 

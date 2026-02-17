@@ -26,7 +26,6 @@ Route::middleware(['module:200000'])->namespace('CRM')->prefix('crm')->group(fun
         });
         Route::prefix('unattached')->name('unattached.')->group(function () {
             Route::resource('contacts', 'ContactController')->only(['show', 'index']);
-            //Route::get('contacts/{contact}', 'ContactActionsController@show')->name('unattached.contact.show');
         });
 
         Route::resource('contacts', 'ContactsController')->only(['show', 'update', 'destroy']);
@@ -148,7 +147,6 @@ Route::middleware(['module:200000'])->namespace('CRM')->prefix('crm')->group(fun
             Route::prefix('marketing-list/{list}')->group(function () {
                 Route::match(['get', 'post'], 'leads', 'MarketingListsActionsController@leads')->name('marketing-list.leads');
                 Route::match(['get', 'post'], 'clients', 'MarketingListsActionsController@clients')->name('marketing-list.clients');
-                // Route::match(['get', 'put'], 'loans', 'MarketingListsActionsController@loans')->name('marketing-list.loans');
 
                 Route::resource('marketing-list-upload', 'MarketingListsUploadController')->only(['index', 'store']);
                 Route::resource('marketing-list-filters', 'MarketingListFilterController')->only(['index', 'create', 'store', 'destroy']);
@@ -213,6 +211,34 @@ Route::middleware(['module:200000'])->namespace('CRM')->prefix('crm')->group(fun
         });
 
         Route::resource('product-development', 'ProductDevelopmentController')->except(['create', 'edit']);
+    });
+
+    Route::namespace('Training')->prefix('training')->group(function () {
+        Route::resource('categories', 'TrainingCategoryController')->names('crm.training.categories')->except(['show']);
+        Route::resource('trainers', 'TrainingTrainerController')->names('crm.training.trainers')->except(['show']);
+        Route::get('programs/{id}/participants', 'ClientTrainingProgramController@participants')->name('crm.training.programs.participants');
+        Route::post('programs/{id}/participants', 'ClientTrainingProgramController@addParticipants')->name('crm.training.programs.participants.add');
+        Route::post('programs/{id}/participants/from-marketing-list', 'ClientTrainingProgramController@addParticipantsFromMarketingList')->name('crm.training.programs.participants.add-list');
+        Route::delete('programs/{id}/participants/{clientId}', 'ClientTrainingProgramController@removeParticipant')->name('crm.training.programs.participants.remove');
+        Route::get('programs/{id}/certification', 'ClientTrainingProgramController@certification')->name('crm.training.programs.certification');
+        Route::post('programs/{id}/certification/issue', 'ClientTrainingProgramController@issueProgramCertificates')->name('crm.training.programs.certification.issue');
+        Route::resource('programs', 'ClientTrainingProgramController')->names('crm.training.programs');
+        Route::get('sessions/program-clients', 'TrainingSessionController@programClients')->name('crm.training.sessions.program-clients');
+        Route::get('sessions/{id}/participants/search', 'TrainingSessionController@sessionParticipantsSearch')->name('crm.training.sessions.participants.search');
+        Route::resource('sessions', 'TrainingSessionController')->names('crm.training.sessions');
+        Route::post('sessions/{id}/participants', 'TrainingSessionController@addParticipants')->name('crm.training.sessions.participants');
+        Route::post('sessions/{id}/participants/add-all', 'TrainingSessionController@addAllParticipants')->name('crm.training.sessions.participants.add-all');
+        Route::post('sessions/{id}/participants/bulk-attendance', 'TrainingSessionController@bulkAttendance')->name('crm.training.sessions.participants.bulk-attendance');
+        Route::post('sessions/{id}/participants/bulk-certificate', 'TrainingSessionController@bulkIssueCertificates')->name('crm.training.sessions.participants.bulk-certificate');
+        Route::get('sessions/{id}/participants/bulk-certificate/status', 'TrainingSessionController@bulkCertificateStatus')->name('crm.training.sessions.participants.bulk-certificate.status');
+        Route::post('sessions/{id}/participants/bulk-certificate/cancel', 'TrainingSessionController@cancelBulkIssueCertificates')->name('crm.training.sessions.participants.bulk-certificate.cancel');
+        Route::post('sessions/{id}/participants/{participantId}', 'TrainingSessionController@updateParticipant')->name('crm.training.sessions.participants.update');
+        Route::post('sessions/{id}/participants/{participantId}/certificate', 'TrainingSessionController@issueCertificate')->name('crm.training.sessions.participants.certificate');
+        Route::get('sessions/{id}/feedback', 'TrainingSessionController@feedbackForm')->name('crm.training.sessions.feedback.form');
+        Route::post('sessions/{id}/feedback', 'TrainingSessionController@saveFeedback')->name('crm.training.sessions.feedback');
+        Route::resource('certificate-templates', 'TrainingCertificateTemplateController')->names('crm.training.certificate-templates')->except(['show']);
+        Route::get('certificates', 'TrainingCertificateController@index')->name('crm.training.certificates.index');
+        Route::get('reports', 'TrainingReportController@index')->name('crm.training.reports.index');
     });
 
     Route::namespace('DebtCollection')->group(function () {

@@ -4,33 +4,35 @@ namespace App\Models\Procurement;
 
 use App\Enums\TenderStatusEnum;
 use App\Models\Auth\User;
-use App\Models\ThirdParies\Supplier;
 use App\Models\Core\Approval\WorkflowHistory;
+use App\Models\Finance\FinanceTaxRuleConfiguration;
+use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TenderAward extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_TenderAwards';
     protected $primaryKey = 'Id';
 
     // Award Status Enums
-    const STATUS_DRAFT = 'Draft';
-    const STATUS_PENDING = 'Pending';
-    const STATUS_SUBMITTED = 'Submitted for Approval';
-    const STATUS_UNDER_REVIEW = 'Under Review';
-    const STATUS_APPROVED = 'Approved';
-    const STATUS_REJECTED = 'Rejected';
-    const STATUS_CANCELLED = 'Cancelled';
+    public const STATUS_DRAFT = 'Draft';
+    public const STATUS_PENDING = 'Pending';
+    public const STATUS_SUBMITTED = 'Submitted for Approval';
+    public const STATUS_UNDER_REVIEW = 'Under Review';
+    public const STATUS_APPROVED = 'Approved';
+    public const STATUS_REJECTED = 'Rejected';
+    public const STATUS_CANCELLED = 'Cancelled';
 
     protected $fillable = [
         'TenderID',
@@ -55,6 +57,7 @@ class TenderAward extends Model
         'ContractStatus',
         'ContractRef',
         'ContractValue',
+        'ContractTaxID',
         'ContractRequestRef',
         'PaymentTerms',
         'DeliveryTerms',
@@ -83,6 +86,7 @@ class TenderAward extends Model
         'DeletedOn' => 'datetime',
         // Contract Management Casts
         'ContractValue' => 'decimal:2',
+        'ContractTaxID' => 'integer',
         'ContractApprovedOn' => 'datetime',
         'TerminationDate' => 'date',
     ];
@@ -121,6 +125,23 @@ class TenderAward extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(\App\Models\Procurement\Order::class, 'AwardRef', 'Id');
+    }
+
+    public function milestones(): HasMany
+    {
+        return $this->hasMany(ContractMilestone::class, 'ContractSourceID', 'Id')
+            ->where('ContractSourceType', 'tender');
+    }
+
+    public function penaltyRules(): HasMany
+    {
+        return $this->hasMany(ContractPenaltyRule::class, 'ContractSourceID', 'Id')
+            ->where('ContractSourceType', 'tender');
+    }
+
+    public function contractTaxRule(): BelongsTo
+    {
+        return $this->belongsTo(FinanceTaxRuleConfiguration::class, 'ContractTaxID', 'Id');
     }
 
     // Scopes
@@ -180,12 +201,12 @@ class TenderAward extends Model
 
     public function hasContract()
     {
-        return !empty($this->ContractStatus) && $this->ContractStatus !== 'Pending Contract';
+        return ! empty($this->ContractStatus) && $this->ContractStatus !== 'Pending Contract';
     }
 
     public function isContractReady()
     {
-        return $this->AwardStatus === self::STATUS_APPROVED && !$this->hasContract();
+        return $this->AwardStatus === self::STATUS_APPROVED && ! $this->hasContract();
     }
 
     // Methods
@@ -216,7 +237,7 @@ class TenderAward extends Model
             'ModifiedBy' => $user->Id,
         ]);
     }
-   
+
     public function cancel(User $user, string $reason)
     {
         $this->update([
@@ -231,9 +252,9 @@ class TenderAward extends Model
         return 'tender_award';
     }
 
-     /**
-     * Workflow history relationship
-     */
+    /**
+    * Workflow history relationship
+    */
     public function workflowHistory()
     {
         return $this->morphMany(

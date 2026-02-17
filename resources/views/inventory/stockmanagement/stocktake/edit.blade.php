@@ -21,10 +21,9 @@
             @csrf
             @method('PUT')
 
-            {{-- Header Section --}}
             <div class="row g-3 mb-4">
                 <div class="col-md-3">
-                    <label class="form-label">📍 Branch</label>
+                    <label class="form-label">📍 Branch<span class="text-danger">*</span></label>
                     <select name="BranchId" class="form-select" required>
                         <option value="">-- Select Branch --</option>
                         @foreach ($branches as $branch)
@@ -36,7 +35,7 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">🏢 Store</label>
+                    <label class="form-label">🏢 Store<span class="text-danger">*</span></label>
                     <select name="StoreId" class="form-select" required>
                         <option value="">-- Select Store --</option>
                         @foreach ($stores as $store)
@@ -48,7 +47,7 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">🧑‍💼 Counted By</label>
+                    <label class="form-label">🧑‍💼 Counted By<span class="text-danger">*</span></label>
                     <select name="CountedBy" class="form-select" required>
                         <option value="">-- Select User --</option>
                         @foreach ($users as $user)
@@ -60,12 +59,11 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">📅 Count Date</label>
+                    <label class="form-label">📅 Count Date<span class="text-danger">*</span></label>
                     <input type="date" name="CountDate" class="form-control" value="{{ $stock->CountDate }}" required>
                 </div>
             </div>
 
-            {{-- Line Items Table --}}
             <div class="card mb-4">
                 <div class="card-header">
                     <strong>🧾 Update Line Items</strong>
@@ -76,10 +74,10 @@
                             <thead class="table-light">
                             <tr>
                                 <th>#</th>
-                                <th>Item Code</th>
-                                <th>Item Name</th>
+                                <th>Item Code<span class="text-danger">*</span></th>
+                                <th>Item Name<span class="text-danger">*</span></th>
                                 <th>System Qty</th>
-                                <th>Counted Qty</th>
+                                <th>Counted Qty<span class="text-danger">*</span></th>
                                 <th>Remarks</th>
                             </tr>
                             </thead>
@@ -108,7 +106,6 @@
                 </div>
             </div>
 
-            {{-- Action Buttons --}}
             <div class="d-flex justify-content-end gap-2">
                 <button type="submit" class="btn btn-success">Update</button>
                 <a href="{{ route('stocktake.index') }}" class="btn btn-secondary">Cancel</a>

@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\ThirdPartyAuth;
 
+use App\Enums\BusinessTypeEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Enums\BusinessTypeEnum;
 
 class RegisterThirdPartyDetailsRequest extends FormRequest
 {

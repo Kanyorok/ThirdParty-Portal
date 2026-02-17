@@ -40,4 +40,9 @@ class GoodsReceiptPolicy
     {
         return $user->can(PermissionEnum::GoodsReceiptApprove->value);
     }
+
+    public function post(User $user): bool
+    {
+        return $user->can(PermissionEnum::GoodsReceiptApprove->value);
+    }
 }

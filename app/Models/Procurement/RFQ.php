@@ -2,25 +2,26 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\Core\Approval\WorkflowHistory;
+use App\Models\Core\Approval\WorkflowPending;
 use App\Models\Inventory\ItemCategories;
 use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
-use App\Models\Core\Approval\WorkflowHistory;
-use App\Models\Core\Approval\WorkflowPending;
-use App\Models\Procurement\Requisitions;
+
 class RFQ extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     protected $table = 't_RFQ';
     protected $primaryKey = 'Id';
 
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected static function boot()
     {
@@ -33,12 +34,15 @@ class RFQ extends Model
                 Log::info('RFQ created, submitting to workflow', [
                     'rfq_id' => $rfq->Id,
                     'rfq_number' => $rfq->RFQNumber,
-                    'user_id' => $user->Id
+                    'user_id' => $user->Id,
                 ]);
-                
+
                 // Use the convenience method with proper type hints
                 $workflowService->submitRFQ($rfq, $user, 'RFQ Created');
             }
+
+            app(\App\Services\Procurement\RFQ\RFQWorkflowService::class)
+                ->submitRFQ($rfq, $user, 'RFQ Created');
         });
     }
 
@@ -58,7 +62,7 @@ class RFQ extends Model
         'SubmissionDeadline',
         'CreatedBy',
         'ModifiedBy',
-        'Remarks'
+        'Remarks',
     ];
 
     /**
@@ -112,6 +116,14 @@ class RFQ extends Model
     }
 
     /**
+     * Relationship to Active RFQ Sections
+     */
+    public function activeSections()
+    {
+        return $this->hasMany(RFQSection::class, 'RFQID', 'Id')->where('IsActive', true);
+    }
+
+    /**
      * Relationship to RFQ Criteria
      */
     public function criteria()
@@ -143,15 +155,13 @@ class RFQ extends Model
      * Relationship to Workflow History
      * This allows you to fetch workflow actions for this RFQ
      */
-   public function workflowHistory()
+    public function workflowHistory()
     {
         return $this->hasMany(WorkflowHistory::class, 'SourceID', 'Id')
             ->where('Source', 'RFQId')
             ->whereNull('DeletedOn');
-            
     }
 
-    
     public function workflowPending()
     {
         return $this->hasMany(WorkflowPending::class, 'SourceID', 'RFQId')
@@ -167,9 +177,9 @@ class RFQ extends Model
         if ($this->statusDetail) {
             return $this->statusDetail->Description;
         }
-        
+
         // Fallback mapping if relationship doesn't work
-        return match(strtolower($this->Status)) {
+        return match (strtolower($this->Status)) {
             'ap', 'approved' => 'Approved',
             'pe', 'pending' => 'Pending',
             're', 'rejected' => 'Rejected',
@@ -225,6 +235,19 @@ class RFQ extends Model
     {
         return in_array(strtolower($this->Status), ['re', 'rejected']);
     }
-    // In App\Models\Procurement\RFQ.php
 
+    /**
+     * Relationship to RFQ Evaluations
+     */
+    public function evaluations()
+    {
+        return $this->hasMany(RFQEvaluation::class, 'RFQId', 'Id');
+    }
+
+    public function activeTenderCommittees()
+    {
+        return $this->hasMany(TenderCommittee::class, 'ReferenceId', 'Id')
+            ->where('CommitteeType', 'rfq')
+            ->where('IsActive', true);
+    }
 }

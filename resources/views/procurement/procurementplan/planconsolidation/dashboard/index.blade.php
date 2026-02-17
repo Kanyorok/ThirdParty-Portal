@@ -82,11 +82,11 @@
                         <th>Item</th>
                         <th>Branch</th>
                         <th>Dept</th>
-                        <th>Raised</th>
+                        <th>Requested By</th>
                         <th>Qty</th>
                         <th>Unit Cost</th>
                         <th>Est. Total</th>
-                        <th>Needed</th>
+                        <th>Expected Delivery Date</th>
                         <th>Status</th>
                         <th class="text-center">&nbsp;</th>
                     </tr>
@@ -232,14 +232,12 @@ document.addEventListener("DOMContentLoaded", function () {
         if (button) {
             const needId = button.getAttribute('data-id');
             
-            console.log('Fetching need details for ID:', needId);
             
             // Reset modal content
             needDetails.innerHTML = '<p class="text-muted"><i class="spinner-border spinner-border-sm"></i> Loading details...</p>';
 
             // Construct the URL
             const url = `/procurement/dashboard/show/${needId}`;
-            console.log('Fetching from URL:', url);
 
             fetch(url, {
                 method: 'GET',
@@ -251,14 +249,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 credentials: 'same-origin'
             })
             .then(res => {
-                console.log('Response status:', res.status);
                 if (!res.ok) {
                     throw new Error(`HTTP error! Status: ${res.status} - ${res.statusText}`);
                 }
                 return res.json();
             })
             .then(data => {
-                console.log('Response data:', data);
                 
                 if (data.error) {
                     needDetails.innerHTML = `<p class="text-danger">Error: ${data.error}</p>`;
@@ -273,7 +269,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <li class="list-group-item"><strong>Item Name:</strong> ${data.ItemName || 'N/A'}</li>
                         <li class="list-group-item"><strong>Branch:</strong> ${data.BranchName || 'N/A'}</li>
                         <li class="list-group-item"><strong>Department:</strong> ${data.DepartmentName || 'N/A'}</li>
-                        <li class="list-group-item"><strong>Created By:</strong> ${data.CreatedBy || 'N/A'}</li>
+                        <li class="list-group-item"><strong>Requested By:</strong> ${data.CreatedBy || 'N/A'}</li>
                         <li class="list-group-item"><strong>Quantity:</strong> ${data.RequestedQty || 0}</li>
                         <li class="list-group-item"><strong>Est. Total Cost:</strong> KES ${data.EstimatedCost || '0.00'}</li>
                         <li class="list-group-item"><strong>Expected Delivery:</strong> ${formattedDate}</li>

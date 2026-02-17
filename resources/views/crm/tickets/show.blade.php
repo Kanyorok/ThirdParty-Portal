@@ -821,7 +821,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading workflow.");
-                    // console.log(er);
                 });
             } else {
                 $('#ticketWorkflowTable').DataTable().ajax.reload();
@@ -852,7 +851,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading workflow.");
-                    // console.log(er);
                 });
             } else {
                 $('#ticketWatchersTable').DataTable().ajax.reload();
@@ -894,7 +892,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading workflow.");
-                    // console.log(er);
                 });
             } else {
                 $('#ticketActivitiesTable').DataTable().ajax.reload();

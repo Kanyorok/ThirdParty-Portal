@@ -7,7 +7,7 @@ use App\Models\Auth\ModelRole;
 use App\Models\Auth\Role;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Services\BR\BREncryption;
 use App\Services\Core\ModuleService;
 use Illuminate\Auth\Events\Lockout;
@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -40,7 +39,7 @@ class LoginRequest extends FormRequest
     public function getBranch(User $user): array
     {
         $branch = Branch::query()->where('BranchID', $this->string('branch'))->first();
-        if (!$branch instanceof Branch) {
+        if (! $branch instanceof Branch) {
             throw ValidationException::withMessages([
                 'branch' => 'Branch not found or not authorized.',
             ]);
@@ -51,10 +50,9 @@ class LoginRequest extends FormRequest
             ->where('BranchId', $branch->Id)->with('role')->first();
 
         $role = $modelRole?->role;
-        if (!$modelRole instanceof ModelRole || !$role instanceof Role) {
+        if (! $modelRole instanceof ModelRole || ! $role instanceof Role) {
             throw ValidationException::withMessages([
                 'branch' => 'Branch not found or not authorized.',
-                //'branch' => 'You do not have access to the selected branch.',
             ]);
         }
 
@@ -81,7 +79,6 @@ class LoginRequest extends FormRequest
             RateLimiter::clear($this->throttleKey());
 
             //remove other sessions
-            //remove other sessions
             if (config(key: 'session.driver') === 'database') {
                 DB::connection(config(key: 'session.connection'))->table(table: config(key: 'session.table', default: 't_SYSSessions'))
                     ->where(column: 'user_id', operator: '=', value: $user->getAuthIdentifier())->delete();
@@ -92,35 +89,14 @@ class LoginRequest extends FormRequest
                 'BranchId' => $branchRole['branch']->Id,
             ])->save();
 
-            // Debug: Log before login
-            \Log::info('BEFORE Auth::login', [
-                'user_id' => $user->Id,
-                'session_id' => session()->getId(),
-                'auth_check' => auth()->check(),
-            ]);
+
 
             //new session
             Auth::guard('web')->login($user, $branchRole['role']->hasPermissionTo(PermissionEnum::UsersSessions));
-            
-            // Debug: Log immediately after login
-            \Log::info('AFTER Auth::login', [
-                'auth_check' => auth()->check(),
-                'auth_id' => auth()->id(),
-                'session_id' => session()->getId(),
-            ]);
-            
-            // DISABLED: session()->regenerate() changes session ID
-            // Apache in production doesn't send Set-Cookie header in AJAX responses
-            // So browser keeps old session ID, causing authentication to fail
-            // Security note: Auth::login() already migrates session for security
-            // $this->session()->regenerate();
-            
-            // Debug: Log after regenerate (skipped)
-            \Log::info('SKIPPED session regenerate', [
-                'auth_check' => auth()->check(),
-                'auth_id' => auth()->id(),
-                'session_id' => session()->getId(),
-            ]);
+
+
+
+
 
             // CRITICAL: Generate session_token for EnsureSingleActiveSession middleware
             // This middleware was added on Sept 23, 2025 but login was never updated
@@ -142,25 +118,22 @@ class LoginRequest extends FormRequest
             activity()->causedBy($user)->performedOn($user)->event('authentication')->log('Signed in from ' . $this->getClientIp() . ' as ' . $branchRole['role']->name . ' at ' . $branchRole['branch']->Name);
 
             ModuleService::clearNavbarCache($user);
-            
+
             // Force save session to DB immediately
             $this->session()->save();
-            
+
             // Debug: Check DB immediately after save
             $dbSession = DB::table(config('session.table', 't_SYSSessions'))
                 ->where('id', session()->getId())
                 ->first();
-            \Log::info('AFTER session save', [
-                'session_id' => session()->getId(),
-                'db_found' => (bool)$dbSession,
-                'db_user_id' => $dbSession ? $dbSession->user_id : null,
-                'auth_check' => auth()->check(),
-            ]);
-            
+
+
+
             return;
         }
 
         RateLimiter::hit($this->throttleKey());
+
         throw ValidationException::withMessages([
             'UserID' => trans('auth.failed'),
         ]);
@@ -175,7 +148,7 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (!RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
             return;
         }
 

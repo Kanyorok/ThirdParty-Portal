@@ -2,10 +2,8 @@
 
 namespace App\Models\Procurement;
 
-use App\Models\ThirdParies\Supplier;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Procurement\BidResponsiveness;
 
 class TenderSupplier extends Model
 {
@@ -15,7 +13,7 @@ class TenderSupplier extends Model
 
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'id';
 
     protected $fillable = [
@@ -45,5 +43,4 @@ class TenderSupplier extends Model
     {
         return $this->hasOne(BidResponsiveness::class, 'TenderSupplierID');
     }
-
 }

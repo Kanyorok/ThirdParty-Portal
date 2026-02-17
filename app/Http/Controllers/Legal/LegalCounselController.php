@@ -53,6 +53,7 @@ class LegalCounselController extends Controller
         if ($duplicates) {
             return back()->with('error', 'A counsel with this details already exists');
         }
+
         try {
             DB::beginTransaction();
 
@@ -69,7 +70,6 @@ class LegalCounselController extends Controller
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ]);
-            // return $counsel;
             activity()
                 ->performedOn(new LegalCaseCounsel())
                 ->causedBy(Auth::user())
@@ -89,6 +89,7 @@ class LegalCounselController extends Controller
                 ->log('Error creating legal councel: ' . $th->getMessage());
 
             Log::error('Error creating legal councel: ' . $th->getMessage());
+
             return back()->with('error', 'Error creating legal councel: ' . $th->getMessage());
         }
     }
@@ -114,14 +115,14 @@ class LegalCounselController extends Controller
 
         $data = $request->validate([
             'CounselName' => 'required|string|max:255',
-            'FirmName'    => 'required|string|max:255',
-            'Email'       => 'required|email|max:255',
-            'Phone'       => ['required', 'regex:/^\\+[1-9]\\d{7,14}$/'],
-            'Role'        => 'required|string|max:100',
-            'Remarks'     => 'required|string',
+            'FirmName' => 'required|string|max:255',
+            'Email' => 'required|email|max:255',
+            'Phone' => ['required', 'regex:/^\\+[1-9]\\d{7,14}$/'],
+            'Role' => 'required|string|max:100',
+            'Remarks' => 'required|string',
         ]);
-        try {
 
+        try {
             DB::beginTransaction();
 
 
@@ -135,7 +136,7 @@ class LegalCounselController extends Controller
             ]);
 
             activity()
-                ->performedOn(new LegalCaseCounsel)
+                ->performedOn(new LegalCaseCounsel())
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'update'])
                 ->log('Succefully Updated counsel: ' . $counsel->$data['CounselName']);
@@ -155,10 +156,10 @@ class LegalCounselController extends Controller
                 ->log('Error editing legal councel: ' . $th->getMessage());
 
             Log::error('Error editing legal councel: ' . $th->getMessage());
+
             return back()->with('error', 'Error creating legal councel: ' . $th->getMessage());
         }
     }
-
 
     public function show($disputeId, $counselId)
     {
@@ -171,10 +172,10 @@ class LegalCounselController extends Controller
         return view('legal.disputes.counsels.show', compact('case', 'counsel'));
     }
 
-
     public function destroy($id)
     {
         $this->authorize(PermissionEnum::DisputeLitigationDelete, LegalCaseCounsel::class);
+
         try {
             DB::beginTransaction();
 
@@ -186,7 +187,7 @@ class LegalCounselController extends Controller
             $counsel->delete();
 
             activity()
-                ->performedOn(new LegalCaseCounsel)
+                ->performedOn(new LegalCaseCounsel())
                 ->causedBy(Auth::user())
                 ->withProperties(['action' => 'delete'])
                 ->log('Counsel Succefully Deleted');

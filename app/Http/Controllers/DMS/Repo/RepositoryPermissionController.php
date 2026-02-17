@@ -29,23 +29,24 @@ class RepositoryPermissionController extends Controller
     public function index(Request $request, Repository $repository): JsonResponse
     {
         $this->authorize('view', $repository);
+
         return $this->permissions($repository->permissions(), $request->user()->can('delete', $repository));
     }
 
     public function visibility(VisibilityRequest $request, Repository $repository): JsonResponse
     {
         $this->authorize('update', $repository);
+
         try {
             return $this->succeeded('repository updated successfully', data: [
                 'data' => new RepositoryResource(
                     (new RepositoryService($repository))->visibility($request->getVisibility(), $request->user())->repo
-                )
+                ),
             ]);
         } catch (ErroredException $e) {
             return $e->toJson();
         }
     }
-
 
     /**
      * Store a newly created resource in storage.
@@ -60,7 +61,7 @@ class RepositoryPermissionController extends Controller
             return $this->succeeded('repository permissions updated', data: [
                 'data' => new RepositoryResource(
                     (new RepositoryService($repository))->addPermission($assignee, $permission, $request->user())->repo
-                )
+                ),
             ]);
         } catch (ErroredException $e) {
             return $e->toJson();
@@ -74,20 +75,19 @@ class RepositoryPermissionController extends Controller
     {
         $this->authorize('update', $repository);
         $specialPermission = $repository->permissions()->where('Id', $permission_id)->first();
-        if (!$specialPermission instanceof SpecialPermission) {
+        if (! $specialPermission instanceof SpecialPermission) {
             return $this->errored('permission not found');
         }
+
         try {
             return $this->succeeded('repository permissions updated', data: [
                 'data' => new RepositoryResource(
                     (new RepositoryService($repository))->removePermission($specialPermission, $request->user())->repo
-                )
+                ),
             ]);
         } catch (ErroredException $e) {
             return $e->toJson();
         }
-
-
     }
 
     protected function _trashRoute(SpecialPermission $permission): string

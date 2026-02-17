@@ -9,11 +9,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Workflow extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $connection = 'sqlsrv';
     protected $table = 't_Workflows_static';
     protected $primaryKey = 'Id';
@@ -23,7 +24,7 @@ class Workflow extends Model
      */
     protected $fillable = [
         'Source', 'SourceID', 'Stage', 'Status', 'Notes',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     protected $casts = [
@@ -34,5 +35,4 @@ class Workflow extends Model
     {
         return 'WorkflowID';
     }
-
 }

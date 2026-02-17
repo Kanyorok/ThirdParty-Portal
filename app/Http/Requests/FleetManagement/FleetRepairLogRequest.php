@@ -29,7 +29,7 @@ class FleetRepairLogRequest extends FormRequest
             'Cost' => 'nullable|numeric|min:0',
             'Description' => 'nullable|string|max:1000',
             'Notes' => 'nullable|string',
-            'ScheduleID' => 'nullable|exists:t_FleetMaintenanceSchedules,Id'
+            'ScheduleID' => 'nullable|exists:t_FleetMaintenanceSchedules,Id',
         ];
     }
 }

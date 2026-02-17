@@ -6,21 +6,19 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Budget\ReallocationRequest;
 use App\Models\Budget\Budget;
-use App\Models\Budget\BudgetGLMaster;
-use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetActivityMaster;
+use App\Models\Budget\BudgetGLMaster;
+use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLineLedgerLimit;
 use App\Models\Budget\BudgetLinesGLAccount;
-use App\Models\Budget\BudgetMonthlyAllocation;
-use App\Models\Budget\BudgetPeriods;
-use App\Models\Budget\BudgetReallocation;
 use App\Models\Budget\BudgetManualEntry;
+use App\Models\Budget\BudgetReallocation;
 use App\Models\Core\Branch;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class BudgetReallocationController extends Controller
@@ -29,6 +27,7 @@ class BudgetReallocationController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetReallocationView, BudgetReallocationController::class);
         $reallocations = BudgetReallocation::orderBy('CreatedOn', 'desc')->get();
+
         return view('budgetandanalytics.reallocation.index', compact('reallocations'));
     }
 
@@ -42,7 +41,7 @@ class BudgetReallocationController extends Controller
             'branch',
             'department',
             'createdBy',
-            'approvedBy'
+            'approvedBy',
         ])->findOrFail($id);
 
         // Load associated budget limits
@@ -62,12 +61,11 @@ class BudgetReallocationController extends Controller
         ));
     }
 
-
     public function create()
     {
         $this->authorize(PermissionEnum::BudgetReallocationCreate, BudgetReallocationController::class);
-        $budgets     = Budget::where('Status', 'approved')->where('IsLimitSet',true)->get();
-        $branches    = \App\Models\Core\Branch::all();
+        $budgets = Budget::where('Status', 'approved')->where('IsLimitSet', true)->get();
+        $branches = \App\Models\Core\Branch::all();
         $departments = \App\Models\HRM\Department::all();
         $lines = BudgetLine::all();
 
@@ -78,15 +76,17 @@ class BudgetReallocationController extends Controller
             $isHeadOffice = true;
         }
 
-        return view('budgetandanalytics.reallocation.create',
-            compact('budgets', 'branches', 'departments', 'lines', 'isHeadOffice'));
+        return view(
+            'budgetandanalytics.reallocation.create',
+            compact('budgets', 'branches', 'departments', 'lines', 'isHeadOffice')
+        );
     }
 
     public function allocate(ReallocationRequest $request)
     {
         $this->authorize(PermissionEnum::BudgetReallocationCreate, BudgetReallocationController::class);
         $validated = $request->validated();
-        $budgetLines = array();
+        $budgetLines = [];
         $budgetId = $validated['BudgetID'];
         $ReallocationType = $validated['ReallocationType'];
         $branchId = '';
@@ -128,8 +128,10 @@ class BudgetReallocationController extends Controller
         $budget = Budget::findOrFail($budgetId);
         $msg = 'Re-allocate Budget: ' . $budget->Name;
 
-        return view('budgetandanalytics.reallocation.allocate',
-            compact('isHeadOffice', 'budgetLines', 'branchId', 'budget', 'budgetId', 'msg', 'isAccrossDepertments', 'fromLines', 'toLines', 'ReallocationType'));
+        return view(
+            'budgetandanalytics.reallocation.allocate',
+            compact('isHeadOffice', 'budgetLines', 'branchId', 'budget', 'budgetId', 'msg', 'isAccrossDepertments', 'fromLines', 'toLines', 'ReallocationType')
+        );
     }
 
     protected function getBudgetLinesData($budgetID, $branchID, $departmentID)
@@ -178,13 +180,11 @@ class BudgetReallocationController extends Controller
         }
     }
 
-
     public function store(Request $request)
     {
 
         $this->authorize(PermissionEnum::BudgetReallocationCreate, BudgetReallocationController::class);
 
-        //return $request;
         // 1) Validate input
         $validated = $request->validate([
             'BudgetID' => ['required', 'integer', 'exists:t_Budgets,Id'],
@@ -229,14 +229,14 @@ class BudgetReallocationController extends Controller
             $allocated = BudgetLineLedgerLimit::where('BudgetID', $validated['BudgetID'])
                 ->where('BudgetLineID', $budgetLineId)
                 ->where('BranchID', $validated['BranchID'])
-                ->when($activeLimitsOnly, fn($q) => $q->where('IsActive', 1))
+                ->when($activeLimitsOnly, fn ($q) => $q->where('IsActive', 1))
                 ->sum('LimitAmount');
 
             // Usage via SP (CBS branch id)
             $cbsBranchId = Branch::findOrFail($branchDbId)->BranchID;
             $asDate = Carbon::today()->format('d M Y'); // or align to budget end, if required
             $res = DB::select('EXEC dbo.p_GetBudgetLineClosingBalance ?, ?, ?, ?', [
-                $budgetLineId, $cbsBranchId, $asDate, 'L'
+                $budgetLineId, $cbsBranchId, $asDate, 'L',
             ]);
             $usage = (isset($res[0]->ClosingBalance) && $res[0]->ClosingBalance !== '.00')
                 ? (float)$res[0]->ClosingBalance
@@ -254,7 +254,7 @@ class BudgetReallocationController extends Controller
         }
         if ($amount > $fromBalance) {
             throw ValidationException::withMessages([
-                'Amount' => "Insufficient balance on From line. Needed " . number_format($amount, 2) . " available " . number_format($fromBalance, 2) . "."
+                'Amount' => "Insufficient balance on From line. Needed " . number_format($amount, 2) . " available " . number_format($fromBalance, 2) . ".",
             ]);
         }
 
@@ -264,9 +264,12 @@ class BudgetReallocationController extends Controller
         $sumArray = function (array $arr): float {
             $sum = 0.0;
             foreach ($arr as $v) {
-                if ($v === null || $v === '') continue;
+                if ($v === null || $v === '') {
+                    continue;
+                }
                 $sum += (float)$v;
             }
+
             return round($sum, 2);
         };
 
@@ -296,7 +299,14 @@ class BudgetReallocationController extends Controller
 
         // 6) Persist everything atomically
         $realloc = DB::transaction(function () use (
-            $validated, $fromMonthly, $toMonthly, $months, $fromLine, $toLine, $fromLineLedgerCBSAccID, $toLineLedgerCBSAccID
+            $validated,
+            $fromMonthly,
+            $toMonthly,
+            $months,
+            $fromLine,
+            $toLine,
+            $fromLineLedgerCBSAccID,
+            $toLineLedgerCBSAccID
         ) {
             // a) Reallocation header
             $realloc = BudgetReallocation::create([
@@ -316,11 +326,7 @@ class BudgetReallocationController extends Controller
             // Helper to insert pending monthly limits
             $insertLimits = function (array $arr, BudgetLine $line, int $reallocId, $ledgerID) use ($validated, $months) {
                 foreach ($arr as $idx => $val) {
-                    //if ($val === null || $val === '' || (float)$val <= 0) continue;
-
-                    // $idx is 1..12 per your field names (e.g., FromAllocations[9])
                     $month = $months[(int)$idx] ?? null;
-                    //if (!$month instanceof Carbon) continue;
 
                     $erpLedgerId = BudgetLinesGLAccount::where('BudgetLineID', $line->Id)->pluck('BudgetGLAccountID')->first();
                     BudgetLineLedgerLimit::create([
@@ -438,7 +444,7 @@ class BudgetReallocationController extends Controller
 
         if ($isActivityDriven) {
             $activities = BudgetActivity::where('BudgetLineID', $lineId)
-                ->when($branchId, fn($q) => $q->where('BranchID', $branchId))
+                ->when($branchId, fn ($q) => $q->where('BranchID', $branchId))
                 ->get();
 
             foreach ($activities as $activity) {
@@ -448,7 +454,7 @@ class BudgetReallocationController extends Controller
             }
         } else {
             $entries = BudgetManualEntry::where('BudgetLineID', $lineId)
-                ->when($branchId, fn($q) => $q->where('BranchID', $branchId))
+                ->when($branchId, fn ($q) => $q->where('BranchID', $branchId))
                 ->get();
 
             foreach ($entries as $entry) {
@@ -464,6 +470,7 @@ class BudgetReallocationController extends Controller
     public function getBudgetLines($deptId, $branchId = null)
     {
         $lines = BudgetLine::where('DepartmentID', $deptId)->get();
+
         return response()->json($lines);
     }
 
@@ -482,7 +489,7 @@ class BudgetReallocationController extends Controller
             foreach ($activities as $activity) {
                 $allocations = BudgetActivity::where('BudgetLineID', $lineId)
                     ->where('ActivityID', $activity->Id)
-                    ->when($branchId, fn($q) => $q->where('BranchID', $branchId))
+                    ->when($branchId, fn ($q) => $q->where('BranchID', $branchId))
                     ->with('monthlyAllocations')
                     ->get();
 
@@ -491,7 +498,7 @@ class BudgetReallocationController extends Controller
                     foreach ($alloc->monthlyAllocations as $m) {
                         $monthly[] = [
                             'month' => $m->Month,
-                            'amount' => $m->Amount
+                            'amount' => $m->Amount,
                         ];
                     }
                 }
@@ -500,19 +507,19 @@ class BudgetReallocationController extends Controller
                     'id' => $activity->Id,
                     'name' => $activity->ActivityName,
                     'description' => $activity->Description,
-                    'monthly_allocations' => $monthly
+                    'monthly_allocations' => $monthly,
                 ];
             }
 
             return response()->json([
                 'type' => 'activity',
-                'activities' => $result
+                'activities' => $result,
             ]);
         }
 
         // Manual-driven lines
         $entries = BudgetManualEntry::where('BudgetLineID', $lineId)
-            ->when($branchId, fn($q) => $q->where('BranchID', $branchId))
+            ->when($branchId, fn ($q) => $q->where('BranchID', $branchId))
             ->with('allocations')
             ->get();
 
@@ -522,20 +529,20 @@ class BudgetReallocationController extends Controller
             foreach ($entry->allocations as $m) {
                 $monthly[] = [
                     'month' => $m->Month,
-                    'amount' => $m->Allocation
+                    'amount' => $m->Allocation,
                 ];
             }
 
             $result[] = [
                 'id' => $entry->Id,
                 'amount' => $entry->Amount,
-                'monthly_allocations' => $monthly
+                'monthly_allocations' => $monthly,
             ];
         }
 
         return response()->json([
             'type' => 'manual',
-            'entries' => $result
+            'entries' => $result,
         ]);
     }
 
@@ -549,7 +556,7 @@ class BudgetReallocationController extends Controller
 
         //Check the start and end of the budget fiscal year
         $budget = Budget::find($validated['BudgetID']);
-        $data = array();
+        $data = [];
 
         $fromDate = $budget->From;
         $toDate = $budget->To;
@@ -572,12 +579,8 @@ class BudgetReallocationController extends Controller
         }
 
         //Check if the Line is Activity driven so as to know where to fetch the Total amount from
-//        $check=BudgetActivityMaster::where('BudgetLineID',$validated['BudgetLineID'])->where('IsActive',true)->exists();
-//        if($check){ //Is activity driven
-//
-//        }else{ //We pick from Manul entry by line
-//
-//        }
+        //
+        //
 
         //Pick the total amount from the Limits table for thst line
         $totAmountAllocated = BudgetLineLedgerLimit::where('BudgetLineID', $validated['BudgetLineID'])
@@ -596,7 +599,6 @@ class BudgetReallocationController extends Controller
             [$validated['BudgetLineID'], $b_id, $asDate, 'L']
         );
 
-        // $result is an array of objects
         $totUsage = ($result[0]->ClosingBalance == '.00' ? 0.00 : $result[0]->ClosingBalance) ?? 0.00;
 
         //Push all the data collected in the data array
@@ -609,9 +611,7 @@ class BudgetReallocationController extends Controller
 
 
         return response()->json($data);
-
     }
-
 
     public function getDetails($id)
     {
@@ -623,7 +623,7 @@ class BudgetReallocationController extends Controller
                 'branch',
                 'department',
                 'createdBy',
-                'approvedBy'
+                'approvedBy',
             ])->findOrFail($id);
 
             // Get related budget limits from BudgetLineLedgerLimits table
@@ -661,12 +661,12 @@ class BudgetReallocationController extends Controller
                 'from_summary' => [
                     'allocated' => number_format($fromAllocations['total'] ?? 0, 2),
                     'usage' => number_format($fromAllocations['used'] ?? 0, 2),
-                    'balance' => number_format(($fromAllocations['total'] ?? 0) - ($fromAllocations['used'] ?? 0), 2)
+                    'balance' => number_format(($fromAllocations['total'] ?? 0) - ($fromAllocations['used'] ?? 0), 2),
                 ],
                 'to_summary' => [
                     'allocated' => number_format($toAllocations['total'] ?? 0, 2),
                     'usage' => number_format($toAllocations['used'] ?? 0, 2),
-                    'balance' => number_format(($toAllocations['total'] ?? 0) - ($toAllocations['used'] ?? 0), 2)
+                    'balance' => number_format(($toAllocations['total'] ?? 0) - ($toAllocations['used'] ?? 0), 2),
                 ],
                 'from_allocations' => $fromAllocations['monthly'] ?? [],
                 'to_allocations' => $toAllocations['monthly'] ?? [],
@@ -676,9 +676,9 @@ class BudgetReallocationController extends Controller
                         'limit_type' => $limit->LimitType,
                         'limit_amount' => number_format($limit->LimitAmount, 2),
                         'effective_from' => $limit->EffectiveFrom,
-                        'effective_to' => $limit->EffectiveTo
+                        'effective_to' => $limit->EffectiveTo,
                     ];
-                })
+                }),
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Reallocation not found'], 404);
@@ -701,7 +701,7 @@ class BudgetReallocationController extends Controller
         foreach ($allocations as $allocation) {
             $monthly[] = [
                 'month' => $allocation->month_name, // e.g., 'Jan 2024'
-                'amount' => number_format($allocation->amount, 2)
+                'amount' => number_format($allocation->amount, 2),
             ];
             $total += $allocation->amount;
         }
@@ -709,8 +709,7 @@ class BudgetReallocationController extends Controller
         return [
             'monthly' => $monthly,
             'total' => $total,
-            'used' => $used
+            'used' => $used,
         ];
     }
-
 }

@@ -3,7 +3,6 @@
 namespace App\Models\Core\Approval;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ApprovalGroups extends Model
 {
@@ -13,7 +12,7 @@ class ApprovalGroups extends Model
     // Primary key
     protected $primaryKey = 'Id';
 
-  
+
     public $timestamps = false;
 
     // Mass assignable columns
@@ -26,7 +25,7 @@ class ApprovalGroups extends Model
         'ModifiedBy',
         'ModifiedOn',
         'DeletedBy',
-        'DeletedOn'
+        'DeletedOn',
     ];
 
     // If you want to cast dates automatically

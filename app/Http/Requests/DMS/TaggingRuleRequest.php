@@ -42,8 +42,9 @@ class TaggingRuleRequest extends FormRequest
             return StringComparisonEnum::fromValue($this->validated('Comparison'));
         } catch (ErroredException) {
         }
+
         throw ValidationException::withMessages([
-            'Comparison' => 'Invalid comparison type provided.'
+            'Comparison' => 'Invalid comparison type provided.',
         ]);
     }
 
@@ -53,8 +54,9 @@ class TaggingRuleRequest extends FormRequest
             return ContentEnum::fromValue($this->validated('Content'));
         } catch (ErroredException) {
         }
+
         throw ValidationException::withMessages([
-            'Content' => 'Invalid content type provided.'
+            'Content' => 'Invalid content type provided.',
         ]);
     }
 }

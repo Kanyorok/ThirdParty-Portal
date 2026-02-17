@@ -7,6 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
 use App\Models\Core\Country;
 use App\Models\Core\Locality;
+use App\Models\Procurement\Order;
+use App\Models\PropertyManagement\PropertyNewLease;
+use App\Models\ThirdParty\SupplierMaster;
 use App\Models\ThirdParty\ThirdParties;
 use App\Models\ThirdParty\ThirdPartyType;
 use App\Models\Workflow\CodeDetail;
@@ -16,13 +19,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 use Throwable;
 use Yajra\DataTables\DataTables;
-use App\Models\Procurement\Order;
-use App\Models\PropertyManagement\PropertyNewLease;
-use App\Models\ThirdParty\SupplierMaster;
 
 class ThirdPartyController extends Controller
 {
@@ -38,7 +38,7 @@ class ThirdPartyController extends Controller
                     ->with(['businessType:Id,Description', 'country:Id,Name,Flag', 'types:TypeId,Code,Description', 'status:Id,Description']);
 
                 return DataTables::of($query)->editColumn('types', function (ThirdParties $thirdParties) {
-                    return $thirdParties->types->pluck('Description')->map(fn($type) => "<span class='badge bg-primary'>{$type}</span>")->implode(' ');
+                    return $thirdParties->types->pluck('Description')->map(fn ($type) => "<span class='badge bg-primary'>{$type}</span>")->implode(' ');
                 })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
                     'dbl_click_url' => function (ThirdParties $thirdParties) {
                         return route('thirdparty.parties.show', $thirdParties->Id);
@@ -46,12 +46,14 @@ class ThirdPartyController extends Controller
                 ])->addIndexColumn()->rawColumns(['types'])->make();
             } catch (Throwable $e) {
                 Log::error('Failed to load third parties: ' . $e->getMessage());
+
                 return $this->errored('unexpected error occurred while loading the data. please try again later.');
             }
         }
+
         return view('thirdparty.index', [
             'types' => ThirdPartyType::query()->get(['Code', 'Description']),
-            'businessTypes' => CodeDetail::query()->where('CodeID', 'BusinessType')->orderBy('DisplayOrder')->get(['Value', 'Description'])
+            'businessTypes' => CodeDetail::query()->where('CodeID', 'BusinessType')->orderBy('DisplayOrder')->get(['Value', 'Description']),
         ]);
     }
 
@@ -82,8 +84,8 @@ class ThirdPartyController extends Controller
             $customerDetails = [
                 'DateOfBirth' => $request->date('customer_DateOfBirth'),
                 'Gender' => $request->getGender('customer_Gender'),
-                'MaritalStatus' => $request->getMaritalStatus(),
-                'Occupation' => $request->getOccupation()
+                'MaritalStatus' => $request->getMaritalStatus('customer_MaritalStatus'),
+                'Occupation' => $request->getOccupation('customer_Occupation'),
             ];
         }
         $tenantDetails = [];
@@ -96,7 +98,7 @@ class ThirdPartyController extends Controller
         try {
             return DB::transaction(function () use ($request, $actor, $businessType, $location, $phone, $userDetails, $customerDetails, $tenantDetails, $logo) {
 
-                $service = ThirdPartyService::create(
+                $party = ThirdPartyService::create(
                     name: $request->str('Name')->trim()->toString(),
                     tradingName: $request->str('TradingName')->trim()->toString(),
                     businessType: $businessType,
@@ -111,13 +113,18 @@ class ThirdPartyController extends Controller
                     status: null,
                     extra: null,
                     actor: $actor,
-                    types: $request->array('types'),
-                    CustomerDateOfBirth: $customerDetails['DateOfBirth'] ?? null,
-                    CustomerGender: $customerDetails['Gender'] ?? null,
-                    CustomerMaritalStatus: $customerDetails['MaritalStatus'] ?? null,
-                    CustomerOccupation: $customerDetails['Occupation'] ?? null,
-                    Tenant_Remarks: $tenantDetails['Remarks'] ?? null,
+                    data: [
+                        'types' => $request->array('types'),
+                        'user_DateOfBirth' => $customerDetails['DateOfBirth'] ?? null,
+                        'user_Gender' => $customerDetails['Gender'] ?? null,
+                        'user_MaritalStatus' => $customerDetails['MaritalStatus'] ?? null,
+                        'user_Occupation' => $customerDetails['Occupation'] ?? null,
+                        'tenant_Remarks' => $tenantDetails['Remarks'] ?? null,
+                    ],
                 );
+
+                // Create service wrapper for additional operations
+                $service = new ThirdPartyService($party);
 
                 if ($request->boolean('createUser')) {
                     $service->addUser(
@@ -127,7 +134,7 @@ class ThirdPartyController extends Controller
                         phone: $userDetails['Phone'],
                         gender: $userDetails['Gender'],
                         actor: $actor,
-                        password: $request->get('user_Password') ?? 'password@123'
+                        password: $request->get('user_Password') ?? null
                     );
                 }
 
@@ -135,8 +142,9 @@ class ThirdPartyController extends Controller
                     $service->setLogo($logo, $actor);
                 }
 
-                Log::info('Created ThirdParty:', ['party' => $service->party, 'id' => $service->party->Id]);
-                return $this->succeeded("{$service->party->ThirdPartyName} created successfully", route('thirdparty.parties.show', $service->party->Id));
+                Log::info('Created ThirdParty:', ['party' => $party, 'id' => $party->Id]);
+
+                return $this->succeeded("{$party->ThirdPartyName} created successfully", route('thirdparty.parties.show', $party->Id));
             });
         } catch (ErroredException $e) {
             return $e->toJson();
@@ -144,6 +152,7 @@ class ThirdPartyController extends Controller
             Log::error('Failed to create third party: ');
             Log::error($e);
         }
+
         return $this->errored('unexpected error occurred while creating the third party. please try again later.');
     }
 
@@ -153,13 +162,14 @@ class ThirdPartyController extends Controller
     public function create()
     {
         $this->authorize('create', ThirdParties::class);
+
         return view('thirdparty.create', [
             'types' => ThirdPartyType::query()->get(['Code', 'Description']),
             'countries' => Country::query()->select(['Name', 'CountryCode', 'Id', 'PhoneCode', 'Flag'])->whereHas('localities')->orderBy('t_Countries.Name')->get(),
             'businessTypes' => CodeDetail::query()->where('CodeID', 'BusinessType')->orderBy('DisplayOrder')->get(['Value', 'Description']),
             'genders' => CodeDetail::where('CodeID', 'Gender')->get(['Value', 'Description']),
             'maritalstatus' => CodeDetail::where('CodeID', 'MaritalStatus')->get(['Value', 'Description']),
-            'occupations' => CodeDetail::where('CodeID', 'Occupation')->get(['Value', 'Description'])
+            'occupations' => CodeDetail::where('CodeID', 'Occupation')->get(['Value', 'Description']),
         ]);
     }
 
@@ -177,13 +187,12 @@ class ThirdPartyController extends Controller
                 'location',
             ])->first();
 
-        if (!$thirdParty instanceof ThirdParties) {
+        if (! $thirdParty instanceof ThirdParties) {
             return redirect()->back()->with('error', 'Third party not found');
         }
 
         $this->authorize('view', $thirdParty);
 
-        // --- Supplier Stats ---
         $supplierStats = null;
         if ($thirdParty->isSupplier()) {
             $supplierStats = [
@@ -193,10 +202,9 @@ class ThirdPartyController extends Controller
             ];
         }
 
-        // --- Tenant Stats ---
         $tenantStats = null;
         if ($thirdParty->isTenant()) {
-            $tenantQuery = PropertyNewLease::whereHas('tenant', fn($q) => $q->where('ThirdPartyId', $thirdPartyId));
+            $tenantQuery = PropertyNewLease::whereHas('tenant', fn ($q) => $q->where('ThirdPartyId', $thirdPartyId));
             $tenantStats = [
                 'active_leases' => (clone $tenantQuery)->where('Status', 'Active')->count(),
                 'monthly_rent_roll' => (clone $tenantQuery)->where('Status', 'Active')->sum('MonthlyRent'),
@@ -205,12 +213,11 @@ class ThirdPartyController extends Controller
             ];
         }
 
-        // --- Customer Stats ---
         $customerStats = null;
         if ($thirdParty->isCustomer()) {
             // Placeholder: Just verify existence for now
             $customerStats = [
-                'active' => true
+                'active' => true,
             ];
         }
 
@@ -230,7 +237,7 @@ class ThirdPartyController extends Controller
     public function deactivate(Request $request, $id)
     {
         $request->validate([
-            'reason' => 'required|string|min:5|max:1000'
+            'reason' => 'required|string|min:5|max:1000',
         ]);
 
         try {
@@ -256,7 +263,7 @@ class ThirdPartyController extends Controller
                     ->where('ThirdPartyId', $party->Id)
                     ->update([
                         'DeletedOn' => now(),
-                        'DeletedBy' => auth()->id()
+                        'DeletedBy' => auth()->id(),
                     ]);
             });
 
@@ -264,6 +271,7 @@ class ThirdPartyController extends Controller
                 ->with('success', 'Third Party has been successfully deactivated (Attrited).');
         } catch (\Exception $e) {
             Log::error("Attrition failed for ID $id: " . $e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to process attrition. Please try again.');
         }
     }
@@ -273,7 +281,6 @@ class ThirdPartyController extends Controller
      */
     public function edit(ThirdParties $thirdParties)
     {
-        //
     }
 
     /**
@@ -281,7 +288,6 @@ class ThirdPartyController extends Controller
      */
     public function update(Request $request, ThirdParties $thirdParties)
     {
-        //
     }
 
     /**
@@ -297,21 +303,23 @@ class ThirdPartyController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Third party '{$thirdPartyName}' deleted successfully"
+                'message' => "Third party '{$thirdPartyName}' deleted successfully",
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Third party not found'
+                'message' => 'Third party not found',
             ], 404);
         } catch (\Exception $e) {
             Log::error('Failed to delete third party: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete third party. Please try again.'
+                'message' => 'Failed to delete third party. Please try again.',
             ], 500);
         }
     }
+
     public function searchExisting(Request $request): JsonResponse
     {
         $this->authorize('viewAny', ThirdParties::class);
@@ -336,7 +344,7 @@ class ThirdPartyController extends Controller
         $results = $query->limit(20)->get()->map(function ($party) {
             return [
                 'id' => $party->Id,
-                'text' => $party->ThirdPartyName . ($party->TradingName ? " ({$party->TradingName})" : "") . " - {$party->Email}"
+                'text' => $party->ThirdPartyName . ($party->TradingName ? " ({$party->TradingName})" : "") . " - {$party->Email}",
             ];
         });
 
@@ -379,10 +387,11 @@ class ThirdPartyController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Role added successfully',
-                'redirect' => route('thirdparty.parties.show', $thirdParty->Id)
+                'redirect' => route('thirdparty.parties.show', $thirdParty->Id),
             ]);
         } catch (\Throwable $e) {
             Log::error('Failed to add role: ' . $e->getMessage());
+
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }

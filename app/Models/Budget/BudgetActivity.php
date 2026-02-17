@@ -11,11 +11,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetActivity extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $table = 't_BudgetActivities';
     protected $primaryKey = 'Id';
     protected $fillable = [

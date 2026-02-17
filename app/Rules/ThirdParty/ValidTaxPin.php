@@ -15,7 +15,7 @@ class ValidTaxPin implements ValidationRule
 
         // Validate tax PIN format (e.g., KRA PIN: A000000000X)
         // Adjust pattern based on your country's requirements
-        if (!preg_match('/^[A-Z]\d{9}[A-Z]$/i', $value)) {
+        if (! preg_match('/^[A-Z]\d{9}[A-Z]$/i', $value)) {
             $fail('The tax PIN format is invalid. Expected format: A000000000X');
         }
     }

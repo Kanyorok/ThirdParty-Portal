@@ -80,8 +80,9 @@
                         {!! $campaign->Details !!}
                     </div>
                     <div class="tab-pane m-2" id="tab-0" role="tabpanel">
+                        <div class="table-responsive">
                         <table id="campaignContactsTable"
-                               class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                               class="table table-striped dataTable no-footer dtr-inline w-100 ">
                             <thead>
                             <tr>
                                 <th>#</th>
@@ -92,6 +93,7 @@
                             </thead>
                             <tbody></tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -188,7 +190,6 @@
 
                 campaignContactsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading contacts.");
-                    console.log(er);
                 });
             } else {
                 campaignContactsTable.ajax.reload();

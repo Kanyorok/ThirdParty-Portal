@@ -7,8 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\HRM\AddEmployeeRequest;
 use App\Http\Requests\HRM\EmployeePersonalRequest;
 use App\Models\Core\Branch;
+use App\Models\HR\Employee;
 use App\Models\HRM\Department;
-use App\Models\HRM\Employee;
 use App\Services\HRM\EmployeeService;
 use App\Traits\Controller\EmployeeTrait;
 use Exception;
@@ -35,6 +35,7 @@ class EmployeeController extends Controller
         if ($request->ajax()) {
             return $this->getEmployees(Employee::query()->select('*'), with: ['department', 'photo']);
         }
+
         return view('hrms.employee.index');
     }
 
@@ -62,10 +63,21 @@ class EmployeeController extends Controller
 
         try {
             return DB::transaction(function () use ($request, $image, $joinDate, $dob, $gender, $branch, $department, $actor, $phone, $email) {
-                $employee = EmployeeService::create(department: $department, branch: $branch, actor: $actor, JobTitle: $request->string('JobTitle')->trim()->toString(),
-                    FirstName: $request->string('FirstName')->trim()->toString(), Surname: $request->string('LastName')->trim()->toString(), Email: $email,
-                    Phone: $phone, JoinDate: $joinDate, Gender: $gender, MiddleName: $request->string('MiddleName')->trim()->toString(),
-                    Address: $request->string('Address')->trim()->toString(), DateOfBirth: $dob);
+                $employee = EmployeeService::create(
+                    department: $department,
+                    branch: $branch,
+                    actor: $actor,
+                    JobTitle: $request->string('JobTitle')->trim()->toString(),
+                    FirstName: $request->string('FirstName')->trim()->toString(),
+                    Surname: $request->string('LastName')->trim()->toString(),
+                    Email: $email,
+                    Phone: $phone,
+                    JoinDate: $joinDate,
+                    Gender: $gender,
+                    MiddleName: $request->string('MiddleName')->trim()->toString(),
+                    Address: $request->string('Address')->trim()->toString(),
+                    DateOfBirth: $dob
+                );
                 if ($image instanceof UploadedFile) {
                     $employee->setImage($image, $actor);
                 }
@@ -75,7 +87,7 @@ class EmployeeController extends Controller
 
                 return $this->succeeded($employee->employee->EmployeeID . ' created successfully.', route('employees.show', [$employee->employee->EmployeeID]));
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error("--- CREATE EMPLOYEE ERROR --- " . $e->getMessage());
             Log::error($e);
         }
@@ -90,7 +102,6 @@ class EmployeeController extends Controller
     {
         return view('hrms.employee.show')
             ->with('employee', $employee->load(['department', 'branch']));
-
     }
 
     /**
@@ -98,7 +109,6 @@ class EmployeeController extends Controller
      */
     public function edit(Employee $employee)
     {
-        //
     }
 
     /**
@@ -108,6 +118,7 @@ class EmployeeController extends Controller
     {
         $dob = $request->getDateOfBirth();
         $actor = $request->user();
+
         try {
             return DB::transaction(function () use ($actor, $dob, $request, $employee) {
                 $employee->update([
@@ -122,9 +133,10 @@ class EmployeeController extends Controller
                     'ModifiedBy' => $actor->Id,
                 ]);
                 activity()->causedBy($actor)->performedOn($employee)->event('update')->log('updated employee ' . $employee->EmployeeID);
+
                 return $this->succeeded('employee updated successfully.', route: route('employees.show', $employee->EmployeeID));
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error("--- UPDATE EMPLOYEE ERROR --- " . $e->getMessage());
             Log::error($e);
         }
@@ -137,6 +149,5 @@ class EmployeeController extends Controller
      */
     public function destroy(Employee $employee)
     {
-        //
     }
 }

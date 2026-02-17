@@ -1,0 +1,54 @@
+@extends('layouts.app')
+
+@section('title', 'Edit Training Category')
+
+@section('content')
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Edit Training Category</h2>
+        <a class="btn btn-outline-secondary" href="{{ route('hr.training.categories.index') }}">Back</a>
+    </div>
+
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" action="{{ route('hr.training.categories.update', $category->Id) }}">
+                @csrf
+                @method('PUT')
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Code</label>
+                        <input type="text" name="Code" class="form-control" value="{{ old('Code', $category->Code) }}">
+                    </div>
+                    <div class="col-md-9">
+                        <label class="form-label">Name *</label>
+                        <input type="text" name="Name" class="form-control" value="{{ old('Name', $category->Name) }}" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Description</label>
+                        <textarea name="Description" class="form-control" rows="3">{{ old('Description', $category->Description) }}</textarea>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="IsActive" value="1" id="isActive" @checked(old('IsActive', $category->IsActive))>
+                            <label class="form-check-label" for="isActive">Active</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 d-flex justify-content-end">
+                    <button class="btn btn-primary" type="submit">Update Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection

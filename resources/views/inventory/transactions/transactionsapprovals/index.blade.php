@@ -12,11 +12,19 @@
 @endsection
 
 @section('content')
-    <div class="container">
-        <h4 class="mb-4">Select Transactions to Approve</h4>
+@if($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
                 {{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -24,18 +32,25 @@
 
         @if(session('error'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
                 {{ session('error') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
+    <div class="container">
+        <h4 class="mb-4">Select Stock Transfer/Adjustment to Approve</h4>
 
-        @if(session('fail'))
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                {{ session('fail') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Approval Restrictions:</strong>
+            <ul class="mb-0 mt-2">
+                <li><strong>Maker-Checker Policy:</strong> You cannot approve transactions that you initiated yourself.</li>
+                <li><strong>Workflow Configuration:</strong> Transactions require proper workflow setup and user permissions.</li>
+                <li><strong>Branch Authorization:</strong> You can only approve transactions from your assigned branch.</li>
+                <li><strong>Status Validation:</strong> Only pending transactions can be approved or rejected.</li>
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
         <form method="GET" class="mb-3">
             <div class="row g-2">
                 <div class="col-md-3">
@@ -128,26 +143,30 @@
                         </td>
                         <td>
                             <div class="btn-group" role="group" aria-label="Action buttons">
-                                <!-- Approve Button -->
                                 <form method="POST"
                                       action="{{ route('transactionsapproval.approve', ['Id' => $record->Id]) }}"
                                       onsubmit="return confirm('Are you sure you want to approve this {{ strtolower($transactionType) }}?')"
                                       class="me-1">
                                     @csrf
                                     <input type="hidden" name="transaction_type" value="{{ $transactionType }}">
-                                    <button type="submit" class="btn btn-success btn-sm" title="Approve">
+                                    <button type="submit" 
+                                            class="btn btn-success btn-sm {{ $record->canApprove ? '' : 'disabled' }}" 
+                                            title="{{ $record->canApprove ? 'Approve this transaction' : 'Cannot approve' }}"
+                                            {{ $record->canApprove ? '' : 'disabled' }}>
                                         <i class="fas fa-check"></i> Approve
                                     </button>
                                 </form>
                                 
-                                <!-- Reject Button -->
                                 <form method="POST"
                                       action="{{ route('transactionsapproval.reject', ['Id' => $record->Id]) }}"
                                       onsubmit="return confirm('Are you sure you want to reject this {{ strtolower($transactionType) }}?')">
                                     @csrf
                                     <input type="hidden" name="transaction_type" value="{{ $transactionType }}">
                                     <input type="hidden" name="reason" value="Rejected via approval interface">
-                                    <button type="submit" class="btn btn-danger btn-sm" title="Reject">
+                                    <button type="submit" 
+                                            class="btn btn-danger btn-sm {{ $record->canApprove ? '' : 'disabled' }}" 
+                                            title="{{ $record->canApprove ? 'Reject this transaction' : 'Cannot reject' }}"
+                                            {{ $record->canApprove ? '' : 'disabled' }}>
                                         <i class="fas fa-times"></i> Reject
                                     </button>
                                 </form>
@@ -173,6 +192,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         $(document).ready(function () {
             const table = $('#approvalsTable');
@@ -195,11 +215,16 @@
                     }
                 },
                 columnDefs: [
-                    {orderable: false, targets: [8]} // Action column
+                    {orderable: false, targets: [8]} 
                 ],
-                order: [[5, 'desc']] // Default order by date descending
+                order: [[5, 'desc']] 
             });
             @endif
+
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
         });
     </script>
 @endsection

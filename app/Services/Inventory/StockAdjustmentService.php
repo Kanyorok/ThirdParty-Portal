@@ -8,11 +8,11 @@ use App\Models\Inventory\InventoryHold;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockAdjustmentItem;
 use App\Models\Inventory\StockItem;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use App\Models\Inventory\StockTransaction;
 use App\Services\Workflow\ApprovalWorkflow;
-use Exception;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class StockAdjustmentService
@@ -21,7 +21,7 @@ class StockAdjustmentService
 
     public function __construct(ApprovalWorkflow $workflow)
     {
-        $this->workflow = new ApprovalWorkflow('TransferStatus','Status');
+        $this->workflow = new ApprovalWorkflow('TransferStatus', 'Status');
     }
 
     public function create(array $validated): void
@@ -59,12 +59,20 @@ class StockAdjustmentService
                 ]);
             }
 
-            $this->workflow->submit(
-                $adjustment,
-                Auth::user(),
-                Transfers::Pending,
-                'Stock Adjustment Submitted for Approval'
-            );
+            try {
+                $this->workflow->submit(
+                    $adjustment,
+                    Auth::user(),
+                    Transfers::Pending,
+                    'Stock Adjustment Submitted for Approval'
+                );
+            } catch (\Exception $e) {
+                DB::rollBack();
+
+                throw ValidationException::withMessages([
+                    'workflow' => 'Workflow configuration is missing. Please configure the approval workflow for Stock Adjustments before creating adjustments. Contact your system administrator.',
+                ]);
+            }
 
             activity()->performedOn($adjustment)
                 ->causedBy(Auth::user())
@@ -72,8 +80,11 @@ class StockAdjustmentService
                 ->log('Created Stock Adjustment');
 
             DB::commit();
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (Throwable $th) {
             DB::rollBack();
+
             throw $th;
         }
     }
@@ -95,7 +106,7 @@ class StockAdjustmentService
             $incomingItemIds = $incomingItems->pluck('Item')->toArray();
 
             $itemsToDelete = array_diff($existingItemIds, $incomingItemIds);
-            if (!empty($itemsToDelete)) {
+            if (! empty($itemsToDelete)) {
                 $adjustment->items()->whereIn('Item', $itemsToDelete)->delete();
             }
 
@@ -269,6 +280,7 @@ class StockAdjustmentService
             DB::commit();
         } catch (Throwable $th) {
             DB::rollBack();
+
             throw $th;
         }
     }

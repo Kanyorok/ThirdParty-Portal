@@ -26,6 +26,7 @@ class CompetitorProductController extends Controller
     public function index(Competitor $competitor): JsonResponse
     {
         $this->authorize('view', $competitor);
+
         return Datatables::of($competitor->products()->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
             /*->addColumn('action', function (CompetitorProduct $product) {
                 return '<button type="button" class="btn btn-info btn-sm discussion-details" data-info="'.$discussion->DiscussionID.'"><i class="fas fa-eye"></i> details</button>';
@@ -38,7 +39,7 @@ class CompetitorProductController extends Controller
                 return number_format($product->Clients);
             })->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')->setRowData([
                                                                                                   'dbl_click_url' => function (CompetitorProduct $product) use ($competitor) {
-                                                                                                    return route('competitor-products.show', [$competitor->CompetitorID, $product->Id]);
+                                                                                                      return route('competitor-products.show', [$competitor->CompetitorID, $product->Id]);
                                                                                                   },
                                                                                                   'summary_title' => 'Product Details',
                                                                                                  ])->make();
@@ -51,7 +52,7 @@ class CompetitorProductController extends Controller
     {
         $this->authorize('update', $competitor);
         $competitor->products()->create(array_merge($request->validated(), [
-                                                                            'CreatedBy'  => $request->user()->Id,
+                                                                            'CreatedBy' => $request->user()->Id,
                                                                             'ModifiedBy' => $request->user()->Id,
                                                                            ]));
 
@@ -65,6 +66,7 @@ class CompetitorProductController extends Controller
     {
         $this->authorize('view', $competitor);
         $product = $competitor->products()->where('Id', $product_id)->firstOrFail();
+
         return view('crm.marketing.competitors.product', compact('product', 'competitor'));
     }
 

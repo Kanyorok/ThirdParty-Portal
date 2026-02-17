@@ -23,10 +23,10 @@ class PropertyMaintenanceAssignRequest extends FormRequest
     {
         return [
             'RequestNumber' => 'required|exists:t_MaintenanceRequest,Id',
-            'AssignmentDate' => 'required|date|after_or_equal:today|before_or_equal:ExpectedCompletion',
+            'AssignmentDate' => 'required|date|after_or_equal:ExpectedStartDate|before_or_equal:ExpectedCompletion',
             'AssignmentType' => 'required|exists:t_CodeDetails,Id',
 
-            'InternalTechnician' => 'nullable|exists:t_Employees,Id|required_without:PrequalifiedVendor',
+            'InternalTechnician' => 'nullable|exists:t_HREmployees,Id|required_without:PrequalifiedVendor',
             'PrequalifiedVendor' => 'nullable|exists:t_SupplierMaster,Id|required_without:InternalTechnician',
 
             'ExpectedStartDate' => 'required|date|after_or_equal:today',
@@ -36,17 +36,15 @@ class PropertyMaintenanceAssignRequest extends FormRequest
         ];
     }
 
-
     public function messages()
     {
         return [
             'ExpectedStartDate.after_or_equal' => 'Expected start date must be today or a future date.',
             'ExpectedCompletion.after_or_equal' => 'Expected completion must be after or equal to the expected start date.',
-            'AssignmentDate.after_or_equal' => 'Assignment date must be today or later.',
+            'AssignmentDate.after_or_equal' => 'Assignment date must be after or equal to the expected start date.',
             'AssignmentDate.before_or_equal' => 'Assignment date must be before or equal to the expected completion date.',
-            'InternalTechnician.required_without' => 'Please assign either an internal technician or a prequalified vendor.',
-            'PrequalifiedVendor.required_without' => 'Please assign either an internal technician or a prequalified vendor.',
+            'InternalTechnician.required_without' => 'Please assign an internal technician',
+            'PrequalifiedVendor.required_without' => 'Please assign a prequalified vendor.',
         ];
     }
-
 }

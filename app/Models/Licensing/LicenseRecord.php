@@ -10,7 +10,6 @@ class LicenseRecord extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'LicenseId', 'PayloadJson', 'SignatureBase64', 'PublicKeyId', 'Status', 'CreatedOn', 'LastValidatedOn'
+        'LicenseId', 'PayloadJson', 'SignatureBase64', 'PublicKeyId', 'Status', 'CreatedOn', 'LastValidatedOn',
     ];
 }
-

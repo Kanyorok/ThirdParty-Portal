@@ -5,22 +5,23 @@
 
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    <style>
-        table.dataTable,
-        .dataTables_wrapper .dataTables_length,
-        .dataTables_wrapper .dataTables_filter,
-        .dataTables_wrapper .dataTables_info,
-        .dataTables_wrapper .dataTables_paginate {
-            font-size: 0.875rem;
-        }
-    </style>
 @endsection
 
 @section('content')
     <div class="container mt-4">
+@if($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
                 {{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -28,6 +29,7 @@
 
         @if(session('error'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
                 {{ session('error') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -96,8 +98,8 @@
         </div>
     </div>
 
-    {{-- Scripts --}}
-    @section('scripts')
+
+      @section('scripts')
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
         <script>
@@ -112,8 +114,8 @@
                         emptyTable: ""
                     }
                 });
-            @endif
-        </script>
+                @endif
+            });
+    </script>
     @endsection
-
 @endsection

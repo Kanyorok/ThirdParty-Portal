@@ -2,13 +2,11 @@
 
 namespace App\Http\Requests\Auth;
 
-use App\Enums\Core\PermissionEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\Log;
 
 class RoleRequest extends FormRequest
 {
@@ -34,7 +32,7 @@ class RoleRequest extends FormRequest
     public function getName(Role $role = null): string
     {
         $name = $this->validated('RoleName');
-        $check_role = Role::query();
+        $check_role = Role::query()->where('role_type', 'system');
         if ($role instanceof Role) {
             $check_role->where('id', '!=', $role->id);
         }
@@ -59,20 +57,24 @@ class RoleRequest extends FormRequest
             $dbKey = str_replace([' ', '.'], '_', $dbName);
 
             // Check if any input key matches the normalized DB key
-            $inputKeys = collect($this->all())->keys()->map(fn($k) => str_replace([' ', '.'], '_', strtolower($k)));
-            
+            $inputKeys = collect($this->all())->keys()->map(fn ($k) => str_replace([' ', '.'], '_', strtolower($k)));
+
             // Direct check (optimization)
             if ($this->has($permission->name) || $this->has(str_replace([' ', '.'], '_', $permission->name))) {
-                 $selectedIds[] = $permission->id;
-                 continue;
+                $selectedIds[] = $permission->id;
+
+                continue;
             }
 
             // Case-insensitive fallback
             foreach ($this->all() as $key => $value) {
-                if ($value !== 'on') continue;
+                if ($value !== 'on') {
+                    continue;
+                }
                 $normalizedKey = str_replace([' ', '.'], '_', strtolower($key));
                 if ($normalizedKey === $dbKey) {
                     $selectedIds[] = $permission->id;
+
                     break;
                 }
             }

@@ -2,6 +2,20 @@
 @section('title', 'Tender Item Details')
 @section('content')
 <div class="container mt-4">
+    {{-- Flash Messages --}}
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <h4 class="mb-4">📄 Tender Item Details – {{$tender->TenderNo}}</h4>
 
     <!-- Tender Summary Info -->
@@ -25,8 +39,9 @@
                         <label class="form-label fw-bold">Tender Type</label>
                         <select class="form-select" id="tenderType" name="TenderType" required>
                             <option value="">-- Select Tender Type --</option>
-                            <option value="op" {{$tender->TenderType->value=='op'?'selected':''}}>Open Tender</option>
-                            <option value="rs" {{$tender->TenderType->value=='rs'?'selected':''}}>Restricted Tender</option>
+                            @foreach (\App\Enums\TenderTypeEnum::cases() as $item)
+                                <option value="{{ $item->value }}" {{$tender->TenderType === $item?'selected':''}}>{{ $item->displayName() }}</option>
+                            @endforeach
                         </select>
                         @error('TenderType')
                         <div class="text-danger">{{ $message }}</div>
@@ -74,6 +89,7 @@
                         <label for="submissionDeadline" class="form-label fw-bold">Submission Deadline:</label>
                         <input type="date"
                             value="{{ \Carbon\Carbon::parse($tender->SubmissionDeadline)->format('Y-m-d') }}"
+                            min="{{ date('Y-m-d') }}"
                             class="form-control" id="submissionDeadline" name="submission_deadline" required>
                         @error('submission_deadline')
                         <div class="text-danger">{{ $message }}</div>
@@ -83,6 +99,7 @@
                         <label for="openingDate" class="form-label fw-bold">Opening Date:</label>
                         <input type="date"
                             value="{{ \Carbon\Carbon::parse($tender->OpeningDate)->format('Y-m-d') }}"
+                            min="{{ date('Y-m-d') }}"
                             class="form-control" id="openingDate" name="opening_date" required>
                         @error('opening_date')
                         <div class="text-danger">{{ $message }}</div>
@@ -108,6 +125,7 @@
     </div>
 
     <!-- Attached Documents Section -->
+   {{--
     @if(isset($documents) && $documents->isNotEmpty())
     <div class="card shadow-sm mb-4">
         <div class="card-body">
@@ -145,7 +163,7 @@
                             </td>
                             <td class="text-center">
                                 @if($doc->canView())
-                                {{-- View Document - Uses the DocumentActionsController preview --}}
+                                --}}{{-- View Document - Uses the DocumentActionsController preview --}}{{--
                                 <a href="{{ route('file.preview', ['document' => $doc->Id]) }}"
                                     class="btn btn-sm btn-outline-primary"
                                     title="View Document"
@@ -153,7 +171,7 @@
                                     <i class="fas fa-eye"></i>
                                 </a>
 
-                                {{-- Download Document - Need to find the repository first --}}
+                                --}}{{-- Download Document - Need to find the repository first --}}{{--
                                 @php
                                 // Get the repository ID from document relation
                                 $repositoryId = $doc->RepositoryId ?? $doc->repository?->Id ?? null;
@@ -176,7 +194,7 @@
 
                                 @canDelete('tender')
                                 @if($tender->Status === \App\Enums\TenderStatusEnum::Draft)
-                                {{-- Delete Document - Uses repository-based route --}}
+                                --}}{{-- Delete Document - Uses repository-based route --}}{{--
                                 @php
                                 $repositoryId = $doc->RepositoryId ?? $doc->repository?->Id ?? null;
                                 @endphp
@@ -219,7 +237,7 @@
         </div>
     </div>
     @endif
-
+--}}
 
 
     <!-- Items Table -->
@@ -271,7 +289,7 @@
                                 @canUpdate('tender')
                                 <button type="button" class="btn btn-sm btn-outline-primary"
                                     data-bs-toggle="modal"
-                                    data-bs-target="#editItemModal-{{$item->Id}}"
+                                    data-bs-target="#editItemModal-{{$item->id}}"
                                     title="Edit Quantity">
                                     <i class="fas fa-edit"></i>
                                 </button>
@@ -287,7 +305,7 @@
                                     @method('PATCH')
                                     <input type="hidden" name="type" value='crudItem'>
                                     <input type="hidden" name="crudType" value='deleteItem'>
-                                    <input type="hidden" name="item_id" value="{{$item->Id}}">
+                                    <input type="hidden" name="item_id" value="{{$item->id}}">
                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
                                         onclick="return confirm('Are you sure you want to delete item \'{{ $item->item?->ItemName }}\'? This action cannot be undone.')">
                                         <i class="fas fa-trash-alt"></i>
@@ -349,7 +367,7 @@
                                     @method('PATCH')
                                     <input type="hidden" name="type" value='crudSupplier'>
                                     <input type="hidden" name="crudType" value='deleteSupplier'>
-                                    <input type="hidden" name="supplier_id" value="{{$item->Id}}">
+                                    <input type="hidden" name="tender_supplier_id" value="{{$item->id}}">
                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
                                         onclick="return confirm('Remove supplier \'{{ $item->supplier->party->ThirdPartyName ?? $item->supplier->party->TradingName }}\'?')">
                                         <i class="fas fa-trash-alt"></i>
@@ -461,7 +479,7 @@
 <!-- Edit Item Modal (Only for MANUAL items) -->
 @foreach ($items as $item)
 @if(strtoupper(string: $item->SourceType) === 'MANUAL')
-<div class="modal fade" id="editItemModal-{{$item->Id}}" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="editItemModal-{{$item->id}}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content rounded-3 shadow">
             <div class="modal-header bg-primary text-white">
@@ -476,7 +494,7 @@
                 @method('PATCH')
                 <input type="hidden" name="type" value="crudItem">
                 <input type="hidden" name="crudType" value="updateQty">
-                <input type="hidden" name="item_id" value="{{ $item->Id }}">
+                <input type="hidden" name="item_id" value="{{ $item->id }}">
 
                 <div class="modal-body">
                     <div class="alert alert-info">
@@ -507,13 +525,13 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="QtyToTender-{{$item->Id}}" class="form-label fw-bold">
+                        <label for="QtyToTender-{{$item->id}}" class="form-label fw-bold">
                             New Quantity <span class="text-danger">*</span>
                         </label>
                         <input type="number" step="0.01" min="0.01"
                             name="QtyToTender"
                             value="{{$item->QtyToTender}}"
-                            id="QtyToTender-{{$item->Id}}"
+                            id="QtyToTender-{{$item->id}}"
                             class="form-control"
                             required>
                         <small class="text-muted">Only quantity can be edited. PR reference is locked after creation.</small>

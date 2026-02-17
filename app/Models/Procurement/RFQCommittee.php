@@ -8,15 +8,27 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RFQCommittee extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_RFQCommittee';
 
     protected $primaryKey = 'Id';
+
+    // Compatibility bridge: DB uses lowercase `id`, legacy code often reads/writes `Id`.
+    public function getIdAttribute()
+    {
+        return $this->attributes['id'] ?? null;
+    }
+
+    public function setIdAttribute($value): void
+    {
+        $this->attributes['id'] = $value;
+    }
 
     protected $fillable = [
         'RFQID',
@@ -28,7 +40,7 @@ class RFQCommittee extends Model
         'ModifiedBy',
         'ModifiedOn',
         'DeletedBy',
-        'DeletedOn'
+        'DeletedOn',
     ];
 
     protected $casts = [
@@ -48,7 +60,7 @@ class RFQCommittee extends Model
         'AppointmentDate',
         'CreatedOn',
         'ModifiedOn',
-        'DeletedOn'
+        'DeletedOn',
     ];
 
     public function rfq()

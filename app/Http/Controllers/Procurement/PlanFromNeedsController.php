@@ -6,10 +6,10 @@ use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Enums\ProcurementPlanStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\PlanFromNeedsRequest;
+use App\Models\Budget\BudgetLine;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
 use App\Models\Inventory\ItemCategories;
-use App\Models\Budget\BudgetLine;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\DepartmentNeed;
 use App\Models\Procurement\PlanLineItem;
@@ -33,7 +33,13 @@ class PlanFromNeedsController extends Controller
         $categoryIds = $approvedNeeds->pluck('item.Category')->filter()->unique();
         $categories = ItemCategories::whereIn('Id', $categoryIds)->orderBy('Name')->get();
 
-        return view('procurement.procurementplan.planconsolidation.loadfromneeds.create', compact('approvedNeeds', 'plans', 'branches', 'departments', 'categories', 'budgetLines'
+        return view('procurement.procurementplan.planconsolidation.loadfromneeds.create', compact(
+            'approvedNeeds',
+            'plans',
+            'branches',
+            'departments',
+            'categories',
+            'budgetLines'
         ));
     }
 
@@ -41,6 +47,7 @@ class PlanFromNeedsController extends Controller
     public function filterNeeds(Request $request): string
     {
         $approvedNeeds = $this->getFilteredNeeds($request);
+
         return view('procurement.procurementplan.planconsolidation.loadfromneeds.create', compact('approvedNeeds'))->render();
     }
 
@@ -74,7 +81,7 @@ class PlanFromNeedsController extends Controller
 
         $selectedNeeds = DepartmentNeed::whereIn('Id', $request->selected_needs)->with('item')->get();
 
-        $noFilters = !$request->filled('branch_filter') && !$request->filled('department_filter') && !$request->filled('category_id');
+        $noFilters = ! $request->filled('branch_filter') && ! $request->filled('department_filter') && ! $request->filled('category_id');
 
         foreach ($selectedNeeds as $need) {
             $budgetLineId = $request->budget_line_id[$need->Id] ?? null;

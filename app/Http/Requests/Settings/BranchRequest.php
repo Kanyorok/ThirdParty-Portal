@@ -34,16 +34,17 @@ class BranchRequest extends FormRequest
     {
         $branchID = preg_replace('/[^a-zA-Z0-9]/', '', $this->string('BranchID')->toString());
 
-        if (!is_string($branchID) || strlen($branchID) < 2) {
+        if (! is_string($branchID) || strlen($branchID) < 2) {
             throw ValidationException::withMessages([
-                'BranchID' => 'invalid branch id, ate least 2 characters, no special characters allowed'
+                'BranchID' => 'invalid branch id, ate least 2 characters, no special characters allowed',
             ]);
         }
         if (Branch::query()->where('BranchID', $branchID)->exists()) {
             throw ValidationException::withMessages([
-                'BranchID' => 'branch id already exists'
+                'BranchID' => 'branch id already exists',
             ]);
         }
+
         return $branchID;
     }
 
@@ -51,9 +52,10 @@ class BranchRequest extends FormRequest
     {
         if ($this->has('Manager') && $this->string('Manager')->isNotEmpty()) {
             $user = User::query()->where('UserID', trim($this->string('Manager')->toString()))->first('Id');
-            if (!$user instanceof User) {
+            if (! $user instanceof User) {
                 throw ValidationException::withMessages(['Manager' => 'Branch manager selected is invalid']);
             }
+
             return $user;
         }
 
@@ -64,11 +66,13 @@ class BranchRequest extends FormRequest
     {
         if ($this->has('Operation') && $this->string('Operation')->isNotEmpty()) {
             $user = User::query()->where('UserID', trim($this->string('Operation')->toString()))->first('Id');
-            if (!$user instanceof User) {
+            if (! $user instanceof User) {
                 throw ValidationException::withMessages(['Operation' => 'Operational manager selected is invalid']);
             }
+
             return $user;
         }
+
         return null;
     }
 }

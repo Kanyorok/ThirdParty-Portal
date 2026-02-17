@@ -15,7 +15,6 @@ class MedicalFundBeneficiaryService
      */
     public function __construct(public MedicalFundBeneficiary $medicalFundBeneficiary)
     {
-        //
     }
 
     /**
@@ -30,18 +29,17 @@ class MedicalFundBeneficiaryService
         ?string $contact = null,
         bool $isActive = true,
         ?User $user = null
-    ): self
-    {
+    ): self {
         $beneficiary = MedicalFundBeneficiary::create([
-            'FundId'       => $fund->Id,
-            'FullName'     => $fullName,
+            'FundId' => $fund->Id,
+            'FullName' => $fullName,
             'Relationship' => $relationship?->ID ?? null,
-            'DateOfBirth'  => $dateOfBirth,
-            'NationalID'   => $nationalId,
-            'Contact'      => $contact,
-            'IsActive'     => $isActive,
-            'CreatedBy'    => $user?->Id,
-            'ModifiedBy'   => $user?->Id,
+            'DateOfBirth' => $dateOfBirth,
+            'NationalID' => $nationalId,
+            'Contact' => $contact,
+            'IsActive' => $isActive,
+            'CreatedBy' => $user?->Id,
+            'ModifiedBy' => $user?->Id,
         ]);
 
         if (function_exists('activity')) {
@@ -66,16 +64,15 @@ class MedicalFundBeneficiaryService
         ?string $contact = null,
         bool $isActive = true,
         ?User $user = null
-    ): self
-    {
+    ): self {
         $this->medicalFundBeneficiary->update([
-            'FullName'     => $fullName,
+            'FullName' => $fullName,
             'Relationship' => $relationship?->ID ?? null,
-            'DateOfBirth'  => $dateOfBirth,
-            'NationalID'   => $nationalId,
-            'Contact'      => $contact,
-            'IsActive'     => $isActive,
-            'ModifiedBy'   => $user?->Id,
+            'DateOfBirth' => $dateOfBirth,
+            'NationalID' => $nationalId,
+            'Contact' => $contact,
+            'IsActive' => $isActive,
+            'ModifiedBy' => $user?->Id,
         ]);
 
         if (function_exists('activity')) {

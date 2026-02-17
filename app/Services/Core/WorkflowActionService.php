@@ -48,14 +48,14 @@ class WorkflowActionService
                     $userName,
                     $notes,
                     $statusColumn,
-                    $statusId
+                    $statusId,
                 ]
             );
 
             if (empty($result)) {
                 return [
                     'success' => false,
-                    'message' => 'No response from workflow processor'
+                    'message' => 'No response from workflow processor',
                 ];
             }
 
@@ -65,7 +65,7 @@ class WorkflowActionService
             if ($spResult->Status === 'ERROR') {
                 return [
                     'success' => false,
-                    'message' => $spResult->Message
+                    'message' => $spResult->Message,
                 ];
             }
 
@@ -87,18 +87,17 @@ class WorkflowActionService
                 'is_rejected' => $spResult->IsRejected ?? false,
                 'workflow_complete' => $spResult->WorkflowComplete ?? false,
             ];
-
         } catch (\Exception $e) {
             Log::error('Workflow action failed', [
                 'source' => $source,
                 'source_id' => $sourceId,
                 'user_id' => $userId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
-                'message' => 'An error occurred: ' . $e->getMessage()
+                'message' => 'An error occurred: ' . $e->getMessage(),
             ];
         }
     }
@@ -218,7 +217,7 @@ class WorkflowActionService
     protected function columnExists(string $tableName, string $columnName): bool
     {
         $table = str_replace(['[', ']'], '', $tableName);
-        
+
         $result = DB::select(
             "SELECT COUNT(*) as count
              FROM INFORMATION_SCHEMA.COLUMNS
@@ -235,7 +234,7 @@ class WorkflowActionService
     protected function getKeyColumn(string $tableName): string
     {
         $table = str_replace(['[', ']'], '', $tableName);
-        
+
         $result = DB::select(
             "SELECT COLUMN_NAME
              FROM INFORMATION_SCHEMA.COLUMNS

@@ -46,7 +46,7 @@
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Reported By</label>
                         <input type="text" class="form-control bg-light text-dark"
-                               value="{{ $maintenancerequest->ReportedBy ?? '-' }}" readonly>
+                               value="{{ $maintenancerequest->reportedByUser->ThirdPartyName ?? '-' }}" readonly>
                 </div>
 
                     <div class="col-md-6">
@@ -62,7 +62,7 @@
                 </div>
 
                     <div class="col-12">
-                        <label class="form-label fw-semibold">Issue Description</label>
+                        <label class="form-label fw-semibold">Issue Description </label>
                         <textarea class="form-control bg-light text-dark" rows="3"
                                   readonly>{{ $maintenancerequest->IssueDescription ?? '-' }}</textarea>
                     </div>
@@ -90,8 +90,6 @@
                     <strong>{{ $maintenancerequest->ModifiedOn ? Carbon::parse($maintenancerequest->ModifiedOn)->format('d M Y') : '-' }}</strong>
             </div>
                 <div>
-                    <a href="{{ route('maintenancerequest.edit', $maintenancerequest->Id) }}"
-                       class="btn btn-sm btn-dark">Edit</a>
                     <a href="{{ route('maintenancerequest.index') }}" class="btn btn-sm btn-outline-dark">Back</a>
                 </div>
             </div>

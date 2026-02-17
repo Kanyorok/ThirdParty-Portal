@@ -3,16 +3,15 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Http\Requests\Settings\WorkFlowRequest;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Settings\WorkFlow;
 use App\Models\Core\Approval\WorkflowStage;
+use App\Models\Settings\WorkFlow;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Enums\Core\ModulesEnum;
 
 class WorkFlowController extends Controller
 {
@@ -35,6 +34,7 @@ class WorkFlowController extends Controller
                 } catch (\Throwable $e) {
                     // ignore
                 }
+
                 return [];
             })
             ->toArray();
@@ -82,7 +82,7 @@ class WorkFlowController extends Controller
         $flatten = function ($parentId = 'root', $depth = 0) use (&$flatten, $moduleTree, &$modules) {
             if (isset($moduleTree[$parentId])) {
                 // Sort by Name within the level
-                usort($moduleTree[$parentId], fn($a, $b) => strcmp($a->Name, $b->Name));
+                usort($moduleTree[$parentId], fn ($a, $b) => strcmp($a->Name, $b->Name));
 
                 foreach ($moduleTree[$parentId] as $module) {
                     $module->indentation = str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $depth);
@@ -94,11 +94,11 @@ class WorkFlowController extends Controller
         $flatten('root');
 
         // Create labeled options for better UX
-        $labeledSourceOptions = collect($sourceOptions)->map(function($class, $alias) {
+        $labeledSourceOptions = collect($sourceOptions)->map(function ($class, $alias) {
             return [
                 'alias' => $alias,
                 'class' => $class,
-                'label' => $this->getDocumentTypeLabel($class)
+                'label' => $this->getDocumentTypeLabel($class),
             ];
         })->sortBy('label')->values();
 
@@ -120,7 +120,7 @@ class WorkFlowController extends Controller
             $selection = (string) ($validated['DocType'] ?? '');
             $tableName = $this->resolveSelectedToTable($selection);
 
-            if (!$tableName) {
+            if (! $tableName) {
                 throw new \InvalidArgumentException('Unrecognized model selection: ' . $selection);
             }
 
@@ -128,7 +128,7 @@ class WorkFlowController extends Controller
                 ->where('DocumentType', $tableName)
                 ->value('ModuleID');
 
-            if (!$moduleId) {
+            if (! $moduleId) {
                 if ($request->filled('ModuleID')) {
                     $moduleId = $request->input('ModuleID');
                     DB::table('t_ModuleSources')->insert([
@@ -174,7 +174,7 @@ class WorkFlowController extends Controller
             ]);
 
             return redirect()->back()->withErrors([
-                'error' => 'Failed to create approval workflow: ' . $e->getMessage()
+                'error' => 'Failed to create approval workflow: ' . $e->getMessage(),
             ]);
         }
 
@@ -195,7 +195,7 @@ class WorkFlowController extends Controller
             $selection = (string) ($validated['DocType'] ?? '');
             $tableName = $this->resolveSelectedToTable($selection);
 
-            if (!$tableName) {
+            if (! $tableName) {
                 throw new \InvalidArgumentException('Unrecognized model selection: ' . $selection);
             }
 
@@ -222,7 +222,7 @@ class WorkFlowController extends Controller
             return redirect()->back()->with('success', 'Approval workflow updated.');
         } catch (\Throwable $e) {
             return redirect()->back()->withErrors([
-                'error' => 'Failed to update workflow: ' . $e->getMessage()
+                'error' => 'Failed to update workflow: ' . $e->getMessage(),
             ]);
         }
     }
@@ -237,7 +237,7 @@ class WorkFlowController extends Controller
         // Force fresh query from database
         $approval = WorkFlow::where('Id', $id)->first();
 
-        if (!$approval) {
+        if (! $approval) {
             abort(404, 'Workflow not found');
         }
 
@@ -247,7 +247,7 @@ class WorkFlowController extends Controller
         Log::info('Displaying workflow', [
             'workflow_id' => $id,
             'final_stage' => $approval->FinalStage,
-            'has_final' => !empty($approval->FinalStage)
+            'has_final' => ! empty($approval->FinalStage),
         ]);
 
         $sourceOptions = array_flip(Relation::morphMap());
@@ -273,7 +273,7 @@ class WorkFlowController extends Controller
         Log::info('Loaded workflow stages', [
             'workflow_id' => $id,
             'stage_count' => $stagesCollection->count(),
-            'stages' => $stagesCollection->pluck('StageName')->toArray()
+            'stages' => $stagesCollection->pluck('StageName')->toArray(),
         ]);
 
         // Force no caching on response
@@ -283,6 +283,7 @@ class WorkFlowController extends Controller
             ->header('Pragma', 'no-cache')
             ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
     }
+
     public function destroy(string $id)
     {
         $this->authorize('delete', \App\Models\Settings\WorkFlow::class);
@@ -332,7 +333,7 @@ class WorkFlowController extends Controller
     private function getDocumentTypeLabel(string $class): string
     {
         $basename = class_basename($class);
-        
+
         // Map class names to user-friendly labels with module context
         $labelMap = [
             // Procurement
@@ -348,7 +349,7 @@ class WorkFlowController extends Controller
             'ConsolidatedProcurementPlan' => 'Consolidated Procurement Plan (Procurement)',
             'DepartmentNeeds' => 'Department Needs (Procurement)',
             'PrequalificationRound' => 'Prequalification Round (Procurement)',
-            
+
             // Inventory
             'InterBranchRequisition' => 'Inter-Branch Requisition (Inventory)',
             'InterBranchRequisitionItem' => 'Inter-Branch Requisition Items (Inventory)',
@@ -356,44 +357,49 @@ class WorkFlowController extends Controller
             'TransactionTransfer' => 'Stock Transfer (Inventory)',
             'StockTake' => 'Stock Take (Inventory)',
             'StockConsumption' => 'Stock Consumption (Inventory)',
-            
+
             // Property Management
             'PropertyLease' => 'Property Lease (Property Management)',
             'PropertyLeaseRenewal' => 'Lease Renewal (Property Management)',
             'PropertyLeaseTermination' => 'Lease Termination (Property Management)',
             'PropertyNewLease' => 'New Lease (Property Management)',
-            
+
             // Budget
             'Budget' => 'Budget (Budget & Analytics)',
             'BudgetReallocation' => 'Budget Reallocation (Budget & Analytics)',
-            
+
             // Finance
             'PaymentVoucher' => 'Payment Voucher (Finance)',
             'CreditNote' => 'Credit Note (Finance)',
             'DebitNote' => 'Debit Note (Finance)',
-            
+
             // HR
             'Employee' => 'Employee (Human Resources)',
         ];
-        
+
         return $labelMap[$basename] ?? $basename . ' (Other)';
     }
 
     private function resolveSelectedToTable(?string $selection): ?string
     {
-        if (!$selection) return null;
+        if (! $selection) {
+            return null;
+        }
 
         $morphMap = Relation::morphMap();
         $class = $morphMap[$selection] ?? $selection;
 
-        if (!class_exists($class)) return null;
+        if (! class_exists($class)) {
+            return null;
+        }
 
         $instance = app($class);
-        if (!$instance instanceof Model) return null;
+        if (! $instance instanceof Model) {
+            return null;
+        }
 
         return $instance->getTable();
     }
-
 
     public function getState($id)
     {
@@ -401,7 +407,7 @@ class WorkFlowController extends Controller
             $workflow = WorkFlow::findOrFail($id);
             $workflow->refresh();
 
-                // Get all stages with proper relationships
+            // Get all stages with proper relationships
             $stagesCollection = WorkflowStage::where('WorkFlowId', $id)
                 ->with(['type_name', 'workflow', 'permission.roles'])
                 ->orderBy('Order')
@@ -454,13 +460,14 @@ class WorkFlowController extends Controller
             ], 500);
         }
     }
+
     /**
      * Get approvers for a specific stage
      */
     public function getApprovers($stageId)
     {
         $stage = \App\Models\Core\Approval\WorkflowStage::find($stageId);
-        if (!$stage || !$stage->PermissionId) {
+        if (! $stage || ! $stage->PermissionId) {
             return response()->json(['users' => []]);
         }
 

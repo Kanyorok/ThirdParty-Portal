@@ -4,19 +4,6 @@
 @section('title', 'Edit Lease Agreement')
 
 @section('content')
-
-{{-- ERROR DISPLAY --}}
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <strong>Please fix the following:</strong>
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
-
 <div class="container mt-4">
 
 <form method="POST" action="{{ route('addlease.update', $newlease->Id) }}" enctype="multipart/form-data" id="leaseForm">
@@ -50,7 +37,7 @@
                 {{-- Property --}}
                 <div class="col-md-4">
                     <label class="form-label">Property <span class="text-danger">*</span></label>
-                    <select name="PropertyID" id="property-select" class="form-select shadow-sm" required>
+                    <select name="PropertyID" id="property-select" class="form-select shadow-sm @error('PropertyID') is-invalid @enderror" required>
                         <option value="">-- Select Property --</option>
                         @foreach ($properties as $property)
                             <option value="{{ $property->Id }}"
@@ -59,6 +46,7 @@
                             </option>
                         @endforeach
                     </select>
+                    @error('PropertyID')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
             </div>
 
@@ -70,31 +58,34 @@
                 {{-- Block --}}
                 <div class="col-md-4">
                     <label class="form-label">Block <span class="text-danger">*</span></label>
-                    <select name="BlockID" id="block-select" class="form-select shadow-sm" required>
+                    <select name="BlockID" id="block-select" class="form-select shadow-sm @error('BlockID') is-invalid @enderror" required>
                         <option value="{{ $newlease->BlockID }}" selected>
                             {{ $newlease->block->BlockName ?? 'Current Block' }}
                         </option>
                     </select>
+                    @error('BlockID')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 {{-- Floor --}}
                 <div class="col-md-4">
                     <label class="form-label">Floor <span class="text-danger">*</span></label>
-                    <select name="FloorID" id="floor-select" class="form-select shadow-sm" required>
+                    <select name="FloorID" id="floor-select" class="form-select shadow-sm @error('FloorID') is-invalid @enderror" required>
                         <option value="{{ $newlease->FloorID }}" selected>
                             {{ $newlease->floor->FloorLabel ?? 'Current Floor' }}
                         </option>
                     </select>
+                    @error('FloorID')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 {{-- Unit --}}
                 <div class="col-md-4">
                     <label class="form-label">Unit <span class="text-danger">*</span></label>
-                    <select name="Unit" id="unit-select" class="form-select shadow-sm" required>
+                    <select name="Unit" id="unit-select" class="form-select shadow-sm @error('Unit') is-invalid @enderror" required>
                         <option value="{{ $newlease->Unit }}" selected>
                             {{ $newlease->unit->UnitCode ?? 'Current Unit' }}
                         </option>
                     </select>
+                    @error('Unit')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
             </div>
 
@@ -104,20 +95,22 @@
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
                     <label class="form-label">Start Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control shadow-sm" name="StartDate"
+                    <input type="date" class="form-control shadow-sm @error('StartDate') is-invalid @enderror" name="StartDate"
                         value="{{ Carbon::parse($newlease->StartDate)->format('Y-m-d') }}">
+                    @error('StartDate')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">End Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control shadow-sm" name="EndDate"
+                    <input type="date" class="form-control shadow-sm @error('EndDate') is-invalid @enderror" name="EndDate"
                         value="{{ Carbon::parse($newlease->EndDate)->format('Y-m-d') }}">
+                    @error('EndDate')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
             </div>
 
             {{-- ================= PAYMENT FREQUENCY ================ --}}
             <div class="mb-4">
                 <label class="form-label">Payment Frequency <span class="text-danger">*</span></label>
-                <select name="PaymentFrequency" class="form-select shadow-sm" required>
+                <select name="PaymentFrequency" class="form-select shadow-sm @error('PaymentFrequency') is-invalid @enderror" required>
                     @foreach ($codes as $code)
                         <option value="{{ $code->ID }}"
                             {{ $code->ID == $newlease->PaymentFrequency ? 'selected' : '' }}>
@@ -125,6 +118,7 @@
                         </option>
                     @endforeach
                 </select>
+                @error('PaymentFrequency')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 
             {{-- ================= CURRENCY & TAX ================ --}}
@@ -135,7 +129,7 @@
                 {{-- Currency --}}
                 <div class="col-md-6">
                     <label class="form-label">Currency <span class="text-danger">*</span></label>
-                    <select name="CurrencyId" class="form-select shadow-sm" required>
+                    <select name="CurrencyId" class="form-select shadow-sm @error('CurrencyId') is-invalid @enderror" required>
                         <option value="">-- Select Currency --</option>
                         @foreach ($Currencies as $currency)
                             <option value="{{ $currency->Id }}"
@@ -144,12 +138,13 @@
                             </option>
                         @endforeach
                     </select>
+                    @error('CurrencyId')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 {{-- Tax --}}
                 <div class="col-md-6">
                     <label class="form-label">Tax Rule <span class="text-danger">*</span></label>
-                    <select name="TaxId" class="form-select shadow-sm" required>
+                    <select name="TaxId" class="form-select shadow-sm @error('TaxId') is-invalid @enderror" required>
                         <option value="">-- Select Tax Rule --</option>
                         @foreach ($taxtypes as $tax)
                             <option value="{{ $tax->Id }}"
@@ -158,6 +153,7 @@
                             </option>
                         @endforeach
                     </select>
+                    @error('TaxId')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
             </div>
 
@@ -166,32 +162,37 @@
 
                 <div class="col-md-4">
                     <label class="form-label">Rent <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control shadow-sm charge-field"
+                    <input type="number" class="form-control shadow-sm charge-field @error('MonthlyRent') is-invalid @enderror"
                         name="MonthlyRent" value="{{ $newlease->MonthlyRent }}" required>
+                    @error('MonthlyRent')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="col-md-4">
                     <label class="form-label">Deposit <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control shadow-sm"
+                    <input type="number" class="form-control shadow-sm @error('Deposit') is-invalid @enderror"
                         name="Deposit" value="{{ $newlease->Deposit }}" required>
+                    @error('Deposit')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="col-md-4">
                     <label class="form-label">Service Charge <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control shadow-sm charge-field"
+                    <input type="number" class="form-control shadow-sm charge-field @error('ServiceCharge') is-invalid @enderror"
                         name="ServiceCharge" value="{{ $newlease->ServiceCharge }}" required>
+                    @error('ServiceCharge')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="col-md-4">
                     <label class="form-label">Parking Fee <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control shadow-sm charge-field"
+                    <input type="number" class="form-control shadow-sm charge-field @error('ParkingFee') is-invalid @enderror"
                         name="ParkingFee" value="{{ $newlease->ParkingFee }}" required>
+                    @error('ParkingFee')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="col-md-4">
                     <label class="form-label">Other Charges <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control shadow-sm charge-field"
+                    <input type="number" class="form-control shadow-sm charge-field @error('OtherCharges') is-invalid @enderror"
                         name="OtherCharges" value="{{ $newlease->OtherCharges }}" required>
+                    @error('OtherCharges')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="col-md-4">
@@ -203,15 +204,17 @@
             {{-- DUE DATE --}}
             <div class="mb-4">
                 <label class="form-label">Due Day (1–28) <span class="text-danger">*</span></label>
-                <input type="number" name="DueDay" class="form-control shadow-sm"
+                <input type="number" name="DueDay" class="form-control shadow-sm @error('DueDay') is-invalid @enderror"
                     min="1" max="28" value="{{ $newlease->DueDay }}" required>
+                @error('DueDay')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 
             {{-- SPECIAL TERMS --}}
             <div class="mb-4">
                 <label class="form-label">Special Terms</label>
-                <textarea class="form-control shadow-sm" rows="3"
+                <textarea class="form-control shadow-sm @error('SpecialTerms') is-invalid @enderror" rows="3"
                     name="SpecialTerms">{{ $newlease->SpecialTerms }}</textarea>
+                @error('SpecialTerms')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 
             {{-- DOCUMENTS --}}
@@ -226,12 +229,13 @@
                 </div>
 
                 <label class="form-label mt-2">Upload New Documents</label>
-                <input type="file" name="Document[]" class="form-control shadow-sm"
+                <input type="file" name="Document[]" class="form-control shadow-sm @error('Document') is-invalid @enderror"
                     accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" multiple>
+                @error('Document')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 
             {{-- BUTTONS --}}
-            <div class="d-flex gap-3 justify-content-end">
+            <div class="d-flex gap-3 justify-content-between">
                 <a href="{{ route('addlease.index') }}" class="btn btn-outline-secondary px-4">Cancel</a>
 
                 <button type="submit" class="btn btn-success px-4"

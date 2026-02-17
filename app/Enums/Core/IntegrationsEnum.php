@@ -21,9 +21,10 @@ enum IntegrationsEnum: string
     case Facebook = 'sfb';
     case Twitter = 'xtw';
     case Website = 'web';
-    case CRDB = 'crdb';
+    case CRDB = 'cru';
     // Organization branding (name, motto, logo)
     case Organization = 'org';
+    case GoogleMaps = 'gmp';
     case LLM = 'llm';
 
     public function description(): string
@@ -33,6 +34,7 @@ enum IntegrationsEnum: string
             self::SMS => __('Craft SMS Gateway'),
             self::InfoBip => 'Infobip (Email)',
             self::iTrack => 'iTrack (Car Tracking)',
+            self::GoogleMaps => 'Google Maps API',
             self::PBX => '3CX Credentials',
             self::Email => 'Email Configuration',
             self::Facebook => 'Facebook Configuration',

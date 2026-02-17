@@ -14,12 +14,13 @@ class PropertyTypeService
     public function __construct(PropertyType $propertyType)
     {
     }
+
     public static function create(
         string $PropertyTypeName,
         CategoryMaster $PropertyCategoryId,
         string $Description = null,
         User $user
-    ):self{
+    ): self {
         $propertytype = PropertyType::create([
             'PropertyTypeName' => $PropertyTypeName,
             'PropertyCategoryId' => $PropertyCategoryId->Id,
@@ -29,7 +30,7 @@ class PropertyTypeService
         ]);
 
         activity()->causedBy($user->Id)->performedOn($propertytype)->event('create')->log("Added Property type {$propertytype->Id}.");
+
         return new self($propertytype);
     }
-
 }

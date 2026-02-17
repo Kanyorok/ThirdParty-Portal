@@ -2,8 +2,6 @@
 
 namespace App\Models\Procurement;
 
-use App\Enums\Core\ModulesEnum;
-use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Currency;
 use App\Models\DMS\Document;
@@ -11,16 +9,16 @@ use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Bid extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Bids';
     protected $primaryKey = 'Id';

@@ -2,18 +2,10 @@
 
 namespace App\Http\Requests\Inventory;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
-
 
 class StockItemRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
@@ -27,15 +19,10 @@ class StockItemRequest extends FormRequest
     public function rules()
     {
         return [
-            //'Batch' => 'required|boolean',
             'ItemID' => 'required|exists:t_Items,Id',
             'UOM' => 'nullable|exists:t_UOM,Id',
             'UnitCost' => 'nullable|numeric|min:0',
-            // 'Serial' => 'required|boolean',
-            // 'Perishable' => 'required|boolean',
-            // 'Saleable' => 'required|boolean',
-            // 'Purchasable' => 'required|boolean',
-            'Store' => 'required|exists:t_Stores,Id', 
+            'Store' => 'required|exists:t_Stores,Id',
             'Branch' => 'required|integer|exists:t_Branches,Id',
             'CurrentQty' => 'required|integer|min:1',
             'Min' => 'required|integer|min:0',

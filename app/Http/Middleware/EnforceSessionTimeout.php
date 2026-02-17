@@ -20,7 +20,7 @@ class EnforceSessionTimeout
             return $next($request);
         }
 
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return $next($request);
         }
 
@@ -72,5 +72,3 @@ class EnforceSessionTimeout
         return $next($request);
     }
 }
-
-

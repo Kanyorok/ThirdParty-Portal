@@ -40,7 +40,6 @@
                             @enderror
                         </div>
 
-                        <!-- Main Store Checkbox -->
                         <div class="col-md-6">
                             <div class="form-check mt-3">
                                 <input type="checkbox" name="IsMainStore" id="IsMainStore" 
@@ -66,7 +65,6 @@
                             @enderror
                         </div>
 
-                        <!-- Status field automatically set to active (hidden) -->
                         <input type="hidden" name="Status" value="1">
                     </div>
 
@@ -81,7 +79,6 @@
 
     @push('scripts')
         <script>
-            // Optional: Add confirmation if setting as main store
             document.querySelector('form').addEventListener('submit', function(e) {
                 const isMainStore = document.getElementById('IsMainStore').checked;
                 if (isMainStore && !document.getElementById('IsMainStore').disabled) {
@@ -91,7 +88,6 @@
                 }
             });
 
-            // Enable/disable main store checkbox based on existing main store
             @if($mainStoreExists)
                 document.getElementById('IsMainStore').disabled = true;
             @endif

@@ -47,14 +47,13 @@ class TicketController extends Controller
             $actor = $request->user();
             $query = Ticket::query();
             //ownership
-            if (($request->get('_user') === $actor->UserID) || (!$request->user()->can('viewAny', Ticket::class))) {
+            if (($request->get('_user') === $actor->UserID) || (! $request->user()->can('viewAny', Ticket::class))) {
                 $query->where(function (Builder $query) use ($actor) {
                     $query->where(function (Builder $query) use ($actor) {
                         $query->where('t_Tickets.Owner', User::getPrimaryKey())->where('t_Tickets.OwnerID', $actor->Id);
                     })->orWhere(function (Builder $query) use ($actor) {
                         $query->where('t_Tickets.Owner', Team::getPrimaryKey())
                             ->whereIn('t_Tickets.OwnerID', $actor->teamUser()->select('t_TeamUser.TeamId'));
-                        // dd($actor->teams()->select('t_TeamUser.TeamId')->get('TeamId'db));
                     })->orWhere('t_Tickets.CreatedBy', $actor->Id)->orWhere(function (Builder $query) use ($actor) {
                         $query->where('t_Tickets.Party', User::getPrimaryKey())->where('t_Tickets.PartyID', $actor->Id);
                     })->user($actor);
@@ -122,12 +121,14 @@ class TicketController extends Controller
 
                     $service->addWatcher($watcher, RoleEnum::Read, $owner);
                 }
+
                 return $service;
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|\Throwable $e) {
+        } catch (Exception | \Throwable $e) {
             Log::error('Error creating User ticket ' . $e->getMessage());
+
             return $this->errored('unexpected error creating ticket, try again later');
         }
 
@@ -141,6 +142,7 @@ class TicketController extends Controller
     public function edit(Ticket $ticket): View
     {
         $this->authorize('view', $ticket);
+
         return view('crm.tickets.summary', compact('ticket'))
             ->with('service', new TicketService($ticket))
             ->with('party', $ticket->party);
@@ -178,8 +180,9 @@ class TicketController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Throwable|Exception $e) {
+        } catch (\Throwable | Exception $e) {
             Log::error('Error update ticket ticket ' . $e->getMessage());
+
             return $this->errored('unexpected error creating ticket, try again later');
         }
 
@@ -193,14 +196,16 @@ class TicketController extends Controller
     public function destroy(Request $request, Ticket $ticket): JsonResponse
     {
         $this->authorize('delete', $ticket);
+
         try {
             DB::transaction(function () use ($request, $ticket) {
                 $this->service($ticket)->cancel($request->user());
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error update ticket ticket ' . $e->getMessage());
+
             return $this->errored('unexpected error creating ticket, try again later');
         }
 
@@ -219,7 +224,7 @@ class TicketController extends Controller
                 'required', 'string', 'min:15', 'max:250',
             ],
         ]);
-        if (!in_array($ticket->status->ID, [TicketStatusEnum::Resolved->codeDetail()->ID, TicketStatusEnum::Cancelled->codeDetail()->ID], true)) {
+        if (! in_array($ticket->status->ID, [TicketStatusEnum::Resolved->codeDetail()->ID, TicketStatusEnum::Cancelled->codeDetail()->ID], true)) {
             return $this->errored('ticket is not closed');
         }
 
@@ -229,8 +234,9 @@ class TicketController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error re open ticket ticket ' . $e->getMessage());
+
             return $this->errored('unexpected error , try again later');
         }
 

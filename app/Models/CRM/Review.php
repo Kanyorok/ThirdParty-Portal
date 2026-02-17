@@ -12,11 +12,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Review extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Reviews';
     protected $connection = 'sqlsrv';
@@ -40,7 +41,7 @@ class Review extends Model
                           ];
 
     protected $casts = [
-                        'Rating'   => 'integer',
+                        'Rating' => 'integer',
                         'Tonality' => TonalityEnum::class,
                        ];
 

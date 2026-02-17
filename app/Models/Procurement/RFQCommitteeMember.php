@@ -2,23 +2,34 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\Auth\User;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\HRM\Employee;
-use App\Models\Auth\User;
 
 class RFQCommitteeMember extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_RFQCommitteeMembers';
 
     protected $primaryKey = 'Id';
+
+    // Compatibility bridge: DB uses lowercase `id`, legacy code often reads/writes `Id`.
+    public function getIdAttribute()
+    {
+        return $this->attributes['id'] ?? null;
+    }
+
+    public function setIdAttribute($value): void
+    {
+        $this->attributes['id'] = $value;
+    }
 
     protected $fillable = [
         'CommitteeID',
@@ -96,7 +107,9 @@ class RFQCommitteeMember extends Model
 
     public function employee()
     {
-        return $this->user?->employee();
+        $user = $this->user ?: $this->userByEmployee;
+
+        return $user?->employee();
     }
 
     public function getCommitteeMemberNameAttribute(): string
@@ -106,8 +119,13 @@ class RFQCommitteeMember extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'UserID', 'EmployeeId');
+        // Standard mapping: UserID stores User.Id
+        return $this->belongsTo(User::class, 'UserID', 'Id');
     }
 
-
+    public function userByEmployee()
+    {
+        // Backward-compat: some legacy records saved Employee.Id into UserID
+        return $this->belongsTo(User::class, 'UserID', 'EmployeeId');
+    }
 }

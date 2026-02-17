@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class ProcurementRequisitionSeeder extends Seeder
 {
@@ -15,8 +15,7 @@ class ProcurementRequisitionSeeder extends Seeder
         $departmentId = DB::table('t_Departments')->value('Id');
         $userId = DB::table('t_Users')->value('Id');
 
-        if (!$statusId || !$branchId || !$departmentId || !$userId) {
-            // dump('Missing required related data for seeding.');
+        if (! $statusId || ! $branchId || ! $departmentId || ! $userId) {
             return;
         }
 

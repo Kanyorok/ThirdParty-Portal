@@ -24,7 +24,7 @@ return new class extends Migration {
             $table->boolean('UseAutoGL')->default(1)->after('TransactionType');
 
             // Party info (optional if manual)
-            $table->string('PartyType', 20)->nullable(); // CUSTOMER | VENDOR | OTHER
+            $table->string('PartyType', 20)->nullable(); // TENANT | VENDOR | OTHER
             $table->unsignedBigInteger('PartyID')->nullable();   // FK to your master tables if needed
             $table->string('PartyName', 200)->nullable();
 

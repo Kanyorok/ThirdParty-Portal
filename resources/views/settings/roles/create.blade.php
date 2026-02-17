@@ -1,9 +1,18 @@
+<link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+<style>
+    .select2-container { width: 100% !important; }
+</style>
 <div>
     <form action="{{ route('roles.store') }}" method="post" id="createRoleForm"> @csrf
         <div class="col-12 mb-3">
             <label class="form-label" for="RoleName">Role Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="RoleName" name="RoleName" required placeholder="RoleName" value="{{ old('RoleName') }}">
-            <p id="RoleName_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+            <select class="form-control" id="RoleName" name="RoleName" required>
+                <option value="">Select Job Role</option>
+                @foreach($jobTitles as $title)
+                    <option value="{{ $title }}">{{ $title }}</option>
+                @endforeach
+            </select>
         </div>
 
         <div class="col-12 mb-3">
@@ -103,6 +112,8 @@ ksort($grouped);
 </div>
 <script>
     $(function () {
+        $('#RoleName').select2({ placeholder: 'Select Job Role', allowClear: true });
+
         const $search = $('#permSearch');
         const normalize = (s) => (s||'').toString().trim().toLowerCase();
 

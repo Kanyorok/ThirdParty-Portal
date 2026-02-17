@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Procurement\ModeTimeline;
-use App\Models\Procurement\ProcurementMode;
+use Illuminate\Http\Request;
 
 class ModeTimelineController extends Controller
 {
@@ -35,6 +34,7 @@ class ModeTimelineController extends Controller
     {
         $timeline = ModeTimeline::findOrFail($id);
         $procurement_mode = $timeline->procurementMode;
+
         return view('procurement.timelines.edit', compact('timeline', 'procurement_mode'));
     }
 

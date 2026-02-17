@@ -5,98 +5,88 @@ namespace App\Services\Inventory;
 use App\Enums\Inventory\Transfers;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Inventory\InventoryHold;
+use App\Models\Inventory\StockGRNLedger;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\StockTransaction;
+use App\Models\Inventory\Store;
 use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionTransfer;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Services\Workflow\ApprovalWorkflow;
 
 class TransactionReceiptService
 {
-    protected ApprovalWorkflow $workflow;
-
-    public function __construct(ApprovalWorkflow $workflow)
+    public function createReceipt($validatedData, $items)
     {
-        $this->workflow = new ApprovalWorkflow('TransferStatus', 'Status');
+        return DB::transaction(function () use ($validatedData, $items) {
+            $userId = Auth::id();
+            if (! $userId) {
+                throw new Exception('User not authenticated. Cannot create receipt.');
+            }
+
+            $transfer = TransactionTransfer::with(['items.item'])->findOrFail($validatedData['TransferID']);
+
+            $deliveredValue = Transfers::Delivered->value;
+            $inTransitValue = Transfers::InTransit->value;
+
+            $receipt = TransactionReceipt::create([
+                'TransferId' => $validatedData['TransferID'],
+                'ReceivedBy' => $validatedData['ReceivedBy'],
+                'ReceivedDate' => $validatedData['ReceivedDate'],
+                'GeneralRemarks' => $validatedData['GeneralRemarks'] ?? null,
+                'Status' => $deliveredValue,
+                'CreatedBy' => $userId,
+                'CreatedOn' => now(),
+                'ModifiedBy' => $userId,
+                'ModifiedOn' => now(),
+            ]);
+
+            $receipt->ReceiptId = 'REC/' . now()->format('Ymd') . '/' . str_pad($receipt->Id, 4, '0', STR_PAD_LEFT);
+            $receipt->save();
+
+            if ($transfer && $transfer->Status == $inTransitValue) {
+                $transfer->Status = $deliveredValue;
+                $transfer->ModifiedBy = $userId;
+                $transfer->ModifiedOn = now();
+                $transfer->save();
+            }
+
+            $this->createReceiptItemsWithFIFO($receipt, $items, $transfer, $userId);
+
+            $sourceCodeId = CodeDetail::where('CodeID', 'Source')
+                ->where('Description', 'Transaction Transfer')
+                ->value('ID');
+
+            if ($sourceCodeId) {
+                InventoryHold::where('Source', $sourceCodeId)
+                    ->where('SourceID', $receipt->TransferId)
+                    ->where('Status', $inTransitValue)
+                    ->whereNull('DeletedOn')
+                    ->update([
+                        'Status' => $deliveredValue,
+                        'ModifiedBy' => $userId,
+                        'ModifiedOn' => now(),
+                        'DeletedBy' => $userId,
+                        'DeletedOn' => now(),
+                    ]);
+            }
+
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($receipt)
+                ->withProperties(['attributes' => $receipt->toArray()])
+                ->log('Transaction Receipt created and marked as Delivered');
+
+            return $receipt;
+        });
     }
 
-    public function createReceipt($validatedData, $items)
-{
-    return DB::transaction(function () use ($validatedData, $items) {
-        $userId = Auth::id();
-        if (!$userId) {
-            throw new Exception('User not authenticated. Cannot create receipt.');
-        }
-
-        $transfer = TransactionTransfer::findOrFail($validatedData['TransferID']);
-
-        $deliveredValue = Transfers::Delivered->value;
-        $inTransitValue = Transfers::InTransit->value;
-
-        // Create the receipt
-        $receipt = TransactionReceipt::create([
-            'TransferId' => $validatedData['TransferID'],
-            'ReceivedBy' => $validatedData['ReceivedBy'],
-            'ReceivedDate' => $validatedData['ReceivedDate'],
-            'GeneralRemarks' => $validatedData['GeneralRemarks'] ?? null,
-            'Status' => $deliveredValue,
-            'CreatedBy' => $userId,
-            'CreatedOn' => now(),
-            'ModifiedBy' => $userId,
-            'ModifiedOn' => now(),
-        ]);
-
-        $receipt->ReceiptId = 'REC/' . now()->format('Ymd') . '/' . str_pad($receipt->Id, 4, '0', STR_PAD_LEFT);
-        $receipt->save();
-
-        if ($transfer && $transfer->Status == $inTransitValue) {
-            $transfer->Status = $deliveredValue;
-            $transfer->ModifiedBy = $userId;
-            $transfer->ModifiedOn = now();
-            $transfer->save();
-           
-        }
-
-        // Create receipt items and update stock
-        $this->createReceiptItems($receipt, $items, $userId);
-
-        // Update inventory holds from In Transit to Delivered
-        $sourceCodeId = CodeDetail::where('CodeID', 'Source')
-            ->where('Description', 'Transaction Transfer')
-            ->value('ID');
-
-        if ($sourceCodeId) {
-            InventoryHold::where('Source', $sourceCodeId)
-                ->where('SourceID', $receipt->TransferId)
-                ->where('Status', $inTransitValue)
-                ->whereNull('DeletedOn')
-                ->update([
-                    'Status' => $deliveredValue,
-                    'ModifiedBy' => $userId,
-                    'ModifiedOn' => now(),
-                    'DeletedBy' => $userId,
-                    'DeletedOn' => now(),
-                ]);
-        }
-
-        activity()
-            ->causedBy(Auth::user())
-            ->performedOn($receipt)
-            ->withProperties(['attributes' => $receipt->toArray()])
-            ->log('Transaction Receipt created and marked as Delivered');
-
-        return $receipt;
-    });
-}
-
-    public function createReceiptItems($receipt, $items, $userId = null)
+    public function createReceiptItemsWithFIFO($receipt, $items, $transfer, $userId = null)
     {
-        if (!$userId) {
+        if (! $userId) {
             $userId = Auth::id();
-            if (!$userId) {
+            if (! $userId) {
                 throw new Exception('User not authenticated. Cannot create receipt items.');
             }
         }
@@ -107,29 +97,39 @@ class TransactionReceiptService
             ->where('Description', 'Transfer Receipts')
             ->value('ID');
 
-        if (!$transferSource) {
+        if (! $transferSource) {
             throw new Exception("Source type 'Transfer Receipts' not found in t_CodeDetails.");
         }
 
-        foreach ($items as $itemData) {
-            $storeId = $itemData['store_id'] ?? null;
-            $itemId = $itemData['item'];
+        $itemsByStore = collect($items)->groupBy('store_id');
 
-            $stock = StockItem::where('ItemID', $itemId)
-                ->where('Branch', $toBranchId)
-                ->when($storeId, fn($q) => $q->where('Store', $storeId))
-                ->first();
+        foreach ($itemsByStore as $storeId => $storeItems) {
+            foreach ($storeItems as $itemData) {
+                $itemId = $itemData['item'];
+                $receivedQty = $itemData['received_qty'];
+                $damagedQty = $itemData['damaged_qty'] ?? 0;
 
-            if (!$stock) {
-                $stock = StockItem::firstOrCreate(
-                    [
+                $transferItem = $transfer->items()->where('Item', $itemId)->first();
+
+                if (! $transferItem) {
+                    throw new Exception("Transfer item not found for item {$itemId}");
+                }
+
+                $stock = StockItem::where('ItemID', $itemId)
+                    ->where('Branch', $toBranchId)
+                    ->where('Store', $storeId)
+                    ->first();
+
+                $averageCost = $this->calculateAverageCost($transferItem, $receivedQty);
+
+                if (! $stock) {
+                    $stock = StockItem::create([
+                        'SKUCode' => 'SKU-' . $itemId . '-' . $storeId . '-' . time(),
                         'ItemID' => $itemId,
-                        'Branch' => $toBranchId,
-                        'Store'  => $storeId,
-                    ],
-                    [
                         'UOM' => $itemData['uom'] ?? null,
-                        'UnitCost' => $itemData['unit_cost'] ?? 0,
+                        'UnitCost' => $averageCost,
+                        'Store' => $storeId,
+                        'Branch' => $toBranchId,
                         'CurrentQty' => 0,
                         'Min' => 0,
                         'Reorder' => 0,
@@ -140,115 +140,276 @@ class TransactionReceiptService
                         'CreatedOn' => now(),
                         'ModifiedBy' => $userId,
                         'ModifiedOn' => now(),
-                    ]
-                );
-            }
+                    ]);
+                } else {
+                    $oldQty = $stock->CurrentQty;
+                    $oldCost = $stock->UnitCost;
+                    $newQty = $receivedQty;
 
-            $receiptItem = $receipt->items()->create([
-                'item' => $itemId,
-                'Store' => $storeId,
-                'UnitCost' => $itemData['unit_cost'] ?? null,
-                'UOM' => $itemData['uom'],
-                'ReceivedQty' => $itemData['received_qty'],
-                'DispatchedQty' => $itemData['dispatched_qty'] ?? null,
-                'Discrepancy' => isset($itemData['dispatched_qty'], $itemData['received_qty'])
-                    ? $itemData['dispatched_qty'] - $itemData['received_qty']
-                    : null,
-                'DamagedQty' => $itemData['damaged_qty'] ?? 0,
-                'CreatedBy' => $userId,
-                'CreatedOn' => now(),
-                'ModifiedBy' => $userId,
-                'ModifiedOn' => now(),
-            ]);
-
-            // Update stock quantity
-            $stock->CurrentQty += $itemData['received_qty'];
-            $stock->ModifiedBy = $userId;
-            $stock->ModifiedOn = now();
-            $stock->save();
-
-            // Generate SKU ID
-            $latestSKU = StockTransaction::where('SKUID', 'like', 'SKU%')
-                ->orderByDesc('id')
-                ->value('SKUID');
-
-            $nextNumber = $latestSKU
-                ? ((int) preg_replace('/[^0-9]/', '', $latestSKU)) + 1
-                : 1;
-
-            $skuId = 'SKU' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
-
-            $receiptTypeId = $transferSource;
-
-            // Get last balance for this item/store/branch
-            $lastToQty = StockTransaction::where('ItemID', $itemId)
-                ->where('BranchID', $toBranchId)
-                ->where('StoreID', $storeId)
-                ->orderByDesc('TransactionDate')
-                ->orderByDesc('id')
-                ->value('BalanceQty');
-
-            if ($lastToQty === null) {
-                $lastToQty = $stock->CurrentQty - $itemData['received_qty'];
-            }
-
-            $newToQty = $lastToQty + $itemData['received_qty'];
-
-            StockTransaction::create([
-                'SKUID' => $skuId,
-                'TransactionType' => $receiptTypeId,
-                'ReferenceID' => $receipt->Id,
-                'ItemID' => $itemId,
-                'StoreID' => $storeId,
-                'BranchID' => $toBranchId,
-                'UnitCost' => $itemData['unit_cost'] ?? 0,
-                'UOMID' => $itemData['uom'],
-                'QuantityIn' => $itemData['received_qty'],
-                'QuantityOut' => 0,
-                'BalanceQty' => $newToQty,
-                'TransactionDate' => now(),
-                'TotalCost' => ($itemData['unit_cost'] ?? 0) * ($itemData['received_qty'] ?? 0),
-                'Remarks' => 'Transfer From Branch ID ' . ($receipt->transfer->FromBranch ?? 'Unknown'),
-                'CreatedBy' => $userId,
-                'CreatedOn' => now(),
-                'ModifiedBy' => $userId,
-                'ModifiedOn' => now(),
-            ]);
-
-            // Handle Damaged Items
-            $damagedQty = (float)($itemData['damaged_qty'] ?? 0);
-            if ($damagedQty > 0) {
-                $damagedReasonId = CodeDetail::where('CodeID', 'AdjustmentReason')
-                    ->where('Description', 'Damaged in Transit')
-                    ->value('ID');
-
-                if (!$damagedReasonId) {
-                    throw new Exception("Damaged in Transit reason not found in t_CodeDetails.");
+                    if ($oldQty > 0) {
+                        $stock->UnitCost = (($oldQty * $oldCost) + ($newQty * $averageCost)) / ($oldQty + $newQty);
+                    } else {
+                        $stock->UnitCost = $averageCost;
+                    }
                 }
 
-                InventoryHold::create([
-                    'ItemID' => $itemId,
-                    'BranchID' => $toBranchId,
+                $receiptItem = $receipt->items()->create([
+                    'item' => $itemId,
                     'Store' => $storeId,
-                    'Quantity' => $damagedQty,
-                    'Reason' => $damagedReasonId,
-                    'Source' => $transferSource,
-                    'SourceID' => $receipt->Id,
-                    'Status' => Transfers::AwaitingReview->value,
-                    'Remarks' => $itemData['remarks'] ?? null,
+                    'UnitCost' => $averageCost,
+                    'UOM' => $itemData['uom'],
+                    'ReceivedQty' => $receivedQty,
+                    'DispatchedQty' => $itemData['dispatched_qty'] ?? null,
+                    'Discrepancy' => isset($itemData['dispatched_qty'], $itemData['received_qty'])
+                        ? $itemData['dispatched_qty'] - $itemData['received_qty']
+                        : null,
+                    'DamagedQty' => $damagedQty,
                     'CreatedBy' => $userId,
                     'CreatedOn' => now(),
                     'ModifiedBy' => $userId,
                     'ModifiedOn' => now(),
                 ]);
+
+                $stock->CurrentQty += $receivedQty;
+                $stock->ModifiedBy = $userId;
+                $stock->ModifiedOn = now();
+                $stock->save();
+
+                $this->createGRNLedgerEntriesForTransfer($receipt, $transferItem, $stock, $storeId, $toBranchId, $receivedQty, $userId);
+
+                $latestSKU = StockTransaction::where('SKUID', 'like', 'SKU%')
+                    ->orderByDesc('id')
+                    ->value('SKUID');
+
+                $nextNumber = $latestSKU
+                    ? ((int) preg_replace('/[^0-9]/', '', $latestSKU)) + 1
+                    : 1;
+
+                $skuId = 'SKU' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+
+                $lastToQty = StockTransaction::where('ItemID', $itemId)
+                    ->where('BranchID', $toBranchId)
+                    ->where('StoreID', $storeId)
+                    ->orderByDesc('TransactionDate')
+                    ->orderByDesc('id')
+                    ->value('BalanceQty');
+
+                if ($lastToQty === null) {
+                    $lastToQty = $stock->CurrentQty - $receivedQty;
+                }
+
+                $newToQty = $lastToQty + $receivedQty;
+
+                StockTransaction::create([
+                    'SKUID' => $skuId,
+                    'TransactionType' => $transferSource,
+                    'ReferenceID' => $receipt->Id,
+                    'ItemID' => $itemId,
+                    'StoreID' => $storeId,
+                    'BranchID' => $toBranchId,
+                    'UnitCost' => $averageCost,
+                    'UOMID' => $itemData['uom'],
+                    'QuantityIn' => $receivedQty,
+                    'QuantityOut' => 0,
+                    'BalanceQty' => $newToQty,
+                    'TransactionDate' => now(),
+                    'TotalCost' => $averageCost * $receivedQty,
+                    'Remarks' => 'Transfer From Branch ID ' . ($transfer->FromBranch ?? 'Unknown') .
+                                ' | Transfer ID: ' . $transfer->TransferId .
+                                ' | Allocations: ' . $this->getAllocationSummary($transferItem),
+                    'CreatedBy' => $userId,
+                    'CreatedOn' => now(),
+                    'ModifiedBy' => $userId,
+                    'ModifiedOn' => now(),
+                ]);
+
+                if ($damagedQty > 0) {
+                    $damagedReasonId = CodeDetail::where('CodeID', 'AdjustmentReason')
+                        ->where('Description', 'Damaged in Transit')
+                        ->value('ID');
+
+                    if (! $damagedReasonId) {
+                        throw new Exception("Damaged in Transit reason not found in t_CodeDetails.");
+                    }
+
+                    InventoryHold::create([
+                        'ItemID' => $itemId,
+                        'BranchID' => $toBranchId,
+                        'Store' => $storeId,
+                        'Quantity' => $damagedQty,
+                        'Reason' => $damagedReasonId,
+                        'Source' => $transferSource,
+                        'SourceID' => $receipt->Id,
+                        'Status' => Transfers::AwaitingReview->value,
+                        'Remarks' => $itemData['remarks'] ?? null,
+                        'CreatedBy' => $userId,
+                        'CreatedOn' => now(),
+                        'ModifiedBy' => $userId,
+                        'ModifiedOn' => now(),
+                    ]);
+                }
+
+                activity()
+                    ->causedBy(Auth::user())
+                    ->performedOn($receiptItem)
+                    ->withProperties(['attributes' => $receiptItem->toArray()])
+                    ->log('Receipt item added and stock updated with GRN allocations');
+            }
+        }
+    }
+
+    private function createGRNLedgerEntriesForTransfer($receipt, $transferItem, $stock, $storeId, $branchId, $receivedQty, $userId)
+    {
+        $batchAllocations = json_decode($transferItem->BatchAllocation, true) ?? [];
+
+        if (empty($batchAllocations)) {
+            $allocations = $this->allocateFIFOFromSource($transferItem, $storeId, $branchId, $receivedQty);
+        } else {
+            $allocations = collect($batchAllocations)->map(function ($allocation) {
+                $ledger = StockGRNLedger::find($allocation['ledger_id']);
+                if ($ledger) {
+                    return [
+                        'ledger_id' => $allocation['ledger_id'],
+                        'quantity' => $allocation['quantity'],
+                        'grn_id' => $ledger->GRNID,
+                        'goods_receipt_id' => $ledger->GoodsReceiptId,
+                        'unit_price' => (float) $ledger->UnitPrice,
+                    ];
+                }
+
+                return $allocation;
+            })->toArray();
+        }
+
+        $totalAllocated = 0;
+        foreach ($allocations as $allocation) {
+            $totalAllocated += $allocation['quantity'];
+        }
+
+        if ($totalAllocated != $receivedQty && $totalAllocated > 0) {
+            $ratio = $receivedQty / $totalAllocated;
+            foreach ($allocations as &$allocation) {
+                $allocation['quantity'] = round($allocation['quantity'] * $ratio, 4);
+            }
+        }
+
+        foreach ($allocations as $allocation) {
+            StockGRNLedger::create([
+                'GRNID' => $allocation['grn_id'],
+                'GoodsReceiptId' => $allocation['goods_receipt_id'] ?? null,
+                'StockItemId' => $stock->Id,
+                'ItemNo' => $transferItem->Item,
+                'SKUCode' => $stock->SKUCode . '-TRF-' . $receipt->transfer->TransferId . '-' . substr($allocation['grn_id'], -4),
+                'ReceivedQTY' => $allocation['quantity'],
+                'RemainingQTY' => $allocation['quantity'],
+                'UnitPrice' => $allocation['unit_price'],
+                'Store' => $storeId,
+                'Branch' => $branchId,
+                'ReceivedDate' => now(),
+                'SourceType' => 'transfer',
+                'SourceReference' => $receipt->transfer->TransferId,
+                'ParentLedgerId' => $allocation['ledger_id'] ?? null,
+                'CreatedBy' => $userId,
+                'CreatedOn' => now(),
+                'ModifiedBy' => $userId,
+                'ModifiedOn' => now(),
+            ]);
+        }
+    }
+
+    private function allocateFIFOFromSource($transferItem, $storeId, $branchId, $quantity)
+    {
+        $sourceBranch = $transferItem->transfer->FromBranch;
+
+        $sourceStore = Store::where('BranchID', $sourceBranch)
+            ->where('Status', true)
+            ->first();
+
+        if (! $sourceStore) {
+            throw new Exception("No active store found for source branch {$sourceBranch}");
+        }
+
+        $availableBatches = StockGRNLedger::where('ItemNo', $transferItem->Item)
+            ->where('Store', $sourceStore->Id)
+            ->where('Branch', $sourceBranch)
+            ->where('RemainingQTY', '>', 0)
+            ->orderBy('ReceivedDate', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $allocations = [];
+        $remainingQty = $quantity;
+
+        foreach ($availableBatches as $batch) {
+            if ($remainingQty <= 0) {
+                break;
             }
 
-            activity()
-                ->causedBy(Auth::user())
-                ->performedOn($receiptItem)
-                ->withProperties(['attributes' => $receiptItem->toArray()])
-                ->log('Receipt item added and stock updated');
+            $allocatedQty = min($batch->RemainingQTY, $remainingQty);
+
+            $allocations[] = [
+                'ledger_id' => $batch->id,
+                'grn_id' => $batch->GRNID,
+                'goods_receipt_id' => $batch->GoodsReceiptId,
+                'unit_price' => (float) $batch->UnitPrice,
+                'quantity' => $allocatedQty,
+            ];
+
+            $remainingQty -= $allocatedQty;
         }
+
+        if ($remainingQty > 0) {
+            throw new Exception("Insufficient stock in source for FIFO allocation. Short by: {$remainingQty}");
+        }
+
+        return $allocations;
+    }
+
+    private function calculateAverageCost($transferItem, $receivedQty)
+    {
+        $batchAllocations = json_decode($transferItem->BatchAllocation, true) ?? [];
+
+        if (empty($batchAllocations)) {
+            return $transferItem->UnitCost ?? 0;
+        }
+
+        $totalCost = 0;
+        $totalQty = 0;
+
+        foreach ($batchAllocations as $allocation) {
+            $unitPrice = $allocation['unit_price'] ?? null;
+            if ($unitPrice === null && isset($allocation['ledger_id'])) {
+                $ledger = StockGRNLedger::find($allocation['ledger_id']);
+                $unitPrice = $ledger ? (float) $ledger->UnitPrice : 0;
+            }
+
+            $quantity = $allocation['quantity'] ?? 0;
+            $totalCost += $unitPrice * $quantity;
+            $totalQty += $quantity;
+        }
+
+        return $totalQty > 0 ? $totalCost / $totalQty : 0;
+    }
+
+    private function getAllocationSummary($transferItem)
+    {
+        $batchAllocations = json_decode($transferItem->BatchAllocation, true) ?? [];
+
+        if (empty($batchAllocations)) {
+            return 'FIFO Allocation';
+        }
+
+        return collect($batchAllocations)->map(function ($allocation) {
+            $grnId = $allocation['grn_id'] ?? null;
+            if ($grnId === null && isset($allocation['ledger_id'])) {
+                $ledger = StockGRNLedger::find($allocation['ledger_id']);
+                $grnId = $ledger ? $ledger->GRNID : 'Unknown';
+            }
+
+            $quantity = $allocation['quantity'] ?? 0;
+
+            return ($grnId ?? 'Unknown') . ' (' . $quantity . ')';
+        })->implode(', ');
     }
 
     public function delete($receipt)
@@ -256,8 +417,8 @@ class TransactionReceiptService
         return DB::transaction(function () use ($receipt) {
             $receiptId = $receipt->Id;
             $userId = Auth::id();
-            
-            if (!$userId) {
+
+            if (! $userId) {
                 throw new Exception('User not authenticated. Cannot delete receipt.');
             }
 
@@ -269,10 +430,28 @@ class TransactionReceiptService
 
                 if ($stock) {
                     $stock->CurrentQty -= $item->ReceivedQty;
+
+                    if ($stock->CurrentQty > 0) {
+                        $remainingValue = StockGRNLedger::where('StockItemId', $stock->Id)
+                            ->where('RemainingQTY', '>', 0)
+                            ->get()
+                            ->sum(function ($entry) {
+                                return $entry->RemainingQTY * $entry->UnitPrice;
+                            });
+
+                        $stock->UnitCost = $remainingValue / $stock->CurrentQty;
+                    }
+
                     $stock->ModifiedBy = $userId;
                     $stock->ModifiedOn = now();
                     $stock->save();
                 }
+
+                StockGRNLedger::where('SourceType', 'transfer')
+                    ->where('SourceReference', $receipt->transfer->TransferId)
+                    ->where('ItemNo', $item->item)
+                    ->where('Store', $item->Store)
+                    ->delete();
 
                 StockTransaction::where('ReferenceID', $receiptId)
                     ->where('ItemID', $item->item)

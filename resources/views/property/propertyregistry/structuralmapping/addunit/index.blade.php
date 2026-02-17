@@ -32,16 +32,25 @@
 @section('content')
 <div class="container mt-4">
 
-    <!-- Page Header -->
-    <div class="d-flex justify-content-end align-items-center mb-3">
-        <a href="{{ route('addunit.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-1"></i> Add Unit
-        </a>
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <small>This screen displays all registered property units per floor.</small>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="{{ route('addunit.bulkCreate') }}" class="btn btn-outline-primary shadow-sm">
+                <i class="bi bi-upload me-1"></i> Bulk Upload Units
+            </a>
+
+            <a href="{{ route('addunit.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i> Add Unit
+            </a>
+        </div>
     </div>
 
-    <p class="text-muted">
-        <small>This screen displays all registered property units per floor.</small>
-    </p>
+
 
     @if($units->count())
         <div class="card shadow-sm">

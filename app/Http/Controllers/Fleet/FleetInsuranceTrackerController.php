@@ -3,16 +3,13 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\FleetManagement\FleetInsuranceTrackerRequest;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Fleet\FleetInsuranceTracker;
 use App\Models\Fleet\FleetVehicle;
-use App\Http\Requests\FleetManagement\FleetInsuranceTrackerRequest;
+use App\Models\Insurance\InsuranceProvider;
 use App\Services\FleetManagement\FleetInsuranceTrackerService;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Auth\User;
-use Illuminate\Support\Facades\Storage;
-use App\Models\Insurance\InsuranceProvider;
-use App\Models\Core\Approval\CodeDetail;
 
 class FleetInsuranceTrackerController extends Controller
 {
@@ -54,7 +51,6 @@ class FleetInsuranceTrackerController extends Controller
         return redirect()->route('fleet.insurance_tracker.index')
             ->with('success', 'Insurance record created successfully.');
     }
-
 
     public function show($id)
     {

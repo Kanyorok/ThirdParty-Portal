@@ -20,7 +20,6 @@
 
         <div class="container bg-white shadow-sm rounded p-4">
 
-            {{-- Row 1: SKU, Item, UOM, Unit Cost --}}
             <div class="row mb-3">
                 <div class="col-md-3">
                     <p><strong>SKU Code:</strong> {{ $item->SKUCode }}</p>
@@ -29,14 +28,10 @@
                     <p><strong>Item:</strong> {{ optional($item->item)->ItemName ?? 'N/A' }}</p>
                 </div>
                 <div class="col-md-3">
-                    <p><strong>UOM:</strong> {{ optional($item->uom)->Name ?? 'N/A' }}</p>
-                </div>
-                <div class="col-md-3">
                     <p><strong>Unit Cost:</strong> {{ number_format($item->UnitCost, 2) }}</p>
                 </div>
             </div>
 
-            {{-- Row 2: Current Qty, Min, Reorder, Max --}}
             <div class="row mb-3">
                 <div class="col-md-3">
                     <p><strong>Current Qty:</strong> {{ $item->CurrentQty }}</p>
@@ -47,12 +42,8 @@
                 <div class="col-md-3">
                     <p><strong>Reorder Qty:</strong> {{ $item->Reorder }}</p>
                 </div>
-                <div class="col-md-3">
-                    <p><strong>Max Stock Level:</strong> {{ $item->Max ?? 'N/A' }}</p>
-                </div>
             </div>
 
-            {{-- Row 3: Branch, Store, Last Received, Status --}}
             <div class="row mb-3">
                 <div class="col-md-3">
                     <p><strong>Branch:</strong> {{ optional($item->branch)->Name ?? 'N/A' }}</p>
@@ -76,16 +67,8 @@
             </div>
 
 
-            {{-- Actions --}}
             <div class="d-flex gap-2 mt-3">
                 <a href="{{ route('sku.index') }}" class="btn btn-secondary">Back</a>
-                <a href="{{ route('sku.edit', $item->Id) }}" class="btn btn-warning">Edit SKU</a>
-                <form action="{{ route('sku.destroy', $item->Id) }}" method="POST"
-                      onsubmit="return confirm('⚠️ Are you sure you want to delete this SKU?');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete SKU</button>
-                </form>
             </div>
         </div>
     </div>

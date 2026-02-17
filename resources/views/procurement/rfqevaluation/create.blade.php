@@ -18,6 +18,18 @@
       </div>
     @endif
 
+    @if ($errors->any())
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Please correct the following errors:</strong>
+        <ul class="mb-0 mt-2">
+          @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+          @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    @endif
+
     <form method="POST" action="{{ route('evaluations.store') }}" id="evaluationForm" novalidate>
       @csrf
       @php
@@ -113,7 +125,7 @@
 
       <!-- Action Buttons -->
       <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Submit</button>
         <a href="{{ route('evaluations.index') }}" class="btn btn-danger">Cancel</a>
       </div>
     </form>
@@ -130,42 +142,89 @@
       const committeeMemberInput = document.querySelector('[name="CommitteeMember"]');
       const userIdInput = document.querySelector('[name="UserID"]');
       const form = document.getElementById('evaluationForm');
+      const confirmCheckbox = document.getElementById('confirmCheck');
+      const submitBtn = document.getElementById('submitBtn');
       // Holds per-supplier mapping of section weights and criteria ids for computing weighted totals
       const sectionMap = {};
+
+      // Toggle submit button based on checkbox
+      confirmCheckbox.addEventListener('change', function() {
+        submitBtn.disabled = !this.checked;
+      });
 
       // Custom validation for form submission
       form.addEventListener('submit', function(event) {
         let isValid = true;
         let errorMessages = [];
 
+        // Check if RFQ is selected
+        const rfqValue = rfqSelect.value;
+        if (!rfqValue) {
+          isValid = false;
+          errorMessages.push('Please select an RFQ number.');
+          rfqSelect.classList.add('is-invalid');
+        } else {
+          rfqSelect.classList.remove('is-invalid');
+        }
+
         // Check if user is assigned to committee
         const committeeMember = committeeMemberInput.value.trim();
         const userId = userIdInput.value.trim();
 
-        if (committeeMember === 'You are not assigned to the committee' || committeeMember === 'Error' || !userId) {
+        if (!committeeMember || committeeMember === 'You are not assigned to the committee' || committeeMember === 'Error' || !userId) {
           isValid = false;
-          errorMessages.push('You are not assigned to the evaluation committee for this RFQ. Please contact your administrator.');
+          errorMessages.push('Committee member information is required. You may not be assigned to the evaluation committee for this RFQ.');
           committeeMemberInput.classList.add('is-invalid');
         } else {
           committeeMemberInput.classList.remove('is-invalid');
         }
 
-        // Check if all score inputs have values
+        // Check if Confirmation checkbox is checked
+        const confirmCheckbox = document.getElementById('confirmCheck');
+        if (!confirmCheckbox.checked) {
+          isValid = false;
+          errorMessages.push('Please confirm that the scoring is done independently and fairly.');
+          confirmCheckbox.classList.add('is-invalid');
+        } else {
+          confirmCheckbox.classList.remove('is-invalid');
+        }
+
+        // Check if all score inputs have values (only if RFQ is selected and has responses)
         const scoreInputs = evaluationFormsContainer.querySelectorAll(
           'input[name^="Evaluations"][name$="[Score]"]');
+        let hasScoreErrors = false;
         scoreInputs.forEach(input => {
           if (!input.value || input.value < 1 || input.value > 10) {
             isValid = false;
+            hasScoreErrors = true;
             input.classList.add('is-invalid');
           } else {
             input.classList.remove('is-invalid');
           }
         });
+        if (hasScoreErrors) {
+          errorMessages.push('Please ensure all scores are between 1 and 10.');
+        }
 
         if (!isValid) {
           event.preventDefault();
-          const errorMessage = errorMessages.length > 0 ? errorMessages.join('\n') : 'Please fill in all required fields and ensure scores are between 1 and 10.';
-          alert(errorMessage);
+          // Show error alert at top of form
+          let alertHtml = '<div class="alert alert-danger alert-dismissible fade show" role="alert" id="validation-error-alert">';
+          alertHtml += '<strong>Please correct the following errors:</strong><ul class="mb-0 mt-2">';
+          errorMessages.forEach(msg => {
+            alertHtml += '<li>' + msg + '</li>';
+          });
+          alertHtml += '</ul><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+          
+          // Remove existing validation alert if any
+          const existingAlert = document.getElementById('validation-error-alert');
+          if (existingAlert) existingAlert.remove();
+          
+          // Insert at top of form
+          form.insertAdjacentHTML('afterbegin', alertHtml);
+          
+          // Scroll to top to show errors
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       });
 
@@ -319,7 +378,7 @@
                                     </tr>`;
 
                   sectionGroup.forEach(criterion => {
-                    const critId = criterion.CriteriaID;
+                    const critId = criterion.id;
                     const name = criterion.criteria?.CriteriaName || 'Unnamed';
                     const maxScore = parseFloat(criterion.MaxScore).toFixed(2);
                     sectionMap[response.SupplierId][sectionId].criteriaIds.push(critId);
@@ -327,7 +386,7 @@
                     formHtml += `<tr>
                                         <td>${name}</td>
                                         <td>10</td>
-                                        <td><input type="number" name="Evaluations[${response.SupplierId}][${critId}][Score]" class="form-control score-input" min="1" max="10" required data-supplier-id="${response.SupplierId}" data-section-id="${sectionId}" data-criteria-id="${critId}"></td>
+                                        <td><input type="number" name="Evaluations[${response.SupplierId}][${critId}][Score]" class="form-control score-input" min="0" max="10" step="0.01" required data-supplier-id="${response.SupplierId}" data-section-id="${sectionId}" data-criteria-id="${critId}"></td>
                                         <td><input type="text" name="Evaluations[${response.SupplierId}][${critId}][Comments]" class="form-control"></td>
                                     </tr>`;
                   });
@@ -337,6 +396,7 @@
                               <tfoot>
                                 <tr class="bg-light">
                                   <td colspan="4" class="text-end">
+                                    <span class="me-3">Total Score: <strong class="supplier-raw-score" data-supplier-id="${response.SupplierId}">0/0</strong></span>
                                     Total Weighted Score: <strong class="supplier-total" data-supplier-id="${response.SupplierId}">0.00</strong>%
                                   </td>
                                 </tr>
@@ -350,6 +410,9 @@
                 const computeSupplierTotal = (supplierId) => {
                   const mapping = sectionMap[supplierId] || {};
                   let totalWeighted = 0;
+                  let totalRawScore = 0;
+                  let totalMaxScore = 0;
+
                   Object.keys(mapping).forEach(secId => {
                     const { weight, criteriaIds } = mapping[secId];
                     if (!criteriaIds.length) return;
@@ -357,15 +420,25 @@
                     criteriaIds.forEach(cId => {
                       const input = document.querySelector(`input.score-input[name="Evaluations[${supplierId}][${cId}][Score]"]`);
                       const val = parseFloat(input?.value);
-                      if (!isNaN(val)) sectionSum += val;
+                      if (!isNaN(val)) {
+                          sectionSum += val;
+                      }
                     });
+                    
                     const maxTotal = criteriaIds.length * 10;
+                    totalRawScore += sectionSum;
+                    totalMaxScore += maxTotal;
+
                     if (maxTotal > 0) {
                       totalWeighted += (sectionSum / maxTotal) * weight;
                     }
                   });
+                  
                   const totalEl = document.querySelector(`.supplier-total[data-supplier-id="${supplierId}"]`);
                   if (totalEl) totalEl.textContent = `${totalWeighted.toFixed(2)}%`;
+                  
+                  const rawEl = document.querySelector(`.supplier-raw-score[data-supplier-id="${supplierId}"]`);
+                  if (rawEl) rawEl.textContent = `${totalRawScore}/${totalMaxScore}`;
                 };
 
                 // Bind events for this supplier inputs

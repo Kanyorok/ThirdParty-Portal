@@ -31,6 +31,7 @@ class ContactEmailController extends Controller
     {
         $email = $request->getContactEmail($contact);
         $cc = $request->getCarbonCopyEmails();
+
         try {
             DB::transaction(static function () use ($cc, $email, $contact, $request) {
                 CRMEmailService::createContact($contact, $email, $request->validated('mail_subject'), $request->validated('mail_content'), $request->user(), $cc)
@@ -38,6 +39,7 @@ class ContactEmailController extends Controller
             });
         } catch (Exception | \Throwable $e) {
             Log::error('Error sending email to client ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 

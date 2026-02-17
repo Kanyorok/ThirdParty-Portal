@@ -4,6 +4,7 @@ namespace App\Http\Controllers\HRM;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\HRM\DepartmentRequest;
+use App\Models\Auth\User;
 use App\Models\HRM\Department;
 use App\Services\HRM\DepartmentService;
 use Exception;
@@ -24,7 +25,6 @@ class DepartmentController extends Controller
         $this->authorizeResource(Department::class);
     }
 
-
     /**
      * Display a listing of the resource.
      */
@@ -32,22 +32,34 @@ class DepartmentController extends Controller
     {
         if ($request->ajax()) {
             try {
-                return Datatables::of(Department::query()->select('*'))->addIndexColumn()
+                return Datatables::of(
+                    Department::query()
+                        ->with(['head'])
+                        ->withCount(['employees' => function ($query) {
+                            $query->whereNull('DeletedOn')->where('IsActive', 1);
+                        }])
+                )->addIndexColumn()
                     ->addColumn('action', function (Department $department) {
-                        return '<button type="button" data-click_url="' . route('departments.show', [$department->DepartmentID]) . '" data-summary_title="department details" class="btn btn-info btn-sm click-summary-data"><i class="fas fa-eye"></i> details</button>';
+                        return '<button type="button" data-click_url="' . route('hr.departments.show', [$department->DepartmentID]) . '" data-summary_title="department details" class="btn btn-info btn-sm click-summary-data"><i class="fas fa-eye"></i> details</button>';
                     })->addColumn('employees_count', function (Department $department) {
-                        return number_format(0);
+                        return number_format($department->employees_count ?? 0);
                     })->addColumn('hod', function (Department $department) {
-                        return "-";
+                        if ($department->head) {
+                            return '<span class="badge bg-info">' . $department->head->FirstName . ' ' . $department->head->LastName . '</span>';
+                        }
+
+                        return '<span class="text-muted">Not Assigned</span>';
                     })->editColumn('DepartmentID', function (Department $department) {
                         return Str::upper($department->DepartmentID);
-                    })->rawColumns(['action',])->make();
+                    })->rawColumns(['action', 'hod'])->make();
             } catch (Exception $e) {
+                Log::error('Department index error: ' . $e->getMessage());
             }
+
             return $this->errored('cannot retrieve department list.');
         }
 
-        return view('hrms.department.index');
+        return view('hr.department.index');
     }
 
     /**
@@ -58,16 +70,30 @@ class DepartmentController extends Controller
         try {
             return DB::transaction(function () use ($request) {
                 $dpt = DepartmentService::create(
-                    name: $request->string('Name')->trim()->toString(), actor: $request->user(),
+                    name: $request->string('Name')->trim()->toString(),
+                    actor: $request->user(),
                     description: $request->string('Description')->trim()->toString()
                 )->department;
 
+                // Assign HOD if provided
+                if ($request->filled('HeadId')) {
+                    $dpt->update(['HeadId' => $request->input('HeadId')]);
+                }
+
+                // Assign Deputy HOD if provided
+                if ($request->filled('DeputyHeadId')) {
+                    $dpt->update(['DeputyHeadId' => $request->input('DeputyHeadId')]);
+                }
+
+                activity()->causedBy($request->user())->performedOn($dpt)->event('create')->log('created department ' . $dpt->DepartmentID);
+
                 return $this->succeeded($dpt->DepartmentID . ' created successfully.');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error("--- CREATE DEPARTMENT ERROR --- " . $e->getMessage());
             Log::error($e);
         }
+
         return $this->errored('create department failed.');
     }
 
@@ -76,7 +102,20 @@ class DepartmentController extends Controller
      */
     public function create(): View
     {
-        return view('hrms.department.create');
+        // Get all active employees to select HOD
+        $employees = DB::table('t_HREmployees')
+            ->select('Id', 'EmployeeNo', 'FirstName', 'LastName', 'Email')
+            ->whereNull('DeletedOn')
+            ->where('IsActive', 1)
+            ->orderBy('FirstName')
+            ->get()
+            ->map(function ($employee) {
+                $employee->FullName = $employee->FirstName . ' ' . $employee->LastName . ' (' . $employee->EmployeeNo . ')';
+
+                return $employee;
+            });
+
+        return view('hr.department.create', compact('employees'));
     }
 
     /**
@@ -84,7 +123,20 @@ class DepartmentController extends Controller
      */
     public function show(Department $department)
     {
-        return view('hrms.department.show', ['department' => $department]);
+        // Get all active employees to select HOD
+        $employees = DB::table('t_HREmployees')
+            ->select('Id', 'EmployeeNo', 'FirstName', 'LastName', 'Email')
+            ->whereNull('DeletedOn')
+            ->where('IsActive', 1)
+            ->orderBy('FirstName')
+            ->get()
+            ->map(function ($employee) {
+                $employee->FullName = $employee->FirstName . ' ' . $employee->LastName . ' (' . $employee->EmployeeNo . ')';
+
+                return $employee;
+            });
+
+        return view('hr.department.show', compact('department', 'employees'));
     }
 
     /**
@@ -97,17 +149,38 @@ class DepartmentController extends Controller
                 $department->update([
                     'Name' => $request->string('Name')->trim()->toString(),
                     'Description' => $request->string('Description')->trim()->toString(),
+                    'HeadId' => $request->input('HeadId'),
+                    'DeputyHeadId' => $request->input('DeputyHeadId'),
                     'ModifiedBy' => $request->user()->Id,
                 ]);
+
+                $service = new DepartmentService($department);
+
+                if ($request->has('HeadId')) {
+                    // Update HOD if present (even if null to clear? implementation assumed non-nullable/selection required based on UI, but code handles find returning null if ID is invalid, though validation should catch it. If ID is null, find returns null, setHOD type hint requires User. So we need to check filled)
+                    // If the user wants to clear HOD, they might send null. My setHOD requires User.
+                    // The UI normally sends an ID or empty.
+                    // If I look at the screenshot, "Select HOD" suggests valid selection.
+                    if ($request->filled('HeadId')) {
+                        $service->setHOD(User::find($request->input('HeadId')), $request->user());
+                    }
+                }
+
+                if ($request->has('DeputyHeadId')) {
+                    if ($request->filled('DeputyHeadId')) {
+                        $service->setDeputyHOD(User::find($request->input('DeputyHeadId')), $request->user());
+                    }
+                }
 
                 activity()->causedBy($request->user())->performedOn($department)->event('update')->log('updated department ' . $department->DepartmentID);
 
                 return $this->succeeded($department->DepartmentID . ' updated successfully.');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error("--- UPDATE   DEPARTMENT ERROR --- " . $e->getMessage());
             Log::error($e);
         }
+
         return $this->errored('update department failed.');
     }
 
@@ -124,12 +197,14 @@ class DepartmentController extends Controller
                 ])->save();
 
                 activity()->causedBy($request->user())->performedOn($department)->event('delete')->log('deleted department ' . $department->DepartmentID);
+
                 return $this->succeeded($department->DepartmentID . ' deleted successfully.');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error("--- DELETE   DEPARTMENT ERROR --- " . $e->getMessage());
             Log::error($e);
         }
-        return $this->errored('update department failed.');
+
+        return $this->errored('delete department failed.');
     }
 }

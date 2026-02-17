@@ -23,7 +23,7 @@ class FleetDriverRequest extends FormRequest
     {
         return [
             'FullName' => 'required|string',
-            'StaffNumber' => 'required|integer|exists:t_Employees,Id',
+            'StaffNumber' => 'required|integer|exists:t_HREmployees,Id',
             'NationalID' => 'required|integer',
             'Phone' => ['required','string','max:20','regex:/^\+[1-9]\d{7,14}$/'],
             'Email' => 'required|string',
@@ -35,5 +35,4 @@ class FleetDriverRequest extends FormRequest
             'ImageFile' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ];
     }
-
 }

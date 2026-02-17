@@ -5,19 +5,17 @@ namespace App\Http\Controllers\DMS\Files;
 use App\Http\Controllers\Controller;
 use App\Models\DMS\Document;
 use App\Services\DMS\DocumentService;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DocumentActionsController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('ajax');
-    }
-
-    public function preview(Document $document): View
+    public function preview(Request $request, Document $document): View
     {
         $this->authorize('view', $document);
 
-        return view('dms.files.preview')->with('file', $document)->with('service', new DocumentService($document));
+        $view = $request->ajax() ? 'dms.files.preview' : 'dms.files.preview-page';
+
+        return view($view)->with('file', $document)->with('service', new DocumentService($document));
     }
 }

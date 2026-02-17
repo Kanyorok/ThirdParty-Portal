@@ -13,10 +13,12 @@ class CommissionRuleService
     /**
      * Create a new class instance.
      */
-    public function __construct(public BancassuranceCommissionRule $rule) {}
+    public function __construct(public BancassuranceCommissionRule $rule)
+    {
+    }
 
     public static function create(
-        string           $RuleName,
+        string $RuleName,
         InsuranceProduct $ProductId,
         ?CodeDetail $PolicyTypeId = null,
         float $CommissionRate,
@@ -24,7 +26,7 @@ class CommissionRuleService
         Currency $CurrencyId = null,
         ?CodeDetail $AppliesTo = null,
         ?bool $IsActive = null,
-        User   $user
+        User $user
     ): self {
 
         $rule = BancassuranceCommissionRule::create([
@@ -41,6 +43,7 @@ class CommissionRuleService
         ]);
 
         activity()->causedBy($user->Id)->performedOn($rule)->event('create')->log("Added Provider {$rule->Id}.");
+
         return new self($rule);
     }
 }

@@ -6,13 +6,15 @@ use App\Enums\ThirdParty\ThirdPartyTypeEnum;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 
-class ProfileCreatedEvent
+class ProfileCreated
 {
-    use Dispatchable, InteractsWithSockets;
+    use Dispatchable;
+    use InteractsWithSockets;
 
     public function __construct(
         public int $thirdPartyId,
         public int $userId,
         public ThirdPartyTypeEnum $profileType
-    ) {}
+    ) {
+    }
 }

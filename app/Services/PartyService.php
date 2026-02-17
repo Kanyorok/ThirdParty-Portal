@@ -157,6 +157,7 @@ class PartyService
     {
         if ($this->party instanceof Client) {
             (new ClientService($this->party))->sendEmail($subject, $body, SystemHelper::user());
+
             return;
         }
         if ($this->party instanceof Lead) {
@@ -164,11 +165,13 @@ class PartyService
         }
         if ($this->party instanceof User) {
             (new UserService($this->party))->sendEmail($subject, $body);
+
             return;
         }
 
         if ($this->party instanceof Team) {
             (new TeamService($this->party))->sendEmail($subject, $body, SystemHelper::user());
+
             return;
         }
     }

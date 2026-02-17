@@ -36,6 +36,7 @@ class SMSService
     public static function createClient(Client $client, string $content, User $actor, string $phoneNo = null): SMSService
     {
         $phoneNo = ($phoneNo) ?? (new ClientService($client))->phoneNo();
+
         return self::create($actor, ($phoneNo) ?? '?', str_replace(['#name', '#date', '#org'], [$client->Name, Carbon::now()->format('M d, Y'), config('org.name')], $content), Client::getPrimaryKey(), $client->ClientID);
     }
 
@@ -48,14 +49,14 @@ class SMSService
     {
         $sms = new SMS();
         $sms->fill([
-                    'SMSId'      => self::_id(),
-                    'Phone'      => $phoneNo,
-                    'Type'       => EmailTypeEnum::Outgoing->value,
-                    'Status'     => EmailStatusEnum::Draft->value,
-                    'Content'    => Str::of($content)->remove(["\r", "\n", "\t", "\0", "\x0B"])->replace("\u{A0}", " ")->toString(),
-                    'Party'      => $Party,
-                    'PartyID'    => $PartyID,
-                    'CreatedBy'  => $actor->Id,
+                    'SMSId' => self::_id(),
+                    'Phone' => $phoneNo,
+                    'Type' => EmailTypeEnum::Outgoing->value,
+                    'Status' => EmailStatusEnum::Draft->value,
+                    'Content' => Str::of($content)->remove(["\r", "\n", "\t", "\0", "\x0B"])->replace("\u{A0}", " ")->toString(),
+                    'Party' => $Party,
+                    'PartyID' => $PartyID,
+                    'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
                    ])->save();
 
@@ -76,19 +77,21 @@ class SMSService
     public static function createLead(Lead $lead, string $content, User $actor, string $phoneNo = null): SMSService
     {
         $phoneNo = ($phoneNo) ?? $lead->Phone;
+
         return self::create($actor, $phoneNo, str_replace(['#name', '#date', '#org'], [$lead->Name, Carbon::now()->format('M d, Y'), config('org.name')], $content), Lead::getPrimaryKey(), $lead->LeadID);
     }
 
     public static function createUser(User $user, string $content, User $actor, string $phoneNo = null): SMSService
     {
         $phoneNo = ($phoneNo) ?? $user->Phone;
+
         return self::create($actor, $phoneNo, str_replace(['#name', '#date', '#org'], [$user->Name, Carbon::now()->format('M d, Y'), config('org.name')], $content), User::getPrimaryKey(), $user->Id);
     }
 
     public function setSource(string $Source, string $SourceID): static
     {
         $this->sms->update([
-                            'Source'   => $Source,
+                            'Source' => $Source,
                             'SourceID' => $SourceID,
                            ]);
 
@@ -128,24 +131,25 @@ class SMSService
                                ]);
 
             event(new SMSSendEvent($this->sms));
+
             return $this;
         }
 
         if ($this->sms->Status->value === EmailStatusEnum::Sending->value) {
-            if (!$immediate && config('queue.default') !== 'sync') {
+            if (! $immediate && config('queue.default') !== 'sync') {
                 return $this;      //already queued for sending.
             }
+
             return $this->_send();
         }
 
         return $this;
     }
 
-
     protected function _failed(): static
     {
         $this->sms->update([
-                            'Dated'  => now(),
+                            'Dated' => now(),
                             'Status' => EmailStatusEnum::Failed->value,
                            ]);
 
@@ -157,7 +161,7 @@ class SMSService
         $source = $this->sms->source;
         if ($source instanceof CampaignParty) {//update status
             $source->update([
-                             'Status'    => $status->value,
+                             'Status' => $status->value,
                 'Channel' => SMS::getPrimaryKey(),
                              'ChannelID' => $this->sms->Id,
                             ]);
@@ -173,6 +177,7 @@ class SMSService
                                        'LastContacted' => now(),
                                       ]);
         }
+
         return $this;
     }
 
@@ -183,19 +188,21 @@ class SMSService
                                    'CompleteOn' => ($this->sms->Dated) ?? now(),
                                   ]);
         }
+
         return $this;
     }
 
     protected function _send(): static
     {
         try {
-            $response = !config('app.debug') && (new CSSMSService())->sendMessage($this->sms);
+            $response = ! config('app.debug') && (new CSSMSService())->sendMessage($this->sms);
         } catch (Exception $e) {
             SystemHelper::notifyAdmin('send sms ' . $e->getMessage());
+
             return $this->_failed();
         }
 
-        if (!$response) {
+        if (! $response) {
             return $this->_failed();
         }
 
@@ -212,16 +219,16 @@ class SMSService
         return ActivityService::sms($this->sms, $dated, $description);
     }
 
-
     /**
      * @throws Exception
      */
     public static function dt(Builder|MorphMany|HasMany $query, array $with = []): JsonResponse
     {
         $query->lock('WITH(NOLOCK)');
-        if (!empty($with)) {
+        if (! empty($with)) {
             $query->with($with);
         }
+
         return Datatables::of($query->select('*'))->addIndexColumn()
             ->addColumn('action', function (SMS $sms) {
                 return '...';
@@ -229,11 +236,13 @@ class SMSService
                 if (in_array('party', $with, true)) {
                     return (new PartyService($sms->party))->getDTRow();
                 }
+
                 return '';
             })->editColumn('source', function (SMS $sms) use ($with) {
                 if (in_array('source', $with, true)) {
                     return (new self($sms))->source();
                 }
+
                 return '-';
             })->editColumn('SMSId', function (SMS $sms) {
                 return Str::upper($sms->SMSId);
@@ -245,11 +254,12 @@ class SMSService
                 if ($sms->Dated instanceof Carbon) {
                     return $sms->Dated->format('F d, Y h:i A');
                 }
+
                 return $sms->CreatedOn?->format('F d, Y h:i A');
             })->setRowClass('mouse_pointer user-select-none dbl-click-summary-data')->setRowData([
                 'dbl_click_url' => function (SMS $sms) {
-                                                                                                    return route('sms.summary', [$sms->SMSId]);
-                                                                                                  },
+                    return route('sms.summary', [$sms->SMSId]);
+                },
                                                                                                   'summary_title' => 'sms details.',
                                                                                                  ])->rawColumns(['action', 'party', 'source'])->make();
     }
@@ -261,12 +271,14 @@ class SMSService
             if ($source->campaign instanceof Campaign) {
                 return 'Campaign: <a href="' . route('campaigns.show', [$source->campaign->CampaignID]) . '">' . Str::limit($source->campaign->Label) . '<a>';
             }
+
             return 'Campaign: unknown';
         }
 
         if ($source instanceof Account) {
             return 'Debt Recovery: Ac ' . $source->AccountID;
         }
+
         return 'Direct';
     }
 }

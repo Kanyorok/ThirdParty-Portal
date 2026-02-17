@@ -5,14 +5,13 @@ namespace App\Http\Controllers\Fleet;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FleetManagement\FleetContractedDriverAssignmentRequest;
 use App\Models\Fleet\ContractedDriver;
-use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\FleetContractedDriverAssignment;
-use App\Models\HRM\Employee;
+use App\Models\Fleet\FleetVehicle;
+use App\Models\HR\Employee;
 use App\Services\FleetManagement\FleetContractedDriverAssignmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
 
 class FleetContractedDriverAssignmentController extends Controller
 {
@@ -23,36 +22,36 @@ class FleetContractedDriverAssignmentController extends Controller
         $this->service = $service;
     }
 
-   public function create(Request $request)
-{
-    $driverId = $request->get('DriverID');
+    public function create(Request $request)
+    {
+        $driverId = $request->get('DriverID');
 
-    if (!$driverId) {
-        abort(404, 'Contracted Driver ID is required.');
+        if (! $driverId) {
+            abort(404, 'Contracted Driver ID is required.');
+        }
+
+        $driver = ContractedDriver::findOrFail($driverId);
+
+        // Get only vehicles that have no active assignment
+        $vehicles = FleetVehicle::whereDoesntHave('assignments', function ($query) {
+            $query->whereNull('DeletedOn');
+        })->get();
+
+        $assigners = Employee::select(
+            DB::raw("CONCAT(LastName, ' ', FirstName) AS name"),
+            'Id'
+        )->pluck('name', 'Id');
+
+        return view(
+            'fleet.contracted_driver_assignments.create',
+            compact('driver', 'vehicles', 'assigners')
+        );
     }
-
-    $driver = ContractedDriver::findOrFail($driverId);
-
-    // Get only vehicles that have no active assignment
-    $vehicles = FleetVehicle::whereDoesntHave('assignments', function ($query) {
-        $query->whereNull('DeletedOn');
-    })->get();
-
-    $assigners = Employee::select(
-        DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 
-        'Id'
-    )->pluck('name', 'Id');
-
-    return view(
-        'fleet.contracted_driver_assignments.create',
-        compact('driver', 'vehicles', 'assigners')
-    );
-}
 
     public function store(FleetContractedDriverAssignmentRequest $request)
     {
         $validated = $request->validated();
-        if (!isset($validated['AssignedBy'])) {
+        if (! isset($validated['AssignedBy'])) {
             $validated['AssignedBy'] = Auth::id();
         }
 
@@ -83,12 +82,11 @@ class FleetContractedDriverAssignmentController extends Controller
         return response()->json($assignment);
     }
 
-
     public function update(FleetContractedDriverAssignmentRequest $request, $driverId, $assignmentId)
     {
         $assignment = FleetContractedDriverAssignment::findOrFail($assignmentId);
         $validated = $request->validated();
-        if (!isset($validated['AssignedBy'])) {
+        if (! isset($validated['AssignedBy'])) {
             $validated['AssignedBy'] = $assignment->AssignedBy ?? Auth::id();
         }
 
@@ -131,7 +129,7 @@ class FleetContractedDriverAssignmentController extends Controller
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Assignment deleted successfully.'
+                'message' => 'Assignment deleted successfully.',
             ]);
         }
 
@@ -139,6 +137,4 @@ class FleetContractedDriverAssignmentController extends Controller
             ->route('fleet.contracted_drivers.show', ['Id' => $assignment->DriverID])
             ->with('success', 'Assignment deleted successfully.');
     }
-
-
 }

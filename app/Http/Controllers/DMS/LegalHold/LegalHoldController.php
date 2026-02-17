@@ -9,6 +9,7 @@ use App\Models\Auth\User;
 use App\Models\DMS\DMSTags;
 use App\Models\DMS\Document;
 use App\Models\DMS\LegalHold;
+use App\Traits\Controller\LegalHoldTrait;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,14 +17,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Throwable;
-use Yajra\DataTables\DataTables;
 
 class LegalHoldController extends Controller
 {
+    use LegalHoldTrait;
+
     public function __construct()
     {
         $this->middleware('ajax')->except(['index', 'create', 'show']);
-        //$this->authorizeResource(LegalHold::class);
     }
 
     /**
@@ -33,26 +34,9 @@ class LegalHoldController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         $this->authorize('viewAny', LegalHold::class);
-        if ($request->ajax()) {
-            return Datatables::of(LegalHold::query()->lock('WITH(NOLOCK)')->withCount('documents'))->addIndexColumn()
-                ->addColumn('action', function (LegalHold $legalHold) {
-                    return '<a  href="' . route('legal-hold.show', [$legalHold->Ref]) . '"  class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</button>';
-                })->editColumn('documents_count', function ($legalHold) {
-                    return number_format($legalHold->documents_count);
-                })->editColumn('CreatedOn', function (LegalHold $legalHold) {
-                    return $legalHold->CreatedOn?->format('F d, Y h:i A');
-                })->editColumn('Status', function (LegalHold $legalHold) {
-                    return match ($legalHold->Status->value) {
-                        LegalHoldStatusEnum::Active->value => '<span class="badge rounded-pill bg-success">Active</span>',
-                        LegalHoldStatusEnum::Canceled->value => '<details><summary><span class="badge rounded-pill bg-warning text-dark">Canceled</span></summary>
-                            <p>Cancelled On: ' . $legalHold->ReleasedOn?->format('F d, Y h:i A') . '</p></details>',
-                        LegalHoldStatusEnum::Released->value => '<details><summary><span class="badge rounded-pill bg-primary">Released</span></summary>
-                            <p>Released On: ' . $legalHold->ReleasedOn?->format('F d, Y h:i A') . '</p></details>',
-                    };
-                })->rawColumns(['action', 'Status'])->make();
-        }
 
-        return view('dms.legal-hold.index');
+        return (! $request->ajax()) ? view('dms.legal-hold.index') : $this->getLegalHolds(query: LegalHold::query(), counts: ['documents']);
+
     }
 
     /**
@@ -89,7 +73,7 @@ class LegalHoldController extends Controller
                         'causer_type' => User::getPrimaryKey(),
                         'created_at' => $dated,
                         'updated_at' => $dated,
-                        'event' => 'Legal Hold'
+                        'event' => 'Legal Hold',
                     ];
                 })->add([
                     'log_name' => config('activitylog.default_log_name'),
@@ -100,7 +84,7 @@ class LegalHoldController extends Controller
                     'causer_type' => User::getPrimaryKey(),
                     'created_at' => $dated,
                     'updated_at' => $dated,
-                    'event' => 'Create'
+                    'event' => 'Create',
                 ]) : collect();
 
                 if ($activities->isNotEmpty()) {
@@ -109,8 +93,9 @@ class LegalHoldController extends Controller
 
                 return $this->succeeded('Legal Hold created successfully');
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error creating legal hold: ' . $e);
+
             return $this->errored('an error occurred while creating legal hold');
         }
     }
@@ -121,6 +106,7 @@ class LegalHoldController extends Controller
     public function create(Request $request)
     {
         $this->authorize('create', LegalHold::class);
+
         return view('dms.legal-hold.create')->with('tags', DMSTags::query()->user($request->user())->get(['t_DMSTags.TagID', 't_DMSTags.Name']));
     }
 
@@ -130,6 +116,7 @@ class LegalHoldController extends Controller
     public function show(LegalHold $dMSLegalHold)
     {
         $this->authorize('view', $dMSLegalHold);
+
         return view('dms.legal-hold.show')
             ->with('hold', $dMSLegalHold->loadCount('documents'));
     }
@@ -155,10 +142,12 @@ class LegalHoldController extends Controller
                 ]);
 
                 activity()->causedBy($actor)->performedOn($dMSLegalHold)->event('update')->log('updated ' . $dMSLegalHold->Ref . ' legal hold.');
+
                 return $this->succeeded('Legal Hold updated successfully', route('legal-hold.show', [$dMSLegalHold->Ref]));
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error updating legal hold: ' . $e);
+
             return $this->errored('an error occurred while updating legal hold');
         }
     }
@@ -169,6 +158,7 @@ class LegalHoldController extends Controller
     public function destroy(Request $request, LegalHold $dMSLegalHold)
     {
         $actor = $request->user();
+
         try {
             return DB::transaction(function () use ($dMSLegalHold, $actor) {
                 $dMSLegalHold->update([
@@ -190,7 +180,7 @@ class LegalHoldController extends Controller
                         'causer_type' => User::getPrimaryKey(),
                         'created_at' => $dated,
                         'updated_at' => $dated,
-                        'event' => 'Legal Hold'
+                        'event' => 'Legal Hold',
                     ];
                 })->add([
                     'log_name' => config('activitylog.default_log_name'),
@@ -201,7 +191,7 @@ class LegalHoldController extends Controller
                     'causer_type' => User::getPrimaryKey(),
                     'created_at' => $dated,
                     'updated_at' => $dated,
-                    'event' => 'Canceled'
+                    'event' => 'Canceled',
                 ]) : collect();
 
                 if ($activities->isNotEmpty()) {
@@ -210,8 +200,9 @@ class LegalHoldController extends Controller
 
                 return $this->succeeded('Legal Hold canceled successfully', route('legal-hold.show', [$dMSLegalHold->Ref]));
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error canceling legal hold: ' . $e);
+
             return $this->errored('an error occurred while canceling legal hold');
         }
     }
@@ -222,6 +213,7 @@ class LegalHoldController extends Controller
     public function release(Request $request, LegalHold $dMSLegalHold)
     {
         $actor = $request->user();
+
         try {
             return DB::transaction(function () use ($dMSLegalHold, $actor) {
                 $dMSLegalHold->update([
@@ -243,7 +235,7 @@ class LegalHoldController extends Controller
                         'causer_type' => User::getPrimaryKey(),
                         'created_at' => $dated,
                         'updated_at' => $dated,
-                        'event' => 'Legal Hold'
+                        'event' => 'Legal Hold',
                     ];
                 })->add([
                     'log_name' => config('activitylog.default_log_name'),
@@ -254,7 +246,7 @@ class LegalHoldController extends Controller
                     'causer_type' => User::getPrimaryKey(),
                     'created_at' => $dated,
                     'updated_at' => $dated,
-                    'event' => 'Released'
+                    'event' => 'Released',
                 ]) : collect();
 
                 if ($activities->isNotEmpty()) {
@@ -263,8 +255,9 @@ class LegalHoldController extends Controller
 
                 return $this->succeeded('Legal Hold released successfully', route('legal-hold.show', [$dMSLegalHold->Ref]));
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error releasing legal hold: ' . $e);
+
             return $this->errored('an error occurred while releasing legal hold');
         }
     }

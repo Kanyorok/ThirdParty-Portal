@@ -83,7 +83,6 @@
             const department = document.getElementById("exportDepartment").value;
 
             // Simulated export logic – in actual app, call Laravel route or trigger download
-            console.log(`Exporting ${dataType} for ${period}, ${branch}, ${department} as ${format}`);
             document.getElementById("exportStatus").style.display = "block";
         }
     </script>

@@ -5,10 +5,10 @@ namespace App\Http\Controllers\API\CRDB;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+
 class CRDBCustomerController extends Controller
 {
-    //Sync customer info by executing the p_Customers stored procedure EXEC dbo.r_CustomerData  @IsSynced = 0
+    // Sync customer info by executing the p_Customers stored procedure EXEC dbo.r_CustomerData @IsSynced = 0
 
     public function syncCustomers(Request $request)
     {
@@ -25,7 +25,7 @@ class CRDBCustomerController extends Controller
                     'status' => 'empty',
                     'code' => 404,
                     'message' => 'Stored procedure executed but returned no data',
-                    'data' => []
+                    'data' => [],
                 ], 404);
             }
 
@@ -34,11 +34,12 @@ class CRDBCustomerController extends Controller
             // into a real PHP array so Laravel outputs it as a nested JSON object.
             $formattedData = collect($data)->map(function ($item) {
                 // Check if the field exists and isn't null
-                if (!empty($item->TypesJson)) { 
+                if (! empty($item->TypesJson)) {
                     $item->TypesJson = json_decode($item->TypesJson);
                 } else {
                     $item->TypesJson = []; // Ensure it's an array if null
                 }
+
                 return $item;
             });
 
@@ -48,45 +49,42 @@ class CRDBCustomerController extends Controller
                 'code' => 200,
                 'count' => $formattedData->count(),
                 'message' => 'Customer Data Fetched Successfully',
-                'data' => $formattedData
+                'data' => $formattedData,
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
                 'code' => 500,
                 'message' => 'Failed to sync customer data: ' . $e->getMessage(),
-                'data' => []
+                'data' => [],
             ], 500);
         }
     }
 
-
-    //Fetch Client Summary Statement
+    // Fetch Client Summary Statement
     public function getClientSummaryStatement(Request $request)
     {
         $request->validate([
             'ThirdPartyID' => 'required',
             'Type' => 'required|string',
         ]);
+
         try {
-            $data = DB::select("EXEC p_GetClientStatement @ThirdPartyID = ?, @Type = ?", [$request->ThirdPartyID, $request->Type]);
+            return$data = DB::select("EXEC p_GetClientStatement @ThirdPartyID = ?, @Type = ?", [$request->ThirdPartyID, $request->Type]);
+
             return response()->json([
                 'status' => 'ok',
                 'code' => 200,
                 'message' => 'Client Summary Statement Fetched Successfully',
-                'data' => $data
+                'data' => $data,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
                 'code' => 500,
                 'message' => 'Failed to fetch client summary statement: ' . $e->getMessage(),
-                'data' => []
+                'data' => [],
             ], 500);
         }
     }
-
-
-    
 }

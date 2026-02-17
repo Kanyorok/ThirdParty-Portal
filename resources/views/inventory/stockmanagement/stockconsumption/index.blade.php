@@ -3,24 +3,16 @@
 
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    {{-- Font Awesome for icons --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 @endsection
 
 @section('content')
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+@if(session('success'))
+    <div class="alert alert-success">
+        {{ session('success') }}
+    </div>
+@endif
 
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -47,7 +39,6 @@
             <tbody>
             @foreach($consumptions as $consumption)
                 @php
-                    // Calculate issued to name (without ID)
                     $issuedToName = 'N/A';
                     if ($consumption->IssuedToType && $consumption->IssuedToID) {
                         $type = \App\Models\Core\Approval\CodeDetail::find($consumption->IssuedToType);
@@ -67,7 +58,6 @@
                         }
                     }
                     
-                    // Calculate issued by name (without ID)
                     $issuedByName = 'N/A';
                     if ($consumption->issuedBy) {
                         $employee = $consumption->issuedBy->employee;

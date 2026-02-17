@@ -13,7 +13,7 @@ class ComplianceObligation extends Model
     protected $fillable = [
         'Title', 'Description', 'RegulatorID', 'ComplianceAreaID',
         'EffectiveDate', 'IsActive', 'CreatedBy', 'CreatedOn',
-        'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn'
+        'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn',
     ];
 
     public function regulator()
@@ -36,4 +36,3 @@ class ComplianceObligation extends Model
         return $this->hasMany(ComplianceObligationImpact::class, 'ObligationID');
     }
 }
-

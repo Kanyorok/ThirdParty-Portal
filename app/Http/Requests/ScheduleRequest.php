@@ -20,13 +20,13 @@ class ScheduleRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'client'         => [
+                'client' => [
                                      'required_if:_type,call',
                                      'array',
                                      'min:1',
                                      'max:500',
                                     ],
-                'client.*'       => [
+                'client.*' => [
                                      'required',
                                      'max:9000',
                                     ],
@@ -34,15 +34,15 @@ class ScheduleRequest extends FormRequest
                                      'required_if:_type,meeting',
                                      'max:255',
                                     ],
-                'branches'       => [
+                'branches' => [
                                      'nullable',
                                      'array',
                                      'max:255',
                                     ],
-            #'_type' => ['required', 'string', Rule::in(['call','meeting'])],
+            //'_type' => ['required', 'string', Rule::in(['call','meeting'])],
                 'schedule_start' => 'required|date_format:"Y-m-d H:i"|before:end',
-                'schedule_end'   => 'required|date_format:"Y-m-d H:i"|after:start',
-                'notes'          => 'required|min:1',
+                'schedule_end' => 'required|date_format:"Y-m-d H:i"|after:start',
+                'notes' => 'required|min:1',
                ];
     }
 
@@ -52,7 +52,7 @@ class ScheduleRequest extends FormRequest
     public function getEnd(Carbon $start): Carbon
     {
         $end = Carbon::createFromFormat('Y-m-d H:i', $this->input('schedule_end'));
-        if (!$end instanceof Carbon) {
+        if (! $end instanceof Carbon) {
             throw ValidationException::withMessages(['schedule_start' => 'invalid date format']);
         }
 
@@ -82,6 +82,7 @@ class ScheduleRequest extends FormRequest
         if ($start instanceof Carbon) {
             return $start;
         }
+
         throw ValidationException::withMessages(['schedule_start' => 'invalid date format']);
     }
 
@@ -92,11 +93,11 @@ class ScheduleRequest extends FormRequest
     {
         $clients = collect([]);
         $ids = $this->input('client');
-        if (!empty($ids)) {
+        if (! empty($ids)) {
             $clients = Client::query()->whereIn('ClientID', $ids)->lock('WITH(NOLOCK)')->select(['ClientID', 'Name'])->get();
         }
         $branches = $this->input('branches');
-        if (!empty($branches)) {
+        if (! empty($branches)) {
             $clients2 = Account::query()->whereIn('OurBranchID', $branches)->select(['ClientID', 'Name'])->get();
             if ($clients->isEmpty()) {
                 $clients = $clients2;
@@ -110,7 +111,5 @@ class ScheduleRequest extends FormRequest
         }
 
         return $clients;
-
-        //$clients = Client::query()->whereIn('ClientID',$ids)->lock('WITH(NOLOCK)')->select(['ClientID','Name'])->get();
     }
 }

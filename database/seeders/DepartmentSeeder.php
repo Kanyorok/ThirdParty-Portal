@@ -25,12 +25,12 @@ class DepartmentSeeder extends Seeder
         ];
 
         foreach ($departments as $dept) {
-        Department::create([
-            'DepartmentID' => $dept['DepartmentID'],
-            'Name' => $dept['Name'],
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ]);
+            Department::create([
+                'DepartmentID' => $dept['DepartmentID'],
+                'Name' => $dept['Name'],
+                'CreatedBy' => $actor->Id,
+                'ModifiedBy' => $actor->Id,
+            ]);
+        }
     }
-}
 }

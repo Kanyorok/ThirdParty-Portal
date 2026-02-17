@@ -266,7 +266,6 @@
 
                 surveyWorkflowTable.on('error', function (er) {
                     nWarning("an issue occurred while loading workflow.");
-                    console.log(er);
                 });
             } else {
                 surveyWorkflowTable.ajax.reload();

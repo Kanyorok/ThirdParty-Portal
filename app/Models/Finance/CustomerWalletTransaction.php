@@ -8,14 +8,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CustomerWalletTransaction extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait;
+    use SoftDeletes;
 
     protected $table = 't_FinanceCustomerWalletTransactions';
     protected $primaryKey = 'Id';
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
         'WalletID',
@@ -32,7 +33,7 @@ class CustomerWalletTransaction extends Model
         'ModifiedBy',
         'ModifiedOn',
         'DeletedBy',
-        'DeletedOn'
+        'DeletedOn',
     ];
 
     protected $casts = [
@@ -77,6 +78,7 @@ class CustomerWalletTransaction extends Model
     public function getFormattedAmountAttribute()
     {
         $prefix = in_array($this->TransactionType, ['deposit', 'refund']) ? '+' : '-';
+
         return $prefix . 'KSh ' . number_format($this->Amount, 2);
     }
 

@@ -8,7 +8,6 @@ use App\Http\Resources\Property\PropertyLeaseResource;
 use App\Models\PropertyManagement\PropertyNewLease;
 use Illuminate\Http\Request;
 
-
 class PropertyLeaseController extends Controller
 {
     public function index(Request $request): PropertyLeaseCollection
@@ -23,7 +22,7 @@ class PropertyLeaseController extends Controller
             'unit',
             'currency',
             'code',
-            'createdByUser'
+            'createdByUser',
         ])
         ->when($tenantId, function ($query) use ($tenantId) {
             $query->whereHas('tenant', fn ($q) => $q->where('Id', $tenantId));
@@ -36,12 +35,12 @@ class PropertyLeaseController extends Controller
     public function show(Request $request): PropertyLeaseResource
     {
         $request->validate([
-            'id'        => 'required|integer', // tenant id
-            'lease_id'  => 'required|integer',
+            'id' => 'required|integer', // tenant id
+            'lease_id' => 'required|integer',
         ]);
 
         $tenantId = $request->query('id');
-        $leaseId  = $request->query('lease_id');
+        $leaseId = $request->query('lease_id');
 
         $lease = PropertyNewLease::with([
             'tenant',
@@ -51,7 +50,7 @@ class PropertyLeaseController extends Controller
             'unit',
             'currency',
             'code',
-            'createdByUser'
+            'createdByUser',
         ])
         ->where('Id', $leaseId)
         ->whereHas('tenant', fn ($q) => $q->where('Id', $tenantId))

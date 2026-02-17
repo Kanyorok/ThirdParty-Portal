@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Models\Fleet\FleetTripLog;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Fleet\FleetTripLog;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class StartPendingTrips extends Command
 {
@@ -20,9 +20,10 @@ class StartPendingTrips extends Command
         $approvedId = CodeDetail::where('CodeID', 'TripStatus')->where('Description', 'Approved')->value('ID');
         $ongoingId = CodeDetail::where('CodeID', 'TripStatus')->where('Description', 'Ongoing')->value('ID');
 
-        if (!$approvedId || !$ongoingId) {
+        if (! $approvedId || ! $ongoingId) {
             $this->error('Trip status IDs not found!');
             \Log::error('Trip status IDs not found for scheduled command');
+
             return;
         }
 

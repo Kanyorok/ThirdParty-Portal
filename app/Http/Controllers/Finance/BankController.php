@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Http\Controllers\Controller;
 use App\Models\Finance\Bank;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Log;
 
 class BankController extends Controller
@@ -13,6 +13,7 @@ class BankController extends Controller
     public function index()
     {
         $banks = \App\Models\Finance\Bank::with('country')->orderBy('BankName')->paginate(20);
+
         return view('finance.bank.index', compact('banks'));
     }
 
@@ -57,15 +58,16 @@ class BankController extends Controller
             return redirect()->route('finance.bank.index')->with('success', 'Bank created.');
         } catch (\Throwable $th) {
             Log::error('Bank creation failed: ' . $th->getMessage());
+
             return redirect()->route('finance.bank.index')->with('error', 'Bank creation failed.');
         }
-
     }
 
     // Show a specific bank's details
     public function show($id)
     {
         $bank = Bank::findOrFail($id);
+
         return view('finance.bank.show', compact('bank'));
     }
 
@@ -73,6 +75,7 @@ class BankController extends Controller
     public function edit($id)
     {
         $bank = Bank::findOrFail($id);
+
         return view('finance.bank.edit', compact('bank'));
     }
 
@@ -114,6 +117,7 @@ class BankController extends Controller
     public function destroy($id)
     {
         Bank::destroy($id);
+
         return redirect()->route('finance.bank.index');
     }
 }

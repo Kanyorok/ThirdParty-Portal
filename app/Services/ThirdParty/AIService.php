@@ -29,7 +29,7 @@ class AIService
     public function __construct()
     {
         $cred = APICredential::query()->where('Integration', IntegrationsEnum::LLM->value)->latest('Id')->first();
-        if (!$cred instanceof APICredential) {
+        if (! $cred instanceof APICredential) {
             throw new ErroredException('no LLM configuration Found');
         }
         $this->provider = $this->decodeProvider($cred->Configuration?->Provider);
@@ -48,6 +48,7 @@ class AIService
             return Provider::from($provider);
         } catch (Exception | Throwable) {
         }
+
         throw new ErroredException('Invalid LLM Provider given');
     }
 
@@ -55,9 +56,11 @@ class AIService
     {
         try {
             new self();
+
             return true;
         } catch (Exception | Throwable) {
         }
+
         return false;
     }
 
@@ -86,10 +89,9 @@ class AIService
                 ],
                 requiredFields: ['numbers']
             ))->generate();
+
         return (is_array($response->structured));
     }
-
-
 
     public function competitor(string $content): ?array
     {

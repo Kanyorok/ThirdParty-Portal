@@ -1,11 +1,34 @@
 @extends('layouts.app')
 @section('title', 'Unit Of Measure (UOM) List')
 @section('styles')
-    {{-- Font Awesome for icons --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 @endsection
 @section('content')
+@if($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
     <div class="container mt-5">
         <div class="card shadow rounded-4">
             <div class="card-header text-dark rounded-top-4 d-flex justify-content-between align-items-center"
@@ -69,7 +92,6 @@
         </div>
     </div>
 
-    <!-- Show Modal -->
     <div class="modal fade" id="showUOMModal" tabindex="-1" aria-labelledby="showUOMModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -87,7 +109,6 @@
         </div>
     </div>
 
-    <!-- Edit Modal -->
     <div class="modal fade" id="editUOMModal" tabindex="-1" aria-labelledby="editUOMModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -100,11 +121,11 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="editCode" class="form-label">UOM Code</label>
+                            <label for="editCode" class="form-label">UOM Code<span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="editCode" name="Code" required>
                         </div>
                         <div class="mb-3">
-                            <label for="editName" class="form-label">UOM Name</label>
+                            <label for="editName" class="form-label">UOM Name<span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="editName" name="Name" required>
                         </div>
                         <div class="form-check mb-3">

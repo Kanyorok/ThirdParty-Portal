@@ -24,6 +24,7 @@ class PropertyLeaseRenewalController extends Controller
     {
         $leaserenewals = PropertyLeaseRenewal::with(['lease.tenant', 'lease.property'])
             ->where('isActive', true)->get();
+
         return view('property.tenantmanagement.leasemanagement.leaserenewal.index', compact('leaserenewals'));
     }
 
@@ -34,18 +35,21 @@ class PropertyLeaseRenewalController extends Controller
             ->where('isActive', true)
             ->where('Status', '!=', PropertyNewLeaseEnum::Terminate)
             ->get();
+
         return view('property.tenantmanagement.leasemanagement.leaserenewal.create', compact('newleases'));
     }
 
     public function getPropertyByTenant($tenantId)
     {
         $newlease = PropertyNewLease::where('TenantId', $tenantId)->get();
+
         return response()->json($newlease);
     }
 
     public function getLeaseByProperty($propertyId)
     {
         $newlease = PropertyNewLease::where('PropertyId', $propertyId)->get();
+
         return response()->json($newlease);
     }
 
@@ -53,54 +57,57 @@ class PropertyLeaseRenewalController extends Controller
     {
         $this->authorize(PermissionEnum::PropertyLeaseRenewalView, PropertyLeaseRenewal::class);
         $leaserenewal = PropertyLeaseRenewal::findOrFail($id);
+
         return view('property.tenantmanagement.leasemanagement.leaserenewal.show', compact('leaserenewal'));
     }
 
-public function store(PropertyLeaseRenewalRequest $request)
-{
-    $this->authorize(PermissionEnum::PropertyLeaseRenewalCreate, PropertyLeaseRenewal::class);
+    public function store(PropertyLeaseRenewalRequest $request)
+    {
+        $this->authorize(PermissionEnum::PropertyLeaseRenewalCreate, PropertyLeaseRenewal::class);
 
-    DB::beginTransaction();
-    try {
-        $validated = $request->validated();
-        $leaseId = (int)$validated['LeaseId'];
-        $paymentFrequencyId = (int)$validated['PaymentFrequency'];
+        DB::beginTransaction();
 
-        // Create the lease renewal without the uploaded file for now
-        $leaseRenewal = PropertyLeaseRenewalService::create(
-            $leaseId,
-            $paymentFrequencyId,
-            $validated['EndDateCurrentLease'],
-            $validated['NewStartDate'],
-            $validated['NewEndDate'],
-            $validated['NewMonthlyRent'],
-            $validated['ServiceCharge'],
-            $validated['ParkingFee'],
-            $validated['OtherCharges'],
-            $validated['Remarks'] ?? '',
-            ApprovalEnum::Pending->value,
-            Auth::user()
-        );
+        try {
+            $validated = $request->validated();
+            $leaseId = (int)$validated['LeaseId'];
+            $paymentFrequencyId = (int)$validated['PaymentFrequency'];
 
-        // Optional: handle uploaded documents
-        foreach ($request->file('Document', []) as $uploadedFile) {
-            $leaseRenewal->newDocument(
-                 ModulesEnum::Property,
-                 $uploadedFile,
-                 [PermissionEnum::PropertyLeaseRenewalView->value],
-                 Auth::user()
+            // Create the lease renewal without the uploaded file for now
+            $leaseRenewal = PropertyLeaseRenewalService::create(
+                $leaseId,
+                $paymentFrequencyId,
+                $validated['EndDateCurrentLease'],
+                $validated['NewStartDate'],
+                $validated['NewEndDate'],
+                $validated['NewMonthlyRent'],
+                $validated['ServiceCharge'],
+                $validated['ParkingFee'],
+                $validated['OtherCharges'],
+                $validated['Remarks'] ?? '',
+                ApprovalEnum::Pending->value,
+                Auth::user()
             );
+
+            // Optional: handle uploaded documents
+            foreach ($request->file('Document', []) as $uploadedFile) {
+                $leaseRenewal->newDocument(
+                    ModulesEnum::Property,
+                    $uploadedFile,
+                    [PermissionEnum::PropertyLeaseRenewalView->value],
+                    Auth::user()
+                );
+            }
+
+            DB::commit();
+
+            return redirect()->route('renewlease.index')->with('success', 'Lease renewal created successfully');
+        } catch (Throwable $e) {
+            DB::rollBack();
+            Log::error('Lease Renewal creation failed: ' . $e->getMessage());
+
+            return back()->with('error', $e->getMessage())->withInput();
         }
-
-        DB::commit();
-        return redirect()->route('renewlease.index')->with('success', 'Lease renewal created successfully');
-
-    } catch (Throwable $e) {
-        DB::rollBack();
-        Log::error('Lease Renewal creation failed: ' . $e->getMessage());
-        return back()->with('error', $e->getMessage())->withInput();
     }
-}
 
     public function leaseRenewalOfferLetter($Id)
     {
@@ -112,7 +119,7 @@ public function store(PropertyLeaseRenewalRequest $request)
             'lease.block',
             'lease.floor',
             'lease.unit',
-            'lease.code'
+            'lease.code',
         ])->findOrFail($Id);
 
         activity()
@@ -145,6 +152,7 @@ public function store(PropertyLeaseRenewalRequest $request)
         $this->authorize(PermissionEnum::PropertyLeaseRenewalUpdate, PropertyLeaseRenewal::class);
         $leaserenewal = PropertyLeaseRenewal::where('isActive', true)->findOrFail($Id);
         $newleases = PropertyNewLease::with('tenant', 'property')->get();
+
         return view('property.tenantmanagement.leasemanagement.leaserenewal.edit', compact('leaserenewal', 'newleases'));
     }
 
@@ -152,6 +160,7 @@ public function store(PropertyLeaseRenewalRequest $request)
     {
         $this->authorize(PermissionEnum::PropertyLeaseRenewalUpdate, PropertyLeaseRenewal::class);
         DB::beginTransaction();
+
         try {
             $validated = $request->validated();
             $leaseRenewal = PropertyLeaseRenewal::findOrFail($Id);
@@ -188,10 +197,12 @@ public function store(PropertyLeaseRenewalRequest $request)
             );
 
             DB::commit();
+
             return redirect()->route('renewlease.index')->with('success', 'Lease renewal updated successfully');
         } catch (Throwable $th) {
             DB::rollBack();
             Log::error('Failed to Update Lease Renewal: ' . $th->getMessage());
+
             return back()->withErrors(['error' => 'Failed to update Lease Renewal'])->withInput();
         }
     }
@@ -203,9 +214,11 @@ public function store(PropertyLeaseRenewalRequest $request)
         try {
             $leaseRenewal = PropertyLeaseRenewal::findOrFail($id);
             PropertyLeaseRenewalService::delete($leaseRenewal, Auth::user());
+
             return redirect()->route('renewlease.index')->with('success', 'Lease Renewal soft-deleted successfully!');
         } catch (Throwable $th) {
             Log::error('Error soft-deleting Lease Renewal: ' . $th->getMessage());
+
             return redirect()->back()->withErrors(['error' => 'Failed to delete Lease Renewal. Please try again.'])->withInput();
         }
     }

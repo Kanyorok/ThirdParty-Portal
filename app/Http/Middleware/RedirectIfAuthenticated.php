@@ -17,7 +17,7 @@ class RedirectIfAuthenticated
             if (Auth::guard($guard)->check()) {
                 if ($request->expectsJson()) {
                     return response()->json([
-                        'message' => __('auth.authenticated')
+                        'message' => __('auth.authenticated'),
                     ], 200);
                 }
 

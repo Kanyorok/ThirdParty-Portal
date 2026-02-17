@@ -4,7 +4,6 @@ namespace App\Http\Requests\Procurement\Suppliers\Prequalification;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-
 class StorePrequalificationEvaluationRequest extends FormRequest
 {
     public function authorize(): bool

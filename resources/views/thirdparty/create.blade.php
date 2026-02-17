@@ -267,7 +267,7 @@
                     <div class="wizard-step d-none" data-step="4">
                         <h4 class="mb-3">Third Party User (Optional)</h4>
                         <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="createUser" name="createUser">
+                            <input class="form-check-input" type="checkbox" id="createUser" name="createUser" value="1">
                             <label class="form-check-label" for="createUser">
                                 Create a user for this third party
                             </label>
@@ -643,7 +643,6 @@
                     const field = $('#' + fieldId);
                     if (!field.val()) {
                         field.addClass('is-invalid');
-                        console.log(fieldId)
                         isValid = false;
                     }
                 });
@@ -692,7 +691,6 @@
                     };
                 },
                 processResults: function(data) {
-                    console.log('Select2 Data:', data);
                     return {
                         results: data.results
                     };

@@ -37,6 +37,7 @@ class CampaignActionsController extends Controller
     public function workflow(Campaign $campaign): JsonResponse
     {
         $this->authorize('view', $campaign);
+
         return $this->workflows($campaign->workflows());
     }
 
@@ -76,6 +77,7 @@ class CampaignActionsController extends Controller
             return $e->toJson();
         } catch (Exception | \Throwable $e) {
             Log::error('Error submitting campaign ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
 
@@ -88,6 +90,7 @@ class CampaignActionsController extends Controller
     public function contacts(Campaign $campaign): JsonResponse
     {
         $this->authorize('view', $campaign);
+
         return Datatables::of($campaign->contacts()->with(['party'])->select('*'))->addIndexColumn()
             ->addColumn('action', function (CampaignParty $campaignParty) {
                 return '';
@@ -99,7 +102,6 @@ class CampaignActionsController extends Controller
                 return $campaignParty->CreatedOn?->format('F d, Y h:i A');
             })->rawColumns(['action', 'party'])->make();
     }
-
 
     public function progress(Campaign $campaign): JsonResponse
     {
@@ -126,10 +128,10 @@ class CampaignActionsController extends Controller
         }
 
         return $this->succeeded('ok', data: [
-                                             'progress'    => (int) ($total > 0) ? (($done / $total) * 100) : 100,
-                                             'done'        => (int) $done,
-                                             'total'       => (int) $total,
-                                             'description' => $description . ' (' . number_format($done) . ' / ' . number_format($total) . ')',
-                                            ]);
+             'progress' => (int) ($total > 0) ? (($done / $total) * 100) : 100,
+             'done' => (int) $done,
+             'total' => (int) $total,
+             'description' => $description . ' (' . number_format($done) . ' / ' . number_format($total) . ')',
+        ]);
     }
 }

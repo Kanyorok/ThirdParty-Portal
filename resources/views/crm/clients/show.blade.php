@@ -1,4 +1,4 @@
-@php use App\Services\BR\ClientService; @endphp
+u@php use App\Services\BR\ClientService; @endphp
 @php use App\Models\BR\Client; @endphp
 @php use App\Models\CRM\Discussion; @endphp
 @php use App\Enums\CallStatusEnum; @endphp
@@ -27,6 +27,33 @@
             font-family: "Gwendolyn", cursive;
             font-weight: 400;
             font-style: normal;
+        }
+
+        /* Prevent horizontal overflow on client view */
+        #mainBodyContent > .row {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .col-md-8, .col-xxl-9 {
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .col-md-8 .card-body,
+        .col-xxl-9 .card-body {
+            overflow-x: auto;
+        }
+
+        .col-md-8 .dataTables_wrapper,
+        .col-xxl-9 .dataTables_wrapper {
+            width: 100% !important;
+            overflow-x: auto;
+        }
+
+        .col-md-8 table,
+        .col-xxl-9 table {
+            width: 100% !important;
         }
 
     </style>
@@ -503,20 +530,21 @@
                         <div class="card">
                             <div class="card-header"><h5>Relations - Next of Kin</h5></div>
                             <div class="card-body">
-                                <table id="relationsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>ClientID</th>
-                                        <th>Name</th>
-                                        <th>Relation</th>
-                                        <th>Type</th>
-                                        <th>Phone</th>
-                                        <th>Status</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="relationsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                        <thead>
+                                        <tr>
+                                            <th>ClientID</th>
+                                            <th>Name</th>
+                                            <th>Relation</th>
+                                            <th>Type</th>
+                                            <th>Phone</th>
+                                            <th>Status</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table></div>
                             </div>
                         </div>
 
@@ -525,19 +553,20 @@
                         <div class="card">
                             <div class="card-header"><h5>Portfolio: Client Accounts</h5></div>
                             <div class="card-body">
-                                <table id="accountsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>Product</th>
-                                        <th>Account ID</th>
-                                        <th>ClearBalance</th>
-                                        <th>Status</th>
-                                        <th>Last</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="accountsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                        <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Account ID</th>
+                                            <th>ClearBalance</th>
+                                            <th>Status</th>
+                                            <th>Last</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table></div>
                             </div>
                         </div>
                     </div>
@@ -545,18 +574,19 @@
                         <div class="card">
                             <div class="card-header"><h5>Private Notes</h5></div>
                             <div class="card-body">
-                                <table id="notesTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th class="w-50">Note</th>
-                                        <th>On</th>
-                                        <th>actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="notesTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th class="w-50">Note</th>
+                                            <th>On</th>
+                                            <th>actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table></div>
                             </div>
                         </div>
                     </div>
@@ -564,19 +594,20 @@
                         <div class="card">
                             <div class="card-header"><h5>discussions</h5></div>
                             <div class="card-body">
-                                <table id="discussionsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>From</th>
-                                        <th>Discussion</th>
-                                        <th>Dated</th>
-                                        <th>actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="discussionsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>From</th>
+                                            <th>Discussion</th>
+                                            <th>Dated</th>
+                                            <th>actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table></div>
                             </div>
                         </div>
                     </div>
@@ -584,19 +615,20 @@
                         <div class="card">
                             <div class="card-header"><h5>Call Logs</h5></div>
                             <div class="card-body">
-                                <table id="callsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>User</th>
-                                        <th>Status</th>
-                                        <th>Start</th>
-                                        <th>End</th>
-                                        <th>Duration</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="callsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                        <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Status</th>
+                                            <th>Start</th>
+                                            <th>End</th>
+                                            <th>Duration</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table></div>
                             </div>
                         </div>
                     </div>
@@ -604,19 +636,20 @@
                         <div class="card">
                             <div class="card-header"><h5>Schedule <small>Calls/Meetings ...</small></h5></div>
                             <div class="card-body">
-                                <table id="scheduleTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Type</th>
-                                        <th>Start</th>
-                                        <th>End</th>
-                                        <th>actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="scheduleTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Type</th>
+                                            <th>Start</th>
+                                            <th>End</th>
+                                            <th>actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table></div>
                             </div>
                         </div>
                     </div>
@@ -648,19 +681,20 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <table id="ticketsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Title</th>
-                                        <th>Category</th>
-                                        <th>Priority</th>
-                                        <th>Dated</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="ticketsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Title</th>
+                                            <th>Category</th>
+                                            <th>Priority</th>
+                                            <th>Dated</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table></div>
                             </div>
                         </div>
                     </div>
@@ -668,18 +702,20 @@
                         <div class="card">
                             <div class="card-header"><h5>Emails <small>Incoming & Outgoing</small></h5></div>
                             <div class="card-body">
-                                <table id="EmailsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>Type</th>
-                                        <th>Subject</th>
-                                        <th>Dated</th>
-                                        <th>actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="EmailsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                        <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Subject</th>
+                                            <th>Dated</th>
+                                            <th>actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -687,18 +723,20 @@
                         <div class="card">
                             <div class="card-header"><h5>Messages <small>Incoming & Outgoing</small></h5></div>
                             <div class="card-body">
-                                <table id="MessagesTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>Type</th>
-                                        <th>Source</th>
-                                        <th>Dated</th>
-                                        <th>actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="MessagesTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100">
+                                        <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Source</th>
+                                            <th>Dated</th>
+                                            <th>actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
 
@@ -707,19 +745,21 @@
                         <div class="card">
                             <div class="card-header"><h5>Meeting Appointments</h5></div>
                             <div class="card-body">
-                                <table id="AppointmentsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Title</th>
-                                        <th>Start</th>
-                                        <th>End</th>
-                                        <th>Status</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="AppointmentsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100 ">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Title</th>
+                                            <th>Start</th>
+                                            <th>End</th>
+                                            <th>Status</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -727,19 +767,21 @@
                         <div class="card">
                             <div class="card-header"><h5>Reviews</h5></div>
                             <div class="card-body">
-                                <table id="reviewsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>No.</th>
-                                        <th>Rate</th>
-                                        <th>Sentiment</th>
-                                        <th>Source</th>
-                                        <th>Dated</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="reviewsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100 ">
+                                        <thead>
+                                        <tr>
+                                            <th>No.</th>
+                                            <th>Rate</th>
+                                            <th>Sentiment</th>
+                                            <th>Source</th>
+                                            <th>Dated</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
 
@@ -761,19 +803,21 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <table id="contactsTable"
-                                       class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
-                                    <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Label</th>
-                                        <th>Phone</th>
-                                        <th>Email</th>
-                                        <th>action</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table id="contactsTable"
+                                           class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Label</th>
+                                            <th>Phone</th>
+                                            <th>Email</th>
+                                            <th>action</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1179,9 +1223,6 @@
             const startTime = new Date(startTimeString).getTime();
             const now = new Date().getTime();
             const distance = Math.abs((now - startTime));
-            /*  console.log(distance);
-              console.log(startTime);
-              console.log(now);*/
             let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             let seconds = Math.floor((distance % (1000 * 60)) / 1000);
@@ -1242,7 +1283,6 @@
 
                 callsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the notes.");
-                    console.log(er);
                 });
             } else {
                 callsTable.ajax.reload();
@@ -1292,7 +1332,6 @@
 
                 ticketsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading tickets.");
-                    console.log(er);
                 });
             } else {
                 ticketsTable.ajax.reload();
@@ -1332,7 +1371,6 @@
 
                 notesTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the notes.");
-                    console.log(er);
                 });
             } else {
                 notesTable.ajax.reload();
@@ -1368,7 +1406,6 @@
 
                 scheduleTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the schedule.");
-                    console.log(er);
                 });
             } else {
                 scheduleTable.ajax.reload();
@@ -1404,7 +1441,6 @@
 
                 AppointmentsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading meetings.");
-                    console.log(er);
                 });
             } else {
                 AppointmentsTable.ajax.reload();
@@ -1445,7 +1481,6 @@
 
                 discussionsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the client discussions.");
-                    console.log(er);
                 });
             } else {
                 discussionsTable.ajax.reload();
@@ -1501,7 +1536,6 @@
 
                 accountsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the client portfolio.");
-                    console.log(er);
                 });
             } else {
                 accountsTable.ajax.reload();
@@ -1538,7 +1572,6 @@
 
                 relationsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the relations list.");
-                    console.log(er);
                 });
             } else {
                 relationsTable.ajax.reload();
@@ -1656,7 +1689,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading the reviews.");
-                    console.log(er);
                 });
             } else {
                 $('#reviewsTable').DataTable().ajax.reload();
@@ -1690,7 +1722,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading client contacts.");
-                    // console.log(er);
                 });
             } else {
                 $('#contactsTable').DataTable().ajax.reload();

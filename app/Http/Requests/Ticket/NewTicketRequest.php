@@ -46,7 +46,7 @@ class NewTicketRequest extends FormRequest
     public function getEnd(Carbon $start): Carbon
     {
         $end = Carbon::createFromFormat('Y-m-d', $this->validated('ticket_end'));
-        if (!$end instanceof Carbon) {
+        if (! $end instanceof Carbon) {
             throw ValidationException::withMessages(['ticket_start' => 'invalid date format']);
         }
 
@@ -92,6 +92,7 @@ class NewTicketRequest extends FormRequest
             return TicketSourceEnum::fromValue($this->validated('ticket_source'));
         } catch (Exception) {
         }
+
         throw ValidationException::withMessages(['ticket_source' => 'invalid source']);
     }
 
@@ -104,6 +105,7 @@ class NewTicketRequest extends FormRequest
             return TicketPriorityEnum::fromValue($this->validated('ticket_priority'));
         } catch (Exception) {
         }
+
         throw ValidationException::withMessages(['ticket_priority' => 'invalid ticket priority']);
     }
 
@@ -116,6 +118,7 @@ class NewTicketRequest extends FormRequest
         if ($category instanceof CodeDetail) {
             return $category;
         }
+
         throw ValidationException::withMessages(['ticket_category' => 'Category Not Found']);
     }
 
@@ -123,7 +126,7 @@ class NewTicketRequest extends FormRequest
     {
         $watchers = $this->validated('ticket_watchers');
         $Actors = collect([]);
-        if (!is_array($watchers)) {
+        if (! is_array($watchers)) {
             return $Actors;
         }
         foreach ($watchers as $watcher) {
@@ -135,6 +138,7 @@ class NewTicketRequest extends FormRequest
 
             $Actors->add($actor);
         }
+
         return $Actors;
     }
 
@@ -151,6 +155,7 @@ class NewTicketRequest extends FormRequest
             if (($team instanceof Team) && $team->users()->count() > 0) {
                 return $team;
             }
+
             throw ValidationException::withMessages(['ticket_user' => 'invalid team or has no users']);
         }
 
@@ -158,6 +163,7 @@ class NewTicketRequest extends FormRequest
         if ($user instanceof User) {
             return $user;
         }
+
         throw ValidationException::withMessages(['ticket_user' => 'invalid user selected.']);
     }
 }

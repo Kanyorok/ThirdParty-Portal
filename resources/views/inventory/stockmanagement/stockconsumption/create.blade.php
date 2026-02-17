@@ -91,13 +91,11 @@
                 <label for="IssuedToID" class="form-label">Issued To <span class="text-danger">*</span></label>
                 <select name="IssuedToID" id="IssuedToID" class="form-select @error('IssuedToID') is-invalid @enderror" required>
                     <option value="">Select based on type</option>
-                    <!-- Employees from current branch -->
                     @foreach($employees as $employee)
                         <option value="{{ $employee['id'] }}" {{ old('IssuedToID') == $employee['id'] ? 'selected' : '' }}>
                             {{ $employee['name'] }}
                         </option>
                     @endforeach
-                    <!-- Departments (company-wide) -->
                     @foreach($departments as $department)
                         <option value="{{ $department['id'] }}" {{ old('IssuedToID') == $department['id'] ? 'selected' : '' }}>
                             {{ $department['name'] }}
@@ -174,11 +172,9 @@
         const oldIssuedToID = '{{ old('IssuedToID') }}';
         const currentUserId = {{ Auth::id() }};
         
-        // Get current date in YYYY-MM-DD format
         const today = new Date();
         const currentDate = today.toISOString().split('T')[0];
         
-        // Format for display (e.g., December 11, 2025)
         const displayDate = today.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
@@ -227,7 +223,6 @@
                     recipientSelect.empty().append('<option value="">Select Recipient</option>');
                     
                     if (type && data && data.length > 0) {
-                        // Populate based on type
                         data.forEach(item => {
                             recipientSelect.append(`<option value="${item.Id}" ${item.Id == oldIssuedToId ? 'selected' : ''}>${item.Name}</option>`);
                         });
@@ -235,7 +230,6 @@
                         recipientSelect.append('<option value="">No options available</option>');
                     }
                     
-                    // Validate after loading options
                     validateUsers();
                 },
                 error: function() {
@@ -244,17 +238,14 @@
             });
         }
 
-        // Client-side validation for Issued By vs Issued To
         function validateUsers() {
             const issuedBy = issuedByUserId;
             const issuedTo = $('#IssuedToID').val();
             
-            // Remove any existing validation messages
             $('#issued-to-error').remove();
             $('#IssuedToID').removeClass('is-invalid');
             
             if (issuedTo) {
-                // Check if the selected user is the same as current user
                 if (issuedBy == issuedTo) {
                     $('#IssuedToID').addClass('is-invalid');
                     $('#IssuedToID').after('<div id="issued-to-error" class="invalid-feedback">Issued To cannot be the same as the logged-in user (Issued By)</div>');
@@ -268,62 +259,76 @@
             loadItems($(this).val(), null);
         });
 
-        // Item change event
         $('#ItemID').on('change', function () {
             let selectedOption = $(this).find('option:selected');
             $('#UOM_Display').val(selectedOption.data('uom') || '');
             $('#UOM').val(selectedOption.data('uom-id') || '');
             availableQty = parseFloat(selectedOption.data('currentqty')) || 0;
 
-            // Reset quantity validation
             $('#Quantity').val('').removeClass('is-invalid');
             $('#qty-error').remove();
             $('button[type="submit"]').prop('disabled', false);
 
-            // Update quantity placeholder with available stock
             $('#Quantity').attr('placeholder', `Max: ${availableQty}`);
         });
 
-        // Issued To Type change event
         $('#IssuedToType').on('change', function () {
             loadIssuedToOptions($(this).val(), null);
         });
 
-        // Issued To change event
         $('#IssuedToID').on('change', function () {
             validateUsers();
         });
 
-        // Real-time quantity validation
-        $('#Quantity').on('input', function () {
-            let qty = parseFloat($(this).val());
-            $(this).removeClass('is-invalid');
-            $('#qty-error').remove();
-            $('button[type="submit"]').prop('disabled', false);
+$('#Quantity').on('input', function () {
+    let qty = parseFloat($(this).val());
+    $(this).removeClass('is-invalid');
+    $('#qty-error').remove();
+    $('button[type="submit"]').prop('disabled', false);
 
-            if (qty > availableQty) {
-                $(this).addClass('is-invalid');
-                $(this).after(`<div id="qty-error" class="invalid-feedback">
-                    Quantity exceeds available stock (${availableQty}).
-                </div>`);
-                $('button[type="submit"]').prop('disabled', true);
-            }
-        });
+    if (isNaN(qty) || qty <= 0) {
+        $(this).addClass('is-invalid');
+        $(this).after(`<div id="qty-error" class="invalid-feedback">
+            Quantity must be greater than 0.
+        </div>`);
+        $('button[type="submit"]').prop('disabled', true);
+        return;
+    }
 
-        // Form submission validation
+    if (qty > availableQty) {
+        $(this).addClass('is-invalid');
+        $(this).after(`<div id="qty-error" class="invalid-feedback">
+            Quantity exceeds available stock (${availableQty}).
+        </div>`);
+        $('button[type="submit"]').prop('disabled', true);
+    }
+});
+
+
         $('#consumptionForm').on('submit', function(e) {
             const issuedTo = $('#IssuedToID').val();
             
-            // Validate current user is not selected as Issued To
             if (issuedByUserId == issuedTo) {
                 e.preventDefault();
                 alert('Error: Issued To cannot be the same as the logged-in user.');
                 $('#IssuedToID').focus();
                 return false;
             }
-            
-            // Validate quantity
+
             const qty = parseFloat($('#Quantity').val());
+
+            if (isNaN(qty) || qty <= 0) {
+                e.preventDefault();
+                $('#Quantity').addClass('is-invalid');
+                $('#qty-error').remove();
+                $('#Quantity').after(`<div id="qty-error" class="invalid-feedback">
+                    Quantity must be greater than 0.
+                </div>`);
+                $('#Quantity').focus();
+                return false;
+            }
+
+            
             if (qty > availableQty) {
                 e.preventDefault();
                 alert(`Error: Quantity exceeds available stock (${availableQty}).`);
@@ -331,7 +336,6 @@
                 return false;
             }
             
-            // Validate date is today (should always be true, but just in case)
             const selectedDate = $('#IssuedOn').val();
             if (selectedDate !== currentDate) {
                 e.preventDefault();
@@ -339,11 +343,9 @@
                 return false;
             }
             
-            // Show loading state
             $('button[type="submit"]').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
         });
 
-        // Prevent any manual date manipulation
         $(document).on('click', '#IssuedOnDisplay', function(e) {
             e.preventDefault();
             alert('Issued date is automatically set to today and cannot be changed.');
@@ -354,7 +356,6 @@
             return false;
         });
 
-        // Initial loads
         if ($('#StoreID').val()) {
             loadItems($('#StoreID').val(), oldItemID);
         }
@@ -362,10 +363,8 @@
             loadIssuedToOptions(oldIssuedToType, oldIssuedToID);
         }
         
-        // Initial validation
         validateUsers();
         
-        // Set display date
         $('#IssuedOnDisplay').val(displayDate);
     });
 </script>

@@ -3,19 +3,20 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\Criteria;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQCriteria;
 use App\Models\Procurement\RFQSection;
-use App\Models\Procurement\Criteria;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class RFQCriteriaController extends Controller
 {
     public function show($rfqId)
     {
-        $rfq = RFQ::findOrFail($rfqId);
+        $rfq = RFQ::where('Id', $rfqId)
+            ->whereIn('Status', ['Pub', 'Published'])->firstOrFail();
 
         // Get active assigned RFQ sections with their criteria
         $rfqSections = RFQSection::with(['section.criteria'])
@@ -37,6 +38,7 @@ class RFQCriteriaController extends Controller
 
 
         $hasExisting = $existingCriteria->count() > 0;
+
         return view('procurement.rfqcriteriasetup.rfqCriteria', [
             'rfq' => $rfq,
             'rfqSections' => $rfqSections,
@@ -50,7 +52,7 @@ class RFQCriteriaController extends Controller
             'rfq_id' => 'required|exists:t_RFQ,Id',
             'weights' => 'required|array',
             'criterias' => 'nullable|array',
-            'removed_sections' => 'nullable|array'
+            'removed_sections' => 'nullable|array',
         ]);
 
         $rfqId = (int)$request->rfq_id;
@@ -59,7 +61,7 @@ class RFQCriteriaController extends Controller
         $removed = $request->input('removed_sections', []); // section IDs removed by user
 
         // Filter out weights & criterias for removed sections on server side
-        if (!empty($removed)) {
+        if (! empty($removed)) {
             foreach ($removed as $removedSectionId) {
                 unset($weights[$removedSectionId], $criterias[$removedSectionId]);
             }
@@ -74,10 +76,28 @@ class RFQCriteriaController extends Controller
             return back()->withInput()->with('error', 'Section weights must total 100.00. Current total: ' . number_format($totalWeight, 2));
         }
 
+        // Validate every active section has at least one criteria item selected
+        $emptySections = [];
+        foreach (array_keys($weights) as $sectionId) {
+            // Check if sectionId exists in criterias array AND has at least one item
+            if (! isset($criterias[$sectionId]) || empty($criterias[$sectionId])) {
+                $name = DB::table('t_Sections')->where('Id', $sectionId)->value('SectionName') ?? "Section #{$sectionId}";
+                $emptySections[] = $name;
+            }
+        }
+        if (! empty($emptySections)) {
+            return back()->withInput()->with(
+                'error',
+                'Every selected section must have at least one criteria item checked. Missing criteria for: ' . implode(', ', $emptySections)
+            );
+        }
+
+
         DB::beginTransaction();
+
         try {
             // 1. Deactivate removed sections (keep historical record)
-            if (!empty($removed)) {
+            if (! empty($removed)) {
                 RFQSection::where('RFQID', $rfqId)
                     ->whereIn('SectionID', $removed)
                     ->update([
@@ -93,7 +113,7 @@ class RFQCriteriaController extends Controller
                     'RFQID' => $rfqId,
                     'SectionID' => $sectionId,
                 ]);
-                $isNew = !$sectionModel->exists;
+                $isNew = ! $sectionModel->exists;
                 $sectionModel->Weight = floatval($weight);
                 $sectionModel->IsActive = true;
                 $sectionModel->ModifiedBy = Auth::id();
@@ -107,10 +127,10 @@ class RFQCriteriaController extends Controller
 
             // 3. Remove existing RFQCriteria for removed or updated sections then recreate
             $affectedSectionIds = array_keys($weights);
-            if (!empty($removed)) {
+            if (! empty($removed)) {
                 $affectedSectionIds = array_merge($affectedSectionIds, $removed);
             }
-            if (!empty($affectedSectionIds)) {
+            if (! empty($affectedSectionIds)) {
                 RFQCriteria::where('RFQID', $rfqId)
                     ->whereIn('SectionID', $affectedSectionIds)
                     ->delete();
@@ -119,7 +139,9 @@ class RFQCriteriaController extends Controller
             // 4. Insert criteria rows for sections still active
             foreach ($criterias as $sectionId => $criteriaIds) {
                 $weight = floatval($weights[$sectionId] ?? 0);
-                if (empty($criteriaIds)) continue;
+                if (empty($criteriaIds)) {
+                    continue;
+                }
                 foreach ($criteriaIds as $criteriaId) {
                     RFQCriteria::create([
                         'RFQID' => $rfqId,
@@ -144,9 +166,11 @@ class RFQCriteriaController extends Controller
                 ->log('Saved RFQ Evaluation Criteria (create/update)');
 
             DB::commit();
+
             return redirect()->route('rfqcriteriasetup.evaluations')->with('success', 'RFQ criteria setup saved.');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return back()->withInput()->with('error', 'Failed to save criteria: ' . $th->getMessage());
         }
     }

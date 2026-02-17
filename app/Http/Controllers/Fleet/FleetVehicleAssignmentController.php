@@ -4,16 +4,15 @@ namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FleetManagement\FleetVehicleAssignmentRequest;
-use App\Services\FleetManagement\FleetVehicleAssignmentService;
-use App\Models\Fleet\FleetVehicleAssignment;
-use App\Models\Fleet\FleetVehicle;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Fleet\FleetTripLog;
+use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FleetVehicleAssignment;
 use App\Models\Fleet\FleetVehicleInspection;
-use App\Models\HRM\Employee;
-use Illuminate\Http\Request;
+use App\Models\HR\Employee;
+use App\Services\FleetManagement\FleetVehicleAssignmentService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Core\Approval\CodeDetail;
 
 class FleetVehicleAssignmentController extends Controller
 {
@@ -39,11 +38,11 @@ class FleetVehicleAssignmentController extends Controller
             ->where('Description', 'Approved')
             ->value('ID');
         $fleetTrips = FleetTripLog::whereNull('ParentTripID')
-            ->when($approvedStatusId, fn($q) => $q->where('Status', $approvedStatusId))
+            ->when($approvedStatusId, fn ($q) => $q->where('Status', $approvedStatusId))
             ->orderByDesc('TripStartDate')
             ->get();
 
-        return view('fleet.assignments.index', compact('assignments','assigners','fleetTrips'));
+        return view('fleet.assignments.index', compact('assignments', 'assigners', 'fleetTrips'));
     }
 
     /** Show create form */
@@ -52,8 +51,8 @@ class FleetVehicleAssignmentController extends Controller
         // Get current user and their employee record
         $currentUser = Auth::user();
         $currentEmployee = $currentUser->employee;
-        
-        if (!$currentEmployee) {
+
+        if (! $currentEmployee) {
             return redirect()->back()
                 ->with('error', 'You must have an employee record to assign vehicles.');
         }
@@ -72,16 +71,16 @@ class FleetVehicleAssignmentController extends Controller
 
         // Only filter by status when we have a valid status id
         $fleetTrips = FleetTripLog::whereNull('ParentTripID')
-            ->when($statusId, fn($q) => $q->where('Status', $statusId))
+            ->when($statusId, fn ($q) => $q->where('Status', $statusId))
             ->orderByDesc('TripStartDate')
             ->get();
 
         $fleetInspections = FleetVehicleInspection::all();
 
         return view('fleet.assignments.create', compact(
-            'fleetVehicles', 
-            'assigners', 
-            'fleetTrips', 
+            'fleetVehicles',
+            'assigners',
+            'fleetTrips',
             'fleetInspections',
             'vehicleTypes',
             'currentEmployee'
@@ -94,15 +93,15 @@ class FleetVehicleAssignmentController extends Controller
         try {
             // Get current user's employee ID
             $currentEmployeeId = Auth::user()->employee?->Id;
-            
-            if (!$currentEmployeeId) {
+
+            if (! $currentEmployeeId) {
                 return redirect()->back()
                     ->withInput()
                     ->with('error', 'You must have an employee record to assign vehicles.');
             }
 
             $validated = $request->validated();
-            
+
             // Override AssignedBy with current employee ID
             $validated['AssignedBy'] = $currentEmployeeId;
 
@@ -126,42 +125,43 @@ class FleetVehicleAssignmentController extends Controller
     }
 
     /** Show edit form */
-   public function edit($id)
-{
-    $assignment = FleetVehicleAssignment::with(['vehicle', 'fleetVehicleType', 'driver', 'trip', 'assigner'])
-        ->where('Id', $id)
-        ->firstOrFail();
+    public function edit($id)
+    {
+        $assignment = FleetVehicleAssignment::with(['vehicle', 'fleetVehicleType', 'driver', 'trip', 'assigner'])
+            ->where('Id', $id)
+            ->firstOrFail();
 
-    // Get all vehicles initially (will be filtered by JS based on selected trip)
-    $fleetVehicles = FleetVehicle::all();
-    
-    $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-        ->pluck('name', 'Id');
+        // Get all vehicles initially (will be filtered by JS based on selected trip)
+        $fleetVehicles = FleetVehicle::all();
 
-    // fetch only approved parent trips for the edit form
-    $statusId = CodeDetail::where('CodeID', 'TripStatus')
-        ->where('Description', 'Approved')
-        ->value('ID');
-    
-    $fleetTrips = FleetTripLog::whereNull('ParentTripID')
-        ->when($statusId, fn($q) => $q->where('Status', $statusId))
-        ->orderByDesc('TripStartDate')
-        ->get();
+        $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+            ->pluck('name', 'Id');
 
-    $fleetInspections = FleetVehicleInspection::all();
-    
-    $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')
-        ->pluck('Description', 'ID');
+        // fetch only approved parent trips for the edit form
+        $statusId = CodeDetail::where('CodeID', 'TripStatus')
+            ->where('Description', 'Approved')
+            ->value('ID');
 
-    return view('fleet.assignments.edit', compact(
-        'assignment', 
-        'fleetVehicles', 
-        'assigners', 
-        'fleetTrips', 
-        'fleetInspections',
-        'vehicleTypes'
-    ));
-}
+        $fleetTrips = FleetTripLog::whereNull('ParentTripID')
+            ->when($statusId, fn ($q) => $q->where('Status', $statusId))
+            ->orderByDesc('TripStartDate')
+            ->get();
+
+        $fleetInspections = FleetVehicleInspection::all();
+
+        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')
+            ->pluck('Description', 'ID');
+
+        return view('fleet.assignments.edit', compact(
+            'assignment',
+            'fleetVehicles',
+            'assigners',
+            'fleetTrips',
+            'fleetInspections',
+            'vehicleTypes'
+        ));
+    }
+
     /** Update an assignment */
     public function update(FleetVehicleAssignmentRequest $request, $id)
     {
@@ -176,7 +176,6 @@ class FleetVehicleAssignmentController extends Controller
             return back()->withErrors(['VehicleID' => $e->getMessage()])->withInput();
         }
     }
-
 
     /** Delete an assignment */
     public function destroy($id)
@@ -200,7 +199,7 @@ class FleetVehicleAssignmentController extends Controller
         return response()->json([
             'fleetVehicleType' => $trip->VehicleType,
             'vehicles' => $vehicles,
-            'tripDate' => $trip->TripStartDate
+            'tripDate' => $trip->TripStartDate,
 
         ]);
     }
@@ -213,7 +212,7 @@ class FleetVehicleAssignmentController extends Controller
             ->first();
 
         return response()->json([
-            'lastInspectionDate' => $lastInspection?->InspectionDate
+            'lastInspectionDate' => $lastInspection?->InspectionDate,
         ]);
     }
 
@@ -226,7 +225,7 @@ class FleetVehicleAssignmentController extends Controller
             ->latest('AssignmentDate')
             ->first();
 
-        if (!$driverAssignment) {
+        if (! $driverAssignment) {
             $driverAssignment = \App\Models\Fleet\FleetContractedDriverAssignment::where('VehicleID', $vehicleId)
                 ->whereNull('DeletedOn')
                 ->latest('AssignmentDate')

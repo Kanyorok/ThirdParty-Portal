@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\Criteria;
+use App\Models\Procurement\Section;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderCommitteeEvaluation;
-use App\Models\Procurement\TenderSupplier;
+use App\Models\Procurement\TenderCommitteeMember;
 use App\Models\Procurement\TenderSection;
-use App\Models\Procurement\Section;
-use App\Models\Procurement\Criteria;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class BidScoreConsolidationController extends Controller
@@ -20,21 +21,28 @@ class BidScoreConsolidationController extends Controller
     public function index(Request $request)
     {
         $tenderId = $request->get('tender_id');
-        
-        if (!$tenderId) {
-            // If no tender specified, show only tenders that have passed responsiveness check
-            $tenders = Tender::whereHas('submissions', function($query) {
-                    $query->where('IsResponsive', true)
-                          ->whereIn('BidStatus', ['responsive', 'evaluated']);
+
+        if (! $tenderId) {
+            // If no tender specified, show only tenders that:
+            // 1. Have completed evaluation (submissions with BidStatus = 'evaluated')
+            // 2. Have NOT been awarded yet (no approved TenderAward)
+            $tenders = Tender::whereHas('submissions', function ($query) {
+                $query->where('IsResponsive', true)
+                      ->where('BidStatus', 'evaluated'); // Only show tenders with completed evaluations
+            })
+                // Exclude tenders that have approved awards
+                ->whereDoesntHave('awards', function ($query) {
+                    $query->where('AwardStatus', \App\Models\Procurement\TenderAward::STATUS_APPROVED);
                 })
                 ->select('Id', 'Title', 'TenderNo')
                 ->orderByDesc('OpeningDate')
                 ->get();
+
             return view('procurement.tendering.bidopeningandevaluation.scoreconsolidation.select', compact('tenders'));
         }
-        
+
         $consolidatedData = $this->getConsolidatedScores($tenderId);
-        
+
         return view('procurement.tendering.bidopeningandevaluation.scoreconsolidation.index', $consolidatedData);
     }
 
@@ -44,7 +52,7 @@ class BidScoreConsolidationController extends Controller
     protected function getConsolidatedScores($tenderId)
     {
         $tender = Tender::findOrFail($tenderId);
-        
+
         // Get responsive bids from BidSubmissions table (including evaluated ones)
         $bidders = \App\Models\Procurement\BidSubmission::where('TenderRef', $tender->TenderNo)
             ->where('IsResponsive', true)
@@ -57,13 +65,13 @@ class BidScoreConsolidationController extends Controller
                     'bid_id' => $bid->Id,
                     'name' => $bid->SupplierName ?? 'Unknown Supplier',
                     'bid_amount' => $bid->BidAmount,
-                    'currency' => $bid->Currency
+                    'currency' => $bid->Currency,
                 ];
             });
-        
+
         // Get tender sections with their weights and tender-specific criteria (with MaxScore)
         $sections = $this->getTenderSections($tenderId);
-        
+
         // Get all evaluations for this tender including SupplierId
         $rawEvaluations = TenderCommitteeEvaluation::where('TenderID', $tenderId)
             ->select('MemberID', 'SupplierId', 'SectionID', 'CriteriaID', 'Score')
@@ -85,36 +93,62 @@ class BidScoreConsolidationController extends Controller
 
         // Build accepted evaluators list with names
         $evaluators = DB::table('t_TenderCommitteeMembers as m')
-            ->join('t_Users as u', function($join){
+            ->join('t_Users as u', function ($join) {
                 $join->on('u.Id', '=', 'm.UserID')
                      ->orOn('u.EmployeeId', '=', 'm.UserID');
             })
-            ->leftJoin('t_Employees as e', 'e.Id', '=', 'u.EmployeeId')
+            ->leftJoin('t_HREmployees as e', 'e.Id', '=', 'u.EmployeeId')
             ->where('m.TenderID', $tenderId)
             ->where('m.IsActive', 1)
             ->where('m.Response', 1)
-            ->select('m.Id as MemberID', 'u.Name as UserName', 'e.FirstName', 'e.LastName')
+            ->select(
+                'm.Id as MemberID',
+                'm.HasEvaluated',
+                'm.reason',
+                'u.Name as UserName',
+                'e.FirstName',
+                'e.LastName'
+            )
             ->orderBy('m.Id')
             ->get()
-            ->map(function ($row) {
+            ->map(function ($row) use ($rawEvaluations) {
                 $name = trim(($row->FirstName ? $row->FirstName . ' ' : '') . ($row->LastName ?? ''));
                 if ($name === '') {
                     $name = $row->UserName ?? ('Member #' . $row->MemberID);
                 }
+
+                $memberId = (int)$row->MemberID;
+                $hasAnyEvaluation = $rawEvaluations->contains(function ($evaluation) use ($memberId) {
+                    return (int)$evaluation->MemberID === $memberId;
+                });
+                $isSkipped = $this->isSkippedEvaluatorReason($row->reason ?? null);
+                $isCompleted = $isSkipped || (bool)$row->HasEvaluated || $hasAnyEvaluation;
+
                 return [
-                    'id' => (int)$row->MemberID,
+                    'id' => $memberId,
                     'name' => $name,
+                    'is_skipped' => $isSkipped,
+                    'is_completed' => $isCompleted,
+                    'is_pending' => ! $isCompleted,
+                    'skip_reason' => $this->extractSkippedReason($row->reason ?? null),
                 ];
             })->values();
+
+        $pendingEvaluators = $evaluators
+            ->filter(fn ($ev) => ! empty($ev['is_pending']))
+            ->values();
+        $pendingEvaluatorCount = $pendingEvaluators->count();
+        $canAward = ! $awardBlocks && $evaluators->count() > 0 && $pendingEvaluatorCount === 0;
 
         // Group evaluations by Supplier -> Member -> Section
         $grouped = $rawEvaluations->groupBy(['SupplierId', 'MemberID', 'SectionID']);
 
         // Pre-build per-section criteria MaxScore maps for quick lookup
-        $sectionCriteriaMax = collect($sections)->mapWithKeys(function($sec){
-            $map = collect($sec['criteria'] ?? [])->mapWithKeys(function($c){
+        $sectionCriteriaMax = collect($sections)->mapWithKeys(function ($sec) {
+            $map = collect($sec['criteria'] ?? [])->mapWithKeys(function ($c) {
                 return [ (int)$c['id'] => (float)($c['max_score'] ?? 10) ];
             });
+
             return [ (int)$sec['id'] => $map ];
         });
 
@@ -139,7 +173,8 @@ class BidScoreConsolidationController extends Controller
                         }
                         // Group evaluator's scores by CriteriaID and average if multiple rows exist
                         $byCriteria = $criteriaRows->groupBy('CriteriaID');
-                        $sumScore = 0.0; $sumMax = 0.0;
+                        $sumScore = 0.0;
+                        $sumMax = 0.0;
                         $critMax = $sectionCriteriaMax->get((int)$sectionId) ?? collect();
                         foreach ($byCriteria as $critId => $rows) {
                             $avg = (float)collect($rows)->avg('Score');
@@ -181,6 +216,9 @@ class BidScoreConsolidationController extends Controller
             'evaluators' => $evaluators,
             'supplierSummaries' => $supplierSummaries,
             'evaluatorCount' => $evaluators->count(),
+            'pendingEvaluators' => $pendingEvaluators,
+            'pendingEvaluatorCount' => $pendingEvaluatorCount,
+            'canAward' => $canAward,
             // For header display (award info), use the active award if present
             'existingAward' => $activeAward,
             'awardBlocks' => $awardBlocks,
@@ -211,11 +249,12 @@ class BidScoreConsolidationController extends Controller
                 ->whereNull('DeletedOn')
                 ->with('criteria')
                 ->get();
+
             return [
                 'id' => $section->Id,
                 'name' => $section->SectionName,
                 'weight' => (float)($ts->Weight ?? 100),
-                'criteria' => $tc->map(function($row){
+                'criteria' => $tc->map(function ($row) {
                     return [
                         'id' => (int)$row->CriteriaID,
                         'name' => $row->criteria?->CriteriaName ?? 'Criteria',
@@ -239,7 +278,7 @@ class BidScoreConsolidationController extends Controller
                     'id' => $criteria->id,
                     'name' => $criteria->Name,
                     'weight' => $criteria->Weight ?? 10,
-                    'max_score' => $criteria->MaxScore ?? 10
+                    'max_score' => $criteria->MaxScore ?? 10,
                 ];
             });
     }
@@ -256,15 +295,15 @@ class BidScoreConsolidationController extends Controller
         foreach ($sections as $section) {
             $sectionScore = $this->calculateSectionScore($section, $evaluations, $tenderId);
             $sectionWeightedScore = ($sectionScore / 100) * $section['weight'];
-            
+
             $sectionScores[] = [
                 'section_id' => $section['id'],
                 'section_name' => $section['name'],
                 'score' => $sectionScore,
                 'weight' => $section['weight'],
-                'weighted_score' => $sectionWeightedScore
+                'weighted_score' => $sectionWeightedScore,
             ];
-            
+
             $totalWeightedScore += $sectionWeightedScore;
             $totalSectionWeight += $section['weight'];
         }
@@ -278,7 +317,7 @@ class BidScoreConsolidationController extends Controller
             'bidder_id' => $bidder['id'],
             'bidder_name' => $bidder['name'],
             'section_scores' => $sectionScores,
-            'total_weighted_score' => round($totalWeightedScore, 2)
+            'total_weighted_score' => round($totalWeightedScore, 2),
         ];
     }
 
@@ -303,6 +342,7 @@ class BidScoreConsolidationController extends Controller
 
         if ($criteriaCount > 0) {
             $sectionAverage = $totalCriteriaScore / $criteriaCount; // out of 10
+
             return ($sectionAverage / 10) * 100; // percentage
         }
 
@@ -356,60 +396,60 @@ class BidScoreConsolidationController extends Controller
     {
         $tender = Tender::findOrFail($tenderId);
         $sections = $this->getTenderSections($tenderId);
-        
+
         // Optional supplier filter
         $supplierId = request()->query('supplier_id');
 
         // Get all evaluations grouped by section and evaluator (optionally filtered by supplier)
         $evaluations = TenderCommitteeEvaluation::where('TenderID', $tenderId)
-            ->when($supplierId, fn($q) => $q->where('SupplierId', $supplierId))
+            ->when($supplierId, fn ($q) => $q->where('SupplierId', $supplierId))
             ->with(['tenderCommitteeMember'])
             ->get()
             ->groupBy(['SectionID', 'MemberID']);
-        
+
         $sectionDetails = [];
         foreach ($sections as $section) {
             $sectionEvaluations = $evaluations[$section['id']] ?? collect();
-            
+
             $evaluatorScores = [];
             foreach ($sectionEvaluations as $memberId => $memberEvaluations) {
                 $member = $memberEvaluations->first()->tenderCommitteeMember ?? null;
                 $criteriaScores = [];
                 $totalScore = 0;
                 $criteriaCount = 0;
-                
+
                 foreach ($memberEvaluations as $evaluation) {
                     $criteriaScores[] = [
                         'criteria_id' => $evaluation->CriteriaID,
-                        'score' => $evaluation->Score
+                        'score' => $evaluation->Score,
                     ];
                     $totalScore += $evaluation->Score;
                     $criteriaCount++;
                 }
-                
+
                 $averageScore = $criteriaCount > 0 ? $totalScore / $criteriaCount : 0;
-                
+
                 $evaluatorScores[] = [
                     'member_id' => $memberId,
                     'evaluator_name' => $member ? "User #{$member->UserID}" : 'Unknown',
                     'role' => $member ? $member->Role : 'Unknown',
                     'criteria_scores' => $criteriaScores,
-                    'average_score' => round($averageScore, 2)
+                    'average_score' => round($averageScore, 2),
                 ];
             }
-            
+
             $sectionDetails[] = [
                 'section' => $section,
-                'evaluator_scores' => $evaluatorScores
+                'evaluator_scores' => $evaluatorScores,
             ];
         }
-        
+
         return view('procurement.tendering.bidopeningandevaluation.scoreconsolidation.section-drilldown', [
             'tender' => $tender,
-            'sectionDetails' => $sectionDetails
+            'sectionDetails' => $sectionDetails,
         ]);
     }
-    
+
     /**
      * Show evaluator-wise drill-down for a specific tender
      */
@@ -417,33 +457,33 @@ class BidScoreConsolidationController extends Controller
     {
         $tender = Tender::findOrFail($tenderId);
         $sections = $this->getTenderSections($tenderId);
-        
+
         // Optional supplier filter
         $supplierId = request()->query('supplier_id');
 
         // Get all evaluations grouped by evaluator and section (optionally filtered by supplier)
         $evaluations = TenderCommitteeEvaluation::where('TenderID', $tenderId)
-            ->when($supplierId, fn($q) => $q->where('SupplierId', $supplierId))
+            ->when($supplierId, fn ($q) => $q->where('SupplierId', $supplierId))
             ->with(['tenderCommitteeMember'])
             ->get()
             ->groupBy(['MemberID', 'SectionID']);
-        
+
         $evaluatorDetails = [];
         foreach ($evaluations as $memberId => $memberEvaluations) {
             $member = $memberEvaluations->flatten()->first()->tenderCommitteeMember ?? null;
-            
+
             $sectionScores = [];
             $totalWeightedScore = 0;
             $totalWeight = 0;
-            
+
             foreach ($sections as $section) {
                 $sectionEvaluations = $memberEvaluations[$section['id']] ?? collect();
-                
+
                 if ($sectionEvaluations->isNotEmpty()) {
                     $sectionScore = $sectionEvaluations->avg('Score');
                     $sectionPercentage = ($sectionScore / 10) * 100;
                     $weightedScore = ($sectionPercentage * $section['weight']) / 100;
-                    
+
                     $sectionScores[] = [
                         'section_id' => $section['id'],
                         'section_name' => $section['name'],
@@ -451,26 +491,26 @@ class BidScoreConsolidationController extends Controller
                         'raw_score' => round($sectionScore, 2),
                         'percentage_score' => round($sectionPercentage, 2),
                         'weighted_score' => round($weightedScore, 2),
-                        'criteria_count' => $sectionEvaluations->count()
+                        'criteria_count' => $sectionEvaluations->count(),
                     ];
-                    
+
                     $totalWeightedScore += $weightedScore;
                     $totalWeight += $section['weight'];
                 }
             }
-            
+
             $evaluatorDetails[] = [
                 'member_id' => $memberId,
                 'evaluator_name' => $member ? "User #{$member->UserID}" : 'Unknown',
                 'role' => $member ? $member->Role : 'Unknown',
                 'section_scores' => $sectionScores,
-                'total_weighted_score' => round($totalWeightedScore, 2)
+                'total_weighted_score' => round($totalWeightedScore, 2),
             ];
         }
-        
+
         return view('procurement.tendering.bidopeningandevaluation.scoreconsolidation.evaluator-drilldown', [
             'tender' => $tender,
-            'evaluatorDetails' => $evaluatorDetails
+            'evaluatorDetails' => $evaluatorDetails,
         ]);
     }
 
@@ -490,6 +530,97 @@ class BidScoreConsolidationController extends Controller
             return back()->with('error', 'No evaluation data available to consolidate.');
         }
 
+        if (($data['pendingEvaluatorCount'] ?? 0) > 0) {
+            $pendingNames = collect($data['pendingEvaluators'] ?? [])
+                ->pluck('name')
+                ->implode(', ');
+
+            return back()->with(
+                'error',
+                'Evaluation pending for: ' . $pendingNames . '. Skip pending evaluator(s) or wait for completion before consolidating.'
+            );
+        }
+
         return back()->with('success', 'Consolidated scores computed successfully.');
+    }
+
+    /**
+     * Mark a pending evaluator as skipped during consolidation.
+     */
+    public function skipEvaluator(Request $request, $tenderId, $memberId)
+    {
+        $request->validate([
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $member = TenderCommitteeMember::where('TenderID', (int)$tenderId)
+            ->where('Id', (int)$memberId)
+            ->where('IsActive', 1)
+            ->where('Response', 1)
+            ->first();
+
+        if (! $member) {
+            return back()->with('error', 'Evaluator not found for this tender.');
+        }
+
+        if ($this->isSkippedEvaluatorReason($member->reason ?? null)) {
+            return back()->with('info', 'Evaluator is already marked as skipped.');
+        }
+
+        $hasScores = TenderCommitteeEvaluation::where('TenderID', (int)$tenderId)
+            ->where('MemberID', (int)$memberId)
+            ->exists();
+
+        if ($hasScores || (bool)$member->HasEvaluated) {
+            return back()->with('error', 'Cannot skip this evaluator because evaluation has already been submitted.');
+        }
+
+        $reason = trim((string)$request->input('reason', ''));
+        $skipReason = 'SKIPPED: ' . ($reason !== ''
+            ? $reason
+            : ('Skipped during consolidation by user #' . Auth::id()));
+
+        $member->update([
+            'HasEvaluated' => true,
+            'reason' => $skipReason,
+            'ModifiedBy' => Auth::id(),
+            'ModifiedOn' => now(),
+        ]);
+
+        activity()
+            ->performedOn($member)
+            ->causedBy(Auth::id())
+            ->withProperties([
+                'tender_id' => (int)$tenderId,
+                'committee_member_id' => (int)$memberId,
+                'reason' => $skipReason,
+            ])
+            ->log('Evaluator marked as skipped in bid score consolidation.');
+
+        return back()->with('success', 'Evaluator marked as skipped successfully.');
+    }
+
+    private function isSkippedEvaluatorReason(?string $reason): bool
+    {
+        if (! is_string($reason) || trim($reason) === '') {
+            return false;
+        }
+
+        $normalized = strtoupper(trim($reason));
+
+        return str_starts_with($normalized, 'SKIPPED:')
+            || str_starts_with($normalized, '[SKIPPED]');
+    }
+
+    private function extractSkippedReason(?string $reason): ?string
+    {
+        if (! $this->isSkippedEvaluatorReason($reason)) {
+            return null;
+        }
+
+        $cleaned = preg_replace('/^(SKIPPED:|\[SKIPPED\])\s*/i', '', (string)$reason);
+        $cleaned = trim((string)$cleaned);
+
+        return $cleaned === '' ? null : $cleaned;
     }
 }

@@ -48,6 +48,16 @@
                         Product Dev. Stages
                     </a>
                     <a class="list-group-item list-group-item-action" data-bs-toggle="list"
+                       href="#EmploymentTypesTab"
+                       onclick="fetchEmploymentTypes();" role="tab">
+                        Employment Types
+                    </a>
+                    <a class="list-group-item list-group-item-action" data-bs-toggle="list"
+                       href="#ContractTypesTab"
+                       onclick="fetchContractTypes();" role="tab">
+                        Contract Types
+                    </a>
+                    <a class="list-group-item list-group-item-action" data-bs-toggle="list"
                        href="#MeetingRoomsTab"
                        onclick="fetchMeetingRoomsTable();" role="tab">
                         Meeting Rooms
@@ -246,6 +256,60 @@
                         </div>
                         <div class="card-body">
                             <table id="ProductDevelopmentStagesTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>ID</th>
+                                    <th>Order</th>
+                                    <th>Description</th>
+                                    <th>actions</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="EmploymentTypesTab" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-actions float-end">
+                                <button type="button" class="btn btn-sm btn-primary list-action-add"
+                                        data-type="EmploymentTypes"><i class="fas fa-plus-circle"></i> add
+                                </button>
+                            </div>
+                            <h5 class="card-title mb-0">Employment Types</h5>
+                        </div>
+                        <div class="card-body">
+                            <table id="EmploymentTypesTable"
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>ID</th>
+                                    <th>Order</th>
+                                    <th>Description</th>
+                                    <th>actions</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="ContractTypesTab" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-actions float-end">
+                                <button type="button" class="btn btn-sm btn-primary list-action-add"
+                                        data-type="ContractTypes"><i class="fas fa-plus-circle"></i> add
+                                </button>
+                            </div>
+                            <h5 class="card-title mb-0">Contract Types</h5>
+                        </div>
+                        <div class="card-body">
+                            <table id="ContractTypesTable"
                                    class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                                 <thead>
                                 <tr>
@@ -506,7 +570,7 @@
     <script src="https://cdn.datatables.net/rowreorder/1.5.0/js/rowReorder.dataTables.js"></script>
     <script src="https://cdn.datatables.net/rowreorder/1.5.0/js/dataTables.rowReorder.js"></script>
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-    <script>let IndustriesTable = null, MarketingModes = null, CustomerResponses = null, LeadLossReason = null, CustomerTypes = null, CountyTable = null, TicketCategoriesTable = null, CityTable = null, LocationIn = null, ELocationIn = null, ProductDevelopmentStages = null, isBusy = false, testWindow = null;
+    <script>let IndustriesTable = null, MarketingModes = null, CustomerResponses = null, LeadLossReason = null, CustomerTypes = null, CountyTable = null, TicketCategoriesTable = null, CityTable = null, LocationIn = null, ELocationIn = null, ProductDevelopmentStages = null, EmploymentTypes = null, ContractTypes = null, isBusy = false, testWindow = null;
         const $Modal = $('#listActionsModal'), Type = $('#listType'), ListUrl = "{{ route('code-lists.index') }}",
             LocationUrl = "{{ route('localities.index') }}";
         $(function () {
@@ -514,7 +578,6 @@
             fetchIndustries();
 
             $(document).on('dblclick', '.reorder', function (e) {
-                console.log(e);
                 alert('Double click does not do anything here');
             });
             $(document).on('click', '.list-action-add', function () {
@@ -739,6 +802,22 @@
             }
         }
 
+        function fetchEmploymentTypes() {
+            if (EmploymentTypes === null) {
+                EmploymentTypes = fetchLists('EmploymentTypes');
+            } else {
+                EmploymentTypes.ajax.reload();
+            }
+        }
+
+        function fetchContractTypes() {
+            if (ContractTypes === null) {
+                ContractTypes = fetchLists('ContractTypes');
+            } else {
+                ContractTypes.ajax.reload();
+            }
+        }
+
         function fetchCountiesTab() {
             if (CountyTable === null) {
                 CountyTable = $('#CountyTable').DataTable({
@@ -762,7 +841,6 @@
 
                 CountyTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the notes.");
-                    console.log(er);
                 });
             } else {
                 CountyTable.ajax.reload();
@@ -793,7 +871,6 @@
 
                 CityTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the notes.");
-                    console.log(er);
                 });
             } else {
                 CityTable.ajax.reload();
@@ -803,7 +880,6 @@
         function fetchLists(code) {
             let table = $('#' + code + 'Table').on('dt-error.dt', function (e, settings, techNote, message) {
                 nWarning("an issue occurred while loading the list.");
-                console.log('An error has been reported by DataTables: ', message);
             }).DataTable({
                 processing: true,
                 serverSide: true,
@@ -841,7 +917,6 @@
                 },
             });
             /* table.on('error', function (er) {
-                 console.log(er);
                  nWarning("an issue occurred while loading the list.");
              });*/
             $('#' + code + 'Table tbody').on('dblclick', 'tr', function (e) {
@@ -851,7 +926,6 @@
             table.on('row-reorder', function (e, diff, edit) {
                 e.preventDefault();
                 if (isBusy) {
-                    console.log('busy');
                 } else if (!Array.isArray(diff) && diff.length === 0) {
                     isBusy = true;
                     setTimeout(function () {
@@ -859,7 +933,6 @@
                     }, 1000);
                 } else {
                     if ($(diff[0].node).data('info') == edit.originalEvent.target.parentNode.dataset.info) {
-                        // console.log('else '+$(diff[0].node).data('info')+' first: '+diff[0].oldPosition + ' N: '+ diff[0].newPosition);
                         let position = parseInt(diff[0].newPosition);
                         isBusy = true;
                         if (Number.isInteger(position)) {
@@ -885,7 +958,6 @@
                             });
                         }
                     } else if ($(diff[diff.length - 1].node).data('info') == edit.originalEvent.target.parentNode.dataset.info) {
-                        //  console.log('else '+$(diff[diff.length - 1].node).data('info')+' End : '+diff[diff.length - 1].oldPosition + ' N: '+ diff[diff.length - 1].newPosition)
                         let position = parseInt(diff[diff.length - 1].newPosition);
                         isBusy = true;
                         if (Number.isInteger(position)) {
@@ -948,7 +1020,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading meeting rooms.");
-                    // console.log(er);
                 });
             } else {
                 $('#meetingRoomsTable').DataTable().ajax.reload();
@@ -979,7 +1050,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading currenciess.");
-                    // console.log(er);
                 });
             } else {
                 $('#meetingRoomsTable').DataTable().ajax.reload();

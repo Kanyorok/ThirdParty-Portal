@@ -93,7 +93,6 @@
         const emailInput = document.getElementById('Email');
         customerSelect.addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
-            console.log({
         id: selectedOption.getAttribute('data-idnumber'),
         email: selectedOption.getAttribute('data-email')
 });

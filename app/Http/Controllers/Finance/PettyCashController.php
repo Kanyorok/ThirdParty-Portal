@@ -8,8 +8,8 @@ use App\Models\Finance\BankAccount;
 use App\Models\Finance\Cashbook;
 use App\Models\Finance\CashbookLine;
 use App\Models\Finance\PettyCashFloat;
-use App\Models\Finance\PettyCashVoucher;
 use App\Models\Finance\PettyCashLine;
+use App\Models\Finance\PettyCashVoucher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -22,9 +22,15 @@ class PettyCashController extends Controller
     {
         // Filters for the grid
         $q = PettyCashVoucher::with(['float', 'currency'])->orderByDesc('VoucherID');
-        if ($request->filled('FloatID')) $q->where('FloatID', (int)$request->FloatID);
-        if ($request->filled('VoucherType')) $q->where('VoucherType', $request->VoucherType);
-        if ($request->filled('Status')) $q->where('Status', $request->Status);
+        if ($request->filled('FloatID')) {
+            $q->where('FloatID', (int)$request->FloatID);
+        }
+        if ($request->filled('VoucherType')) {
+            $q->where('VoucherType', $request->VoucherType);
+        }
+        if ($request->filled('Status')) {
+            $q->where('Status', $request->Status);
+        }
         $rows = $q->paginate(25)->appends($request->query());
 
         // Floats summary (widgets)
@@ -71,6 +77,7 @@ class PettyCashController extends Controller
     {
         $floats = PettyCashFloat::with('currency')->orderBy('Name')->get();
         $currencies = Currency::orderBy('Name')->get(['Id', 'Code', 'Name']);
+
         return view('finance.pettycash.create_disbursement', compact('floats', 'currencies'));
     }
 
@@ -79,6 +86,7 @@ class PettyCashController extends Controller
         $floats = PettyCashFloat::with('currency')->orderBy('Name')->get();
         $currencies = Currency::orderBy('Name')->get(['Id', 'Code', 'Name']);
         $bankAccounts = BankAccount::with('bank')->orderBy('AccountNumber')->get();
+
         return view('finance.pettycash.create_replenishment', compact('floats', 'currencies', 'bankAccounts'));
     }
 
@@ -87,6 +95,7 @@ class PettyCashController extends Controller
         $floats = PettyCashFloat::with('currency')->orderBy('Name')->get();
         $currencies = Currency::orderBy('Name')->get(['Id', 'Code', 'Name']);
         $bankAccounts = BankAccount::with('bank')->orderBy('AccountNumber')->get();
+
         return view('finance.pettycash.create_refund', compact('floats', 'currencies', 'bankAccounts'));
     }
 
@@ -125,7 +134,7 @@ class PettyCashController extends Controller
             // Lines for DISBURSEMENT / ADJUSTMENT
             $lines = $request->input('lines', []);
             foreach ($lines as $ln) {
-                if (!empty($ln['Amount'])) {
+                if (! empty($ln['Amount'])) {
                     PettyCashLine::create([
                         'VoucherID' => $v->VoucherID,
                         'GLAccountID' => $ln['GLAccountID'] ?? null,
@@ -143,17 +152,22 @@ class PettyCashController extends Controller
     public function show($id)
     {
         $row = PettyCashVoucher::with(['float.currency', 'lines'])->findOrFail($id);
+
         return view('finance.pettycash.show', compact('row'));
     }
 
     public function post($id)
     {
         $v = PettyCashVoucher::with(['float', 'lines'])->findOrFail($id);
-        if ($v->Status !== 'Draft') return back()->with('error', 'Only Draft vouchers can be posted.');
+        if ($v->Status !== 'Draft') {
+            return back()->with('error', 'Only Draft vouchers can be posted.');
+        }
 
         // For REPLENISHMENT/REFUND, create a Cashbook entry to move funds between bank and petty cash (control GL via mapping/service).
         if ($v->VoucherType === 'REPLENISHMENT') {
-            if (!$v->BankAccountID) return back()->with('error', 'Bank account required for replenishment.');
+            if (! $v->BankAccountID) {
+                return back()->with('error', 'Bank account required for replenishment.');
+            }
             $cb = new Cashbook([
                 'EntryType' => 'PAYMENT', // bank pays out to petty cash
                 'BankAccountID' => $v->BankAccountID,
@@ -184,7 +198,9 @@ class PettyCashController extends Controller
         }
 
         if ($v->VoucherType === 'REFUND') {
-            if (!$v->BankAccountID) return back()->with('error', 'Bank account required for refund.');
+            if (! $v->BankAccountID) {
+                return back()->with('error', 'Bank account required for refund.');
+            }
             $cb = new Cashbook([
                 'EntryType' => 'RECEIPT', // bank receives from petty cash
                 'BankAccountID' => $v->BankAccountID,
@@ -226,7 +242,9 @@ class PettyCashController extends Controller
     public function void($id)
     {
         $v = PettyCashVoucher::findOrFail($id);
-        if ($v->Status !== 'Posted') return back()->with('error', 'Only Posted vouchers can be voided.');
+        if ($v->Status !== 'Posted') {
+            return back()->with('error', 'Only Posted vouchers can be voided.');
+        }
 
         // TODO: reverse GL as needed (and Cashbook if created).
         $v->Status = 'Voided';
@@ -240,40 +258,52 @@ class PettyCashController extends Controller
     public function destroy($id)
     {
         $v = PettyCashVoucher::with('lines')->findOrFail($id);
-        if ($v->Status === 'Posted') return back()->with('error', 'Posted vouchers cannot be deleted.');
+        if ($v->Status === 'Posted') {
+            return back()->with('error', 'Posted vouchers cannot be deleted.');
+        }
         $v->lines()->delete();
         $v->delete();
+
         return redirect()->route('finance.pettycash.index')->with('success', 'Voucher deleted.');
     }
 
     public function submitForApproval($id)
     {
         $v = PettyCashVoucher::findOrFail($id);
-        if ($v->Status !== 'Draft') return back()->with('error', 'Only Draft vouchers can be submitted.');
+        if ($v->Status !== 'Draft') {
+            return back()->with('error', 'Only Draft vouchers can be submitted.');
+        }
         $v->ApprovalStatus = 'Pending';
         $v->SubmittedOn = now();
         $v->SubmittedBy = auth()->id();
         $v->save();
+
         return back()->with('success', 'Submitted for approval.');
     }
 
     public function approve($id)
     {
         $v = PettyCashVoucher::with('float')->findOrFail($id);
-        if ($v->ApprovalStatus !== 'Pending') return back()->with('error', 'Voucher is not pending approval.');
+        if ($v->ApprovalStatus !== 'Pending') {
+            return back()->with('error', 'Voucher is not pending approval.');
+        }
         $v->ApprovalStatus = 'Approved';
         $v->ApprovedOn = now();
         $v->ApprovedBy = auth()->id();
         $v->save();
+
         return back()->with('success', 'Voucher approved.');
     }
 
     public function reject($id)
     {
         $v = PettyCashVoucher::findOrFail($id);
-        if ($v->ApprovalStatus !== 'Pending') return back()->with('error', 'Voucher is not pending approval.');
+        if ($v->ApprovalStatus !== 'Pending') {
+            return back()->with('error', 'Voucher is not pending approval.');
+        }
         $v->ApprovalStatus = 'Rejected';
         $v->save();
+
         return back()->with('success', 'Voucher rejected.');
     }
 
@@ -281,6 +311,7 @@ class PettyCashController extends Controller
     {
         $floats = PettyCashFloat::orderBy('Name')->get(['FloatID', 'Name']);
         $bankAccounts = BankAccount::with('bank')->orderBy('AccountNumber')->get();
+
         return view('finance.pettycash.wizard_replenishment', compact('floats', 'bankAccounts'));
     }
 
@@ -356,5 +387,4 @@ class PettyCashController extends Controller
                 ->with('success', 'Batch prepared; review and post the replenishment voucher.');
         });
     }
-
 }

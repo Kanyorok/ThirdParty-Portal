@@ -27,7 +27,7 @@ class CreditCalculationService
             })
             ->first();
 
-        if (!$credit) {
+        if (! $credit) {
             return [
                 'credit_limit' => 0.0,
                 'used' => 0.0,
@@ -37,7 +37,7 @@ class CreditCalculationService
                 'credit_id' => null,
                 'effective_from' => null,
                 'expiry_date' => null,
-                'payment_terms' => null
+                'payment_terms' => null,
             ];
         }
 
@@ -82,7 +82,7 @@ class CreditCalculationService
             'credit_id' => $credit->Id,
             'effective_from' => $credit->EffectiveFrom,
             'expiry_date' => $credit->ExpiryDate,
-            'payment_terms' => $credit->PaymentTerms
+            'payment_terms' => $credit->PaymentTerms,
         ];
     }
 
@@ -97,12 +97,12 @@ class CreditCalculationService
     {
         $utilization = $this->calculateCustomerCreditUtilization($customerId);
 
-        if (!$utilization['has_credit']) {
+        if (! $utilization['has_credit']) {
             return [
                 'available' => false,
                 'can_apply' => false,
                 'available_amount' => 0.0,
-                'message' => 'Customer has no active credit profile.'
+                'message' => 'Customer has no active credit profile.',
             ];
         }
 
@@ -112,7 +112,7 @@ class CreditCalculationService
                 'can_apply' => false,
                 'available_amount' => $utilization['available'],
                 'message' => "Insufficient credit. Available: KSh " . number_format($utilization['available'], 2) .
-                    ", Required: KSh " . number_format($amount, 2)
+                    ", Required: KSh " . number_format($amount, 2),
             ];
         }
 
@@ -122,7 +122,7 @@ class CreditCalculationService
             'available_amount' => $utilization['available'],
             'credit_limit' => $utilization['credit_limit'],
             'message' => 'Credit available',
-            'remaining_after' => $utilization['available'] - $amount
+            'remaining_after' => $utilization['available'] - $amount,
         ];
     }
 
@@ -148,7 +148,7 @@ class CreditCalculationService
             'utilization_badge_class' => $this->getUtilizationBadgeClass($utilization['utilization']),
             'effective_from' => $utilization['effective_from'],
             'expiry_date' => $utilization['expiry_date'],
-            'payment_terms' => $utilization['payment_terms']
+            'payment_terms' => $utilization['payment_terms'],
         ];
     }
 

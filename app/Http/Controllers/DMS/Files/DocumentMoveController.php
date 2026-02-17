@@ -55,10 +55,10 @@ class DocumentMoveController extends Controller
                 activity()->causedBy($actor)->performedOn($document)->event('Change Repository')->log('File moved to repository ' . $repo->Name . '.');
 
                 return $this->succeeded('file moved to repository ' . $repo->Name . ' successfully', data: [
-                    'data' => (new FileResource($document))->setMinified(true)
+                    'data' => (new FileResource($document))->setMinified(true),
                 ]);
             });
-        } catch (Throwable|Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Could not move document ' . $e);
         }
 

@@ -6,6 +6,7 @@ use App\Models\Auth\User;
 use App\Models\Core\Currency;
 use App\Models\DMS\Document;
 use App\Models\DMS\DocumentRelation;
+use App\Models\Procurement\ContractPenaltyEvent;
 use App\Models\Procurement\GoodsReceipt;
 use App\Models\Procurement\Order;
 use App\Models\ThirdParies\Supplier;
@@ -17,11 +18,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FinanceInvoiceEntry extends Model
 {
-    use SoftDeletes, UserActorTrait,DocumentsTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use DocumentsTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $primaryKey = 'Id';
     protected $table = 't_FinanceInvoiceEntry';
@@ -43,6 +46,15 @@ class FinanceInvoiceEntry extends Model
         'TaxAmount',
         'TaxPercentage',
         'TotalAmount',
+        'InvoiceSourceType',
+        'ContractSourceType',
+        'ContractSourceID',
+        'MilestoneEligibilityStatus',
+        'IsOnHold',
+        'HoldReason',
+        'HoldSetBy',
+        'HoldSetOn',
+        'PenaltySuggestedAmount',
         'DueDate',
         'Amount', // Added for v2 compatibility
         'DueDate', // Added for v2 functionality
@@ -57,9 +69,12 @@ class FinanceInvoiceEntry extends Model
         'TaxPercentage' => 'float',
         'TotalAmount' => 'float',
         'ExchangeRate' => 'float',
+        'IsOnHold' => 'boolean',
+        'PenaltySuggestedAmount' => 'float',
+        'HoldSetOn' => 'datetime',
     ];
 
-    public static function getPrimaryKey() : string
+    public static function getPrimaryKey(): string
     {
         return 'FinanceInvoiceEntryId';
     }
@@ -73,6 +88,7 @@ class FinanceInvoiceEntry extends Model
     {
         return $this->belongsTo(Supplier::class, 'SupplierID', 'Id');
     }
+
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'SupplierID', 'Id');
@@ -83,7 +99,8 @@ class FinanceInvoiceEntry extends Model
         return $this->belongsTo(ThirdParties::class, 'SupplierID', 'Id');
     }
 
-    public function currency(){
+    public function currency()
+    {
         return $this->belongsTo(Currency::class, 'CurrencyID', 'Id');
     }
 
@@ -116,5 +133,15 @@ class FinanceInvoiceEntry extends Model
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+    }
+
+    public function milestoneAllocations()
+    {
+        return $this->hasMany(APInvoiceMilestone::class, 'FinanceInvoiceID', 'Id');
+    }
+
+    public function contractPenaltyEvents()
+    {
+        return $this->hasMany(ContractPenaltyEvent::class, 'FinanceInvoiceID', 'Id');
     }
 }

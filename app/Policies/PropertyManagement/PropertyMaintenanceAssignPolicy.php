@@ -33,4 +33,3 @@ class PropertyMaintenanceAssignPolicy
         return $user->can(PermissionEnum::PropertyMaintenanceAssignDelete->value);
     }
 }
-

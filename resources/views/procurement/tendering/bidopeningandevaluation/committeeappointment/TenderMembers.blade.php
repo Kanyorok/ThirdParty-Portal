@@ -1,11 +1,32 @@
 @extends('layouts.app')
 @section('title', 'Committee Members Overview')
+
 @section('content')
     <div class="container mt-4">
-        <h4 class="mb-3">📄 Members with Roles ({{$tenderTitle}})</h4>
-        <a href="{{ route('assignrole.create') }}" class="btn btn-primary mb-3" data-bs-toggle="modal"
-           data-bs-target="#addRoleModal">
-            Assign Role</a>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">Committee Members ({{ $tenderTitle }})</h4>
+            <span class="badge {{ $isCommitteeActive ? 'bg-success' : 'bg-secondary' }}">
+                {{ $isCommitteeActive ? 'Active' : 'Inactive' }}
+            </span>
+        </div>
+
+        @if (!$isCommitteeActive)
+            <div class="alert alert-info">
+                This committee is inactive. Member changes are disabled.
+            </div>
+        @endif
+
+        <div class="mb-3">
+            <button
+                class="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#manageMembersModal"
+                {{ $isCommitteeActive ? '' : 'disabled' }}
+            >
+                Manage Members
+            </button>
+        </div>
+
         <div class="table-responsive">
             <table class="table table-striped table-bordered align-middle">
                 <thead class="table-light">
@@ -14,121 +35,119 @@
                     <th>Current Role</th>
                     <th>Appointment Date</th>
                     <th>Status</th>
-                    {{-- <th>Actions</th> --}}
                 </tr>
                 </thead>
                 <tbody>
-                <!-- Example Row -->
                 @forelse ($committeeMembers as $item)
+                    @php
+                        $resolvedUser = $item->user ?? $item->userByEmployee;
+                        $resolvedEmployee = $resolvedUser?->employee;
+                        $memberName = $resolvedEmployee?->full_name ?? $resolvedUser?->Name ?? 'N/A';
+                    @endphp
                     <tr>
-                        <td>{{ $item->user->employee->FirstName ?? $item->user->Name ?? 'N/A' }} {{ $item->user->employee->LastName ?? '' }}</td>
-                        <td>{{$item->Role}} </td>
-                        <td>{{$item->modifiedBy->CreatedOn->format('d/m/Y')}}</td>
-                        @if($item->Response == '0')
-                            <td><span class="badge bg-warning">Pending</span></td>
-                        @elseif($item->Response == '1')
-                            <td><span class="badge bg-success">Accepted</span></td>
-                        @elseif($item->Response == '2')
-                            <td><span class="badge bg-danger">Declined</span></td>
-                        @endif
-                        {{-- <td>
-                            <button class="btn btn-sm btn-outline-danger">Delete</button>
-                        </td> --}}
+                        <td>{{ $memberName }}</td>
+                        <td>{{ $item->Role ?? 'Member' }}</td>
+                        <td>{{ $appointmentDate ? \Carbon\Carbon::parse($appointmentDate)->format('d/m/Y') : 'N/A' }}</td>
+                        <td>
+                            @if ((int) $item->Response === 1)
+                                <span class="badge bg-success">Accepted</span>
+                            @elseif ((int) $item->Response === 2)
+                                <span class="badge bg-danger">Declined</span>
+                            @else
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            @endif
+                        </td>
                     </tr>
                 @empty
-
+                    <tr>
+                        <td colspan="4" class="text-center py-4">No committee members found.</td>
+                    </tr>
                 @endforelse
-                <!-- Repeat rows for other members -->
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Add New Committee Role Modal -->
-    <div class="modal fade" id="addRoleModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <div class="modal fade" id="manageMembersModal" tabindex="-1" aria-labelledby="manageMembersLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content rounded-3 shadow">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addItemModalLabel">Appoint Committee</h5>
+                    <h5 class="modal-title" id="manageMembersLabel">Manage Committee Members</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <form action="{{route('tendercommittee.save')}}" method="POST">
+                <form action="{{ route('tendercommittee.save') }}" method="POST">
                     @csrf
+                    @method('POST')
                     <input type="hidden" name="committeeType" value="{{ $committeeType }}">
                     <input type="hidden" name="tenderID" value="{{ $tenderID }}">
-                    @method('POST')
+                    <input type="hidden" name="committeeID" value="{{ $committeeID }}">
 
                     <div class="modal-body">
-                        <!-- Tender Selection -->
                         <div class="mb-3">
-                            <label for="tenderRef" class="form-label">Tender Reference</label>
-                            <input type="text" name="tenderTitle" class="form-control" id="tenderRef"
-                                   value="{{$tenderTitle}}" readonly>
-                            <input type="hidden" name="tenderID" value="{{$tenderID}}">
+                            <label class="form-label">Reference</label>
+                            <input type="text" class="form-control" value="{{ $tenderTitle }}" readonly>
                         </div>
 
-                        <!-- Committee Members and Role Assignment -->
                         <div class="mb-3">
-                            <label class="form-label">Roles Management</label>
+                            <label class="form-label">Current Members</label>
                             <div class="table-responsive">
                                 <table class="table table-bordered align-middle">
                                     <thead class="table-light">
                                     <tr>
                                         <th>Member Name</th>
                                         <th>Current Role</th>
-                                        <th>Assign New Role</th>
+                                        <th>Assign Role</th>
+                                        <th>Remove</th>
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <!-- Example Row -->
                                     @forelse ($committeeMembers as $item)
+                                        @php
+                                            $resolvedUser = $item->user ?? $item->userByEmployee;
+                                            $resolvedEmployee = $resolvedUser?->employee;
+                                            $memberName = $resolvedEmployee?->full_name ?? $resolvedUser?->Name ?? 'N/A';
+                                        @endphp
                                         <tr>
-                                            <td>{{ $item->user->employee->FirstName ?? $item->user->Name ?? 'N/A' }} {{ $item->user->employee->LastName ?? '' }}</td>
-                                            <input type="hidden" name="memberID[]" value="{{ $item->UserID }}">
-                                            <td>{{ $item->Role }}</td>
+                                            <td>{{ $memberName }}</td>
+                                            <td>{{ $item->Role ?? 'Member' }}</td>
                                             <td>
+                                                <input type="hidden" name="memberID[]" value="{{ $item->UserID }}">
                                                 <select class="form-select" name="memberRole[]">
-                                                    <option disabled {{ $item->Role == null ? 'selected' : '' }}>--
-                                                        Select Role --
-                                                    </option>
-                                                    <option
-                                                        value="Chairperson" {{ $item->Role == 'Chairperson' ? 'selected' : '' }}>
-                                                        Chairperson
-                                                    </option>
-                                                    <option
-                                                        value="Technical Evaluator" {{ $item->Role == 'Technical Evaluator' ? 'selected' : '' }}>
-                                                        Technical Evaluator
-                                                    </option>
-                                                    <option
-                                                        value="Financial Evaluator" {{ $item->Role == 'Financial Evaluator' ? 'selected' : '' }}>
-                                                        Financial Evaluator
-                                                    </option>
-                                                    <option
-                                                        value="Legal Advisor" {{ $item->Role == 'Legal Advisor' ? 'selected' : '' }}>
-                                                        Legal Advisor
-                                                    </option>
-                                                    <option
-                                                        value="Observer" {{ $item->Role == 'Observer' ? 'selected' : '' }}>
-                                                        Observer
-                                                    </option>
+                                                    <option value="Member" {{ ($item->Role ?? 'Member') === 'Member' ? 'selected' : '' }}>Member</option>
+                                                    <option value="Chairperson" {{ $item->Role === 'Chairperson' ? 'selected' : '' }}>Chairperson</option>
+                                                    <option value="Technical Evaluator" {{ $item->Role === 'Technical Evaluator' ? 'selected' : '' }}>Technical Evaluator</option>
+                                                    <option value="Financial Evaluator" {{ $item->Role === 'Financial Evaluator' ? 'selected' : '' }}>Financial Evaluator</option>
+                                                    <option value="Legal Advisor" {{ $item->Role === 'Legal Advisor' ? 'selected' : '' }}>Legal Advisor</option>
+                                                    <option value="Observer" {{ $item->Role === 'Observer' ? 'selected' : '' }}>Observer</option>
                                                 </select>
+                                            </td>
+                                            <td class="text-center">
+                                                <input type="checkbox" class="form-check-input" name="removeMembers[]" value="{{ $item->UserID }}">
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-center py-4">
-                                                <i class="fas fa-users fa-2x text-muted mb-2"></i><br>
-                                                No Members Yet. <a href="#" data-bs-toggle="modal"
-                                                                   data-bs-target="#addRoleModal">Create a new one?</a>
-                                            </td>
+                                            <td colspan="4" class="text-center py-3">No members to manage.</td>
                                         </tr>
-
                                     @endforelse
-                                    <!-- Repeat rows for other members -->
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Add New Members</label>
+                            <select class="form-select" name="newMembers[]" multiple>
+                                @forelse ($availableMembers as $member)
+                                    <option value="{{ $member->Id }}">
+                                        {{ optional($member->employee)->full_name ?? $member->Name }} - {{ optional(optional($member->employee)->role)->Name ?? 'N/A' }}
+                                    </option>
+                                @empty
+                                    <option value="" disabled>No available members to add</option>
+                                @endforelse
+                            </select>
+                            <small class="form-text text-muted">Only employees with active user accounts are listed.</small>
                         </div>
                     </div>
 
@@ -137,9 +156,9 @@
                         <button
                             type="submit"
                             class="btn btn-success"
-                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();"
+                            onclick="this.disabled=true; this.innerText='Saving...'; this.form.submit();"
                         >
-                            Appoint Committee
+                            Save Changes
                         </button>
                     </div>
                 </form>

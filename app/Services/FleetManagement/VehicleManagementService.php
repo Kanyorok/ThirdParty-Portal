@@ -2,12 +2,12 @@
 
 namespace App\Services\FleetManagement;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\DMS\Image;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\DMS\Image;
+use App\Models\Fleet\FleetVehicle;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class VehicleManagementService
 {
@@ -23,7 +23,7 @@ class VehicleManagementService
                 throw new \Exception('The Registration Number already exists.');
             }
 
-            if (!empty($data['ChassisNo']) && FleetVehicle::where('ChassisNo', $data['ChassisNo'])->exists()) {
+            if (! empty($data['ChassisNo']) && FleetVehicle::where('ChassisNo', $data['ChassisNo'])->exists()) {
                 throw new \Exception('The Chassis Number already exists.');
             }
 
@@ -123,6 +123,7 @@ class VehicleManagementService
     protected function storeImage(UploadedFile $file): Image
     {
         $imageContent = base64_encode(file_get_contents($file->getRealPath()));
+
         return Image::create([
             'Name' => $file->getClientOriginalName(),
             'Image' => $imageContent,
@@ -178,7 +179,10 @@ class VehicleManagementService
      */
     private function getStatusIdByValue(?string $value): ?int
     {
-        if (!$value) return null;
+        if (! $value) {
+            return null;
+        }
+
         return CodeDetail::where('CodeID', 'VehicleAvailabilityStatus')
             ->where('Value', $value)
             ->value('ID'); // integer ID

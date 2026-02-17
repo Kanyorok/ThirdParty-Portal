@@ -4,19 +4,16 @@ namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FleetManagement\FleetVehicleRequestsRequest;
-use App\Models\Fleet\FleetVehicleRequest;
-use App\Models\Fleet\FleetVehicle;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Fleet\FleetTripLog;
+use App\Models\Fleet\FleetVehicleRequest;
+use App\Models\HR\Employee;
 use App\Models\HRM\Department;
-use App\Models\HRM\Employee;
-use App\Models\User;
+use App\Services\FleetManagement\FleetVehicleRequestService;
+use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Services\FleetManagement\FleetVehicleRequestService;
-use Illuminate\Http\Request;
-use App\Traits\Model\UserActorTrait;
-use App\Models\Core\Approval\CodeDetail;
-use Exception;
 
 class FleetVehicleRequestController extends Controller
 {
@@ -77,8 +74,10 @@ class FleetVehicleRequestController extends Controller
     public function store(FleetVehicleRequestsRequest $request)
     {
         $this->authorize('create', FleetVehicleRequest::class);
+
         try {
             $this->service->create($request->validated());
+
             return redirect()
                 ->route('fleet.vehicle_requests.index')
                 ->with('success', 'Vehicle request submitted successfully.');
@@ -91,8 +90,10 @@ class FleetVehicleRequestController extends Controller
     public function update(FleetVehicleRequestsRequest $request, FleetVehicleRequest $vehicleRequest)
     {
         $this->authorize('update', FleetVehicleRequest::class);
+
         try {
             $this->service->update($vehicleRequest, $request->validated());
+
             return redirect()
                 ->route('fleet.vehicle_requests.index')
                 ->with('success', 'Vehicle request updated successfully.');
@@ -123,7 +124,6 @@ class FleetVehicleRequestController extends Controller
             return redirect()
                 ->route('fleet.vehicle_requests.index')
                 ->with('success', $msg);
-
         } catch (Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }
@@ -133,8 +133,10 @@ class FleetVehicleRequestController extends Controller
     public function destroy(FleetVehicleRequest $vehicleRequest)
     {
         $this->authorize('destroy', FleetVehicleRequest::class);
+
         try {
             $this->service->delete($vehicleRequest);
+
             return redirect()
                 ->route('fleet.vehicle_requests.index')
                 ->with('success', 'Vehicle request deleted.');

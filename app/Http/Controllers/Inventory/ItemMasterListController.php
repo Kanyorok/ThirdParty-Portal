@@ -2,25 +2,20 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Exports\ItemMasterListExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\ItemMasterListRequest;
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\ItemCategories;
-use App\Models\Inventory\InventoryType;
-use App\Models\Inventory\ItemType;
-use App\Models\Inventory\UnitOfMeasure;
-use App\Models\Inventory\PriceManagement;
+use App\Imports\ItemMasterListImport;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\Inventory\InventoryType;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\ItemType;
+use App\Models\Inventory\PriceManagement;
+use App\Models\Inventory\UnitOfMeasure;
 use App\Services\Inventory\ItemMasterListService;
 use Illuminate\Http\Request;
-use Yajra\DataTables\DataTables;
-use App\Imports\ItemMasterListImport;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\ItemMasterListExport;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Log;
 
 class ItemMasterListController extends Controller
 {
@@ -41,7 +36,7 @@ class ItemMasterListController extends Controller
             'inventoryType.type',
             'uom',
             'price',
-            'status'
+            'status',
         ])->get();
 
         return view('inventory.itemmaster.itemmasterlist.index', compact('items'));
@@ -53,13 +48,28 @@ class ItemMasterListController extends Controller
 
         return view('inventory.itemmaster.itemmasterlist.create', [
             'categories' => ItemCategories::whereNull('ParentId')
-                ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+                ->whereHas('status', fn ($q) => $q->where('Description', 'Active'))
+                ->orderBy('Name', 'asc')
                 ->get(),
-            'status' => CodeDetail::where('CodeID', 'ItemStatus')->orderBy('Value')->get(),
-            'uoms' => UnitOfMeasure::all(),
+            'status' => CodeDetail::where('CodeID', 'ItemStatus')
+                ->orderBy('Description', 'asc')
+                ->get(),
+            'uoms' => UnitOfMeasure::where('Active', 1)
+                ->orderBy('Code', 'asc')
+                ->get(),
             'price' => PriceManagement::all(),
-            'itemTypes' => ItemType::with('type')->get(),
-            'inventoryTypes' => InventoryType::with('type')->get(),
+            'itemTypes' => ItemType::with(['type' => function ($query) {
+                $query->orderBy('Description', 'asc');
+            }])
+                ->where('Active', 1)
+                ->get()
+                ->sortBy('type.Description'),
+            'inventoryTypes' => InventoryType::with(['type' => function ($query) {
+                $query->orderBy('Description', 'asc');
+            }])
+                ->where('Status', 1)
+                ->get()
+                ->sortBy('type.Description'),
         ]);
     }
 
@@ -70,99 +80,115 @@ class ItemMasterListController extends Controller
         ]);
 
         try {
-            // Create import instance
             $import = new ItemMasterListImport();
 
-            // Import the file
             Excel::import($import, $request->file('file'));
 
-            // Get the Items sheet from the associative array
-            $sheets = $import->sheets();
-            $itemsSheet = $sheets['Items'] ?? null;
+            $processed = $import->getProcessedCount();
+            $created = $import->getCreatedCount();
+            $updated = $import->getUpdatedCount();
+            $skipped = $import->getSkippedCount();
+            $errors = $import->getErrors();
 
-            if (!$itemsSheet) {
-                // Try to find the sheet with different casing
-                foreach ($sheets as $sheetName => $sheet) {
-                    if (strtolower($sheetName) === 'items') {
-                        $itemsSheet = $sheet;
-                        break;
-                    }
-                }
+            $successParts = [];
 
-                if (!$itemsSheet) {
-                    throw new \Exception('Could not find the Items sheet in the import file.');
-                }
+            if ($created > 0) {
+                $successParts[] = "Created: {$created} new item" . ($created > 1 ? 's' : '');
             }
 
-            // Get the import statistics
-            $processed = $itemsSheet->getProcessedCount();
-            $created = $itemsSheet->getCreatedCount();
-            $updated = $itemsSheet->getUpdatedCount();
-            $skipped = $itemsSheet->getSkippedCount();
-            $errors = $itemsSheet->getErrors();
-
-            // Build success message with details
-            $successMessage = "Import completed! ";
-            $successMessage .= "Processed: {$processed} rows. ";
-            $successMessage .= "Created: {$created} new items. ";
-            $successMessage .= "Updated: {$updated} existing items. ";
+            if ($updated > 0) {
+                $successParts[] = "Updated: {$updated} existing item" . ($updated > 1 ? 's' : '');
+            }
 
             if ($skipped > 0) {
-                $successMessage .= "Skipped: {$skipped} rows.";
+                $successParts[] = "Skipped: {$skipped} row" . ($skipped > 1 ? 's' : '') . " (empty/invalid data)";
             }
 
-            // If there are validation errors, show them
-            if (!empty($errors)) {
-                $errorMessage = "<strong>Some rows had errors:</strong><br>";
-                foreach (array_slice($errors, 0, 20) as $error) { // Show first 20 errors max
+            if (empty($successParts)) {
+                $successMessage = "No changes were made. All rows were either empty or unchanged.";
+            } else {
+                $successMessage = "Import completed! " . implode('. ', $successParts) . '.';
+            }
+
+            $importResult = [
+                'message' => $successMessage,
+                'summary' => [
+                    'processed' => $processed,
+                    'created' => $created,
+                    'updated' => $updated,
+                    'skipped' => $skipped,
+                ],
+                'errors' => $errors,
+                'warnings' => [],
+            ];
+
+            if (! empty($errors)) {
+                $errorMessage = "<strong>Critical errors encountered:</strong><br>";
+
+                foreach (array_slice($errors, 0, 20) as $error) {
                     $errorMessage .= "• {$error}<br>";
                 }
-
                 if (count($errors) > 20) {
                     $errorMessage .= "<br>... and " . (count($errors) - 20) . " more errors.";
                 }
 
-                return back()
-                    ->with('warning', $successMessage)
+                return redirect()->route('itemmaster.index')
+                    ->with('import_result', $importResult)
                     ->with('error_details', $errorMessage);
             }
 
-            // Log for debugging
-            \Log::info('Item Master List Import Statistics', [
-                'processed' => $processed,
-                'created' => $created,
-                'updated' => $updated,
-                'skipped' => $skipped,
-                'imported_by' => Auth::id(),
-            ]);
+            return redirect()->route('itemmaster.index')
+                ->with('import_result', $importResult);
 
-            return back()->with('success', $successMessage);
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-            // Handle Excel validation errors
             $errors = collect($e->failures())->map(function ($failure) {
                 $row = $failure->row();
                 $errors = implode(', ', $failure->errors());
+
                 return "Row {$row}: {$errors}";
-            })->implode('<br>');
+            })->toArray();
 
-            return back()->with('error', "Validation errors:<br>{$errors}");
+            $importResult = [
+                'message' => "Import failed due to validation errors.",
+                'summary' => [
+                    'processed' => 0,
+                    'created' => 0,
+                    'updated' => 0,
+                    'skipped' => count($errors),
+                ],
+                'errors' => $errors,
+                'warnings' => [],
+            ];
+
+            return redirect()->route('itemmaster.index')
+                ->with('import_result', $importResult);
+
         } catch (\Exception $e) {
-            \Log::error('Item Master List Import Failed', [
-                'error' => $e->getMessage(),
-                'file' => $request->file('file')?->getClientOriginalName(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+            $importResult = [
+                'message' => config('app.debug')
+                    ? "Import failed: " . $e->getMessage()
+                    : "Import failed. Please check the file format and try again.",
+                'summary' => [
+                    'processed' => 0,
+                    'created' => 0,
+                    'updated' => 0,
+                    'skipped' => 0,
+                ],
+                'errors' => [config('app.debug') ? $e->getMessage() : "System error occurred"],
+                'warnings' => [],
+            ];
 
-            $errorMessage = config('app.debug')
-                ? "Import failed: " . $e->getMessage()
-                : "Import failed. Please check the file format and try again.";
-
-            return back()->with('error', $errorMessage);
+            return redirect()->route('itemmaster.index')
+                ->with('import_result', $importResult);
         }
     }
+
     public function export()
     {
-        return Excel::download(new ItemMasterListExport, 'ItemMasterList.xlsx');
+        return Excel::download(
+            new ItemMasterListExport(),
+            'ItemMasterList_' . now()->format('Y-m-d_His') . '.xlsx'
+        );
     }
 
     public function store(ItemMasterListRequest $request)
@@ -172,14 +198,14 @@ class ItemMasterListController extends Controller
         $validated = $request->validated();
         $document = $request->file('Document');
         $image = $request->file('ImageUpload');
+
         $validated['Status'] = CodeDetail::where('CodeID', 'ItemStatus')
             ->where('Description', 'Active')
             ->value('Id');
 
         $this->service->create($validated, $image, $document);
 
-        return redirect()->route('itemmaster.index')
-            ->with('success', 'Item created successfully.');
+        return redirect()->route('itemmaster.index')->with('success', 'Item created successfully.');
     }
 
     public function show($Id)
@@ -198,15 +224,31 @@ class ItemMasterListController extends Controller
         return view('inventory.itemmaster.itemmasterlist.edit', [
             'item' => $item,
             'categories' => ItemCategories::whereNull('ParentId')
-                ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+                ->whereHas('status', fn ($q) => $q->where('Description', 'Active'))
+                ->orderBy('Name', 'asc')
                 ->get(),
-            'status' => CodeDetail::where('CodeID', 'ItemStatus')->orderBy('Value')->get(),
+            'status' => CodeDetail::where('CodeID', 'ItemStatus')
+                ->orderBy('Description', 'asc')
+                ->get(),
             'subcategories' => ItemCategories::where('ParentId', $item->category?->ParentId ?? $item->Category)
-                ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+                ->whereHas('status', fn ($q) => $q->where('Description', 'Active'))
+                ->orderBy('Name', 'asc')
                 ->get(),
-            'itemTypes' => ItemType::all(),
-            'uoms' => UnitOfMeasure::all(),
-            'inventoryTypes' => InventoryType::all(),
+            'itemTypes' => ItemType::with(['type' => function ($query) {
+                $query->orderBy('Description', 'asc');
+            }])
+                ->where('Active', 1)
+                ->get()
+                ->sortBy('type.Description'),
+            'uoms' => UnitOfMeasure::where('Active', 1)
+                ->orderBy('Code', 'asc')
+                ->get(),
+            'inventoryTypes' => InventoryType::with(['type' => function ($query) {
+                $query->orderBy('Description', 'asc');
+            }])
+                ->where('Status', 1)
+                ->get()
+                ->sortBy('type.Description'),
             'priceManagement' => PriceManagement::all(),
         ]);
     }
@@ -220,9 +262,9 @@ class ItemMasterListController extends Controller
         $document = $request->file('Document');
         $image = $request->file('ImageUpload');
 
-        // Handle image removal if requested
         if ($request->has('remove_image') && $request->input('remove_image') == '1') {
             if ($item->ImageId) {
+                // @phpstan-ignore-next-line - Image model is deprecated but still functional
                 \App\Models\DMS\Image::destroy($item->ImageId);
                 $item->ImageId = null;
             }
@@ -230,10 +272,8 @@ class ItemMasterListController extends Controller
 
         $this->service->update($Id, $validated, $image, $document);
 
-        return redirect()->route('itemmaster.index')
-            ->with('success', 'Item updated successfully.');
+        return redirect()->route('itemmaster.index')->with('success', 'Item updated successfully.');
     }
-
 
     public function destroy($Id)
     {
@@ -242,20 +282,20 @@ class ItemMasterListController extends Controller
 
         if ($item->inUse()) {
             return redirect()->route('itemmaster.index')
-                ->with('error', '❌ Cannot delete this item because it is currently in use.');
+                ->with('error', 'Cannot delete this item because it is currently in use.');
         }
 
         $this->service->delete($item);
 
-        return redirect()->route('itemmaster.index')
-            ->with('success', 'Item deleted successfully.');
+        return redirect()->route('itemmaster.index')->with('success', 'Item deleted successfully.');
     }
 
     public function getSubcategories(Request $request)
     {
         return response()->json(
             ItemCategories::where('ParentId', $request->get('category_id'))
-                ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+                ->whereHas('status', fn ($q) => $q->where('Description', 'Active'))
+                ->orderBy('Name', 'asc')
                 ->get(['Id', 'Name'])
         );
     }

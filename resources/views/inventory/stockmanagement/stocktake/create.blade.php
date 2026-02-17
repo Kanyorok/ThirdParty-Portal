@@ -40,10 +40,9 @@
         <form action="{{ route('stocktake.store') }}" method="POST" enctype="multipart/form-data" id="stockTakeForm">
             @csrf
 
-            <!-- Header Info -->
             <div class="row mb-3">
                 <div class="col-md-3">
-                    <label class="form-label">📍 Branch</label>
+                    <label class="form-label">📍 Branch<span class="text-danger">*</span></label>
                     <select name="BranchId" id="branch-select" class="form-select @error('BranchId') is-invalid @enderror" required>
                         <option value="">-- Select Branch --</option>
                         @foreach ($branches as $branch)
@@ -59,7 +58,7 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">🏢 Store</label>
+                    <label class="form-label">🏢 Store<span class="text-danger">*</span></label>
                     <select name="StoreId" id="store-select" class="form-select @error('StoreId') is-invalid @enderror" required>
                         <option value="">-- Select Store --</option>
                         @foreach ($stores ?? [] as $store)
@@ -75,7 +74,7 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">🧑‍💼 Counted By</label>
+                    <label class="form-label">🧑‍💼 Counted By<span class="text-danger">*</span></label>
                     <select name="CountedBy" class="form-select select2 @error('CountedBy') is-invalid @enderror" required>
                         <option value="">-- Select User --</option>
                         @foreach ($users as $user)
@@ -91,7 +90,7 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">📅 Count Date</label>
+                    <label class="form-label">📅 Count Date<span class="text-danger">*</span></label>
                     <input type="date" name="CountDate" class="form-control @error('CountDate') is-invalid @enderror" 
                            value="{{ old('CountDate', now()->toDateString()) }}" required>
                     @error('CountDate')
@@ -100,22 +99,20 @@
                 </div>
             </div>
 
-            <!-- Items Grid -->
             <div class="table-responsive">
                 <table class="table table-bordered align-middle">
                     <thead class="table-light">
                     <tr>
                         <th>#</th>
-                        <th>Item Code</th>
-                        <th>Item Name</th>
+                        <th>Item Code<span class="text-danger">*</span></th>
+                        <th>Item Name<span class="text-danger">*</span></th>
                         <th>System Qty</th>
-                        <th>Counted Qty</th>
+                        <th>Counted Qty<span class="text-danger">*</span></th>
                         <th>Variance</th>
                         <th>Remarks <span class="text-danger">*</span></th>
                     </tr>
                     </thead>
                     <tbody id="stockTakeBody">
-                    <!-- Filled dynamically from old input or fresh load -->
                     @php
                         $oldLines = old('lines', []);
                     @endphp
@@ -168,7 +165,6 @@
                 </table>
             </div>
 
-            <!-- No items message container -->
             <div id="noItemsMessage" class="alert alert-warning text-center d-none">
                 <i class="fas fa-exclamation-triangle me-2"></i>
                 <span id="noItemsText"></span>
@@ -199,31 +195,24 @@
         const noItemsMessage = document.getElementById('noItemsMessage');
         const noItemsText = document.getElementById('noItemsText');
 
-        // Get old form values
         const oldBranchId = "{{ old('BranchId') }}";
         const oldStoreId = "{{ old('StoreId') }}";
         const oldCountedBy = "{{ old('CountedBy') }}";
 
-        // Initialize Select2
         $('.select2').select2({
             placeholder: 'Select user',
             allowClear: true
         });
 
-        // Set selected values from old input
         if (oldBranchId) {
             branchSelect.value = oldBranchId;
-            // Load stores for the selected branch
             loadStores(oldBranchId).then(() => {
                 if (oldStoreId) {
                     storeSelect.value = oldStoreId;
-                    // If we have old lines data, don't reload from API
                     const oldLines = @json(old('lines', []));
                     if (oldLines.length === 0) {
-                        // Only load from API if no old lines data
                         loadStockItems(oldBranchId, oldStoreId);
                     } else {
-                        // Hide no items message if we have old lines
                         hideNoItemsMessage();
                     }
                 }
@@ -234,13 +223,11 @@
             $('.select2').val(oldCountedBy).trigger('change');
         }
 
-        // Calculate variance for existing rows
         document.querySelectorAll('.counted-qty').forEach(input => {
             calculateVariance(input);
         });
 
         branchSelect.addEventListener('change', function () {
-            // Clear table and hide messages when branch changes
             stockTableBody.innerHTML = '';
             hideNoItemsMessage();
             loadStores(this.value);
@@ -250,7 +237,6 @@
             const branchId = branchSelect.value;
             const storeId = this.value;
 
-            // Clear table and hide messages when store changes
             stockTableBody.innerHTML = '';
             hideNoItemsMessage();
 
@@ -290,7 +276,6 @@
         }
 
         function loadStockItems(branchId, storeId) {
-            // Show loading state
             showLoading();
             
             fetch(`/inventory/stock-items/${branchId}/${storeId}`)
@@ -312,7 +297,6 @@
                     const oldLines = @json(old('lines', []));
                     
                     stocks.forEach((stock, index) => {
-                        // Find old data for this item if exists
                         const oldLine = oldLines.find(line => line.ItemId == stock.Id);
                         const countedQty = oldLine ? oldLine.CountedQuantity : stock.CurrentQty;
                         const remarks = oldLine ? oldLine.Remarks : '';
@@ -356,7 +340,6 @@
                     attachVarianceListeners();
                     attachRemarksValidation();
                     
-                    // Hide no items message since we have items
                     hideNoItemsMessage();
                 })
                 .catch(err => {
@@ -381,18 +364,14 @@
         }
 
         function hideLoading() {
-            // Loading will be replaced by items or no items message
         }
 
         function showNoItemsMessage(message) {
-            // Clear the table body
             stockTableBody.innerHTML = '';
             
-            // Show the no items message
             noItemsText.textContent = message;
             noItemsMessage.classList.remove('d-none');
             
-            // Disable submit button
             submitBtn.disabled = true;
             submitBtn.classList.add('disabled');
         }
@@ -420,7 +399,6 @@
             
             varianceSpan.textContent = variance > 0 ? '+' + variance : variance;
             
-            // Color coding for variance
             if (variance > 0) {
                 varianceSpan.className = 'variance fw-bold text-success';
             } else if (variance < 0) {
@@ -432,12 +410,10 @@
 
         function attachRemarksValidation() {
             document.querySelectorAll('.remarks-input').forEach(input => {
-                // Add red border for empty remarks
                 input.addEventListener('blur', function() {
                     validateRemarksField(this);
                 });
                 
-                // Remove error state when user starts typing
                 input.addEventListener('input', function() {
                     if (this.value.trim()) {
                         this.classList.remove('is-invalid');
@@ -459,17 +435,14 @@
             }
         }
 
-        // Form submission validation
         stockTakeForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Clear previous custom errors
             clearErrors();
             
             let isValid = true;
             const errorMessages = [];
             
-            // Validate required fields
             if (!branchSelect.value) {
                 errorMessages.push('Branch is required');
                 branchSelect.classList.add('is-invalid');
@@ -486,10 +459,8 @@
                 storeSelect.classList.remove('is-invalid');
             }
             
-            // Check if we have items loaded
             const remarksInputs = document.querySelectorAll('.remarks-input');
             if (remarksInputs.length === 0) {
-                // Check if no items message is showing
                 if (noItemsMessage.classList.contains('d-none')) {
                     errorMessages.push('Please select a store to load items');
                     isValid = false;
@@ -498,7 +469,6 @@
                     isValid = false;
                 }
             } else {
-                // Validate remarks for each item
                 remarksInputs.forEach((input, index) => {
                     if (!validateRemarksField(input)) {
                         const itemName = input.getAttribute('data-item-name') || `Item ${index + 1}`;
@@ -507,7 +477,6 @@
                     }
                 });
                 
-                // Validate counted quantities
                 document.querySelectorAll('.counted-qty').forEach(input => {
                     if (input.value === '' || isNaN(input.value)) {
                         input.classList.add('is-invalid');
@@ -521,10 +490,8 @@
             
             if (!isValid) {
                 showErrors(errorMessages);
-                // Scroll to errors
                 formErrors.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             } else {
-                // If all validations pass, submit the form
                 this.submit();
             }
         });

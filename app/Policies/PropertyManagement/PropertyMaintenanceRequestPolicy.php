@@ -2,10 +2,9 @@
 
 namespace App\Policies\PropertyManagement;
 
-use App\Models\Auth\User;
 use App\Enums\Core\PermissionEnum;
+use App\Models\Auth\User;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
-
 
 class PropertyMaintenanceRequestPolicy
 {

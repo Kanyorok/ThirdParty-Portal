@@ -15,8 +15,6 @@ use RoachPHP\Spider\ParseResult;
 
 class CompetitorSpider extends BasicSpider
 {
-    //public array $startUrls = [''];
-
     public array $downloaderMiddleware = [
                                           RequestDeduplicationMiddleware::class,
                                           [
@@ -30,11 +28,11 @@ class CompetitorSpider extends BasicSpider
                                          ];
 
     public array $spiderMiddleware = [
-        //
+
                                      ];
 
     public array $itemProcessors = [
-        //
+
                                    ];
 
     public array $extensions = [
@@ -59,7 +57,7 @@ class CompetitorSpider extends BasicSpider
 
             $data = collect();
             foreach ($response->filter('a')->links() as $link) {
-                if (!Str::contains($link->getUri(), [$domain, 'www.' . $domain]) || ($data->contains($link->getUri()) || !Str::contains($link->getUri(), ['product', 'loan', 'saving', 'account']))) {
+                if (! Str::contains($link->getUri(), [$domain, 'www.' . $domain]) || ($data->contains($link->getUri()) || ! Str::contains($link->getUri(), ['product', 'loan', 'saving', 'account']))) {
                     continue;
                 }
                 if (Str::contains($link->getUri(), ['download'])) {
@@ -76,10 +74,11 @@ class CompetitorSpider extends BasicSpider
     private function _setLogo(Response $response): ?string
     {
         foreach ($response->filter('img')->images() as $image) {
-            if (Str::contains($image->getUri(), 'logo', true) && !Str::contains($image->getUri(), 'widget', true)) {
+            if (Str::contains($image->getUri(), 'logo', true) && ! Str::contains($image->getUri(), 'widget', true)) {
                 return $image->getUri();
             }
         }
+
         return null;
     }
 

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Procurement;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\Tender;
-use App\Enums\Core\PermissionEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -45,8 +45,10 @@ class BidEvaluationController extends Controller
             }
         }
 
-        return view('procurement.tendering.bidopeningandevaluation.evaluation.index',
-            compact('tenders', 'selectedTender', 'responsiveBids', 'evaluationSummary'));
+        return view(
+            'procurement.tendering.bidopeningandevaluation.evaluation.index',
+            compact('tenders', 'selectedTender', 'responsiveBids', 'evaluationSummary')
+        );
     }
 
     /**
@@ -59,12 +61,12 @@ class BidEvaluationController extends Controller
         $request->validate([
             'technical_score' => 'required|numeric|min:0|max:100',
             'financial_score' => 'required|numeric|min:0|max:100',
-            'evaluation_notes' => 'nullable|string|max:2000'
+            'evaluation_notes' => 'nullable|string|max:2000',
         ]);
 
         $bid = BidSubmission::findOrFail($bidId);
 
-        if (!$bid->isResponsive()) {
+        if (! $bid->isResponsive()) {
             return redirect()->back()->with('error', 'Only responsive bids can be evaluated.');
         }
 
@@ -86,17 +88,19 @@ class BidEvaluationController extends Controller
                     'action' => 'bid_evaluated',
                     'technical_score' => $technicalScore,
                     'financial_score' => $financialScore,
-                    'total_score' => $technicalScore + $financialScore
+                    'total_score' => $technicalScore + $financialScore,
                 ])
                 ->log("Bid evaluated: {$bid->SupplierName} - Total Score: " . ($technicalScore + $financialScore));
 
             DB::commit();
 
-            return redirect()->back()->with('success',
-                "Evaluation completed for {$bid->SupplierName}. Total Score: " . ($technicalScore + $financialScore));
-
+            return redirect()->back()->with(
+                'success',
+                "Evaluation completed for {$bid->SupplierName}. Total Score: " . ($technicalScore + $financialScore)
+            );
         } catch (\Exception $e) {
             DB::rollBack();
+
             return redirect()->back()->with('error', 'Failed to update evaluation: ' . $e->getMessage());
         }
     }
@@ -117,8 +121,8 @@ class BidEvaluationController extends Controller
             'highest_score' => $evaluatedBids->max('TotalScore'),
             'lowest_score' => $evaluatedBids->min('TotalScore'),
             'awarded_bid' => $awardedBid,
-            'can_award' => $evaluatedBids->isNotEmpty() && !$awardedBid,
-            'top_ranked' => $evaluatedBids->sortByDesc('TotalScore')->first()
+            'can_award' => $evaluatedBids->isNotEmpty() && ! $awardedBid,
+            'top_ranked' => $evaluatedBids->sortByDesc('TotalScore')->first(),
         ];
     }
 }

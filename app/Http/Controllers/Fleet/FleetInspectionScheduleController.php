@@ -3,15 +3,14 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Fleet\FleetInspectionSchedule;
-use App\Services\FleetManagement\FleetInspectionScheduleService;
-use App\Models\Core\Approval\CodeDetail;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\HRM\Employee;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use App\Http\Requests\FleetManagement\FleetInspectionScheduleRequest;
+use App\Models\Core\Approval\CodeDetail;
+use App\Models\Fleet\FleetInspectionSchedule;
+use App\Models\Fleet\FleetVehicle;
+use App\Models\HR\Employee;
+use App\Services\FleetManagement\FleetInspectionScheduleService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class FleetInspectionScheduleController extends Controller
 {
@@ -25,10 +24,10 @@ class FleetInspectionScheduleController extends Controller
     public function index()
     {
         $this->authorize('viewAny', FleetInspectionSchedule::class);
-        
+
         // Get current user's employee ID
         $currentEmployeeId = Auth::user()->employee?->Id;
-        
+
         // Show all schedules where current user is the inspector
         $schedules = FleetInspectionSchedule::with(['inspector', 'inspectionStatus', 'vehicle'])
             ->when($currentEmployeeId, function ($query) use ($currentEmployeeId) {
@@ -46,8 +45,8 @@ class FleetInspectionScheduleController extends Controller
         // Get current user and their employee record
         $currentUser = $request->user();
         $currentEmployee = $currentUser->employee;
-        
-        if (!$currentEmployee) {
+
+        if (! $currentEmployee) {
             return redirect()->back()
                 ->with('error', 'You must have an employee record to schedule inspections.');
         }
@@ -60,8 +59,8 @@ class FleetInspectionScheduleController extends Controller
 
         // Pass current employee as the default inspector
         return view('fleet.compliance.inspection_schedule.create', compact(
-            'vehicles', 
-            'inspectionStatus', 
+            'vehicles',
+            'inspectionStatus',
             'currentEmployee'
         ));
     }
@@ -69,18 +68,18 @@ class FleetInspectionScheduleController extends Controller
     public function store(FleetInspectionScheduleRequest $request)
     {
         $this->authorize('create', FleetInspectionSchedule::class);
-        
+
         // Get current user's employee ID
         $currentEmployeeId = Auth::user()->employee?->Id;
-        
-        if (!$currentEmployeeId) {
+
+        if (! $currentEmployeeId) {
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'You must have an employee record to schedule inspections.');
         }
 
         $validated = $request->validated();
-        
+
         // Override Inspector with current employee ID
         $validated['Inspector'] = $currentEmployeeId;
 
@@ -107,8 +106,8 @@ class FleetInspectionScheduleController extends Controller
         // Get current user and their employee record
         $currentUser = Auth::user();
         $currentEmployee = $currentUser->employee;
-        
-        if (!$currentEmployee) {
+
+        if (! $currentEmployee) {
             return redirect()->back()
                 ->with('error', 'You must have an employee record to edit inspections.');
         }
@@ -121,9 +120,9 @@ class FleetInspectionScheduleController extends Controller
 
         // Pass current employee
         return view('fleet.compliance.inspection_schedule.edit', compact(
-            'schedule', 
-            'vehicles', 
-            'inspectionStatus', 
+            'schedule',
+            'vehicles',
+            'inspectionStatus',
             'currentEmployee'
         ));
     }

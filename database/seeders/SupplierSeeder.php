@@ -22,8 +22,9 @@ class SupplierSeeder extends Seeder
     {
         $creatorUser = ThirdPartyUser::first();
 
-        if (!$creatorUser) {
+        if (! $creatorUser) {
             $this->command->error('No ThirdPartyUser found. Run ThirdPartyUserSeeder first.');
+
             return;
         }
 

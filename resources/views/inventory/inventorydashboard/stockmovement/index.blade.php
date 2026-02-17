@@ -2,7 +2,6 @@
 @section('title', 'Stock Movement Dashboard')
 @section('content')
 <div class="container-fluid mt-4">
-    <!-- Header with Branch Info -->
     <div class="mb-4">
         <div class="d-flex justify-content-between align-items-center">
             <div>
@@ -27,7 +26,6 @@
         </div>
     </div>
 
-    <!-- Filters -->
     <form method="GET" id="filterForm" class="row g-3 mb-4 p-3 bg-light rounded-3 shadow-sm">
         @if($isHeadOffice)
         <div class="col-md-2">
@@ -61,7 +59,7 @@
                 <option value="">All Items</option>
                 @foreach($items as $item)
                 <option value="{{ $item->Id }}" {{ request('item') == $item->Id ? 'selected' : '' }}>
-                    {{ $item->ItemName ?? $item->Description }}
+                    {{ $item->ItemName ?? $item->ItemDescription }}
                 </option>
                 @endforeach
             </select>
@@ -89,7 +87,6 @@
         </div>
     </form>
 
-    <!-- KPI Cards -->
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="card bg-primary text-white shadow-sm h-100">
@@ -166,11 +163,8 @@
         </div>
     </div>
 
-    <!-- Main Content -->
     <div class="row">
-        <!-- Left Column: Charts -->
         <div class="col-lg-8">
-            <!-- Daily Movement Chart -->
             <div class="card shadow rounded-4 mb-4">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold mb-0">📊 Daily Stock Movement Trend</h6>
@@ -192,7 +186,6 @@
                 </div>
             </div>
 
-            <!-- Branch Distribution -->
             @if($isHeadOffice && $branchMovement->isNotEmpty())
             <div class="card shadow rounded-4 mb-4">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -211,16 +204,13 @@
             @endif
         </div>
 
-        <!-- Right Column: Grid and Top Items -->
         <div class="col-lg-4">
-            <!-- Stock Movement Grid -->
             <div class="card shadow rounded-4 mb-4">
                 <div class="card-header bg-light">
                     <h6 class="fw-bold mb-0">📋 Movement Summary</h6>
                 </div>
                 <div class="card-body p-3">
                     <div id="movementContainer">
-                        <!-- Dynamic content will be loaded here -->
                     </div>
                     @if(empty($movementData))
                     <div class="alert alert-warning mb-0">
@@ -231,7 +221,6 @@
                 </div>
             </div>
 
-            <!-- Top Moving Items -->
             <div class="card shadow rounded-4">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold mb-0">🚀 Top Moving Items</h6>
@@ -288,7 +277,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Data from controller
     const movementData = @json($movementData);
     const dailyData = @json($dailyMovement->toArray());
     const branchData = @json($branchMovement->toArray());
@@ -296,7 +284,6 @@
     let dailyChart, branchChart;
     let currentChartType = 'line';
     let branchChartType = 'pie';
-
     function createMovementSection(title, opening, valueIn, valueOut, closing, isValue = false) {
         const format = isValue ? 
             num => `KES ${num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 
@@ -352,11 +339,9 @@
     }
 
     function initializeCharts() {
-        // Destroy existing charts
         if (dailyChart) dailyChart.destroy();
         if (branchChart) branchChart.destroy();
 
-        // Daily Movement Chart - SIMPLIFIED VERSION
         if (dailyData && dailyData.length > 0) {
             const dailyCtx = document.getElementById('dailyChart').getContext('2d');
             const dates = dailyData.map(d => {
@@ -367,11 +352,9 @@
                 });
             });
             
-            // For quantity chart
             const inQty = dailyData.map(d => d.in_qty || 0);
             const outQty = dailyData.map(d => d.out_qty || 0);
             
-            // For value chart
             const inValue = dailyData.map(d => d.in_value || 0);
             const outValue = dailyData.map(d => d.out_value || 0);
             
@@ -445,7 +428,6 @@
             });
         }
 
-        // Branch Distribution Chart (only for head office)
         @if($isHeadOffice && $branchMovement->isNotEmpty())
         if (branchData && branchData.length > 0) {
             const branchCtx = document.getElementById('branchChart').getContext('2d');
@@ -569,18 +551,14 @@
     }
 
     function exportToExcel() {
-        // Create a simple CSV export
         let csvContent = "data:text/csv;charset=utf-8,";
         
-        // Add headers
         csvContent += "Date,Stock In Qty,Stock Out Qty,Stock In Value,Stock Out Value\n";
         
-        // Add data
         dailyData.forEach(row => {
             csvContent += `${row.date},${row.in_qty},${row.out_qty},${row.in_value},${row.out_value}\n`;
         });
         
-        // Create download link
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
@@ -598,16 +576,72 @@
         document.getElementById('toDate').value = '{{ now()->format("Y-m-d") }}';
         document.getElementById('filterForm').submit();
     }
+    @if($isHeadOffice)
+    function loadStores(branchId) {
+        const storeSelect = document.getElementById('storeSelect');
+        storeSelect.innerHTML = '<option value="">Loading stores...</option>';
+        storeSelect.disabled = true;
 
-    // Event Listeners
+        fetch(`/inventory/stores-by-branch/${branchId || 0}`)
+            .then(response => response.json())
+            .then(stores => {
+                storeSelect.innerHTML = '<option value="">All Stores</option>';
+                stores.forEach(store => {
+                    const option = document.createElement('option');
+                    option.value = store.Id;
+                    option.textContent = store.StoreName;
+                    storeSelect.appendChild(option);
+                });
+                storeSelect.disabled = false;
+            })
+            .catch(() => {
+                storeSelect.innerHTML = '<option value="">Error loading stores</option>';
+                storeSelect.disabled = false;
+            });
+    }
+    function loadItems(storeId) {
+        const itemSelect = document.getElementById('itemSelect');
+        itemSelect.innerHTML = '<option value="">Loading items...</option>';
+        itemSelect.disabled = true;
+
+        fetch(`/inventory/items-by-store/${storeId || 0}`)
+            .then(response => response.json())
+            .then(items => {
+                itemSelect.innerHTML = '<option value="">All Items</option>';
+                items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.Id;
+                    option.textContent = item.ItemName ?? item.ItemDescription;
+                    itemSelect.appendChild(option);
+                });
+                itemSelect.disabled = false;
+            })
+            .catch(() => {
+                itemSelect.innerHTML = '<option value="">Error loading items</option>';
+                itemSelect.disabled = false;
+            });
+    }
+    @endif
     document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('itemSelect').addEventListener('change', updateUI);
+
+        @if($isHeadOffice)
+        const branchSelect = document.getElementById('branchSelect');
+        const storeSelect = document.getElementById('storeSelect');
+        branchSelect.addEventListener('change', function() {
+            const branchId = this.value;
+            loadStores(branchId);
+            const itemSelect = document.getElementById('itemSelect');
+            itemSelect.innerHTML = '<option value="">All Items</option>';
+            itemSelect.disabled = false;
+        });
+        storeSelect.addEventListener('change', function() {
+            const storeId = this.value;
+            loadItems(storeId);
+        });
+        @endif
         updateUI();
         initializeCharts();
-        
-        // Update UI when item select changes
-        document.getElementById('itemSelect').addEventListener('change', updateUI);
-        
-        // Add event listeners for chart type buttons
         document.querySelectorAll('.btn-group .btn').forEach(button => {
             button.addEventListener('click', function() {
                 const parent = this.parentElement;

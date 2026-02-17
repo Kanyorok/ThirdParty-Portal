@@ -19,7 +19,7 @@ class MeetingRoomRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'RooMName'     => [
+                'RooMName' => [
                                    'required',
                                    'string',
                                    'max:255',
@@ -29,12 +29,12 @@ class MeetingRoomRequest extends FormRequest
                                    'integer',
                                    'min:2',
                                   ],
-                'RooMNotes'    => [
+                'RooMNotes' => [
                                    'nullable',
                                    'string',
                                    'max:2000',
                                   ],
-                'RooMBranch'   => [
+                'RooMBranch' => [
                                    'nullable',
                                    'string',
                                   ],

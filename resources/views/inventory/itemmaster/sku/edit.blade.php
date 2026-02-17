@@ -23,11 +23,11 @@
 
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <label for="skuCode" class="form-label">SKU Code</label>
+                            <label for="skuCode" class="form-label">SKU Code</label><span class="text-danger">*</span>
                             <input type="text" name="SKUCode" class="form-control" id="skuCode" value="{{ $item->SKUCode }}" readonly>
                         </div>
                         <div class="col-md-4">
-                            <label for="Category" class="form-label">Category</label>
+                            <label for="Category" class="form-label">Category</label><span class="text-danger">*</span>
                             <select name="Category" id="Category" class="form-select" required>
                                 <option value="">-- Select Category --</option>
                                 @foreach($categories as $category)
@@ -48,30 +48,28 @@
 
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <label for="ItemID" class="form-label">Item</label>
+                            <label for="ItemID" class="form-label">Item</label><span class="text-danger">*</span>
                             <select name="ItemID" id="Item" class="form-select" required>
                                 <option value="">-- Select Item --</option>
-                                {{-- Items will be populated by JavaScript --}}
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label for="Branch" class="form-label">Branch</label>
+                            <label for="Branch" class="form-label">Branch</label><span class="text-danger">*</span>
                             <select name="Branch" id="Branch" class="form-select" required>
                                 <option value="{{ $branch->Id }}" selected>{{ $branch->Name }}</option>
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label for="Store" class="form-label">Store</label>
+                            <label for="Store" class="form-label">Store</label><span class="text-danger">*</span>
                             <select name="Store" id="Store" class="form-select">
                                 <option value="">-- Select Store --</option>
-                                {{-- Stores will be populated by JavaScript --}}
                             </select>
                         </div>
                     </div>
 
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <label for="currentQty" class="form-label">Current Qty</label>
+                            <label for="currentQty" class="form-label">Current Qty</label><span class="text-danger">*</span>
                             <input type="number" name="CurrentQty" class="form-control" id="currentQty" 
                                    value="{{ $item->CurrentQty }}" min="0" step="1" required
                                    oninput="validateQuantity(this)">
@@ -101,7 +99,7 @@
 
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="lastReceivedDate" class="form-label">Last Received Date</label>
+                            <label for="lastReceivedDate" class="form-label">Last Received Date</label><span class="text-danger">*</span>
                             <input type="date" name="LastReceived" id="lastReceivedDate" 
                                    class="form-control @error('LastReceived') is-invalid @enderror" 
                                    value="{{ old('LastReceived', $item->LastReceived) }}" 
@@ -117,7 +115,7 @@
                                 <input type="hidden" name="Status" value="0">
                                 <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status" 
                                     {{ $item->Status ? 'checked' : '' }}>
-                                <label class="form-check-label" for="Status">Is Active</label>
+                                <label class="form-check-label" for="Status">Is Active</label><span class="text-danger">*</span>
                             </div>
                         </div>
                     </div>
@@ -147,7 +145,6 @@
             const initialBranchId = "{{ old('Branch', $item->Branch) }}";
             const initialStoreId = "{{ old('Store', $item->Store) }}";
 
-            // Function to validate quantity fields
             window.validateQuantity = function(input) {
                 const value = parseFloat(input.value);
                 const errorDiv = document.getElementById(input.id + 'Error');
@@ -167,7 +164,6 @@
                 }
             };
 
-            // Function to validate all quantity fields before form submission
             function validateAllQuantities() {
                 const currentQty = document.getElementById('currentQty');
                 const minStockLevel = document.getElementById('minStockLevel');
@@ -180,7 +176,6 @@
                 return isCurrentQtyValid && isMinStockValid && isReorderQtyValid;
             }
 
-            // Form submission handler
             form.addEventListener('submit', function(e) {
                 if (!validateAllQuantities()) {
                     e.preventDefault();
@@ -188,12 +183,10 @@
                     return false;
                 }
                 
-                // Disable submit button to prevent double submission
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
             });
 
-            // Prevent negative input through keyboard
             document.querySelectorAll('input[type="number"]').forEach(input => {
                 input.addEventListener('keydown', function(e) {
                     if (e.key === '-' || e.key === 'e' || e.key === 'E') {
@@ -201,7 +194,6 @@
                     }
                 });
                 
-                // Additional validation on blur
                 input.addEventListener('blur', function() {
                     if (this.value < 0) {
                         this.value = 0;
@@ -225,7 +217,6 @@
                                 }
                                 subcategorySelect.appendChild(option);
                             });
-                            // After loading subcategories, check if we need to load items
                             if (selectedSubcategoryId) {
                                 loadItems(selectedSubcategoryId, selectedSubcategoryId, initialItemId);
                             }

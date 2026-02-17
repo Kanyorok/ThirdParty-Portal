@@ -2,20 +2,20 @@
 
 namespace App\Models\Core;
 
-use App\Enums\WorkflowStatus;
-use App\Traits\Model\UserActorTrait;
-use App\Models\Core\Approval\WorkflowType;
 use App\Models\Core\Approval\WorkflowStage;
+use App\Models\Core\Approval\WorkflowType;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Workflow extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Workflows';
     protected $primaryKey = 'Id';
@@ -44,7 +44,7 @@ class Workflow extends Model
     // Soft-delete style check
     public function isDeleted(): bool
     {
-        return !is_null($this->DeletedOn);
+        return ! is_null($this->DeletedOn);
     }
 
     // === Relationships ===
@@ -58,14 +58,9 @@ class Workflow extends Model
     {
         return $this->hasMany(WorkflowStage::class, 'WorkFlowId');
     }
-    
-     public static function getPrimaryKey(): string
+
+    public static function getPrimaryKey(): string
     {
         return 'WorkflowID';
     }
-
-
-   
 }
-
-    

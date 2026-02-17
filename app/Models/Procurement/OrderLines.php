@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class OrderLines extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $connection = 'sqlsrv';
     protected $table = 't_OrderLines';
@@ -35,7 +36,7 @@ class OrderLines extends Model
         'iStockCodeID',    // Actual column name for ItemID
         'cLineNotes',      // Actual column name for Notes
         'CreatedBy',
-        'ModifiedBy'
+        'ModifiedBy',
     ];
 
     protected $casts = [
@@ -47,7 +48,7 @@ class OrderLines extends Model
         'CreatedBy' => 'integer',
         'ModifiedBy' => 'integer',
         'iOrderID' => 'integer',
-        'iStockCodeID' => 'integer'
+        'iStockCodeID' => 'integer',
     ];
 
     /**

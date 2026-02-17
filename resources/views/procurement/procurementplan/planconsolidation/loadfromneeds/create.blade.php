@@ -109,7 +109,7 @@
                         <th>Dept</th>
                         <th>Qty</th>
                         <th>Est. Cost</th>
-                        <th>Required By</th>
+                        <th>Expected Delivery Date</th>
                         <th>Justification</th>
                         <th>Budget Line</th>
                     </tr>

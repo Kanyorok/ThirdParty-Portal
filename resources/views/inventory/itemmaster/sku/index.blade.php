@@ -7,39 +7,40 @@
 
 @section('content')
 @if($errors->any())
-    <div class="alert alert-danger">
-        <ul class="mb-0">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
 <div class="container mt-5">
     <div class="card shadow rounded-4">
         <div class="card-header text-dark rounded-top-4 d-flex justify-content-between align-items-center"
              style="background-color: #add8e6;">
             <h4 class="mb-0">SKU Items List</h4>
-            <a href="{{ route('sku.create') }}" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Add New Stock Item
-            </a>
+           
         </div>
 
         <div class="card-body">
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif
 
             <div class="table-responsive">
                 <table id="stockitemsTable" class="table table-bordered table-striped align-middle">
@@ -81,31 +82,8 @@
                                            data-bs-toggle="tooltip"
                                            title="View Item">
                                             <i class="bi bi-eye"></i>
-                                        </a>
-
-                                        <a href="{{ route('sku.edit', $item->Id) }}"
-                                           class="btn btn-edit btn-sm"
-                                           data-bs-toggle="tooltip"
-                                           title="Edit Item">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-
-                                        <button type="button"
-                                                class="btn btn-delete btn-sm delete-btn"
-                                                data-id="{{ $item->Id }}"
-                                                data-name="{{ $item->SKUCode }}"
-                                                title="Delete Item">
-                                            <i class="bi bi-trash text-white"></i>
-                                        </button>
+                                        </a>  
                                     </div>
-
-                                    <form id="delete-form-{{ $item->Id }}"
-                                          action="{{ route('sku.destroy', $item->Id) }}"
-                                          method="POST"
-                                          style="display:none;">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
                                 </td>
                             </tr>
                         @endforeach
@@ -137,7 +115,6 @@
         }
         initializeTooltips();
 
-        // SweetAlert delete confirmation
         $(document).on('click', '.delete-btn', function () {
             const itemId = $(this).data('id');
             const itemName = $(this).data('name');

@@ -18,6 +18,7 @@ class BudgetLineLedgerLimitController extends Controller
     public function index()
     {
         $limits = BudgetLineLedgerLimit::orderBy('CreatedOn', 'desc')->get();
+
         return view('budgetandanalytics.limits.index', compact('limits'));
     }
 
@@ -33,10 +34,10 @@ class BudgetLineLedgerLimitController extends Controller
             'LedgerID' => 'required',
             'LimitType' => 'required',
             'LimitAmount' => 'required|numeric|min:1',
-            'EffectiveFrom' => 'required|date'
+            'EffectiveFrom' => 'required|date',
         ]);
 
-//        BudgetLineLedgerLimit::create($validated + ['CreatedBy'=>auth()->id()]);
+        //        BudgetLineLedgerLimit::create($validated + ['CreatedBy'=>auth()->id()]);
         //Get Ledger CBS ID
         $cbsID = BudgetMaster::where('BudgetGLID', $validated['BudgetLineID'])->pluck('AccountID')->first();
         BudgetLineLedgerLimit::create([
@@ -48,6 +49,7 @@ class BudgetLineLedgerLimitController extends Controller
             'EffectiveFrom' => $validated['EffectiveFrom'],
             'CreatedBy' => auth()->id(),
         ]);
+
         return redirect()->route('budget.limits.index')->with('success', 'Ledger limit saved.');
     }
 
@@ -56,13 +58,12 @@ class BudgetLineLedgerLimitController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
     }
-
 
     public function showUpdateForm()
     {
         $budgets = Budget::where('Status', 'draft')->get();
+
         return view('budgetandanalytics.limits.update', compact('budgets'));
     }
 
@@ -92,7 +93,6 @@ class BudgetLineLedgerLimitController extends Controller
             });
 
             return back()->with('success', "✅ Ledger limits successfully synced for Budget: $budget->Name.");
-
         } catch (\Throwable $e) {
             return $e->getMessage();
             Log::error('Ledger limit sync failed', [
@@ -108,12 +108,10 @@ class BudgetLineLedgerLimitController extends Controller
         }
     }
 
-
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
-        //
     }
 }

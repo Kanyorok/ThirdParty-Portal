@@ -3,11 +3,35 @@
 @section('title', 'Item Categories')
 
 @section('styles')
-    {{-- Font Awesome for icons --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 @endsection
 
 @section('content')
+@if($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
     <div class="container mt-5">
         <div class="card shadow rounded-4">
             <div class="card-header text-dark rounded-top-4 d-flex justify-content-between align-items-center"
@@ -32,8 +56,7 @@
                         <tbody>
                             @foreach($categories as $key => $category)
                                 <tr>
-                                    {{-- paginator-aware row number --}}
-                                    <td>{{ ($categories->currentPage() - 1) * $categories->perPage() + $loop->iteration }}</td>
+                                    <td>{{ $loop->iteration }}</td>
                                     <td>{{ $category->CategoryCode }}</td>
                                     <td>{{ $category->Name }}</td>
                                     <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $category->Description }}</td>
@@ -84,31 +107,11 @@
                         </tbody>
                     </table>
                 </div>
-                {{-- Pagination and summary inside card body --}}
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <div>
-                        Showing {{ $categories->firstItem() ?? 0 }} to {{ $categories->lastItem() ?? 0 }} of {{ $categories->total() }} entries
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <label for="perPageSelect" class="me-2 mb-0">Per page</label>
-                        <form id="perPageForm" method="GET" action="{{ route('itemcategory.index') }}">
-                            <select id="perPageSelect" name="perPage" class="form-select form-select-sm" onchange="document.getElementById('perPageForm').submit()" style="width:auto; display:inline-block;">
-                                @php $currentPer = request()->query('perPage', session('itemcategory.perPage', 20)); @endphp
-                                @foreach([5,10,20,50] as $opt)
-                                    <option value="{{ $opt }}" {{ intval($currentPer) === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                                @endforeach
-                            </select>
-                        </form>
-                        <div class="ms-3">
-                            {{ $categories->withQueryString()->links('pagination::bootstrap-5') }}
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </div>
     </div>
 
-    {{-- Delete Confirmation Script --}}
     <script>
         function confirmDelete(id, button) {
             if (confirm('⚠️ Are you sure you want to delete this category?')) {
@@ -123,17 +126,20 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
     <script>
-        $(document).ready(function () {
-            // Disable DataTables paging because we use Laravel server-side pagination.
-            $('#itemCategoryTbl').DataTable({
-                paging: false,
-                ordering: true,
-                searching: true,
-                lengthChange: false,
-                language: {
-                    emptyTable: "No categories found"
-                }
-            });
+    $(document).ready(function () {
+        $('#itemCategoryTbl').DataTable({
+            paging: true,
+            pageLength: 10,
+            lengthMenu: [5, 10, 20, 50],
+            ordering: true,
+            searching: true,
+            info: true,
+            language: {
+                emptyTable: "No categories found",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ categories",
+            }
         });
-    </script>
+    });
+</script>
 @endsection

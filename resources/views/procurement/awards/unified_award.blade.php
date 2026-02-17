@@ -186,7 +186,12 @@
                             @endif
                         </div>
                         <div>
-                            @if($existingAward && ($existingAward->AwardStatus === \App\Models\Procurement\TenderAward::STATUS_PENDING))
+                            @if($existingAward && in_array($existingAward->AwardStatus, [
+                                \App\Models\Procurement\TenderAward::STATUS_DRAFT,
+                                \App\Models\Procurement\TenderAward::STATUS_PENDING,
+                                \App\Models\Procurement\TenderAward::STATUS_SUBMITTED,
+                                \App\Models\Procurement\TenderAward::STATUS_UNDER_REVIEW
+                            ]))
                                 <form action="{{ route('awards.cancel', $existingAward->Id) }}" method="POST" class="d-inline" onsubmit="return confirm('Cancel this pending award and re-open for re-award?');">
                                     @csrf
                                     <input type="hidden" name="cancel_reason" value="Cancelled to re-award">
@@ -197,7 +202,7 @@
                             @endif
 
                             {{-- Contract Creation Button --}}
-                            @if($existingAward && ($existingAward->AwardStatus === 'Approved' || $type === 'rfq'))
+                            @if($existingAward && ($existingAward->AwardStatus === 'Approved'))
                                 @if(empty($existingAward->ContractStatus))
                                     <a href="{{ route('contracts.createFromAward', ['awardId' => $existingAward->Id, 'type' => $type]) }}" class="btn btn-success me-2">
                                         <i class="fas fa-file-contract"></i> Create Contract
@@ -216,15 +221,91 @@
                             <button type="button" class="btn btn-info me-2" onclick="previewAward()">
                                 <i class="fas fa-eye"></i> Preview
                             </button>
+
+                            {{-- Approval Buttons --}}
+                            @if($showApprovalButtons)
+                                <button type="button" class="btn btn-success me-2" onclick="triggerApprove()">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button type="button" class="btn btn-danger me-2" onclick="triggerReject()">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            @endif
+
                             @if(!$existingAward)
                                 <button type="submit" class="btn {{ $type === 'rfq' ? 'btn-success' : 'btn-primary' }}">
                                     <i class="fas fa-check"></i> Create Award (Pending Approval)
                                 </button>
+                            @elseif($existingAward->AwardStatus === 'Pending' && !$showApprovalButtons && $type === 'rfq')
+                                {{-- Manual Submit for Approval (Rescue/Initial) --}}
+                                {{-- Manual Submit for Approval (Rescue/Initial) --}}
+                                <form action="{{ route('awards.submit-approval', $existingAward->Id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <input type="hidden" name="award_id" value="{{ $existingAward->Id }}">
+                                    <button type="submit" class="btn btn-warning text-dark me-2">
+                                        <i class="fas fa-paper-plane"></i> Submit for Approval
+                                    </button>
+                                </form>
                             @endif
                         </div>
                     </div>
                 </form>
             @endif
+        </div>
+    </div>
+    </div>
+</div>
+
+{{-- Approval Modal --}}
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="approveForm" method="POST">
+                @csrf
+                <input type="hidden" name="award_id" id="approvalAwardId" value="{{ $existingAward->Id ?? '' }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Approve Award</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Approval Remarks <span class="text-danger">*</span></label>
+                        <textarea name="remarks" class="form-control" rows="3" required
+                                  placeholder="Enter remarks for this approval..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Approve Award</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Rejection Modal --}}
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="rejectForm" method="POST">
+                @csrf
+                <input type="hidden" name="award_id" id="rejectionAwardId" value="{{ $existingAward->Id ?? '' }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reject Award</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Rejection Reason <span class="text-danger">*</span></label>
+                        <textarea name="reason" class="form-control" rows="3" required
+                                  placeholder="Please provide a reason for rejecting this award..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject Award</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -288,6 +369,30 @@ document.getElementById('typeSelector').addEventListener('change', function() {
     // You could make an AJAX call here to get items of the selected type
     // For now, we'll just trigger the switch
 });
+
+    function triggerApprove() {
+        const form = document.getElementById('approveForm');
+        const id = '{{ $existingAward->Id ?? "" }}';
+        
+        if (id) {
+            form.action = `{{ route('awards.approve', ':id') }}`.replace(':id', id) + `?type={{ $type }}`;
+            new bootstrap.Modal(document.getElementById('approveModal')).show();
+        } else {
+            alert('Error: Award ID missing.');
+        }
+    }
+
+    function triggerReject() {
+        const form = document.getElementById('rejectForm');
+        const id = '{{ $existingAward->Id ?? "" }}';
+
+        if (id) {
+            form.action = `{{ route('awards.reject', ':id') }}`.replace(':id', id) + `?type={{ $type }}`;
+            new bootstrap.Modal(document.getElementById('rejectModal')).show();
+        } else {
+             alert('Error: Award ID missing.');
+        }
+    }
 </script>
 
 @endsection

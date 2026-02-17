@@ -7,14 +7,16 @@ use App\Models\Core\Branch;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class InterBranchRequisition extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_InterBranchRequisition';
     protected $primaryKey = 'Id';
@@ -76,12 +78,12 @@ class InterBranchRequisition extends Model
     public function transfer()
     {
         return $this->hasOne(TransactionTransfer::class, 'RequisitionId', 'Id');
-}
+    }
 
     public function scopeActive($query)
     {
         $activeStatusId = cache()->rememberForever('status_active_id', function () {
-            return \DB::table('t_CodeDetails')
+            return DB::table('t_CodeDetails')
                 ->where('Code', 'Status')
                 ->where('Name', 'Active')
                 ->value('Id');
@@ -89,6 +91,4 @@ class InterBranchRequisition extends Model
 
         return $query->where('Status', $activeStatusId);
     }
-
-
 }

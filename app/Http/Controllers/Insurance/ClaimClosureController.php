@@ -16,6 +16,7 @@ class ClaimClosureController extends Controller
     public function closedClaimsIndex()
     {
         $closedClaims = BancassuranceClaimClosure::all();
+
         return view('bancassurance.claims.closed_claims_index', compact('closedClaims'));
     }
 
@@ -43,5 +44,4 @@ class ClaimClosureController extends Controller
 
         return redirect()->route('bancassurance.claims.closed')->with('success', 'Claim successfully closed.');
     }
-
 }

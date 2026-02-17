@@ -33,7 +33,7 @@ class CompetitorRequest extends FormRequest
             'Country' => ['required', Rule::exists('t_Countries', 'CountryCode')],
             'Location' => ['required',],
             'Website' => ['nullable', 'url', 'max:250', new isDomain(),],
-            'Phone' => ['nullable', (new Phone)->countryField('Country'),],
+            'Phone' => ['nullable', (new Phone())->countryField('Country'),],
             'Email' => ['nullable', 'email', 'max:250',],
             "CoreBusiness" => ['nullable', 'string', 'max:250',],
             "Clients" => ['nullable', 'integer', 'min:1',],
@@ -64,36 +64,37 @@ class CompetitorRequest extends FormRequest
 
         try {
             return DB::transaction(function () use ($new, $competitor, $image, $actor, $location) {
-            $competitor->fill(array_merge([
-                "CompetitorName" => $this->validated('Name'),
-                "LocationID" => $location->ID,
-                'CountryId' => $location->CountryId,
-                "CoreBusiness" => $this->validated('CoreBusiness'),
-                "Clients" => $this->validated('Clients'),
-                "MarketShare" => $this->validated('MarketShare'),
-                "Email" => $this->validated('Email'),
-                "Phone" => $this->getPhoneNumber(),
-                "Website" => $this->validated('Website'),
-                'Notes' => $this->validated('Notes'),
-                'ModifiedBy' => $actor->Id,
-            ], $new))->save();
+                $competitor->fill(array_merge([
+                    "CompetitorName" => $this->validated('Name'),
+                    "LocationID" => $location->ID,
+                    'CountryId' => $location->CountryId,
+                    "CoreBusiness" => $this->validated('CoreBusiness'),
+                    "Clients" => $this->validated('Clients'),
+                    "MarketShare" => $this->validated('MarketShare'),
+                    "Email" => $this->validated('Email'),
+                    "Phone" => $this->getPhoneNumber(),
+                    "Website" => $this->validated('Website'),
+                    'Notes' => $this->validated('Notes'),
+                    'ModifiedBy' => $actor->Id,
+                ], $new))->save();
 
-            if (empty($new)) {
-                activity()->causedBy($actor)->performedOn($competitor)->event('create')->log('Added a new competitor ' . $competitor->CompetitorName . '.');
-            } else {
-                activity()->causedBy($actor)->performedOn($competitor)->event('update')->log('Updated competitor (' . $competitor->CompetitorID . ')details.');
-            }
+                if (empty($new)) {
+                    activity()->causedBy($actor)->performedOn($competitor)->event('create')->log('Added a new competitor ' . $competitor->CompetitorName . '.');
+                } else {
+                    activity()->causedBy($actor)->performedOn($competitor)->event('update')->log('Updated competitor (' . $competitor->CompetitorID . ')details.');
+                }
 
 
-            if ($image instanceof UploadedFile) {
-                $competitor->setImage($image, $actor, 'Logo');
-            }
+                if ($image instanceof UploadedFile) {
+                    $competitor->setImage($image, $actor, 'Logo');
+                }
 
-            return $competitor;
-        });
+                return $competitor;
+            });
         } catch (Throwable $e) {
             Log::error('Error for competitor request: ' . $e->getMessage());
         }
+
         throw new ErroredException('an expected error occurred.');
     }
 
@@ -102,6 +103,7 @@ class CompetitorRequest extends FormRequest
         if (is_null($this->validated('Phone'))) {
             return '';
         }
+
         return (new PhoneNumber($this->validated('Phone'), $this->validated('Country')))->formatE164();
     }
 

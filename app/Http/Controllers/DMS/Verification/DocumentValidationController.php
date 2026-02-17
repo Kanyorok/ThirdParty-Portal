@@ -5,7 +5,9 @@ namespace App\Http\Controllers\DMS\Verification;
 use App\Enums\Core\IntegrationsEnum;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DMS\ApproveDocumentValidationRequest;
 use App\Http\Requests\DMS\UploadDocumentRequest;
+use App\Models\DMS\DMSSignature;
 use App\Models\DMS\Document;
 use App\Models\DMS\DocumentValidation;
 use App\Models\Settings\APICredential;
@@ -32,12 +34,13 @@ class DocumentValidationController extends Controller
                 $query->whereNull('ApprovedBy')
                     ->orWhereNull('DocumentId');
             });
+
             try {
-                return Datatables::of($query->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
+                return Datatables::of($query->lock('WITH(NOLOCK)')->with('type')->select('*'))->addIndexColumn()
                     ->addColumn('action', function (DocumentValidation $documentValidation) {
                         return '<a href="' . route('dms.validation.show', $documentValidation->ValidationId) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</a>';
                     })->editColumn('Type', function (DocumentValidation $documentValidation) {
-                        return $documentValidation->Type->description();
+                        return $documentValidation->type->Name;
                     })->addColumn('Stage', function (DocumentValidation $documentValidation) {
 
                         if (is_null($documentValidation->DocumentId)) {
@@ -46,58 +49,87 @@ class DocumentValidationController extends Controller
                         if (is_null($documentValidation->ApprovedBy)) {
                             return '<span class="badge rounded-pill bg-warning">Pending</span>';
                         }
+
                         return '<span class="badge rounded-pill bg--success">Approved</span>';
                     })->rawColumns(['action', 'Stage'])->make();
             } catch (Exception $e) {
                 return $this->errored('failed loading document validation.');
             }
         }
+
         return view('dms.validation.index');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show($documentValidationId)
+    public function show(Request $request, $documentValidationId)
     {
-        $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->with(['attributes', 'creator'])->first();
-        if (!$documentValidation instanceof DocumentValidation) {
+        $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->with(['properties', 'creator','document'])->first();
+        if (! $documentValidation instanceof DocumentValidation) {
             return redirect()->back()->with('error', 'Invalid validation provided');
         }
 
         $document = $documentValidation->document;
-        if (!$document instanceof Document) {
+        if (! $document instanceof Document) {
             $document = null;
         }
 
-        return view('dms.validation.show', compact('documentValidation', 'document'));
+        return view('dms.validation.show', compact('documentValidation', 'document'))
+            ->with('signatures', DMSSignature::query()->userCreator($request->user())->lock('WITH(NOLOCK)')->get(["Id", "SignatureId", "Name"]));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function approve(Request $request, $documentValidationId): JsonResponse
+    public function approve(ApproveDocumentValidationRequest $request, $documentValidationId): JsonResponse
     {
-        $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->whereNull('ApprovedBy')->first();
-        if (!$documentValidation instanceof DocumentValidation) {
-            return $this->errored('Invalid validation provided');
+        $actor = $request->user();
+        $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->whereNull('ApprovedBy')->with('document')->first();
+        if (! $documentValidation instanceof DocumentValidation || ! $documentValidation->document instanceof Document) {
+            return $this->errored('Invalid validation provided or cannot validate');
         }
 
-        $actor = $request->user();
+        $signature = $request->getSignature($actor);
 
         try {
+            return DB::transaction(function () use ($documentValidation, $actor, $signature) {
+                $documentValidation->update([
+                    'ApprovedBy' => $actor->Id,
+                    'ApprovedOn' => now(),
+                ]);
+
+                activity()->causedBy($actor)
+                    ->performedOn($documentValidation)
+                    ->event('approve')
+                    ->log('Approved document validation');
+
+                (new DocumentService($documentValidation->document))->sign($signature, $actor, 1);
+
+                return $this->succeeded('Document validated successfully', route('dms.validation.index'));
+            });
+        } catch (ErroredException $e) {
+            $e->toJson();
+        } catch (\Exception | \Throwable $e) {
+            Log::error('Error validating document: ' .$e);
+        }
+
+        return $this->errored('Unexpected error, try again later');
+
+        /*
+        try {
             $ApiCred = APICredential::query()->where('Integration', IntegrationsEnum::DMSCoreBanking->value)->latest('Id')->first();
-            if (!$ApiCred instanceof APICredential) {
+            if (! $ApiCred instanceof APICredential) {
                 return $this->errored('confirmation to cbs failed.');
             }
             $URL = $ApiCred->Configuration?->url;
             $TOKEN = $ApiCred->Configuration?->token;
 
-            if (!filter_var($URL, FILTER_VALIDATE_URL)) {
+            if (! filter_var($URL, FILTER_VALIDATE_URL)) {
                 return $this->errored('confirmation to cbs failed.');
             }
 
-            if (!is_string($TOKEN) || empty($TOKEN)) {
+            if (! is_string($TOKEN) || empty($TOKEN)) {
                 return $this->errored('confirmation to cbs failed.');
             }
 
@@ -107,7 +139,7 @@ class DocumentValidationController extends Controller
                 $response = $client->post($URL . '/Client/EDMSMemberDocumentsVerification', [
                     'headers' => [
                         'token' => $TOKEN,
-                        'Content-Type' => 'application/json'
+                        'Content-Type' => 'application/json',
                     ],
                     'json' => [
                         'application_id' => $documentValidation->ValidationId,
@@ -118,8 +150,8 @@ class DocumentValidationController extends Controller
                         'document_id' => $documentValidation->Id,
                         'document_type' => $documentValidation->Type->value,
                         'status' => 'APPROVED',
-                        'date' => now()->format('Y-m-d H:i:s')
-                    ]
+                        'date' => now()->format('Y-m-d H:i:s'),
+                    ],
                 ]);
 
                 if ($response->getStatusCode() !== 200) {
@@ -138,13 +170,44 @@ class DocumentValidationController extends Controller
 
                 return $this->succeeded('Document validated successfully', route('dms.validation.show', $documentValidation->ValidationId));
             });
-
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error validating document: ' . $e->getMessage());
+
             return $this->errored('Unexpected error, try again later');
+        }*/
+    }
+
+    public function reject(Request $request, $documentValidationId): JsonResponse
+    {
+        $actor = $request->user();
+        $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->whereNull('ApprovedBy')->with('document')->first();
+        if (! $documentValidation instanceof DocumentValidation && $documentValidation->document instanceof Document) {
+            return $this->errored('Invalid validation provided or cannot validate');
         }
+
+        try {
+            return DB::transaction(function () use ($documentValidation, $actor) {
+                $documentValidation->update([
+                    'ApprovedBy' => $actor->Id,
+                    'ApprovedOn' => now(),
+                ]);
+
+                activity()->causedBy($actor)
+                    ->performedOn($documentValidation)
+                    ->event('reject')
+                    ->log('Rejected document validation');
+
+                return $this->succeeded('Document validation rejected.', route('dms.validation.index'));
+            });
+        } catch (ErroredException $e) {
+            $e->toJson();
+        } catch (\Exception | \Throwable $e) {
+            Log::error('Error validating document: ' .$e);
+        }
+
+        return $this->errored('Unexpected error, try again later');
     }
 
     /**
@@ -154,17 +217,18 @@ class DocumentValidationController extends Controller
     {
 
         $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->whereNull('DocumentId')->first();
-        if (!$documentValidation instanceof DocumentValidation) {
+        if (! $documentValidation instanceof DocumentValidation) {
             return $this->errored('Invalid validation provided');
         }
 
         $actor = $request->user();
+
         try {
             return DB::transaction(function () use ($documentValidation, $request, $actor) {
                 $document = DocumentService::createUpload(RepositoryService::validation($documentValidation->Type), $request->file('file'), $actor)->document;
                 $documentValidation->update([
                     'DocumentId' => $document->Id,
-                    'ModifiedBy' => $actor->Id
+                    'ModifiedBy' => $actor->Id,
                     /* 'ApprovedBy' => $request->user()->Id,
                      'ApprovedOn' => now(),*/
                 ]);
@@ -175,8 +239,9 @@ class DocumentValidationController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error upload ticket document : ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
     }
@@ -186,6 +251,5 @@ class DocumentValidationController extends Controller
      */
     public function destroy(DocumentValidation $documentValidation)
     {
-        //
     }
 }

@@ -14,7 +14,7 @@ class ProductDevelopmentFeatureRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'feature_title'   => [
+                'feature_title' => [
                                       'required',
                                       'string',
                                       'max:100',

@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class FinanceGLSubAccountTypeSeeder extends Seeder
 {
@@ -65,15 +65,15 @@ class FinanceGLSubAccountTypeSeeder extends Seeder
 
             if ($typeGroup) {
                 DB::table('t_FinanceGLSubAccountTypes')->insert([
-                    'SubAccountCode'  => $code,
-                    'GLTypeGroupId'   => $typeGroup->Id,
-                    'Description'     => $desc,
-                    'CreatedBy'       => 1,
-                    'CreatedOn'       => $now,
-                    'ModifiedBy'      => 1,
-                    'ModifiedOn'      => $now,
-                    'DeletedBy'       => null,
-                    'DeletedOn'       => null,
+                    'SubAccountCode' => $code,
+                    'GLTypeGroupId' => $typeGroup->Id,
+                    'Description' => $desc,
+                    'CreatedBy' => 1,
+                    'CreatedOn' => $now,
+                    'ModifiedBy' => 1,
+                    'ModifiedOn' => $now,
+                    'DeletedBy' => null,
+                    'DeletedOn' => null,
                 ]);
             }
         }

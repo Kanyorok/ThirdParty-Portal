@@ -12,18 +12,6 @@
             <div class="card-header bg-light fw-bold">Termination Details</div>
             <div class="card-body">
 
-                {{-- Global Validation Errors --}}
-                @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <strong>Please fix the following errors:</strong>
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
                 <!-- Lease Selection -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
@@ -37,8 +25,8 @@
                             @foreach ($newtenants as $newtenant)
                                 <option value="{{ $newtenant->Id }}"
                                     {{ old('LeaseID') == $newtenant->Id ? 'selected' : '' }}>
-                                    LSno: {{ $newtenant->LeaseNumber }} —
-                                    Name: {{ $newtenant->tenant->thirdParty->ThirdPartyName }}
+                                    LSno: {{ $newtenant->LeaseNumber ?? 'No.'}} —
+                                    Name: {{ $newtenant->tenant->thirdParty->ThirdPartyName ?? 'Name'}}
                                 </option>
                             @endforeach
                         </select>
@@ -76,7 +64,7 @@
                             @foreach ($terminationReasons as $reason)
                                 <option value="{{ $reason->ID }}"
                                     {{ old('TerminationReason') == $reason->ID ? 'selected' : '' }}>
-                                    {{ $reason->Description }}
+                                    {{ $reason->Description ?? 'No Description' }}
                                 </option>
                             @endforeach
                         </select>
@@ -111,23 +99,22 @@
                            multiple
                            required>
 
-                    <small class="text-muted d-block mb-1">
+                    <small class="text-muted d-block mt-1 mb-2">
                         Allowed: .pdf, .jpg, .jpeg, .png, .docx, .xlsx | Max size: 25MB each
                     </small>
 
-                    {{-- Error for the entire Document field --}}
                     @error('Document')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
 
-                    {{-- Error for each file inside Document[] --}}
                     @error('Document.*')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <!-- Submit Button -->
-                <div class="text-end">
+                <div class="d-flex justify-content-between">
+                    <a href="{{ route('terminatelease.index') }}" class="btn btn-secondary">Cancel</a>
                     <button type="submit"
                             class="btn btn-success"
                             onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">

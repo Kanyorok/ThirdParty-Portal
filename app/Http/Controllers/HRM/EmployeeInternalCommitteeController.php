@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\HRM;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\HRM\Employee;
-use App\Models\Auth\User;
+use App\Models\HR\Employee;
 use App\Models\HRM\Committee;
-use App\Models\HRM\EmployeeInternalCommittee;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -29,7 +27,7 @@ class EmployeeInternalCommitteeController extends Controller
     {
 
         $request->validate([
-            'Employee' => 'required|exists:t_Employees,Id',
+            'Employee' => 'required|exists:t_HREmployees,Id',
             'Committee' => 'required|exists:t_Committees,Id',
         ]);
 
@@ -65,7 +63,7 @@ class EmployeeInternalCommitteeController extends Controller
     {
         $request->validate([
             'committee_id' => 'required|exists:t_Committees,Id',
-            'employee_id' => 'required|exists:t_Employees,Id',
+            'employee_id' => 'required|exists:t_HREmployees,Id',
         ]);
 
         DB::table('t_Committee_Employee')
@@ -75,6 +73,4 @@ class EmployeeInternalCommitteeController extends Controller
 
         return back()->with('success', 'Employee removed from committee.');
     }
-
-
 }

@@ -31,12 +31,14 @@ class LeadUserController extends Controller
     public function index(Request $request, Lead $lead): JsonResponse
     {
         $this->authorize('view', $lead);
+
         return Datatables::of($lead->watchers()->with('party')->whereNull(['t_LeadUsers.DeletedOn', 't_LeadUsers.DeletedBy'])->select('*'))->addIndexColumn()
             ->addColumn('action', function (LeadUser $user) use ($lead, $request) {
                 if ($request->user()->can('delete', $lead)) {
                     return '<button type="button" data-click_url="' . route('lead-watchers.destroy', [$lead->LeadID, $user->Id]) . '" data-info="' . (new PartyService($user->party))->getName() . '"
                         class="btn btn-danger btn-sm lead-watchers-trash"><i class="fas fa-trash"></i></button>';
                 }
+
                 return '...';
             })->editColumn('party', function (LeadUser $user) {
                 return (new PartyService($user->party))->getDTRow();
@@ -56,6 +58,7 @@ class LeadUserController extends Controller
         $assignee = $request->getParty();
         $role = $request->getRole();
         $actor = $request->user();
+
         try {
             DB::transaction(static function () use ($actor, $lead, $assignee, $role) {
                 (new LeadService($lead))->addWatcher($assignee, $role, $actor);
@@ -64,11 +67,12 @@ class LeadUserController extends Controller
             return $e->toJson();
         } catch (\Throwable | Exception $e) {
             Log::error('Error add lead watcher failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
+
         return $this->succeeded('shared successfully');
     }
-
 
     public function reassign(LeadAssignRequest $request, Lead $lead): JsonResponse
     {
@@ -79,6 +83,7 @@ class LeadUserController extends Controller
         if ($assignee->Id === $lead->RelationshipManagerID) {
             return $this->errored('lead already assigned to ' . $assignee->UserID);
         }
+
         try {
             DB::transaction(static function () use ($actor, $lead, $assignee) {
                 (new LeadService($lead))->assign($assignee, $actor);
@@ -87,8 +92,10 @@ class LeadUserController extends Controller
             return $e->toJson();
         } catch (\Throwable | Exception $e) {
             Log::error('Error  re assigned lead failed: ' . $e->getMessage());
+
             return $this->errored('unexpected error, try again later');
         }
+
         return $this->succeeded('lead re assigned successfully, redirecting', route('leads.show', $lead->LeadID));
     }
 
@@ -118,6 +125,7 @@ class LeadUserController extends Controller
                 return $e->toJson();
             } catch (\Throwable | Exception $e) {
                 Log::error('Error remove lead watcher failed: ' . $e->getMessage());
+
                 return $this->errored('unexpected error, try again later');
             }
         }

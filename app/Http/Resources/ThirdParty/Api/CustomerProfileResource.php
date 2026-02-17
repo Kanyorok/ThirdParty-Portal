@@ -12,15 +12,15 @@ class CustomerProfileResource extends JsonResource
             'dateOfBirth' => $this->DateOfBirth,
             'gender' => [
                 'id' => $this->Gender,
-                'label' => $this->genders->Name ?? null
+                'label' => $this->genders->Name ?? null,
             ],
             'maritalStatus' => [
                 'id' => $this->MaritalStatus,
-                'label' => $this->maritalstatus->Name ?? null
+                'label' => $this->maritalstatus->Name ?? null,
             ],
             'occupation' => [
                 'id' => $this->Occupation,
-                'label' => $this->occupations->Name ?? null
+                'label' => $this->occupations->Name ?? null,
             ],
             'createdOn' => $this->CreatedOn ? $this->CreatedOn->toIso8601String() : null,
         ];

@@ -23,7 +23,7 @@ class PurchaseOrderRequest extends FormRequest
     {
         return [
             'supplier' => ['required'],
-            'pODate' => ['required', 'date', 'before_or_equal:today'],
+            'Date' => ['required', 'date', 'after_or_equal:today'],
             'priority' => ['nullable'],
             'refNo' => ['nullable'],
             'terms' => ['required', 'exists:t_CodeDetails,ID,CodeID,PaymentTerm'],

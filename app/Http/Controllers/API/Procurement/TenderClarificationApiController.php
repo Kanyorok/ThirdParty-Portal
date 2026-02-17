@@ -2,93 +2,97 @@
 
 namespace App\Http\Controllers\API\Procurement;
 
+use App\Enums\TenderStatusEnum;
+use App\Enums\TenderTypeEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Procurement\VendorClarifications;
+use App\Http\Requests\Procurement\TenderClarifications\ListPendingTenderClarificationsRequest;
+use App\Http\Requests\Procurement\TenderClarifications\ListTenderClarificationsRequest;
+use App\Http\Requests\Procurement\TenderClarifications\RespondTenderClarificationRequest;
+use App\Http\Requests\Procurement\TenderClarifications\StoreTenderClarificationRequest;
+use App\Http\Resources\Procurement\TenderClarificationResource;
 use App\Models\Procurement\Tender;
+use App\Models\Procurement\VendorClarifications;
 use App\Models\ThirdParies\Supplier;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 
 class TenderClarificationApiController extends Controller
 {
-    /**
-     * Submit a clarification question from the portal
-     * POST /api/tender-clarifications
-     */
-    public function submitClarification(Request $request): JsonResponse
+    public function submitClarification(StoreTenderClarificationRequest $request): JsonResponse
     {
+        $validated = $request->validated();
+
         try {
-            // Simple validation first
-            if (!$request->tender_id || !$request->question) {
-                return response()->json([
-                    'error' => 'Missing required fields: tender_id, question'
-                ], 422);
-            }
-
-
-
             // Resolve supplier
             $supplier = null;
-            $user = Auth::user();
+            $user = Auth::guard('third_party')->user()
+                ?? Auth::guard('sanctum')->user()
+                ?? Auth::user();
 
             // Case 1: Third Party ID provided (e.g. from internal ERP call or debug)
-            if ($request->third_party_id) {
-                $supplier = DB::table('t_Suppliers')
-                    ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
-                    ->where('t_SupplierMaster.ThirdPartyId', $request->third_party_id)
-                    ->select('t_Suppliers.Id')
-                    ->first();
+            if (! empty($validated['third_party_id'])) {
+                $supplierId = $this->resolveSupplierId((int)$validated['third_party_id']);
+                $supplier = $supplierId ? (object)['Id' => $supplierId] : null;
             }
             // Case 2: Resolve from Authenticated User (Portal)
-            else if ($user) {
-                // Check if user is a ThirdPartyUser and has a related ThirdParty
-                // Note: Logic depends on how User model relates to ThirdParty
-                // Assuming standard ThirdPartyUser model pattern where we can find the ThirdParty
-
-                // First try direct relation if available
-                if (method_exists($user, 'thirdParty')) {
-                    $thirdPartyId = $user->thirdParty->Id ?? null;
+            elseif ($user) {
+                $thirdPartyId = null;
+                if ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
+                    $thirdPartyId = $user->ThirdPartyId ?? null;
+                } elseif (property_exists($user, 'ThirdPartyId')) {
+                    $thirdPartyId = $user->ThirdPartyId ?? null;
                 } else {
-                    // Fallback to checking via email or other linking logic if needed 
-                    // For now, let's assume the user IS linked. 
-                    // This part might need adjustment based on specific User/ThirdPartyUser model structure
-                    // Using a common pattern seen in other controllers:
                     $thirdPartyUser = DB::table('t_ThirdPartyUsers')->where('Id', $user->Id)->first();
                     $thirdPartyId = $thirdPartyUser->ThirdPartyId ?? null;
                 }
 
                 if ($thirdPartyId) {
-                    $supplier = DB::table('t_Suppliers')
-                        ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
-                        ->where('t_SupplierMaster.ThirdPartyId', $thirdPartyId)
-                        // Getting the supplier ID linked to this third party
-                        ->select('t_Suppliers.Id')
-                        ->first();
+                    $supplierId = $this->resolveSupplierId((int)$thirdPartyId);
+                    $supplier = $supplierId ? (object)['Id' => $supplierId] : null;
                 }
             }
 
-            if (!$supplier) {
+            if (! $supplier) {
                 return response()->json([
-                    'error' => 'Supplier record not found for the current user/context.'
+                    'success' => false,
+                    'message' => 'Supplier record not found for the current user/context.',
+                    'error' => 'Supplier record not found for the current user/context.',
                 ], 404);
             }
 
-            // NEW: Enforce that the supplier has INVITED and ACCEPTED status for this tender
-            $invitation = DB::table('t_TenderInvitations')
-                ->where('TenderId', $request->tender_id)
-                ->where('SupplierId', $supplier->Id)
-                ->where('ResponseStatus', 'accepted') // Case-sensitive check matched to DB update method
-                ->first();
-
-            if (!$invitation) {
+            $tender = Tender::find($validated['tender_id']);
+            if (! $tender) {
                 return response()->json([
-                    'error' => 'Access Denied',
-                    'message' => 'You must accept the tender invitation before asking questions.'
-                ], 403);
+                    'success' => false,
+                    'message' => 'Tender not found.',
+                    'error' => 'Tender not found.',
+                ], 404);
+            }
+
+            if ($this->isRestrictedTender($tender)) {
+                $invitation = DB::table('t_TenderInvitations')
+                    ->where('TenderId', $validated['tender_id'])
+                    ->where('SupplierId', $supplier->Id)
+                    ->whereRaw('LOWER(ResponseStatus) = ?', ['accepted'])
+                    ->first();
+
+                if (! $invitation) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You must accept the tender invitation before asking questions.',
+                        'error' => 'Access Denied',
+                    ], 403);
+                }
+            } else {
+                if (! $this->isTenderPublished($tender)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This tender is not open for clarifications.',
+                        'error' => 'Access Denied',
+                    ], 403);
+                }
             }
 
 
@@ -101,14 +105,14 @@ class TenderClarificationApiController extends Controller
 
             $sql = "INSERT INTO t_VendorClarifications (TenderID, VendorID, Question, QuestionDate, ISPUBLISHEDTOALL, CreatedBy, CreatedOn, ModifiedBy, ModifiedOn)
                     OUTPUT INSERTED.ClarificationID
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"; // this is bad
 
             $result = DB::select($sql, [
-                (int)$request->tender_id,
+                (int)$validated['tender_id'],
                 (int)$supplier->Id,
-                $request->question,
+                $validated['question'],
                 date('Y-m-d H:i:s'),
-                $request->is_public ? 1 : 0,
+                ! empty($validated['is_public']) ? 1 : 0,
                 $systemUserId, // Use numeric user ID
                 date('Y-m-d H:i:s'),
                 $systemUserId, // Use numeric user ID
@@ -117,109 +121,125 @@ class TenderClarificationApiController extends Controller
 
             $clarificationId = $result[0]->ClarificationID ?? null;
 
-            if (!$clarificationId) {
+            if (! $clarificationId) {
                 throw new \Exception('Failed to create clarification record');
             }
 
             Log::info('Created clarification', ['clarification_id' => $clarificationId]);
 
+            $clarification = VendorClarifications::with(['tenderID', 'vendorID'])
+                ->find($clarificationId);
+
+            if ($clarification) {
+                $clarification->setAttribute('is_own_question', true);
+                $clarification->setAttribute('status', 'pending');
+            }
+
             return response()->json([
-                'message' => 'Clarification submitted successfully',
-                'data' => [
-                    'clarificationId' => $clarificationId,
-                    'tenderId' => $request->tender_id,
-                    'question' => $request->question,
-                    'questionDate' => date('Y-m-d H:i:s'),
-                    'status' => 'pending'
-                ]
+                'success' => true,
+                'message' => 'Clarification Sent!',
+                'data' => $clarification
+                    ? (new TenderClarificationResource($clarification))->toArray($request)
+                    : [
+                        'clarificationId' => $clarificationId,
+                        'tenderId' => $validated['tender_id'],
+                        'question' => $validated['question'],
+                        'questionDate' => date('Y-m-d H:i:s'),
+                        'status' => 'pending',
+                    ],
             ], 201);
         } catch (\Exception $e) {
             Log::error('Error submitting tender clarification', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all()
+                'request_data' => $request->all(),
             ]);
 
             return response()->json([
-                'error' => 'Failed to submit clarification',
-                'message' => $e->getMessage(),
-                'debug' => $e->getTraceAsString()
+                'success' => false,
+                'message' => 'Failed to submit clarification',
+                'error' => $e->getMessage(),
+                'debug' => $e->getTraceAsString(),
             ], 500);
         }
     }
 
-    /**
-     * Get clarifications for a specific tender and supplier
-     * GET /api/tender-clarifications?tender_id=X&third_party_id=Y
-     */
-    public function getClarifications(Request $request): JsonResponse
+    public function getClarifications(ListTenderClarificationsRequest $request): JsonResponse
     {
+        $validated = $request->validated();
+
         try {
+            $user = Auth::guard('third_party')->user()
+                ?? Auth::guard('sanctum')->user()
+                ?? Auth::user();
 
-            $validator = Validator::make($request->all(), [
-                'tender_id' => 'required|integer|exists:t_Tenders,Id',
-                'third_party_id' => 'nullable|integer'
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'error' => 'Validation failed',
-                    'messages' => $validator->errors()
-                ], 422);
-            }
-
-            // Resolve supplier from request or auth
             $supplier = null;
-            $user = Auth::user();
-
-            if ($request->third_party_id) {
-                $supplier = Supplier::whereHas('supplierMaster', function ($query) use ($request) {
-                    $query->where('ThirdPartyId', $request->third_party_id);
-                })->first();
-            } else if ($user) {
-                // Try to find the supplier via the authenticated user's third party
-                // Assuming the User model (likely ThirdPartyUser) has a way to get to ThirdParty
+            if (! empty($validated['supplier_id'])) {
+                $supplier = Supplier::find($validated['supplier_id']);
+            } elseif (! empty($validated['third_party_id'])) {
+                $supplierId = $this->resolveSupplierId((int)$validated['third_party_id']);
+                $supplier = $supplierId ? Supplier::find($supplierId) : null;
+            } elseif ($user) {
                 $thirdPartyId = null;
-
-                // Direct check on user object if loaded
-                if (isset($user->ThirdPartyId)) {
-                    $thirdPartyId = $user->ThirdPartyId;
+                if ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) {
+                    $thirdPartyId = $user->ThirdPartyId ?? null;
+                } elseif (property_exists($user, 'ThirdPartyId')) {
+                    $thirdPartyId = $user->ThirdPartyId ?? null;
                 } else {
-                    // Look up in t_ThirdPartyUsers
                     $tpu = DB::table('t_ThirdPartyUsers')->where('Id', $user->Id)->first();
                     $thirdPartyId = $tpu->ThirdPartyId ?? null;
                 }
 
                 if ($thirdPartyId) {
-                    $supplier = Supplier::whereHas('supplierMaster', function ($query) use ($thirdPartyId) {
-                        $query->where('ThirdPartyId', $thirdPartyId);
-                    })->first();
+                    $supplierId = $this->resolveSupplierId((int)$thirdPartyId);
+                    $supplier = $supplierId ? Supplier::find($supplierId) : null;
                 }
             }
 
-            if (!$supplier) {
+            if (! $supplier) {
                 return response()->json([
-                    'error' => 'Supplier context not found'
+                    'success' => false,
+                    'message' => 'Supplier context not found',
+                    'error' => 'Supplier context not found',
                 ], 404);
             }
 
-            // NEW: Enforce that the supplier has INVITED and ACCEPTED status for this tender
-            $invitation = DB::table('t_TenderInvitations')
-                ->where('TenderId', $request->tender_id)
-                ->where('SupplierId', $supplier->Id)
-                ->where('ResponseStatus', 'accepted')
-                ->first();
-
-            if (!$invitation) {
+            $tender = Tender::find($validated['tender_id']);
+            if (! $tender) {
                 return response()->json([
-                    'error' => 'Access Denied',
-                    'message' => 'You must accept the tender invitation to view clarifications.'
-                ], 403);
+                    'success' => false,
+                    'message' => 'Tender not found.',
+                    'error' => 'Tender not found.',
+                ], 404);
+            }
+
+            if ($this->isRestrictedTender($tender)) {
+                $invitation = DB::table('t_TenderInvitations')
+                    ->where('TenderId', $validated['tender_id'])
+                    ->where('SupplierId', $supplier->Id)
+                    ->whereRaw('LOWER(ResponseStatus) = ?', ['accepted'])
+                    ->first();
+
+                if (! $invitation) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You must accept the tender invitation to view clarifications.',
+                        'error' => 'Access Denied',
+                    ], 403);
+                }
+            } else {
+                if (! $this->isTenderPublished($tender)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This tender is not open for clarifications.',
+                        'error' => 'Access Denied',
+                    ], 403);
+                }
             }
 
             // Get clarifications for this tender and supplier
             $clarifications = VendorClarifications::with(['tenderID', 'vendorID'])
-                ->where('TenderID', $request->tender_id)
+                ->where('TenderID', $validated['tender_id'])
                 ->where(function ($query) use ($supplier) {
                     // Get clarifications from this supplier OR public clarifications
                     $query->where('VendorID', $supplier->Id)
@@ -229,146 +249,134 @@ class TenderClarificationApiController extends Controller
                 ->orderBy('QuestionDate', 'desc')
                 ->get();
 
-            // Format the response
-            $formattedClarifications = $clarifications->map(function ($clarification) use ($supplier) {
-                return [
-                    'clarificationId' => $clarification->ClarificationID,
-                    'tenderId' => $clarification->TenderID,
-                    'question' => $clarification->Question,
-                    'questionDate' => $clarification->QuestionDate,
-                    'answer' => $clarification->Answer,
-                    'answerDate' => $clarification->AnswerDate,
-                    'isPublic' => (bool)$clarification->ISPUBLISHEDTOALL,
-                    'isOwnQuestion' => $clarification->VendorID == $supplier->Id,
-                    'status' => $clarification->Answer ? 'answered' : 'pending',
-                    'createdBy' => $clarification->CreatedBy,
-                    'createdOn' => $clarification->CreatedOn
-                ];
+            $clarifications->each(function ($clarification) use ($supplier) {
+                $clarification->setAttribute('is_own_question', $clarification->VendorID == $supplier->Id);
+                $clarification->setAttribute('status', $clarification->Answer ? 'answered' : 'pending');
             });
 
             return response()->json([
-                'data' => $formattedClarifications,
-                'total' => $formattedClarifications->count(),
-                'tender_id' => $request->tender_id,
-                'supplier_id' => $supplier->Id
+                'success' => true,
+                'message' => 'Clarifications retrieved successfully.',
+                'data' => TenderClarificationResource::collection($clarifications)->toArray($request),
+                'total' => $clarifications->count(),
+                'tender_id' => $validated['tender_id'],
+                'supplier_id' => $supplier->Id,
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching tender clarifications', [
                 'error' => $e->getMessage(),
-                'request_data' => $request->all()
+                'request_data' => $request->all(),
             ]);
 
             return response()->json([
-                'error' => 'Failed to fetch clarifications',
-                'message' => $e->getMessage()
+                'success' => false,
+                'message' => 'Failed to fetch clarifications',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
-    /**
-     * Get all pending clarifications for ERP staff to respond to
-     * GET /api/tender-clarifications/pending
-     */
-    public function getPendingClarifications(Request $request): JsonResponse
+    public function getPendingClarifications(ListPendingTenderClarificationsRequest $request): JsonResponse
     {
-        try {
-            $page = (int)$request->query('page', 1);
-            $limit = (int)$request->query('limit', 20);
-            $tenderId = $request->query('tender_id');
+        $validated = $request->validated();
 
-            $query = VendorClarifications::with(['tenderID', 'vendorID'])
+        try {
+            $query = VendorClarifications::query()
                 ->whereNull('Answer')
                 ->whereNull('DeletedOn');
 
-            // Filter by specific tender if requested
-            if ($tenderId) {
-                $query->where('TenderID', $tenderId);
+            if (! empty($validated['tender_id'])) {
+                $query->where('TenderID', $validated['tender_id']);
             }
 
-            $total = $query->count();
-            $offset = ($page - 1) * $limit;
-
-            $clarifications = $query->orderBy('QuestionDate', 'asc')
-                ->skip($offset)
-                ->take($limit)
-                ->get();
-
-            // Format the response with additional supplier information
-            $formattedClarifications = $clarifications->map(function ($clarification) {
-                // Get supplier name from third party relationship
-                $supplierName = 'Unknown Supplier';
-                if ($clarification->vendorID && $clarification->vendorID->thirdParty) {
-                    $supplierName = $clarification->vendorID->thirdParty->TradingName
-                        ?? $clarification->vendorID->thirdParty->ThirdPartyName;
+            if (! empty($validated['supplier_id'])) {
+                $query->where('VendorID', $validated['supplier_id']);
+            } elseif (! empty($validated['third_party_id'])) {
+                $supplierId = $this->resolveSupplierId((int)$validated['third_party_id']);
+                if ($supplierId) {
+                    $query->where('VendorID', $supplierId);
                 }
+            }
 
-                return [
-                    'clarificationId' => $clarification->ClarificationID,
-                    'tenderId' => $clarification->TenderID,
-                    'tenderNo' => $clarification->tenderID->TenderNo ?? 'N/A',
-                    'tenderTitle' => $clarification->tenderID->Title ?? 'N/A',
-                    'vendorId' => $clarification->VendorID,
-                    'supplierName' => $supplierName,
-                    'question' => $clarification->Question,
-                    'questionDate' => $clarification->QuestionDate,
-                    'daysPending' => now()->diffInDays($clarification->QuestionDate),
-                    'createdBy' => $clarification->CreatedBy,
-                    'createdOn' => $clarification->CreatedOn
-                ];
-            });
+            $data = $query->orderBy('QuestionDate', 'desc')->get();
 
             return response()->json([
-                'data' => $formattedClarifications,
-                'pagination' => [
-                    'total' => $total,
-                    'page' => $page,
-                    'limit' => $limit,
-                    'pages' => ceil($total / $limit)
-                ]
+                'success' => true,
+                'message' => 'Pending clarifications retrieved successfully.',
+                'data' => TenderClarificationResource::collection($data)->toArray($request),
+                'total' => $data->count(),
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching pending clarifications', [
-                'error' => $e->getMessage()
+            Log::error('Error fetching pending tender clarifications', [
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
-                'error' => 'Failed to fetch pending clarifications',
-                'message' => $e->getMessage()
+                'success' => false,
+                'message' => 'Failed to fetch pending clarifications',
+                'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    private function resolveSupplierId(int $thirdPartyId): ?int
+    {
+        return DB::table('t_Suppliers')
+            ->join('t_SupplierMaster', 't_Suppliers.SupplierMasterId', '=', 't_SupplierMaster.Id')
+            ->where('t_SupplierMaster.ThirdPartyId', $thirdPartyId)
+            ->whereNull('t_Suppliers.DeletedOn')
+            ->value('t_Suppliers.Id');
+    }
+
+    private function isRestrictedTender(Tender $tender): bool
+    {
+        $type = strtolower(trim((string) $tender->getRawOriginal('TenderType')));
+
+        return in_array($type, [
+            TenderTypeEnum::Restricted->value,
+            'restricted',
+            'restricted tender',
+            'rs',
+        ], true);
+    }
+
+    private function isTenderPublished(Tender $tender): bool
+    {
+        $status = strtolower(trim((string) $tender->getRawOriginal('Status')));
+
+        return in_array($status, [
+            TenderStatusEnum::Published->value,
+            'published',
+            TenderStatusEnum::OpeningInProgress->value,
+            'opening in progress',
+            'openinginprogress',
+        ], true);
     }
 
     /**
      * Submit a response to a clarification from ERP staff
      * PUT /api/tender-clarifications/{id}/respond
      */
-    public function respondToClarification(Request $request, $clarificationId): JsonResponse
+    public function respondToClarification(RespondTenderClarificationRequest $request, $clarificationId): JsonResponse
     {
+        $validated = $request->validated();
+
         try {
-            $validator = Validator::make($request->all(), [
-                'answer' => 'required|string|min:10|max:2000',
-                'is_published_to_all' => 'boolean',
-                'responded_by' => 'required|string'
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'error' => 'Validation failed',
-                    'messages' => $validator->errors()
-                ], 422);
-            }
-
             $clarification = VendorClarifications::find($clarificationId);
 
-            if (!$clarification) {
+            if (! $clarification) {
                 return response()->json([
-                    'error' => 'Clarification not found'
+                    'success' => false,
+                    'message' => 'Clarification not found',
+                    'error' => 'Clarification not found',
                 ], 404);
             }
 
             if ($clarification->Answer) {
                 return response()->json([
-                    'error' => 'This clarification has already been answered'
+                    'success' => false,
+                    'message' => 'This clarification has already been answered',
+                    'error' => 'This clarification has already been answered',
                 ], 409);
             }
 
@@ -382,39 +390,48 @@ class TenderClarificationApiController extends Controller
                  SET Answer = ?, AnswerDate = ?, ISPUBLISHEDTOALL = ?, ModifiedBy = ?, ModifiedOn = ?
                  WHERE ClarificationID = ?",
                 [
-                    $request->answer,
+                    $validated['answer'],
                     date('Y-m-d H:i:s'),
-                    $request->is_published_to_all ?? false ? 1 : 0,
+                    ! empty($validated['is_published_to_all']) ? 1 : 0,
                     $systemUserId,
                     date('Y-m-d H:i:s'),
-                    $clarificationId
+                    $clarificationId,
                 ]
             );
 
             Log::info('Clarification response submitted', [
                 'clarification_id' => $clarificationId,
-                'answered_by' => $request->responded_by,
-                'is_public' => $request->is_published_to_all ?? false
+                'answered_by' => $validated['responded_by'],
+                'is_public' => $validated['is_published_to_all'] ?? false,
             ]);
 
+            $updated = VendorClarifications::with(['tenderID', 'vendorID'])->find($clarificationId);
+            if ($updated) {
+                $updated->setAttribute('status', $updated->Answer ? 'answered' : 'pending');
+            }
+
             return response()->json([
+                'success' => true,
                 'message' => 'Response submitted successfully',
-                'data' => [
-                    'clarificationId' => $clarificationId,
-                    'answer' => $request->answer,
-                    'answerDate' => now()->format('Y-m-d H:i:s'),
-                    'isPublic' => (bool)($request->is_published_to_all ?? false)
-                ]
+                'data' => $updated
+                    ? (new TenderClarificationResource($updated))->toArray($request)
+                    : [
+                        'clarificationId' => $clarificationId,
+                        'answer' => $validated['answer'],
+                        'answerDate' => now()->format('Y-m-d H:i:s'),
+                        'isPublic' => (bool)($validated['is_published_to_all'] ?? false),
+                    ],
             ]);
         } catch (\Exception $e) {
             Log::error('Error submitting clarification response', [
                 'clarification_id' => $clarificationId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
-                'error' => 'Failed to submit response',
-                'message' => $e->getMessage()
+                'success' => false,
+                'message' => 'Failed to submit response',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

@@ -1,22 +1,24 @@
 <?php
 
 namespace App\Models\PropertyManagement;
-use App\Enums\Property\PropertyInvoiceEnum;
 
+use App\Enums\Property\PropertyInvoiceEnum;
+use App\Models\Auth\User;
 use App\Models\Core\Currency;
 use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Auth\User;
 
 class PropertyInvoice extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+
     protected $table = 't_RentInvoice';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
@@ -35,7 +37,7 @@ class PropertyInvoice extends Model
         'Tax',
         'CreatedBy',
         'ModifiedBy',
-        'DeletedBy'
+        'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
@@ -50,14 +52,17 @@ class PropertyInvoice extends Model
     {
         return $this->belongsTo(PropertyNewLease::class, 'Lease', 'Id');
     }
+
     public function receipts()
     {
         return $this->hasMany(PropertyReceipt::class, 'InvoiceID', 'Id');
     }
+
     public function currency()
     {
         return $this->belongsTo(Currency::class, 'Currency', 'Id');
     }
+
     public function tax()
     {
         return $this->belongsTo(FinanceTaxRuleConfiguration::class, 'Tax', 'Id');
@@ -67,9 +72,9 @@ class PropertyInvoice extends Model
     {
         return $this->belongsTo(User::class, 'CreatedBy');
     }
+
     public function modifiedByUser()
     {
         return $this->belongsTo(User::class, 'ModifiedBy');
     }
-
 }

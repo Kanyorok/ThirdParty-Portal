@@ -18,7 +18,7 @@ class DocumentPreviewController extends Controller
         $document = Document::query()->where(function ($query) use ($documentId) {
             $query->where('DocumentId', $documentId)->orWhere('Id', $documentId);
         })->first();
-        if (!$document instanceof Document) {
+        if (! $document instanceof Document) {
             abort(404, 'Document not found');
         }
 

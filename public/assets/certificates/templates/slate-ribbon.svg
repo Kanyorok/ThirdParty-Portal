@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1000" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="slate" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2f3c57"/>
+      <stop offset="100%" stop-color="#1c2538"/>
+    </linearGradient>
+    <linearGradient id="champagne" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f3e5c0"/>
+      <stop offset="100%" stop-color="#d8b97a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1400" height="1000" fill="#ffffff"/>
+  <rect x="24" y="24" width="1352" height="952" fill="none" stroke="url(#slate)" stroke-width="20"/>
+  <rect x="58" y="58" width="1284" height="884" fill="none" stroke="url(#champagne)" stroke-width="3"/>
+  <polygon points="0,0 340,0 220,250 0,360" fill="url(#slate)"/>
+  <polygon points="1400,1000 1060,1000 1180,750 1400,640" fill="url(#slate)"/>
+  <path d="M0 370 L 90 330 L 260 0 L 330 0 L 150 360 L 0 430 Z" fill="url(#champagne)"/>
+  <path d="M1400 630 L 1310 670 L 1140 1000 L 1070 1000 L 1250 640 L 1400 570 Z" fill="url(#champagne)"/>
+</svg>

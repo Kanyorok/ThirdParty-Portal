@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Legal;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Legal\LegalCaseEvidence;
 use App\Models\Legal\LegalCase;
+use App\Models\Legal\LegalCaseEvidence;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -31,6 +31,7 @@ class LegalCaseEvidenceController extends Controller
         $this->authorize(PermissionEnum::DisputeLitigationCreate, LegalCaseEvidence::class);
 
         $case = LegalCase::findOrFail($caseId);
+
         return view('legal.disputes.evidence.create', compact('case'));
     }
 
@@ -42,7 +43,7 @@ class LegalCaseEvidenceController extends Controller
             'EvidenceTitle' => 'required|string',
             'Description' => 'required|string',
             'DMSDocumentID' => 'nullable|file|max:5120|mimes:pdf,doc,docx,xls,xlsx,csv,png,jpg,jpeg',
-            'ExternalLink' => 'nullable|url'
+            'ExternalLink' => 'nullable|url',
         ], [
             'DMSDocumentID.mimes' => 'Only PDF, Word, Excel, CSV, JPG, and PNG files are allowed.',
             'DMSDocumentID.max' => 'File size must not exceed 5 MB.',
@@ -97,12 +98,13 @@ class LegalCaseEvidenceController extends Controller
                 ->log('Uploaded Evidence:' . $evidence->EvidenceTitle);
 
             DB::commit();
+
             return redirect()->route('legal.cases.evidence.index', $caseId)
                 ->with('success', 'Evidence linked successfully.');
-
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to create Evidence: ' . $th->getMessage());
+
             return back()->with('error', 'An Error Occurred. Please try again');
         }
     }
@@ -129,6 +131,7 @@ class LegalCaseEvidenceController extends Controller
     public function update(Request $request, $caseId, $id)
     {
         $this->authorize(PermissionEnum::DisputeLitigationUpdate, LegalCaseEvidence::class);
+
         try {
             DB::beginTransaction();
 
@@ -139,10 +142,10 @@ class LegalCaseEvidenceController extends Controller
                 'Description' => 'required|string',
                 'DMSDocumentID' => 'nullable|file|max:5120|mimes:pdf,doc,docx,xls,xlsx,csv,png,jpg,jpeg',
                 'ExternalLink' => 'nullable|url',
-                'IsActive' => 'string'
+                'IsActive' => 'string',
             ], [
                 'DMSDocumentID.mimes' => 'Only PDF, Word, Excel, CSV, JPG, and PNG files are allowed.',
-                'DMSDocumentID.max'   => 'File size must not exceed 5 MB.',
+                'DMSDocumentID.max' => 'File size must not exceed 5 MB.',
             ]);
 
             $DMSDocumentID = $evidence->DMSDocumentID; // preserve existing
@@ -179,6 +182,7 @@ class LegalCaseEvidenceController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to delete: ' . $th->getMessage());
+
             return back()->with('error', 'An Error Occurred. Please try again');
         }
     }
@@ -186,6 +190,7 @@ class LegalCaseEvidenceController extends Controller
     public function destroy($caseId, $id)
     {
         $this->authorize(PermissionEnum::DisputeLitigationDelete, LegalCaseEvidence::class);
+
         try {
             DB::beginTransaction();
 
@@ -201,15 +206,14 @@ class LegalCaseEvidenceController extends Controller
                 ->log('Deleted Evidence');
 
             DB::commit();
+
             return redirect()->route('legal.cases.evidence.index', $caseId)
                 ->with('success', 'Evidence deleted successfully.');
-
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Failed to delete Evidence: ' . $th->getMessage());
+
             return back()->with('error', 'An Error Occurred. Please try again');
         }
-
     }
 }
-

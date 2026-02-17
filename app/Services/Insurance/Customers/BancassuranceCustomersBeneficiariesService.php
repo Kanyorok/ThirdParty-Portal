@@ -3,11 +3,10 @@
 namespace App\Services\Insurance\Customers;
 
 use App\Models\Auth\User;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Insurance\BancassuranceBeneficiaries;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassurancePolicy;
-use App\Models\Core\Approval\CodeDetail;
-
 
 class BancassuranceCustomersBeneficiariesService
 {
@@ -20,17 +19,16 @@ class BancassuranceCustomersBeneficiariesService
 
     public static function create(
         BancassuranceCustomer $CustomerID,
-        BancassurancePolicy   $PolicyID,
-        string                $FullName,
-        CodeDetail            $Relationship,
-        string                $IDNumber,
-        string                $Phone,
-        string                $Email,
-        float                 $PercentageShare,
-        bool                  $IsPrimary,
-        User                  $user,
-    ): self
-    {
+        BancassurancePolicy $PolicyID,
+        string $FullName,
+        CodeDetail $Relationship,
+        string $IDNumber,
+        string $Phone,
+        string $Email,
+        float $PercentageShare,
+        bool $IsPrimary,
+        User $user,
+    ): self {
         $customer = BancassuranceBeneficiaries::create([
             'CustomerID' => $CustomerID->Id,
             'PolicyID' => $PolicyID->Id,
@@ -46,6 +44,7 @@ class BancassuranceCustomersBeneficiariesService
         ]);
 
         activity()->causedBy($user->Id)->performedOn($customer)->event('create')->log("Added Customer Contacts {$customer->Id}.");
+
         return new self($customer);
     }
 }

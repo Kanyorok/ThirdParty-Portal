@@ -6,6 +6,7 @@ $action = $isEdit
 : route('prequalification.prequalification-rounds.store');
 $method = $isEdit ? 'PUT' : 'POST';
 $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
+$today = \Carbon\Carbon::today()->format('Y-m-d');
 @endphp
 
 <form action="{{ $action }}" method="POST">
@@ -33,6 +34,7 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
             <label for="StartDate" class="form-label">Start Date</label>
             <input type="date" name="StartDate" id="StartDate"
                 value="{{ old('StartDate', optional($prequalificationRound->StartDate)->format('Y-m-d')) }}"
+                min="{{ $today }}"
                 class="form-control @error('StartDate') is-invalid @enderror"
                 {{ $readOnly ? 'readonly' : '' }}>
             @error('StartDate') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -41,6 +43,7 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
             <label for="EndDate" class="form-label">End Date</label>
             <input type="date" name="EndDate" id="EndDate"
                 value="{{ old('EndDate', optional($prequalificationRound->EndDate)->format('Y-m-d')) }}"
+                min="{{ $today }}"
                 class="form-control @error('EndDate') is-invalid @enderror"
                 {{ $readOnly ? 'readonly' : '' }}>
             @error('EndDate') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -55,10 +58,22 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
         </div>
         <div class="col-md-3">
             <label for="Status" class="form-label">Status</label>
+            @php
+                // Determine if we're in publish mode (URL has #Status or ?publish=1)
+                $isPublishMode = request()->get('publish') === '1' || ($isEdit && request()->fullUrl() && str_contains(request()->fullUrl(), 'publish=1'));
+            @endphp
             <select name="Status" id="Status" class="form-select @error('Status') is-invalid @enderror" {{ $readOnly ? 'disabled' : '' }}>
-                <option value="D" @selected($currentStatus==='D' )>Draft Round</option>
-                <option value="O" @selected($currentStatus==='O' )>Open for Application</option>
-                <option value="CL" @selected($currentStatus==='CL' )>Closed - Applications not Allowed</option>
+                @if($isPublishMode)
+                    {{-- Publish mode: Only show Open for Application --}}
+                    <option value="O" selected>Open for Application</option>
+                @elseif($isEdit)
+                    {{-- Edit mode: Show Draft and Closed only (NOT Open) --}}
+                    <option value="D" @selected($currentStatus==='D')>Draft Round</option>
+                    <option value="CL" @selected($currentStatus==='CL')>Closed - Applications not Allowed</option>
+                @else
+                    {{-- Create mode: Show Draft only --}}
+                    <option value="D" selected>Draft Round</option>
+                @endif
             </select>
             @if($readOnly)
             <input type="hidden" name="Status" value="{{ $currentStatus }}">
@@ -199,9 +214,26 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
         const accordionItems = document.querySelectorAll('.accordion-item');
         const totalSectionWeightProgress = document.getElementById('totalWeightProgress');
         const sectionWeightWarning = document.getElementById('weightWarning');
-    const submitBtn = document.getElementById('publishBtn');
-    const saveDraftBtn = document.getElementById('saveDraftBtn');
-    const saveAsDraftInput = document.getElementById('save_as_draft');
+        const submitBtn = document.getElementById('publishBtn');
+        const saveDraftBtn = document.getElementById('saveDraftBtn');
+        const saveAsDraftInput = document.getElementById('save_as_draft');
+        const startDateInput = document.getElementById('StartDate');
+        const endDateInput = document.getElementById('EndDate');
+
+        // Initial check to set min EndDate based on StartDate
+        if (startDateInput && endDateInput) {
+             function updateEndDateMin() {
+                 endDateInput.min = startDateInput.value;
+             }
+
+             // Run on load if start date is already populated
+             if (startDateInput.value) {
+                 updateEndDateMin();
+             }
+
+             // Update whenever StartDate changes
+             startDateInput.addEventListener('change', updateEndDateMin);
+        }
 
         function updateTotalWeights() {
             let totalSectionWeight = 0;

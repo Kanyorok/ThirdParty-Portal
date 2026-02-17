@@ -115,7 +115,6 @@
 
                 accountsTable.on('error', function (er) {
                     nWarning("an issue occurred while loading the list.");
-                    console.log(er);
                 });
             } else {
                 accountsTable.clear().destroy();

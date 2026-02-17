@@ -2,27 +2,23 @@
 
 namespace App\Models\Fleet;
 
-use Illuminate\Database\Eloquent\Model;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\DMS\Image;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Models\Core\Approval\CodeDetail;
+use App\Models\DMS\Image;
+use App\Models\HR\Employee;
 use App\Traits\Model\DocumentsTrait;
-use App\Models\HRM\Employee;
-use App\Models\Fleet\FleetTripLog;
-
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FleetDriver extends Model
 {
-    use UserActorTrait, SoftDeletes,DocumentsTrait;
+    use UserActorTrait;
+    use SoftDeletes;
+    use DocumentsTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    public const CREATED_AT = 'CreatedOn';
+    public const UPDATED_AT = 'ModifiedOn';
+    public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_FleetDrivers';
     protected $primaryKey = 'Id';
@@ -73,8 +69,6 @@ class FleetDriver extends Model
         ->whereNull('t_TripLogs.DeletedOn');
     }
 
-
-
     public function employmentType()
     {
         return $this->belongsTo(CodeDetail::class, 'EmploymentType', 'ID');
@@ -104,6 +98,4 @@ class FleetDriver extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'DriverStatus', 'ID');
     }
-
-
 }

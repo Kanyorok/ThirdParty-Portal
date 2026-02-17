@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class ClearPermissionCacheWithSessions extends Command
 {
@@ -31,9 +31,10 @@ class ClearPermissionCacheWithSessions extends Command
      */
     public function handle()
     {
-        if (!$this->option('force')) {
-            if (!$this->confirm('This will log out all users. Do you want to continue?')) {
+        if (! $this->option('force')) {
+            if (! $this->confirm('This will log out all users. Do you want to continue?')) {
                 $this->warn('Operation cancelled');
+
                 return 1;
             }
         }
@@ -85,7 +86,7 @@ class ClearPermissionCacheWithSessions extends Command
                 // For database sessions, delete from the sessions table
                 $table = config('session.table', 'sessions');
                 $connection = config('session.connection');
-                
+
                 try {
                     $deletedCount = DB::connection($connection)
                         ->table($table)
@@ -93,6 +94,7 @@ class ClearPermissionCacheWithSessions extends Command
                 } catch (\Exception $e) {
                     $this->error("   ✗ Failed to clear database sessions: {$e->getMessage()}");
                 }
+
                 break;
 
             case 'redis':
@@ -101,14 +103,15 @@ class ClearPermissionCacheWithSessions extends Command
                     $redis = app('redis')->connection(config('session.connection'));
                     $prefix = config('session.cookie', 'laravel_session');
                     $keys = $redis->keys("{$prefix}:*");
-                    
-                    if (!empty($keys)) {
+
+                    if (! empty($keys)) {
                         $redis->del($keys);
                         $deletedCount = count($keys);
                     }
                 } catch (\Exception $e) {
                     $this->error("   ✗ Failed to clear Redis sessions: {$e->getMessage()}");
                 }
+
                 break;
 
             case 'file':
@@ -116,7 +119,7 @@ class ClearPermissionCacheWithSessions extends Command
                 try {
                     $sessionPath = config('session.files', storage_path('framework/sessions'));
                     $files = glob($sessionPath . '/*');
-                    
+
                     if ($files) {
                         foreach ($files as $file) {
                             if (is_file($file)) {
@@ -128,10 +131,12 @@ class ClearPermissionCacheWithSessions extends Command
                 } catch (\Exception $e) {
                     $this->error("   ✗ Failed to clear file sessions: {$e->getMessage()}");
                 }
+
                 break;
 
             default:
                 $this->warn("   ⚠ Session driver '{$driver}' - attempting generic clear");
+
                 try {
                     Artisan::call('cache:clear');
                     $this->line('   ✓ Cleared cache (sessions may still be active)');

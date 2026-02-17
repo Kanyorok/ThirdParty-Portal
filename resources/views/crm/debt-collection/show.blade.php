@@ -175,8 +175,9 @@
                                         <div class="clearfix"></div>
                                     </div>
                                     <div class="col-12">
+                                        <div class="table-responsive">
                                         <table id="guarantorsTable"
-                                               class="table table-striped no-footer dtr-inline w-100 table-responsive">
+                                               class="table table-striped no-footer dtr-inline w-100 ">
                                             <thead>
                                             <tr>
                                                 <th>No.</th>
@@ -187,15 +188,16 @@
                                             </tr>
                                             </thead>
                                             <tbody></tbody>
-                                        </table>
+                                        </table></div>
                                     </div>
                                 </div>
                             @elseif($loan->collaterals_count>0)
                                 <div class="row">
                                     <div class="col-12"><h3>Collaterals</h3></div>
                                     <div class="col-12">
+                                        <div class="table-responsive">
                                         <table id="collateralsTable"
-                                               class="table table-striped no-footer dtr-inline w-100 table-responsive">
+                                               class="table table-striped no-footer dtr-inline w-100">
                                             <thead>
                                             <tr>
                                                 <th>No.</th>
@@ -205,7 +207,7 @@
                                             </tr>
                                             </thead>
                                             <tbody></tbody>
-                                        </table>
+                                        </table></div>
                                     </div>
                                 </div>
                             @else
@@ -222,8 +224,9 @@
                             @endif
                         </div>
                         <div class="tab-pane m-2" id="tab-2" role="tabpanel">
+                            <div class="table-responsive">
                             <table id="MessagesTable"
-                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 ">
                                 <thead>
                                 <tr>
                                     <th>SMS ID</th>
@@ -232,11 +235,12 @@
                                 </tr>
                                 </thead>
                                 <tbody></tbody>
-                            </table>
+                            </table></div>
                         </div>
                         <div class="tab-pane m-2" id="tab-3" role="tabpanel">
+                            <div class="table-responsive">
                             <table id="tasksTable"
-                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 ">
                                 <thead>
                                 <tr>
                                     <th>#</th>
@@ -246,11 +250,12 @@
                                 </tr>
                                 </thead>
                                 <tbody></tbody>
-                            </table>
+                            </table></div>
                         </div>
                         <div class="tab-pane m-2" id="tab-4" role="tabpanel">
+                            <div class="table-responsive">
                             <table id="scheduleTable"
-                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 ">
                                 <thead>
                                 <tr>
                                     <th>No.</th>
@@ -261,11 +266,12 @@
                                 </tr>
                                 </thead>
                                 <tbody></tbody>
-                            </table>
+                            </table></div>
                         </div>
                         <div class="tab-pane m-2" id="tab-5" role="tabpanel">
+                            <div class="table-responsive">
                             <table id="assignmentsTable"
-                                   class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                                   class="table table-striped dataTable no-footer dtr-inline w-100 ">
                                 <thead>
                                 <tr>
                                     <th>No.</th>
@@ -276,7 +282,7 @@
                                 </tr>
                                 </thead>
                                 <tbody></tbody>
-                            </table>
+                            </table></div>
                         </div>
                     </div>
                 </div>
@@ -551,7 +557,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading guarantors.");
-                    // console.log(er);
                 });
             } else {
                 $('#guarantorsTable').DataTable().ajax.reload();
@@ -581,7 +586,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading collaterals.");
-                    // console.log(er);
                 });
             } else {
                 $('#collateralsTable').DataTable().ajax.reload();
@@ -610,7 +614,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading collaterals.");
-                    // console.log(er);
                 });
             } else {
                 $('#MessagesTable').DataTable().ajax.reload();
@@ -640,7 +643,6 @@
                     }
                 }).on('error', function () {
                     nWarning("an issue occurred while loading tasks.");
-                    // console.log(er);
                 });
             } else {
                 $('#tasksTable').DataTable().ajax.reload();

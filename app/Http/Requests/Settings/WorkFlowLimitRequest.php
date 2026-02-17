@@ -26,6 +26,6 @@ class WorkFlowLimitRequest extends FormRequest
             'Permission' => 'required|integer',
             'AmountLimit' => ['required', 'array', 'min:1'],
         'AmountLimit.*' => ['required', 'numeric', 'min:0', 'distinct'],
-        ]; 
+        ];
     }
 }

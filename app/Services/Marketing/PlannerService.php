@@ -58,7 +58,7 @@ class PlannerService
      */
     public function ceoWorkflowReject(User $actor, string $reason): static
     {
-        if (!$this->canApprove($actor) && !$actor->can(PermissionEnum::Ceo->value)) {
+        if (! $this->canApprove($actor) && ! $actor->can(PermissionEnum::Ceo->value)) {
             throw new ErroredException('cannot reject, no permission');
         }
 
@@ -115,6 +115,7 @@ class PlannerService
             'Modes' => $Mode->ID,
             'ModifiedBy' => $actor->Id,
         ]);
+
         return $this;
     }
 
@@ -153,7 +154,7 @@ class PlannerService
      */
     public function ceoWorkflowApprove(User $actor): static
     {
-        if (!$this->canApprove($actor) && !$actor->can(PermissionEnum::Ceo->value)) {
+        if (! $this->canApprove($actor) && ! $actor->can(PermissionEnum::Ceo->value)) {
             throw new ErroredException('cannot reject, no permission');
         }
 
@@ -191,7 +192,7 @@ class PlannerService
      */
     public function branchWorkflowReject(User $actor, string $reason): static
     {
-        if (!$this->canApprove($actor)) {
+        if (! $this->canApprove($actor)) {
             throw new ErroredException('cannot reject, no permission');
         }
 
@@ -235,7 +236,7 @@ class PlannerService
      */
     public function managerWorkflowApprove(User $actor): static
     {
-        if (!$this->canApprove($actor) && !(new UserService($actor))->isMarketingManager($actor->branch)) {
+        if (! $this->canApprove($actor) && ! (new UserService($actor))->isMarketingManager($actor->branch)) {
             throw new ErroredException('cannot approve, no permission');
         }
 
@@ -315,11 +316,13 @@ class PlannerService
 
     private function _notifyCeo(User $actor): void
     {
-        $users = UserService::ceos(true)->whereNotIn('t_Users.Id', $this->planner->workflows()
+        $users = UserService::ceos(true)->whereNotIn(
+            't_Users.Id',
+            $this->planner->workflows()
             ->whereIn('Status', [WorkflowStatus::Submitted->value, WorkflowStatus::Accepted->value])->select('CreatedBy')
         )->get(["Id", "UserID", "Name", "Email"]);
         foreach ($users as $user) {
-            if (!$user instanceof User) {
+            if (! $user instanceof User) {
                 continue;
             }
             if (in_array($user->UserID, [$actor->UserID, SystemHelper::ID], true)) {//skip sys and submitter
@@ -333,7 +336,6 @@ class PlannerService
                 'ModifiedBy' => $actor->Id,
             ]);
 
-            //$this->_sendMail($user);
             (new UserService($user))->sendEmail(
                 subject: 'Marketing Plan submitted for review and approval',
                 body: '<p>Hello</p><p>The plan <b>' . Str::upper($this->planner->PlannerID) . '</b> has been submitted for your review. Click the link below to review</p>
@@ -348,7 +350,7 @@ class PlannerService
      */
     public function managerWorkflowReject(User $actor, string $reason): static
     {
-        if (!$this->canApprove($actor)) {
+        if (! $this->canApprove($actor)) {
             throw new ErroredException('cannot reject, no permission');
         }
 
@@ -395,7 +397,7 @@ class PlannerService
     {
         $this->syncDates();
 
-        if ((!$branch->manager instanceof User) && (!$branch->operation instanceof User)) {
+        if ((! $branch->manager instanceof User) && (! $branch->operation instanceof User)) {
             throw new ErroredException('cannot submit, no branch manager');
         }
         // add to pending workflow
@@ -455,6 +457,7 @@ class PlannerService
         ]);
 
         activity()->causedBy($actor)->performedOn($this->planner)->event('submit')->log('Submitted ' . $this->planner->PlannerID . ' for approval.');
+
         return $this;
     }
 
@@ -474,6 +477,7 @@ class PlannerService
             'StartOn' => $start,
             'EndOn' => $end,
         ])->save(['timestamps' => false]);
+
         return $this;
     }
 
@@ -482,7 +486,7 @@ class PlannerService
      */
     public function branchWorkflowApprove(User $actor): static
     {
-        if (!$this->canApprove($actor)) {
+        if (! $this->canApprove($actor)) {
             throw new ErroredException('cannot approve, no permission');
         }
 
@@ -502,7 +506,8 @@ class PlannerService
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
         ]);
-        $marketingManagers = UserService::marketingManagers(true)->whereNotIn('t_Users.Id',
+        $marketingManagers = UserService::marketingManagers(true)->whereNotIn(
+            't_Users.Id',
             $this->planner->workflows()->whereIn('Status', [WorkflowStatus::Submitted->value, WorkflowStatus::Accepted->value])->select('CreatedBy')
         )->get(["Id", "UserID", "Name", "Email"]);
         foreach ($marketingManagers as $marketingManager) {
@@ -536,6 +541,7 @@ class PlannerService
                 'DeletedOn' => now(),
             ])->save();
             activity()->causedBy($actor)->performedOn($this->planner)->event('delete')->log('Deleted draft  plan ' . $this->planner->PlannerID);
+
             return;
         }
 
@@ -553,6 +559,7 @@ class PlannerService
             $this->planner->activities()->update(['MasterPlannerId' => null]);
 
             activity()->causedBy($actor)->performedOn($this->planner)->event('delete')->log('Deleted draft master  plan ' . $this->planner->PlannerID);
+
             return;
         }
 

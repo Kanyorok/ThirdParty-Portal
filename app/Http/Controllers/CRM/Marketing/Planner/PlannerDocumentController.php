@@ -26,7 +26,7 @@ class PlannerDocumentController extends Controller
             'title' => Str::upper($planner->PlannerID),
             'planner' => $planner,
             'name' => $name,
-            'motto' => $motto
+            'motto' => $motto,
         ])->setPaper('a4', 'landscape')->download($planner->PlannerID . '.pdf');
     }
 }

@@ -3,8 +3,8 @@
 namespace App\Services\Inventory;
 
 use App\Models\Inventory\StockItem;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 
 class StockItemService
 {
@@ -16,13 +16,12 @@ class StockItemService
         do {
             try {
                 return DB::transaction(function () use ($data) {
-                    // Create StockItem first to get primary key `Id`
                     $stockItem = StockItem::create([
                         'ItemID' => $data['ItemID'],
                         'UnitCost' => $data['UnitCost'] ?? null,
                         'UOM' => $data['UOM'],
                         'Branch' => $data['Branch'],
-                        'Store' => $data['Store'] ?? null, 
+                        'Store' => $data['Store'] ?? null,
                         'CurrentQty' => $data['CurrentQty'],
                         'Status' => $data['Status'],
                         'Batch' => $data['Batch'] ?? false,
@@ -43,7 +42,6 @@ class StockItemService
                     $skuCode = $this->generateSKUCode($stockItem->Id, $data['Branch'], $data['Store'] ?? '00');
                     $stockItem->update(['SKUCode' => $skuCode]);
 
-                    // Log activity
                     activity()
                         ->causedBy(auth()->user())
                         ->performedOn($stockItem)
@@ -82,12 +80,9 @@ class StockItemService
         });
     }
 
-
     public function destroy(StockItem $item): void
     {
 
-       
-                
         $item->DeletedBy = auth()->id();
         $item->Status = '0';
         $item->save();
@@ -99,8 +94,6 @@ class StockItemService
             ->event('delete')
             ->log('Deleted Stock Item with SKUCode ' . $item->Id);
     }
- 
-
 
     protected function generateSKUCode(int $Id, int $branchId, ?int $storeId): string
     {
@@ -111,9 +104,6 @@ class StockItemService
             str_pad($Id, 5, '0', STR_PAD_LEFT);
     }
 
-    /**
-     * Check Duplicate SKUCode
-     */
     protected function isDuplicateSKUCodeError(QueryException $e): bool
     {
         return str_contains($e->getMessage(), 'Duplicate entry')
