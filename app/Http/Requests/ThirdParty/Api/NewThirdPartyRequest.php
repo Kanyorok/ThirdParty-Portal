@@ -45,7 +45,7 @@ class NewThirdPartyRequest extends FormRequest
         }
 
         try {
-            $this->merge([$field =>(string) (new PhoneNumber($value, $country->CountryCode))->formatE164()]);
+            $this->merge([$field => (string) (new PhoneNumber($value, $country->CountryCode))->formatE164()]);
         } catch (\Throwable) {
             // @lambo
         }

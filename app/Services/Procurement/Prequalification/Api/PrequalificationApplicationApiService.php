@@ -99,7 +99,7 @@ class PrequalificationApplicationApiService
 
                 $eligibility = $this->prequalificationService->validateRoundEligibility($round);
                 $hasUnapplied = $categories->contains(
-                    fn ($category) => !($category['hasApplied'] ?? false),
+                    fn ($category) => ! ($category['hasApplied'] ?? false),
                 );
                 $hasCategories = $categories->isNotEmpty();
 
