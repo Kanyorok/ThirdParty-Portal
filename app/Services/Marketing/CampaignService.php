@@ -6,10 +6,10 @@ use App\Enums\CampaignStatusEnum;
 use App\Enums\CampaignTypeEnum;
 use App\Enums\MarketingListEnum;
 use App\Enums\WorkflowStatus;
-use App\Events\Marketing\CampaignRunEvent;
 use App\Events\Marketing\CampaignSubmittedEvent;
 use App\Events\Marketing\NewCampaignEvent;
 use App\Exceptions\ErroredException;
+use App\Jobs\Campaigns\ProcessRunJob;
 use App\Models\Auth\User;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
@@ -27,20 +27,20 @@ class CampaignService
     {
     }
 
-    public static function create(MarketingList $list, string $label, User $actor, CampaignTypeEnum $type, string $notes = '', bool $autoSend = false): CampaignService
+    public static function create(MarketingList $list, string $label, User $actor, CampaignTypeEnum $type, string $notes = '', bool $autoSend = false): self
     {
         $campaign = new Campaign();
         $campaign->fill([
-                         'CampaignID' => self::_ID($label),
-                         'Label' => $label,
-                         'Status' => CampaignStatusEnum::Draft->value,
-                         'Type' => $type,
-                         'Processing' => true,
-                         'MarketingListId' => $list->MarketingListID,
-                         'Notes' => $notes,
-                         'CreatedBy' => $actor->Id,
-                         'ModifiedBy' => $actor->Id,
-                        ])->save();
+            'CampaignID' => self::_ID($label),
+            'Label' => $label,
+            'Status' => CampaignStatusEnum::Draft->value,
+            'Type' => $type,
+            'Processing' => true,
+            'MarketingListId' => $list->MarketingListID,
+            'Notes' => $notes,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
+        ])->save();
 
         event(new NewCampaignEvent($campaign, $actor, $autoSend));
 
@@ -159,7 +159,8 @@ class CampaignService
                                'Processing' => true,
                               ])->save(['timestamps' => false]);
 
-        event(new CampaignRunEvent($this->campaign, $actor));
+        //1 event(new CampaignRunEvent($this->campaign, $actor));
+        ProcessRunJob::dispatch($this->campaign, $actor);
 
         return $this;
     }

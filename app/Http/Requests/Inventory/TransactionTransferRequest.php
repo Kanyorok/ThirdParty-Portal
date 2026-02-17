@@ -53,15 +53,13 @@ class TransactionTransferRequest extends FormRequest
             'items.*.approved_qty' => 'required|numeric|min:1',
             'items.*.dispatched_qty' => 'required|numeric|min:0',
             'items.*.remarks' => 'nullable|string|max:255',
+            'items.*.batch_allocation' => 'nullable|array',
+            'items.*.batch_allocation.*.ledger_id' => 'required_with:items.*.batch_allocation|exists:t_StockGRNLedger,Id',
+            'items.*.batch_allocation.*.quantity' => 'required_with:items.*.batch_allocation|numeric|min:0',
         ];
 
-
-        $rules['items.*.batch_allocation'] = 'nullable|array';
-        $rules['items.*.batch_allocation.*.ledger_id'] = 'required|exists:t_StockGRNLedger,Id';
-        $rules['items.*.batch_allocation.*.quantity'] = 'required|numeric|min:0';
-
         if ($this->input('RequisitionType') === 'procurement') {
-            $rules['RequisitionId'] = 'required|exists:t_GoodsReceipts,Id';
+            $rules['RequisitionId'] = 'required|exists:t_Requisitions,Id';
         } else {
             $rules['RequisitionId'] = 'required|exists:t_InterBranchRequisition,Id';
         }

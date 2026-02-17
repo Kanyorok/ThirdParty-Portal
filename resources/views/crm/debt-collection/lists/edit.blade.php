@@ -218,8 +218,9 @@
 
                 </div>
                 <div class="card-body">
+                    <div class="table-responsive">
                     <table id="productsTable"
-                           class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+                           class="table table-striped dataTable no-footer dtr-inline w-100">
                         <thead>
                         <tr>
                             <th></th>
@@ -231,7 +232,7 @@
                         </tr>
                         </thead>
                         <tbody></tbody>
-                    </table>
+                    </table></div>
                 </div>
             </div>
 
