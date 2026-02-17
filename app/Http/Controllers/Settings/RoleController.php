@@ -162,12 +162,7 @@ class RoleController extends Controller
         });
 
         // Get active job roles from unified roles table
-        $jobRoles = \App\Models\HR\JobRole::where('IsActive', 1)
-            ->whereNull('DeletedOn')
-            ->orderBy('name')
-            ->get(['id', 'Code', 'name']);
-
-        return view('settings.roles.edit', compact('role', 'permissions', 'dynamicPermissions', 'jobRoles'));
+        return view('settings.roles.edit', compact('role', 'permissions', 'dynamicPermissions'));
     }
 
     public function update(RoleRequest $request, Role $role): JsonResponse
