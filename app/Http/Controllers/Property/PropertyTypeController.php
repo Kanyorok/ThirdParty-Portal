@@ -18,7 +18,7 @@ class PropertyTypeController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::PropertyTypeView, PropertyType::class);
-        $types = PropertyType::with('propertycategory')->get();
+        $types = PropertyType::with('propertycategory')->orderBy('Id', 'desc')->get();
 
         return view('property.propertyregistry.propertytype.index', compact('types'));
     }

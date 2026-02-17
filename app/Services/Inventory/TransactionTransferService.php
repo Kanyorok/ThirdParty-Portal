@@ -13,7 +13,7 @@ use App\Models\Inventory\StockTransaction;
 use App\Models\Inventory\Store;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\TransactionTransferItem;
-use App\Models\Procurement\GoodsReceipt;
+use App\Models\Procurement\Requisitions;
 use App\Services\Finance\TransactionService;
 use App\Services\Workflow\ApprovalWorkflow;
 use Exception;
@@ -56,8 +56,8 @@ class TransactionTransferService
         $data['Status'] = Transfers::Pending->value;
 
         if ($data['RequisitionType'] === 'procurement') {
-            $requisition = GoodsReceipt::findOrFail($data['RequisitionId']);
-            $fromBranch = $this->getHQBranchId();
+            $requisition = Requisitions::findOrFail($data['RequisitionId']);
+            $fromBranch = $data['FromBranch'];
             $toBranch = $data['ToBranch'];
         } else {
             $requisition = InterBranchRequisition::findOrFail($data['RequisitionId']);
@@ -111,10 +111,7 @@ class TransactionTransferService
             $itemId = $itemData['item'];
             $dispatchedQty = $itemData['dispatched_qty'];
             $batchAllocation = $itemData['batch_allocation'] ?? null;
-
-            $fromBranch = $transfer->RequisitionType === 'procurement'
-                ? $this->getHQBranchId()
-                : $transfer->FromBranch;
+            $fromBranch = $transfer->FromBranch;
 
             if (! $this->branchHasGRNLedger($fromBranch, $itemId)) {
                 throw new Exception("Branch {$fromBranch} has no GRN ledger entries for item {$itemId}. Cannot transfer without GRN tracking.");
@@ -148,11 +145,13 @@ class TransactionTransferService
             return false;
         }
 
+
         return StockGRNLedger::where('ItemNo', $itemId)
             ->where('Branch', $branchId)
             ->where('Store', $store->Id)
             ->where('RemainingQTY', '>', 0)
             ->exists();
+
     }
 
     public function getAvailableGRNBatches($itemId, $branchId, $storeId = null)
@@ -310,7 +309,6 @@ class TransactionTransferService
 
                         $remainingQty -= $allocatedQty;
                     }
-
                 }
 
                 $itemCost = 0;
@@ -455,6 +453,7 @@ class TransactionTransferService
             ->where('IsMainStore', true)
             ->whereNull('DeletedOn')
             ->first();
+
 
 
         if (! $store) {

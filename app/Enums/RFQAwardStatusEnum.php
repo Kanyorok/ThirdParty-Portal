@@ -13,7 +13,7 @@ enum RFQAwardStatusEnum: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'Pending Approval',
             self::SUBMITTED => 'Submitted for Approval',
             self::UNDER_REVIEW => 'Under Review',
@@ -25,7 +25,7 @@ enum RFQAwardStatusEnum: string
 
     public function badgeClass(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'warning',
             self::SUBMITTED => 'info',
             self::UNDER_REVIEW => 'primary',

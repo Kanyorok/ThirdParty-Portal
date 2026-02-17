@@ -488,7 +488,7 @@
                             <td>{{ $termination->lease->property->PropertyName ?? 'N/A' }}</td>
                             <td>{{ $termination->lease->unit->UnitCode ?? 'N/A' }}</td>
                             <td>{{ $termination->TerminationDate ? Carbon::parse($termination->TerminationDate)->format('d/m/Y') : 'N/A' }}</td>
-                            <td>{{ $termination->Reason ?? 'N/A' }}</td>
+                            <td>{{ $termination->code->Description ?? 'N/A' }}</td>
                             <td>
                                 @php
                                     $statusEnum = is_object($termination->Status) ? $termination->Status : ApprovalEnum::tryFrom($termination->Status);
@@ -525,7 +525,7 @@
                                                     </div>
                                                     <div class="info-row row mt-2">
                                                         <div class="col-md-6"><strong>Termination Date:</strong> {{ $termination->TerminationDate ? Carbon::parse($termination->TerminationDate)->format('d/m/Y') : 'N/A' }}</div>
-                                                        <div class="col-md-6"><strong>Reason:</strong> {{ $termination->Reason ?? 'N/A' }}</div>
+                                                        <div class="col-md-6"><strong>Reason:</strong> {{ $termination->code->Description ?? 'N/A' }}</div>
                                                     </div>
                                                 </div>
 

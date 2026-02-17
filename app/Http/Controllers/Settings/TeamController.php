@@ -42,7 +42,6 @@ class TeamController extends Controller
                                                                                                        return route('teams.show', [$team->TeamID]);
                                                                                                    },
                                                                                                   ])->rawColumns(['action'])->make();
-
     }
 
     /**

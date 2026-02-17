@@ -4,9 +4,6 @@
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
-        /* --------------------------
-           GENERAL LAYOUT & CARD STYLE
-        --------------------------- */
         body {
             background-color: #f8f9fa;
         }
@@ -30,9 +27,6 @@
             }
         }
 
-        /* --------------------------
-           SELECT2 STYLING
-        --------------------------- */
         .select2-container {
             width: 100% !important;
         }
@@ -76,7 +70,6 @@
             overflow-y: auto;
         }
 
-        /* Option styling */
         .s2-option .s2-row {
             display: flex;
             align-items: center;
@@ -90,9 +83,6 @@
             color: #fff;
         }
 
-        /* --------------------------
-           PREVIEW SECTION STYLING
-        --------------------------- */
         #journalPreviewSection {
             transition: all 0.3s ease-in-out;
         }
@@ -141,7 +131,6 @@
             </div>
         @endif
 
-        <!-- Pending Reversal Notice (shown via JS when pending journal selected) -->
         <div id="pendingReversalNotice" class="alert alert-danger shadow-sm rounded-4 d-none" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
             <span id="pendingReversalMessage"></span>
@@ -149,8 +138,6 @@
 
         <div class="card shadow border-0">
             <div class="card-body">
-                {{-- <h4 class="mb-4 fw-semibold text-primary text-center">Reverse Journal Entry</h4> --}}
-
                 <form method="POST" action="{{ route('reversingjournal.store') }}" id="reverseJournalForm">
                     @csrf
                     @method('POST')
@@ -158,8 +145,8 @@
                     <div class="row g-4 mb-3">
                         <div class="col-md-4">
                             <label for="OriginalReferenceNumber" class="form-label fw-semibold">Original Journal Ref #</label>
-                             <select name="OriginalJournalID" id="OriginalReferenceNumber"
-                                 class="form-select je-ref-select" required>
+                            <select name="OriginalJournalID" id="OriginalReferenceNumber"
+                                class="form-select je-ref-select" required>
                                 <option value="" disabled selected>-- Select Journal Ref --</option>
                                 @foreach ($journalEntries as $entry)
                                     @php
@@ -174,21 +161,21 @@
                                         {{ $entry->RefNo }} - {{ $entry->Description ?? 'No Description' }}
                                     </option>
                                 @endforeach
-                                 @if(!empty($pendingEntries))
-                                     @foreach ($pendingEntries as $p)
-                                         @php
-                                             $isRecurring = strtolower($p->Type ?? 'normal') === 'recurring';
-                                             $showUrl = $isRecurring
-                                                 ? route('recurrentjournal.show', $p->Id)
-                                                 : route('journalentry.show', $p->Id);
-                                         @endphp
-                                         <option value="{{ $p->Id }}" data-pending="1" data-url="{{ $showUrl }}"
-                                             data-type="{{ ucfirst($p->Type) }}" data-ref="{{ $p->RefNo }}"
-                                             data-desc="{{ $p->Description ?? 'No Description' }} (Pending reversal approval)">
-                                             {{ $p->RefNo }} - {{ $p->Description ?? 'No Description' }}
-                                         </option>
-                                     @endforeach
-                                 @endif
+                                @if(!empty($pendingEntries))
+                                    @foreach ($pendingEntries as $p)
+                                        @php
+                                            $isRecurring = strtolower($p->Type ?? 'normal') === 'recurring';
+                                            $showUrl = $isRecurring
+                                                ? route('recurrentjournal.show', $p->Id)
+                                                : route('journalentry.show', $p->Id);
+                                        @endphp
+                                        <option value="{{ $p->Id }}" data-pending="1" data-url="{{ $showUrl }}"
+                                            data-type="{{ ucfirst($p->Type) }}" data-ref="{{ $p->RefNo }}"
+                                            data-desc="{{ $p->Description ?? 'No Description' }} (Pending reversal approval)">
+                                            {{ $p->RefNo }} - {{ $p->Description ?? 'No Description' }}
+                                        </option>
+                                    @endforeach
+                                @endif
                             </select>
                         </div>
 
@@ -205,18 +192,17 @@
                         </div>
                     </div>
 
-                    @if(!empty($pendingReversals) && count($pendingReversals) > 0)
+                    @if(!empty($pendingEntries) && count($pendingEntries) > 0)
                         <div class="alert alert-info py-2 px-3 small rounded-3 mb-3">
-                            <strong>Note:</strong> The following journals are pending reversal approval and are hidden from the list:
+                            <strong>Note:</strong> The following journals are pending reversal approval:
                             <div class="mt-1">
-                                @foreach($pendingReversals as $ref)
-                                    <span class="badge bg-secondary me-1 mb-1">{{ $ref }}</span>
+                                @foreach($pendingEntries as $p)
+                                    <span class="badge bg-secondary me-1 mb-1">{{ $p->RefNo }}</span>
                                 @endforeach
                             </div>
                         </div>
                     @endif
 
-                    <!-- Inline Original Journal Preview -->
                     <div id="journalPreviewSection" class="mt-4 d-none">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h6 class="mb-0 text-info">Original Journal Preview</h6>
@@ -247,7 +233,6 @@
                     </div>
                 </form>
 
-                <!-- Confirmation Modal -->
                 <div class="modal fade" id="reverseConfirmModal" tabindex="-1" aria-labelledby="reverseConfirmLabel"
                     aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
@@ -265,10 +250,10 @@
                                     lines and cannot be undone easily.
                                 </div>
                                 <div class="small">
-                                    <div>Original Reference: <strong id="confirmRef">—</strong></div>
-                                    <div>Type: <strong id="confirmType">—</strong></div>
-                                    <div>Reversal Date: <strong id="confirmDate">—</strong></div>
-                                    <div>Reason: <strong id="confirmReason">—</strong></div>
+                                    <div>Original Reference: <strong id="confirmRef">-</strong></div>
+                                    <div>Type: <strong id="confirmType">-</strong></div>
+                                    <div>Reversal Date: <strong id="confirmDate">-</strong></div>
+                                    <div>Reason: <strong id="confirmReason">-</strong></div>
                                 </div>
                             </div>
                             <div class="modal-footer border-0">
@@ -307,8 +292,7 @@
                         let badge = '';
                         if (type) {
                             const norm = type.toLowerCase();
-                            const cls = norm === 'recurring' ? 'bg-info' : (norm === 'reversing' ? 'bg-danger' :
-                                'bg-secondary');
+                            const cls = norm === 'recurring' ? 'bg-info' : (norm === 'reversing' ? 'bg-danger' : 'bg-secondary');
                             badge = '<span class="s2-type ' + cls + '">' + type + '</span>';
                         }
                         return $('<div class="s2-option ' + (isPending ? 'opacity-75' : '') + '">\
@@ -328,8 +312,7 @@
                         let badge = '';
                         if (type) {
                             const norm = type.toLowerCase();
-                            const cls = norm === 'recurring' ? 'bg-info' : (norm === 'reversing' ? 'bg-danger' :
-                                'bg-secondary');
+                            const cls = norm === 'recurring' ? 'bg-info' : (norm === 'reversing' ? 'bg-danger' : 'bg-secondary');
                             badge = '<span class="ms-2 badge ' + cls + '" style="font-size:.7rem;">' + type + '</span>' + (isPending ? '<span class="ms-2 badge bg-danger" style="font-size:.7rem;">Pending approval</span>' : '');
                         }
                         return $('<div class="d-flex align-items-center">\
@@ -352,10 +335,10 @@
 
             function populateConfirmDetails() {
                 const opt = refSelect && refSelect.options[refSelect.selectedIndex];
-                const ref = opt ? (opt.getAttribute('data-ref') || opt.textContent) : '—';
-                const type = opt ? (opt.getAttribute('data-type') || 'Normal') : '—';
-                const date = dateInput ? (dateInput.value || '—') : '—';
-                const reason = reasonInput ? (reasonInput.value || '—') : '—';
+                const ref = opt ? (opt.getAttribute('data-ref') || opt.textContent) : '-';
+                const type = opt ? (opt.getAttribute('data-type') || 'Normal') : '-';
+                const date = dateInput ? (dateInput.value || '-') : '-';
+                const reason = reasonInput ? (reasonInput.value || '-') : '-';
                 document.getElementById('confirmRef').textContent = ref;
                 document.getElementById('confirmType').textContent = type;
                 document.getElementById('confirmDate').textContent = date;
@@ -384,19 +367,17 @@
 
                 const notice = document.getElementById('pendingReversalNotice');
                 const noticeMessage = document.getElementById('pendingReversalMessage');
-                
+
                 if (isPending) {
-                    // show notice at top, do not load preview
                     previewSection.classList.add('d-none');
                     if (notice && noticeMessage) {
                         noticeMessage.textContent = `Journal ${ref} is pending reversal approval.`;
                         notice.classList.remove('d-none');
-                        // Scroll to notice
                         notice.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
-                    if (openBtn) { 
-                        openBtn.disabled = true; 
-                        openBtn.title = 'Journal pending reversal approval'; 
+                    if (openBtn) {
+                        openBtn.disabled = true;
+                        openBtn.title = 'Journal pending reversal approval';
                     }
                     return;
                 } else {
@@ -404,9 +385,9 @@
                         notice.classList.add('d-none');
                         noticeMessage.textContent = '';
                     }
-                    if (openBtn) { 
-                        openBtn.disabled = false; 
-                        openBtn.title = ''; 
+                    if (openBtn) {
+                        openBtn.disabled = false;
+                        openBtn.title = '';
                     }
                 }
 

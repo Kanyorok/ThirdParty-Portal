@@ -111,6 +111,5 @@ class ScheduleRequest extends FormRequest
         }
 
         return $clients;
-
     }
 }

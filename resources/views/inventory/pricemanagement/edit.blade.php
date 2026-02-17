@@ -67,10 +67,11 @@
                         @endforeach
                     </select>
             </div>
+            
             <button type="submit" class="btn btn-success"
                     onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Update Price
             </button>
-            <a href="{{ route('pricemanagement.index') }}" class="btn btn-secondary mt-3">Cancel</a>
+            <a href="{{ route('pricemanagement.index') }}" class="btn btn-secondary">Cancel</a>
         </form>
     </div>
 @endsection

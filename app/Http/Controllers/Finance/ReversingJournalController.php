@@ -226,6 +226,11 @@ class ReversingJournalController extends Controller
         $this->authorize(PermissionEnum::FinanceGeneralLedgerDelete, FinanceJournalEntry::class);
 
         $entry = FinanceJournalEntry::findOrFail($id);
+        $approvalStatus = strtolower((string) $entry->ApprovalStatus);
+        if (in_array($approvalStatus, ['posted', 'rejected'], true)) {
+            return redirect()->route('reversingjournal.index')
+                ->with('error', 'Posted or rejected reversing journals cannot be deleted.');
+        }
         DB::transaction(function () use ($entry) {
             // Delete related lines and reverse journal record
             FinanceJournalLines::where('JournalEntryId', $entry->Id)->delete();

@@ -77,6 +77,8 @@ class FinanceInvoice extends Model
         'IsGenerated' => 'boolean',
         'TaxAmount' => 'float',
         'InvoiceAmount' => 'float',
+        'TotalAmount' => 'float',
+        'AmountPaid' => 'float',
         'TaxPercentage' => 'float',
         'UseCredit' => 'boolean',
         'CreditAppliedOn' => 'datetime',

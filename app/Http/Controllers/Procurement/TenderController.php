@@ -634,7 +634,7 @@ class TenderController extends Controller
             [
             'submission_deadline.after_or_equal' => 'The submission deadline cannot be in the past.',
             'opening_date.after' => 'The opening date must be after the submission deadline.',
-        ]
+            ]
         );
 
         $show = true;
@@ -2341,7 +2341,6 @@ class TenderController extends Controller
             return response()->streamDownload(function () use ($content) {
                 echo $content;
             }, $filename, ['Content-Type' => $mimeType]);
-
         } catch (\Exception $e) {
             Log::error("Failed to download document {$documentId} for tender {$id}: " . $e->getMessage());
 
@@ -2362,7 +2361,6 @@ class TenderController extends Controller
             return view('dms.files.embed')
                 ->with('file', $document)
                 ->with('service', new \App\Services\DMS\DocumentService($document));
-
         } catch (\Exception $e) {
             Log::error("Failed to preview document {$documentId}: " . $e->getMessage());
 
@@ -2396,7 +2394,6 @@ class TenderController extends Controller
                 ->log('Deleted tender document');
 
             return redirect()->back()->with('success', 'Document deleted successfully.');
-
         } catch (\Exception $e) {
             Log::error("Failed to delete document {$documentId} for tender {$id}: " . $e->getMessage());
 

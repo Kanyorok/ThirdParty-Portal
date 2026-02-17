@@ -171,18 +171,23 @@ class InterBranchRequisitionApprovalController extends Controller
 
             return redirect()->back()->with('error', $errorMessage);
         } catch (Exception $e) {
-
             $errorMessage = 'Unexpected error, try again later.';
             $errorLower = strtolower($e->getMessage());
 
-            if (str_contains($errorLower, 'cannot approve your own submission') ||
-                str_contains($errorLower, 'maker-checker')) {
+            if (
+                str_contains($errorLower, 'cannot approve your own submission') ||
+                str_contains($errorLower, 'maker-checker')
+            ) {
                 $errorMessage = 'You cannot approve your own submission. Please have another user approve this requisition.';
-            } elseif (str_contains($errorLower, 'already approved') ||
-                     str_contains($errorLower, 'already actioned')) {
+            } elseif (
+                str_contains($errorLower, 'already approved') ||
+                     str_contains($errorLower, 'already actioned')
+            ) {
                 $errorMessage = 'This requisition has already been approved or processed.';
-            } elseif (str_contains($errorLower, 'not in approvable status') ||
-                     str_contains($errorLower, 'no pending approval found')) {
+            } elseif (
+                str_contains($errorLower, 'not in approvable status') ||
+                     str_contains($errorLower, 'no pending approval found')
+            ) {
                 $errorMessage = 'This requisition cannot be approved in its current status or no pending approval found for your user.';
             } elseif (str_contains($errorLower, 'insufficient stock')) {
                 $errorMessage = 'Insufficient stock available for one or more items.';
@@ -278,18 +283,23 @@ class InterBranchRequisitionApprovalController extends Controller
 
             return redirect()->back()->with('error', $errorMessage);
         } catch (Exception $e) {
-
             $errorMessage = 'Unexpected error, try again later.';
             $errorLower = strtolower($e->getMessage());
 
-            if (str_contains($errorLower, 'cannot approve your own submission') ||
-                str_contains($errorLower, 'maker-checker')) {
+            if (
+                str_contains($errorLower, 'cannot approve your own submission') ||
+                str_contains($errorLower, 'maker-checker')
+            ) {
                 $errorMessage = 'You cannot reject your own submission. Please have another user review this requisition.';
-            } elseif (str_contains($errorLower, 'already rejected') ||
-                     str_contains($errorLower, 'already actioned')) {
+            } elseif (
+                str_contains($errorLower, 'already rejected') ||
+                     str_contains($errorLower, 'already actioned')
+            ) {
                 $errorMessage = 'This requisition has already been rejected or processed.';
-            } elseif (str_contains($errorLower, 'not in rejectable status') ||
-                     str_contains($errorLower, 'no pending approval found')) {
+            } elseif (
+                str_contains($errorLower, 'not in rejectable status') ||
+                     str_contains($errorLower, 'no pending approval found')
+            ) {
                 $errorMessage = 'This requisition cannot be rejected in its current status or no pending approval found for your user.';
             }
 
@@ -368,17 +378,19 @@ class InterBranchRequisitionApprovalController extends Controller
 
             return redirect()->route('interbranchrequisitionapproval.index')
                 ->with('success', 'Your decision has been recorded.');
-
         } catch (Exception $e) {
-
             $errorMessage = 'Unexpected error: ' . $e->getMessage();
             $errorLower = strtolower($e->getMessage());
 
-            if (str_contains($errorLower, 'cannot approve your own submission') ||
-                str_contains($errorLower, 'maker-checker')) {
+            if (
+                str_contains($errorLower, 'cannot approve your own submission') ||
+                str_contains($errorLower, 'maker-checker')
+            ) {
                 $errorMessage = 'You cannot approve or reject your own submission. Please have another user review this requisition.';
-            } elseif (str_contains($errorLower, 'no pending approval found') ||
-                     str_contains($errorLower, 'already actioned')) {
+            } elseif (
+                str_contains($errorLower, 'no pending approval found') ||
+                     str_contains($errorLower, 'already actioned')
+            ) {
                 $errorMessage = 'No pending approval found for your user or this requisition has already been processed.';
             } elseif (str_contains($errorLower, 'insufficient stock')) {
                 $errorMessage = 'Insufficient stock available for one or more items.';

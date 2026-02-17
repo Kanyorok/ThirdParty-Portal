@@ -161,7 +161,6 @@ class TenderClarificationApiController extends Controller
                 'debug' => $e->getTraceAsString(),
             ], 500);
         }
-
     }
 
     public function getClarifications(ListTenderClarificationsRequest $request): JsonResponse
@@ -273,7 +272,6 @@ class TenderClarificationApiController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
-
     }
 
     public function getPendingClarifications(ListPendingTenderClarificationsRequest $request): JsonResponse
@@ -432,6 +430,5 @@ class TenderClarificationApiController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
-
     }
 }

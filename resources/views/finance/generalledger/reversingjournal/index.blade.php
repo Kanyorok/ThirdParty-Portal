@@ -163,15 +163,22 @@
                                 {{-- Status --}}
                                 <td>
                                     @php
-                                        $statusClass = match(strtolower($reversal->ApprovalStatus)) {
+                                        $approvalStatus = strtolower((string)($reversal->ApprovalStatus ?? ''));
+                                        $statusClass = match($approvalStatus) {
                                             'posted' => 'bg-success',
                                             'rejected' => 'bg-danger',
-                                            'draft' => 'bg-secondary',
-                                            default => 'bg-secondary'
+                                            'draft', '' => 'bg-secondary',
+                                            default => 'bg-secondary',
+                                        };
+                                        $statusLabel = match($approvalStatus) {
+                                            'posted' => 'Posted',
+                                            'rejected' => 'Rejected',
+                                            'draft', '' => 'Pending',
+                                            default => ucfirst($approvalStatus),
                                         };
                                     @endphp
                                     <span class="badge {{ $statusClass }}">
-                                        {{ ucfirst($reversal->ApprovalStatus) ?? 'Pending' }}
+                                        {{ $statusLabel }}
                                     </span>
                                 </td>
 
@@ -188,13 +195,16 @@
                                        class="btn btn-sm btn-outline-primary" title="View Journal Entry">
                                         <i class="fas fa-book-open"></i>
                                     </a>
-                                    @php $isPosted = strtolower($reversal->ApprovalStatus ?? '') === 'posted'; @endphp
+                                    @php
+                                        $approvalStatus = strtolower($reversal->ApprovalStatus ?? '');
+                                        $isLocked = in_array($approvalStatus, ['posted', 'rejected'], true);
+                                    @endphp
                                         <!-- Edit removed as requested -->
                                     <button type="button"
-                                            class="btn btn-sm btn-outline-danger custom-delete-btn {{ $isPosted ? 'disabled' : '' }}"
+                                            class="btn btn-sm btn-outline-danger custom-delete-btn {{ $isLocked ? 'disabled' : '' }}"
                                             title="Delete"
-                                            {{ $isPosted ? 'disabled' : '' }}
-                                            @if(!$isPosted)
+                                            {{ $isLocked ? 'disabled' : '' }}
+                                            @if(!$isLocked)
                                                 data-bs-toggle="modal"
                                             data-bs-target="#customDeleteConfirmModal"
                                             data-name="{{ $reversal->RefNo ?? ('#'.$reversal->Id) }}"

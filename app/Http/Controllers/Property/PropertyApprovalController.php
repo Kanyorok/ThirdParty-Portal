@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PropertyManagement\PropertyLeaseRenewal;
 use App\Models\PropertyManagement\PropertyLeaseTermination;
 use App\Models\PropertyManagement\PropertyNewLease;
+use App\Models\PropertyManagement\PropertyUnit;
 use App\Services\Workflow\ApprovalWorkflow;
 use Exception;
 use Illuminate\Http\Request;
@@ -160,6 +161,16 @@ class PropertyApprovalController extends Controller
             // Release lock
             optional($lock)->release();
         }
+
+        // Availability of the property Unit
+        $unit = PropertyUnit::findOrFail($termination->lease->Unit);
+        $unit->update([
+            'IsRentable' => 1,   // Unit can now be rented again
+            'CurrentStatus' => 1,   // Status = Available
+            'ModifiedBy' => $user->Id,
+            'ModifiedOn' => now(),
+        ]);
+
 
         return redirect()->route('propertyapproval.index')->with('success', 'Termination approved successfully.');
     }

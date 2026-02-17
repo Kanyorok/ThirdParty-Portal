@@ -34,6 +34,21 @@ class NewThirdPartyRequest extends FormRequest
 
         $this->formatPhoneField('Phone', $country);
         $this->formatPhoneField('user_Phone', $country);
+
+        // Map customer_ prefixed fields to user_ prefixed fields when user_ versions are missing
+        $customerToUserFields = [
+            'customer_DateOfBirth' => 'user_DateOfBirth',
+            'customer_MaritalStatus' => 'user_MaritalStatus',
+            'customer_Occupation' => 'user_Occupation',
+            'customer_Gender' => 'user_Gender',
+            'tenant_Remarks' => 'user_Remarks',
+        ];
+
+        foreach ($customerToUserFields as $customerField => $userField) {
+            if (! $this->filled($userField) && $this->filled($customerField)) {
+                $this->merge([$userField => $this->input($customerField)]);
+            }
+        }
     }
 
     private function formatPhoneField(string $field, Country $country): void
@@ -109,6 +124,11 @@ class NewThirdPartyRequest extends FormRequest
                 'string',
                 'max:500',
             ],
+            'customer_Gender' => ['nullable'],
+            'customer_DateOfBirth' => ['nullable'],
+            'customer_MaritalStatus' => ['nullable'],
+            'customer_Occupation' => ['nullable'],
+            'tenant_Remarks' => ['nullable'],
         ];
     }
 

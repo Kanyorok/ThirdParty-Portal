@@ -20,7 +20,7 @@ class PropertyNewLeaseRequest extends FormRequest
             'FloorID' => 'required|exists:t_PropertyFloor,Id',
             'Unit' => 'required|exists:t_PropertyUnit,Id',
 
-            'StartDate' => 'required|date|before_or_equal:EndDate',
+            'StartDate' => 'required|date|after_or_equal:today',
             'EndDate' => 'required|date|after_or_equal:StartDate',
 
             'PaymentFrequency' => 'required|exists:t_CodeDetails,ID',
@@ -49,8 +49,8 @@ class PropertyNewLeaseRequest extends FormRequest
             'BlockID.required' => 'Please select a block.',
             'FloorID.required' => 'Please select a floor.',
             'Unit.required' => 'Please select a unit.',
-            'StartDate.before_or_equal' => 'Start date must be on or before the end date.',
-            'EndDate.after_or_equal' => 'End date must be on or after the start date.',
+            'StartDate' => 'Start date must be current or future date.',
+            'EndDate' => 'End date must be on or after the start date.',
             'PaymentFrequency.required' => 'Please select a payment frequency.',
             'MonthlyRent.required' => 'Monthly rent is required.',
             'Deposit.required' => 'Deposit amount is required.',
