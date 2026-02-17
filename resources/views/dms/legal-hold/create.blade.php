@@ -45,7 +45,9 @@
 </div>
 <script>
     $(function () {
-        $('#Tags').select2();
+        $('#Tags').select2({
+            dropdownParent: $("#offcanvasMain"),
+        });
         $('form#createLegalHoldForm').submit(async function (e) {
             e.preventDefault();
             if (await saveForm($(this), $('#createLegalHoldBtn'), false, true, true)) {

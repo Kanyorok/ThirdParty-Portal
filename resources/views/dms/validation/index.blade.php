@@ -2,12 +2,7 @@
 
 @section('title','Document Validation')
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
-    <style>
-        .select2-container {
-            width: 100% !important;
-        }
-    </style>
+
 @endsection
 @section('breadcrumbs')
     <li class="breadcrumb-item"><a href="#">DMS</a></li>
@@ -49,8 +44,8 @@
                     processing: true,
                     serverSide: true,
                     responsive: true,
-                    "order": [[5, 'desc']],
-                    /*"columnDefs": [
+                    /* "order": [[5, 'desc']],
+                   "columnDefs": [
                         {"className": "text-center", "targets": [2]}
                     ],*/
                     ajax: {
@@ -61,7 +56,7 @@
                     },
                     columns: [
                         {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
-                        {data: 'Type', name: 'Type'},
+                        {data: 'Type', name: 'type.Name'},
                         {data: 'Name', name: 'Name'},
                         {data: 'Stage', name: 'Stage', orderable: false, searchable: false},
                         {data: 'action', name: 'action', orderable: false, searchable: false},
