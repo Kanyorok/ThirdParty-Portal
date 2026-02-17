@@ -50,7 +50,7 @@
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.16",
         "fakerphp/faker": "^1.23",
-        "friendsofphp/php-cs-fixer": "^3.93",
+        "friendsofphp/php-cs-fixer": "^3.94",
         "kitloong/laravel-migrations-generator": "^7.2",
         "larastan/larastan": "^3.9",
         "laravel/pint": "^1.13",

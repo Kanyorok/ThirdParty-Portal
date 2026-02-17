@@ -352,6 +352,7 @@ class BidSubmissionApiController extends Controller
     public function submitBid(LegacyBidSubmissionRequest $request)
     {
         $validated = $request->validated();
+
         try {
             // Get tender and supplier information
             $tender = Tender::find($validated['tender_id']);
@@ -506,6 +507,7 @@ class BidSubmissionApiController extends Controller
     public function getExistingBid(GetExistingBidRequest $request)
     {
         $validated = $request->validated();
+
         try {
             $user = Auth::guard('sanctum')->user()
                 ?? Auth::guard('third_party')->user()
@@ -578,6 +580,7 @@ class BidSubmissionApiController extends Controller
     public function getSupplierBids(ListBidSubmissionsRequest $request)
     {
         $validated = $request->validated();
+
         try {
             $user = Auth::guard('sanctum')->user()
                 ?? Auth::guard('third_party')->user()

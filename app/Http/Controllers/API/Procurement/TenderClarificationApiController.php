@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\API\Procurement;
 
+use App\Enums\TenderStatusEnum;
+use App\Enums\TenderTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Procurement\TenderClarifications\ListPendingTenderClarificationsRequest;
 use App\Http\Requests\Procurement\TenderClarifications\ListTenderClarificationsRequest;
@@ -11,8 +13,6 @@ use App\Http\Resources\Procurement\TenderClarificationResource;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\VendorClarifications;
 use App\Models\ThirdParies\Supplier;
-use App\Enums\TenderStatusEnum;
-use App\Enums\TenderTypeEnum;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +23,7 @@ class TenderClarificationApiController extends Controller
     public function submitClarification(StoreTenderClarificationRequest $request): JsonResponse
     {
         $validated = $request->validated();
+
         try {
             // Resolve supplier
             $supplier = null;
@@ -166,6 +167,7 @@ class TenderClarificationApiController extends Controller
     public function getClarifications(ListTenderClarificationsRequest $request): JsonResponse
     {
         $validated = $request->validated();
+
         try {
             $user = Auth::guard('third_party')->user()
                 ?? Auth::guard('sanctum')->user()
@@ -277,6 +279,7 @@ class TenderClarificationApiController extends Controller
     public function getPendingClarifications(ListPendingTenderClarificationsRequest $request): JsonResponse
     {
         $validated = $request->validated();
+
         try {
             $query = VendorClarifications::query()
                 ->whereNull('Answer')
@@ -357,6 +360,7 @@ class TenderClarificationApiController extends Controller
     public function respondToClarification(RespondTenderClarificationRequest $request, $clarificationId): JsonResponse
     {
         $validated = $request->validated();
+
         try {
             $clarification = VendorClarifications::find($clarificationId);
 
