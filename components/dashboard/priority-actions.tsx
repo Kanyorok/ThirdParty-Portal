@@ -47,15 +47,6 @@ const toneIconStyles: Record<PriorityAction["tone"], string> = {
   info: "bg-sky-500/10 text-sky-600 ring-1 ring-sky-500/20",
 }
 
-const toneButtonStyles: Record<PriorityAction["tone"], string> = {
-  danger:
-    "border-rose-200 text-rose-700 hover:border-rose-300 hover:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-200",
-  warning:
-    "border-amber-200 text-amber-700 hover:border-amber-300 hover:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-200",
-  info:
-    "border-sky-200 text-sky-700 hover:border-sky-300 hover:bg-sky-500/10 dark:border-sky-500/30 dark:text-sky-200",
-}
-
 const toneLabels: Record<PriorityAction["tone"], string> = {
   danger: "Critical",
   warning: "High",
@@ -186,7 +177,7 @@ export function PriorityActions({
       title: "Prequalification review",
       value: preqReview,
       description: "Rounds awaiting review or follow-up.",
-      href: isSupplier ? "/dashboard/supplier/prequalification" : "/dashboard/prequalification",
+      href: "/dashboard/supplier/prequalification",
       tone: "warning",
       icon: ClipboardCheck,
     })

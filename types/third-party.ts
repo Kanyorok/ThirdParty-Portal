@@ -23,23 +23,31 @@ export const businessTypeOptions = [
 export type CountryOption = { id: number; name: string; code?: string; flag?: string }
 
 export type ThirdPartyInputs = {
-    thirdPartyName: string
+    firstName?: string
+    lastName?: string
+    phone?: string | null
+    gender?: string | null
+    imageId?: number | null
+    categories?: number[]
     tradingName?: string | null
-    businessType: number
-    registrationNumber: string
-    taxPIN: string
+    businessType?: number | string | null
+    registrationNumber?: string | null
+    taxPin?: string | null
+    taxPIN?: string | null
     vatNumber?: string | null
-    countryId: number
-    physicalAddress: string
-    email: string
-    phone: string
+    countryId?: number | null
+    physicalAddress?: string | null
     website?: string | null
+
+    // Backward-compatible fields still used in older UI forms.
+    thirdPartyName?: string
+    email?: string
 }
 
 export type ThirdPartyProfile = ThirdPartyInputs & {
-    id: number
-    status: number
-    approvalStatus: string
+    id?: number
+    status?: number | string
+    approvalStatus?: string | null
 }
 
 export interface Supplier {

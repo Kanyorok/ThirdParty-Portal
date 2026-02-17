@@ -53,7 +53,7 @@ export default function StatusBadge({
     return (
         <Badge
             className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-medium",
+                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold",
                 theme.className,
                 extraClass
             )}

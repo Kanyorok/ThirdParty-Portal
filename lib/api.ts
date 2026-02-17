@@ -1,5 +1,4 @@
 import { getSession, signOut } from 'next-auth/react'
-import { ApiResponse, PrequalificationRound } from '@/types/procurement/types'
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -112,15 +111,15 @@ export interface UpdateThirdPartyPayload {
 }
 
 export async function getProfile(): Promise<ProfileResponse> {
-    return apiClient.get<ProfileResponse>('/api/v1/portal/auth/profile')
+    return apiClient.get<ProfileResponse>('/api/v1/profile')
 }
 
 export async function updateProfile(profileData: UpdateThirdPartyPayload): Promise<ProfileResponse> {
-    return apiClient.put<ProfileResponse>('/api/v1/portal/auth/profile', profileData)
+    return apiClient.put<ProfileResponse>('/api/v1/profile', profileData)
 }
 
 export async function getCurrentUser(): Promise<ProfileResponse> {
-    return apiClient.post<ProfileResponse>('/api/v1/portal/auth/me', {})
+    return apiClient.get<ProfileResponse>('/api/thirdpartyuser')
 }
 
 // export async function getOpenRounds(): Promise<ApiResponse<PrequalificationRound[]>> {

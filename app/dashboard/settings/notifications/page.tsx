@@ -29,7 +29,7 @@ export default function BusinessDetails() {
                             <Link href="/dashboard/notifications">Open notifications</Link>
                         </Button>
                         <Button asChild variant="outline" className="h-11 rounded-xl border-border/60 bg-background shadow-none">
-                            <Link href="/dashboard/settings/general">Manage preferences</Link>
+                            <Link href="/dashboard/settings/profile">Manage preferences</Link>
                         </Button>
                     </div>
                 </CardContent>

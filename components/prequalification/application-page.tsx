@@ -17,7 +17,7 @@ export default function ApplicationPageClient() {
     const handleOpenChange = (value: boolean) => {
         setOpen(value)
         if (!value) {
-            router.replace("/dashboard/prequalification")
+            router.replace("/dashboard/supplier/prequalification")
         }
     }
 

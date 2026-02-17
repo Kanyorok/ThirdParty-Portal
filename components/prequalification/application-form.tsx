@@ -663,15 +663,27 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
     const renderFormState = () => {
         switch (formLoadingState) {
             case "success":
-                return <SuccessState onClose={handleClose} />;
+                return (
+                    <div className="px-6 py-6 sm:px-8">
+                        <SuccessState onClose={handleClose} />
+                    </div>
+                );
             case "warning":
-                return <WarningState message={formMessage?.message || "You have already applied to this round."} />;
+                return (
+                    <div className="px-6 py-6 sm:px-8">
+                        <WarningState message={formMessage?.message || "You have already applied to this round."} />
+                    </div>
+                );
             case "error":
-                return <ErrorState error={formMessage?.message || "Application submission failed. Please try again."} onRetry={() => onSubmit(form.getValues())} />;
+                return (
+                    <div className="px-6 py-6 sm:px-8">
+                        <ErrorState error={formMessage?.message || "Application submission failed. Please try again."} onRetry={() => onSubmit(form.getValues())} />
+                    </div>
+                );
             default:
                 return (
-                    <form className="mt-8 space-y-8" onSubmit={form.handleSubmit(onSubmit)} noValidate>
-                        <div className="space-y-6">
+                    <form className="flex h-full flex-col" onSubmit={form.handleSubmit(onSubmit)} noValidate>
+                        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6 sm:px-8">
                             <div className="space-y-4">
                                 {!defaultRoundId && (
                                     <>
@@ -928,14 +940,14 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                 </div>
                             )}
                         </div>
-                        <div className="flex flex-col-reverse sm:flex-row gap-3 pt-6 border-t">
-                            <Button type="button" variant="outline" onClick={handleClose} disabled={formLoadingState === "submitting"} className="flex-1 sm:flex-none h-11 rounded-xl border-slate-200 bg-white hover:bg-slate-50">
+                        <div className="sticky bottom-0 flex flex-col-reverse gap-3 border-t border-slate-200 bg-white/95 px-6 py-4 backdrop-blur sm:flex-row sm:px-8">
+                            <Button type="button" variant="outline" onClick={handleClose} disabled={formLoadingState === "submitting"} className="h-11 flex-1 rounded-xl border-slate-200 bg-white hover:bg-slate-50 sm:flex-none">
                                 Cancel
                             </Button>
                             {!currentRound?.hasApplied && <Button
                                 type="submit"
                                 disabled={!submitEnabled}
-                                className="flex-1 sm:flex-none h-11 rounded-xl bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-100"
+                                className="h-11 flex-1 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:ring-indigo-100 sm:flex-none"
                             >
                                 {formLoadingState === "submitting" ? (
                                     <>
@@ -958,10 +970,18 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             {trigger}
-            <SheetContent className="w-full sm:max-w-xl md:max-w-2xl overflow-y-auto bg-white border-l border-slate-200 shadow-none">
-                <SheetHeader className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+            <SheetContent className="w-full sm:max-w-2xl lg:max-w-3xl overflow-hidden border-l border-slate-200 bg-white p-0 shadow-none">
+                <SheetHeader className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-6 py-5 pr-12 backdrop-blur sm:px-8">
                     <SheetTitle className="text-2xl font-bold tracking-tight text-slate-900">Prequalification application</SheetTitle>
                     <SheetDescription className="text-slate-600">Apply to participate in procurement opportunities.</SheetDescription>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                            {selectedRoundId ? "Round selected" : "Select a round"}
+                        </span>
+                        <span className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
+                            {selectedCategoryIds.length} categories selected
+                        </span>
+                    </div>
                 </SheetHeader>
                 {renderFormState()}
             </SheetContent>

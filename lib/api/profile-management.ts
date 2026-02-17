@@ -8,16 +8,18 @@ export interface ThirdPartyType {
 }
 
 export interface ThirdPartyDetails {
-  thirdPartyName: string
-  tradingName: string | null
-  businessType: string | null
-  registrationNumber: string
-  taxPIN: string
+  thirdPartyName?: string | null
+  tradingName?: string | null
+  businessType?: string | null
+  registrationNumber?: string | null
+  taxPIN?: string | null
+  taxPin?: string | null
+  vatNumber?: string | null
   physicalAddress: string | null
   website: string | null
-  email: string
-  phone: string
-  countryId: string
+  email?: string | null
+  phone?: string | null
+  countryId?: string | number | null
 }
 
 export interface SupplierProfile {
@@ -55,45 +57,59 @@ export interface CustomerProfile {
 }
 
 export interface ThirdPartyEntity {
-  id: number
-  profileCompletion: number
+  id?: number
+  profileCompletion?: number
   approvalStatus: string | null
-  isPrequalified: boolean
-  supplierId: string | null
-  isSupplier: boolean
-  isTenant: boolean
-  isCustomer: boolean
-  thirdPartyDetails: ThirdPartyDetails
+  isPrequalified?: boolean
+  supplierId?: string | null
+  isSupplier?: boolean
+  isTenant?: boolean
+  isCustomer?: boolean
+  thirdPartyDetails?: ThirdPartyDetails
+  tradingName?: string | null
+  businessType?: string | null
+  registrationNumber?: string | null
+  taxPin?: string | null
+  vatNumber?: string | null
+  countryId?: number | null
+  physicalAddress?: string | null
+  website?: string | null
   types?: ThirdPartyType[]
-  createdOn: string
+  createdOn?: string
 }
 
 export interface ThirdPartyUserProfile {
-  id: number
-  userId: number
-  firstName: string
-  lastName: string
-  fullName: string
-  email: string
+  id?: number
+  userId?: number
+  firstName?: string
+  lastName?: string
+  fullName?: string
+  email?: string
   phone: string | null
   imageId: number | null
   gender: any
-  thirdPartyId: string
-  isActive: boolean
-  isSupplier: boolean
-  isTenant: boolean
-  isCustomer: boolean
+  thirdPartyId?: string | number | null
+  isActive?: boolean
+  isSupplier?: boolean
+  isTenant?: boolean
+  isCustomer?: boolean
   emailVerifiedOn: string | null
-  createdOn: string
-  modifiedOn: string
+  createdOn?: string
+  modifiedOn?: string
   thirdParty?: ThirdPartyEntity
+  third_party?: ThirdPartyEntity
+  thirdPartyDetails?: ThirdPartyDetails
+  third_party_details?: ThirdPartyDetails
 }
 
 export interface ProfileResponse {
-  success: boolean
+  success?: boolean
   message?: string
   data?: ThirdPartyUserProfile
   user?: ThirdPartyUserProfile
+  user_profile?: ThirdPartyUserProfile
+  userProfile?: ThirdPartyUserProfile
+  errors?: Record<string, string[]>
 }
 
 export interface UpdateProfilePayload {
@@ -109,14 +125,15 @@ export interface UpdateProfilePayload {
 }
 
 export interface AvailableProfilesResponse {
-  success: boolean
+  success?: boolean
   data: {
     availableProfiles: Array<{
       type: 'supplier' | 'tenant' | 'customer'
       label: string
       hasProfile: boolean
     }>
-    totalProfiles: number
+    totalProfiles?: number
+    totalActive?: number
   }
 }
 
@@ -139,41 +156,65 @@ export interface CustomerProfileResponse {
 }
 
 export async function getProfile(): Promise<ProfileResponse> {
-  return apiClient.get<ProfileResponse>("/api/v1/portal/auth/profile")
+  try {
+    return await apiClient.get<ProfileResponse>("/api/v1/profile")
+  } catch {
+    return apiClient.get<ProfileResponse>("/api/third-party-profile")
+  }
 }
 
 export async function updateProfile(data: UpdateProfilePayload): Promise<ProfileResponse> {
-  return apiClient.put<ProfileResponse>("/api/v1/portal/auth/profile", data)
+  const hasPortalPayload = [
+    "ThirdPartyName",
+    "TradingName",
+    "BusinessType",
+    "RegistrationNumber",
+    "TaxPIN",
+    "CountryId",
+    "LocationId",
+    "PhysicalAddress",
+    "Website",
+  ].some((key) => Object.prototype.hasOwnProperty.call(data, key))
+
+  if (hasPortalPayload) {
+    return apiClient.put<ProfileResponse>("/api/v1/profile", data)
+  }
+
+  return apiClient.put<ProfileResponse>("/api/third-party-profile", data as any)
 }
 
 export async function getCurrentUser(): Promise<ProfileResponse> {
-  return apiClient.get<ProfileResponse>("/api/v1/portal/auth/me")
+  try {
+    return await apiClient.get<ProfileResponse>("/api/thirdpartyuser")
+  } catch {
+    return apiClient.get<ProfileResponse>("/api/third-party-profile")
+  }
 }
 
 export async function getAvailableProfiles(): Promise<AvailableProfilesResponse> {
-  return apiClient.get<AvailableProfilesResponse>("/api/v1/portal/auth/profile/available")
+  return apiClient.get<AvailableProfilesResponse>("/api/v1/profile/available")
 }
 
 export async function getSupplierProfile(): Promise<SupplierProfileResponse> {
-  return apiClient.get<SupplierProfileResponse>("/api/v1/portal/auth/profile/supplier")
+  return apiClient.get<SupplierProfileResponse>("/api/v1/profile/supplier")
 }
 
 export async function updateSupplierProfile(data: { category_ids: number[] }): Promise<SupplierProfileResponse> {
-  return apiClient.put<SupplierProfileResponse>("/api/v1/portal/auth/profile/supplier", data)
+  return apiClient.put<SupplierProfileResponse>("/api/v1/profile/supplier", data)
 }
 
 export async function getTenantProfile(): Promise<TenantProfileResponse> {
-  return apiClient.get<TenantProfileResponse>("/api/v1/portal/auth/profile/tenant")
+  return apiClient.get<TenantProfileResponse>("/api/v1/profile/tenant")
 }
 
 export async function updateTenantProfile(data: { TenantType?: number; Remarks?: string }): Promise<TenantProfileResponse> {
-  return apiClient.put<TenantProfileResponse>("/api/v1/portal/auth/profile/tenant", data)
+  return apiClient.put<TenantProfileResponse>("/api/v1/profile/tenant", data)
 }
 
 export async function getCustomerProfile(): Promise<CustomerProfileResponse> {
-  return apiClient.get<CustomerProfileResponse>("/api/v1/portal/auth/profile/customer")
+  return apiClient.get<CustomerProfileResponse>("/api/v1/profile/customer")
 }
 
 export async function updateCustomerProfile(data: any): Promise<CustomerProfileResponse> {
-  return apiClient.put<CustomerProfileResponse>("/api/v1/portal/auth/profile/customer", data)
+  return apiClient.put<CustomerProfileResponse>("/api/v1/profile/customer", data)
 }

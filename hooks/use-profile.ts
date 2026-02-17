@@ -55,11 +55,51 @@ export function useProfile() {
     [updateMutation],
   )
 
-  const profile = profileResponse?.data || profileResponse?.user
-  const currentUser = currentUserResponse?.user || currentUserResponse?.data
-  
-  const thirdParty = profile?.thirdParty as any
-  const details = thirdParty?.thirdPartyDetails
+  const profile =
+    profileResponse?.data ||
+    profileResponse?.user ||
+    profileResponse?.user_profile ||
+    profileResponse?.userProfile
+
+  const currentUser =
+    currentUserResponse?.user ||
+    currentUserResponse?.data ||
+    currentUserResponse?.user_profile ||
+    currentUserResponse?.userProfile
+
+  const thirdParty = (profile?.thirdParty || profile?.third_party || profile) as any
+
+  const rawDetails =
+    thirdParty?.thirdPartyDetails ||
+    thirdParty?.third_party_details ||
+    profile?.thirdPartyDetails ||
+    profile?.third_party_details ||
+    {
+      thirdPartyName:
+        profile?.thirdPartyName ??
+        profile?.third_party_name ??
+        thirdParty?.thirdPartyName ??
+        thirdParty?.tradingName ??
+        profile?.tradingName ??
+        profile?.fullName ??
+        null,
+      tradingName: thirdParty?.tradingName ?? profile?.tradingName ?? null,
+      businessType: thirdParty?.businessType ?? profile?.businessType ?? null,
+      registrationNumber: thirdParty?.registrationNumber ?? profile?.registrationNumber ?? null,
+      taxPIN: thirdParty?.taxPIN ?? thirdParty?.taxPin ?? profile?.taxPIN ?? profile?.taxPin ?? null,
+      vatNumber: thirdParty?.vatNumber ?? profile?.vatNumber ?? null,
+      countryId: thirdParty?.countryId ?? profile?.countryId ?? null,
+      physicalAddress: thirdParty?.physicalAddress ?? profile?.physicalAddress ?? null,
+      website: thirdParty?.website ?? profile?.website ?? null,
+      email: profile?.email ?? null,
+      phone: profile?.phone ?? null,
+    }
+
+  const details = {
+    ...rawDetails,
+    email: rawDetails?.email ?? profile?.email ?? null,
+    phone: rawDetails?.phone ?? profile?.phone ?? null,
+  }
 
   const rawProfileCompletion =
     thirdParty?.profileCompletion ??

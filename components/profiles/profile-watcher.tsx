@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useProfileStore, ProfileType } from '@/store/use-profile-store'
+import { useProfileStore } from '@/store/use-profile-store'
+import { resolveSessionAvailableProfiles } from '@/lib/profile/session-profiles'
 
 export function ProfileSyncWatcher() {
     const { data: session, status } = useSession()
@@ -10,13 +11,7 @@ export function ProfileSyncWatcher() {
 
     useEffect(() => {
         if (status === 'authenticated' && session?.user) {
-            const types: ProfileType[] = ['base']
-
-            if (session.user.is_supplier) types.push('Supplier')
-            if (session.user.is_tenant) types.push('Tenant')
-            if (session.user.is_customer) types.push('Customer')
-
-            initializeProfiles(types)
+            initializeProfiles(resolveSessionAvailableProfiles(session.user as any))
         } else if (status === 'unauthenticated') {
             initializeProfiles(['base'])
         }

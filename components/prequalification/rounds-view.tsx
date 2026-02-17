@@ -29,8 +29,7 @@ export default function RoundsView({ initialQuery }: PageProps) {
         setPageSize
     } = useRoundsStore()
 
-    const initialQueryKey = useMemo(() => JSON.stringify(initialQuery ?? {}), [initialQuery])
-    const normalized = useMemo(() => normalizeQuery(initialQuery), [initialQueryKey])
+    const normalized = useMemo(() => normalizeQuery(initialQuery), [initialQuery])
 
     useEffect(() => {
         setSearchQuery(normalized.q)
@@ -59,9 +58,9 @@ export default function RoundsView({ initialQuery }: PageProps) {
     ])
 
     return (
-        <div className="space-y-4">
+        <section className="w-full space-y-5 rounded-2xl border border-slate-200/70 bg-gradient-to-b from-slate-50/60 via-white to-white p-3 sm:p-4">
             <RoundsToolbar defaultQuery={normalized} />
             <RoundsTable />
-        </div>
+        </section>
     )
 }

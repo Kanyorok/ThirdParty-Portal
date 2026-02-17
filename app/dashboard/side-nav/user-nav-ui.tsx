@@ -5,7 +5,6 @@ import { memo, useMemo } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
-    User,
     LogOut,
     Settings,
     ChevronDown,
@@ -32,15 +31,27 @@ import { Spinner } from "@/components/common/spinner"
 import { cn, getInitials } from "@/lib/utils"
 import { useProfileStore, type ProfileType } from "@/store/use-profile-store"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/common/tooltip"
+import { resolveSessionBusinessProfiles } from "@/lib/profile/session-profiles"
 
 interface UserData {
     firstName?: string | null
+    first_name?: string | null
     lastName?: string | null
+    last_name?: string | null
     fullName?: string | null
+    full_name?: string | null
     name?: string | null
     email?: string | null
     isActive?: boolean
+    is_active?: boolean
+    isSupplier?: boolean
+    is_supplier?: boolean
+    isTenant?: boolean
+    is_tenant?: boolean
+    isCustomer?: boolean
+    is_customer?: boolean
     imageUrl?: string | null
+    image_url?: string | null
     image?: string | null
 }
 
@@ -54,9 +65,8 @@ interface UserNavProps {
 }
 
 const MENU_ITEMS = [
-    // { id: "account", label: "Account", icon: User, href: "/dashboard/account" },
     { id: "notifications", label: "Notifications", icon: Bell, href: "/dashboard/notifications" },
-    { id: "accounts", label: "Account Settings", icon: Settings, href: "/dashboard/settings" },
+    { id: "accounts", label: "Account Settings", icon: Settings, href: "/dashboard/settings/profile" },
 ] as const
 
 const placeholder_avatar = "/avatars/doe.png"
@@ -89,10 +99,14 @@ const itemVariants: Variants = {
 }
 
 const UserAvatar = memo(({ user, size = "default" }: { user: UserData; size?: "default" | "large" }) => {
-    const displayName = user.fullName || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim()
+    const displayName =
+        user.fullName ||
+        user.full_name ||
+        user.name ||
+        `${user.firstName || user.first_name || ""} ${user.lastName || user.last_name || ""}`.trim()
     const initials = getInitials(displayName || user.email || "U")
     const dimensions = size === "large" ? "size-12" : "size-8"
-    const avatarSrc = user.imageUrl || user.image || placeholder_avatar
+    const avatarSrc = user.imageUrl || user.image_url || user.image || placeholder_avatar
 
     return (
         <div className="relative shrink-0">
@@ -102,7 +116,7 @@ const UserAvatar = memo(({ user, size = "default" }: { user: UserData; size?: "d
                     {initials}
                 </AvatarFallback>
             </Avatar>
-            {user.isActive && (
+            {(user.isActive ?? user.is_active) && (
                 <span className="absolute -right-0.5 -top-0.5 size-3 rounded-full border-2 border-background bg-emerald-500" />
             )}
         </div>
@@ -125,15 +139,30 @@ const PROFILE_CONFIG: Record<
 export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, onOpenChange }: UserNavProps) => {
     const router = useRouter()
     const displayName = useMemo(() =>
-        user ? (user.fullName || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim()) : "",
+        user
+            ? (
+                user.fullName ||
+                user.full_name ||
+                user.name ||
+                `${user.firstName || user.first_name || ""} ${user.lastName || user.last_name || ""}`.trim()
+            )
+            : "",
         [user])
 
     const activeProfile = useProfileStore((s) => s.activeProfile)
     const availableProfiles = useProfileStore((s) => s.availableProfiles)
     const setActiveProfile = useProfileStore((s) => s.setActiveProfile)
+    const fallbackBusinessProfiles = useMemo(
+        () => (user ? resolveSessionBusinessProfiles(user as any) : []),
+        [user],
+    )
+    const resolvedBusinessProfiles = useMemo(() => {
+        const fromStore = availableProfiles.filter((p): p is Exclude<ProfileType, "base"> => p !== "base")
+        return fromStore.length > 0 ? fromStore : fallbackBusinessProfiles
+    }, [availableProfiles, fallbackBusinessProfiles])
     const businessProfiles = useMemo(
-        () => availableProfiles.filter((p): p is Exclude<ProfileType, "base"> => p !== "base"),
-        [availableProfiles],
+        () => resolvedBusinessProfiles,
+        [resolvedBusinessProfiles],
     )
     const canSwitchProfile = businessProfiles.length > 1
     const resolvedActiveProfile = (activeProfile === "base" ? businessProfiles[0] : (activeProfile as any)) as
