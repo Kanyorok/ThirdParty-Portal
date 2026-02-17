@@ -59,7 +59,7 @@
         "nunomaduro/collision": "^8.0",
         "php-parallel-lint/php-parallel-lint": "^1.4",
         "phpstan/phpstan": "^2.1",
-        "phpunit/phpunit": "^11.0.1",
+        "phpunit/phpunit": "^11.5",
         "roave/security-advisories": "dev-latest",
         "spatie/laravel-ignition": "^2.4",
         "squizlabs/php_codesniffer": "*"
