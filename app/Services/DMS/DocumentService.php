@@ -80,9 +80,9 @@ class DocumentService extends PermissionsService
     /**
      * @throws ErroredException
      */
-    public function sign(DMSSignature $signature, User $actor, int $Pages=1): static
+    public function sign(DMSSignature $signature, User $actor, int $Pages = 1): static
     {
-        if (!$this->type->canSign()) {
+        if (! $this->type->canSign()) {
             throw new ErroredException('Document cannot be signed ');
         }
         (new SignatureService($signature))->sign($this->document, $actor, $Pages);
@@ -196,7 +196,8 @@ class DocumentService extends PermissionsService
     /**
      * @throws ErroredException
      */
-    private static function _create(Repository $repository, User $actor, DisksEnum $disk, string $name, ExtensionsEnum $extension, string $path, int $sizeInBytes, string $checksum, CategoryMaster $category = null, bool $copyPermissions = true, Collection $properties = null): DocumentService {
+    private static function _create(Repository $repository, User $actor, DisksEnum $disk, string $name, ExtensionsEnum $extension, string $path, int $sizeInBytes, string $checksum, CategoryMaster $category = null, bool $copyPermissions = true, Collection $properties = null): DocumentService
+    {
         try {
             return DB::transaction(static function () use ($path, $checksum, $properties, $sizeInBytes, $disk, $category, $extension, $repository, $name, $actor, $copyPermissions) {
                 $document = Document::create([
@@ -251,7 +252,7 @@ class DocumentService extends PermissionsService
 
         $this->document->update([
             'Name' => $name,
-            'MimeType' => $extension? $extension->getMimeType():$this->document->MimeType,
+            'MimeType' => $extension ? $extension->getMimeType() : $this->document->MimeType,
         ]);
 
         $generate = true;
@@ -599,7 +600,7 @@ class DocumentService extends PermissionsService
         return $this;
     }
 
-    public function summaryList(bool $withTrash= false, bool $refreshOnDelete = false): string
+    public function summaryList(bool $withTrash = false, bool $refreshOnDelete = false): string
     {
         $parameters = [];
         if ($withTrash) {

@@ -17,11 +17,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Throwable;
-use Yajra\DataTables\DataTables;
 
 class LegalHoldController extends Controller
 {
     use LegalHoldTrait;
+
     public function __construct()
     {
         $this->middleware('ajax')->except(['index', 'create', 'show']);
@@ -34,7 +34,8 @@ class LegalHoldController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         $this->authorize('viewAny', LegalHold::class);
-        return (!$request->ajax()) ? view('dms.legal-hold.index'): $this->getLegalHolds(query: LegalHold::query(), counts: ['documents']);
+
+        return (! $request->ajax()) ? view('dms.legal-hold.index') : $this->getLegalHolds(query: LegalHold::query(), counts: ['documents']);
 
     }
 

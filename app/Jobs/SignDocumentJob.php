@@ -52,7 +52,7 @@ class SignDocumentJob implements ShouldQueue, ShouldBeUnique
     {
         $message = $exception?->getMessage() ?? 'Unknown error occurred';
         Log::error('Document signing failed: ' . $message, [
-            'e' => $exception
+            'e' => $exception,
         ]);
         (new UserService($this->actor))->sendEmail(
             subject: 'Document Signing Failed',

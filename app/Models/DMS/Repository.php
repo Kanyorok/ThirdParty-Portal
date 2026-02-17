@@ -13,7 +13,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Repository extends Model implements SpecialPermissionContract
 {
-    use SoftDeletes, UserActorTrait, SpecialPermissionTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use SpecialPermissionTrait;
 
     public const string CREATED_AT = 'CreatedOn';
     public const string UPDATED_AT = 'ModifiedOn';

@@ -15,7 +15,7 @@ trait LegalHoldTrait
     /**
      * @throws Exception
      */
-    public function getLegalHolds(Builder|BelongsToMany $query, array $with=[],array $counts=[]): JsonResponse
+    public function getLegalHolds(Builder|BelongsToMany $query, array $with = [], array $counts = []): JsonResponse
     {
         if (! empty($with)) {
             $query->with($with);
@@ -23,6 +23,7 @@ trait LegalHoldTrait
         if (! empty($counts)) {
             $query->withCount($counts);
         }
+
         return Datatables::of($query->lock('WITH(NOLOCK)'))->addIndexColumn()
             ->addColumn('action', function (LegalHold $legalHold) {
                 return '<a  href="' . route('legal-hold.show', [$legalHold->Ref]) . '"  class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</button>';

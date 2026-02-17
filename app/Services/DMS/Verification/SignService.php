@@ -107,7 +107,7 @@ abstract class SignService
     protected function setTempDocument(Document $document): void
     {
         $docService = new DocumentService($document);
-        if (!$docService->type->canSign()) {
+        if (! $docService->type->canSign()) {
             throw new ErroredException('Document cannot be signed');
         }
 
@@ -130,6 +130,7 @@ abstract class SignService
         $file = (new FileConversionService($document))->convertToPdf();
         if (is_string($file) && file_exists($file)) {
             $this->tempDocument = $file;
+
             return;
         }
 
@@ -163,6 +164,7 @@ abstract class SignService
         }
         if (! isset($this->tempDocument) || ! file_exists($this->tempDocument)) {
             Log::error('Failed to get pages count, temp document does not exist file: '.$this->tempDocument) ;
+
             return 0;
         }
 
@@ -174,8 +176,9 @@ abstract class SignService
         }
         Log::error('Failed to get pages count, pdfinfo failed ', [
             'output' => $string,
-            'file' => $this->tempDocument
+            'file' => $this->tempDocument,
         ]) ;
+
         return 0;
     }
 
@@ -263,7 +266,7 @@ abstract class SignService
     {
         $path = Storage::disk('temp')->path(Str::uuid()->toString() . '.pdf');
 
-        shell_exec( "convert -density 150 " . implode(' ', $paths) . " $path");
+        shell_exec("convert -density 150 " . implode(' ', $paths) . " $path");
 
         foreach ($paths as $imagePath) {
             unlink($imagePath);

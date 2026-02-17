@@ -14,7 +14,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DMSSignature extends Model
 {
-    use SoftDeletes, UserActorTrait, SpecialPermissionTrait, DocumentsTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use SpecialPermissionTrait;
+    use DocumentsTrait;
 
     public const string CREATED_AT = 'CreatedOn';
     public const string UPDATED_AT = 'ModifiedOn';

@@ -26,15 +26,17 @@ class DocumentValidationRequest extends FormRequest
         if ($ValidationType instanceof DocumentValidationType) {
             return $ValidationType;
         }
+
         throw ValidationException::withMessages(['ValidationType' => 'invalid validation type']);
     }
 
-    public function createValidationId(DocumentValidationType $type):string
+    public function createValidationId(DocumentValidationType $type): string
     {
         $id = $type->validations()->count();
-        do{
-            $validationId =  $type->ValidationTypeId.'-'.$id;
-        }while(DocumentValidationType::query()->where('ValidationTypeId',$validationId)->exists());
+        do {
+            $validationId = $type->ValidationTypeId.'-'.$id;
+        } while (DocumentValidationType::query()->where('ValidationTypeId', $validationId)->exists());
+
         return $validationId;
     }
 }

@@ -9,7 +9,6 @@ use Illuminate\Validation\ValidationException;
 
 class ApproveDocumentValidationRequest extends FormRequest
 {
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -18,16 +17,17 @@ class ApproveDocumentValidationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Signature' => ['required', 'string', 'max:200']
+            'Signature' => ['required', 'string', 'max:200'],
         ];
     }
 
     public function getSignature(User $user): DMSSignature
     {
         $sign = DMSSignature::query()->user($user)->where('SignatureId', $this->string('Signature'))->first();
-        if (!$sign instanceof DMSSignature) {
+        if (! $sign instanceof DMSSignature) {
             throw ValidationException::withMessages(['Signature' => 'Invalid signature provided']);
         }
+
         return $sign;
     }
 }

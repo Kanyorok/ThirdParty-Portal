@@ -16,11 +16,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Auth;
 
 class Document extends Model implements SpecialPermissionContract
 {
-    use SoftDeletes, UserActorTrait, SpecialPermissionTrait;
+    use SoftDeletes;
+    use UserActorTrait;
+    use SpecialPermissionTrait;
 
     public const string CREATED_AT = 'CreatedOn';
     public const string UPDATED_AT = 'ModifiedOn';

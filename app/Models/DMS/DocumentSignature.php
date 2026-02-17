@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DocumentSignature extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     public const string CREATED_AT = 'CreatedOn';
     public const string UPDATED_AT = 'ModifiedOn';
@@ -20,7 +21,7 @@ class DocumentSignature extends Model
 
     protected $fillable = [
         "DocumentId", "SignatureId", "Extra", "Content",
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     protected $casts = [

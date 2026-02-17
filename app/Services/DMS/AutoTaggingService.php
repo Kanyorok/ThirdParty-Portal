@@ -47,7 +47,7 @@ class AutoTaggingService
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
                     'CreatedOn' => $date,
-                    'ModifiedOn' => $date
+                    'ModifiedOn' => $date,
                 ]);
                 $description .= $rule->tag->Name . ', ';
             }
@@ -67,11 +67,12 @@ class AutoTaggingService
     private function contentMatchesRule(string $content, DocumentTaggingRules $rule): bool
     {
         $value = $rule->Value;
-        return match ( $rule->Comparison) {
+
+        return match ($rule->Comparison) {
             StringComparisonEnum::Exact => $content === $value,
             StringComparisonEnum::NotExact => $content !== $value,
             StringComparisonEnum::Contains => Str::of($content)->contains($value, true),
-            StringComparisonEnum::NotContains => !Str::of($content)->contains($value, true),
+            StringComparisonEnum::NotContains => ! Str::of($content)->contains($value, true),
             StringComparisonEnum::StartsWith => Str::of($content)->lower()->startsWith(strtolower($value)),
             StringComparisonEnum::EndsWith => Str::of($content)->lower()->endsWith(strtolower($value)),
         };

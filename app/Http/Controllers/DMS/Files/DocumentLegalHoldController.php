@@ -26,6 +26,7 @@ class DocumentLegalHoldController extends Controller
     public function __invoke(Request $request, Document $document): JsonResponse
     {
         $this->authorize('viewAny', LegalHold::class);
+
         return $this->getLegalHolds(query: $document->holds(), counts: ['documents']);
     }
 }

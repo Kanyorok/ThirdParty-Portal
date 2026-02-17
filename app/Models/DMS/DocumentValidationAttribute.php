@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DocumentValidationAttribute extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     public const string CREATED_AT = 'CreatedOn';
     public const string UPDATED_AT = 'ModifiedOn';

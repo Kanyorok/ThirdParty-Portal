@@ -3,14 +3,12 @@
 namespace App\Http\Controllers\DMS\Verification;
 
 use App\Enums\Core\IntegrationsEnum;
-use App\Enums\Core\RoleEnum;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DMS\ApproveDocumentValidationRequest;
 use App\Http\Requests\DMS\UploadDocumentRequest;
 use App\Models\DMS\DMSSignature;
 use App\Models\DMS\Document;
-use App\Models\DMS\DocumentSignature;
 use App\Models\DMS\DocumentValidation;
 use App\Models\Settings\APICredential;
 use App\Services\DMS\DocumentService;
@@ -73,7 +71,7 @@ class DocumentValidationController extends Controller
         }
 
         $document = $documentValidation->document;
-        if (!$document instanceof Document) {
+        if (! $document instanceof Document) {
             $document = null;
         }
 
@@ -88,7 +86,7 @@ class DocumentValidationController extends Controller
     {
         $actor = $request->user();
         $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->whereNull('ApprovedBy')->with('document')->first();
-        if (! $documentValidation instanceof DocumentValidation || !$documentValidation->document instanceof Document) {
+        if (! $documentValidation instanceof DocumentValidation || ! $documentValidation->document instanceof Document) {
             return $this->errored('Invalid validation provided or cannot validate');
         }
 
@@ -110,9 +108,9 @@ class DocumentValidationController extends Controller
 
                 return $this->succeeded('Document validated successfully', route('dms.validation.index'));
             });
-        }catch (ErroredException $e) {
+        } catch (ErroredException $e) {
             $e->toJson();
-        }catch (\Exception | \Throwable $e) {
+        } catch (\Exception | \Throwable $e) {
             Log::error('Error validating document: ' .$e);
         }
 
@@ -203,9 +201,9 @@ class DocumentValidationController extends Controller
 
                 return $this->succeeded('Document validation rejected.', route('dms.validation.index'));
             });
-        }catch (ErroredException $e) {
+        } catch (ErroredException $e) {
             $e->toJson();
-        }catch (\Exception | \Throwable $e) {
+        } catch (\Exception | \Throwable $e) {
             Log::error('Error validating document: ' .$e);
         }
 

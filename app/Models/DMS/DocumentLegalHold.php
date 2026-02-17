@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DocumentLegalHold extends Pivot
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
+    use UserActorTrait;
 
     public const string CREATED_AT = 'CreatedOn';
     public const string UPDATED_AT = 'ModifiedOn';
@@ -20,7 +21,7 @@ class DocumentLegalHold extends Pivot
 
     protected $fillable = [
         'DocId', 'LegalHoldId',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy'
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
