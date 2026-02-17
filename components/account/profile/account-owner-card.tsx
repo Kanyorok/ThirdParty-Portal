@@ -1,9 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { ChevronDown, Mail, Phone } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Calendar, ChevronDown, Mail, Phone } from "lucide-react"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/common/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/common/avatar"
 import { Button } from "@/components/common/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/common/collapsible"
@@ -15,17 +14,20 @@ type AccountOwnerCardProps = {
 
 export default function AccountOwnerCard({ profile }: AccountOwnerCardProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [remoteAvatarSrc, setRemoteAvatarSrc] = useState<string | null>(null)
 
   const email = profile?.email || "—"
   const phone = profile?.phone || "—"
   const ownerName = profile?.fullName || [profile?.firstName, profile?.lastName].filter(Boolean).join(" ") || "—"
   const ownerInitials = ((profile?.firstName?.[0] ?? "") + (profile?.lastName?.[0] ?? "")).toUpperCase() || "—"
   const imageId = profile?.imageId ?? profile?.image_id ?? null
-  const avatarSrc =
+  const avatarSrcFromProfile =
+    profile?.image?.src ??
     profile?.image_url ??
     profile?.imageUrl ??
     profile?.image ??
-    (imageId ? `/api/profile/image?v=${encodeURIComponent(String(imageId))}` : null)
+    null
+  const avatarSrc = avatarSrcFromProfile ?? remoteAvatarSrc
 
   const createdOn = profile?.createdOn ?? null
   const modifiedOn = profile?.modifiedOn ?? null
@@ -33,15 +35,52 @@ export default function AccountOwnerCard({ profile }: AccountOwnerCardProps) {
   const ownerUserId = profile?.userId ?? profile?.user_id ?? profile?.id ?? null
   const ownerThirdPartyId = profile?.thirdPartyId ?? null
 
+  useEffect(() => {
+    if (avatarSrcFromProfile) {
+      setRemoteAvatarSrc(null)
+      return
+    }
+
+    let cancelled = false
+    const query = imageId ? `?v=${encodeURIComponent(String(imageId))}` : ""
+
+    fetch(`/api/v1/profile/user-image${query}`, { method: "GET", cache: "no-store" })
+      .then(async (res) => {
+        const body = await res.json().catch(() => null)
+        if (!res.ok || body?.success === false) return
+
+        const src =
+          body?.data?.image?.src ??
+          body?.data?.imageUrl ??
+          body?.data?.image_url ??
+          body?.data?.image ??
+          body?.image?.src ??
+          body?.imageUrl ??
+          body?.image_url ??
+          body?.image ??
+          null
+
+        if (!cancelled && typeof src === "string" && src.trim().length > 0) {
+          setRemoteAvatarSrc(src)
+        }
+      })
+      .catch(() => null)
+
+    return () => {
+      cancelled = true
+    }
+  }, [avatarSrcFromProfile, imageId])
+
   return (
-    <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-      <CardHeader className="border-b border-border/60 py-5">
-        <CardTitle className="text-base">Account owner</CardTitle>
-        <CardDescription>Personal details for this login.</CardDescription>
-      </CardHeader>
-      <CardContent className="pb-6">
-        <div className="flex items-start gap-4">
-          <Avatar className="h-14 w-14 rounded-2xl border border-border/60 bg-card">
+    <section className="border border-border/60 bg-background">
+      <div className="border-b border-border/60 px-5 py-4">
+        <h2 className="text-base font-semibold text-foreground">Account owner</h2>
+        <p className="text-sm text-muted-foreground">Personal details for this login.</p>
+      </div>
+
+      <div className="px-5 py-5">
+        <div className="flex items-start gap-4 rounded-xl border border-border/60 bg-muted/30 p-4">
+          <Avatar className="h-14 w-14 rounded-2xl border border-border/60 bg-card shadow-sm">
             {avatarSrc ? <AvatarImage src={avatarSrc} alt={`${ownerName} avatar`} className="object-cover" /> : null}
             <AvatarFallback className="rounded-2xl bg-muted text-muted-foreground font-semibold">
               {ownerInitials}
@@ -50,13 +89,13 @@ export default function AccountOwnerCard({ profile }: AccountOwnerCardProps) {
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold text-foreground truncate">{ownerName}</div>
 
-            <div className="mt-2 space-y-1">
+            <div className="mt-2 space-y-2">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Mail className="h-4 w-4" />
+                <Mail className="h-4 w-4 text-primary/80" />
                 <span className="truncate">{email}</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Phone className="h-4 w-4" />
+                <Phone className="h-4 w-4 text-primary/80" />
                 <span className="truncate">{phone}</span>
               </div>
             </div>
@@ -76,6 +115,13 @@ export default function AccountOwnerCard({ profile }: AccountOwnerCardProps) {
               {isActive ? "Active" : "Inactive"}
             </span>
           )}
+        </div>
+
+        <div className="mt-4 rounded-xl border border-border/60 bg-muted/30 p-3">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Calendar className="h-4 w-4 text-primary/80" />
+            <span>Last updated: {modifiedOn ?? "—"}</span>
+          </div>
         </div>
 
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -109,7 +155,7 @@ export default function AccountOwnerCard({ profile }: AccountOwnerCardProps) {
             </div>
           </CollapsibleContent>
         </Collapsible>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   )
 }

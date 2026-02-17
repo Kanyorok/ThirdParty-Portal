@@ -1,49 +1,105 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useSession } from "next-auth/react"
-import { ShieldCheck, X } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { AlertCircle, ShieldCheck, X } from "lucide-react"
 import { toast } from "sonner"
 
+import { Alert, AlertDescription } from "@/components/common/alert"
 import { Button } from "@/components/common/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/common/card"
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/common/dialog"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/common/dialog"
 import { Input } from "@/components/common/input"
 import { Label } from "@/components/common/label"
-import Loading from "@/components/common/custom-loader"
+import { Spinner } from "@/components/common/spinner"
+
+type ApiErrors = Record<string, string[]>
+
+type PasswordRouteResponse = {
+  message?: string
+  errors?: ApiErrors
+}
+
+type LocalErrors = {
+  currentPassword?: string
+  newPassword?: string
+  confirmNewPassword?: string
+}
 
 const inputClassName = "h-11 rounded-xl bg-background px-4 shadow-none focus-visible:ring-2 focus-visible:ring-ring/40"
 
+function parseResponseMessage(payload: PasswordRouteResponse, fallback: string) {
+  const current = payload.errors?.current_password?.[0]
+  const next = payload.errors?.new_password?.[0]
+  const confirmation = payload.errors?.new_password_confirmation?.[0]
+
+  const special = [current, next, confirmation, payload.message].find(Boolean)
+  if (!special) return fallback
+
+  if (typeof special === "string" && special.includes("password_reuse_not_allowed")) {
+    return "New password must be different from your current password."
+  }
+
+  return String(special)
+}
+
 export default function ChangePasswordCard() {
-  const { data: session } = useSession()
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmNewPassword, setConfirmNewPassword] = useState("")
+  const [localErrors, setLocalErrors] = useState<LocalErrors>({})
 
   useEffect(() => {
     if (!isOpen) {
       setCurrentPassword("")
       setNewPassword("")
       setConfirmNewPassword("")
+      setLocalErrors({})
       setIsSubmitting(false)
     }
   }, [isOpen])
 
-  const onSubmit = async () => {
-    if (!session?.accessToken) {
-      toast.error("Authentication required to change password.")
-      return
+  const newPasswordSameAsCurrent = useMemo(
+    () => currentPassword.length > 0 && currentPassword === newPassword,
+    [currentPassword, newPassword],
+  )
+
+  const validateForm = () => {
+    const nextErrors: LocalErrors = {}
+
+    if (!currentPassword.trim()) {
+      nextErrors.currentPassword = "Current password is required."
     }
 
-    if (!currentPassword || currentPassword.length < 8) return toast.error("Current password must be at least 8 characters.")
-    if (newPassword.length < 8) return toast.error("New password must be at least 8 characters.")
-    if (!/[a-z]/.test(newPassword)) return toast.error("New password must include a lowercase letter.")
-    if (!/[A-Z]/.test(newPassword)) return toast.error("New password must include an uppercase letter.")
-    if (!/[0-9]/.test(newPassword)) return toast.error("New password must include a number.")
-    if (!/[^a-zA-Z0-9]/.test(newPassword)) return toast.error("New password must include a special character.")
-    if (newPassword !== confirmNewPassword) return toast.error("Passwords do not match.")
+    if (!newPassword.trim()) {
+      nextErrors.newPassword = "New password is required."
+    } else if (newPassword.length < 8) {
+      nextErrors.newPassword = "New password must be at least 8 characters."
+    } else if (newPasswordSameAsCurrent) {
+      nextErrors.newPassword = "New password must be different from current password."
+    }
+
+    if (!confirmNewPassword.trim()) {
+      nextErrors.confirmNewPassword = "Please confirm your new password."
+    } else if (newPassword !== confirmNewPassword) {
+      nextErrors.confirmNewPassword = "New password confirmation does not match."
+    }
+
+    setLocalErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
+  }
+
+  const onSubmit = async () => {
+    if (!validateForm()) return
 
     setIsSubmitting(true)
     try {
@@ -51,15 +107,32 @@ export default function ChangePasswordCard() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.accessToken}`,
         },
-        body: JSON.stringify({ currentPassword, newPassword, confirmNewPassword }),
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+          new_password_confirmation: confirmNewPassword,
+        }),
       })
 
-      const json = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(json?.message || "Failed to update password.")
+      const json = (await res.json().catch(() => ({}))) as PasswordRouteResponse
 
-      toast.success(json?.message || "Password updated successfully!")
+      if (!res.ok) {
+        const serverErrors = json?.errors ?? {}
+
+        setLocalErrors({
+          currentPassword: serverErrors.current_password?.[0],
+          newPassword:
+            serverErrors.new_password?.[0]?.includes("password_reuse_not_allowed")
+              ? "New password must be different from your current password."
+              : serverErrors.new_password?.[0],
+          confirmNewPassword: serverErrors.new_password_confirmation?.[0],
+        })
+
+        throw new Error(parseResponseMessage(json, "Failed to update password."))
+      }
+
+      toast.success(json?.message || "Password updated successfully.")
       setIsOpen(false)
     } catch (error: any) {
       toast.error(error?.message || "Failed to update password.")
@@ -69,53 +142,98 @@ export default function ChangePasswordCard() {
   }
 
   return (
-    <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-      <CardHeader className="border-b border-border/60 py-5">
-        <CardTitle className="text-base">Security</CardTitle>
-        <CardDescription>Keep your account protected.</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6">
-        <div className="text-sm text-muted-foreground">Update your password regularly for better security.</div>
+    <section className="border border-border/60 bg-background">
+      <div className="border-b border-border/60 px-5 py-4">
+        <h2 className="text-base font-semibold text-foreground">Security</h2>
+        <p className="text-sm text-muted-foreground">Keep your account protected.</p>
+      </div>
+
+      <div className="px-5 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+          Update your password regularly for better security.
+        </div>
+
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" className="h-11 rounded-xl text-xs font-medium shadow-none">
               Change password
             </Button>
           </DialogTrigger>
+
           <DialogContent className="sm:max-w-[440px] max-h-[85vh] overflow-y-auto bg-popover border-border/60 shadow-none">
             <DialogHeader>
               <DialogTitle>Change Password</DialogTitle>
-              <DialogDescription>Use a strong password (min 8 chars).</DialogDescription>
+              <DialogDescription>
+                Use at least 8 characters and confirm your new password before saving.
+              </DialogDescription>
             </DialogHeader>
+
+            {newPasswordSameAsCurrent ? (
+              <Alert variant="destructive" className="mt-1">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>New password must be different from current password.</AlertDescription>
+              </Alert>
+            ) : null}
+
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="currentPassword">Current password</Label>
-                <Input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className={inputClassName} />
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className={inputClassName}
+                />
+                {localErrors.currentPassword ? <p className="text-xs text-destructive">{localErrors.currentPassword}</p> : null}
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="newPassword">New password</Label>
-                <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputClassName} />
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className={inputClassName}
+                />
+                {localErrors.newPassword ? <p className="text-xs text-destructive">{localErrors.newPassword}</p> : null}
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="confirmNewPassword">Confirm new password</Label>
-                <Input id="confirmNewPassword" type="password" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} className={inputClassName} />
+                <Input
+                  id="confirmNewPassword"
+                  type="password"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  className={inputClassName}
+                />
+                {localErrors.confirmNewPassword ? (
+                  <p className="text-xs text-destructive">{localErrors.confirmNewPassword}</p>
+                ) : null}
               </div>
             </div>
+
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="outline" disabled={isSubmitting} className="h-11 rounded-xl text-xs font-medium shadow-none">
                   <X className="mr-2 h-4 w-4" /> Cancel
                 </Button>
               </DialogClose>
-              <Button onClick={onSubmit} disabled={isSubmitting} className="h-11 rounded-xl text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm">
-                {isSubmitting ? <Loading className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+
+              <Button
+                onClick={onSubmit}
+                disabled={isSubmitting}
+                className="h-11 rounded-xl text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+              >
+                {isSubmitting ? <Spinner className="mr-2 h-4 w-4" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
                 Save
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   )
 }
-

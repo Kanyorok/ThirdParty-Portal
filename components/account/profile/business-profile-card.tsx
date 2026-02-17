@@ -4,15 +4,13 @@ import { useEffect, useState } from "react"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { ChevronDown, ImageUp, Save } from "lucide-react"
+import { ChevronDown, Save } from "lucide-react"
 
 import { Button } from "@/components/common/button"
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/common/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/common/collapsible"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/common/form"
 import { Input } from "@/components/common/input"
-import { Progress } from "@/components/common/progress"
-import Loading from "@/components/common/custom-loader"
+import { Spinner } from "@/components/common/spinner"
 import { cn } from "@/lib/utils"
 import { normalizeString } from "@/components/account/profile/utils"
 
@@ -33,12 +31,9 @@ const BUSINESS_FORM_ID = "business-profile-form"
 type BusinessProfileCardProps = {
   thirdPartyDetails: any
   thirdParty?: any
-  completionValue: number
-  missingFields: string[]
   isEditing: boolean
   setIsEditing: (next: boolean) => void
   isUpdating: boolean
-  onOpenLogo: () => void
   updateProfile: (payload: any) => Promise<unknown>
   refetch?: () => Promise<unknown>
 }
@@ -46,12 +41,9 @@ type BusinessProfileCardProps = {
 export default function BusinessProfileCard({
   thirdPartyDetails,
   thirdParty,
-  completionValue,
-  missingFields,
   isEditing,
   setIsEditing,
   isUpdating,
-  onOpenLogo,
   updateProfile,
   refetch,
 }: BusinessProfileCardProps) {
@@ -117,19 +109,14 @@ export default function BusinessProfileCard({
     : []
 
   return (
-    <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-      <CardHeader className="border-b border-border/60 py-5">
+    <section className="border border-border/60 bg-background">
+      <div className="border-b border-border/60 px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1.5">
-          <CardTitle className="text-base">Business profile</CardTitle>
-          <CardDescription>Company details used across the portal.</CardDescription>
+          <h2 className="text-base font-semibold text-foreground">Business profile</h2>
+          <p className="text-sm text-muted-foreground">Company details used across the portal.</p>
         </div>
 
-        <CardAction className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="outline" className="h-9 rounded-xl text-xs font-medium shadow-none" onClick={onOpenLogo}>
-            <ImageUp className="h-4 w-4" />
-            Logo
-          </Button>
-
+        <div className="flex flex-wrap items-center gap-2">
           {isEditing ? (
             <>
               <Button
@@ -147,7 +134,7 @@ export default function BusinessProfileCard({
                 className="h-9 rounded-xl text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
                 disabled={isUpdating}
               >
-                {isUpdating ? <Loading className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                {isUpdating ? <Spinner className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
                 Save
               </Button>
             </>
@@ -162,70 +149,42 @@ export default function BusinessProfileCard({
               Edit
             </Button>
           )}
-        </CardAction>
-      </CardHeader>
-
-      <CardContent className="pb-6">
-        <div className="mb-6 rounded-xl border border-border/60 bg-muted/30 p-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <div className="text-sm font-semibold text-foreground">Profile completion</div>
-              <div className="text-xs text-muted-foreground">
-                {missingFields.length > 0 ? (
-                  <>
-                    Missing: <span className="text-foreground font-semibold">{missingFields.join(", ")}</span>
-                  </>
-                ) : (
-                  "All key fields look complete."
-                )}
-              </div>
-            </div>
-            <div className="text-sm font-semibold text-foreground tabular-nums">{completionValue}%</div>
-          </div>
-          <div className="mt-3">
-            <Progress value={completionValue} className="h-2" />
-          </div>
-          {!isEditing && missingFields.length > 0 && (
-            <div className="mt-3">
-              <Button className="h-9 rounded-xl text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm" onClick={() => setIsEditing(true)}>
-                Complete now
-              </Button>
-            </div>
-          )}
         </div>
+      </div>
 
+      <div className="px-5 py-5">
         {!isEditing ? (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-              <div className="space-y-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-1">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Legal name</div>
                 <div className="text-sm font-semibold text-foreground">{thirdPartyDetails?.thirdPartyName || "—"}</div>
               </div>
-              <div className="space-y-1">
+              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-1">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Trading name</div>
                 <div className="text-sm font-semibold text-foreground">{thirdPartyDetails?.tradingName || "—"}</div>
               </div>
-              <div className="space-y-1">
+              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-1">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Registration number</div>
                 <div className="text-sm font-semibold text-foreground">{thirdPartyDetails?.registrationNumber || "—"}</div>
               </div>
-              <div className="space-y-1">
+              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-1">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Tax PIN</div>
                 <div className="text-sm font-semibold text-foreground">{thirdPartyDetails?.taxPIN || "—"}</div>
               </div>
-              <div className="space-y-1 md:col-span-2">
+              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-1 md:col-span-2">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Website</div>
                 <div className="text-sm font-semibold text-foreground">{thirdPartyDetails?.website || "—"}</div>
               </div>
-              <div className="space-y-1 md:col-span-2">
+              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-1 md:col-span-2">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Address</div>
                 <div className="text-sm font-semibold text-foreground">{thirdPartyDetails?.physicalAddress || "—"}</div>
               </div>
-              <div className="space-y-1 md:col-span-2">
+              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-1 md:col-span-2">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Company email</div>
                 <div className="text-sm font-semibold text-foreground">{thirdPartyDetails?.email || "—"}</div>
               </div>
-              <div className="space-y-1 md:col-span-2">
+              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-1 md:col-span-2">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Company phone</div>
                 <div className="text-sm font-semibold text-foreground">{thirdPartyDetails?.phone || "—"}</div>
               </div>
@@ -377,7 +336,7 @@ export default function BusinessProfileCard({
             </form>
           </Form>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   )
 }

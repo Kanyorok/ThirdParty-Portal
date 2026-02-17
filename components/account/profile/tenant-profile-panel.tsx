@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { AlertCircle, Calendar, CheckCircle2, Layers, XCircle } from "lucide-react"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/common/card"
 import Loading from "@/components/common/custom-loader"
 import { getTenantProfile } from "@/lib/api/profile-management"
 
@@ -21,15 +20,15 @@ export default function TenantProfilePanel({ enabled }: TenantProfilePanelProps)
 
   if (!enabled) {
     return (
-      <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-        <CardHeader className="py-5 border-b border-border/60">
-          <CardTitle className="text-base">Tenant profile</CardTitle>
-          <CardDescription>Not enabled for this account.</CardDescription>
-        </CardHeader>
-        <CardContent className="pb-6 pt-6">
+      <section className="border border-border/60 bg-background">
+        <div className="px-5 py-4 border-b border-border/60">
+          <h2 className="text-base font-semibold text-foreground">Tenant profile</h2>
+          <p className="text-sm text-muted-foreground">Not enabled for this account.</p>
+        </div>
+        <div className="px-5 py-5">
           <div className="text-sm text-muted-foreground">Enable Tenant to access properties, leases, and maintenance.</div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     )
   }
 
@@ -43,12 +42,12 @@ export default function TenantProfilePanel({ enabled }: TenantProfilePanelProps)
 
   if (isError) {
     return (
-      <Card className="bg-card rounded-2xl border border-destructive/20 shadow-none py-0 gap-0">
-        <CardHeader className="py-5 border-b border-destructive/20">
-          <CardTitle className="text-base text-destructive">Tenant profile</CardTitle>
-          <CardDescription>We couldn’t load tenant details.</CardDescription>
-        </CardHeader>
-        <CardContent className="pb-6 pt-6 space-y-3">
+      <section className="border border-destructive/20 bg-background">
+        <div className="px-5 py-4 border-b border-destructive/20">
+          <h2 className="text-base font-semibold text-destructive">Tenant profile</h2>
+          <p className="text-sm text-muted-foreground">We couldn’t load tenant details.</p>
+        </div>
+        <div className="px-5 py-5 space-y-3">
           <div className="flex items-start gap-3 text-sm text-muted-foreground">
             <AlertCircle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
             <span>{(error as any)?.message || "Please try again."}</span>
@@ -61,8 +60,8 @@ export default function TenantProfilePanel({ enabled }: TenantProfilePanelProps)
           >
             Retry
           </button>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     )
   }
 
@@ -72,23 +71,23 @@ export default function TenantProfilePanel({ enabled }: TenantProfilePanelProps)
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-          <CardHeader className="py-5 border-b border-border/60">
-            <CardTitle className="text-sm">Classification</CardTitle>
-            <CardDescription>Tenant type.</CardDescription>
-          </CardHeader>
-          <CardContent className="pb-6 pt-6 flex items-center gap-2 text-sm font-semibold text-foreground">
+        <section className="border border-border/60 bg-background">
+          <div className="px-4 py-3 border-b border-border/60">
+            <h3 className="text-sm font-semibold text-foreground">Classification</h3>
+            <p className="text-xs text-muted-foreground">Tenant type.</p>
+          </div>
+          <div className="px-4 py-4 flex items-center gap-2 text-sm font-semibold text-foreground">
             <Layers className="h-4 w-4 text-primary" />
             {tenant?.typeName ?? tenant?.tenantType ?? "—"}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-          <CardHeader className="py-5 border-b border-border/60">
-            <CardTitle className="text-sm">Account status</CardTitle>
-            <CardDescription>Whether tenant account is active.</CardDescription>
-          </CardHeader>
-          <CardContent className="pb-6 pt-6 flex items-center gap-2 text-sm font-semibold text-foreground">
+        <section className="border border-border/60 bg-background">
+          <div className="px-4 py-3 border-b border-border/60">
+            <h3 className="text-sm font-semibold text-foreground">Account status</h3>
+            <p className="text-xs text-muted-foreground">Whether tenant account is active.</p>
+          </div>
+          <div className="px-4 py-4 flex items-center gap-2 text-sm font-semibold text-foreground">
             {isActive === null ? (
               "—"
             ) : isActive ? (
@@ -102,27 +101,27 @@ export default function TenantProfilePanel({ enabled }: TenantProfilePanelProps)
                 Inactive
               </>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-          <CardHeader className="py-5 border-b border-border/60">
-            <CardTitle className="text-sm">Onboarded</CardTitle>
-            <CardDescription>Tenant profile created date.</CardDescription>
-          </CardHeader>
-          <CardContent className="pb-6 pt-6 flex items-center gap-2 text-sm font-semibold text-foreground">
+        <section className="border border-border/60 bg-background">
+          <div className="px-4 py-3 border-b border-border/60">
+            <h3 className="text-sm font-semibold text-foreground">Onboarded</h3>
+            <p className="text-xs text-muted-foreground">Tenant profile created date.</p>
+          </div>
+          <div className="px-4 py-4 flex items-center gap-2 text-sm font-semibold text-foreground">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             {tenant?.createdOn ?? "—"}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
 
-      <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-        <CardHeader className="py-5 border-b border-border/60">
-          <CardTitle className="text-base">Tenant details</CardTitle>
-          <CardDescription>Extra details linked to this tenant profile.</CardDescription>
-        </CardHeader>
-        <CardContent className="pb-6 pt-6">
+      <section className="border border-border/60 bg-background">
+        <div className="px-5 py-4 border-b border-border/60">
+          <h2 className="text-base font-semibold text-foreground">Tenant details</h2>
+          <p className="text-sm text-muted-foreground">Extra details linked to this tenant profile.</p>
+        </div>
+        <div className="px-5 py-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Tenant type</div>
@@ -137,9 +136,8 @@ export default function TenantProfilePanel({ enabled }: TenantProfilePanelProps)
               <div className="text-sm text-muted-foreground">{tenant?.remarks ?? "—"}</div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     </div>
   )
 }
-

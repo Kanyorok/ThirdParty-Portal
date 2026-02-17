@@ -5,6 +5,9 @@ export function normalizeString(value: string | null | undefined) {
 
 export function resolveLogoUrl(profile: any, thirdParty: any, thirdPartyDetails: any) {
   return (
+    thirdPartyDetails?.logo?.src ??
+    thirdParty?.logo?.src ??
+    profile?.logo?.src ??
     thirdPartyDetails?.logoUrl ??
     thirdPartyDetails?.logo_url ??
     thirdPartyDetails?.logo ??
@@ -13,9 +16,6 @@ export function resolveLogoUrl(profile: any, thirdParty: any, thirdPartyDetails:
     thirdParty?.logo ??
     profile?.logoUrl ??
     profile?.logo_url ??
-    profile?.imageUrl ??
-    profile?.image_url ??
-    profile?.image ??
     null
   )
 }

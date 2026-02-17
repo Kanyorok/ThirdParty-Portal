@@ -22,6 +22,7 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>
 
 export function ForgotPasswordForm() {
+    const [isResending, setIsResending] = useState(false)
     const [state, setState] = useState<{
         type: "idle" | "success" | "error" | "rate_limited"
         message: string
@@ -45,33 +46,52 @@ export function ForgotPasswordForm() {
 
     const watchedEmail = useWatch({ control, name: "email" })
 
-    const onSubmit = (data: ForgotPasswordValues) => {
+    const submitResetRequest = async (email: string) => {
         setState({ type: "idle", message: "" })
+        const result: AuthResult = await requestPasswordReset(email)
 
-        requestPasswordReset(data.email).then((result: AuthResult) => {
-            if (result.success) {
-                setState({
-                    type: "success",
-                    message: "Reset link sent successfully",
-                    email: data.email,
-                })
-            } else if (result.error === "RATE_LIMIT") {
-                setState({
-                    type: "rate_limited",
-                    message: result.message || "Too many attempts. Please try again later.",
-                })
-            } else {
-                setState({
-                    type: "error",
-                    message: result.message || "An error occurred. Please try again.",
-                })
-            }
-        }).catch(() => {
+        if (result.success) {
+            setState({
+                type: "success",
+                message: result.message || "Reset link sent successfully.",
+                email,
+            })
+            return
+        }
+
+        if (result.error === "RATE_LIMIT") {
+            setState({
+                type: "rate_limited",
+                message: result.message || "Too many attempts. Please try again later.",
+            })
+            return
+        }
+
+        setState({
+            type: "error",
+            message: result.message || "An error occurred. Please try again.",
+        })
+    }
+
+    const onSubmit = async (data: ForgotPasswordValues) => {
+        try {
+            await submitResetRequest(data.email)
+        } catch {
             setState({
                 type: "error",
                 message: "Network error. Please check your connection and try again.",
             })
-        })
+        }
+    }
+
+    const onResend = async () => {
+        if (!state.email) return
+        setIsResending(true)
+        try {
+            await submitResetRequest(state.email)
+        } finally {
+            setIsResending(false)
+        }
     }
 
     if (state.type === "success") {
@@ -85,7 +105,7 @@ export function ForgotPasswordForm() {
                         <div className="space-y-2">
                             <h2 className="text-2xl font-semibold text-gray-900">Check your email</h2>
                             <p className="text-gray-600 text-sm leading-relaxed">
-                                We've sent password reset instructions to{" "}
+                                {state.message || "We've sent password reset instructions to"}{" "}
                                 <span className="font-medium text-gray-900">{state.email}</span>
                             </p>
                         </div>
@@ -106,8 +126,8 @@ export function ForgotPasswordForm() {
                     </Alert>
 
                     <div className="space-y-4">
-                        <Button onClick={() => onSubmit({ email: state.email! })} variant="outline" className="w-full" disabled={isSubmitting}>
-                            {isSubmitting ? (
+                        <Button onClick={onResend} variant="outline" className="w-full" disabled={isSubmitting || isResending}>
+                            {isResending ? (
                                 <>
                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                     Sending...

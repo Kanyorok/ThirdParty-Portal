@@ -20,11 +20,7 @@ const resetPasswordSchema = z
         password: z
             .string()
             .min(8, "Password must be at least 8 characters")
-            .max(128, "Password cannot exceed 128 characters")
-            .regex(/[A-Z]/, "Must contain an uppercase letter")
-            .regex(/[a-z]/, "Must contain a lowercase letter")
-            .regex(/[0-9]/, "Must contain a number")
-            .regex(/[^A-Za-z0-9]/, "Must contain a special character"),
+            .max(128, "Password cannot exceed 128 characters"),
         confirmPassword: z.string().min(1, "Please confirm your password"),
     })
     .refine((data) => data.password === data.confirmPassword, {
@@ -50,7 +46,9 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
     const {
         register,
         handleSubmit,
-        formState: { isValid },
+        setError,
+        clearErrors,
+        formState: { isValid, errors },
         control,
     } = useForm<ResetPasswordInputs>({
         resolver: zodResolver(resetPasswordSchema),
@@ -77,13 +75,12 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
     const getStrength = (pw: string) => {
         const reqs = [
             { test: pw.length >= 8, label: "8+ characters" },
-            { test: /[A-Z]/.test(pw), label: "Uppercase" },
-            { test: /[a-z]/.test(pw), label: "Lowercase" },
+            { test: /[A-Za-z]/.test(pw), label: "Letter" },
             { test: /[0-9]/.test(pw), label: "Number" },
             { test: /[^A-Za-z0-9]/.test(pw), label: "Special char" },
         ]
         const score = reqs.filter(r => r.test).length
-        return { reqs, score, strength: score < 3 ? "weak" : score < 5 ? "medium" : "strong" }
+        return { reqs, score, strength: score < 2 ? "weak" : score < 4 ? "medium" : "strong" }
     }
 
     const strengthData = getStrength(watchedPassword)
@@ -91,10 +88,31 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
     const onSubmit = async (data: ResetPasswordInputs) => {
         startTransition(async () => {
             try {
+                clearErrors()
                 const result = await resetPassword(token, data.password, email)
                 if (result.success) {
                     setState({ type: "success", message: result.message })
                 } else {
+                    const backendErrors = result.errors ?? {}
+                    const passwordError =
+                        backendErrors.password?.[0] ??
+                        backendErrors.new_password?.[0]
+                    const confirmationError =
+                        backendErrors.password_confirmation?.[0] ??
+                        backendErrors.new_password_confirmation?.[0]
+
+                    if (passwordError) {
+                        setError("password", {
+                            type: "server",
+                            message: passwordError.includes("password_reuse_not_allowed")
+                                ? "New password must be different from your previous password."
+                                : passwordError,
+                        })
+                    }
+                    if (confirmationError) {
+                        setError("confirmPassword", { type: "server", message: confirmationError })
+                    }
+
                     setState({ type: "error", message: result.message })
                 }
             } catch {
@@ -163,7 +181,7 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
                     {watchedPassword && (
                         <div className="p-3 bg-gray-50 rounded-lg border space-y-2">
                             <div className="flex gap-1">
-                                {[1, 2, 3, 4, 5].map(i => (
+                                {[1, 2, 3, 4].map(i => (
                                     <div key={i} className={`h-1.5 flex-1 rounded-full ${strengthData.score >= i ? 'bg-blue-500' : 'bg-gray-200'}`} />
                                 ))}
                             </div>
@@ -175,6 +193,9 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
                                 ))}
                             </div>
                         </div>
+                    )}
+                    {errors.password && (
+                        <p className="text-red-600 text-xs">{errors.password.message}</p>
                     )}
                 </div>
 
@@ -195,6 +216,9 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
                     </div>
                     {watchedConfirmPassword && watchedConfirmPassword === watchedPassword && (
                         <p className="text-green-600 text-xs flex items-center gap-1"><Check className="h-3 w-3" /> Passwords match</p>
+                    )}
+                    {errors.confirmPassword && (
+                        <p className="text-red-600 text-xs">{errors.confirmPassword.message}</p>
                     )}
                 </div>
 

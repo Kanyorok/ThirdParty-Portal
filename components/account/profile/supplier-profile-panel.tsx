@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { AlertCircle, BadgeCheck, Clock, Hash, Layers } from "lucide-react"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/common/card"
 import Loading from "@/components/common/custom-loader"
 import { getSupplierProfile } from "@/lib/api/profile-management"
 
@@ -21,15 +20,15 @@ export default function SupplierProfilePanel({ enabled }: SupplierProfilePanelPr
 
   if (!enabled) {
     return (
-      <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-        <CardHeader className="py-5 border-b border-border/60">
-          <CardTitle className="text-base">Supplier profile</CardTitle>
-          <CardDescription>Not enabled for this account.</CardDescription>
-        </CardHeader>
-        <CardContent className="pb-6 pt-6">
+      <section className="border border-border/60 bg-background">
+        <div className="px-5 py-4 border-b border-border/60">
+          <h2 className="text-base font-semibold text-foreground">Supplier profile</h2>
+          <p className="text-sm text-muted-foreground">Not enabled for this account.</p>
+        </div>
+        <div className="px-5 py-5">
           <div className="text-sm text-muted-foreground">Enable Supplier to access RFQs, tenders, and supplier workflows.</div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     )
   }
 
@@ -43,12 +42,12 @@ export default function SupplierProfilePanel({ enabled }: SupplierProfilePanelPr
 
   if (isError) {
     return (
-      <Card className="bg-card rounded-2xl border border-destructive/20 shadow-none py-0 gap-0">
-        <CardHeader className="py-5 border-b border-destructive/20">
-          <CardTitle className="text-base text-destructive">Supplier profile</CardTitle>
-          <CardDescription>We couldn’t load supplier details.</CardDescription>
-        </CardHeader>
-        <CardContent className="pb-6 pt-6 space-y-3">
+      <section className="border border-destructive/20 bg-background">
+        <div className="px-5 py-4 border-b border-destructive/20">
+          <h2 className="text-base font-semibold text-destructive">Supplier profile</h2>
+          <p className="text-sm text-muted-foreground">We couldn’t load supplier details.</p>
+        </div>
+        <div className="px-5 py-5 space-y-3">
           <div className="flex items-start gap-3 text-sm text-muted-foreground">
             <AlertCircle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
             <span>{(error as any)?.message || "Please try again."}</span>
@@ -61,8 +60,8 @@ export default function SupplierProfilePanel({ enabled }: SupplierProfilePanelPr
           >
             Retry
           </button>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     )
   }
 
@@ -76,51 +75,51 @@ export default function SupplierProfilePanel({ enabled }: SupplierProfilePanelPr
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-          <CardHeader className="py-5 border-b border-border/60">
-            <CardTitle className="text-sm">Approval</CardTitle>
-            <CardDescription>Your supplier verification status.</CardDescription>
-          </CardHeader>
-          <CardContent className="pb-6 pt-6 flex items-center justify-between">
+        <section className="border border-border/60 bg-background">
+          <div className="px-4 py-3 border-b border-border/60">
+            <h3 className="text-sm font-semibold text-foreground">Approval</h3>
+            <p className="text-xs text-muted-foreground">Your supplier verification status.</p>
+          </div>
+          <div className="px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               {isApproved ? <BadgeCheck className="h-4 w-4 text-emerald-600" /> : isPending ? <Clock className="h-4 w-4 text-amber-600" /> : <AlertCircle className="h-4 w-4 text-muted-foreground" />}
               {isApproved ? "Approved" : isPending ? "In review" : status || "Unknown"}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-          <CardHeader className="py-5 border-b border-border/60">
-            <CardTitle className="text-sm">Supplier ID</CardTitle>
-            <CardDescription>Your supplier reference.</CardDescription>
-          </CardHeader>
-          <CardContent className="pb-6 pt-6">
+        <section className="border border-border/60 bg-background">
+          <div className="px-4 py-3 border-b border-border/60">
+            <h3 className="text-sm font-semibold text-foreground">Supplier ID</h3>
+            <p className="text-xs text-muted-foreground">Your supplier reference.</p>
+          </div>
+          <div className="px-4 py-4">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground font-mono">
               <Hash className="h-4 w-4 text-muted-foreground" />
               {supplier?.supplierId || "—"}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-          <CardHeader className="py-5 border-b border-border/60">
-            <CardTitle className="text-sm">Prequalified</CardTitle>
-            <CardDescription>Eligibility to bid faster.</CardDescription>
-          </CardHeader>
-          <CardContent className="pb-6 pt-6">
+        <section className="border border-border/60 bg-background">
+          <div className="px-4 py-3 border-b border-border/60">
+            <h3 className="text-sm font-semibold text-foreground">Prequalified</h3>
+            <p className="text-xs text-muted-foreground">Eligibility to bid faster.</p>
+          </div>
+          <div className="px-4 py-4">
             <div className="text-sm font-semibold text-foreground">
               {typeof supplier?.isPrequalified === "boolean" ? (supplier.isPrequalified ? "Yes" : "No") : "—"}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
 
-      <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-        <CardHeader className="py-5 border-b border-border/60">
-          <CardTitle className="text-base">Categories</CardTitle>
-          <CardDescription>Supplier categories linked to this account.</CardDescription>
-        </CardHeader>
-        <CardContent className="pb-6 pt-6">
+      <section className="border border-border/60 bg-background">
+        <div className="px-5 py-4 border-b border-border/60">
+          <h2 className="text-base font-semibold text-foreground">Categories</h2>
+          <p className="text-sm text-muted-foreground">Supplier categories linked to this account.</p>
+        </div>
+        <div className="px-5 py-5">
           {categories.length === 0 ? (
             <div className="text-sm text-muted-foreground">No categories assigned.</div>
           ) : (
@@ -138,9 +137,8 @@ export default function SupplierProfilePanel({ enabled }: SupplierProfilePanelPr
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     </div>
   )
 }
-
