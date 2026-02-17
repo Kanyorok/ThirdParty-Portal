@@ -58,6 +58,12 @@
                                             data-click_url="{{ route('help') }}?help=integration_fb"
                                             data-summary_title="Facebook Integration Help ?"
                                             style="cursor: pointer;">Help ?</span>
+                                    @elseif($integration->value === IntegrationsEnum::GoogleMaps->value)
+                                        <span
+                                            class="text-muted float-end text-decoration-underline text-primary click-summary-data"
+                                            data-click_url="{{ route('help') }}?help=integration_gmaps"
+                                            data-summary_title="Google Maps Integration Help ?"
+                                            style="cursor: pointer;">Help ?</span>
                                     @endif
                                 </h5>
                             </div>
@@ -700,7 +706,7 @@
                                         </form>
                                         @break
                                     @case(IntegrationsEnum::GoogleMaps->value)
-                                        <form id="gMapsConfigurationForm" method="post"
+                                        <form id="gmapsConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
                                                    class="d-none" style="display: none;">
@@ -708,7 +714,7 @@
                                                 <div class="col-12">
                                                     <div class="alert alert-info" role="alert">
                                                         <i class="fas fa-check-circle me-2"></i>
-                                                        <strong>Configuration:</strong> There are existings setting already set
+                                                        <strong>Configuration:</strong> There are existing setting already set up for this integration. If you proceed to set a new key, the current configuration will be overwritten.
                                                     </div>
                                                 </div>
                                             @endif
@@ -717,7 +723,7 @@
                                                         class="text-danger">*</span></label>
                                                 <input type="text" class="form-control config-gmaps-form"
                                                        id="GMaps_Key" disabled
-                                                       placeholder="Consumer Secret" required autocomplete="off"
+                                                       placeholder="API Key fror Google Maps" required autocomplete="off"
                                                        name="GMaps_Key">
                                                 <span id="GMaps_Key_error"
                                                       class="invalid-feedback d-none error"
@@ -727,17 +733,17 @@
                                             <div class="row">
                                                 <div class="col-6">
                                                     <button type="button" class="btn btn-secondary d-none float-start"
-                                                            id="gMapsConfigurationCancelBtn">
+                                                            id="gmapsConfigurationCancelBtn">
                                                         cancel
                                                     </button>
                                                     <button type="button" class="btn btn-primary float-start"
-                                                            id="gMapsConfigurationEditBtn">
+                                                            id="gmapsConfigurationEditBtn">
                                                         edit config
                                                     </button>
                                                 </div>
                                                 <div class="col-6">
                                                     <button type="submit" class="btn btn-success d-none float-end"
-                                                            id="gMapsConfigurationBtn">
+                                                            id="gmapsConfigurationBtn">
                                                         save new key
                                                     </button>
                                                 </div>
@@ -1126,6 +1132,19 @@
                 e.preventDefault();
                 if (await saveForm($(this), $("#llmConfigurationBtn"), false, false, true)) {
                     disable('llm');
+                }
+            });
+
+            $("#gmapsConfigurationEditBtn").on('click', function () {
+                enable('gmaps')
+            });
+            $("#gmapsConfigurationCancelBtn").on('click', function () {
+                disable('gmaps');
+            });
+            $('form#gmapsConfigurationForm').submit(async function (e) {
+                e.preventDefault();
+                if (await saveForm($(this), $("#gmapsConfigurationBtn"), false, false, true)) {
+                    disable('gmaps');
                 }
             });
 

@@ -34,10 +34,7 @@ class SettingsController extends Controller
         return view('settings.users');
     }
 
-    /**
-     * Handle the incoming request.
-     * @throws AuthorizationException
-     */
+
     public function integrations(): View
     {
         $this->authorize('viewAny', APICredential::class);
