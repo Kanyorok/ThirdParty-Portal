@@ -1,14 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/common/dialog";
 import { Button } from "@/components/common/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/common/tabs";
 import { Badge } from "@/components/common/badge";
 import {
   Calendar,
-  DollarSign,
   Building,
   Clock,
   FileText,
@@ -18,9 +16,13 @@ import {
   XCircle,
   AlertTriangle,
   Download,
+  ArrowRight,
+  RefreshCw,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { getBaseUrl } from "@/lib/api-base";
 import TenderResponseForm from "./tender-response-form";
 import TenderClarifications from "./tender-clarifications";
 import TenderBidForm from "./tender-bid-form";
@@ -37,6 +39,7 @@ interface Tender {
   openingDate: string;
   status: string;
   estimatedValue?: string | null;
+  currencyCode?: string | null;
   currency?: {
     code: string;
     symbol: string;
@@ -47,6 +50,16 @@ interface Tender {
   tenderCategoryRelation?: {
     tenderCategory: string;
   };
+  itemCategoryRelation?: {
+    name?: string | null;
+  };
+  documents?: Array<{
+    id: number;
+    name: string;
+    mimeType?: string | null;
+    visibility?: string | null;
+    downloadUrl?: string | null;
+  }>;
 }
 
 interface TenderInvitation {
@@ -80,15 +93,23 @@ export default function TenderDetailModal({
   onInvitationUpdate,
 }: TenderDetailModalProps) {
   const [activeTab, setActiveTab] = useState("overview");
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const [documents, setDocuments] = useState<Tender["documents"]>(tender?.documents ?? []);
+  const [docsLoading, setDocsLoading] = useState(false);
+  const [docsError, setDocsError] = useState<string | null>(null);
 
-  if (!tender) return null;
+  useEffect(() => {
+    if (!tender) return;
+    setDocuments(tender.documents ?? []);
+  }, [tender]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pb': return 'bg-green-100 text-green-800';
-      case 'dr': return 'bg-gray-100 text-gray-800';
-      case 'cl': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'pb': return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+      case 'dr': return 'bg-slate-100 text-slate-600 border border-slate-200';
+      case 'cl': return 'bg-rose-50 text-rose-700 border border-rose-200';
+      case 'opening_in_progress': return 'bg-amber-50 text-amber-700 border border-amber-200';
+      default: return 'bg-slate-100 text-slate-600 border border-slate-200';
     }
   };
 
@@ -97,17 +118,18 @@ export default function TenderDetailModal({
       case 'pb': return 'Open';
       case 'dr': return 'Draft';
       case 'cl': return 'Closed';
+      case 'opening_in_progress': return 'Opening';
       default: return status;
     }
   };
 
   const getResponseStatusColor = (status: string) => {
     switch (status) {
-      case 'accepted': return 'text-green-600';
-      case 'declined': return 'text-red-600';
-      case 'submitted': return 'text-blue-600';
-      case 'pending': return 'text-yellow-600';
-      default: return 'text-gray-600';
+      case 'accepted': return 'text-emerald-600';
+      case 'declined': return 'text-rose-600';
+      case 'submitted': return 'text-indigo-600';
+      case 'pending': return 'text-amber-600';
+      default: return 'text-slate-600';
     }
   };
 
@@ -121,257 +143,462 @@ export default function TenderDetailModal({
     }
   };
 
-  const formatCurrency = (amount: string | null | undefined, currencyCode: string = 'KES') => {
-    if (!amount) return 'Not specified';
-    return new Intl.NumberFormat('en-KE', {
-      style: 'currency',
-      currency: currencyCode,
-    }).format(parseFloat(amount));
+  const getDocLabel = (doc: { name: string; mimeType?: string | null }) => {
+    const name = doc.name || "";
+    const ext = name.includes(".") ? name.split(".").pop() || "" : "";
+    const mime = (doc.mimeType || "").toLowerCase();
+    if (ext) return ext.toUpperCase().slice(0, 6);
+    if (mime.includes("pdf")) return "PDF";
+    if (mime.includes("excel") || mime.includes("spreadsheet")) return "XLS";
+    if (mime.includes("word")) return "DOC";
+    if (mime.includes("image")) return "IMG";
+    return "FILE";
   };
+
+  const getDocTone = (label: string) => {
+    switch (label) {
+      case "PDF":
+        return "bg-rose-50 text-rose-700 border-rose-200";
+      case "XLS":
+      case "XLSX":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "DOC":
+      case "DOCX":
+        return "bg-blue-50 text-blue-700 border-blue-200";
+      case "PNG":
+      case "JPG":
+      case "JPEG":
+      case "IMG":
+        return "bg-amber-50 text-amber-700 border-amber-200";
+      default:
+        return "bg-slate-100 text-slate-600 border-slate-200";
+    }
+  };
+
+  const handleStartBid = () => {
+    setActiveTab("bidding");
+    requestAnimationFrame(() => {
+      contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  };
+
+  const refreshDocuments = useCallback(async () => {
+    if (!tender.tenderNo && !tender.id) return;
+    try {
+      setDocsLoading(true);
+      setDocsError(null);
+      const params = new URLSearchParams();
+      if (tender.tenderNo) params.set("search", tender.tenderNo);
+      const res = await fetch(
+        `${getBaseUrl()}/api/tenders${params.toString() ? `?${params.toString()}` : ""}`,
+        { headers: { Accept: "application/json" } }
+      );
+      const json = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(json?.message ?? "Failed to refresh documents");
+      const list = Array.isArray(json?.data)
+        ? json.data
+        : Array.isArray(json)
+          ? json
+          : [];
+      const match = list.find((item: any) =>
+        String(item?.id) === String(tender.id) || item?.tenderNo === tender.tenderNo
+      );
+      setDocuments(match?.documents ?? []);
+    } catch (e: any) {
+      setDocsError(e?.message ?? "Unable to refresh documents");
+    } finally {
+      setDocsLoading(false);
+    }
+  }, [tender]);
+
+  useEffect(() => {
+    if (activeTab === "documents") {
+      refreshDocuments();
+    }
+  }, [activeTab, refreshDocuments]);
+
+  if (!tender) return null;
+
+  const safeFormatDate = (value: string | null | undefined, fmt: string = "PPP p") => {
+    if (!value) return "—";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "—";
+    return format(date, fmt);
+  };
+
+  const deadlineText = safeFormatDate(tender.submissionDeadline, "PPP p");
+  const deadlineShort = safeFormatDate(tender.submissionDeadline, "dd MMM yyyy");
+  const openingText = safeFormatDate(tender.openingDate, "PPP p");
+  const openingShort = safeFormatDate(tender.openingDate, "dd MMM yyyy");
+  const deadlineDate = tender.submissionDeadline ? new Date(tender.submissionDeadline) : null;
+  const hasValidDeadlineDate = !!deadlineDate && !Number.isNaN(deadlineDate.getTime());
+  const deadlinePassed = hasValidDeadlineDate ? deadlineDate.getTime() < Date.now() : false;
+  const categoryText = tender.tenderCategoryRelation?.tenderCategory || "";
+  const tenderTypeKey = String(tender.tenderType || "").toLowerCase();
+  const typeText = tenderTypeKey === "op" || tenderTypeKey === "open" ? 'Open Tender' : 'Restricted Tender';
+  const referenceText = tender.tenderNo || "REF-PENDING";
+  const hasDeadline = deadlineShort !== "—";
+  const hasOpening = openingShort !== "—";
+  const procurementModeText = tender.procurementMode?.name || "";
+  const currencyText = tender.currencyCode || tender.currency?.code || "KES";
+  const itemCategoryText = tender.itemCategoryRelation?.name || "";
+  const publicDocs = (documents || []).filter(doc => {
+    const v = (doc.visibility || "").toLowerCase();
+    return v === "pub" || v === "public";
+  });
+  const isOpenStatus = tender.status === "pb";
+  const isOpenTenderType = tenderTypeKey === "op" || tenderTypeKey === "open";
+  const isRestrictedTenderType = tenderTypeKey === "rs" || tenderTypeKey === "restricted";
+  const hasInvitation = !!invitation;
+  const showResponseTab = isRestrictedTenderType && hasInvitation;
+  const showClarificationsTab = !isRestrictedTenderType || hasInvitation;
+  const invitationStatus = String(invitation?.ResponseStatus || invitation?.responseStatus || "pending").toLowerCase();
+  const statusClosed = tender.status === "cl";
+  const backendClosedByDeadline = deadlinePassed;
+  const closedReason = statusClosed
+    ? "This tender is no longer accepting submissions."
+    : backendClosedByDeadline
+      ? `This tender is no longer accepting submissions. Deadline was ${deadlineShort}.`
+      : undefined;
+  const invitationReason = isRestrictedTenderType && invitationStatus !== "accepted"
+    ? "Accept the invitation in Response before submitting your bid."
+    : undefined;
+  const canSubmitBid = !closedReason && !invitationReason;
+  const bidBlockedReason = closedReason || invitationReason;
+  const tabTriggerClass =
+    "rounded-lg px-3 py-2 text-[11px] font-semibold text-slate-600 transition-all duration-150 hover:text-slate-900 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:border data-[state=active]:border-slate-200/80";
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[98vw] w-full h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0 pb-4 border-b">
-          <DialogTitle className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <h2 className="text-2xl font-bold truncate">{tender.title}</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                {tender.tenderNo}
-              </p>
+      <DialogContent className="w-screen max-w-[1400px] sm:w-[96vw] md:w-[90vw] lg:w-[86vw] xl:w-[82vw] 2xl:w-[80vw] h-[100dvh] flex flex-col p-0 overflow-hidden rounded-none border-0 sm:border-l sm:border-slate-200/80 bg-white shadow-[ -18px_0_48px_rgba(15,23,42,0.14)] left-auto right-0 top-0 translate-x-0 translate-y-0">
+        <DialogHeader className="relative flex-shrink-0 border-b border-slate-200/70 bg-white px-6 lg:px-8 py-3 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-indigo-500/80 before:content-['']">
+          <DialogTitle className="flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                  Tender
+                </p>
+                <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 truncate">
+                  {tender.title}
+                </h2>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                  <span className="font-mono">{referenceText}</span>
+                  <span className="h-1 w-1 rounded-full bg-slate-300" />
+                  <span>{categoryText}</span>
+                </div>
+              </div>
+              <div className="flex items-center">
+                <Badge className={cn("shrink-0 px-2.5 py-1 text-[11px] font-semibold", getStatusColor(tender.status))}>
+                  {getStatusText(tender.status)}
+                </Badge>
+              </div>
             </div>
-            <Badge className={cn("ml-4 flex-shrink-0", getStatusColor(tender.status))}>
-              {getStatusText(tender.status)}
-            </Badge>
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
-          <TabsList className="grid w-full grid-cols-5 flex-shrink-0 bg-muted rounded-md">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="response">Response</TabsTrigger>
-            <TabsTrigger value="clarifications">Clarifications</TabsTrigger>
-            <TabsTrigger value="bidding">Bidding</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden bg-slate-50/40">
+          <div className="mx-6 lg:mx-8 mt-2">
+            <TabsList className={cn(
+              "grid w-full gap-0.5 rounded-xl border border-slate-200/80 bg-slate-100 p-0.5 text-[11px] sm:text-xs",
+              showResponseTab
+                ? "grid-cols-5"
+                : showClarificationsTab
+                  ? "grid-cols-4"
+                  : "grid-cols-3"
+            )}>
+              <TabsTrigger className={tabTriggerClass} value="overview">
+                Overview
+              </TabsTrigger>
+              {showResponseTab && (
+                <TabsTrigger className={tabTriggerClass} value="response">
+                  Response
+                </TabsTrigger>
+              )}
+              {showClarificationsTab && (
+                <TabsTrigger className={tabTriggerClass} value="clarifications">
+                  Clarifications
+                </TabsTrigger>
+              )}
+              <TabsTrigger className={tabTriggerClass} value="documents">
+                Documents
+              </TabsTrigger>
+              <TabsTrigger className={tabTriggerClass} value="bidding">
+                Bidding
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <div className="flex-1 mt-4 overflow-y-auto">
-            <TabsContent value="overview" className="space-y-6 px-4 py-2">
-              {/* Invitation Status */}
+          <div ref={contentRef} className="flex-1 overflow-y-auto px-6 lg:px-8 pb-20 pt-3">
+            <TabsContent value="overview" className="mt-0 space-y-3">
               {invitation && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <MessageSquare className="h-5 w-5" />
-                      Invitation Status
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {getResponseStatusIcon(invitation.ResponseStatus || invitation.responseStatus || 'pending')}
-                        <span className={cn("font-medium capitalize", getResponseStatusColor(invitation.ResponseStatus || invitation.responseStatus || 'pending'))}>
-                          {invitation.ResponseStatus || invitation.responseStatus || 'pending'}
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-none">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="relative flex items-center gap-2 pl-3 text-sm font-semibold text-slate-900 before:absolute before:left-0 before:top-1 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-indigo-600">
+                        <MessageSquare className="h-4 w-4" />
+                      </span>
+                      Invitation status
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <span>
+                        Invited: {safeFormatDate(invitation.InvitationDate || invitation.invitationDate, "dd MMM yyyy")}
+                      </span>
+                      {(invitation.ResponseDate || invitation.responseDate) && (
+                        <span>
+                          Responded: {safeFormatDate(invitation.ResponseDate || invitation.responseDate, "dd MMM yyyy")}
                         </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 text-sm">
+                    <span className={cn("inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 font-semibold capitalize", getResponseStatusColor(invitation.ResponseStatus || invitation.responseStatus || 'pending'))}>
+                      {getResponseStatusIcon(invitation.ResponseStatus || invitation.responseStatus || 'pending')}
+                      {invitation.ResponseStatus || invitation.responseStatus || 'pending'}
+                    </span>
+                  </div>
+                  {(invitation.DeclineReason || invitation.declineReason) && (
+                    <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+                      <strong>Decline Reason:</strong> {invitation.DeclineReason || invitation.declineReason}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 xl:grid-cols-[1.15fr_0.85fr] gap-5">
+                <div className="space-y-3">
+                  {tender.scopeOfWork && (
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-none">
+                      <div className="relative flex items-center gap-2 pl-3 text-sm font-semibold text-slate-900 before:absolute before:left-0 before:top-1 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
+                        <FileText className="h-4 w-4 text-indigo-600" />
+                        Scope of work
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        Invited: {format(new Date(invitation.InvitationDate || invitation.invitationDate!), 'PPP')}
-                        {(invitation.ResponseDate || invitation.responseDate) && (
-                          <span className="ml-4">
-                            Responded: {format(new Date(invitation.ResponseDate || invitation.responseDate!), 'PPP')}
-                          </span>
+                      <div className="mt-2 text-sm text-slate-700 whitespace-pre-wrap">
+                        {tender.scopeOfWork}
+                      </div>
+                    </div>
+                  )}
+
+                  {tender.instructions && (
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-none">
+                      <div className="relative flex items-center gap-2 pl-3 text-sm font-semibold text-slate-900 before:absolute before:left-0 before:top-1 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
+                        <FileText className="h-4 w-4 text-indigo-600" />
+                        Instructions to bidders
+                      </div>
+                      <div className="mt-2 text-sm text-slate-700 whitespace-pre-wrap">
+                        {tender.instructions}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  {(categoryText || itemCategoryText || procurementModeText) && (
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-none">
+                      <div className="relative flex items-center gap-2 pl-3 text-sm font-semibold text-slate-900 before:absolute before:left-0 before:top-1 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
+                        <Building className="h-4 w-4 text-indigo-600" />
+                        Tender snapshot
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-2.5 text-sm">
+                        {categoryText && (
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">Category</p>
+                            <p className="text-sm text-slate-900">{categoryText}</p>
+                          </div>
+                        )}
+                        {itemCategoryText && (
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">Item category</p>
+                            <p className="text-sm text-slate-900">{itemCategoryText}</p>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-xs font-medium text-slate-500">Type</p>
+                          <p className="text-sm text-slate-900">{typeText}</p>
+                        </div>
+                        {procurementModeText && (
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">Procurement mode</p>
+                            <p className="text-sm text-slate-900">{procurementModeText}</p>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-xs font-medium text-slate-500">Currency</p>
+                          <p className="text-sm text-slate-900">{currencyText}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-slate-500">Reference</p>
+                          <p className="text-sm text-slate-900 font-mono">{referenceText}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {(hasDeadline || hasOpening) && (
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-none">
+                      <div className="relative flex items-center gap-2 pl-3 text-sm font-semibold text-slate-900 before:absolute before:left-0 before:top-1 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
+                        <Calendar className="h-4 w-4 text-indigo-600" />
+                        Important dates
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-2.5 text-sm">
+                        {hasDeadline && (
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">Submission deadline</p>
+                            <p className="text-sm font-semibold text-rose-600">{deadlineText}</p>
+                          </div>
+                        )}
+                        {hasOpening && (
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">Opening date</p>
+                            <p className="text-sm text-slate-900">{openingText}</p>
+                          </div>
                         )}
                       </div>
                     </div>
-                    {(invitation.DeclineReason || invitation.declineReason) && (
-                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-sm text-red-800">
-                          <strong>Decline Reason:</strong> {invitation.DeclineReason || invitation.declineReason}
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
+                  )}
 
-              {/* Tender Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Building className="h-5 w-5" />
-                      Tender Details
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Category</label>
-                      <p className="text-sm">{tender.tenderCategoryRelation?.tenderCategory || 'Not specified'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Type</label>
-                      <p className="text-sm">{tender.tenderType === 'op' ? 'Open to All' : 'Restricted'}</p>
-                    </div>
-
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5" />
-                      Financial Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Estimated Value</label>
-                      <p className="text-sm font-semibold">
-                        {formatCurrency(tender.estimatedValue, tender.currency?.code)}
+                  {isOpenStatus && canSubmitBid && (
+                    <div className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-3 shadow-none">
+                      <div className="text-sm font-semibold text-slate-900">Recommended next step</div>
+                      <p className="mt-1 text-xs text-slate-600">
+                        Move this opportunity forward by starting your bid now.
                       </p>
+                      <Button onClick={handleStartBid} variant="outline" size="sm" className="mt-3 border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+                        Go to bidding
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Currency</label>
-                      <p className="text-sm">{tender.currency?.code || 'KES'}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="md:col-span-2">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5" />
-                      Important Dates
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Submission Deadline</label>
-                      <p className="text-sm font-semibold text-red-600">
-                        {format(new Date(tender.submissionDeadline), 'PPP p')}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Opening Date</label>
-                      <p className="text-sm">
-                        {format(new Date(tender.openingDate), 'PPP p')}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                  )}
+                </div>
               </div>
-
-              {/* Scope of Work */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Scope of Work
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose prose-sm max-w-none">
-                    <p className="whitespace-pre-wrap">{tender.scopeOfWork}</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Instructions */}
-              {tender.instructions && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Instructions to Bidders</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="prose prose-sm max-w-none">
-                      <p className="whitespace-pre-wrap">{tender.instructions}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </TabsContent>
 
-            <TabsContent value="response" className="mt-0 data-[state=active]:block data-[state=inactive]:hidden">
-              <div className="px-4 py-2">
+            {showResponseTab && (
+              <TabsContent value="response" className="mt-0">
                 <TenderResponseForm
                   tender={tender}
                   invitation={invitation}
                   onUpdate={onInvitationUpdate}
+                  onStartBid={handleStartBid}
                 />
-              </div>
-            </TabsContent>
+              </TabsContent>
+            )}
 
-            <TabsContent value="clarifications" className="mt-0 data-[state=active]:block data-[state=inactive]:hidden">
-              <div className="px-4 py-2">
-                <TenderClarifications tenderId={tender.id.toString()} />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="bidding" className="mt-0 data-[state=active]:block data-[state=inactive]:hidden">
-              <div className="px-4 py-2">
-                <TenderBidForm
-                  tender={{
-                    ...tender,
-                    id: tender.id.toString()
-                  }}
-                  onFinalSubmitSuccess={() => {
-                    // Close the dialog
-                    onClose();
-                  }}
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="documents" className="mt-0 data-[state=active]:block data-[state=inactive]:hidden">
-              <div className="px-4 py-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="h-5 w-5" />
-                      Tender Documents
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-8 w-8 text-blue-600" />
-                          <div>
-                            <p className="font-medium">Tender Document.pdf</p>
-                            <p className="text-sm text-muted-foreground">2.4 MB • PDF</p>
-                          </div>
-                        </div>
-                        <Button variant="outline" size="sm">
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-8 w-8 text-green-600" />
-                          <div>
-                            <p className="font-medium">Bill of Quantities.xlsx</p>
-                            <p className="text-sm text-muted-foreground">1.8 MB • Excel</p>
-                          </div>
-                        </div>
-                        <Button variant="outline" size="sm">
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
-                      </div>
-
-                      <div className="text-center py-8 text-muted-foreground">
-                        <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                        <p>Additional documents will appear here</p>
-                      </div>
+            <TabsContent value="documents" className="mt-0">
+              <div className="rounded-2xl border border-slate-200/80 bg-white shadow-none">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-200/70 px-3 py-2.5">
+                  <div className="relative flex items-center gap-2 pl-3 text-sm font-semibold text-slate-900 before:absolute before:left-0 before:top-1 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
+                    <FileText className="h-4 w-4 text-indigo-600" />
+                    Tender documents
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                      {publicDocs.length} public
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2.5 border-slate-200 text-slate-600 hover:bg-slate-50"
+                      onClick={refreshDocuments}
+                      disabled={docsLoading}
+                    >
+                      {docsLoading ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <div className="divide-y divide-slate-200/70">
+                  {docsError && (
+                    <div className="px-3 py-2.5 text-xs text-rose-600 bg-rose-50/40 border-b border-rose-200/60">
+                      {docsError}
                     </div>
-                  </CardContent>
-                </Card>
+                  )}
+                  {publicDocs.length > 0 ? (
+                    publicDocs.map(doc => (
+                      <div key={doc.id} className="flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                            <FileText className="h-4 w-4" />
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-slate-900 truncate">{doc.name}</p>
+                            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                              <span className={cn("inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold", getDocTone(getDocLabel(doc)))}>
+                                {getDocLabel(doc)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        {doc.downloadUrl ? (
+                          <Button variant="outline" size="sm" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50" asChild>
+                            <a href={doc.downloadUrl} target="_blank" rel="noreferrer">
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </a>
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-slate-400">Unavailable</span>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-3 py-8 text-center text-slate-500">
+                      <FileText className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm font-medium text-slate-700">No public documents yet</p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Documents shared by procurement will appear here.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
+            </TabsContent>
+
+            {showClarificationsTab && (
+              <TabsContent value="clarifications" className="mt-0">
+                <TenderClarifications
+                  tenderId={tender.id.toString()}
+                  canAcceptInvitation={showResponseTab}
+                  isOpenTender={isOpenTenderType}
+                  onRequestAccess={showResponseTab ? () => setActiveTab("response") : undefined}
+                />
+              </TabsContent>
+            )}
+
+            <TabsContent value="bidding" className="mt-0">
+              <TenderBidForm
+                tender={{
+                  ...tender,
+                  id: tender.id.toString()
+                }}
+                canSubmitBid={canSubmitBid}
+                submissionBlockedReason={bidBlockedReason}
+                onResolveSubmissionBlock={showResponseTab ? () => setActiveTab("response") : undefined}
+                onFinalSubmitSuccess={() => {
+                  onClose();
+                }}
+              />
             </TabsContent>
           </div>
         </Tabs>
+
+        <div className="sticky bottom-0 z-10 border-t border-slate-200/80 bg-white/95 px-6 lg:px-8 py-2.5 backdrop-blur">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm text-slate-600">
+              {canSubmitBid ? "Ready to proceed? Start your bid while details are fresh." : (bidBlockedReason || "Submission is currently unavailable.")}
+            </div>
+            <Button
+              onClick={handleStartBid}
+              disabled={!canSubmitBid}
+              className="h-9 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:text-slate-600"
+            >
+              Start bid
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

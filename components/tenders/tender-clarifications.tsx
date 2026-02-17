@@ -55,12 +55,24 @@ interface TenderClarification {
 
 interface TenderClarificationsProps {
   tenderId: string;
+  onRequestAccess?: () => void;
+  canAcceptInvitation?: boolean;
+  isOpenTender?: boolean;
 }
 
-export default function TenderClarifications({ tenderId }: TenderClarificationsProps) {
+export default function TenderClarifications({
+  tenderId,
+  onRequestAccess,
+  canAcceptInvitation = false,
+  isOpenTender = false,
+}: TenderClarificationsProps) {
   const [clarifications, setClarifications] = useState<TenderClarification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [inlineError, setInlineError] = useState<string | null>(null);
+  const [permissionDenied, setPermissionDenied] = useState(false);
+  const [accepting, setAccepting] = useState(false);
+  const [acceptError, setAcceptError] = useState<string | null>(null);
   const [showNewClarification, setShowNewClarification] = useState(false);
   const [newQuestion, setNewQuestion] = useState("");
   const [isPublic, setIsPublic] = useState(false);
@@ -72,28 +84,50 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
     }
 
     try {
-      const response = await fetch(`/api/tender-clarifications?tender_id=${tenderId}`);
+      const response = await fetch(`/api/tender-clarifications?tenderId=${tenderId}`);
 
       if (!response.ok) {
-        let errorMessage = 'Failed to fetch clarifications';
+        const raw = await response.text().catch(() => "");
+        let errorData: any = null;
         try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorData.error || errorMessage;
-          console.error('API Error:', { status: response.status, data: errorData });
+          errorData = raw ? JSON.parse(raw) : null;
         } catch {
-          console.error('API Error (Parse Fail):', response.status, response.statusText);
-          errorMessage = `Failed to fetch: ${response.status} ${response.statusText}`;
+          errorData = null;
         }
-        throw new Error(errorMessage);
+        const errorMessage =
+          errorData?.message ||
+          errorData?.error ||
+          raw ||
+          `Failed to fetch: ${response.status} ${response.statusText}`;
+        if (process.env.NODE_ENV !== "production") {
+          console.error('API Error:', {
+            status: response.status,
+            statusText: response.statusText,
+            data: errorData ?? raw ?? null
+          });
+        }
+        const err = new Error(errorMessage) as Error & { status?: number };
+        err.status = response.status;
+        throw err;
       }
 
       const data = await response.json();
       const clarificationsData = data.data || [];
 
       setClarifications(clarificationsData);
+      setInlineError(null);
+      setPermissionDenied(false);
       setLastRefresh(new Date()); // Update refresh timestamp
     } catch (error) {
-      console.error('Error fetching clarifications:', error);
+      if (process.env.NODE_ENV !== "production") {
+        console.error('Error fetching clarifications:', error);
+      }
+      const status = (error as { status?: number })?.status;
+      const denied = status === 403;
+      setPermissionDenied(denied);
+      setInlineError(
+        error instanceof Error ? error.message : "Unable to load clarifications"
+      );
       if (showLoadingIndicator) {
         toast.error("Failed to load clarifications");
       }
@@ -134,7 +168,7 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
         body: JSON.stringify({
           tender_id: tenderId,
           question: newQuestion.trim(),
-          isPublic,
+          is_public: isPublic,
         }),
       });
 
@@ -166,16 +200,56 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
     }
   };
 
+  const handleAcceptInvitation = async () => {
+    try {
+      setAccepting(true);
+      setAcceptError(null);
+      const response = await fetch('/api/tender-invitations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tender_id: tenderId,
+          response_status: "accepted",
+        }),
+      });
+
+      const raw = await response.text().catch(() => "");
+      let data: any = null;
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch {
+        data = null;
+      }
+
+      if (!response.ok) {
+        const msg = data?.message || data?.error || raw || "Unable to accept invitation.";
+        throw new Error(msg);
+      }
+
+      toast.success(data?.message || "Invitation accepted.");
+      setPermissionDenied(false);
+      await fetchClarifications(false);
+      onRequestAccess?.();
+    } catch (error) {
+      setAcceptError(error instanceof Error ? error.message : "Unable to accept invitation.");
+      toast.error("Failed to accept invitation");
+    } finally {
+      setAccepting(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'answered':
-        return 'bg-green-100 text-green-800';
+        return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-amber-50 text-amber-700 border border-amber-200';
       case 'closed':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-100 text-slate-600 border border-slate-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-100 text-slate-600 border border-slate-200';
     }
   };
 
@@ -194,10 +268,10 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="border-slate-200/70 bg-white shadow-none">
         <CardContent className="py-8">
-          <div className="text-center text-muted-foreground">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-300 mx-auto mb-4" />
+          <div className="text-center text-slate-500">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-300 mx-auto mb-4" />
             <p>Loading clarifications...</p>
           </div>
         </CardContent>
@@ -206,23 +280,29 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
   }
 
   return (
-    <div className="space-y-6 max-w-full overflow-hidden">
+    <div className="space-y-5 max-w-full overflow-hidden">
       {/* Header and Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h3 className="text-xl font-bold tracking-tight text-gray-900">Tender Clarifications</h3>
-          <p className="text-sm text-gray-500 mt-1">
-            Ask questions or view responses about this tender.
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold tracking-tight text-slate-900">Clarifications</h3>
+            <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+              {clarifications.length}
+            </span>
+          </div>
+          <p className="text-xs text-slate-500">
+            Public questions are visible to all suppliers.
           </p>
         </div>
         <div className="flex items-center gap-2">
           {!showNewClarification && (
             <Button
               onClick={() => setShowNewClarification(true)}
-              className="w-full sm:w-auto"
+              className="h-9 px-4 bg-indigo-600 hover:bg-indigo-700"
+              disabled={permissionDenied}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Ask Question
+              New question
             </Button>
           )}
           <Button
@@ -230,6 +310,7 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
             variant="outline"
             size="icon"
             title="Refresh"
+            className="h-9 w-9 border-slate-200 text-slate-600 hover:bg-slate-50"
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
@@ -237,52 +318,39 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
       </div>
 
       {/* New Clarification Form - Always Visible or Expandable */}
-      {showNewClarification && (
-        <Card className="border-blue-200 bg-blue-50/30 animate-in fade-in slide-in-from-top-4 duration-300">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2 text-blue-800">
-              <MessageSquare className="h-5 w-5" />
-              Submit a New Question
+      {showNewClarification && !permissionDenied && (
+        <Card className="border-indigo-200 bg-indigo-50/30 shadow-none animate-in fade-in slide-in-from-top-4 duration-300">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm flex items-center gap-2 text-indigo-800">
+              <MessageSquare className="h-4 w-4" />
+              New clarification
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Textarea
-                placeholder="Type your question clearly here..."
+                placeholder="Write a concise question for procurement..."
                 value={newQuestion}
                 onChange={(e) => setNewQuestion(e.target.value)}
-                className="min-h-[120px] bg-white border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+                className="min-h-[110px] bg-white border-indigo-200 focus:border-indigo-400 focus:ring-indigo-400"
               />
-              <p className="text-xs text-gray-500 text-right">
-                {newQuestion.length}/2000 characters
+              <p className="text-xs text-slate-500 text-right">
+                {newQuestion.length}/2000
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
-              <div className="flex items-start sm:items-center gap-3 bg-white p-3 rounded-md border border-gray-100 flex-1">
-                <div className="flex h-6 items-center">
-                  <input
-                    type="checkbox"
-                    id="isPublic"
-                    checked={isPublic}
-                    onChange={(e) => setIsPublic(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-                  />
-                </div>
-                <div className="text-sm">
-                  <label htmlFor="isPublic" className="font-medium text-gray-900">
-                    Mark as Public?
-                  </label>
-                  <p className="text-gray-500 text-xs">
-                    {isPublic
-                      ? "Visible to ALL suppliers. Good for general clarifications."
-                      : "Visible ONLY to you and Procurement. Use for sensitive info."
-                    }
-                  </p>
-                </div>
-              </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <label className="flex items-center gap-2 text-xs text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={isPublic}
+                  onChange={(e) => setIsPublic(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600"
+                />
+                Share with all suppliers
+              </label>
 
-              <div className="flex gap-2 justify-end pt-2 sm:pt-0">
+              <div className="flex gap-2">
                 <Button
                   onClick={() => {
                     setShowNewClarification(false);
@@ -291,13 +359,14 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
                   }}
                   variant="ghost"
                   disabled={isSubmitting}
+                  className="text-slate-600 hover:bg-slate-100"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleSubmitClarification}
                   disabled={isSubmitting || !newQuestion.trim()}
-                  className="min-w-[140px]"
+                  className="min-w-[140px] bg-indigo-600 hover:bg-indigo-700"
                 >
                   {isSubmitting ? (
                     <>
@@ -307,7 +376,7 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
                   ) : (
                     <>
                       <Send className="h-4 w-4 mr-2" />
-                      Submit Question
+                      Submit
                     </>
                   )}
                 </Button>
@@ -318,29 +387,79 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
       )}
 
       {/* Clarifications List */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between text-sm text-gray-500 pb-2 border-b">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between text-xs text-slate-500 pb-2 border-b border-slate-200/70">
           <span>
-            Showing {clarifications.length} question{clarifications.length !== 1 ? 's' : ''}
+            {clarifications.length} question{clarifications.length !== 1 ? 's' : ''}
           </span>
-          <span className="text-xs">
-            Last updated: {format(lastRefresh, 'HH:mm')}
+          <span>
+            Updated {format(lastRefresh, 'HH:mm')}
           </span>
         </div>
+        {inlineError && (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+            {inlineError}
+          </div>
+        )}
+        {permissionDenied && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 flex flex-wrap items-center justify-between gap-2">
+            <span>
+              {isOpenTender
+                ? "Clarifications are currently unavailable for this tender."
+                : "Clarifications are available after you accept the tender invitation."}
+            </span>
+            {canAcceptInvitation && onRequestAccess && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 px-2 border-amber-200 text-amber-800 hover:bg-amber-100"
+                onClick={handleAcceptInvitation}
+                disabled={accepting}
+              >
+                {accepting ? "Accepting..." : "Accept invitation"}
+              </Button>
+            )}
+          </div>
+        )}
+        {acceptError && (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+            {acceptError}
+          </div>
+        )}
 
         <ScrollArea className="h-[600px] pr-4 -mr-4">
           <div className="space-y-4 pb-4">
-            {clarifications.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                <MessageSquare className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900">No questions yet</h3>
-                <p className="text-gray-500 max-w-sm mx-auto mt-2">
+            {permissionDenied ? (
+              <div className="text-center py-12 bg-slate-50 rounded-lg border border-dashed border-slate-200/70">
+                <AlertCircle className="h-10 w-10 mx-auto text-amber-400 mb-3" />
+                <h3 className="text-base font-semibold text-slate-900">Access restricted</h3>
+                <p className="text-sm text-slate-500 max-w-sm mx-auto mt-2">
+                  {isOpenTender
+                    ? "Clarifications are currently unavailable for this tender."
+                    : "Accept the invitation to view or ask clarifications."}
+                </p>
+                {canAcceptInvitation && onRequestAccess && (
+                  <Button
+                    size="sm"
+                    className="mt-4 bg-amber-600 hover:bg-amber-700"
+                    onClick={handleAcceptInvitation}
+                    disabled={accepting}
+                  >
+                    {accepting ? "Accepting..." : "Accept invitation"}
+                  </Button>
+                )}
+              </div>
+            ) : clarifications.length === 0 ? (
+              <div className="text-center py-12 bg-slate-50 rounded-lg border border-dashed border-slate-200/70">
+                <MessageSquare className="h-12 w-12 mx-auto text-slate-300 mb-4" />
+                <h3 className="text-lg font-medium text-slate-900">No questions yet</h3>
+                <p className="text-slate-500 max-w-sm mx-auto mt-2">
                   Have a question about the tender specifications or requirements?
                   Click "Ask Question" above to start.
                 </p>
                 <Button
                   variant="outline"
-                  className="mt-6"
+                  className="mt-6 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
                   onClick={() => setShowNewClarification(true)}
                 >
                   Ask First Question
@@ -351,26 +470,26 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
                 <Card
                   key={`clarification-${clarification.clarificationId || clarification.id || index}`}
                   className={cn(
-                    "transition-all duration-200 border-l-4",
+                    "transition-all duration-200 border border-slate-200/70 shadow-none",
                     (clarification.response || clarification.Response || clarification.answer || clarification.Answer)
-                      ? "border-l-green-500 border-gray-200"
-                      : "border-l-yellow-400 border-gray-200"
+                      ? "bg-white"
+                      : "bg-slate-50/40"
                   )}
                 >
-                  <CardHeader className="py-3 px-4 bg-gray-50/50">
+                  <CardHeader className="py-3 px-4 border-b border-slate-200/70">
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span className="font-mono text-xs text-gray-400">#{clarification.clarificationId || index + 1}</span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-[11px] text-slate-400">#{clarification.clarificationId || index + 1}</span>
                         {(clarification.isPublic || clarification.IsPublic) ? (
-                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 gap-1">
+                          <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200 gap-1">
                             <Users className="h-3 w-3" /> Public
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200 gap-1">
+                          <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-200 gap-1">
                             <User className="h-3 w-3" /> Private
                           </Badge>
                         )}
-                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <span className="text-[11px] text-slate-500 flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {format(new Date(clarification.questionDate), 'MMM d, yyyy HH:mm')}
                         </span>
@@ -385,41 +504,26 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
                     </div>
                   </CardHeader>
 
-                  <CardContent className="p-4 space-y-4">
-                    {/* Question Section */}
-                    <div className="grid grid-cols-[24px_1fr] gap-3">
-                      <div className="mt-1">
-                        <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
-                          <span className="text-xs font-bold">Q</span>
-                        </div>
-                      </div>
-                      <div className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap break-words">
-                        {clarification.question}
-                      </div>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap break-words">
+                      {clarification.question}
                     </div>
 
-                    {/* Answer Section (if exists) */}
                     {(clarification.response || clarification.Response || clarification.answer || clarification.Answer) && (
-                      <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-[24px_1fr] gap-3 bg-green-50/30 -mx-4 px-4 pb-2">
-                        <div className="mt-1">
-                          <div className="h-6 w-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
-                            <span className="text-xs font-bold">A</span>
-                          </div>
+                      <div className="rounded-lg border border-emerald-200/70 bg-emerald-50/50 p-3 text-sm text-slate-800">
+                        <div className="text-xs font-semibold text-emerald-700 mb-1">Answer</div>
+                        <div className="whitespace-pre-wrap break-words">
+                          {clarification.response || clarification.Response || clarification.answer || clarification.Answer}
                         </div>
-                        <div className="space-y-2">
-                          <div className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap break-words font-medium">
-                            {clarification.response || clarification.Response || clarification.answer || clarification.Answer}
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-green-700 pt-1">
-                            <CheckCircle className="h-3 w-3" />
-                            <span>
-                              Answered by {clarification.responseBy || clarification.ResponseBy || clarification.AnswerBy || 'Procurement Team'}
-                              {' • '}
-                              {(clarification.responseDate || clarification.ResponseDate || clarification.answerDate || clarification.AnswerDate) &&
-                                format(new Date(clarification.responseDate || clarification.ResponseDate || clarification.answerDate || clarification.AnswerDate!), 'MMM d, HH:mm')
-                              }
-                            </span>
-                          </div>
+                        <div className="mt-2 text-xs text-emerald-700 flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          <span>
+                            {clarification.responseBy || clarification.ResponseBy || clarification.AnswerBy || 'Procurement Team'}
+                            {' • '}
+                            {(clarification.responseDate || clarification.ResponseDate || clarification.answerDate || clarification.AnswerDate) &&
+                              format(new Date(clarification.responseDate || clarification.ResponseDate || clarification.answerDate || clarification.AnswerDate!), 'MMM d, HH:mm')
+                            }
+                          </span>
                         </div>
                       </div>
                     )}

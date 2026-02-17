@@ -1,14 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { format } from "date-fns"
 import {
-    Building2,
-    Paperclip,
-    MessageSquare,
     ArrowUpRight,
+    Building2,
     Loader2,
+    MessageSquare,
+    Paperclip,
     Timer
 } from "lucide-react"
 
@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils"
 import { parseSubmissionDeadline } from "@/lib/deadline"
 import { Badge } from "@/components/common/badge"
 import { Button } from "@/components/common/button"
+
+type AnyRecord = Record<string, any>
 
 type RFQPayload = {
     rfq: {
@@ -71,6 +73,24 @@ function isSubmittedStatus(status: string) {
         s === "submitted_response" ||
         s === "response_submitted"
     )
+}
+
+function statusBadgeClass(status?: string) {
+    const s = normalizeStatusKey(status ?? "")
+    if (!s) return "bg-slate-100 text-slate-600 border-slate-200"
+    if (["submitted", "approved", "accepted"].includes(s)) {
+        return "bg-emerald-50 text-emerald-700 border-emerald-200"
+    }
+    if (["draft", "pending", "in_review"].includes(s)) {
+        return "bg-amber-50 text-amber-800 border-amber-200"
+    }
+    if (["published", "open", "active"].includes(s)) {
+        return "bg-indigo-50 text-indigo-700 border-indigo-200"
+    }
+    if (["closed", "expired", "rejected"].includes(s)) {
+        return "bg-slate-100 text-slate-500 border-slate-200"
+    }
+    return "bg-slate-100 text-slate-600 border-slate-200"
 }
 
 export default function RFQPage() {
@@ -143,14 +163,32 @@ export default function RFQPage() {
 
     const attachments = (root.attachments ?? root.data?.attachments ?? []) as any[]
     const clarifications = (root.clarifications ?? root.data?.clarifications ?? []) as any[]
+    const lines = (root.lines ?? root.rfq?.lines ?? root.data?.lines ?? root.data?.rfq?.lines ?? []) as any[]
     const supplierResponse = (root.supplierResponse ?? root.supplier_response ?? root.data?.supplierResponse ?? root.data?.supplier_response ?? {}) as any
     const submissionDeadline =
         rfq?.submissionDeadline ??
         rfq?.submission_deadline ??
         rfq?.SubmissionDeadline ??
         rfq?.deadline
-
+    const parsedDeadline = submissionDeadline
+        ? parseSubmissionDeadline(String(submissionDeadline)).date
+        : null
     const urgency = deadlineMeta(String(submissionDeadline ?? ""))
+    const urgencyHours = parsedDeadline
+        ? (parsedDeadline.getTime() - Date.now()) / (60 * 60 * 1000)
+        : null
+    const urgencyProgress =
+        urgencyHours == null
+            ? 0
+            : Math.max(0, Math.min(100, Math.round(100 - (urgencyHours / 72) * 100)))
+    const urgencyBarClass =
+        urgencyHours == null
+            ? "bg-slate-300"
+            : urgencyHours <= 24
+                ? "bg-rose-500"
+                : urgencyHours <= 72
+                    ? "bg-amber-500"
+                    : "bg-emerald-500"
     const responseStatus = String(supplierResponse?.status ?? "")
     const isDraft = normalizeStatusKey(responseStatus) === "draft"
     const isSubmitted = isSubmittedStatus(responseStatus)
@@ -159,121 +197,297 @@ export default function RFQPage() {
         : isDraft
             ? "Continue quotation"
             : "Start quotation"
-
+   
     return (
-        <div className="w-full max-w-7xl mx-auto px-6 py-10 space-y-8">
-            <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div className="flex gap-4">
-                    <div className="w-1 rounded-full bg-indigo-600" />
-                    <div className="space-y-1">
+        <div className="w-full max-w-7xl mx-auto px-6 py-6 space-y-5">
+            <header className="relative rounded-2xl border border-slate-200/80 bg-white p-3 sm:p-4">
+                <span className="absolute left-0 top-4 h-10 w-1 rounded-full bg-indigo-500/80" />
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="space-y-2">
+                        <Button
+                            variant="outline"
+                            className="h-7 text-[11px] border-slate-200 bg-white"
+                            onClick={() => router.push("/dashboard/supplier/rfqs")}
+                        >
+                            Back to RFQs
+                        </Button>
                         <div className="text-xs font-semibold text-slate-500 uppercase">RFQ Ref</div>
-                        <h1 className="text-2xl font-semibold text-slate-900">{rfq.ref ?? rfq.number ?? rfq.rfqNumber ?? rfqId}</h1>
-                        <p className="text-sm text-slate-600">{rfq.title ?? rfq.comments ?? rfq.description ?? "Request for Quotation"}</p>
-                        <div className="flex items-center gap-3 text-sm text-slate-500 mt-2">
+                        <h1 className="text-xl font-semibold text-slate-900">
+                            {rfq.ref ?? rfq.number ?? rfq.rfqNumber ?? rfqId}
+                        </h1>
+                        <p className="text-sm text-slate-600 line-clamp-2">
+                            {rfq.title ?? rfq.comments ?? rfq.description ?? "Request for Quotation"}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
                             <Building2 className="h-4 w-4" />
                             {rfq?.buyer?.name ?? rfq?.buyerName ?? rfq?.BuyerName ?? "—"}
                         </div>
                     </div>
-                </div>
 
-                <div className="flex items-center gap-4">
-                    <div className="text-right">
-                        <div className={cn("text-sm", urgency.tone)}>{urgency.label}</div>
-                        <div className="text-xs text-slate-500">
-                            {submissionDeadline ? format(new Date(submissionDeadline), "dd MMM yyyy, HH:mm") : "—"}
+                    <div className="flex flex-col items-start gap-3 lg:items-end">
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                            <Timer className="h-4 w-4" />
+                            <span className={cn("font-semibold", urgency.tone)}>{urgency.label}</span>
+                            <span className="text-slate-300">•</span>
+                            <span>
+                                {parsedDeadline ? format(parsedDeadline, "dd MMM yyyy, HH:mm") : "No deadline"}
+                            </span>
                         </div>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            <span
+                                className={cn(
+                                    "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                                    statusBadgeClass(rfq.status)
+                                )}
+                            >
+                                {rfq.status ?? "Status"}
+                            </span>
+                            <span
+                                className={cn(
+                                    "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                                    statusBadgeClass(rfq.invitationStatus ?? rfq.invitation_status ?? rfq.InvitationStatus)
+                                )}
+                            >
+                                {rfq.invitationStatus ?? rfq.invitation_status ?? rfq.InvitationStatus ?? "Invited"}
+                            </span>
+                            <span
+                                className={cn(
+                                    "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                                    statusBadgeClass(responseStatus)
+                                )}
+                            >
+                                Response: {responseStatus || "—"}
+                            </span>
+                            {parsedDeadline ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="h-1.5 w-20 rounded-full bg-slate-200 overflow-hidden">
+                                        <div
+                                            className={cn("h-full rounded-full", urgencyBarClass)}
+                                            style={{ width: `${urgencyProgress}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-[10px] text-slate-400">Urgency</span>
+                                </div>
+                            ) : null}
+                        </div>
+                        <Button
+                            className={cn(
+                                "h-8 rounded-full px-4 text-sm font-semibold",
+                                isSubmitted
+                                    ? "bg-slate-200 text-slate-700 hover:bg-slate-200"
+                                    : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                            )}
+                            disabled={isSubmitted}
+                            onClick={() => router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}/quotation`)}
+                        >
+                            {quotationCtaLabel}
+                            <ArrowUpRight className="h-4 w-4 ml-2" />
+                        </Button>
                     </div>
-                    <Button
-                        className={cn(
-                            "h-10 px-6 font-semibold",
-                            isSubmitted
-                                ? "bg-slate-200 text-slate-700 hover:bg-slate-200"
-                                : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                        )}
-                        disabled={isSubmitted}
-                        onClick={() => router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}/quotation`)}
-                    >
-                        {quotationCtaLabel}
-                        <ArrowUpRight className="h-4 w-4 ml-2" />
-                    </Button>
                 </div>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10">
-                <main className="space-y-10">
-                    <section className="space-y-4">
-                        <h2 className="text-sm font-semibold uppercase text-slate-500">RFQ Description</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5">
+                <main className="space-y-5">
+                    <section className="rounded-2xl border border-slate-200/80 bg-white p-3 space-y-2.5">
+                        <div className="flex items-center gap-3">
+                            <div className="h-4 w-1 rounded-full bg-indigo-500/80" />
+                            <h2 className="text-xs font-semibold uppercase text-slate-500">Overview</h2>
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <div className="text-xs font-semibold uppercase text-slate-500">Currency</div>
+                                <div className="text-sm font-medium text-slate-900">
+                                    {rfq.currency ?? rfq.Currency ?? "—"}
+                                </div>
+                            </div>
+                            <div>
+                                <div className="text-xs font-semibold uppercase text-slate-500">Delivery terms</div>
+                                <div className="text-sm font-medium text-slate-900">
+                                    {rfq.deliveryTerms ?? rfq.delivery_terms ?? rfq.DeliveryTerms ?? "—"}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="rounded-2xl border border-slate-200/80 bg-white p-3 space-y-2.5">
+                        <div className="flex items-center gap-3">
+                            <div className="h-4 w-1 rounded-full bg-indigo-500/80" />
+                            <h2 className="text-xs font-semibold uppercase text-slate-500">RFQ Description</h2>
+                        </div>
                         <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
                             {rfq.description ?? rfq.comments ?? "—"}
                         </p>
                     </section>
 
-                    <section className="grid sm:grid-cols-2 gap-6">
-                        <div>
-                            <h3 className="text-xs font-semibold uppercase text-slate-500 mb-1">Currency</h3>
-                            <div className="text-sm font-medium text-slate-900">{rfq.currency ?? rfq.Currency ?? "—"}</div>
+                    <section className="rounded-2xl border border-slate-200/80 bg-white p-3 space-y-2.5">
+                        <div className="flex items-center gap-3">
+                            <div className="h-4 w-1 rounded-full bg-indigo-500/80" />
+                            <h2 className="text-xs font-semibold uppercase text-slate-500">Line items</h2>
+                            <span className="text-[10px] text-slate-400">{lines.length}</span>
                         </div>
-                        <div>
-                            <h3 className="text-xs font-semibold uppercase text-slate-500 mb-1">Delivery Terms</h3>
-                            <div className="text-sm font-medium text-slate-900">{rfq.deliveryTerms ?? rfq.delivery_terms ?? rfq.DeliveryTerms ?? "—"}</div>
-                        </div>
+                        {lines.length === 0 ? (
+                            <div className="text-sm text-slate-500">No line items provided.</div>
+                        ) : (
+                            <div className="rounded-xl border border-slate-200/70 bg-slate-50/70 divide-y divide-slate-200/70">
+                                {lines.slice(0, 6).map((line, idx) => {
+                                    const label = String(
+                                        line?.itemName ??
+                                        line?.ItemName ??
+                                        line?.item ??
+                                        line?.Item ??
+                                        line?.description ??
+                                        line?.Description ??
+                                        line?.comments ??
+                                        line?.Comments ??
+                                        `Item ${idx + 1}`
+                                    )
+                                    const qtyRaw = line?.quantity ?? line?.Quantity ?? line?.qty ?? line?.Qty
+                                    const qty = Number.isFinite(Number(qtyRaw)) ? Number(qtyRaw) : null
+                                    const uom = String(line?.uom ?? line?.Uom ?? line?.unit ?? line?.Unit ?? "").trim()
+                                    return (
+                                        <div key={`${label}-${idx}`} className="px-3 py-2.5">
+                                            <div className="text-sm text-slate-700 line-clamp-1">{label}</div>
+                                            <div className="text-xs text-slate-500">
+                                                {qty != null ? `Qty: ${qty}` : "Qty: —"}
+                                                {uom ? ` • UoM: ${uom}` : ""}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                                {lines.length > 6 ? (
+                                    <div className="px-3 py-2.5 text-xs text-slate-500">
+                                        Showing first 6 items.
+                                    </div>
+                                ) : null}
+                            </div>
+                        )}
                     </section>
 
-                    <section className="space-y-4">
-                        <h2 className="text-sm font-semibold uppercase text-slate-500 flex items-center gap-2">
-                            <Paperclip className="h-4 w-4" /> Attachments
-                        </h2>
+                    <section className="rounded-2xl border border-slate-200/80 bg-white p-3 space-y-2.5">
+                        <div className="flex items-center gap-3">
+                            <Paperclip className="h-4 w-4 text-slate-500" />
+                            <h2 className="text-xs font-semibold uppercase text-slate-500">Attachments</h2>
+                            <span className="text-[10px] text-slate-400">{attachments.length}</span>
+                        </div>
                         {attachments.length === 0 ? (
-                            <p className="text-sm text-slate-500">No attachments provided</p>
-                        ) : null}
+                            <div className="text-sm text-slate-500">No attachments provided.</div>
+                        ) : (
+                            <div className="rounded-xl border border-slate-200/70 bg-slate-50/70 divide-y divide-slate-200/70">
+                                {attachments.slice(0, 20).map((attachment, idx) => {
+                                    const label = String(
+                                        attachment?.name ??
+                                        attachment?.fileName ??
+                                        attachment?.filename ??
+                                        attachment?.title ??
+                                        `Attachment ${idx + 1}`
+                                    )
+                                    return (
+                                        <div key={`${label}-${idx}`} className="px-3 py-2.5 text-sm text-slate-700">
+                                            {label}
+                                        </div>
+                                    )
+                                })}
+                                {attachments.length > 20 ? (
+                                    <div className="px-3 py-2.5 text-xs text-slate-500">
+                                        Showing first 20 attachments.
+                                    </div>
+                                ) : null}
+                            </div>
+                        )}
                     </section>
 
-                    <section className="space-y-4">
-                        <h2 className="text-sm font-semibold uppercase text-slate-500 flex items-center gap-2">
-                            <MessageSquare className="h-4 w-4" /> Clarifications
-                        </h2>
+                    <section className="rounded-2xl border border-slate-200/80 bg-white p-3 space-y-2.5">
+                        <div className="flex items-center gap-3">
+                            <MessageSquare className="h-4 w-4 text-slate-500" />
+                            <h2 className="text-xs font-semibold uppercase text-slate-500">Clarifications</h2>
+                            <span className="text-[10px] text-slate-400">{clarifications.length}</span>
+                        </div>
                         {clarifications.length === 0 ? (
-                            <p className="text-sm text-slate-500">No clarifications issued</p>
-                        ) : null}
+                            <div className="text-sm text-slate-500">No clarifications issued.</div>
+                        ) : (
+                            <div className="rounded-xl border border-slate-200/70 bg-slate-50/70 divide-y divide-slate-200/70">
+                                {clarifications.slice(0, 20).map((clarification, idx) => {
+                                    const message = String(
+                                        clarification?.message ??
+                                        clarification?.question ??
+                                        clarification?.clarification ??
+                                        clarification?.comments ??
+                                        clarification?.Description ??
+                                        `Clarification ${idx + 1}`
+                                    )
+                                    return (
+                                        <div key={`${idx}-${message}`} className="px-3 py-2.5">
+                                            <div className="text-sm text-slate-700 line-clamp-2">
+                                                {message}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                                {clarifications.length > 20 ? (
+                                    <div className="px-3 py-2.5 text-xs text-slate-500">
+                                        Showing first 20 clarifications.
+                                    </div>
+                                ) : null}
+                            </div>
+                        )}
                     </section>
                 </main>
 
-                <aside className="sticky top-24 h-fit border border-slate-200 rounded-xl p-6 space-y-6 bg-white">
-                    <div className="space-y-2">
-                        <div className="text-xs uppercase font-semibold text-slate-500">Invitation</div>
-                        <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            {rfq.invitationStatus ?? rfq.invitation_status ?? rfq.InvitationStatus ?? "—"}
-                        </Badge>
-                    </div>
-
-                    <div className="space-y-2">
-                        <div className="text-xs uppercase font-semibold text-slate-500">Your Response</div>
-                        <Badge variant="outline" className="text-xs">
-                            {supplierResponse.status}
-                        </Badge>
-                    </div>
-
-                    <div className="flex items-center gap-3 p-4 border border-indigo-200 bg-indigo-50 rounded-lg">
-                        <Timer className="h-5 w-5 text-indigo-600" />
-                        <div>
-                            <div className="text-sm font-semibold text-slate-900">Time Remaining</div>
-                            <div className={cn("text-sm", urgency.tone)}>{urgency.label}</div>
+                <aside className="space-y-4 lg:sticky lg:top-24 h-fit">
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-3 space-y-3">
+                        <div className="flex items-center gap-3">
+                            <div className="h-4 w-1 rounded-full bg-indigo-500/80" />
+                            <h3 className="text-xs font-semibold uppercase text-slate-500">Status & Actions</h3>
                         </div>
-                    </div>
 
-                    <Button
-                        className={cn(
-                            "w-full h-11 font-semibold",
-                            isSubmitted
-                                ? "bg-slate-200 text-slate-700 hover:bg-slate-200"
-                                : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                        )}
-                        disabled={isSubmitted}
-                        onClick={() => router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}/quotation`)}
-                    >
-                        {quotationCtaLabel}
-                        <ArrowUpRight className="h-4 w-4 ml-2" />
-                    </Button>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between text-xs text-slate-600">
+                                <span>Invitation</span>
+                                <span
+                                    className={cn(
+                                        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                                        statusBadgeClass(rfq.invitationStatus ?? rfq.invitation_status ?? rfq.InvitationStatus)
+                                    )}
+                                >
+                                    {rfq.invitationStatus ?? rfq.invitation_status ?? rfq.InvitationStatus ?? "—"}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-slate-600">
+                                <span>Your response</span>
+                                <span
+                                    className={cn(
+                                        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                                        statusBadgeClass(responseStatus)
+                                    )}
+                                >
+                                    {responseStatus || "—"}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 rounded-xl border border-indigo-200/70 bg-indigo-50/70 p-2.5">
+                            <Timer className="h-4 w-4 text-indigo-600" />
+                            <div>
+                                <div className="text-xs font-semibold text-slate-900">Time remaining</div>
+                                <div className={cn("text-xs", urgency.tone)}>{urgency.label}</div>
+                            </div>
+                        </div>
+
+                        <Button
+                            className={cn(
+                                "w-full h-9 rounded-full font-semibold",
+                                isSubmitted
+                                    ? "bg-slate-200 text-slate-700 hover:bg-slate-200"
+                                    : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                            )}
+                            disabled={isSubmitted}
+                            onClick={() => router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}/quotation`)}
+                        >
+                            {quotationCtaLabel}
+                            <ArrowUpRight className="h-4 w-4 ml-2" />
+                        </Button>
+                    </div>
                 </aside>
             </div>
         </div>

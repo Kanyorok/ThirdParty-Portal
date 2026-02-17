@@ -71,9 +71,9 @@ interface ProfileEditModalProps {
 }
 
 interface ProfileUpdateResponse {
-    success: boolean;
-    data: UserProfile;
     message?: string;
+    user_profile?: UserProfile;
+    userProfile?: UserProfile;
 }
 
 interface ApiError {
@@ -144,7 +144,10 @@ export function ProfileEditModal({
                 }
 
                 const result: ProfileUpdateResponse = await response.json();
-                const updatedProfile = result.data;
+                const updatedProfile = result.user_profile ?? result.userProfile;
+                if (!updatedProfile) {
+                    throw new Error("Profile update response is missing user_profile.");
+                }
 
                 await mutateProfile(updatedProfile, { revalidate: false });
 

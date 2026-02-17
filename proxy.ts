@@ -29,6 +29,7 @@ const DEFAULT_AUTH_REDIRECT = "/dashboard"
 const PUBLIC_ROUTES = [
     "/api/auth",
     "/api/countries",
+    "/api/register",
     "/api/v1/countries",
     "/api/third-party-details",
     "/api/currencies",

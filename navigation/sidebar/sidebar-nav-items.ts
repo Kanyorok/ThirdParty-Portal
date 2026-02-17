@@ -4,7 +4,8 @@ import {
     ClipboardList, FolderOpen, ShieldCheck, BookOpen,
     Settings, HelpCircle, Send,
     Construction,
-    LandPlot
+    LandPlot,
+    FileCheck2
 } from "lucide-react"
 
 const allProfiles: readonly UserProfile[] = ["Supplier", "Tenant", "Customer"]
@@ -41,10 +42,10 @@ export const sidebarItems: readonly NavSection[] = [
         title: "Vendor Management",
         allowedProfiles: ["Supplier"],
         items: [
-            // withProfiles({ title: "Prequalification", url: "/dashboard/procurement/rounds", icon: ShieldCheck, description: "Compliance & onboarding" }, ["Supplier"]),
-            withProfiles({ title: "Prequalification", url: "/dashboard/prequalification", icon: ShieldCheck, description: "XYZ" }, ["Supplier"]),
+            withProfiles({ title: "Prequalification", url: "/dashboard/supplier/prequalification", icon: ShieldCheck, description: "Compliance & onboarding" }, ["Supplier"]),
             withProfiles({ title: "Find RFQs", url: "/dashboard/supplier/rfqs", icon: ClipboardList, description: "Browse requests for quotation" }, ["Supplier"]),
             withProfiles({ title: "Find Tenders", url: "/dashboard/supplier/tenders", icon: FileText, description: "Explore available tenders" }, ["Supplier"]),
+            withProfiles({ title: "My Bids", url: "/dashboard/supplier/bids", icon: FileCheck2, description: "Track draft and submitted bids" }, ["Supplier"]),
             withProfiles({ title: "All Documents", url: "/dashboard/supplier/documents", icon: FolderOpen, description: "Contracts, files & uploads" }, ["Supplier"]),
         ],
     },
@@ -72,7 +73,7 @@ export const sidebarItems: readonly NavSection[] = [
         title: "Account & Help",
         allowedProfiles: allProfiles,
         items: [
-            withProfiles({ title: "Settings", url: "/dashboard/account", icon: Settings, description: "Profile & preferences" }, allProfiles),
+            withProfiles({ title: "Settings", url: "/dashboard/settings/profile", icon: Settings, description: "Profile & preferences" }, allProfiles),
             withProfiles({ title: "Help Center", url: "/dashboard/help", icon: HelpCircle, description: "Guides & support" }, allProfiles),
             withProfiles({ title: "Send Feedback", url: "/dashboard/feedback", icon: Send, newTab: true, description: "Report issues or suggestions" }, allProfiles),
         ],

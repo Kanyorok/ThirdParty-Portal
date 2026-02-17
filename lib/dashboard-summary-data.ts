@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
 import { isClosedByDeadline } from "@/lib/deadline"
 import { resolveTenantIdFromSessionUser } from "@/lib/profile/resolve-tenant-id"
+import { isRoundActive, mapApiRound } from "@/lib/rounds"
 
 export type PreqBreakdown = Record<
     "approved" | "submitted" | "under_review" | "rejected" | "not_applied",
@@ -19,6 +20,7 @@ export type RFQBreakdown = Record<
 >
 
 export type TenderBreakdown = Record<"open" | "draft" | "closed", number>
+export type BidBreakdown = Record<"draft" | "submitted" | "unknown", number>
 
 export type TenantLeaseSummary = {
     total: number
@@ -41,6 +43,37 @@ export type TenantBreakdown = {
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL
+
+type NormalizedPreqStatus = keyof PreqBreakdown
+
+function classifyPrequalificationRound(round: any): NormalizedPreqStatus {
+    const normalizedRound = mapApiRound(round)
+    const categories = Array.isArray(normalizedRound.categories)
+        ? normalizedRound.categories
+        : []
+
+    if (categories.length === 0) return "not_applied"
+
+    const appliedCategories = categories.filter((category) => category.has_applied)
+    if (appliedCategories.length === 0) return "not_applied"
+
+    const statuses = appliedCategories.map((category) =>
+        String(category.status || "").toUpperCase()
+    )
+
+    const hasStatus = (values: string[]) => statuses.some((status) => values.includes(status))
+    const allStatuses = (values: string[]) => statuses.every((status) => values.includes(status))
+
+    if (hasStatus(["UNDER_REVIEW"])) return "under_review"
+    if (hasStatus(["SUBMITTED", "DRAFT"])) return "submitted"
+    if (allStatuses(["APPROVED"])) return "approved"
+    if (allStatuses(["REJECTED"])) return "rejected"
+    if (hasStatus(["APPROVED"]) && !hasStatus(["REJECTED"])) return "approved"
+    if (hasStatus(["REJECTED"]) && !hasStatus(["APPROVED"])) return "rejected"
+    if (hasStatus(["APPROVED"]) && hasStatus(["REJECTED"])) return "approved"
+
+    return "submitted"
+}
 
 function computeRFQBreakdown(rfqs: any[]): RFQBreakdown {
     return rfqs.reduce(
@@ -84,10 +117,10 @@ export async function getDashboardData() {
         Authorization: `Bearer ${accessToken}`,
     }
 
-    const [preqRes, rfqRes, tendersRes] = await Promise.allSettled([
-        fetch(`${API_BASE}/api/prequalification/rounds`, {
+    const [preqRes, rfqRes, tendersRes, bidsRes] = await Promise.allSettled([
+        fetch(`${API_BASE}/api/v1/supplier/prequalification/rounds`, {
             headers,
-            next: { revalidate: 60 },
+            cache: "no-store",
         }).then(r => r.json()),
 
         fetch(`${API_BASE}/api/v1/supplier/rfqs`, {
@@ -99,10 +132,13 @@ export async function getDashboardData() {
             `${API_BASE}/api/tenders?enforce_invites=true&third_party_id=${thirdPartyId}`,
             { headers, cache: "no-store" }
         ).then(r => r.json()),
+
+        fetch(
+            `${API_BASE}/api/v1/supplier/bid-submissions?third_party_id=${thirdPartyId}`,
+            { headers, cache: "no-store" }
+        ).then(r => r.json()),
     ])
 
-    let activePreq = 0
-    let completedPreq = 0
     const user = session?.user as any
     const preqBreakdown: PreqBreakdown = {
         approved: 0, submitted: 0, under_review: 0, rejected: 0, not_applied: 0,
@@ -113,33 +149,26 @@ export async function getDashboardData() {
         (user?.isTenant ?? user?.is_tenant) && tenantId
     )
 
-    if (preqRes.status === "fulfilled" && Array.isArray(preqRes.value?.data)) {
-        preqRes.value.data.forEach((round: any) => {
-            round.categories?.forEach((c: any) => {
-                const status = String(c.status || "").toUpperCase()
-                const applied = c.hasApplied ?? c.has_applied
+    const preqItems =
+        preqRes.status === "fulfilled"
+            ? Array.isArray(preqRes.value?.data)
+                ? preqRes.value.data
+                : Array.isArray(preqRes.value)
+                    ? preqRes.value
+                    : []
+            : []
 
-                if (!applied) {
-                    preqBreakdown.not_applied++
-                    return
-                }
-
-                if (status === "FINAL" || status === "SUBMITTED") {
-                    preqBreakdown.submitted++
-                    activePreq++
-                } else if (status === "APPROVED") {
-                    preqBreakdown.approved++
-                    completedPreq++
-                } else if (status === "REJECTED") {
-                    preqBreakdown.rejected++
-                    completedPreq++
-                } else if (status === "UNDER_REVIEW") {
-                    preqBreakdown.under_review++
-                    activePreq++
-                }
-            })
+    if (preqItems.length > 0) {
+        preqItems.forEach((round: any) => {
+            const classification = classifyPrequalificationRound(round)
+            preqBreakdown[classification] += 1
         })
     }
+
+    const activePreq = preqItems.filter((round: any) =>
+        isRoundActive(mapApiRound(round))
+    ).length
+    const completedPreq = preqBreakdown.approved + preqBreakdown.rejected
 
     const rfqData =
         rfqRes.status === "fulfilled" && Array.isArray(rfqRes.value?.data)
@@ -167,6 +196,22 @@ export async function getDashboardData() {
     })
 
     const tendersAvailable = tenderVal?.total ?? tenderItems.length
+    const bidsVal = bidsRes.status === "fulfilled" ? bidsRes.value : null
+    const bidItems = Array.isArray(bidsVal?.data) ? bidsVal.data : []
+    const bidBreakdown: BidBreakdown = { draft: 0, submitted: 0, unknown: 0 }
+    bidItems.forEach((bid: any) => {
+        const status = String(bid?.bid_status || bid?.status || "").toLowerCase()
+        if (status === "submitted") {
+            bidBreakdown.submitted++
+        } else if (status === "draft") {
+            bidBreakdown.draft++
+        } else {
+            bidBreakdown.unknown++
+        }
+    })
+    const myBids = Number.isFinite(Number(bidsVal?.total))
+        ? Number(bidsVal?.total)
+        : bidItems.length
 
     let tenantBreakdown: TenantBreakdown | null = null
 
@@ -236,8 +281,6 @@ export async function getDashboardData() {
 
             const isPaid = status === "paid"
             const isOverdue = status === "o" || status === "overdue"
-            const isPending = status === "p" || status === "pending"
-
             if (isPaid) {
                 invoicePaid++
             } else if (isOverdue) {
@@ -275,11 +318,15 @@ export async function getDashboardData() {
             directInvites: rfqData.length,
             tendersAvailable,
             rfqsInvited: rfqBreakdown.invited,
+            myBids,
+            submittedBids: bidBreakdown.submitted,
+            draftBids: bidBreakdown.draft,
         },
         breakdowns: {
             prequalification: preqBreakdown,
             rfqs: rfqBreakdown,
             tenders: tenderBreakdown,
+            bids: bidBreakdown,
             tenant: tenantBreakdown ?? undefined,
             invitations: { pending: 0, accepted: 0, declined: 0, submitted: 0 },
         },

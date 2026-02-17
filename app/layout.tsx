@@ -7,6 +7,7 @@ import { ProfileSyncWatcher } from "@/components/profiles/profile-watcher"
 import { OnboardingWatcher } from "@/components/common/onboarding-tooltip"
 import { ProfileTransitionOverlay } from "@/components/common/profile-switch-overlay"
 import { ThemeProvider } from "@/components/common/theme-provider"
+import { ThemeToggle } from "@/components/common/theme-toggle"
 
 const geist = Geist({
   weight: ["400", "700"],
@@ -62,6 +63,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="overflow-x-hidden">
       <body
+        suppressHydrationWarning
         className={`${geist.variable} antialiased min-h-screen overflow-x-hidden`}
       >
         <ThemeProvider
@@ -75,6 +77,9 @@ export default function RootLayout({
             <OnboardingWatcher />
             <ProfileTransitionOverlay />
             {children}
+            <div className="fixed bottom-4 right-4 z-50 hidden items-center justify-center rounded-full border border-border/60 bg-background/70 p-2 shadow-lg backdrop-blur-xl md:flex">
+              <ThemeToggle />
+            </div>
           </NextAuthProvider>
         </ThemeProvider>
       </body>

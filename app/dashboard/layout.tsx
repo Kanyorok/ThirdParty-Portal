@@ -8,6 +8,7 @@ import { AppSidebar } from "@/app/dashboard/side-nav/app-sidebar"
 import { HeaderActions } from "@/app/dashboard/header-actions"
 import { LayoutControls } from "@/app/dashboard/layout-controls"
 import { SearchDialog } from "@/app/dashboard/search-dialog"
+import { SystemFooter } from "@/components/dashboard/system-footer"
 import Loading from "@/components/common/custom-loader"
 
 export const dynamic = "force-dynamic"
@@ -72,13 +73,9 @@ async function AsyncDashboardLayout({ children }: { children: ReactNode }) {
                 )}>
                     {children}
                 </main>
-                {contentLayout === "centered" && (
-                    <footer className="mt-auto border-t border-border/40 p-4 bg-muted/5">
-                        <p className="text-center text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">
-                            System Status: Operational
-                        </p>
-                    </footer>
-                )}
+                <footer className="mt-auto border-t border-border/40 bg-muted/5 px-4 py-3">
+                    <SystemFooter />
+                </footer>
             </SidebarInset>
         </SidebarProvider>
     )

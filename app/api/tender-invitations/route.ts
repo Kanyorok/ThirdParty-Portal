@@ -55,25 +55,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const third_party_id = session.user.third_party_id;
-    if (!third_party_id) {
-      return NextResponse.json(
-        { error: "Third Party ID not found in session" },
-        { status: 400 }
-      );
-    }
+    const thirdPartyId = session.user.thirdPartyId ?? session.user.third_party_id;
+    const supplierId = session.user.supplierId ?? session.user.supplier_id;
 
     const searchParams = request.nextUrl.searchParams;
-    const queryParams = new URLSearchParams({
-      third_party_id: third_party_id.toString(),
-      page: searchParams.get("page") || "1",
-      limit: searchParams.get("limit") || "10",
-    });
+    const queryParams = new URLSearchParams();
+
+    if (thirdPartyId) queryParams.append("third_party_id", String(thirdPartyId));
+    if (supplierId) queryParams.append("supplier_id", String(supplierId));
+
+    const tenderId = searchParams.get("tender_id") ?? searchParams.get("tenderId");
+    if (tenderId) queryParams.append("tender_id", tenderId);
 
     const status = searchParams.get("status");
-    if (status && status !== "all") {
-      queryParams.append("status", status);
-    }
+    if (status) queryParams.append("status", status);
 
     const externalApiUrl = process.env.NEXT_PUBLIC_API_URL;
     if (!externalApiUrl) {
@@ -84,7 +79,7 @@ export async function GET(request: NextRequest) {
     }
 
     const response = await fetch(
-      `${externalApiUrl}/api/tender-invitations?${queryParams}`,
+      `${externalApiUrl}/api/v1/supplier/tenders/invitations?${queryParams}`,
       {
         headers: {
           Authorization: `Bearer ${session.accessToken}`,
@@ -126,7 +121,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -135,16 +130,19 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { invitationId, responseStatus, declineReason } = body;
+    const { responseStatus, response_status, declineReason, decline_reason, tenderId, tender_id } = body;
+    const status = response_status ?? responseStatus;
+    const tender = tender_id ?? tenderId;
+    const decline = decline_reason ?? declineReason;
 
-    if (!invitationId || !responseStatus) {
+    if (!tender || !status) {
       return NextResponse.json(
-        { error: "InvitationID and ResponseStatus are required" },
+        { error: "Tender ID and ResponseStatus are required" },
         { status: 400 }
       );
     }
 
-    if (responseStatus === "declined" && !declineReason) {
+    if (String(status).toLowerCase() === "declined" && !decline) {
       return NextResponse.json(
         { error: "Decline reason is required" },
         { status: 400 }
@@ -153,17 +151,19 @@ export async function PUT(request: NextRequest) {
 
     const externalApiUrl = process.env.NEXT_PUBLIC_API_URL;
     const response = await fetch(
-      `${externalApiUrl}/api/tender-invitations/${invitationId}`,
+      `${externalApiUrl}/api/v1/supplier/tenders/respond`,
       {
-        method: "PUT",
+        method: "POST",
         headers: {
           Authorization: `Bearer ${session.accessToken}`,
           Accept: "application/json",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          responseStatus,
-          declineReason: declineReason || null,
+          tender_id: Number(tender),
+          response_status: status,
+          decline_reason: decline || null,
+          third_party_id: thirdPartyId ?? undefined,
         }),
       }
     );

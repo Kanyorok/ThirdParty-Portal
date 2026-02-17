@@ -11,14 +11,14 @@ export type DashboardRegistryEntry = {
 const BASE_ENTRY: DashboardRegistryEntry = {
   contextLabel: "Dashboard",
   primaryAction: { label: "Complete profile", href: "/dashboard/settings/profile" },
-  secondaryAction: { label: "Account settings", href: "/dashboard/account" },
+  secondaryAction: { label: "Account settings", href: "/dashboard/settings/profile" },
 }
 
 const REGISTRY: Record<Exclude<ProfileType, "base">, DashboardRegistryEntry> = {
   Supplier: {
     contextLabel: "Supplier Profile",
     primaryAction: { label: "Find tenders", href: "/dashboard/supplier/tenders" },
-    secondaryAction: { label: "Prequalification", href: "/dashboard/procurement/rounds" },
+    secondaryAction: { label: "Prequalification", href: "/dashboard/supplier/prequalification" },
   },
   Tenant: {
     contextLabel: "Tenant Profile",

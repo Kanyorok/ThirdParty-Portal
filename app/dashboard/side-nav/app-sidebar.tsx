@@ -18,6 +18,7 @@ import { useProfileStore } from "@/store/use-profile-store"
 import { NavMain } from "@/app/dashboard/side-nav/nav-main"
 import { CLIENT_APP_NAME_STRING } from "@/config/client-config"
 import { cn } from "@/lib/utils"
+import { resolveSessionAvailableProfiles, resolveSessionBusinessProfiles } from "@/lib/profile/session-profiles"
 
 function NavItemSkeleton() {
     return (
@@ -59,27 +60,32 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
     useEffect(() => setMounted(true), [])
 
-    const authorizedRoles = useMemo(() => {
-        if (!session?.user) return []
-        const u = session.user
-        const roles: any[] = []
-        if (u.is_supplier) roles.push("Supplier")
-        if (u.is_tenant) roles.push("Tenant")
-        if (u.is_customer) roles.push("Customer")
-        return roles
-    }, [session])
+    const availableProfiles = useMemo(
+        () => resolveSessionAvailableProfiles(session?.user as any),
+        [session?.user]
+    )
+    const businessProfiles = useMemo(
+        () => resolveSessionBusinessProfiles(session?.user as any),
+        [session?.user]
+    )
 
     useEffect(() => {
-        if (authorizedRoles.length > 0 && isHydrated) {
-            initializeProfiles(authorizedRoles)
+        if (!isHydrated) return
 
-            const isProfileStillValid = authorizedRoles.includes(activeProfile)
+        initializeProfiles(availableProfiles)
 
-            if (!activeProfile || activeProfile === 'base' || !isProfileStillValid) {
-                setActiveProfile(authorizedRoles[0])
+        if (businessProfiles.length > 0) {
+            const isBusinessProfile = activeProfile !== "base" && businessProfiles.includes(activeProfile as any)
+            if (!isBusinessProfile) {
+                setActiveProfile(businessProfiles[0])
             }
+            return
         }
-    }, [authorizedRoles, isHydrated, initializeProfiles, activeProfile, setActiveProfile])
+
+        if (activeProfile !== "base") {
+            setActiveProfile("base")
+        }
+    }, [availableProfiles, businessProfiles, isHydrated, initializeProfiles, activeProfile, setActiveProfile])
 
     const { primaryNav, utilityNav } = useMemo(() => {
         if (!mounted || !isHydrated) return { primaryNav: [], utilityNav: [] }

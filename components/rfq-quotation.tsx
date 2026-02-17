@@ -9,6 +9,7 @@ import {
   ArrowUpRight,
   Check,
   ChevronsUpDown,
+  CheckCircle,
   EllipsisVertical,
   Eye,
   Loader2,
@@ -30,6 +31,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/common/card"
@@ -103,6 +105,15 @@ type SelectedDocument = {
   version?: string | number | null
   source: "dms" | "upload"
   uploading?: boolean
+}
+
+type SubmissionSummary = {
+  pricedLines: number
+  totalLines: number
+  totalAmount: number
+  currency: string
+  documents: number
+  submittedAt: string
 }
 
 type AttachmentActionsMenuProps = {
@@ -302,7 +313,7 @@ function badgeTone(
 
   const neutral: Tone = {
     label,
-    className: "border-border/60 bg-muted/30 text-muted-foreground",
+    className: "border-slate-200/70 bg-slate-50 text-slate-600",
   }
 
   const good: Tone = {
@@ -545,7 +556,7 @@ function deadlineMeta(deadline?: string | null) {
   if (!parsed.date) {
     return {
       label: "No deadline",
-      tone: "text-muted-foreground",
+      tone: "text-slate-600",
       date: null as Date | null,
       isClosed: false,
     }
@@ -555,7 +566,7 @@ function deadlineMeta(deadline?: string | null) {
   if (diffMs <= 0) {
     return {
       label: "Closed",
-      tone: "text-muted-foreground",
+      tone: "text-slate-600",
       date: parsed.date,
       isClosed: true,
     }
@@ -620,6 +631,9 @@ export function RfqQuotation() {
     }
   }, [rfqId])
 
+  const rfqDetailPath = `/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}`
+  const rfqQuotationPath = `${rfqDetailPath}/quotation`
+
   const [payload, setPayload] = useState<RfqPayload | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -665,9 +679,44 @@ export function RfqQuotation() {
   const [dmsPickerSelected, setDmsPickerSelected] = useState<Record<string, boolean>>({})
   const uploadInputRef = useRef<HTMLInputElement | null>(null)
   const tmpUploadSeq = useRef(0)
+  const redirectTimeoutRef = useRef<number | null>(null)
+
+  const [submissionSummary, setSubmissionSummary] = useState<SubmissionSummary | null>(null)
 
   const draftKey = `rfq-quote:${normalizedRfqId}`
   const saveTimer = useRef<number | null>(null)
+
+  const goToRfq = useCallback(() => {
+    if (redirectTimeoutRef.current !== null && typeof window !== "undefined") {
+      window.clearTimeout(redirectTimeoutRef.current)
+      redirectTimeoutRef.current = null
+    }
+    router.push("/dashboard/supplier/rfqs")
+  }, [router])
+
+  const scheduleRedirectToRfq = useCallback(() => {
+    if (typeof window === "undefined") return
+    if (redirectTimeoutRef.current !== null) {
+      window.clearTimeout(redirectTimeoutRef.current)
+    }
+    redirectTimeoutRef.current = window.setTimeout(goToRfq, 4200)
+  }, [goToRfq])
+
+  useEffect(() => {
+    setSubmissionSummary(null)
+    if (redirectTimeoutRef.current !== null && typeof window !== "undefined") {
+      window.clearTimeout(redirectTimeoutRef.current)
+      redirectTimeoutRef.current = null
+    }
+  }, [normalizedRfqId])
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && redirectTimeoutRef.current !== null) {
+        window.clearTimeout(redirectTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const rfq = useMemo(() => {
     const p: AnyRecord | null = payload as any
@@ -772,6 +821,13 @@ export function RfqQuotation() {
     isSubmittedStatus(supplierResponse?.status) || clientLocked === "submitted"
   const isLocked = lockedByDeadline || lockedByRfqStatus || lockedByStatus
   const clarificationsLocked = lockedByDeadline || lockedByRfqStatus || lockedByStatus
+  const submittedAtDate = submissionSummary
+    ? new Date(submissionSummary.submittedAt)
+    : null
+  const formattedSubmissionTimestamp =
+    submittedAtDate && Number.isFinite(submittedAtDate.getTime())
+      ? format(submittedAtDate, "PP p")
+      : null
 
   useEffect(() => {
     let cancelled = false
@@ -1297,13 +1353,28 @@ export function RfqQuotation() {
         return
       }
 
+      const summaryCurrency =
+        quoteCurrency ||
+        String(rfq?.currency ?? rfq?.Currency ?? rfq?.currencyCode ?? "").trim()
+      const summaryData: SubmissionSummary = {
+        pricedLines: totals.filledCount,
+        totalLines: totals.totalLines,
+        totalAmount: totals.grandTotal,
+        currency: summaryCurrency,
+        documents: quoteDocuments.length,
+        submittedAt: new Date().toISOString(),
+      }
+      setSubmissionSummary(summaryData)
+      setClientLocked("submitted")
+      setSubmitDialogOpen(false)
+
       toast.success("Quotation submitted", {
         description: "Submitted successfully. Redirecting you back to the RFQ…",
       })
       try {
         window.localStorage.removeItem(draftKey)
       } catch { }
-      router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}`)
+      scheduleRedirectToRfq()
     } catch (e: any) {
       toast.error("Request failed", {
         description: e?.message || "Please check your connection and try again.",
@@ -1641,6 +1712,19 @@ export function RfqQuotation() {
 
   const missingSet = useMemo(() => new Set(missingLineIds), [missingLineIds])
   const formattedDeadline = deadlineDate ? format(deadlineDate, "PP p") : null
+  const deadlineHours = deadlineDate ? (deadlineDate.getTime() - Date.now()) / (60 * 60 * 1000) : null
+  const deadlineProgress =
+    deadlineHours == null
+      ? 0
+      : Math.max(0, Math.min(100, Math.round(100 - (deadlineHours / 72) * 100)))
+  const deadlineBarClass =
+    deadlineHours == null
+      ? "bg-slate-300"
+      : deadlineHours <= 24
+        ? "bg-rose-500"
+        : deadlineHours <= 72
+          ? "bg-amber-500"
+          : "bg-emerald-500"
   const docsUploading = quoteDocuments.some((d) => d.uploading)
   const canSubmit =
     !isLocked &&
@@ -1663,7 +1747,7 @@ export function RfqQuotation() {
     if (deadline.isClosed) {
       return {
         label: deadline.label,
-        className: "border-border/60 bg-muted/30 text-muted-foreground",
+        className: "border-slate-200/70 bg-slate-50 text-slate-600",
       }
     }
     if (deadline.label.toLowerCase().includes("closing") || deadline.label.toLowerCase().includes("h left")) {
@@ -1694,20 +1778,20 @@ export function RfqQuotation() {
       return {
         title: "Closed",
         description: "The submission deadline has passed. You can no longer edit or submit a quotation.",
-        tone: "border-border/60 bg-muted/20",
+        tone: "border-slate-200/70 bg-slate-50",
       }
     }
     if (lockedByRfqStatus) {
       return {
         title: "Closed",
         description: "This RFQ is closed. Submission is disabled.",
-        tone: "border-border/60 bg-muted/20",
+        tone: "border-slate-200/70 bg-slate-50",
       }
     }
     return {
       title: "Locked",
       description: "Submission is disabled for this RFQ.",
-      tone: "border-border/60 bg-muted/20",
+      tone: "border-slate-200/70 bg-slate-50",
     }
   })()
   const dmsSelectedCount = useMemo(
@@ -1751,7 +1835,7 @@ export function RfqQuotation() {
   if (loading) {
     return (
       <div className="flex justify-center py-24">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Loader2 className="h-6 w-6 animate-spin text-slate-600" />
       </div>
     )
   }
@@ -1759,14 +1843,14 @@ export function RfqQuotation() {
   if (error) {
     return (
       <div className="w-full py-10">
-        <Card className="bg-card rounded-2xl border border-border/50 shadow-none">
-          <CardHeader className="border-b border-border/40 py-5">
+        <Card className="bg-white rounded-2xl border border-slate-200/80 shadow-none">
+          <CardHeader className="relative border-b border-slate-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
             <CardTitle className="text-base font-semibold">RFQ Quotation</CardTitle>
           </CardHeader>
-          <CardContent className="py-6 space-y-4">
-            <p className="text-sm text-muted-foreground">{error}</p>
+          <CardContent className="py-4 space-y-3">
+            <p className="text-sm text-slate-600">{error}</p>
             <div className="flex items-center gap-2">
-              <Button onClick={() => router.back()} variant="outline" className="gap-2">
+              <Button onClick={() => router.push("/dashboard/supplier/rfqs")} variant="outline" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Back
               </Button>
@@ -1783,13 +1867,13 @@ export function RfqQuotation() {
   if (!rfq) {
     return (
       <div className="w-full py-10">
-        <Card className="bg-card rounded-2xl border border-border/50 shadow-none">
-          <CardHeader className="border-b border-border/40 py-5">
+        <Card className="bg-white rounded-2xl border border-slate-200/80 shadow-none">
+          <CardHeader className="relative border-b border-slate-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
             <CardTitle className="text-base font-semibold">RFQ Quotation</CardTitle>
           </CardHeader>
-          <CardContent className="py-6 space-y-4">
-            <p className="text-sm text-muted-foreground">RFQ not found.</p>
-            <Button onClick={() => router.back()} variant="outline" className="gap-2 w-fit">
+          <CardContent className="py-4 space-y-3">
+            <p className="text-sm text-slate-600">RFQ not found.</p>
+            <Button onClick={() => router.push("/dashboard/supplier/rfqs")} variant="outline" className="gap-2 w-fit">
               <ArrowLeft className="h-4 w-4" />
               Back
             </Button>
@@ -1800,38 +1884,37 @@ export function RfqQuotation() {
   }
 
   return (
-    <div className="w-full space-y-8">
-      <header className="space-y-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Button variant="outline" className="h-9 gap-2 w-fit" onClick={() => router.back()}>
+    <div className="w-full space-y-6">
+      <header className="relative space-y-3 rounded-2xl border border-slate-200/80 bg-white p-4">
+        <span className="absolute left-0 top-4 h-10 w-1 rounded-full bg-indigo-500/80" />
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <Button
+            variant="outline"
+            className="h-8 gap-2 w-fit text-xs border-slate-200 bg-white hover:bg-white"
+            onClick={() => router.push("/dashboard/supplier/rfqs")}
+          >
             <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
 
-          <div className="text-xs text-muted-foreground sm:text-right space-y-1">
+          <div className="text-[11px] text-slate-600 sm:text-right space-y-0.5">
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <Badge variant="outline" className={cn("text-xs", deadlineTone.className)}>
+              <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5", deadlineTone.className)}>
                 {deadlineTone.label}
               </Badge>
               <span>{formattedDeadline ? `Due ${formattedDeadline}` : "No submission deadline"}</span>
             </div>
-            {draftSavedAt ? (
-              <div className="mt-1">Autosaved {format(draftSavedAt, "p")}</div>
-            ) : (
-              <div className="mt-1">Autosaves locally as you type</div>
-            )}
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex gap-4">
-            <div className="w-1.5 rounded-full bg-primary/80" aria-hidden="true" />
             <div className="space-y-2">
               <div className="space-y-1">
-                <h1 className="text-2xl font-semibold tracking-tight">
+                <h1 className="text-xl font-semibold tracking-tight">
                   RFQ Quotation
                 </h1>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-slate-600 line-clamp-1">
                   {rfqNumber || "RFQ"}
                   {headerComments ? (
                     <span className="ml-2">• {headerComments}</span>
@@ -1839,14 +1922,14 @@ export function RfqQuotation() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className={cn("text-xs", rfqTone.className)}>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5 shrink-0", rfqTone.className)}>
                   {rfqTone.label}
                 </Badge>
                 {invitationStatus ? (
                   <Badge
                     variant="outline"
-                    className={cn("text-xs", invitationTone?.className)}
+                    className={cn("text-[10px] px-2 py-0.5 shrink-0", invitationTone?.className)}
                   >
                     {invitationTone?.label ?? invitationStatus}
                   </Badge>
@@ -1854,22 +1937,42 @@ export function RfqQuotation() {
                 {supplierStatusLabel ? (
                   <Badge
                     variant="outline"
-                    className={cn("text-xs", responseTone?.className)}
+                    className={cn("text-[10px] px-2 py-0.5 shrink-0", responseTone?.className)}
                   >
                     Response: {responseTone?.label ?? normalizeStatus(supplierStatusLabel)}
                   </Badge>
+                ) : null}
+                {draftSavedAt ? (
+                  <span className="inline-flex items-center rounded-full border border-slate-200/70 px-2 py-0.5 text-[10px] text-slate-600">
+                    Autosaved {format(draftSavedAt, "p")}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center rounded-full border border-slate-200/70 px-2 py-0.5 text-[10px] text-slate-600">
+                    Autosave on
+                  </span>
+                )}
+                {deadlineDate ? (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="h-1.5 w-20 rounded-full bg-slate-200 overflow-hidden">
+                      <div
+                        className={cn("h-full rounded-full", deadlineBarClass)}
+                        style={{ width: `${deadlineProgress}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-slate-600">Urgency</span>
+                  </div>
                 ) : null}
               </div>
 
               {lockBanner ? (
                 <div
                   className={cn(
-                    "mt-3 rounded-xl border px-4 py-3 text-sm",
+                    "mt-2 rounded-xl border px-3 py-2 text-xs",
                     lockBanner.tone
                   )}
                 >
                   <div className="font-semibold text-foreground">{lockBanner.title}</div>
-                  <div className="mt-1 text-muted-foreground">{lockBanner.description}</div>
+                  <div className="mt-0.5 text-slate-600">{lockBanner.description}</div>
                 </div>
               ) : null}
             </div>
@@ -1877,36 +1980,94 @@ export function RfqQuotation() {
         </div>
       </header>
 
+      {submissionSummary ? (
+        <Card className="rounded-2xl border border-emerald-200 bg-emerald-50/70 shadow-none">
+          <CardHeader className="relative flex flex-col gap-2 border-b border-emerald-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-emerald-500/80 before:content-['']">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-emerald-600" />
+              <CardTitle className="text-base font-semibold">Quotation submitted</CardTitle>
+            </div>
+            <CardDescription className="text-sm text-slate-600">
+              We captured your totals and will redirect you back to the RFQ shortly.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-5 py-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1">
+                <p className="text-xs uppercase tracking-[0.16em] text-slate-600">Lines priced</p>
+                <p className="text-lg font-semibold tabular-nums">
+                  {submissionSummary.pricedLines}/{submissionSummary.totalLines}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs uppercase tracking-[0.16em] text-slate-600">Total payable</p>
+                <p className="text-lg font-semibold">{toMoney(submissionSummary.totalAmount, submissionSummary.currency)}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs uppercase tracking-[0.16em] text-slate-600">Attachments</p>
+                <p className="text-lg font-semibold tabular-nums">{submissionSummary.documents}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs uppercase tracking-[0.16em] text-slate-600">Submitted</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {formattedSubmissionTimestamp ?? "Just now"}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="border-t border-emerald-200/70 px-5 py-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <Button variant="outline" size="sm" onClick={goToRfq} className="gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Back to RFQs
+              </Button>
+              <p className="text-xs text-slate-600">
+                Redirecting automatically in a few seconds…
+              </p>
+            </div>
+          </CardFooter>
+        </Card>
+      ) : null}
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <main className="lg:col-span-8">
           <Tabs defaultValue="pricing" className="space-y-6">
-            <TabsList className="w-full h-auto flex flex-wrap sm:flex-nowrap">
-              <TabsTrigger value="pricing" className="gap-2">
+            <TabsList className="w-full h-auto flex flex-wrap sm:flex-nowrap rounded-xl border border-slate-200/80 bg-slate-100 p-1 text-slate-600">
+              <TabsTrigger
+                value="pricing"
+                className="gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:border-slate-200/80"
+              >
                 <ListChecks className="h-4 w-4" />
                 Pricing
               </TabsTrigger>
-              <TabsTrigger value="rfq-docs" className="gap-2">
+              <TabsTrigger
+                value="rfq-docs"
+                className="gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:border-slate-200/80"
+              >
                 <Paperclip className="h-4 w-4" />
                 Documents
-                <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-background/70 px-1.5 text-[11px] tabular-nums text-muted-foreground">
+                <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-indigo-50 px-1.5 text-[11px] tabular-nums text-indigo-700">
                   {quoteDocuments.length}
                 </span>
               </TabsTrigger>
-              <TabsTrigger value="clarifications" className="gap-2">
+              <TabsTrigger
+                value="clarifications"
+                className="gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:border-slate-200/80"
+              >
                 <MessageSquare className="h-4 w-4" />
                 Clarifications
-                <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-background/70 px-1.5 text-[11px] tabular-nums text-muted-foreground">
+                <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-indigo-50 px-1.5 text-[11px] tabular-nums text-indigo-700">
                   {clarifications.length}
                 </span>
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="pricing" className="space-y-6">
-              <Card className="rounded-2xl border-border/50 shadow-none py-0 gap-0">
-                <CardHeader className="border-b border-border/40 py-5">
+              <Card className="rounded-2xl border border-slate-200/80 bg-white shadow-none py-0 gap-0">
+                <CardHeader className="relative border-b border-slate-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <CardTitle className="text-base font-semibold">Line items</CardTitle>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-3 text-xs text-slate-600">
                       <span>
                         {totals.filledCount}/{totals.totalLines} priced
                       </span>
@@ -1921,20 +2082,20 @@ export function RfqQuotation() {
                   </div>
                 </CardHeader>
 
-                <CardContent className="py-6 space-y-4">
+                <CardContent className="py-4 space-y-3">
                   {submitFieldErrors.items?.[0] ? (
-                    <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
-                      <div className="text-sm font-semibold">Submission issue</div>
-                      <p className="mt-1 text-sm text-muted-foreground">
+                    <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+                      <div className="text-sm font-semibold text-rose-900">Submission issue</div>
+                      <p className="mt-1 text-sm text-rose-900/80">
                         {submitFieldErrors.items[0]}
                       </p>
                     </div>
                   ) : null}
 
                   {missingLineIds.length > 0 ? (
-                    <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
-                      <div className="text-sm font-semibold">Missing required values</div>
-                      <p className="mt-1 text-sm text-muted-foreground">
+                    <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+                      <div className="text-sm font-semibold text-rose-900">Missing required values</div>
+                      <p className="mt-1 text-sm text-rose-900/80">
                         Complete quantity and unit price for {missingLineIds.length}{" "}
                         line item{missingLineIds.length === 1 ? "" : "s"} to enable
                         submission.
@@ -1943,9 +2104,9 @@ export function RfqQuotation() {
                   ) : null}
 
                   {!isLocked ? (
-                    <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
-                      <div className="text-sm font-semibold">Quick tip</div>
-                      <div className="mt-1 text-sm text-muted-foreground">
+                    <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+                      <div className="text-sm font-semibold text-slate-900">Quick tip</div>
+                      <div className="mt-1 text-sm text-slate-700">
                         Enter your unit prices. Quantities are pre-filled from the RFQ (you can adjust if allowed).
                         Totals update automatically.
                       </div>
@@ -1953,28 +2114,28 @@ export function RfqQuotation() {
                   ) : null}
 
                   {enrichedLines.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-6 text-sm text-muted-foreground">
+                    <div className="rounded-xl border border-dashed border-slate-200/70 bg-slate-50 p-6 text-sm text-slate-600">
                       No RFQ line items were returned by the endpoint for this RFQ.
                     </div>
                   ) : (
                     <>
-                      <div className="hidden md:block overflow-x-auto rounded-xl border border-border/60">
+                      <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-200/70">
                         <Table>
                           <TableHeader>
-                            <TableRow className="bg-muted/30">
-                              <TableHead className="px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
+                            <TableRow className="bg-slate-50">
+                              <TableHead className="px-4 py-3 text-xs font-semibold uppercase text-slate-600">
                                 Item
                               </TableHead>
-                              <TableHead className="px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
+                              <TableHead className="px-4 py-3 text-xs font-semibold uppercase text-slate-600">
                                 Qty
                               </TableHead>
-                              <TableHead className="px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
+                              <TableHead className="px-4 py-3 text-xs font-semibold uppercase text-slate-600">
                                 Currency
                               </TableHead>
-                              <TableHead className="px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
+                              <TableHead className="px-4 py-3 text-xs font-semibold uppercase text-slate-600">
                                 Unit price
                               </TableHead>
-                              <TableHead className="px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
+                              <TableHead className="px-4 py-3 text-xs font-semibold uppercase text-slate-600">
                                 Total
                               </TableHead>
                             </TableRow>
@@ -1996,7 +2157,7 @@ export function RfqQuotation() {
                                     <div className="space-y-1">
                                       <div className="text-sm font-medium">{l.label}</div>
                                       {l.uom ? (
-                                        <div className="text-[11px] text-muted-foreground">
+                                        <div className="text-[11px] text-slate-600">
                                           UoM: {l.uom}
                                         </div>
                                       ) : null}
@@ -2023,7 +2184,7 @@ export function RfqQuotation() {
                                   <TableCell className="px-4 py-4 w-[90px]">
                                     <div className={cn(
                                       "h-9 inline-flex items-center text-sm tabular-nums",
-                                      currencyOk ? "text-foreground" : "text-muted-foreground"
+                                      currencyOk ? "text-foreground" : "text-slate-600"
                                     )}>
                                       {(quoteCurrency || currency || "—").toUpperCase()}
                                     </div>
@@ -2073,14 +2234,14 @@ export function RfqQuotation() {
                             <div
                               key={l.id}
                               className={cn(
-                                "rounded-xl border border-border/60 bg-card p-4 space-y-3",
+                                "rounded-xl border border-slate-200/70 bg-white p-4 space-y-3",
                                 isMissing && "border-destructive/50"
                               )}
                             >
                               <div className="flex items-start justify-between gap-4">
                                 <div className="space-y-1">
                                   <div className="text-sm font-semibold">{l.label}</div>
-                                  <div className="text-xs text-muted-foreground">
+                                  <div className="text-xs text-slate-600">
                                     Line {idx + 1}
                                     {l.uom ? ` • UoM: ${l.uom}` : ""}
                                   </div>
@@ -2092,7 +2253,7 @@ export function RfqQuotation() {
 
                               <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                  <div className="text-xs font-medium text-muted-foreground">
+                                  <div className="text-xs font-medium text-slate-600">
                                     Quantity
                                   </div>
                                   <Input
@@ -2111,7 +2272,7 @@ export function RfqQuotation() {
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <div className="text-xs font-medium text-muted-foreground">
+                                  <div className="text-xs font-medium text-slate-600">
                                     <span className="inline-flex items-center gap-2">
                                       <span className="uppercase tracking-widest">
                                         {(quoteCurrency || currency || "—").toUpperCase()}
@@ -2145,11 +2306,11 @@ export function RfqQuotation() {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-2xl border-border/50 shadow-none py-0 gap-0">
-                <CardHeader className="border-b border-border/40 py-5">
+              <Card className="rounded-2xl border border-slate-200/80 bg-white shadow-none py-0 gap-0">
+                <CardHeader className="relative border-b border-slate-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
                   <CardTitle className="text-base font-semibold">Remarks (Optional)</CardTitle>
                 </CardHeader>
-                <CardContent className="py-6 space-y-4">
+                <CardContent className="py-4 space-y-3">
                   <Textarea
                     value={remarks}
                     disabled={isLocked}
@@ -2162,11 +2323,11 @@ export function RfqQuotation() {
             </TabsContent>
 
             <TabsContent value="rfq-docs" className="space-y-6">
-              <Card className="rounded-2xl border-border/50 shadow-none py-0 gap-0">
-                <CardHeader className="border-b border-border/40 py-5">
+              <Card className="rounded-2xl border border-slate-200/80 bg-white shadow-none py-0 gap-0">
+                <CardHeader className="relative border-b border-slate-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <Paperclip className="h-4 w-4 text-muted-foreground" />
+                      <Paperclip className="h-4 w-4 text-slate-600" />
                       <CardTitle className="text-base font-semibold">Documents (Optional)</CardTitle>
                     </div>
                     <Badge variant="outline" className="text-xs tabular-nums">
@@ -2177,7 +2338,7 @@ export function RfqQuotation() {
                     Attach supporting documents if any.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="py-6 space-y-4">
+                <CardContent className="py-4 space-y-3">
                   <input
                     ref={uploadInputRef}
                     type="file"
@@ -2211,7 +2372,7 @@ export function RfqQuotation() {
                   </div>
 
                   {quoteDocuments.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
+                    <div className="rounded-xl border border-dashed border-slate-200/70 bg-slate-50 p-4 text-sm text-slate-600">
                       No documents attached.
                     </div>
                   ) : (
@@ -2229,19 +2390,19 @@ export function RfqQuotation() {
                         return (
                           <div
                             key={idKey}
-                            className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-background p-4"
+                            className="flex items-start justify-between gap-3 rounded-xl border border-slate-200/70 bg-white p-4"
                           >
                             <div className="min-w-0 space-y-1">
                               <div className="text-sm font-medium text-foreground truncate">
                                 {d.name}
                               </div>
-                              <div className="text-xs text-muted-foreground">
+                              <div className="text-xs text-slate-600">
                                 {d.source === "upload" ? "Uploaded" : "From DMS"}
                                 {d.repository ? ` • ${d.repository}` : ""}
                                 {d.version != null ? ` • v${String(d.version)}` : ""}
                               </div>
                               {d.uploading ? (
-                                <div className="text-xs text-muted-foreground inline-flex items-center gap-2">
+                                <div className="text-xs text-slate-600 inline-flex items-center gap-2">
                                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                   Uploading…
                                 </div>
@@ -2265,24 +2426,24 @@ export function RfqQuotation() {
                         )
                       })}
                       {quoteDocuments.length > 10 ? (
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-slate-600">
                           Showing first 10 documents.
                         </div>
                       ) : null}
                     </div>
                   )}
 
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-slate-600">
                     Documents are optional. You can submit without attaching anything.
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="rounded-2xl border-border/50 shadow-none py-0 gap-0">
-                <CardHeader className="border-b border-border/40 py-5">
+              <Card className="rounded-2xl border border-slate-200/80 bg-white shadow-none py-0 gap-0">
+                <CardHeader className="relative border-b border-slate-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <Paperclip className="h-4 w-4 text-muted-foreground" />
+                      <Paperclip className="h-4 w-4 text-slate-600" />
                       <CardTitle className="text-base font-semibold">Reference documents</CardTitle>
                     </div>
                     <Badge variant="outline" className="text-xs tabular-nums">
@@ -2293,14 +2454,14 @@ export function RfqQuotation() {
                     View buyer-shared RFQ documents (payload or DMS) for reference.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="py-6 space-y-3">
+                <CardContent className="py-4 space-y-3">
                   {attachments.length === 0 ? (
                     <div className="space-y-3">
-                      <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-6 text-sm text-muted-foreground">
+                      <div className="rounded-xl border border-dashed border-slate-200/70 bg-slate-50 p-6 text-sm text-slate-600">
                         No reference documents were included in the RFQ payload.
                       </div>
                       <div className="flex items-center justify-between gap-3">
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-slate-600">
                           If the RFQ documents are stored in DMS, view them here.
                         </div>
                         <Button
@@ -2335,13 +2496,13 @@ export function RfqQuotation() {
                             return (
                               <div
                                 key={`${docId}-${name}`}
-                                className="flex items-start justify-between gap-4 rounded-xl border border-border/60 bg-background p-4"
+                                className="flex items-start justify-between gap-4 rounded-xl border border-slate-200/70 bg-white p-4"
                               >
                                 <div className="min-w-0 space-y-1">
                                   <div className="text-sm font-medium text-foreground truncate">
                                     {name}
                                   </div>
-                                  <div className="text-xs text-muted-foreground">
+                                  <div className="text-xs text-slate-600">
                                     {String(d?.repository ?? d?.visibility ?? "").trim() || "DMS"}
                                     {d?.version != null ? ` • v${String(d.version)}` : ""}
                                   </div>
@@ -2377,20 +2538,20 @@ export function RfqQuotation() {
                         return (
                           <div
                             key={`${idx}-${name}`}
-                            className="flex items-start justify-between gap-4 rounded-xl border border-border/60 bg-background p-4"
+                            className="flex items-start justify-between gap-4 rounded-xl border border-slate-200/70 bg-white p-4"
                           >
                             <div className="min-w-0 space-y-1">
                               <div className="text-sm font-medium text-foreground truncate">
                                 {name}
                               </div>
                               {meta ? (
-                                <div className="text-xs text-muted-foreground">{meta}</div>
+                                <div className="text-xs text-slate-600">{meta}</div>
                               ) : null}
                               {verified ? (
                                 <div className="text-xs text-emerald-700">Verified</div>
                               ) : null}
                               {!previewHref ? (
-                                <div className="text-xs text-muted-foreground">
+                                <div className="text-xs text-slate-600">
                                   Preview not available.
                                 </div>
                               ) : null}
@@ -2407,7 +2568,7 @@ export function RfqQuotation() {
                         )
                       })}
                       {attachments.length > 10 ? (
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-slate-600">
                           Showing first 10 attachments.
                         </div>
                       ) : null}
@@ -2419,11 +2580,11 @@ export function RfqQuotation() {
 
             <TabsContent value="clarifications" className="space-y-6">
 
-              <Card className="rounded-2xl border-border/50 shadow-none py-0 gap-0">
-                <CardHeader className="border-b border-border/40 py-5">
+              <Card className="rounded-2xl border border-slate-200/80 bg-white shadow-none py-0 gap-0">
+                <CardHeader className="relative border-b border-slate-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                      <MessageSquare className="h-4 w-4 text-slate-600" />
                       <CardTitle className="text-base font-semibold">Clarifications</CardTitle>
                     </div>
                     <div className="flex items-center gap-2">
@@ -2450,9 +2611,9 @@ export function RfqQuotation() {
                   </div>
                   <CardDescription>Ask questions and view buyer responses.</CardDescription>
                 </CardHeader>
-                <CardContent className="py-6 space-y-4">
+                <CardContent className="py-4 space-y-3">
                   {!clarificationsLocked ? (
-                    <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-3">
+                    <div className="rounded-xl border border-slate-200/70 bg-slate-50 p-4 space-y-3">
                       <div className="text-sm font-semibold">Ask a clarification (Optional)</div>
                       <Textarea
                         value={clarificationDraft}
@@ -2462,7 +2623,7 @@ export function RfqQuotation() {
                         className="min-h-[96px]"
                       />
                       <div className="flex items-center justify-between gap-3">
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-slate-600">
                           Keep it short and specific for a faster response.
                         </div>
                         <Button
@@ -2481,7 +2642,7 @@ export function RfqQuotation() {
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
+                    <div className="rounded-xl border border-dashed border-slate-200/70 bg-slate-50 p-4 text-sm text-slate-600">
                       Clarifications are locked for this RFQ.
                     </div>
                   )}
@@ -2491,7 +2652,7 @@ export function RfqQuotation() {
                   ) : null}
 
                   {clarifications.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-6 text-sm text-muted-foreground">
+                    <div className="rounded-xl border border-dashed border-slate-200/70 bg-slate-50 p-6 text-sm text-slate-600">
                       No clarifications yet.
                     </div>
                   ) : (
@@ -2514,7 +2675,7 @@ export function RfqQuotation() {
                         return (
                           <div
                             key={idx}
-                            className="rounded-xl border border-border/60 bg-background p-4 space-y-2"
+                            className="rounded-xl border border-slate-200/70 bg-white p-4 space-y-2"
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0 space-y-1">
@@ -2522,7 +2683,7 @@ export function RfqQuotation() {
                                   {message}
                                 </div>
                                 {created ? (
-                                  <div className="text-xs text-muted-foreground">
+                                  <div className="text-xs text-slate-600">
                                     {String(created)}
                                   </div>
                                 ) : null}
@@ -2535,8 +2696,8 @@ export function RfqQuotation() {
                               </Badge>
                             </div>
                             {answer ? (
-                              <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
-                                <div className="text-xs font-semibold text-muted-foreground">
+                              <div className="rounded-lg border border-slate-200/70 bg-slate-50 p-3">
+                                <div className="text-xs font-semibold text-slate-600">
                                   Buyer response
                                 </div>
                                 <div className="mt-1 text-sm text-foreground whitespace-pre-line">
@@ -2544,7 +2705,7 @@ export function RfqQuotation() {
                                 </div>
                               </div>
                             ) : (
-                              <div className="text-xs text-muted-foreground">
+                              <div className="text-xs text-slate-600">
                                 Awaiting buyer response.
                               </div>
                             )}
@@ -2552,7 +2713,7 @@ export function RfqQuotation() {
                         )
                       })}
                       {clarifications.length > 10 ? (
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-slate-600">
                           Showing first 10 clarifications.
                         </div>
                       ) : null}
@@ -2565,16 +2726,16 @@ export function RfqQuotation() {
         </main>
 
         <aside className="space-y-5 lg:col-span-4 lg:sticky lg:top-24 h-fit">
-          <Card className="rounded-2xl border-border/50 shadow-none py-0 gap-0">
-            <CardHeader className="border-b border-border/40 py-5">
+          <Card className="rounded-2xl border border-slate-200/80 bg-white shadow-none py-0 gap-0">
+            <CardHeader className="relative border-b border-slate-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
               <CardTitle className="text-base font-semibold">Summary</CardTitle>
               <CardDescription>
                 Review totals and submit when ready.
               </CardDescription>
             </CardHeader>
-            <CardContent className="py-6 space-y-4">
+            <CardContent className="py-4 space-y-3">
               <div className="space-y-1">
-                <div className="text-xs font-medium text-muted-foreground">
+                <div className="text-xs font-medium text-slate-600">
                   Validity (days)
                 </div>
                 <Input
@@ -2605,7 +2766,7 @@ export function RfqQuotation() {
               </div>
 
               <div className="space-y-1">
-                <div className="text-xs font-medium text-muted-foreground">Currency</div>
+                <div className="text-xs font-medium text-slate-600">Currency</div>
                 <Popover open={currencyOpen} onOpenChange={setCurrencyOpen}>
                   <PopoverTrigger asChild>
                     <Button
@@ -2625,13 +2786,13 @@ export function RfqQuotation() {
                               {quoteCurrency.toUpperCase()}
                             </span>
                             {selectedCurrency?.name ? (
-                              <span className="text-muted-foreground truncate">
+                              <span className="text-slate-600 truncate">
                                 {selectedCurrency.name}
                               </span>
                             ) : null}
                           </span>
                         ) : (
-                          <span className="text-muted-foreground">
+                          <span className="text-slate-600">
                             {currenciesLoading ? "Loading..." : "Select currency"}
                           </span>
                         )}
@@ -2677,7 +2838,7 @@ export function RfqQuotation() {
                         })}
                       </CommandList>
                     </Command>
-                    <div className="border-t border-border/60 p-2">
+                    <div className="border-t border-slate-200/70 p-2">
                       <Input
                         value={quoteCurrency}
                         disabled={isLocked}
@@ -2705,14 +2866,14 @@ export function RfqQuotation() {
               </div>
 
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Total Payable</span>
+                <span className="text-slate-600">Total Payable</span>
                 <span className="font-semibold tabular-nums">
                   {toMoney(totals.grandTotal, quoteCurrency || currency)}
                 </span>
               </div>
 
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Quotation Deadline</span>
+                <span className="text-slate-600">Quotation Deadline</span>
                 <span className={cn("font-medium", deadline.tone)}>
                   {formattedDeadline ?? "—"}
                 </span>
@@ -2735,7 +2896,7 @@ export function RfqQuotation() {
                     Submit quotation
                   </Button>
 
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-slate-600">
                     {!submitMeta.ok
                       ? "Add currency and validity to enable submission."
                       : docsUploading
@@ -2749,17 +2910,15 @@ export function RfqQuotation() {
                 <Button
                   variant="outline"
                   className="w-full justify-center gap-2 h-11 font-semibold"
-                  onClick={() =>
-                    router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}`)
-                  }
+                  onClick={() => router.push("/dashboard/supplier/rfqs")}
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  Back to RFQ
+                  Back to RFQs
                 </Button>
               )}
 
               {isLocked ? (
-                <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
+                <div className="rounded-xl border border-dashed border-slate-200/70 bg-slate-50 p-4 text-sm text-slate-600">
                   {lockedByStatus
                     ? "Your quotation has already been submitted. You can no longer edit or re-submit."
                     : `This RFQ is closed${lockedByDeadline ? " (deadline passed)" : ""}. You can no longer submit or edit a quotation.`}
@@ -2771,18 +2930,16 @@ export function RfqQuotation() {
       </div>
 
       <div className="md:hidden h-20" aria-hidden="true" />
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-background/90 backdrop-blur">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200/70 bg-white/95 backdrop-blur">
         <div className="w-full px-4 py-3 flex items-center gap-3">
           {isLocked ? (
             <Button
               variant="outline"
-              onClick={() =>
-                router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}`)
-              }
+              onClick={() => router.push("/dashboard/supplier/rfqs")}
               className="flex-1 gap-2 h-11 font-semibold"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to RFQ
+              Back to RFQs
             </Button>
           ) : (
             <Button
@@ -2879,7 +3036,7 @@ export function RfqQuotation() {
             ) : null}
 
             {dmsPickerResults.length === 0 && !dmsPickerLoading ? (
-              <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-6 text-sm text-muted-foreground">
+              <div className="rounded-xl border border-dashed border-slate-200/70 bg-slate-50 p-6 text-sm text-slate-600">
                 No documents found. Try a different keyword (e.g. RFQ number).
               </div>
             ) : null}
@@ -2901,7 +3058,7 @@ export function RfqQuotation() {
                   return (
                     <div
                       key={key}
-                      className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-background p-4"
+                      className="flex items-start justify-between gap-3 rounded-xl border border-slate-200/70 bg-white p-4"
                     >
                       <div className="flex items-start gap-3 min-w-0 flex-1">
                         <Checkbox
@@ -2917,7 +3074,7 @@ export function RfqQuotation() {
                           <div className="text-sm font-medium text-foreground break-words overflow-hidden [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
                             {name}
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-slate-600">
                             {metaLeft}
                             {metaRight ? ` • ${metaRight}` : ""}
                             {verified ? " • Verified" : ""}
@@ -2968,13 +3125,13 @@ export function RfqQuotation() {
 
           <div className="space-y-3">
             {attachmentVerifyTarget ? (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-slate-600">
                 {attachmentVerifyTarget.name} • ID {String(attachmentVerifyTarget.id)}
               </div>
             ) : null}
 
             {attachmentVerifyLoading ? (
-              <div className="rounded-xl border border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
+              <div className="rounded-xl border border-slate-200/70 bg-slate-50 p-4 text-sm text-slate-600">
                 <span className="inline-flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Verifying…
@@ -2983,16 +3140,16 @@ export function RfqQuotation() {
             ) : attachmentVerifyError ? (
               <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
                 <div className="font-semibold text-destructive">Verification failed</div>
-                <div className="mt-1 text-muted-foreground">{attachmentVerifyError}</div>
+                <div className="mt-1 text-slate-600">{attachmentVerifyError}</div>
               </div>
             ) : attachmentVerifyData ? (
-              <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+              <div className="rounded-xl border border-slate-200/70 bg-slate-50 p-4">
                 <pre className="text-xs overflow-auto max-h-[360px] whitespace-pre-wrap">
                   {safeJsonPreview(attachmentVerifyData)}
                 </pre>
               </div>
             ) : (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-slate-600">
                 Click “Verify” on an attachment to view its verification details.
               </div>
             )}

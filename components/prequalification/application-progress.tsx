@@ -77,9 +77,9 @@ const CategoryProgressCard = ({ category }: { category: CategoryProgress }) => {
     const config = getStatusConfig(category.status);
     
     return (
-        <div className="border rounded-lg p-4 space-y-3">
+        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
-                <h4 className="font-medium text-sm">{category.category_name}</h4>
+                <h4 className="text-sm font-semibold text-slate-900">{category.category_name}</h4>
                 <Badge 
                     variant={config.variant}
                     className={cn("text-xs", config.color)}
@@ -88,8 +88,8 @@ const CategoryProgressCard = ({ category }: { category: CategoryProgress }) => {
                     {config.label}
                 </Badge>
             </div>
-            
-            <div className="space-y-2">
+
+            <div className="mt-3 space-y-2">
                 <div className="flex items-center justify-between text-xs text-slate-600">
                     <span>{category.stage_label}</span>
                     <span>{category.progress_percent}%</span>
@@ -98,18 +98,18 @@ const CategoryProgressCard = ({ category }: { category: CategoryProgress }) => {
             </div>
 
             {category.updated_on && (
-                <div className="flex items-center gap-2 text-xs text-slate-600">
+                <div className="mt-3 flex items-center gap-2 text-xs text-slate-600">
                     <Calendar className="w-3 h-3" />
                     <span>Updated {new Date(category.updated_on).toLocaleDateString()}</span>
                 </div>
             )}
 
             {category.rejection_reason && (
-                <div className="rounded border border-rose-200 bg-rose-50 p-2 text-xs text-rose-800">
+                <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-2 text-xs text-rose-800">
                     <strong>Reason:</strong> {category.rejection_reason}
                 </div>
             )}
-        </div>
+        </article>
     );
 };
 
@@ -148,7 +148,7 @@ const ProgressSummary = ({
     const statusConfig = getOverallStatusConfig(overallStatus);
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
             <div className="flex items-center gap-3">
                 <Badge className={cn("text-xs", statusConfig.color)}>
                     {statusConfig.label}
@@ -159,26 +159,26 @@ const ProgressSummary = ({
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                <div className="p-3 bg-emerald-50 rounded-lg">
+            <div className="grid grid-cols-2 gap-3 text-center md:grid-cols-4">
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
                     <div className="text-lg font-semibold text-emerald-700">
                         {summary.approved_categories}
                     </div>
                     <div className="text-xs text-emerald-600">Approved</div>
                 </div>
-                <div className="p-3 bg-rose-50 rounded-lg">
+                <div className="rounded-xl border border-rose-200 bg-rose-50 p-3">
                     <div className="text-lg font-semibold text-rose-700">
                         {summary.rejected_categories}
                     </div>
                     <div className="text-xs text-rose-600">Rejected</div>
                 </div>
-                <div className="p-3 bg-amber-50 rounded-lg">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
                     <div className="text-lg font-semibold text-amber-700">
                         {summary.pending_categories}
                     </div>
                     <div className="text-xs text-amber-600">Pending</div>
                 </div>
-                <div className="p-3 bg-blue-50 rounded-lg">
+                <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3">
                     <div className="text-lg font-semibold text-blue-700">
                         {summary.total_categories}
                     </div>
@@ -220,14 +220,14 @@ export default function ApplicationProgress({ round, className }: ApplicationPro
 
     // Simple progress bar for table view
     const SimpleProgressBar = () => (
-        <div className="flex items-center gap-2 min-w-[120px]">
-            <div className="flex-1 h-2 rounded bg-gray-200 dark:bg-gray-800 overflow-hidden">
+        <div className="flex min-w-[140px] items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1">
+            <div className="h-2 flex-1 overflow-hidden rounded bg-gray-200 dark:bg-gray-800">
                 <div 
                     className="h-2 bg-emerald-500 transition-all" 
                     style={{ width: `${Math.min(100, Math.max(0, applicationProgress.summary.overall_progress))}%` }} 
                 />
             </div>
-            <span className="text-xs tabular-nums w-10 text-right">
+            <span className="w-10 text-right text-xs tabular-nums text-slate-700">
                 {applicationProgress.summary.overall_progress}%
             </span>
         </div>
@@ -238,23 +238,25 @@ export default function ApplicationProgress({ round, className }: ApplicationPro
         return (
             <Dialog>
                 <DialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className={cn("h-auto p-1", className)}>
+                    <Button variant="ghost" size="sm" className={cn("h-auto p-1 hover:bg-transparent", className)}>
                         <SimpleProgressBar />
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>Application Progress - {round.title}</DialogTitle>
+                <DialogContent className="w-[min(100vw-2rem,1040px)] max-w-[1040px] overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-none">
+                    <DialogHeader className="border-b border-slate-100 bg-white/95 px-6 py-4 pr-12 text-left backdrop-blur sm:px-8">
+                        <DialogTitle className="text-xl font-semibold text-slate-900">
+                            Application Progress - {round.title}
+                        </DialogTitle>
                     </DialogHeader>
                     
-                    <div className="space-y-6">
+                    <div className="max-h-[calc(100vh-10rem)] space-y-6 overflow-y-auto px-6 py-5 sm:px-8">
                         <ProgressSummary 
                             summary={applicationProgress.summary}
                             overallStatus={applicationProgress.overall_status}
                         />
 
                         <div className="space-y-4">
-                            <h3 className="font-medium">Category Progress</h3>
+                            <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Category Progress</h3>
                             <div className="grid gap-4">
                                 {applicationProgress.categories.map((category: CategoryProgress) => (
                                     <CategoryProgressCard 

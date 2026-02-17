@@ -1,13 +1,11 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useTransition } from "react"
 import { motion, Variants } from "framer-motion"
 import { apiService } from "@/lib/api/profile"
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/common/card"
 import { Separator } from "@/components/common/separator"
 import { Button } from "@/components/common/button"
-import { Input } from "@/components/common/input"
-import { Label } from "@/components/common/label"
 import { Spinner } from "@/components/common/spinner"
 import {
     AlertDialog,
@@ -20,7 +18,7 @@ import {
     AlertDialogCancel,
     AlertDialogAction
 } from "@/components/common/alert-dialog"
-import { AlertTriangle, Info, Trash2, Lock } from "lucide-react"
+import { AlertTriangle, Info, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 const containerVariants: Variants = {
@@ -35,19 +33,16 @@ const itemVariants: Variants = {
 
 export default function DangerZoneCard({ accessToken }: { accessToken: string }) {
     const [isPending, startTransition] = useTransition()
-    const [password, setPassword] = useState("")
 
-    const handleDelete = () => {
+    const handleSuspend = () => {
         startTransition(() => {
-            toast.promise(apiService.deleteAccount(password, accessToken), {
-                loading: "Processing account deletion...",
+            toast.promise(apiService.suspendAccount(accessToken), {
+                loading: "Suspending account...",
                 success: () => {
-                    setPassword("")
-                    return "Account deleted successfully. Logging out now."
+                    return "Account suspended successfully."
                 },
                 error: (err: any) => {
-                    setPassword("")
-                    return err.message || "Deletion failed. Please check your password."
+                    return err.message || "Suspension failed."
                 }
             })
         })
@@ -72,10 +67,10 @@ export default function DangerZoneCard({ accessToken }: { accessToken: string })
                 <CardContent className="p-4 sm:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <motion.div variants={itemVariants} initial="hidden" animate="show" className="flex-1">
                         <h3 className="text-base font-semibold text-foreground">
-                            Delete Account
+                            Suspend Account
                         </h3>
                         <p className="text-sm text-muted-foreground mt-1">
-                            Permanently remove your account and all associated data. This action cannot be undone.
+                            Temporarily suspend your account and revoke current access tokens.
                         </p>
                     </motion.div>
 
@@ -84,7 +79,7 @@ export default function DangerZoneCard({ accessToken }: { accessToken: string })
                             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }} className="flex-shrink-0">
                                 <Button variant="destructive" className="flex items-center gap-2">
                                     <Trash2 className="h-4 w-4" />
-                                    Delete Account
+                                    Suspend Account
                                 </Button>
                             </motion.div>
                         </AlertDialogTrigger>
@@ -97,46 +92,31 @@ export default function DangerZoneCard({ accessToken }: { accessToken: string })
                                 </AlertDialogTitle>
                                 <AlertDialogDescription className="text-base text-muted-foreground space-y-3 pt-2">
                                     <p>
-                                        This action **cannot be undone**. All your data, settings, and information will be permanently deleted.
+                                        This will suspend your account and revoke access tokens until it is re-enabled by an administrator.
                                     </p>
                                     <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/30 text-destructive text-sm font-medium">
                                         <Info className="h-4 w-4 flex-shrink-0" />
-                                        Type your password below to confirm this irreversible action.
+                                        You can sign in again after your account is reactivated.
                                     </div>
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
 
-                            <div className="space-y-2 pt-2">
-                                <Label htmlFor="password-confirm" className="flex items-center gap-1">
-                                    <Lock className="h-4 w-4 text-primary" />
-                                    Confirm Password
-                                </Label>
-                                <Input
-                                    id="password-confirm"
-                                    type="password"
-                                    value={password}
-                                    onChange={e => setPassword(e.target.value)}
-                                    placeholder="Enter your password to confirm"
-                                    disabled={isPending}
-                                />
-                            </div>
-
                             <AlertDialogFooter className="mt-4">
                                 <AlertDialogCancel asChild>
-                                    <Button variant="outline" disabled={isPending} onClick={() => setPassword("")}>
+                                    <Button variant="outline" disabled={isPending}>
                                         Cancel
                                     </Button>
                                 </AlertDialogCancel>
 
                                 <AlertDialogAction
-                                    onClick={handleDelete}
-                                    disabled={isPending || !password}
+                                    onClick={handleSuspend}
+                                    disabled={isPending}
                                     className="bg-destructive hover:bg-destructive/90 flex items-center gap-2"
                                 >
                                     {isPending && (
                                         <Spinner className="h-4 w-4 animate-spin" />
                                     )}
-                                    Permanently Delete Account
+                                    Suspend Account
                                 </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>

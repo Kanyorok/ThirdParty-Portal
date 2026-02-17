@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { Search, ListFilter, ArrowUpDown, X, RefreshCw } from "lucide-react"
+import { ArrowUpDown, RefreshCw, Search, X } from "lucide-react"
 import { Input } from "@/components/common/input"
 import { Button } from "@/components/common/button"
 import {
@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils"
 import { ToolbarProps } from "@/types/prequalification-rounds-types"
 import { StatusFilter, useRoundsStore } from "@/hooks/use-rounds-store"
+import { isRoundActive } from "@/lib/rounds"
 
 type SortOption = {
     value: string
@@ -33,8 +34,8 @@ const SORT_OPTIONS: SortOption[] = [
 ]
 
 const STATUS_OPTIONS: StatusOption[] = [
-    { value: "all", label: "All status" },
-    { value: "open", label: "Open" },
+    { value: "all", label: "All" },
+    { value: "open", label: "Active" },
     { value: "closed", label: "Archived" }
 ]
 
@@ -55,17 +56,21 @@ export default function RoundsToolbar({
     const searchParams = useSearchParams()
     const [isPending, startTransition] = useTransition()
 
+    const rounds = useRoundsStore((state) => state.rounds)
+    const meta = useRoundsStore((state) => state.meta)
     const searchQuery = useRoundsStore((state) => state.searchQuery)
     const statusFilter = useRoundsStore((state) => state.statusFilter)
     const sortBy = useRoundsStore((state) => state.sortBy)
     const sortOrder = useRoundsStore((state) => state.sortOrder)
     const pageSize = useRoundsStore((state) => state.pageSize)
+    const hideApplied = useRoundsStore((state) => state.hideApplied)
     const setSearchQuery = useRoundsStore((state) => state.setSearchQuery)
     const setStatusFilter = useRoundsStore((state) => state.setStatusFilter)
     const setSortBy = useRoundsStore((state) => state.setSortBy)
     const setSortOrder = useRoundsStore((state) => state.setSortOrder)
     const setPage = useRoundsStore((state) => state.setPage)
     const setPageSize = useRoundsStore((state) => state.setPageSize)
+    const setHideApplied = useRoundsStore((state) => state.setHideApplied)
     const fetchRounds = useRoundsStore((state) => state.fetchRounds)
 
     const [inputValue, setInputValue] = useState(defaultQuery.q ?? "")
@@ -153,69 +158,180 @@ export default function RoundsToolbar({
         startTransition(() => fetchRounds({ pageSize: size, page: 1 }))
     }
 
+    const handleReset = () => {
+        const defaultStatus = defaultQuery.status ?? "all"
+        const defaultSortBy = defaultQuery.sortBy ?? "startDate"
+        const defaultSortOrder = defaultQuery.sortOrder ?? "desc"
+        const defaultPageSize = defaultQuery.pageSize ?? 10
+
+        setInputValue("")
+        setSearchQuery("")
+        setStatusFilter(defaultStatus)
+        setSortBy(defaultSortBy)
+        setSortOrder(defaultSortOrder)
+        setPageSize(defaultPageSize)
+        setPage(1)
+        setHideApplied(false)
+        updateUrl({
+            q: "",
+            status: defaultStatus,
+            sortBy: defaultSortBy,
+            sortOrder: defaultSortOrder,
+            pageSize: defaultPageSize,
+            page: 1
+        })
+        startTransition(() =>
+            fetchRounds({
+                q: "",
+                status: defaultStatus,
+                sortBy: defaultSortBy,
+                sortOrder: defaultSortOrder,
+                pageSize: defaultPageSize,
+                page: 1
+            })
+        )
+    }
+
+    const totalCount = meta.total ?? rounds.length
+    const activeCount = meta.openCount ?? rounds.filter(isRoundActive).length
+    const archivedCount = Math.max(totalCount - activeCount, 0)
+    const appliedCount = rounds.filter((round) => round.hasApplied).length
+
+    const statusChips = useMemo(
+        () => [
+            { id: "all" as const, label: "All", count: totalCount },
+            { id: "open" as const, label: "Active", count: activeCount },
+            { id: "closed" as const, label: "Archived", count: archivedCount }
+        ],
+        [totalCount, activeCount, archivedCount]
+    )
+
     return (
         <div
             className={cn(
-                "flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:justify-end",
+                "space-y-3",
                 isPending && "opacity-60 pointer-events-none",
                 className
             )}
         >
-            <div className="relative w-full lg:w-[340px]">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" strokeWidth={2} />
-                <Input
-                    value={inputValue}
-                    onChange={(event) => setInputValue(event.target.value)}
-                    placeholder="Search rounds by title or ID…"
-                    className="w-full pl-11 pr-10 h-11 rounded-2xl border border-slate-200 bg-white text-sm placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-50"
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 rounded-lg flex items-center justify-center">
-                    {isPending ? (
-                        <RefreshCw className="h-4 w-4 animate-spin text-blue-600" strokeWidth={2} />
-                    ) : inputValue ? (
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setInputValue("")
-                                setSearchQuery("")
-                                setPage(1)
-                                updateUrl({ q: "", page: 1 })
-                                startTransition(() => fetchRounds({ q: "", page: 1 }))
-                            }}
-                            className="h-7 w-7 rounded-lg hover:bg-slate-100 flex items-center justify-center transition-colors"
-                            aria-label="Clear search"
-                        >
-                            <X className="h-4 w-4 text-slate-400" strokeWidth={2} />
-                        </button>
-                    ) : null}
+            <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-start gap-4">
+                    <div className="mt-1 h-9 w-1 rounded-full bg-indigo-600" />
+                    <div className="space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+                                Prequalification Rounds
+                            </h1>
+                            <span className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+                                {activeCount} active
+                            </span>
+                        </div>
+                        <p className="text-xs text-slate-500">
+                            Review active rounds, track progress, and submit applications.
+                        </p>
+                    </div>
                 </div>
+
+                <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+                    <div className="relative w-full sm:w-80">
+                        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <Input
+                            value={inputValue}
+                            onChange={(event) => setInputValue(event.target.value)}
+                            placeholder="Search round title"
+                            className="h-9 rounded-full border-slate-300 pl-10 pr-9 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                        />
+                        {isPending ? (
+                            <span className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                                <RefreshCw className="h-4 w-4 animate-spin text-indigo-600" />
+                            </span>
+                        ) : null}
+                        {!isPending && inputValue ? (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setInputValue("")
+                                    setSearchQuery("")
+                                    setPage(1)
+                                    updateUrl({ q: "", page: 1 })
+                                    startTransition(() => fetchRounds({ q: "", page: 1 }))
+                                }}
+                                className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full hover:bg-slate-100"
+                                aria-label="Clear search"
+                            >
+                                <X className="h-4 w-4 text-slate-400" />
+                            </button>
+                        ) : null}
+                    </div>
+
+                    <Select value={statusFilter} onValueChange={(value) => handleStatusChange(value as StatusFilter)}>
+                        <SelectTrigger className="h-9 w-full rounded-full border-slate-300 bg-white text-xs font-medium sm:w-36">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {STATUS_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </header>
+
+            <div className="flex flex-wrap gap-2">
+                {statusChips.map((item) => (
+                    <button
+                        type="button"
+                        key={item.id}
+                        onClick={() => handleStatusChange(item.id)}
+                        className={cn(
+                            "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition",
+                            statusFilter === item.id
+                                ? "border-indigo-200 bg-indigo-50 text-indigo-700"
+                                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                        )}
+                    >
+                        <span>{item.label}</span>
+                        <span
+                            className={cn(
+                                "inline-flex h-5 min-w-5 items-center justify-center rounded-md px-1.5 text-[11px]",
+                                statusFilter === item.id ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-600"
+                            )}
+                        >
+                            {item.count}
+                        </span>
+                    </button>
+                ))}
+
+                <button
+                    type="button"
+                    onClick={() => setHideApplied(!hideApplied)}
+                    className={cn(
+                        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition",
+                        hideApplied
+                            ? "border-indigo-200 bg-indigo-50 text-indigo-700"
+                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    )}
+                >
+                    Hide applied
+                    <span
+                        className={cn(
+                            "inline-flex h-5 min-w-5 items-center justify-center rounded-md px-1.5 text-[11px]",
+                            hideApplied ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-600"
+                        )}
+                    >
+                        {appliedCount}
+                    </span>
+                </button>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row lg:w-auto">
-                <Select value={statusFilter} onValueChange={(value) => handleStatusChange(value as StatusFilter)}>
-                    <SelectTrigger className="h-11 w-full sm:w-[160px] rounded-2xl border border-slate-200 bg-white text-xs font-semibold focus:border-blue-300 focus:ring-4 focus:ring-blue-50">
-                        <div className="flex items-center gap-2">
-                            <ListFilter className="h-4 w-4 text-slate-500" strokeWidth={2} />
-                            <SelectValue placeholder="Status" />
-                        </div>
-                    </SelectTrigger>
-                    <SelectContent align="end">
-                        {STATUS_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-
+            <div className="flex flex-wrap items-center gap-2">
                 <Select value={sortBy} onValueChange={handleSortByChange}>
-                    <SelectTrigger className="h-11 w-full sm:w-[150px] rounded-2xl border border-slate-200 bg-white text-xs font-semibold focus:border-blue-300 focus:ring-4 focus:ring-blue-50">
-                        <div className="flex items-center gap-2">
-                            <ArrowUpDown className="h-4 w-4 text-slate-500" strokeWidth={2} />
-                            <SelectValue placeholder="Sort" />
-                        </div>
+                    <SelectTrigger className="h-9 w-32 rounded-full border-slate-300 bg-white text-xs font-medium">
+                        <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
-                    <SelectContent align="end">
+                    <SelectContent>
                         {SORT_OPTIONS.map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                                 {option.label}
@@ -228,23 +344,22 @@ export default function RoundsToolbar({
                     type="button"
                     variant="outline"
                     onClick={handleSortOrderToggle}
-                    className="h-11 w-full sm:w-12 rounded-2xl border-slate-200 bg-white hover:bg-slate-50 shadow-none"
+                    className="h-9 w-9 rounded-full border-slate-300 bg-white p-0 hover:bg-slate-50"
                     aria-label="Toggle sort order"
                 >
                     <ArrowUpDown
                         className={cn(
                             "h-4 w-4 transition-transform duration-200",
-                            sortOrder === "desc" && "rotate-180 text-blue-600"
+                            sortOrder === "desc" && "rotate-180 text-indigo-600"
                         )}
-                        strokeWidth={2}
                     />
                 </Button>
 
                 <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-                    <SelectTrigger className="h-11 w-full sm:w-[90px] rounded-2xl border border-slate-200 bg-white text-xs font-semibold focus:border-blue-300 focus:ring-4 focus:ring-blue-50">
+                    <SelectTrigger className="h-9 w-20 rounded-full border-slate-300 bg-white text-xs font-medium">
                         <SelectValue />
                     </SelectTrigger>
-                    <SelectContent align="end">
+                    <SelectContent>
                         {PAGE_SIZE_OPTIONS.map((size) => (
                             <SelectItem key={size} value={String(size)}>
                                 {size}
@@ -252,6 +367,15 @@ export default function RoundsToolbar({
                         ))}
                     </SelectContent>
                 </Select>
+
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleReset}
+                    className="h-9 rounded-full border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                >
+                    Reset
+                </Button>
             </div>
         </div>
     )

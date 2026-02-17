@@ -54,7 +54,7 @@ export function RoundCard({ round }: { round: PrequalificationRound }) {
                     asChild
                     onClick={() => setSelectedRound(round)}
                 >
-                    <Link href={`/dashboard/procurement/rounds/${round.id}`}>
+                    <Link href={`/dashboard/supplier/prequalification/application?roundId=${round.id}`}>
                         View Details
                         <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>

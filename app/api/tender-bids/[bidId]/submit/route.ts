@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
     if (!session?.user) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Not Authorized" },
         { status: 401 }
       );
     }

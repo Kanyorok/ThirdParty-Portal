@@ -13,6 +13,7 @@ import { Spinner } from "@/components/common/spinner"
 import { cn } from "@/lib/utils"
 import {
   formatRelativeTime,
+  type AppNotification,
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
   useNotifications,
@@ -26,13 +27,16 @@ export function NotificationsPopover() {
   const markRead = useMarkNotificationRead()
   const markAllRead = useMarkAllNotificationsRead()
 
-  const unreadCount = React.useMemo(() => items.filter((n) => !n.read).length, [items])
+  const unreadCount = React.useMemo(
+    () => items.filter((n) => !n.read).length,
+    [items]
+  )
   const isNotifications = pathname?.startsWith("/dashboard/notifications")
 
-  const onSelect = (id: string | number) => {
-    markRead.mutate(id)
+  const onSelect = (item: AppNotification) => {
+    markRead.mutate({ channel: item.channel, id: item.id })
     setOpen(false)
-    router.push("/dashboard/notifications")
+    router.push(item.link || "/dashboard/notifications")
   }
 
   return (
@@ -55,7 +59,7 @@ export function NotificationsPopover() {
       <PopoverContent
         align="end"
         sideOffset={12}
-        className="w-[min(26rem,calc(100vw-1.5rem))] p-0 rounded-2xl border border-border/60 bg-background/95 shadow-sm overflow-hidden backdrop-blur-xl"
+        className="w-[min(26rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-border/60 bg-background/95 p-0 shadow-sm backdrop-blur-xl"
       >
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
@@ -73,7 +77,11 @@ export function NotificationsPopover() {
               type="button"
               variant="ghost"
               className="h-8 rounded-xl px-2.5 text-[12px] font-semibold text-muted-foreground hover:text-foreground"
-              onClick={() => markAllRead.mutate()}
+              onClick={() => {
+                if (unreadCount > 0) {
+                  markAllRead.mutate()
+                }
+              }}
               disabled={markAllRead.isPending}
             >
               {markAllRead.isPending ? <Spinner className="size-3.5" /> : null}
@@ -86,7 +94,7 @@ export function NotificationsPopover() {
 
         <ScrollArea className="max-h-[420px]">
           {isLoading ? (
-            <div className="px-4 py-3 space-y-3">
+            <div className="space-y-3 px-4 py-3">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="flex items-start gap-3 rounded-xl border border-border/40 bg-muted/10 px-3 py-3">
                   <div className="mt-1.5 h-2 w-2 rounded-full bg-muted-foreground/30" />
@@ -113,7 +121,7 @@ export function NotificationsPopover() {
                 <button
                   key={n.id}
                   type="button"
-                  onClick={() => onSelect(n.id)}
+                  onClick={() => onSelect(n)}
                   className={cn(
                     "group flex w-full items-start gap-3 px-4 py-3 text-left transition-colors",
                     "hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
@@ -130,7 +138,14 @@ export function NotificationsPopover() {
                     <div className={cn("text-[13px] leading-snug", n.read ? "text-muted-foreground" : "text-foreground")}>
                       {n.message}
                     </div>
-                    <div className="mt-1 text-[12px] text-muted-foreground">{formatRelativeTime(n.createdAt)}</div>
+                    <div className="mt-1 flex items-center gap-2 text-[12px] text-muted-foreground">
+                      <span>{formatRelativeTime(n.createdAt)}</span>
+                      {n.isPriority ? (
+                        <span className="rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                          Priority
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                 </button>
               ))}

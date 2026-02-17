@@ -6,6 +6,7 @@ import {
 } from "@/lib/profile/active-profile-cookie"
 import { MasterDashboardClient } from "@/components/dashboard/master-dashboard-client"
 import type { ProfileType } from "@/store/use-profile-store"
+import { resolveSessionBusinessProfiles } from "@/lib/profile/session-profiles"
 
 export const dynamic = "force-dynamic"
 
@@ -20,11 +21,7 @@ function resolveFirstName(user: any): string {
 }
 
 function getAuthorizedProfiles(user: any): ProfileType[] {
-  const roles: ProfileType[] = []
-  if (user?.is_supplier || user?.isSupplier) roles.push("Supplier")
-  if (user?.is_tenant || user?.isTenant) roles.push("Tenant")
-  if (user?.is_customer || user?.isCustomer) roles.push("Customer")
-  return roles
+  return resolveSessionBusinessProfiles(user)
 }
 
 function pickInitialProfile(
