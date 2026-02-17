@@ -174,6 +174,11 @@ class TransactionTransfersController extends Controller
                 ->withInput()
                 ->with('error', 'Error creating transfer: ' . $e->getMessage());
         }
+
+        return redirect()
+            ->back()
+            ->withInput()
+            ->with('error', $errorMessage);
     }
 
     public function show($Id)

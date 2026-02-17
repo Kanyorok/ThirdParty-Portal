@@ -350,7 +350,7 @@
         }
 
         function reviewContract(contractId, type) {
-            window.location.href = `{{ url('/procurement/contracts') }}/${contractId}?type=${type}`;
+            window.location.href = `{{ url('/procurement/contracts') }}/${contractId}/view?type=${type}`;
         }
     </script>
 @endsection

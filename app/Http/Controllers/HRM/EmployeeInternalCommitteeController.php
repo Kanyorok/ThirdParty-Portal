@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\HRM;
 
 use App\Http\Controllers\Controller;
+use App\Models\HR\Employee;
 use App\Models\HRM\Committee;
-use App\Models\HRM\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +27,7 @@ class EmployeeInternalCommitteeController extends Controller
     {
 
         $request->validate([
-            'Employee' => 'required|exists:t_Employees,Id',
+            'Employee' => 'required|exists:t_HREmployees,Id',
             'Committee' => 'required|exists:t_Committees,Id',
         ]);
 
@@ -63,7 +63,7 @@ class EmployeeInternalCommitteeController extends Controller
     {
         $request->validate([
             'committee_id' => 'required|exists:t_Committees,Id',
-            'employee_id' => 'required|exists:t_Employees,Id',
+            'employee_id' => 'required|exists:t_HREmployees,Id',
         ]);
 
         DB::table('t_Committee_Employee')

@@ -3,12 +3,9 @@
 namespace App\Models\Finance;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SystemBankSetting extends Model
 {
-    use SoftDeletes;
-
     protected $table = 't_SystemBankSetting';
     protected $primaryKey = 'Id';
     public const CREATED_AT = 'CreatedOn';

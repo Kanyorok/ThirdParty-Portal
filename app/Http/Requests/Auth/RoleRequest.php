@@ -32,7 +32,7 @@ class RoleRequest extends FormRequest
     public function getName(Role $role = null): string
     {
         $name = $this->validated('RoleName');
-        $check_role = Role::query();
+        $check_role = Role::query()->where('role_type', 'system');
         if ($role instanceof Role) {
             $check_role->where('id', '!=', $role->id);
         }

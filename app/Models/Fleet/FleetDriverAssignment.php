@@ -2,7 +2,7 @@
 
 namespace App\Models\Fleet;
 
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;

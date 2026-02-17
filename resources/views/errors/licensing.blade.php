@@ -26,7 +26,7 @@
                     </div>
 
                     <div class="mt-4">
-                        <a href="{{ route('dashboard') }}" class="btn btn-primary me-2">
+                        <a href="{{ route('home') }}" class="btn btn-primary me-2">
                             <i class="fas fa-home me-1"></i> Return to Dashboard
                         </a>
                         <a href="javascript:history.back()" class="btn btn-secondary">

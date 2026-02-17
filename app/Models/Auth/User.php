@@ -9,7 +9,7 @@ use App\Models\Core\Branch;
 use App\Models\Core\Task;
 use App\Models\CRM\DebtRecovery\LoanAssignment;
 use App\Models\CRM\Ticket;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Services\HRM\UserService;
 use App\Traits\Controller\HasBranchRoles;
 use App\Traits\Model\ImageTrait;
@@ -56,6 +56,7 @@ class User extends Authenticatable
         'ClientID',
         'ExtensionNo',
         'BranchId',
+        'CurrentSessionId',
         'login_at',
         'CreatedBy',
         'ModifiedBy',
