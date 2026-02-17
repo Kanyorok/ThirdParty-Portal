@@ -948,19 +948,17 @@ class AwardsController extends Controller
 
             // Update award status model-side
             $award->refresh();
-            if($type === 'tender'){
-
+            if ($type === 'tender') {
                 $award->update([
                     'AwardStatus' => 'Approved',
                     'ApprovedBy' => $user->Id,
                     'ApprovedOn' => now(),
                     'ModifiedBy' => $user->Id,
-                'ModifiedOn' => now(),
-            ]);
+                    'ModifiedOn' => now(),
+                ]);
 
-            $this->deactivateTenderCommittee((int) $award->TenderID, (int) $user->Id);
+                $this->deactivateTenderCommittee((int) $award->TenderID, (int) $user->Id);
 
-            if ($type === 'tender') {
                 // Update Tender Status
                 if ($award->tender) {
                     $award->tender->update(['Status' => \App\Enums\TenderStatusEnum::Awarded->value]);
@@ -1014,6 +1012,7 @@ class AwardsController extends Controller
                 // 2. Notify Suppliers
                 if ($type === 'tender') {
                     $this->notifySuccessfulBidders($award);
+                
                     if ($award->NotifyUnsuccessfulBidders) {
                         $this->notifyUnsuccessfulBidders($award);
                     }
@@ -1042,7 +1041,7 @@ class AwardsController extends Controller
 
             return redirect()->route('procawards.index')
                 ->with('success', ucfirst($type) . ' Award approved successfully.');
-        } catch (\Throwable $th) {
+        }catch (\Throwable $th) {
             DB::rollBack();
             Log::error("--- APPROVE AWARD ERROR --- " . $th->getMessage());
             Log::error($th->getTraceAsString());
@@ -1051,9 +1050,8 @@ class AwardsController extends Controller
         }
     }
 
-    /**
-     * Reject award
-     */
+
+
     public function reject(Request $request, $id = null)
     {
        $request->validate([
