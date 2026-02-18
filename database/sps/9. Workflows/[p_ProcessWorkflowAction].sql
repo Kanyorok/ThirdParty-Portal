@@ -90,9 +90,20 @@ BEGIN
 
         -- Classify action based on description
         IF LOWER(@Description) LIKE '%approve%' OR LOWER(@Description) = 'approval'
+        BEGIN
             SET @IsApprovalAction = 1;
+            -- Auto-set IsApproved flag for history tracking and multi-approval counting
+            -- This ensures the approval count logic in Section 13 works correctly
+            -- even when the caller does not explicitly pass @IsApproved
+            IF @IsApproved IS NULL
+                SET @IsApproved = 1;
+        END
         ELSE IF LOWER(@Description) LIKE '%reject%'
+        BEGIN
             SET @IsRejectionAction = 1;
+            IF @IsApproved IS NULL
+                SET @IsApproved = 0;
+        END
 
         -- =====================================================================
         -- 3. MAKER-CHECKER VIOLATION CHECK
@@ -165,14 +176,18 @@ BEGIN
         BEGIN TRY
             DECLARE @AmountSQL NVARCHAR(MAX);
             SET @TableName = PARSENAME(@Source, 1);
-            SET @KeyColumn = 'Id';
+            SET @KeyColumn = NULL;
 
-            -- Find key column
-            SELECT TOP 1 @KeyColumn = COLUMN_NAME
-            FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
-            WHERE TABLE_NAME = @TableName
-              AND COLUMN_NAME IN ('Id', 'ID', 'PlanID');
+            -- Find primary key column dynamically from database metadata
+            SELECT TOP 1 @KeyColumn = ccu.COLUMN_NAME
+            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+            JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu
+                ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME
+                AND tc.TABLE_SCHEMA = ccu.TABLE_SCHEMA
+            WHERE tc.TABLE_NAME = @TableName
+              AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY';
 
+            -- Fallback to 'Id' if no primary key found
             IF @KeyColumn IS NULL
                 SET @KeyColumn = 'Id';
 
@@ -318,11 +333,15 @@ BEGIN
 
             IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @TableName)
             BEGIN
-                -- Reset key column
-                SET @KeyColumn = 'Id';
-                SELECT TOP 1 @KeyColumn = COLUMN_NAME
-                FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
-                WHERE TABLE_NAME = @TableName AND COLUMN_NAME IN ('Id', 'ID');
+                -- Find primary key column dynamically from database metadata
+                SET @KeyColumn = NULL;
+                SELECT TOP 1 @KeyColumn = ccu.COLUMN_NAME
+                FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+                JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu
+                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME
+                    AND tc.TABLE_SCHEMA = ccu.TABLE_SCHEMA
+                WHERE tc.TABLE_NAME = @TableName
+                  AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY';
 
                 IF @KeyColumn IS NULL SET @KeyColumn = 'Id';
 
@@ -480,11 +499,15 @@ BEGIN
 
             IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @TableName)
             BEGIN
-                -- Reset key column
-                SET @KeyColumn = 'Id';
-                SELECT TOP 1 @KeyColumn = COLUMN_NAME
-                FROM INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
-                WHERE TABLE_NAME = @TableName AND COLUMN_NAME IN ('Id', 'ID');
+                -- Find primary key column dynamically from database metadata
+                SET @KeyColumn = NULL;
+                SELECT TOP 1 @KeyColumn = ccu.COLUMN_NAME
+                FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+                JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu
+                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME
+                    AND tc.TABLE_SCHEMA = ccu.TABLE_SCHEMA
+                WHERE tc.TABLE_NAME = @TableName
+                  AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY';
 
                 IF @KeyColumn IS NULL SET @KeyColumn = 'Id';
 
