@@ -64,6 +64,12 @@ class ThirdPartyPasswordController extends Controller
             return $this->succeeded('Account linked with core banking, synced. Use core banking password.');
         }
 
+        if (Hash::check($request->password, $user->Password)) {
+            throw ValidationException::withMessages([
+                'password' => [__('auth.password_reuse_not_allowed')],
+            ]);
+        }
+
         $user->forceFill([
             'Password' => Hash::make($request->password),
             'remember_token' => Str::random(60),

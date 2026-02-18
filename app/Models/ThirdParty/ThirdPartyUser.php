@@ -6,6 +6,7 @@ use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Country;
+use App\Traits\Model\ImageTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Auth\Passwords\CanResetPassword;
@@ -25,6 +26,7 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
     use Notifiable;
     use SoftDeletes;
     use MustVerifyEmail;
+    use ImageTrait;
     use UserActorTrait;
     use CanResetPassword;
 
@@ -314,5 +316,10 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
         }
 
         return parent::setAttribute($key, $val);
+    }
+
+    protected function getImageName(): string
+    {
+        return trim("{$this->FirstName} {$this->LastName}") ?: ($this->Email ?? 'third-party-user');
     }
 }

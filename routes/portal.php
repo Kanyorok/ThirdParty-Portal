@@ -10,6 +10,7 @@ use App\Http\Controllers\Procurement\TenderApiController;
 use App\Http\Controllers\ThirdParty\API\LookupController;
 use App\Http\Controllers\ThirdParty\API\MetadataController;
 use App\Http\Controllers\ThirdParty\API\NewThirdPartyController;
+use App\Http\Controllers\ThirdParty\API\HelpTicketController;
 use App\Http\Controllers\ThirdParty\API\NotificationController;
 use App\Http\Controllers\ThirdParty\API\ProfileController;
 use App\Http\Controllers\ThirdParty\API\ThirdPartyAuthController;
@@ -73,6 +74,10 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
 Route::prefix('profile')->middleware(['auth.thirdparty'])->group(function () {
     Route::get('/', [ProfileController::class, 'show']);
     Route::put('/', [ProfileController::class, 'updateProfile']);
+    Route::get('logo', [ProfileController::class, 'getLogo']);
+    Route::post('logo', [ProfileController::class, 'uploadLogo']);
+    Route::get('user-image', [ProfileController::class, 'getUserImage']);
+    Route::post('user-image', [ProfileController::class, 'uploadUserImage']);
     Route::get('available', [ProfileController::class, 'getAvailableProfiles']);
     Route::get('supplier', [ProfileController::class, 'getSupplierProfile']);
     Route::put('supplier', [ProfileController::class, 'updateSupplierProfile']);
@@ -86,6 +91,14 @@ Route::middleware(['auth.thirdparty'])->prefix('portal')->group(function () {
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::post('notifications/{type}/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+
+    Route::prefix('help')->group(function () {
+        Route::get('categories', [HelpTicketController::class, 'categories']);
+        Route::get('tickets', [HelpTicketController::class, 'index']);
+        Route::post('tickets', [HelpTicketController::class, 'store']);
+        Route::get('tickets/{ticketId}', [HelpTicketController::class, 'show']);
+        Route::post('tickets/{ticketId}/messages', [HelpTicketController::class, 'reply']);
+    });
 });
 
 Route::middleware(['auth.thirdparty'])->prefix('supplier')->group(function () {

@@ -4,6 +4,7 @@ namespace App\Services\CRM;
 
 use App\Enums\Core\RoleEnum;
 use App\Enums\TicketPriorityEnum;
+use App\Enums\TicketSourceEnum;
 use App\Enums\TicketStatusEnum;
 use App\Enums\WorkflowStatus;
 use App\Events\Ticket\ReopenTicketEvent;
@@ -20,6 +21,8 @@ use App\Models\CRM\Approval\Workflow;
 use App\Models\CRM\Lead;
 use App\Models\CRM\Ticket;
 use App\Models\DMS\Image;
+use App\Models\ThirdParty\ThirdParties;
+use App\Models\ThirdParty\ThirdPartyUser as PortalThirdPartyUser;
 use App\Services\BR\ClientService;
 use App\Services\CommentService;
 use App\Services\Core\ApprovalWorkflowService;
@@ -35,6 +38,8 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 use Yajra\DataTables\DataTables;
 
 class TicketService extends ApprovalWorkflowService
@@ -409,7 +414,10 @@ class TicketService extends ApprovalWorkflowService
     {
         activity()->causedBy($actor)->performedOn($this->ticket)->event('comment')->log('commented on ' . $this->ticket->TicketID);
 
-        return CommentService::forTicket($this->ticket, $description, $actor)->comment;
+        $comment = CommentService::forTicket($this->ticket, $description, $actor)->comment;
+        $this->notifyPortalPartyOnComment($description);
+
+        return $comment;
     }
 
     /**
@@ -519,5 +527,112 @@ class TicketService extends ApprovalWorkflowService
         activity()->causedBy($actor)->performedOn($this->ticket)->event('document')->log('added a document  ' . $document->Name . ' to ticket ' . Str::upper($this->ticket->TicketID));
 
         return $document;
+    }
+
+    private function notifyPortalPartyOnComment(string $description): void
+    {
+        if ($this->ticket->Source !== TicketSourceEnum::Website->value) {
+            return;
+        }
+
+        $recipient = $this->resolvePortalRecipient();
+        $email = $recipient['email'] ?? null;
+
+        if (! is_string($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
+        $name = $recipient['name'] ?? 'Customer';
+        $subject = "Support update on ticket {$this->ticket->TicketID}";
+        $body = "<p>Hello " . e($name) . ",</p>
+            <p>Your support ticket <strong>{$this->ticket->TicketID}</strong> has a new response.</p>
+            <p><strong>Subject:</strong> " . e($this->ticket->Title) . "</p>
+            <p><strong>Response:</strong><br>" . e($description) . '</p>
+            <p>Please log in to the portal for more details.</p>';
+        $replyToEmail = config('support.queue_email', config('org.email'));
+        $replyToName = config('support.queue_name', config('org.name'));
+
+        try {
+            CRMEmailService::createRaw(
+                SystemHelper::user(),
+                $subject,
+                $body,
+                [[$name => $email]],
+                $recipient['party'] ?? null,
+                $recipient['partyId'] ?? null
+            )->setReplyTo($replyToEmail, $replyToName)->send(true);
+        } catch (Throwable $e) {
+            Log::warning('Failed to send ticket response notification email.', [
+                'ticket_id' => $this->ticket->TicketID,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function resolvePortalRecipient(): array
+    {
+        if ($this->ticket->Party === 'ThirdPartyUser') {
+            $user = PortalThirdPartyUser::query()->where('Id', $this->ticket->PartyID)->first();
+
+            return [
+                'name' => $user?->fullName ?: ($user?->Email ?? 'Customer'),
+                'email' => $user?->Email,
+                'party' => 'ThirdPartyUser',
+                'partyId' => $user ? (string) $user->Id : (string) $this->ticket->PartyID,
+            ];
+        }
+
+        if ($this->ticket->Party === 'ThirdParty') {
+            $party = ThirdParties::query()->where('Id', $this->ticket->PartyID)->first();
+            $portalMeta = $this->latestPortalCommentMeta();
+
+            $portalEmail = $portalMeta['author_email'] ?? null;
+            $portalName = $portalMeta['author_name'] ?? null;
+
+            if (is_string($portalEmail) && filter_var($portalEmail, FILTER_VALIDATE_EMAIL)) {
+                return [
+                    'name' => $portalName ?: ($party?->ThirdPartyName ?? 'Customer'),
+                    'email' => $portalEmail,
+                    'party' => 'ThirdParty',
+                    'partyId' => (string) $this->ticket->PartyID,
+                ];
+            }
+
+            $user = PortalThirdPartyUser::query()
+                ->where('ThirdPartyId', $this->ticket->PartyID)
+                ->whereNotNull('Email')
+                ->orderByDesc('IsActive')
+                ->orderByDesc('Id')
+                ->first();
+
+            return [
+                'name' => $user?->fullName ?: ($party?->ThirdPartyName ?? 'Customer'),
+                'email' => $user?->Email ?: $party?->Email,
+                'party' => 'ThirdParty',
+                'partyId' => (string) $this->ticket->PartyID,
+            ];
+        }
+
+        return [
+            'name' => 'Customer',
+            'email' => null,
+            'party' => $this->ticket->Party,
+            'partyId' => (string) $this->ticket->PartyID,
+        ];
+    }
+
+    private function latestPortalCommentMeta(): array
+    {
+        $comments = $this->ticket->comments()->latest('Id')->limit(20)->get(['Response']);
+
+        foreach ($comments as $comment) {
+            $response = $comment->Response;
+            $meta = is_object($response) ? (array) $response : (is_array($response) ? $response : []);
+            if (! empty($meta['author_email'])) {
+                return $meta;
+            }
+        }
+
+        return [];
     }
 }

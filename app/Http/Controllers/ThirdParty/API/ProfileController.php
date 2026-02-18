@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\ThirdParty\API;
 
+use App\Helpers\SystemHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdParty\Api\{
     UpdateCustomerProfileRequest,
@@ -15,6 +16,7 @@ use App\Http\Resources\ThirdParty\Api\{
     TenantProfileResource,
     ThirdPartyUserResource
 };
+use App\Models\DMS\Image;
 use Illuminate\Http\{JsonResponse, Request};
 use Illuminate\Support\Facades\{DB};
 
@@ -46,6 +48,86 @@ class ProfileController extends Controller
             'success' => true,
             'data' => new ThirdPartyUserResource($user->refresh()->load(['thirdParty.businessType', 'thirdParty.country'])),
             'message' => 'Profile updated successfully',
+        ]);
+    }
+
+    public function getLogo(Request $request): JsonResponse
+    {
+        $user = $request->user()->load('thirdParty.photo');
+        $thirdParty = $user->thirdParty;
+
+        if (! $thirdParty) {
+            return response()->json(['success' => false, 'message' => 'Context not found'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'logo' => $this->imagePayload($thirdParty->photo),
+                'imageId' => $thirdParty->ImageId,
+            ],
+            'message' => 'Logo retrieved successfully',
+        ]);
+    }
+
+    public function uploadLogo(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'logo' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+        ]);
+
+        $user = $request->user();
+        $thirdParty = $user->thirdParty;
+
+        if (! $thirdParty) {
+            return response()->json(['success' => false, 'message' => 'Context not found'], 404);
+        }
+
+        DB::transaction(fn () => $thirdParty->setImage($validated['logo'], SystemHelper::user(), 'ImageId'));
+        $thirdParty->refresh()->load('photo');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'logo' => $this->imagePayload($thirdParty->photo),
+                'imageId' => $thirdParty->ImageId,
+            ],
+            'message' => 'Logo uploaded successfully',
+        ]);
+    }
+
+    public function getUserImage(Request $request): JsonResponse
+    {
+        $user = $request->user()->load('photo');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'image' => $this->imagePayload($user->photo),
+                'imageId' => $user->ImageId,
+            ],
+            'message' => 'User image retrieved successfully',
+        ]);
+    }
+
+    public function uploadUserImage(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'image' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+        ]);
+
+        $user = $request->user();
+
+        DB::transaction(fn () => $user->setImage($validated['image'], SystemHelper::user(), 'ImageId'));
+        $user->refresh()->load('photo');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'image' => $this->imagePayload($user->photo),
+                'imageId' => $user->ImageId,
+            ],
+            'message' => 'User image uploaded successfully',
         ]);
     }
 
@@ -193,5 +275,19 @@ class ProfileController extends Controller
             'data' => new CustomerProfileResource($customer->refresh()),
             'message' => 'Customer profile updated',
         ]);
+    }
+
+    private function imagePayload(?Image $image): ?array
+    {
+        if (! $image) {
+            return null;
+        }
+
+        return [
+            'id' => $image->ImageID,
+            'name' => $image->Name,
+            'mimeType' => $image->MIMEType,
+            'src' => $image->image_src,
+        ];
     }
 }

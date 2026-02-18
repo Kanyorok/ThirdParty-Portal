@@ -253,6 +253,26 @@ class CRMEmailService
         return $this;
     }
 
+    public function setReplyTo(?string $email, ?string $name = null): static
+    {
+        if (! is_string($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this;
+        }
+
+        $extra = $this->crmEmail->Extra;
+        $extraData = is_object($extra) ? (array) $extra : (is_array($extra) ? $extra : []);
+        $extraData['reply_to'] = [
+            'email' => $email,
+            'name' => $name ?: $email,
+        ];
+
+        $this->crmEmail->update([
+            'Extra' => (object) $extraData,
+        ]);
+
+        return $this;
+    }
+
     public function autoAttachIncoming(Carbon $dated): static
     {
         if ($this->crmEmail->Type->value !== EmailTypeEnum::Incoming->value) {
