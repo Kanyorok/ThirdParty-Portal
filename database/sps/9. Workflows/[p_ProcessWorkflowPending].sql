@@ -15,7 +15,19 @@ BEGIN
         @ApprovedStatusId BIGINT,
         @RejectedStatusId BIGINT,
         @ProcessedCount INT = 0,
-        @ErrorCount INT = 0;
+        @ErrorCount INT = 0,
+        -- Batch loop variables
+        @BNotifyId BIGINT,
+        @BNotifyEmail NVARCHAR(255),
+        @BNotifyName NVARCHAR(255),
+        @BSubject NVARCHAR(255),
+        @BMessage NVARCHAR(MAX);
+
+    DECLARE @BatchEligible TABLE (
+        Id BIGINT PRIMARY KEY,
+        Name NVARCHAR(255),
+        Email NVARCHAR(255)
+    );
 
     -- =====================================================================
     -- 0. RESOLVE SYSTEM LOOKUPS
@@ -270,7 +282,7 @@ BEGIN
     END
 
     -- =====================================================================
-    -- MODE B: BATCH PROCESSING (no specific record — process all unassigned)
+    -- MODE B: BATCH PROCESSING (no specific record -- process all unassigned)
     -- =====================================================================
     BEGIN TRY
 
@@ -370,11 +382,6 @@ BEGIN
                 -- callers should use Mode A (specific record) with @Amount parameter.
 
                 -- Get eligible users for this batch item
-                DECLARE @BatchEligible TABLE (
-                    Id BIGINT PRIMARY KEY,
-                    Name NVARCHAR(255),
-                    Email NVARCHAR(255)
-                );
                 DELETE FROM @BatchEligible;
 
                 INSERT INTO @BatchEligible (Id, Name, Email)
@@ -449,11 +456,6 @@ BEGIN
                 COMMIT TRANSACTION;
 
                 -- Send notifications (outside transaction, per batch item)
-                DECLARE
-                    @BNotifyId BIGINT,
-                    @BNotifyEmail NVARCHAR(255),
-                    @BNotifyName NVARCHAR(255);
-
                 DECLARE batch_notify_cursor CURSOR LOCAL FAST_FORWARD FOR
                     SELECT Id, Email, Name FROM @BatchEligible;
 
@@ -465,8 +467,8 @@ BEGIN
                     BEGIN TRY
                         IF @BNotifyEmail IS NOT NULL AND LEN(@BNotifyEmail) > 5
                         BEGIN
-                            DECLARE @BSubject NVARCHAR(255) = 'Workflow Approval Required - ' + ISNULL(@BatchStageName, 'Stage ' + CAST(@BatchStageId AS NVARCHAR(50)));
-                            DECLARE @BMessage NVARCHAR(MAX) =
+                            SET @BSubject = 'Workflow Approval Required - ' + ISNULL(@BatchStageName, 'Stage ' + CAST(@BatchStageId AS NVARCHAR(50)));
+                            SET @BMessage =
                                 'Dear ' + ISNULL(@BNotifyName, 'User') + ',' + CHAR(13) + CHAR(10) +
                                 'A new item requires your approval.' + CHAR(13) + CHAR(10) +
                                 'Source: ' + ISNULL(@BatchSource, '[Unknown]') + CHAR(13) + CHAR(10) +

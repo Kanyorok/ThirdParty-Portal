@@ -39,7 +39,26 @@ BEGIN
         @ErrorCount INT = 0,
         @SkippedCount INT = 0,
         @OrphanCount INT = 0,
-        @CleanupCount INT = 0;
+        @CleanupCount INT = 0,
+        -- Phase 1 loop variables
+        @MajTotal INT,
+        @FinalTableName NVARCHAR(255),
+        @FinalKeyColumn NVARCHAR(128),
+        @FinalUpdateSQL NVARCHAR(MAX),
+        @NextStageActualApprovals INT,
+        @FinalStatusVal NVARCHAR(50);
+
+    DECLARE @NextStageUsers TABLE (
+        Id BIGINT PRIMARY KEY,
+        Name NVARCHAR(255),
+        Email NVARCHAR(255)
+    );
+
+    DECLARE @OrphanUsers TABLE (
+        Id BIGINT PRIMARY KEY,
+        Name NVARCHAR(255),
+        Email NVARCHAR(255)
+    );
 
     -- =====================================================================
     -- 0. RESOLVE SYSTEM LOOKUPS
@@ -182,7 +201,7 @@ BEGIN
                 END
                 ELSE IF @WorkflowType = 'MAJ'
                 BEGIN
-                    DECLARE @MajTotal INT;
+                    SET @MajTotal = 0;
                     SELECT @MajTotal = COUNT(*)
                     FROM dbo.f_getUserWithPermission(@WorkflowStagePermission);
 
@@ -196,7 +215,7 @@ BEGIN
                 IF @RequiredApprovals < 1
                     SET @RequiredApprovals = 1;
 
-                -- Not enough approvals yet — skip
+                -- Not enough approvals yet -- skip
                 IF @ActualApprovals < @RequiredApprovals
                 BEGIN
                     SET @SkippedCount += 1;
@@ -214,7 +233,7 @@ BEGIN
 
                 IF @NextStageId IS NULL
                 BEGIN
-                    -- WORKFLOW COMPLETE — no next stage
+                    -- WORKFLOW COMPLETE -- no next stage
                     BEGIN TRANSACTION;
 
                     UPDATE dbo.t_WorkFlowPending
@@ -230,9 +249,9 @@ BEGIN
                     -- Update source table to final approved status
                     -- Only update if not already set (idempotent)
                     BEGIN TRY
-                        DECLARE @FinalTableName NVARCHAR(255) = PARSENAME(@Source, 1);
-                        DECLARE @FinalKeyColumn NVARCHAR(128) = 'Id';
-                        DECLARE @FinalUpdateSQL NVARCHAR(MAX);
+                        SET @FinalTableName = PARSENAME(@Source, 1);
+                        SET @FinalKeyColumn = 'Id';
+                        SET @FinalUpdateSQL = NULL;
 
                         -- Determine primary key column
                         SELECT TOP 1 @FinalKeyColumn = COLUMN_NAME
@@ -254,9 +273,11 @@ BEGIN
                                 N' SET Status = @StatusVal, ModifiedBy = @UID, ModifiedOn = GETDATE()' +
                                 N' WHERE ' + QUOTENAME(@FinalKeyColumn) + N' = @SID';
 
+                            SET @FinalStatusVal = CAST(@ApprovedStatusId AS NVARCHAR(50));
+
                             EXEC sp_executesql @FinalUpdateSQL,
                                 N'@StatusVal NVARCHAR(50), @SID NVARCHAR(100), @UID BIGINT',
-                                CAST(@ApprovedStatusId AS NVARCHAR(50)), @SourceId, @SystemUserId;
+                                @FinalStatusVal, @SourceId, @SystemUserId;
                         END
                     END TRY
                     BEGIN CATCH
@@ -289,8 +310,8 @@ BEGIN
                     CONTINUE;
                 END
 
-                -- Check if next stage is already complete — skip if so
-                DECLARE @NextStageActualApprovals INT = 0;
+                -- Check if next stage is already complete -- skip if so
+                SET @NextStageActualApprovals = 0;
                 SELECT @NextStageActualApprovals = COUNT(DISTINCT h.CreatedBy)
                 FROM t_WorkFlowHistory h WITH (NOLOCK)
                 WHERE h.Source = @Source
@@ -301,7 +322,7 @@ BEGIN
 
                 IF @NextStageActualApprovals >= @NextCount
                 BEGIN
-                    -- Next stage already complete — just clean up current stage
+                    -- Next stage already complete -- just clean up current stage
                     BEGIN TRANSACTION;
 
                     UPDATE dbo.t_WorkFlowPending
@@ -330,11 +351,6 @@ BEGIN
                 ORDER BY h.CreatedOn ASC;
 
                 -- Get eligible users for next stage
-                DECLARE @NextStageUsers TABLE (
-                    Id BIGINT PRIMARY KEY,
-                    Name NVARCHAR(255),
-                    Email NVARCHAR(255)
-                );
                 DELETE FROM @NextStageUsers;
 
                 INSERT INTO @NextStageUsers (Id, Name, Email)
@@ -577,11 +593,6 @@ BEGIN
                 ORDER BY h.CreatedOn ASC;
 
                 -- Get eligible users
-                DECLARE @OrphanUsers TABLE (
-                    Id BIGINT PRIMARY KEY,
-                    Name NVARCHAR(255),
-                    Email NVARCHAR(255)
-                );
                 DELETE FROM @OrphanUsers;
 
                 INSERT INTO @OrphanUsers (Id, Name, Email)
@@ -696,7 +707,7 @@ BEGIN
         DROP TABLE #OrphanItems;
 
         -- =================================================================
-        -- PHASE 3: CLEANUP — soft-delete pending records where stage
+        -- PHASE 3: CLEANUP -- soft-delete pending records where stage
         -- is already fully approved
         -- =================================================================
         UPDATE p

@@ -291,7 +291,7 @@ BEGIN
         );
 
         -- =====================================================================
-        -- 12. HANDLE REJECTION — clear all pending, update source, return
+        -- 12. HANDLE REJECTION -- clear all pending, update source, return
         -- =====================================================================
         IF @IsRejectionAction = 1
         BEGIN
@@ -396,7 +396,7 @@ BEGIN
         END
 
         -- =====================================================================
-        -- 13. HANDLE APPROVAL — multi-approval logic
+        -- 13. HANDLE APPROVAL -- multi-approval logic
         -- =====================================================================
         IF @IsApprovalAction = 1
         BEGIN
