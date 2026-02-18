@@ -210,7 +210,7 @@ class ItemMasterListController extends Controller
 
     public function show($Id)
     {
-        $item = ItemMasterList::with('category.parent')->findOrFail($Id);
+        $item = ItemMasterList::with('category.parent', 'inventoryType.type', 'itemType.type')->findOrFail($Id);
         $this->authorize('view', $item);
 
         return view('inventory.itemmaster.itemmasterlist.show', compact('item'));

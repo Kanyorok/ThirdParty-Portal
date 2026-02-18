@@ -31,7 +31,7 @@
 
     <div class="row mb-3">
         <div class="col-md-4">
-            <p><strong>Item Type:</strong> {{ $item->itemType?->Description ?? 'N/A' }}</p>
+            <p><strong>Item Type:</strong> {{ $item->itemType?->type?->Description ?? 'N/A' }}</p>
         </div>
         <div class="col-md-4">
             <p><strong>Category:</strong> {{ $item->category?->Name ?? 'N/A' }}</p>
@@ -46,7 +46,7 @@
             <p><strong>Unit of Measure (UOM):</strong> {{ $item->uom?->Code ?? 'N/A' }}</p>
         </div>
         <div class="col-md-4">
-            <p><strong>Inventory Type:</strong> {{ $item->inventoryType?->Description ?? 'N/A' }}</p>
+            <p><strong>Inventory Type:</strong> {{ $item->inventoryType?->type?->Description ?? 'N/A' }}</p>
         </div>
         <div class="col-md-4">
             <p><strong>Status:</strong> {{ $item->status->Description ?? 'N/A' }}</p>
