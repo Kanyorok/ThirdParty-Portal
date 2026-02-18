@@ -6,9 +6,9 @@ CREATE OR ALTER PROCEDURE R_Balance_Sheet
 AS
 BEGIN
     SET NOCOUNT ON;
-
+ 
     DECLARE @NetProfit DECIMAL(18,2);
-
+ 
     CREATE TABLE #BS
     (
         ORDERCOL INT,
@@ -17,8 +17,8 @@ BEGIN
         GLACCOUNTTYPE VARCHAR(50),
         BALANCE DECIMAL(18,2)
     );
-
-
+ 
+ 
     ;WITH BRANCH_LIST AS (
         SELECT LTRIM(RTRIM(value)) AS BranchName
         FROM STRING_SPLIT(@BRANCHES, ',')
@@ -45,8 +45,8 @@ BEGIN
             SUM(CASE WHEN GLAccountTypeID = 'I' THEN ISNULL(Balance,0) ELSE 0 END)
           - SUM(CASE WHEN GLAccountTypeID = 'E' THEN ISNULL(Balance,0) ELSE 0 END)
     FROM TRANS_SUM;
-
  
+
     ;WITH BRANCH_LIST AS (
         SELECT LTRIM(RTRIM(value)) AS BranchName
         FROM STRING_SPLIT(@BRANCHES, ',')
@@ -82,11 +82,11 @@ BEGIN
     FROM GL_ACCOUNTS A
     LEFT JOIN TRANS_SUM T ON A.GLCode = T.GLCode
     WHERE A.GLAccountTypeID IN ('A','L','S');
-
  
+
     INSERT INTO #BS
     VALUES (6,'','NET PROFIT / LOSS','S',@NetProfit);
-
+ 
     
     INSERT INTO #BS VALUES
     (2,'','','TOTAL ASSETS',
@@ -95,13 +95,9 @@ BEGIN
         (SELECT SUM(BALANCE) FROM #BS WHERE GLACCOUNTTYPE='L')),
     (7,'','','TOTAL EQUITY',
         (SELECT SUM(BALANCE) FROM #BS WHERE GLACCOUNTTYPE='S'));
-
+ 
     SELECT *
     FROM #BS
     ORDER BY ORDERCOL, GLCODE;
 END;
-GO
-
-	
-
 

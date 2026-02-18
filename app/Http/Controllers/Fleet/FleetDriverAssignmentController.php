@@ -9,7 +9,7 @@ use App\Models\Fleet\ContractedDriver;
 use App\Models\Fleet\FleetDriverAssignment;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\FleetVehicleInspection;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Services\FleetManagement\FleetDriverAssignmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

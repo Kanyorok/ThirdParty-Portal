@@ -3,7 +3,7 @@
 namespace App\Models\Procurement;
 
 use App\Models\Auth\User;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -57,6 +57,17 @@ class TenderCommitteeMember extends Model
     ];
 
     protected $primaryKey = 'Id';
+
+    // Compatibility bridge: DB uses lowercase `id`, legacy code often reads/writes `Id`.
+    public function getIdAttribute()
+    {
+        return $this->attributes['id'] ?? null;
+    }
+
+    public function setIdAttribute($value): void
+    {
+        $this->attributes['id'] = $value;
+    }
 
     public function committee()
     {

@@ -131,15 +131,15 @@ class PriceManagementController extends Controller
             $skipped = $import->getSkippedCount();
             $errors = $import->getErrors();
             $successParts = [];
-            
+
             if ($created > 0) {
                 $successParts[] = "Created: {$created} new price" . ($created > 1 ? 's' : '');
             }
-            
+
             if ($updated > 0) {
                 $successParts[] = "Updated: {$updated} existing price" . ($updated > 1 ? 's' : '');
             }
-            
+
             if ($skipped > 0) {
                 $successParts[] = "Skipped: {$skipped} row" . ($skipped > 1 ? 's' : '') . " (empty/invalid data)";
             }
@@ -149,9 +149,9 @@ class PriceManagementController extends Controller
             } else {
                 $successMessage = "Import completed! " . implode('. ', $successParts) . '.';
             }
-            if (!empty($errors)) {
+            if (! empty($errors)) {
                 $errorMessage = "<strong>Some rows had critical errors:</strong><br>";
-                
+
                 foreach (array_slice($errors, 0, 20) as $error) {
                     $errorMessage .= "• {$error}<br>";
                 }
@@ -164,6 +164,7 @@ class PriceManagementController extends Controller
                     ->with('warning', $successMessage)
                     ->with('error_details', $errorMessage);
             }
+
             return back()->with('success', $successMessage);
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             $errors = collect($e->failures())->map(function ($failure) {

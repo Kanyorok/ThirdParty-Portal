@@ -19,6 +19,7 @@ class FinanceGLAccounts extends Model
     protected $primaryKey = 'Id';
     protected $fillable = [
         'GLCode',
+        'MappedGLCode',
         'GLName',
         'GLAccountTypeID',
         'GLTypeGroupID',

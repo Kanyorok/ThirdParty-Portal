@@ -13,7 +13,6 @@ use App\Models\Inventory\StockTransaction;
 use App\Models\Inventory\Store;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\TransactionTransferItem;
-use App\Models\Procurement\GoodsReceipt;
 use App\Models\Procurement\Requisitions;
 use App\Services\Finance\TransactionService;
 use App\Services\Workflow\ApprovalWorkflow;
@@ -71,17 +70,17 @@ class TransactionTransferService
         }
 
         $transfer = new TransactionTransfer([
-            'TransferDate'   => $data['TransferDate'],
-            'TransferredBy'  => $data['TransferredBy'],
-            'RequisitionId'  => $data['RequisitionId'],
-            'FromBranch'     => $fromBranch,
-            'ToBranch'       => $toBranch,
-            'RequisitionType'=> $data['RequisitionType'],
-            'Status'         => Transfers::Pending->value,
-            'CreatedBy'      => Auth::id(),
-            'ModifiedBy'     => Auth::id(),
-            'CreatedOn'      => now(),
-            'ModifiedOn'     => now(),
+            'TransferDate' => $data['TransferDate'],
+            'TransferredBy' => $data['TransferredBy'],
+            'RequisitionId' => $data['RequisitionId'],
+            'FromBranch' => $fromBranch,
+            'ToBranch' => $toBranch,
+            'RequisitionType' => $data['RequisitionType'],
+            'Status' => Transfers::Pending->value,
+            'CreatedBy' => Auth::id(),
+            'ModifiedBy' => Auth::id(),
+            'CreatedOn' => now(),
+            'ModifiedOn' => now(),
         ]);
         $transfer->save();
 
@@ -145,14 +144,14 @@ class TransactionTransferService
         if (! $store) {
             return false;
         }
-        
+
 
         return StockGRNLedger::where('ItemNo', $itemId)
             ->where('Branch', $branchId)
             ->where('Store', $store->Id)
             ->where('RemainingQTY', '>', 0)
             ->exists();
-            
+
     }
 
     public function getAvailableGRNBatches($itemId, $branchId, $storeId = null)
@@ -454,8 +453,8 @@ class TransactionTransferService
             ->where('IsMainStore', true)
             ->whereNull('DeletedOn')
             ->first();
-            
-            
+
+
 
         if (! $store) {
             throw new Exception("No active store found for branch {$branchId}");

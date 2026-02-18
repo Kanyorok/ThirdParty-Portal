@@ -39,8 +39,9 @@
                         <label class="form-label fw-bold">Tender Type</label>
                         <select class="form-select" id="tenderType" name="TenderType" required>
                             <option value="">-- Select Tender Type --</option>
-                            <option value="op" {{$tender->TenderType->value=='op'?'selected':''}}>Open Tender</option>
-                            <option value="rs" {{$tender->TenderType->value=='rs'?'selected':''}}>Restricted Tender</option>
+                            @foreach (\App\Enums\TenderTypeEnum::cases() as $item)
+                                <option value="{{ $item->value }}" {{$tender->TenderType === $item?'selected':''}}>{{ $item->displayName() }}</option>
+                            @endforeach
                         </select>
                         @error('TenderType')
                         <div class="text-danger">{{ $message }}</div>
@@ -124,6 +125,7 @@
     </div>
 
     <!-- Attached Documents Section -->
+   {{--
     @if(isset($documents) && $documents->isNotEmpty())
     <div class="card shadow-sm mb-4">
         <div class="card-body">
@@ -161,7 +163,7 @@
                             </td>
                             <td class="text-center">
                                 @if($doc->canView())
-                                {{-- View Document - Uses the DocumentActionsController preview --}}
+                                --}}{{-- View Document - Uses the DocumentActionsController preview --}}{{--
                                 <a href="{{ route('file.preview', ['document' => $doc->Id]) }}"
                                     class="btn btn-sm btn-outline-primary"
                                     title="View Document"
@@ -169,7 +171,7 @@
                                     <i class="fas fa-eye"></i>
                                 </a>
 
-                                {{-- Download Document - Need to find the repository first --}}
+                                --}}{{-- Download Document - Need to find the repository first --}}{{--
                                 @php
                                 // Get the repository ID from document relation
                                 $repositoryId = $doc->RepositoryId ?? $doc->repository?->Id ?? null;
@@ -192,7 +194,7 @@
 
                                 @canDelete('tender')
                                 @if($tender->Status === \App\Enums\TenderStatusEnum::Draft)
-                                {{-- Delete Document - Uses repository-based route --}}
+                                --}}{{-- Delete Document - Uses repository-based route --}}{{--
                                 @php
                                 $repositoryId = $doc->RepositoryId ?? $doc->repository?->Id ?? null;
                                 @endphp
@@ -235,7 +237,7 @@
         </div>
     </div>
     @endif
-
+--}}
 
 
     <!-- Items Table -->

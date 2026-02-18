@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
+use App\Models\Finance\FinanceSyncGLAccount;
 
 class HierarchyViewerController extends Controller
 {
@@ -18,9 +19,7 @@ class HierarchyViewerController extends Controller
 
     public function hierarchy()
     {
-        $accounts = DB::table('t_GLAccounts')
-            ->orderBy('GLCode')
-            ->get();
+        $accounts = FinanceSyncGLAccount::orderBy('GLCode')->get();
 
         return view('finance.chartofaccounts.chartofaccounts.account_hierarchy', compact('accounts'));
     }

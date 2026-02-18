@@ -16,7 +16,7 @@ class ItemMasterListExport implements FromArray, WithHeadings
     public function array(): array
     {
         $items = ItemMasterList::with([
-            'itemType.type',      
+            'itemType.type',
             'uom',
             'inventoryType.type',
             'status',
@@ -37,9 +37,9 @@ class ItemMasterListExport implements FromArray, WithHeadings
                 $item->ItemCode ?? '',
                 $item->BarCode ?? '',
                 $item->ItemName ?? '',
-                $item->itemType?->type?->Description ?? '', 
+                $item->itemType?->type?->Description ?? '',
                 $item->uom?->Code ?? '',
-                $item->inventoryType?->type?->Description ?? '', 
+                $item->inventoryType?->type?->Description ?? '',
                 $categoryName,
                 $parentName,
                 $item->price?->ActualPrice ?? '',

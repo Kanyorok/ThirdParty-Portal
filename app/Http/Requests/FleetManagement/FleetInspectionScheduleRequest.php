@@ -27,7 +27,7 @@ class FleetInspectionScheduleRequest extends FormRequest
             'InspectionType' => 'required|string',
             'InspectionDate' => 'required|date',
             'DueDate' => 'required|date|after_or_equal:InspectionDate',
-            'Inspector' => 'required|integer|exists:t_Employees,Id',
+            'Inspector' => 'required|integer|exists:t_HREmployees,Id',
             'Status' => 'required|integer|exists:t_CodeDetails,ID',
             'Remarks' => 'required|string',
 

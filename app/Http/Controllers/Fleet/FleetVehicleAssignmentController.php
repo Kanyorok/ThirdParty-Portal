@@ -9,7 +9,7 @@ use App\Models\Fleet\FleetTripLog;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\FleetVehicleAssignment;
 use App\Models\Fleet\FleetVehicleInspection;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Services\FleetManagement\FleetVehicleAssignmentService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

@@ -13,8 +13,6 @@
                     <option value="{{ $title }}">{{ $title }}</option>
                 @endforeach
             </select>
-            <small class="text-info">Select a job role from the Human Capital Suite module</small>
-            <p id="RoleName_error" class="invalid-feedback d-none error col-12" role="alert"></p>
         </div>
 
         <div class="col-12 mb-3">

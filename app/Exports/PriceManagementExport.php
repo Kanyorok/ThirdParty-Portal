@@ -7,9 +7,9 @@ use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\UnitOfMeasure;
 use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class PriceManagementExport implements FromArray, WithHeadings, WithStyles, WithColumnWidths
@@ -33,7 +33,7 @@ class PriceManagementExport implements FromArray, WithHeadings, WithStyles, With
                     $price->currency?->Code ?? 'KES',
                     $price->IsDefault ? 'Yes' : 'No',
                 ];
-            }   
+            }
             $data[] = ['---', '---', '---', '---', '---', '---', '---'];
         }
         $itemsWithoutPrices = ItemMasterList::with('uom')
@@ -48,13 +48,13 @@ class PriceManagementExport implements FromArray, WithHeadings, WithStyles, With
 
         foreach ($itemsWithoutPrices as $item) {
             $data[] = [
-                '', 
-                $item->ItemCode, 
-                $item->ItemName, 
+                '',
+                $item->ItemCode,
+                $item->ItemName,
                 $item->uom?->Code ?? '',
-                '', 
-                'KES', 
-                'No', 
+                '',
+                'KES',
+                'No',
             ];
         }
         $data[] = [];
@@ -66,7 +66,7 @@ class PriceManagementExport implements FromArray, WithHeadings, WithStyles, With
             $data[] = [
                 $currency->Code,
                 $currency->Name,
-                '', '', '', '', ''
+                '', '', '', '', '',
             ];
         }
         $data[] = [];
@@ -76,7 +76,7 @@ class PriceManagementExport implements FromArray, WithHeadings, WithStyles, With
             $data[] = [
                 $uom->Code,
                 $uom->Name ?? '',
-                '', '', '', '', ''
+                '', '', '', '', '',
             ];
         }
         $data[] = [];
@@ -124,13 +124,13 @@ class PriceManagementExport implements FromArray, WithHeadings, WithStyles, With
     public function columnWidths(): array
     {
         return [
-            'A' => 15, 
-            'B' => 15, 
-            'C' => 35, 
+            'A' => 15,
+            'B' => 15,
+            'C' => 35,
             'D' => 10,
-            'E' => 15, 
-            'F' => 15, 
-            'G' => 12, 
+            'E' => 15,
+            'F' => 15,
+            'G' => 12,
         ];
     }
 }

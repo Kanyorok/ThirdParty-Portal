@@ -1,0 +1,99 @@
+@extends('layouts.app')
+
+@section('title', 'Training Programs')
+
+@section('content')
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Training Programs</h2>
+        <a class="btn btn-primary" href="{{ route('hr.training.programs.create') }}">+ New Program</a>
+    </div>
+
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if($errors->any())
+        <div class="alert alert-danger">{{ $errors->first() }}</div>
+    @endif
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <form method="GET" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Category</label>
+                    <select name="category_id" class="form-select">
+                        <option value="">All</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->Id }}" @selected(request('category_id') == $category->Id)>{{ $category->Name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All</option>
+                        @foreach($statusList as $status)
+                            <option value="{{ $status }}" @selected(request('status') === $status)>{{ $status }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Mandatory</label>
+                    <select name="mandatory" class="form-select">
+                        <option value="">All</option>
+                        <option value="1" @selected(request('mandatory') === '1')>Yes</option>
+                        <option value="0" @selected(request('mandatory') === '0')>No</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-primary" type="submit">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Mode</th>
+                            <th>Duration (hrs)</th>
+                            <th>Mandatory</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($programs as $program)
+                            <tr>
+                                <td>{{ $program->Code }}</td>
+                                <td>{{ $program->Title }}</td>
+                                <td>{{ $program->category?->Name ?? '-' }}</td>
+                                <td>{{ $program->DeliveryMode ?? '-' }}</td>
+                                <td>{{ $program->DurationHours ?? '-' }}</td>
+                                <td>{{ $program->IsMandatory ? 'Yes' : 'No' }}</td>
+                                <td>{{ $program->Status }}</td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ route('hr.training.programs.show', $program->Id) }}">View</a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ route('hr.training.programs.edit', $program->Id) }}">Edit</a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="8" class="text-center text-muted">No programs found.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        {{ $programs->links() }}
+    </div>
+</div>
+@endsection

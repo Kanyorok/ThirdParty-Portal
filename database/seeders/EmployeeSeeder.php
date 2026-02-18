@@ -7,7 +7,7 @@ use App\Helpers\SystemHelper;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
 use App\Services\BR\BREncryption;
-use App\Services\HRM\EmployeeService;
+use App\Services\HR\EmployeeService;
 use Illuminate\Database\Seeder;
 use RuntimeException;
 use Spatie\Permission\Models\Role;

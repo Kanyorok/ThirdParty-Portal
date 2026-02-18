@@ -183,8 +183,10 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
 });
 
 // Semi-public routes (index/show handle their own auth checks for filtering)
-Route::get('tenders', [TenderApiController::class, 'index']);
-Route::get('tenders/{tender}', [TenderApiController::class, 'show']);
+Route::get('tenders', [TenderApiController::class, 'index'])
+    ->withoutMiddleware([\Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class]);
+Route::get('tenders/{tender}', [TenderApiController::class, 'show'])
+    ->withoutMiddleware([\Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class]);
 
 // currencies
 Route::prefix('v1')->group(function () {

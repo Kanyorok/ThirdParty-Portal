@@ -52,6 +52,7 @@
     <div class="col-md-6">
         <label class="form-label">IBAN</label>
         <input name="IBAN" class="form-control" value="{{ old('IBAN', $account->IBAN ?? '') }}">
+        <small class="text-muted">Optional for Kenya (use SWIFT/BIC + account number).</small>
     </div>
     <div class="col-md-6">
         <label class="form-label">Currency <span class="text-danger">*</span></label>
@@ -149,4 +150,3 @@
         setHint();
     });
 </script>
-

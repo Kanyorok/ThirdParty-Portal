@@ -30,7 +30,7 @@ class PriceManagementImport implements ToModel, WithHeadingRow
             $row = array_map(fn ($v) => is_string($v) ? trim($v) : $v, $row);
 
             if (isset($row['priceid']) && preg_match('/^[-=]+$/', $row['priceid'])) {
-                $this->processed--; 
+                $this->processed--;
                 DB::rollBack();
 
                 return null;
@@ -38,29 +38,31 @@ class PriceManagementImport implements ToModel, WithHeadingRow
 
             $hasAnyData = false;
             foreach ($row as $value) {
-                if (!empty($value) && $value !== '-' && $value !== 'N/A' && $value !== '') {
+                if (! empty($value) && $value !== '-' && $value !== 'N/A' && $value !== '') {
                     $hasAnyData = true;
+
                     break;
                 }
             }
-            
-            if (!$hasAnyData) {
-                $this->processed--; 
+
+            if (! $hasAnyData) {
+                $this->processed--;
                 DB::rollBack();
 
                 return null;
             }
 
             $referenceIndicators = [
-                'example', 'sample', 'reference', 'template', 'xxx', 'test', 
-                'e.g.', 'eg.', '<', '>'
+                'example', 'sample', 'reference', 'template', 'xxx', 'test',
+                'e.g.', 'eg.', '<', '>',
             ];
-            
+
             $itemCode = strtolower((string)($row['itemcode'] ?? ''));
             foreach ($referenceIndicators as $indicator) {
                 if (str_contains($itemCode, $indicator)) {
-                    $this->processed--; 
+                    $this->processed--;
                     DB::rollBack();
+
                     return null;
                 }
             }
@@ -68,7 +70,7 @@ class PriceManagementImport implements ToModel, WithHeadingRow
             $requiredColumns = ['itemcode', 'actualprice'];
 
             foreach ($requiredColumns as $col) {
-                if (!array_key_exists($col, $row)) {
+                if (! array_key_exists($col, $row)) {
                     throw new \Exception("File format error: Missing required column '{$col}'. Please use the template.");
                 }
             }
@@ -89,21 +91,21 @@ class PriceManagementImport implements ToModel, WithHeadingRow
             $isDefault = $this->parseBoolean($row['isdefault'] ?? 'No');
 
             $item = ItemMasterList::where('ItemCode', $itemCode)->first();
-            if (!$item) {
+            if (! $item) {
                 $this->skipped++;
                 DB::rollBack();
 
                 return null;
             }
             $uomId = $this->resolveUomId($uomCode, $item);
-            if (!$uomId) {
+            if (! $uomId) {
                 $this->skipped++;
                 DB::rollBack();
 
                 return null;
             }
             $currency = Currency::where('Code', $currencyCode)->first();
-            if (!$currency) {
+            if (! $currency) {
                 $this->skipped++;
                 DB::rollBack();
 
@@ -186,7 +188,7 @@ class PriceManagementImport implements ToModel, WithHeadingRow
 
                         return null;
                     } else {
-                        $this->processed--; 
+                        $this->processed--;
                         DB::commit();
 
                         return null;
@@ -229,8 +231,8 @@ class PriceManagementImport implements ToModel, WithHeadingRow
         } catch (\Throwable $e) {
             DB::rollBack();
             $this->skipped++;
-            $rowNumber = $this->processed + 1;         
-            $message = $e->getMessage();          
+            $rowNumber = $this->processed + 1;
+            $message = $e->getMessage();
             if (str_contains($message, 'Duplicate entry')) {
                 $errorMsg = "Row {$rowNumber}: Duplicate entry detected";
             } elseif (str_contains($message, 'foreign key constraint')) {
@@ -238,13 +240,13 @@ class PriceManagementImport implements ToModel, WithHeadingRow
             } elseif (str_contains($message, 'Data too long')) {
                 $errorMsg = "Row {$rowNumber}: Data exceeds maximum length";
             } else {
-                $errorMsg = config('app.debug') 
+                $errorMsg = config('app.debug')
                     ? "Row {$rowNumber}: " . $message
                     : "Row {$rowNumber}: Data error - please check values";
             }
-            
+
             $this->errors[] = $errorMsg;
-            
+
             return null;
         }
     }
@@ -260,7 +262,7 @@ class PriceManagementImport implements ToModel, WithHeadingRow
         $actualPrice = $row['actualprice'] ?? null;
         if (empty($actualPrice) || trim($actualPrice) === '' || trim($actualPrice) === '-') {
             $errors[] = "Row {$rowNumber}: Price is missing";
-        } elseif (!is_numeric($actualPrice) || (float)$actualPrice <= 0) {
+        } elseif (! is_numeric($actualPrice) || (float)$actualPrice <= 0) {
             $errors[] = "Row {$rowNumber}: Price must be a positive number (got: {$actualPrice})";
         }
 
@@ -285,7 +287,7 @@ class PriceManagementImport implements ToModel, WithHeadingRow
     private function resolveUomId($uomInput, ItemMasterList $item): ?int
     {
         if ($uomInput !== null && $uomInput !== '' && $uomInput !== '-') {
-            $candidate = trim((string)$uomInput);            
+            $candidate = trim((string)$uomInput);
             if (ctype_digit($candidate)) {
                 $uom = UnitOfMeasure::where('Id', (int)$candidate)
                     ->where('Active', 1)
@@ -301,7 +303,7 @@ class PriceManagementImport implements ToModel, WithHeadingRow
                 return (int)$uom->Id;
             }
         }
-        if (!empty($item->UOM)) {
+        if (! empty($item->UOM)) {
             return (int)$item->UOM;
         }
 

@@ -6,7 +6,7 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\Customers\BancassuranceCustomersContactsRequest;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassuranceCustomerContact;
 use App\Services\Insurance\Customers\BancassuranceCustomersContactsService;
