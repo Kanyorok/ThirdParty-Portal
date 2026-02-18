@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Calendar, ChevronDown, Mail, Phone } from "lucide-react"
+import { Calendar, ChevronDown, ImageUp, Mail, Phone } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/common/avatar"
 import { Button } from "@/components/common/button"
@@ -10,9 +10,11 @@ import { cn } from "@/lib/utils"
 
 type AccountOwnerCardProps = {
   profile: any
+  imageUrl?: string | null
+  onEditImage?: () => void
 }
 
-export default function AccountOwnerCard({ profile }: AccountOwnerCardProps) {
+export default function AccountOwnerCard({ profile, imageUrl, onEditImage }: AccountOwnerCardProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [remoteAvatarSrc, setRemoteAvatarSrc] = useState<string | null>(null)
 
@@ -27,7 +29,7 @@ export default function AccountOwnerCard({ profile }: AccountOwnerCardProps) {
     profile?.imageUrl ??
     profile?.image ??
     null
-  const avatarSrc = avatarSrcFromProfile ?? remoteAvatarSrc
+  const avatarSrc = imageUrl ?? avatarSrcFromProfile ?? remoteAvatarSrc
 
   const createdOn = profile?.createdOn ?? null
   const modifiedOn = profile?.modifiedOn ?? null
@@ -36,7 +38,7 @@ export default function AccountOwnerCard({ profile }: AccountOwnerCardProps) {
   const ownerThirdPartyId = profile?.thirdPartyId ?? null
 
   useEffect(() => {
-    if (avatarSrcFromProfile) {
+    if (imageUrl || avatarSrcFromProfile) {
       setRemoteAvatarSrc(null)
       return
     }
@@ -69,7 +71,7 @@ export default function AccountOwnerCard({ profile }: AccountOwnerCardProps) {
     return () => {
       cancelled = true
     }
-  }, [avatarSrcFromProfile, imageId])
+  }, [imageUrl, avatarSrcFromProfile, imageId])
 
   return (
     <section className="border border-border/60 bg-background">
@@ -80,14 +82,42 @@ export default function AccountOwnerCard({ profile }: AccountOwnerCardProps) {
 
       <div className="px-5 py-5">
         <div className="flex items-start gap-4 rounded-xl border border-border/60 bg-muted/30 p-4">
-          <Avatar className="h-14 w-14 rounded-2xl border border-border/60 bg-card shadow-sm">
-            {avatarSrc ? <AvatarImage src={avatarSrc} alt={`${ownerName} avatar`} className="object-cover" /> : null}
-            <AvatarFallback className="rounded-2xl bg-muted text-muted-foreground font-semibold">
-              {ownerInitials}
-            </AvatarFallback>
-          </Avatar>
+          {onEditImage ? (
+            <button
+              type="button"
+              onClick={onEditImage}
+              aria-label="Update profile image"
+              className="group/image rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+            >
+              <Avatar className="h-14 w-14 rounded-2xl border border-border/60 bg-card shadow-sm transition-colors group-hover/image:border-primary/40">
+                {avatarSrc ? <AvatarImage src={avatarSrc} alt={`${ownerName} avatar`} className="object-cover" /> : null}
+                <AvatarFallback className="rounded-2xl bg-muted text-muted-foreground font-semibold">
+                  {ownerInitials}
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          ) : (
+            <Avatar className="h-14 w-14 rounded-2xl border border-border/60 bg-card shadow-sm">
+              {avatarSrc ? <AvatarImage src={avatarSrc} alt={`${ownerName} avatar`} className="object-cover" /> : null}
+              <AvatarFallback className="rounded-2xl bg-muted text-muted-foreground font-semibold">
+                {ownerInitials}
+              </AvatarFallback>
+            </Avatar>
+          )}
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-foreground truncate">{ownerName}</div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <div className="text-sm font-semibold text-foreground truncate">{ownerName}</div>
+              {onEditImage && (
+                <button
+                  type="button"
+                  onClick={onEditImage}
+                  className="inline-flex items-center text-[11px] font-semibold text-primary hover:text-primary/80"
+                >
+                  <ImageUp className="mr-1 h-3.5 w-3.5" />
+                  Update image
+                </button>
+              )}
+            </div>
 
             <div className="mt-2 space-y-2">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">

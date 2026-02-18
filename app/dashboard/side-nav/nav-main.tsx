@@ -293,21 +293,72 @@ export const NavMain = memo(({ items, onItemClick, className }: NavMainProps) =>
   const { state, isMobile } = useSidebar()
   const activeProfile = useProfileStore((s) => s.activeProfile)
 
+  const normalizeUrl = useCallback((url: string) => {
+    const next = url.trim()
+    if (!next || next === "/") return "/"
+    return next.endsWith("/") ? next.slice(0, -1) : next
+  }, [])
+
+  const normalizedPathname = useMemo(() => normalizeUrl(pathname || "/"), [normalizeUrl, pathname])
+
+  const matchesPath = useCallback(
+    (url: string) => {
+      const target = normalizeUrl(url)
+      return normalizedPathname === target || normalizedPathname.startsWith(`${target}/`)
+    },
+    [normalizeUrl, normalizedPathname],
+  )
+
+  const longestMatchedUrl = useMemo(() => {
+    const urls: string[] = []
+    for (const group of items) {
+      for (const item of group.items) {
+        if (!item.allowedProfiles.includes(activeProfile as UserProfile)) continue
+        if (item.subItems?.length) {
+          for (const subItem of item.subItems) {
+            if (subItem.allowedProfiles.includes(activeProfile as UserProfile)) {
+              urls.push(subItem.url)
+            }
+          }
+        } else {
+          urls.push(item.url)
+        }
+      }
+    }
+
+    const matches = urls
+      .map(normalizeUrl)
+      .filter((url) => matchesPath(url))
+      .sort((a, b) => b.length - a.length)
+
+    return matches[0] ?? null
+  }, [activeProfile, items, matchesPath, normalizeUrl])
+
   const isActive = useCallback(
     (url: string, subItems?: readonly NavSubItem[]) => {
+      if (!longestMatchedUrl) return false
       if (subItems?.length) {
-        return subItems.some((sub) => pathname === sub.url || (sub.url !== "/" && pathname.startsWith(sub.url)))
+        return subItems.some(
+          (sub) =>
+            sub.allowedProfiles.includes(activeProfile as UserProfile) &&
+            normalizeUrl(sub.url) === longestMatchedUrl,
+        )
       }
-      return pathname === url || (url !== "/" && pathname.startsWith(url))
+      return normalizeUrl(url) === longestMatchedUrl
     },
-    [pathname],
+    [activeProfile, longestMatchedUrl, normalizeUrl],
   )
 
   const isSubmenuOpen = useCallback(
     (subItems?: readonly NavSubItem[]) => {
-      return subItems?.some((sub) => pathname === sub.url || (sub.url !== "/" && pathname.startsWith(sub.url))) ?? false
+      if (!subItems?.length || !longestMatchedUrl) return false
+      return subItems.some(
+        (sub) =>
+          sub.allowedProfiles.includes(activeProfile as UserProfile) &&
+          normalizeUrl(sub.url) === longestMatchedUrl,
+      )
     },
-    [pathname],
+    [activeProfile, longestMatchedUrl, normalizeUrl],
   )
 
   return (

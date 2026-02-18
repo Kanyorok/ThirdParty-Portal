@@ -10,6 +10,7 @@ import { computeBusinessCompletionPercent, computeMissingBusinessFields, resolve
 import BusinessProfileCard from "@/components/account/profile/business-profile-card"
 import AccountOwnerCard from "@/components/account/profile/account-owner-card"
 import LogoDialog from "@/components/account/profile/logo-dialog"
+import UserImageDialog from "@/components/account/profile/user-image-dialog"
 import ChangePasswordCard from "@/components/account/profile/change-password-card"
 import CompanySidebarCard from "@/components/account/profile/company-sidebar-card"
 import ProfileTabsNav, { type ProfileTabKey } from "@/components/account/profile/profile-tabs-nav"
@@ -30,7 +31,9 @@ function LoadingState() {
 export default function ProfileSettings() {
   const [isEditing, setIsEditing] = useState(false)
   const [isLogoDialogOpen, setIsLogoDialogOpen] = useState(false)
+  const [isUserImageDialogOpen, setIsUserImageDialogOpen] = useState(false)
   const [optimisticLogoUrl, setOptimisticLogoUrl] = useState<string | null>(null)
+  const [optimisticUserImageUrl, setOptimisticUserImageUrl] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<ProfileTabKey>("party")
 
   const { profile, thirdPartyDetails, thirdParty, profileCompletion, isLoading, isUpdating, updateProfile, refetch } =
@@ -63,6 +66,16 @@ export default function ProfileSettings() {
     [profile, thirdParty, thirdPartyDetails],
   )
   const logoUrl = optimisticLogoUrl ?? resolvedLogoUrl
+  const resolvedUserImageUrl = useMemo(
+    () =>
+      (profile as any)?.image?.src ??
+      (profile as any)?.image_url ??
+      (profile as any)?.imageUrl ??
+      (profile as any)?.image ??
+      null,
+    [profile],
+  )
+  const userImageUrl = optimisticUserImageUrl ?? resolvedUserImageUrl
 
   useEffect(() => {
     if (resolvedLogoUrl || optimisticLogoUrl) return
@@ -94,6 +107,37 @@ export default function ProfileSettings() {
       cancelled = true
     }
   }, [resolvedLogoUrl, optimisticLogoUrl])
+
+  useEffect(() => {
+    if (resolvedUserImageUrl || optimisticUserImageUrl) return
+
+    let cancelled = false
+    fetch("/api/v1/profile/user-image", { method: "GET", cache: "no-store" })
+      .then(async (res) => {
+        const body = await res.json().catch(() => null)
+        if (!res.ok || body?.success === false) return
+
+        const src =
+          body?.data?.image?.src ??
+          body?.data?.imageUrl ??
+          body?.data?.image_url ??
+          body?.data?.image ??
+          body?.image?.src ??
+          body?.imageUrl ??
+          body?.image_url ??
+          body?.image ??
+          null
+
+        if (!cancelled && typeof src === "string" && src.trim().length > 0) {
+          setOptimisticUserImageUrl(src)
+        }
+      })
+      .catch(() => null)
+
+    return () => {
+      cancelled = true
+    }
+  }, [resolvedUserImageUrl, optimisticUserImageUrl])
 
   const hasSupplier = Boolean(profile?.isSupplier ?? thirdParty?.isSupplier)
   const hasTenant = Boolean(profile?.isTenant ?? thirdParty?.isTenant)
@@ -221,7 +265,11 @@ export default function ProfileSettings() {
                   />
 
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    <AccountOwnerCard profile={profile} />
+                    <AccountOwnerCard
+                      profile={profile}
+                      imageUrl={userImageUrl}
+                      onEditImage={() => setIsUserImageDialogOpen(true)}
+                    />
                     <ChangePasswordCard />
                   </div>
                 </div>
@@ -240,6 +288,15 @@ export default function ProfileSettings() {
         onOpenChange={setIsLogoDialogOpen}
         logoUrl={logoUrl}
         onLogoUrlChange={setOptimisticLogoUrl}
+        onRefetch={refetch as any}
+      />
+      <UserImageDialog
+        open={isUserImageDialogOpen}
+        onOpenChange={setIsUserImageDialogOpen}
+        imageUrl={userImageUrl}
+        firstName={(profile as any)?.firstName ?? (profile as any)?.first_name}
+        lastName={(profile as any)?.lastName ?? (profile as any)?.last_name}
+        onImageUrlChange={setOptimisticUserImageUrl}
         onRefetch={refetch as any}
       />
     </div>

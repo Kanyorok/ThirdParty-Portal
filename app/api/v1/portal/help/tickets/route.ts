@@ -4,10 +4,10 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
 import { getApiUrl } from "@/lib/config"
 
-const USER_IMAGE_ENDPOINT = "/api/v1/profile/user-image"
+const HELP_TICKETS_ENDPOINT = "/api/v1/portal/help/tickets"
 
 function getBaseApiUrl() {
-  return process.env.NEXT_PUBLIC_EXTERNAL_API_URL || getApiUrl()
+  return process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_EXTERNAL_API_URL || getApiUrl()
 }
 
 async function parseBody(res: Response) {
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const query = request.nextUrl.search || ""
-    const requestUrl = `${getBaseApiUrl()}${USER_IMAGE_ENDPOINT}${query}`
+    const requestUrl = `${getBaseApiUrl()}${HELP_TICKETS_ENDPOINT}${query}`
 
     const res = await fetch(requestUrl, {
       method: "GET",
@@ -48,11 +48,11 @@ export async function GET(request: NextRequest) {
 
     const body = await parseBody(res)
     return NextResponse.json(
-      body ?? { success: false, message: "Failed to fetch user image." },
+      body ?? { success: false, message: "Failed to fetch help tickets." },
       { status: res.status },
     )
   } catch (error) {
-    console.error("[Profile User Image API] GET error:", error)
+    console.error("[Help Tickets API] GET error:", error)
     return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 })
   }
 }
@@ -64,30 +64,26 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const incoming = await request.formData()
-    const formData = new FormData()
+    const payload = await request.json().catch(() => null)
 
-    for (const [key, value] of incoming.entries()) {
-      formData.append(key, value as any)
-    }
-
-    const res = await fetch(`${getBaseApiUrl()}${USER_IMAGE_ENDPOINT}`, {
+    const res = await fetch(`${getBaseApiUrl()}${HELP_TICKETS_ENDPOINT}`, {
       method: "POST",
       headers: {
         Accept: "application/json",
+        "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: formData,
+      body: JSON.stringify(payload ?? {}),
       cache: "no-store",
     })
 
     const body = await parseBody(res)
     return NextResponse.json(
-      body ?? { success: false, message: "Failed to upload user image." },
+      body ?? { success: false, message: "Failed to create help ticket." },
       { status: res.status },
     )
   } catch (error) {
-    console.error("[Profile User Image API] POST error:", error)
+    console.error("[Help Tickets API] POST error:", error)
     return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 })
   }
 }
