@@ -43,7 +43,7 @@ BEGIN
     -- 3. Check if workflow history exists
     IF NOT EXISTS (
         SELECT 1
-        FROM t_WorkFlowHistoryTest
+        FROM t_WorkFlowHistory
         WHERE Source = @Source
           AND SourceID = @SourceID
           AND DeletedOn IS NULL
@@ -56,7 +56,7 @@ BEGIN
 
     -- Core maker-checker logic
     SELECT TOP 1 @SubmitterId = CreatedBy
-    FROM t_WorkFlowHistoryTest
+    FROM t_WorkFlowHistory
     WHERE Source = @Source
       AND SourceID = @SourceID
       AND DeletedOn IS NULL

@@ -239,8 +239,10 @@ abstract class ApprovalWorkflowService
         $this->logWorkflowState($table, $sourceId, 'BEFORE_ACTION');
 
         try {
-            DB::beginTransaction();
-
+            // NOTE: No DB::beginTransaction() here — the stored procedures manage their
+            // own transactions with SET XACT_ABORT ON. Wrapping SP calls in PHP transactions
+            // creates nested savepoints (trans2) that SQL Server destroys on XACT_ABORT,
+            // causing "Cannot roll back trans2" errors.
 
             DB::statement("SET NOCOUNT OFF");
 
@@ -281,8 +283,6 @@ abstract class ApprovalWorkflowService
             //  Check state AFTER calling SP
             $this->logWorkflowState($table, $sourceId, 'AFTER_ACTION');
 
-            DB::commit();
-
             $result = [
                 'success' => true,
                 'message' => $result[0]->Message ?? 'Action recorded successfully',
@@ -299,14 +299,12 @@ abstract class ApprovalWorkflowService
 
             return $result;
         } catch (ErroredException $e) {
-            DB::rollBack();
             Log::error("ErroredException in _executeWorkflowAction", [
                 'message' => $e->getMessage(),
             ]);
 
             throw $e;
         } catch (\Throwable $e) {
-            DB::rollBack();
             Log::error('Error in _executeWorkflowAction', [
                 'error' => $e->getMessage(),
                 'table' => $table,
@@ -494,8 +492,9 @@ abstract class ApprovalWorkflowService
 
 
         try {
-            // Start a SINGLE transaction for everything
-            DB::beginTransaction();
+            // NOTE: No DB::beginTransaction() here — the stored procedures manage their
+            // own transactions with SET XACT_ABORT ON. The caller (controller/service)
+            // wraps this in DB::transaction() which is the single top-level transaction.
 
             // Prevent double submission only when there are active pending approvers.
             // History rows can remain with isApproved = null after transitions, so they are
@@ -590,13 +589,9 @@ abstract class ApprovalWorkflowService
             // Log state after creating pending approvals
             $this->logWorkflowState($table, $sourceId, 'AFTER_SUBMISSION');
 
-            // Commit everything together
-            DB::commit();
-
 
             return true;
         } catch (ErroredException $e) {
-            DB::rollBack();
             Log::error("ErroredException in submittedAction", [
                 'message' => $e->getMessage(),
                 'table' => $table,
@@ -605,7 +600,6 @@ abstract class ApprovalWorkflowService
 
             throw $e;
         } catch (\Throwable $e) {
-            DB::rollBack();
             Log::error('Error in submittedAction', [
                 'error' => $e->getMessage(),
                 'table' => $table,
@@ -939,15 +933,15 @@ abstract class ApprovalWorkflowService
         }
     }
 
-    //advancing to the nect stage
+    //advancing to the next stage
+    // NOTE: No DB::beginTransaction() here — the stored procedures manage their own
+    // transactions with SET XACT_ABORT ON. Adding PHP-level transactions around SP calls
+    // creates nested savepoints that SQL Server destroys, causing "Cannot roll back trans2" errors.
     private function advanceToNextStage(string $table, string|int $sourceId, ?int $currentStageId, int $userId, string $statusColumn = 'Status'): void
     {
         try {
-            DB::beginTransaction();
-
             if (! $currentStageId) {
                 Log::warning("Cannot advance: currentStageId is null", ['table' => $table, 'sourceId' => $sourceId]);
-                DB::rollBack();
 
                 return;
             }
@@ -959,7 +953,6 @@ abstract class ApprovalWorkflowService
 
             if (! $currentStage) {
                 Log::warning("Current stage not found", ['stageId' => $currentStageId]);
-                DB::rollBack();
 
                 return;
             }
@@ -1046,8 +1039,6 @@ abstract class ApprovalWorkflowService
 
                     throw new ErroredException("Failed to advance to next stage: " . $e->getMessage());
                 }
-
-                DB::commit();
             } else {
                 // No next stage - workflow fully approved
 
@@ -1099,11 +1090,8 @@ abstract class ApprovalWorkflowService
                     ]);
                     // Don't throw - workflow is complete, this is just a status update issue
                 }
-
-                DB::commit();
             }
         } catch (\Throwable $e) {
-            DB::rollBack();
             Log::error("Failed to advance stage", [
                 'error' => $e->getMessage(),
                 'table' => $table,
