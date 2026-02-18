@@ -135,34 +135,6 @@ class DepartmentNeedApprovalController extends Controller
         return redirect()
             ->route('department-need-approval.index')
             ->with('success', 'Department need submitted & approved successfully.');
-        $this->authorize('approve', $departmentNeed);
-
-        $user = Auth::user();
-
-        // Maker-checker pre-check: Ensure user can approve (has pending, not submitter)
-        if (! $this->workflow->canApproveModel($departmentNeed, $user)) {
-            return redirect()->back()->withErrors(['error' => 'You are not authorized to approve this need.']);
-        }
-
-        $lock = Cache::lock('approve-DepartmentNeeds-' . $departmentNeed->NeedID, 5);
-        if (! $lock->get()) {
-            return redirect()->back()->with('error', 'Department Needs has been approved, or another user is working on it.');
-        }
-
-        try {
-            DB::transaction(function () use ($departmentNeed, $user) {
-                // Only approve (no need to submit again, as pendings are already created)
-                $this->workflow->approve($departmentNeed, $user, DepartmentNeedsEnum::Approved, 'Approved');
-            });
-        } catch (ErroredException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        } catch (\Throwable | Exception $e) {
-            Log::error('Error approving department need: ' . $e->getMessage());
-
-            return redirect()->back()->with('error', 'Unexpected error, try again later.');
-        }
-
-        return redirect()->route('department-need-approval.index')->with('success', 'Department need approved successfully.');
     }
 
     /**

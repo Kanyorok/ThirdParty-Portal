@@ -291,10 +291,17 @@ abstract class ApprovalWorkflowService
             ];
 
             //  Use the properly defined $currentStageId
-            if ($result['stageCompleted']) {
-                // Always call advanceToNextStage - it handles both moving to next stage AND finalizing if no next stage exists
+            // Only advance to next stage for APPROVALS, not rejections.
+            // The SP's Section 12 already handles rejection completely:
+            // it updates the source table status, cleans up pending records,
+            // and returns. Calling advanceToNextStage after rejection would
+            // overwrite the rejected status with an approved status.
+            $isRejection = isset($result['workflowStatus'])
+                && stripos($result['workflowStatus'], 'reject') !== false;
+
+            if ($result['stageCompleted'] && !$isRejection) {
+                // Advance to next stage or finalize approval if no next stage exists
                 $this->advanceToNextStage($table, $sourceId, $currentStageId, $actor->Id, $statusColumn);
-            } else {
             }
 
             return $result;
