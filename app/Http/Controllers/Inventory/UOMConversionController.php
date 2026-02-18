@@ -31,7 +31,9 @@ class UOMConversionController extends Controller
     {
         $this->authorize('create', UOMConversion::class);
         $uoms = UnitOfMeasure::all();
-        $alternateUoms = UnitOfMeasure::where('BaseUnit', '0')->get();
+        $alternateUoms = UnitOfMeasure::where('BaseUnit', '0')
+         ->orderBy('Code','asc')
+         ->get();
         $items = ItemMasterList::with('uom')->get();
 
         return view('inventory.uomconversion.create', compact('uoms', 'alternateUoms', 'items'));
@@ -53,7 +55,9 @@ class UOMConversionController extends Controller
         $this->authorize('update', UOMConversion::class);
         $uomConversion = UOMConversion::findOrFail($id);
         $uoms = UnitOfMeasure::all();
-        $alternateUoms = UnitOfMeasure::where('BaseUnit', '0')->get();
+        $alternateUoms = UnitOfMeasure::where('BaseUnit', '0')
+         ->orderBy('Code','asc')
+         ->get();
         $items = ItemMasterList::with('uom')->get();
 
         return view('inventory.uomconversion.edit', compact('items', 'uomConversion', 'uoms', 'alternateUoms'));

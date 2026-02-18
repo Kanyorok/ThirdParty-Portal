@@ -65,14 +65,14 @@ class StockConsumptionController extends Controller
             ->whereHas('user', function ($q) use ($currentUser) {
                 $q->where('Id', '!=', $currentUser->Id);
             })
-            ->select('Id', 'FirstName', 'LastName', 'EmployeeID')
+            ->select('Id', 'FirstName', 'LastName', 'EmployeeNo')
             ->orderBy('FirstName')
             ->get()
             ->map(function ($employee) {
                 return [
                     'id' => $employee->user ? $employee->user->Id : null,
                     'name' => $employee->FirstName . ' ' . $employee->LastName .
-                        ($employee->EmployeeID ? ' (' . $employee->EmployeeID . ')' : ''),
+                        ($employee->EmployeeNo ? ' (' . $employee->EmployeeNo . ')' : ''),
                 ];
             })
             ->filter(function ($item) {
@@ -80,7 +80,7 @@ class StockConsumptionController extends Controller
             });
 
         $departments = Department::select('Id', 'Name')
-            ->orderBy('Name')
+            ->orderBy('Name', 'asc')
             ->get()
             ->map(function ($department) {
                 return [
@@ -89,10 +89,14 @@ class StockConsumptionController extends Controller
                 ];
             });
 
-        $stores = Store::where('BranchID', $branchId)->get();
+        $stores = Store::where('BranchID', $branchId)
+            ->orderBy('StoreName', 'asc')
+            ->get();
         $items = StockItem::where('Branch', $branchId)->get();
         $uoms = UnitOfMeasure::all();
-        $types = CodeDetail::where('CodeID', 'IssuedToType')->get(['ID', 'Description']);
+        $types = CodeDetail::where('CodeID', 'IssuedToType')
+        ->orderBy('Description', 'asc')
+        ->get(['ID', 'Description']);
 
         return view('inventory.stockmanagement.stockconsumption.create', compact(
             'branch',
@@ -152,7 +156,7 @@ class StockConsumptionController extends Controller
                     'Id' => $user->Id,
                     'Name' => $employee
                         ? $employee->FirstName . ' ' . $employee->LastName .
-                        ($employee->EmployeeID ? ' (' . $employee->EmployeeID . ')' : '')
+                        ($employee->EmployeeNo ? ' (' . $employee->EmployeeNo . ')' : '')
                         : $user->UserName,
                 ];
             });
@@ -162,14 +166,14 @@ class StockConsumptionController extends Controller
             ->whereHas('user', function ($q) use ($currentUser) {
                 $q->where('Id', '!=', $currentUser->Id);
             })
-            ->select('Id', 'FirstName', 'LastName', 'EmployeeID')
+            ->select('Id', 'FirstName', 'LastName', 'EmployeeNo')
             ->orderBy('FirstName')
             ->get()
             ->map(function ($employee) {
                 return [
                     'id' => $employee->user ? $employee->user->Id : null,
                     'name' => $employee->FirstName . ' ' . $employee->LastName .
-                        ($employee->EmployeeID ? ' (' . $employee->EmployeeID . ')' : ''),
+                        ($employee->EmployeeNo ? ' (' . $employee->EmployeeNo . ')' : ''),
                 ];
             })
             ->filter(function ($item) {
@@ -177,7 +181,7 @@ class StockConsumptionController extends Controller
             });
 
         $departments = Department::select('Id', 'Name')
-            ->orderBy('Name')
+            ->orderBy('Name','asc')
             ->get()
             ->map(function ($department) {
                 return [
@@ -186,10 +190,18 @@ class StockConsumptionController extends Controller
                 ];
             });
 
-        $stores = Store::where('BranchID', $branchId)->get();
-        $items = StockItem::where('Branch', $branchId)->get();
+        $stores = Store::where('BranchID', $branchId)
+            ->orderBy('StoreName', 'asc')
+            ->get();
+        $items = StockItem::with('item')
+            ->where('Branch', $branchId)
+            ->get()
+            ->sortBy('item.ItemName')
+            ->values();
         $uoms = UnitOfMeasure::all();
-        $types = CodeDetail::where('CodeID', 'IssuedToType')->get(['ID', 'Description']);
+        $types = CodeDetail::where('CodeID', 'IssuedToType')
+            ->orderBy('Description', 'asc')
+            ->get(['ID', 'Description']);
 
         $preSelectedValue = '';
         if ($consumption->IssuedToType) {
@@ -279,17 +291,20 @@ class StockConsumptionController extends Controller
             $query->where('Branch', $branchId);
         }
 
-        $items = $query->get();
-
-        return response()->json($items->map(function ($item) {
-            return [
-                'Id' => $item->Id,
-                'ItemName' => $item->item?->ItemName ?? '',
-                'UOM' => $item->UOM,
-                'UOMCode' => $item->uom?->Code ?? '',
-                'CurrentQty' => $item->CurrentQty,
-            ];
-        }));
+            $items = $query->get();
+            return response()->json(
+                $items->map(function ($item) {
+                    return [
+                        'Id'         => $item->Id,
+                        'ItemName'   => $item->item?->ItemName ?? '',
+                        'UOM'        => $item->UOM,
+                        'UOMCode'    => $item->uom?->Code ?? '',
+                        'CurrentQty' => $item->CurrentQty,
+                    ];
+                })
+                ->sortBy('ItemName') 
+                ->values()           
+            );
     }
 
     public function getIssuedToOptions(Request $request)
@@ -309,14 +324,14 @@ class StockConsumptionController extends Controller
                     ->whereHas('user', function ($q) {
                         $q->where('Id', '!=', Auth::id());
                     })
-                    ->select('Id', 'FirstName', 'LastName', 'EmployeeID')
+                    ->select('Id', 'FirstName', 'LastName', 'EmployeeNo')
                     ->orderBy('FirstName')
                     ->get()
                     ->map(function ($employee) {
                         return [
                             'Id' => $employee->user ? $employee->user->Id : $employee->Id,
                             'Name' => $employee->FirstName . ' ' . $employee->LastName .
-                                ($employee->EmployeeID ? ' (' . $employee->EmployeeID . ')' : ''),
+                                ($employee->EmployeeNo ? ' (' . $employee->EmployeeNo . ')' : ''),
                         ];
                     });
 
