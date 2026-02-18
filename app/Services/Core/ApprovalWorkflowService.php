@@ -299,7 +299,7 @@ abstract class ApprovalWorkflowService
             $isRejection = isset($result['workflowStatus'])
                 && stripos($result['workflowStatus'], 'reject') !== false;
 
-            if ($result['stageCompleted'] && !$isRejection) {
+            if ($result['stageCompleted'] && ! $isRejection) {
                 // Advance to next stage or finalize approval if no next stage exists
                 $this->advanceToNextStage($table, $sourceId, $currentStageId, $actor->Id, $statusColumn);
             }
