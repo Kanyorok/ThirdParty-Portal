@@ -67,14 +67,14 @@
                                     <div class="d-inline-flex align-items-center justify-content-start w-100 mb-3">
                                         <i class="ti ti-mail me-2"></i>
                                         <p class="mb-0"><a href="javascript:void(0)"
-                                                data-info="{{ route('employees.store', [$party->EmployeeID]) }}~{{ $party->full_name }}~{{ $party->Email }}"
+                                                data-info="{{ route('emails.store') }}~{{ $party->ThirdPartyName }}~{{ $party->Email }}"
                                                 class="send-mail-to-action">{{ $party->Email }}</a>
                                         </p>
                                     </div>
                                     <div class="d-inline-flex align-items-center justify-content-start w-100 mb-3">
                                         <i class="ti ti-phone me-2"></i>
                                         <p class="mb-0"><a href="javascript:void(0)"
-                                                data-info="{{ route('employees.store', [$party->EmployeeID]) }}~{{ $party->full_name }}~{{ $party->Phone }}"
+                                                data-info="{{ route('emails.store') }}~{{ $party->ThirdPartyName }}~{{ $party->Phone }}"
                                                 class=" send-message-to-action">{{ $party->Phone }}</a>
                                         </p>
                                     </div>

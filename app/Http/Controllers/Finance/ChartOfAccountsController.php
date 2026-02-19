@@ -397,12 +397,15 @@ class ChartOfAccountsController extends Controller
                 'max:255',
                 Rule::exists('t_FinanceSyncGLAccounts', 'GLCode')
                     ->where(function ($query) use ($request) {
-                        $query->where('CurrencyID', $request->input('Currency'));
+                        $query->where('CurrencyID', $request->input('Currency'))
+                            ->where('GLAccountTypeID', $request->input('GLAccountTypeID'));
                     }),
             ]
             : ['nullable', 'string', 'max:255'];
 
-        $validated = $request->validate($rules);
+        $validated = $request->validate($rules, [
+            'MappedGLCode.exists' => 'Selected mapped GL must match both the selected currency and GL Type.',
+        ]);
 
         DB::beginTransaction();
 
@@ -527,7 +530,7 @@ class ChartOfAccountsController extends Controller
                     ->orWhere('GLName', 'like', '%' . $q . '%');
             })
             ->where('CurrencyID', $currencyId)
-            ->select('GLCode', 'GLName')
+            ->select('GLCode', 'GLName', 'GLAccountTypeID')
             ->orderBy('GLCode')
             ->limit(25)
             ->get()
@@ -537,6 +540,7 @@ class ChartOfAccountsController extends Controller
                     'text' => trim($gl->GLCode . ' (' . ($gl->GLName ?? '-') . ')'),
                     'code' => $gl->GLCode,
                     'name' => $gl->GLName,
+                    'gl_account_type' => $gl->GLAccountTypeID,
                 ];
             })
             ->values();
@@ -633,12 +637,15 @@ class ChartOfAccountsController extends Controller
                 'max:255',
                 Rule::exists('t_FinanceSyncGLAccounts', 'GLCode')
                     ->where(function ($query) use ($request) {
-                        $query->where('CurrencyID', $request->input('Currency'));
+                        $query->where('CurrencyID', $request->input('Currency'))
+                            ->where('GLAccountTypeID', $request->input('GLAccountTypeID'));
                     }),
             ]
             : ['nullable', 'string', 'max:255'];
 
-        $validated = $request->validate($rules);
+        $validated = $request->validate($rules, [
+            'MappedGLCode.exists' => 'Selected mapped GL must match both the selected currency and GL Type.',
+        ]);
 
         DB::beginTransaction();
 

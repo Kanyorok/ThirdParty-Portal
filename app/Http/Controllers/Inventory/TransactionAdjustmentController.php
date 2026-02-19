@@ -51,7 +51,8 @@ class TransactionAdjustmentController extends Controller
             $q->where('BranchId', $branchId);
         })->get();
 
-        $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
+        $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->orderBy('Description', 'asc')->get();
+
         $stockItems = StockItem::with(['item', 'uom'])
             ->where('Branch', $branchId)
             ->get();
@@ -132,7 +133,9 @@ class TransactionAdjustmentController extends Controller
             $q->where('BranchId', $branchId);
         })->get();
 
-        $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
+        $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')
+            ->orderBy('Description', 'asc')
+            ->get();
 
         return view('inventory.transactions.adjustments.edit', compact(
             'adjustment',
