@@ -25,7 +25,6 @@ enum IntegrationsEnum: string
     case CRDB = 'cru';
     // Organization branding (name, motto, logo)
     case Organization = 'org';
-    case GoogleMaps = 'gmp';
     case LLM = 'llm';
 
     public function description(): string
@@ -47,7 +46,6 @@ enum IntegrationsEnum: string
             self::ReportService => "SQL Server Reporting Service",
             self::DMSCoreBanking => "DMS Core Banking",
             self::CRDB => "Central Report Unit (CRU)",
-            self::GoogleMaps => "Google Maps Integration",
         };
     }
 
