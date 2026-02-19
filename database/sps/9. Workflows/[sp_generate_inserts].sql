@@ -21,7 +21,7 @@ BEGIN
 
 /***********************************************************************************************************
 Procedure:	sp_generate_inserts  (Build 22) 
-		(Copyright © 2002 Narayana Vyas Kondreddi. All rights reserved.)
+		(Copyright (c) 2002 Narayana Vyas Kondreddi. All rights reserved.)
                                           
 Purpose:	To generate INSERT statements from existing data. 
 		These INSERTS can be executed to regenerate the data at some other location.

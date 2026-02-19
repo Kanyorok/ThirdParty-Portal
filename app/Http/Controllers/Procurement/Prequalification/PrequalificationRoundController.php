@@ -21,7 +21,7 @@ class PrequalificationRoundController extends Controller
 {
     public function __construct()
     {
-        $this->authorizeResource(PrequalificationRound::class, 'prequalificationRound');
+        $this->authorizeResource(PrequalificationRound::class, 'prequalification_round');
     }
 
     public function index(Request $request): View
