@@ -59,6 +59,7 @@ class GoogleMapsService
         } catch (ErroredException|CouldNotGeocode) {
             return false;
         }
+
         return true;
     }
 

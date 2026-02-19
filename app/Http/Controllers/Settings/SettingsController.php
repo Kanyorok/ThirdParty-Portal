@@ -34,7 +34,6 @@ class SettingsController extends Controller
         return view('settings.users');
     }
 
-
     public function integrations(): View
     {
         $this->authorize('viewAny', APICredential::class);
