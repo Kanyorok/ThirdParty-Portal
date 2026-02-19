@@ -21,6 +21,8 @@ const profileSchema = z.object({
   taxPIN: z.string().optional().nullable(),
   website: z.string().url("Enter a valid URL").optional().or(z.literal("")).nullable(),
   physicalAddress: z.string().optional().nullable(),
+  email: z.string().email("Enter a valid email").optional().or(z.literal("")).nullable(),
+  phone: z.string().optional().nullable(),
 })
 
 type ProfileFormValues = z.infer<typeof profileSchema>
@@ -57,6 +59,8 @@ export default function BusinessProfileCard({
       taxPIN: "",
       website: "",
       physicalAddress: "",
+      email: "",
+      phone: "",
     },
   })
 
@@ -69,6 +73,8 @@ export default function BusinessProfileCard({
       taxPIN: thirdPartyDetails.taxPIN ?? "",
       website: thirdPartyDetails.website ?? "",
       physicalAddress: thirdPartyDetails.physicalAddress ?? "",
+      email: thirdPartyDetails.email ?? "",
+      phone: thirdPartyDetails.phone ?? "",
     })
   }, [thirdPartyDetails, form])
 
@@ -85,12 +91,16 @@ export default function BusinessProfileCard({
       TaxPIN: normalizeString(values.taxPIN) ?? undefined,
       PhysicalAddress: normalizeString(values.physicalAddress) ?? undefined,
       Website: normalizeString(values.website) ?? undefined,
+      Email: normalizeString(values.email) ?? undefined,
+      Phone: normalizeString(values.phone) ?? undefined,
       thirdPartyName: normalizeString(values.thirdPartyName),
       tradingName: normalizeString(values.tradingName),
       registrationNumber: normalizeString(values.registrationNumber),
       taxPIN: normalizeString(values.taxPIN),
       physicalAddress: normalizeString(values.physicalAddress),
       website: normalizeString(values.website),
+      email: normalizeString(values.email),
+      phone: normalizeString(values.phone),
     }
 
     try {
@@ -327,6 +337,34 @@ export default function BusinessProfileCard({
                       <FormLabel className="text-xs font-semibold text-foreground">Address</FormLabel>
                       <FormControl>
                         <Input {...field} value={field.value || ""} className={inputClassName} placeholder="Street, City, Country" />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold text-foreground">Company email</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} type="email" className={inputClassName} placeholder="info@company.com" />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold text-foreground">Company phone</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} className={inputClassName} placeholder="+254700000000" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>

@@ -163,6 +163,8 @@ export const profileService = {
       "LocationId",
       "PhysicalAddress",
       "Website",
+      "Email",
+      "Phone",
     ]
     const hasPortalPayload = portalFields.some((key) => Object.prototype.hasOwnProperty.call(payload, key))
     const endpoint = hasPortalPayload ? "/api/v1/profile" : "/api/third-party-profile"

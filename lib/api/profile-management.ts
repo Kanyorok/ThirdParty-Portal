@@ -122,6 +122,16 @@ export interface UpdateProfilePayload {
   LocationId?: number
   PhysicalAddress?: string
   Website?: string
+  Email?: string
+  Phone?: string
+  thirdPartyName?: string
+  tradingName?: string
+  registrationNumber?: string
+  taxPIN?: string
+  physicalAddress?: string
+  website?: string
+  email?: string
+  phone?: string
 }
 
 export interface AvailableProfilesResponse {
@@ -174,6 +184,8 @@ export async function updateProfile(data: UpdateProfilePayload): Promise<Profile
     "LocationId",
     "PhysicalAddress",
     "Website",
+    "Email",
+    "Phone",
   ].some((key) => Object.prototype.hasOwnProperty.call(data, key))
 
   if (hasPortalPayload) {

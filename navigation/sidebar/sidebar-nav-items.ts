@@ -2,7 +2,7 @@ import { UserProfile, NavSection, NavMainItem } from "@/types/profile-types"
 import {
     LayoutDashboard, Receipt, FileText,
     ClipboardList, FolderOpen, ShieldCheck, BookOpen,
-    Settings, HelpCircle, Send, Ticket,
+    Settings, HelpCircle, Ticket,
     Construction,
     LandPlot,
     FileCheck2
@@ -76,7 +76,6 @@ export const sidebarItems: readonly NavSection[] = [
             withProfiles({ title: "Settings", url: "/dashboard/settings/profile", icon: Settings, description: "Profile & preferences" }, allProfiles),
             withProfiles({ title: "Help Center", url: "/dashboard/help", icon: HelpCircle, description: "Guides & support" }, allProfiles),
             withProfiles({ title: "My Tickets", url: "/dashboard/help/tickets", icon: Ticket, description: "Track and reply to support tickets" }, allProfiles),
-            withProfiles({ title: "Send Feedback", url: "/dashboard/feedback", icon: Send, newTab: true, description: "Report issues or suggestions" }, allProfiles),
         ],
     },
 ]

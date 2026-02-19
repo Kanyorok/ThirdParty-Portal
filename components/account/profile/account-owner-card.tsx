@@ -1,22 +1,37 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Calendar, ChevronDown, ImageUp, Mail, Phone } from "lucide-react"
+import { Calendar, ChevronDown, ImageUp, Mail, PencilLine, Phone, Save, X } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/common/avatar"
 import { Button } from "@/components/common/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/common/collapsible"
+import { Input } from "@/components/common/input"
 import { cn } from "@/lib/utils"
 
 type AccountOwnerCardProps = {
   profile: any
   imageUrl?: string | null
   onEditImage?: () => void
+  onUpdateContact?: (payload: { email: string; phone: string | null }) => Promise<unknown>
+  isSavingContact?: boolean
 }
 
-export default function AccountOwnerCard({ profile, imageUrl, onEditImage }: AccountOwnerCardProps) {
+const inputClassName = "h-10 rounded-xl bg-background px-3 text-sm shadow-none focus-visible:ring-2 focus-visible:ring-ring/40"
+
+export default function AccountOwnerCard({
+  profile,
+  imageUrl,
+  onEditImage,
+  onUpdateContact,
+  isSavingContact = false,
+}: AccountOwnerCardProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [remoteAvatarSrc, setRemoteAvatarSrc] = useState<string | null>(null)
+  const [isEditingContact, setIsEditingContact] = useState(false)
+  const [emailInput, setEmailInput] = useState("")
+  const [phoneInput, setPhoneInput] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; phone?: string }>({})
 
   const email = profile?.email || "—"
   const phone = profile?.phone || "—"
@@ -36,6 +51,11 @@ export default function AccountOwnerCard({ profile, imageUrl, onEditImage }: Acc
   const isActive = typeof profile?.isActive === "boolean" ? profile.isActive : null
   const ownerUserId = profile?.userId ?? profile?.user_id ?? profile?.id ?? null
   const ownerThirdPartyId = profile?.thirdPartyId ?? null
+
+  useEffect(() => {
+    setEmailInput(profile?.email ?? "")
+    setPhoneInput(profile?.phone ?? "")
+  }, [profile?.email, profile?.phone])
 
   useEffect(() => {
     if (imageUrl || avatarSrcFromProfile) {
@@ -72,6 +92,54 @@ export default function AccountOwnerCard({ profile, imageUrl, onEditImage }: Acc
       cancelled = true
     }
   }, [imageUrl, avatarSrcFromProfile, imageId])
+
+  const validateContactInputs = () => {
+    const nextErrors: { email?: string; phone?: string } = {}
+    const trimmedEmail = emailInput.trim()
+    const trimmedPhone = phoneInput.trim()
+
+    if (!trimmedEmail) {
+      nextErrors.email = "Email is required."
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      nextErrors.email = "Please enter a valid email address."
+    }
+
+    if (trimmedPhone && !/^\+?[0-9()\-\s]{7,20}$/.test(trimmedPhone)) {
+      nextErrors.phone = "Please enter a valid phone number."
+    }
+
+    setFieldErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
+  }
+
+  const handleStartEditContact = () => {
+    setIsEditingContact(true)
+    setEmailInput(profile?.email ?? "")
+    setPhoneInput(profile?.phone ?? "")
+    setFieldErrors({})
+  }
+
+  const handleCancelEditContact = () => {
+    setIsEditingContact(false)
+    setEmailInput(profile?.email ?? "")
+    setPhoneInput(profile?.phone ?? "")
+    setFieldErrors({})
+  }
+
+  const handleSaveContact = async () => {
+    if (!onUpdateContact) return
+    if (!validateContactInputs()) return
+
+    try {
+      await onUpdateContact({
+        email: emailInput.trim(),
+        phone: phoneInput.trim() || null,
+      })
+      setIsEditingContact(false)
+    } catch {
+      // Error toast is already handled by the profile mutation hook.
+    }
+  }
 
   return (
     <section className="border border-border/60 bg-background">
@@ -119,17 +187,83 @@ export default function AccountOwnerCard({ profile, imageUrl, onEditImage }: Acc
               )}
             </div>
 
-            <div className="mt-2 space-y-2">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Mail className="h-4 w-4 text-primary/80" />
-                <span className="truncate">{email}</span>
+            {!isEditingContact ? (
+              <div className="mt-2 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Mail className="h-4 w-4 text-primary/80" />
+                  <span className="truncate">{email}</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Phone className="h-4 w-4 text-primary/80" />
+                  <span className="truncate">{phone}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Phone className="h-4 w-4 text-primary/80" />
-                <span className="truncate">{phone}</span>
+            ) : (
+              <div className="mt-3 space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-foreground">Email</label>
+                  <Input
+                    type="email"
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    className={inputClassName}
+                    placeholder="you@company.com"
+                    disabled={isSavingContact}
+                  />
+                  {fieldErrors.email ? <p className="text-[11px] text-destructive">{fieldErrors.email}</p> : null}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-foreground">Phone</label>
+                  <Input
+                    value={phoneInput}
+                    onChange={(e) => setPhoneInput(e.target.value)}
+                    className={inputClassName}
+                    placeholder="+254700000000"
+                    disabled={isSavingContact}
+                  />
+                  {fieldErrors.phone ? <p className="text-[11px] text-destructive">{fieldErrors.phone}</p> : null}
+                </div>
               </div>
-            </div>
+            )}
           </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {!isEditingContact ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9 rounded-xl text-xs font-medium shadow-none"
+              onClick={handleStartEditContact}
+              disabled={!onUpdateContact || isSavingContact}
+            >
+              <PencilLine className="mr-2 h-4 w-4" />
+              Edit contact
+            </Button>
+          ) : (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 rounded-xl text-xs font-medium shadow-none"
+                onClick={handleCancelEditContact}
+                disabled={isSavingContact}
+              >
+                <X className="mr-2 h-4 w-4" />
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="h-9 rounded-xl text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                onClick={handleSaveContact}
+                disabled={isSavingContact}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                Save
+              </Button>
+            </>
+          )}
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">

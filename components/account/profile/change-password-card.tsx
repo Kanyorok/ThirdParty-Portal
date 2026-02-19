@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { AlertCircle, ShieldCheck, X } from "lucide-react"
+import { AlertCircle, CheckCircle2, ShieldCheck, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Alert, AlertDescription } from "@/components/common/alert"
@@ -34,6 +34,21 @@ type LocalErrors = {
 }
 
 const inputClassName = "h-11 rounded-xl bg-background px-4 shadow-none focus-visible:ring-2 focus-visible:ring-ring/40"
+const PASSWORD_MESSAGE_MAP: Record<string, string> = {
+  "auth.password_changed_ok": "Password changed successfully.",
+}
+
+function resolveUserMessage(raw: unknown, fallback: string) {
+  if (typeof raw !== "string") return fallback
+  const normalized = raw.trim()
+  if (!normalized) return fallback
+
+  if (normalized.includes("password_reuse_not_allowed")) {
+    return "New password must be different from your current password."
+  }
+
+  return PASSWORD_MESSAGE_MAP[normalized] || normalized
+}
 
 function parseResponseMessage(payload: PasswordRouteResponse, fallback: string) {
   const current = payload.errors?.current_password?.[0]
@@ -41,13 +56,7 @@ function parseResponseMessage(payload: PasswordRouteResponse, fallback: string) 
   const confirmation = payload.errors?.new_password_confirmation?.[0]
 
   const special = [current, next, confirmation, payload.message].find(Boolean)
-  if (!special) return fallback
-
-  if (typeof special === "string" && special.includes("password_reuse_not_allowed")) {
-    return "New password must be different from your current password."
-  }
-
-  return String(special)
+  return resolveUserMessage(special, fallback)
 }
 
 export default function ChangePasswordCard() {
@@ -57,6 +66,7 @@ export default function ChangePasswordCard() {
   const [newPassword, setNewPassword] = useState("")
   const [confirmNewPassword, setConfirmNewPassword] = useState("")
   const [localErrors, setLocalErrors] = useState<LocalErrors>({})
+  const [successMessage, setSuccessMessage] = useState("")
 
   useEffect(() => {
     if (!isOpen) {
@@ -99,6 +109,7 @@ export default function ChangePasswordCard() {
   }
 
   const onSubmit = async () => {
+    setSuccessMessage("")
     if (!validateForm()) return
 
     setIsSubmitting(true)
@@ -132,12 +143,22 @@ export default function ChangePasswordCard() {
         throw new Error(parseResponseMessage(json, "Failed to update password."))
       }
 
-      toast.success(json?.message || "Password updated successfully.")
+      const message = resolveUserMessage(json?.message, "Password updated successfully.")
+      setLocalErrors({})
+      setSuccessMessage(message)
+      toast.success(message)
       setIsOpen(false)
     } catch (error: any) {
       toast.error(error?.message || "Failed to update password.")
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const onOpenChange = (nextOpen: boolean) => {
+    setIsOpen(nextOpen)
+    if (nextOpen) {
+      setSuccessMessage("")
     }
   }
 
@@ -153,7 +174,7 @@ export default function ChangePasswordCard() {
           Update your password regularly for better security.
         </div>
 
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
           <DialogTrigger asChild>
             <Button variant="outline" className="h-11 rounded-xl text-xs font-medium shadow-none">
               Change password
@@ -234,6 +255,15 @@ export default function ChangePasswordCard() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {successMessage ? (
+        <div className="px-5 pb-5">
+          <Alert className="border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200">
+            <CheckCircle2 className="h-4 w-4" />
+            <AlertDescription className="text-emerald-800 dark:text-emerald-200">{successMessage}</AlertDescription>
+          </Alert>
+        </div>
+      ) : null}
     </section>
   )
 }

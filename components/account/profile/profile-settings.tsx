@@ -269,6 +269,14 @@ export default function ProfileSettings() {
                       profile={profile}
                       imageUrl={userImageUrl}
                       onEditImage={() => setIsUserImageDialogOpen(true)}
+                      onUpdateContact={async ({ email, phone }) => {
+                        await updateProfile({
+                          email,
+                          phone: phone ?? undefined,
+                        })
+                        await refetch?.()
+                      }}
+                      isSavingContact={isUpdating}
                     />
                     <ChangePasswordCard />
                   </div>

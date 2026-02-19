@@ -17,14 +17,15 @@ function formatSystemTime(date: Date) {
 }
 
 export function SystemFooter() {
-  const [now, setNow] = useState<Date>(new Date())
+  const [now, setNow] = useState<Date | null>(null)
 
   useEffect(() => {
+    setNow(new Date())
     const timer = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
 
-  const year = useMemo(() => now.getFullYear(), [now])
+  const year = useMemo(() => (now ? now.getFullYear() : new Date().getFullYear()), [now])
 
   return (
     <div className="w-full rounded-xl border border-border/60 bg-background/70 px-3 py-2 backdrop-blur">
@@ -38,7 +39,7 @@ export function SystemFooter() {
 
         <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
           <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
-            System Time: {formatSystemTime(now)}
+            System Time: {now ? formatSystemTime(now) : "--:--:--"}
           </span>
           <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
             version v1.0.0

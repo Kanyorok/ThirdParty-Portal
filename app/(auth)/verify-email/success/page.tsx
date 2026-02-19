@@ -1,45 +1,33 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { CheckCircle2 } from 'lucide-react'
+import Link from 'next/link'
+import { Button } from '@/components/common/button'
 
-export default function VerifyEmail() {
-    const searchParams = useSearchParams()
-    const router = useRouter()
-    const verifyUrl = searchParams.get('verify_url')
-    const ran = useRef(false)
+export default function VerifyEmailSuccess() {
+    return (
+        <div className="min-h-screen flex items-center justify-center p-4">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white p-8 rounded-2xl text-center border border-slate-100 max-w-md w-full"
+            >
+                <div className="flex justify-center mb-6">
+                    <div className="p-4 rounded-full bg-emerald-50 text-emerald-600">
+                        <CheckCircle2 className="w-8 h-8" />
+                    </div>
+                </div>
 
-    useEffect(() => {
-        if (ran.current) return
-        ran.current = true
+                <h2 className="text-2xl font-bold mb-2">Email Verified</h2>
+                <p className="text-slate-600 mb-8">
+                    Your account has been verified successfully. You can now sign in.
+                </p>
 
-        if (!verifyUrl) {
-            router.replace('/verify-email/invalid')
-            return
-        }
-
-        const run = async () => {
-            try {
-                const res = await fetch(verifyUrl, { headers: { Accept: 'application/json' } })
-
-                if (res.status === 200) {
-                    router.replace('/verify-email/success')
-                    return
-                }
-
-                if (res.status === 410) {
-                    router.replace('/verify-email/expired')
-                    return
-                }
-
-                router.replace('/verify-email/invalid')
-            } catch {
-                router.replace('/verify-email/invalid')
-            }
-        }
-
-        run()
-    }, [verifyUrl, router])
-
-    return null
+                <Button asChild className="w-full">
+                    <Link href="/signin">Continue to Login</Link>
+                </Button>
+            </motion.div>
+        </div>
+    )
 }

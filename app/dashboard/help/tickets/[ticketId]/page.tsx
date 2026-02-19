@@ -7,12 +7,12 @@ import { Button } from "@/components/common/button"
 import Loading from "@/components/common/custom-loader"
 import { Label } from "@/components/common/label"
 import { Textarea } from "@/components/common/textarea"
-import { ArrowLeft, ChevronLeft, Clock3, LifeBuoy, MessageCircleMore, RefreshCw, Send } from "lucide-react"
+import { AlertCircle, ArrowLeft, ChevronLeft, Clock3, LifeBuoy, MessageCircleMore, RefreshCw, Send } from "lucide-react"
 
 const PRIMARY_BUTTON =
-  "h-10 rounded-md border border-primary bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-none hover:bg-primary/95 hover:border-primary/95"
+  "h-10 rounded-2xl border border-primary/90 bg-primary px-4 text-xs font-semibold text-primary-foreground transition-colors duration-200 hover:bg-primary/85"
 const SECONDARY_BUTTON =
-  "h-10 rounded-md border border-border bg-background px-3 text-xs font-semibold text-foreground shadow-none hover:bg-muted/30"
+  "h-10 rounded-2xl border border-border/80 bg-background/95 px-4 text-xs font-semibold text-foreground transition-colors duration-200 hover:border-primary/30 hover:bg-primary/[0.05]"
 
 type Ticket = {
   id: string
@@ -138,20 +138,24 @@ function formatDate(v?: string | null): string {
   return Number.isNaN(d.getTime()) ? v : d.toLocaleString()
 }
 
-function severityLevelFromPriority(priority: string): string {
-  const key = normalizeKey(priority)
-  if (key === "urgent") return "1"
-  if (key === "high") return "2"
-  if (key === "normal") return "3"
-  if (key === "low") return "4"
-  return "3"
-}
-
 function severityTokenClasses(priority: string): string {
   const key = normalizeKey(priority)
   if (key === "urgent") return "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300"
   if (key === "high") return "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300"
   if (key === "low") return "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+  return "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300"
+}
+
+function displayToken(value: string, fallback: string): string {
+  const t = value.trim().replace(/[_-]+/g, " ")
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : fallback
+}
+
+function statusTokenClasses(status: string): string {
+  const key = normalizeKey(status)
+  if (["resolved", "closed", "done"].includes(key)) return "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+  if (["pending", "waiting", "in_progress", "pending_approval"].includes(key)) return "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+  if (["rejected", "failed"].includes(key)) return "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300"
   return "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300"
 }
 
@@ -260,12 +264,20 @@ export default function TicketDetailPage() {
   }
 
   return (
-    <div className="w-full antialiased">
-      <div className="w-full max-w-[1440px] mx-auto space-y-5 sm:space-y-6">
-        <header className="pb-2">
+    <div className="w-full antialiased relative">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(52rem_24rem_at_0%_0%,rgba(14,165,233,0.10),transparent_58%),radial-gradient(36rem_16rem_at_100%_0%,rgba(16,185,129,0.08),transparent_62%)]"
+      />
+      <div className="w-full space-y-7 sm:space-y-8">
+        <header className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-b from-background via-background to-muted/25 px-5 sm:px-7 py-6">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute right-0 top-0 h-24 w-24 -translate-y-6 translate-x-6 rounded-full bg-primary/10 blur-2xl"
+          />
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-2 border border-border/60 px-3 py-1.5">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/85 px-3 py-1.5">
                 <LifeBuoy className="h-3.5 w-3.5 text-primary" />
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">Support Hub</span>
               </div>
@@ -287,7 +299,7 @@ export default function TicketDetailPage() {
 
         <section className="px-4 sm:px-5">
           <div className="pt-1">
-            <Button asChild type="button" variant="outline" className="h-9 rounded-md border-border bg-background px-3 text-xs font-semibold shadow-none hover:bg-muted/30">
+            <Button asChild type="button" variant="outline" className="h-9 rounded-xl border-border bg-background px-3 text-xs font-semibold hover:bg-muted/30">
               <Link href="/dashboard/help/tickets">
                 <ArrowLeft className="mr-1.5 h-4 w-4" />
                 Back
@@ -296,27 +308,24 @@ export default function TicketDetailPage() {
           </div>
 
           {detailLoading && <Loading fullScreen={false} message="Loading ticket" className="py-14 bg-transparent" />}
-          {!detailLoading && detailError && <p className="py-8 text-sm text-rose-600">{detailError}</p>}
+          {!detailLoading && detailError && <p className="py-8 text-sm text-rose-600 flex items-center gap-2"><AlertCircle className="h-4 w-4" />{detailError}</p>}
           {!detailLoading && !detailError && !detail && <p className="py-8 text-sm text-muted-foreground">Ticket not found.</p>}
 
           {!detailLoading && !detailError && detail && (
             <div className="pb-7">
-              <div className="mt-3 px-3.5 py-3.5 flex flex-wrap items-center gap-2 text-sm bg-muted/[0.16]">
+              <div className="mt-3 rounded-2xl border border-border/70 bg-gradient-to-b from-background to-muted/20 px-3.5 py-3.5 flex flex-wrap items-center gap-2 text-sm">
                 <span className="font-semibold text-foreground">Ticket: {detail.id}</span>
-                <span className="text-muted-foreground">/</span>
-                <span className={`inline-flex items-center border px-2 py-1 text-xs font-semibold ${severityTokenClasses(detail.priority)}`}>
-                  Severity {severityLevelFromPriority(detail.priority)}
+                <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${statusTokenClasses(detail.status)}`}>
+                  {displayToken(detail.status, "Open")}
                 </span>
-                <span className="text-muted-foreground">/</span>
-                <span className="text-foreground font-medium">Source: Portal</span>
-                <span className="text-muted-foreground">/</span>
-                <span className="text-foreground font-medium">Raised by: Logged-in user</span>
-                <span className="text-muted-foreground">/</span>
-                <span className="text-foreground">Created at: {formatDate(detail.createdAt || detail.updatedAt)}</span>
+                <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${severityTokenClasses(detail.priority)}`}>
+                  Priority {displayToken(detail.priority, "Normal")}
+                </span>
+                <span className="text-foreground/90">Created: {formatDate(detail.createdAt || detail.updatedAt)}</span>
               </div>
 
               <div className="pt-6 space-y-6">
-                <section className="space-y-2.5">
+                <section className="space-y-2.5 rounded-2xl border border-border/70 bg-background/90 p-4">
                   <h3 className="text-xl font-semibold text-foreground">Summary</h3>
                   <p className="text-foreground/95 leading-relaxed">
                     {detail.subject}
@@ -324,21 +333,21 @@ export default function TicketDetailPage() {
                   </p>
                 </section>
 
-                <section className="space-y-2.5 pt-2">
+                <section className="space-y-2.5 rounded-2xl border border-border/70 bg-background/90 p-4">
                   <h4 className="text-base font-semibold text-foreground">Description</h4>
                   <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
                     {detail.description || "No detailed description provided for this ticket."}
                   </p>
                 </section>
 
-                <section className="pt-2">
+                <section className="rounded-2xl border border-border/70 bg-background/90 p-4">
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() => setDetailTab("comments")}
-                      className={`-mb-px inline-flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-semibold transition-all ${
+                      className={`-mb-px inline-flex items-center gap-1.5 border-b-2 rounded-t-lg px-3 py-2.5 text-sm font-semibold transition-all ${
                         detailTab === "comments"
-                          ? "border-primary text-primary bg-muted/25"
+                          ? "border-primary text-primary bg-primary/[0.08]"
                           : "border-transparent text-muted-foreground hover:text-foreground"
                       }`}
                     >
@@ -348,9 +357,9 @@ export default function TicketDetailPage() {
                     <button
                       type="button"
                       onClick={() => setDetailTab("history")}
-                      className={`-mb-px inline-flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-semibold transition-all ${
+                      className={`-mb-px inline-flex items-center gap-1.5 border-b-2 rounded-t-lg px-3 py-2.5 text-sm font-semibold transition-all ${
                         detailTab === "history"
-                          ? "border-primary text-primary bg-muted/25"
+                          ? "border-primary text-primary bg-primary/[0.08]"
                           : "border-transparent text-muted-foreground hover:text-foreground"
                       }`}
                     >
@@ -362,12 +371,12 @@ export default function TicketDetailPage() {
                   {detailTab === "comments" ? (
                     <div className="pt-5 space-y-5">
                       {detail.messages.length === 0 ? (
-                        <div className="border border-border/60 py-14 px-4 text-center bg-transparent">
+                        <div className="rounded-2xl border border-border/60 py-14 px-4 text-center bg-transparent">
                           <MessageCircleMore className="mx-auto h-10 w-10 text-muted-foreground" />
                           <p className="mt-4 text-xl font-medium text-foreground">No timeline items yet.</p>
                         </div>
                       ) : (
-                        <div className="space-y-4 max-h-[420px] overflow-auto pr-1">
+                        <div className="space-y-4 max-h-[420px] overflow-auto pr-1 rounded-xl border border-border/60 bg-muted/[0.12] p-3">
                           {detail.messages.map((m, index) => (
                             <div key={m.id} className="relative pl-14">
                               {index < detail.messages.length - 1 && (
@@ -403,7 +412,7 @@ export default function TicketDetailPage() {
                           onChange={(e) => setReply(e.target.value)}
                           rows={3}
                           placeholder="Write a follow-up message..."
-                          className="border-border/70 bg-transparent resize-none shadow-none focus-visible:ring-0 focus-visible:border-primary/40"
+                          className="border-border/70 bg-transparent resize-none focus-visible:ring-0 focus-visible:border-primary/40"
                         />
                         <Button type="submit" disabled={replying || !reply.trim()} className={PRIMARY_BUTTON.replace("h-10", "h-9")}>
                           {replying ? "Sending..." : <><Send className="mr-1.5 h-3.5 w-3.5" />Send reply</>}
@@ -411,7 +420,7 @@ export default function TicketDetailPage() {
                       </form>
                     </div>
                   ) : (
-                    <div className="pt-5 space-y-4">
+                    <div className="pt-5 space-y-4 rounded-xl border border-border/60 bg-muted/[0.12] p-3">
                       {detail.messages.length === 0 ? (
                         <p className="text-sm text-muted-foreground">No history entries yet.</p>
                       ) : (
