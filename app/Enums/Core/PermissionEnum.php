@@ -426,6 +426,7 @@ enum PermissionEnum: string
     case UOMConversionDelete = 'uomConversion-delete';
 
     case InventoryDashboardView = 'inventoryDashboard-view';
+    case InventoryReportsView = 'inventoryReports-view';
     /*
      *
      * ========================================  Property Management  ========================================
@@ -731,6 +732,8 @@ enum PermissionEnum: string
     case BudgetConsolidationView = 'budgetConsolidation-view';
     case ApproveNewBudget = 'approveNewBudget';
     case ApproveReallocation = 'approveReallocation';
+
+    case BudgetReportsView = 'budgetReports-view';
 
     /** ======================================== Document Management System ========================================*/
 
