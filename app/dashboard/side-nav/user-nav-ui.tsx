@@ -1,7 +1,7 @@
 'use client'
 
 import type * as React from "react"
-import { memo, useMemo } from "react"
+import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -34,6 +34,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { resolveSessionBusinessProfiles } from "@/lib/profile/session-profiles"
 
 interface UserData {
+    id?: string | number | null
+    user_id?: number | null
     firstName?: string | null
     first_name?: string | null
     lastName?: string | null
@@ -42,17 +44,19 @@ interface UserData {
     full_name?: string | null
     name?: string | null
     email?: string | null
-    isActive?: boolean
-    is_active?: boolean
-    isSupplier?: boolean
-    is_supplier?: boolean
-    isTenant?: boolean
-    is_tenant?: boolean
-    isCustomer?: boolean
-    is_customer?: boolean
+    isActive?: boolean | null
+    is_active?: boolean | null
+    isSupplier?: boolean | null
+    is_supplier?: boolean | null
+    isTenant?: boolean | null
+    is_tenant?: boolean | null
+    isCustomer?: boolean | null
+    is_customer?: boolean | null
     imageUrl?: string | null
     image_url?: string | null
     image?: string | null
+    imageId?: number | null
+    image_id?: number | null
 }
 
 interface UserNavProps {
@@ -70,6 +74,22 @@ const MENU_ITEMS = [
 ] as const
 
 const placeholder_avatar = "/avatars/doe.png"
+const USER_IMAGE_UPDATED_EVENT = "profile:user-image-updated"
+
+function resolveUserImageUrl(payload: any): string | null {
+    const src =
+        payload?.data?.image?.src ??
+        payload?.data?.imageUrl ??
+        payload?.data?.image_url ??
+        payload?.data?.image ??
+        payload?.image?.src ??
+        payload?.imageUrl ??
+        payload?.image_url ??
+        payload?.image ??
+        null
+
+    return typeof src === "string" && src.trim().length > 0 ? src : null
+}
 
 const dropdownVariants: Variants = {
     hidden: { opacity: 0, scale: 0.98, y: 8, filter: "blur(4px)" },
@@ -98,7 +118,7 @@ const itemVariants: Variants = {
     }),
 }
 
-const UserAvatar = memo(({ user, size = "default" }: { user: UserData; size?: "default" | "large" }) => {
+const UserAvatar = memo(({ user, avatarSrc, size = "default" }: { user: UserData; avatarSrc?: string | null; size?: "default" | "large" }) => {
     const displayName =
         user.fullName ||
         user.full_name ||
@@ -106,12 +126,12 @@ const UserAvatar = memo(({ user, size = "default" }: { user: UserData; size?: "d
         `${user.firstName || user.first_name || ""} ${user.lastName || user.last_name || ""}`.trim()
     const initials = getInitials(displayName || user.email || "U")
     const dimensions = size === "large" ? "size-12" : "size-8"
-    const avatarSrc = user.imageUrl || user.image_url || user.image || placeholder_avatar
+    const resolvedAvatarSrc = avatarSrc || user.imageUrl || user.image_url || user.image || placeholder_avatar
 
     return (
         <div className="relative shrink-0">
             <Avatar className={cn(dimensions, "rounded-xl border border-border/60 ring-1 ring-transparent transition-all group-hover:ring-primary/10")}>
-                <AvatarImage src={avatarSrc} alt={displayName} className="object-cover" />
+                <AvatarImage src={resolvedAvatarSrc} alt={displayName} className="object-cover" />
                 <AvatarFallback className="rounded-xl bg-primary text-[10px] font-black text-primary-foreground">
                     {initials}
                 </AvatarFallback>
@@ -138,6 +158,7 @@ const PROFILE_CONFIG: Record<
 
 export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, onOpenChange }: UserNavProps) => {
     const router = useRouter()
+    const [remoteAvatarSrc, setRemoteAvatarSrc] = useState<string | null>(null)
     const displayName = useMemo(() =>
         user
             ? (
@@ -148,6 +169,15 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
             )
             : "",
         [user])
+    const avatarSrcFromUser = useMemo(
+        () => user?.imageUrl || user?.image_url || user?.image || null,
+        [user?.imageUrl, user?.image_url, user?.image],
+    )
+    const avatarImageId = useMemo(
+        () => user?.imageId ?? user?.image_id ?? null,
+        [user?.imageId, user?.image_id],
+    )
+    const resolvedAvatarSrc = avatarSrcFromUser || remoteAvatarSrc || placeholder_avatar
 
     const activeProfile = useProfileStore((s) => s.activeProfile)
     const availableProfiles = useProfileStore((s) => s.availableProfiles)
@@ -176,6 +206,52 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
         router.push("/dashboard")
     }
 
+    const fetchUserImage = useCallback(async () => {
+        if (!user || avatarSrcFromUser) return
+        const query = avatarImageId ? `?v=${encodeURIComponent(String(avatarImageId))}` : ""
+
+        try {
+            const res = await fetch(`/api/v1/profile/user-image${query}`, { method: "GET", cache: "no-store" })
+            const body = await res.json().catch(() => null)
+            if (!res.ok || body?.success === false) return
+            const nextUrl = resolveUserImageUrl(body)
+            if (nextUrl) setRemoteAvatarSrc(nextUrl)
+        } catch {
+            // Avatar falls back to initials/placeholder.
+        }
+    }, [user, avatarSrcFromUser, avatarImageId])
+
+    useEffect(() => {
+        if (!user) {
+            setRemoteAvatarSrc(null)
+            return
+        }
+
+        if (avatarSrcFromUser) {
+            setRemoteAvatarSrc(null)
+            return
+        }
+
+        void fetchUserImage()
+    }, [user, avatarSrcFromUser, fetchUserImage])
+
+    useEffect(() => {
+        if (!isOpen) return
+        void fetchUserImage()
+    }, [isOpen, fetchUserImage])
+
+    useEffect(() => {
+        const onUserImageUpdated = () => {
+            setRemoteAvatarSrc(null)
+            void fetchUserImage()
+        }
+
+        window.addEventListener(USER_IMAGE_UPDATED_EVENT, onUserImageUpdated)
+        return () => {
+            window.removeEventListener(USER_IMAGE_UPDATED_EVENT, onUserImageUpdated)
+        }
+    }, [fetchUserImage])
+
     if (isLoading) return <UserNavSkeleton />
     if (!user) return (
         <Button asChild size="sm" className="rounded-full px-6 text-[12px] font-semibold shadow-none">
@@ -197,7 +273,7 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
                         isPending && "opacity-50 grayscale cursor-not-allowed"
                     )}
                 >
-                    <UserAvatar user={user} />
+                    <UserAvatar user={user} avatarSrc={resolvedAvatarSrc} />
                     <div className="hidden flex-col items-start leading-none sm:flex">
                         <span className="max-w-[160px] truncate text-[12px] font-semibold tracking-tight text-foreground">
                             {displayName}
@@ -228,7 +304,7 @@ export const UserNavUI = memo(({ user, isLoading, isPending, isOpen, onLogout, o
                         <motion.div variants={dropdownVariants} initial="hidden" animate="visible" exit="exit">
                             <div className="relative p-5">
                                 <div className="flex items-center gap-4 min-w-0">
-                                    <UserAvatar user={user} size="large" />
+                                    <UserAvatar user={user} avatarSrc={resolvedAvatarSrc} size="large" />
                                     <div className="flex flex-col min-w-0">
                                         <div className="flex items-center gap-1.5">
                                             <h4 className="truncate text-[14px] font-semibold tracking-tight">

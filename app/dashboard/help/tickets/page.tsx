@@ -1,0 +1,666 @@
+"use client"
+
+import Link from "next/link"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
+import { Button } from "@/components/common/button"
+import Loading from "@/components/common/custom-loader"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/common/dialog"
+import { Input } from "@/components/common/input"
+import { Label } from "@/components/common/label"
+import { NativeSelect, NativeSelectOption } from "@/components/common/native-select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/common/table"
+import { Textarea } from "@/components/common/textarea"
+import { AlertCircle, ArrowUpRight, CheckCircle2, Download, Eye, Filter, LifeBuoy, Plus, RefreshCw, Save, Search, X } from "lucide-react"
+
+const STORAGE_KEY = "portal_help_ticket_filters_v2"
+const DEFAULT_PAGE_SIZE = 10
+const PRIMARY = "h-10 rounded-2xl border border-primary/90 bg-primary px-4 text-xs font-semibold text-primary-foreground transition-colors duration-200 hover:bg-primary/85"
+const SECONDARY = "h-10 rounded-2xl border border-border/80 bg-background/95 px-4 text-xs font-semibold text-foreground transition-colors duration-200 hover:border-primary/30 hover:bg-primary/[0.05]"
+const TERTIARY = "h-10 rounded-2xl border border-sky-300/70 bg-sky-50/70 px-4 text-xs font-semibold text-sky-800 transition-colors duration-200 hover:bg-sky-100/80 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200"
+const DANGER = "h-10 rounded-2xl border border-rose-200/80 bg-rose-50/80 px-4 text-xs font-semibold text-rose-700 transition-colors duration-200 hover:bg-rose-100 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
+
+type Ticket = { id: string; subject: string; status: string; priority: string; responseCount: number; createdAt?: string | null; updatedAt?: string | null }
+type SortKey = "newest" | "oldest"
+type Filters = { search: string; status: string; severity: string; sort: SortKey }
+type CreateFieldErrors = { subject?: string; message?: string }
+
+const DEFAULT_FILTERS: Filters = { search: "", status: "all", severity: "all", sort: "newest" }
+
+const s = (v: unknown) => (v == null ? "" : String(v))
+const norm = (v: string) => v.trim().toLowerCase().replace(/\s+/g, "_")
+
+function readText(v: unknown, depth = 0): string {
+  if (v == null) return ""
+  if (typeof v === "string") return v.trim()
+  if (typeof v === "number" || typeof v === "boolean" || typeof v === "bigint") return String(v)
+  if (Array.isArray(v)) return v.map((x) => readText(x, depth + 1)).filter(Boolean).join(" ").trim()
+  if (typeof v === "object" && depth < 3) {
+    const o = v as Record<string, unknown>
+    for (const k of ["subject", "message", "text", "content", "body", "title", "label", "name", "value"]) {
+      const t = readText(o[k], depth + 1)
+      if (t) return t
+    }
+    for (const x of Object.values(o)) {
+      const t = readText(x, depth + 1)
+      if (t) return t
+    }
+  }
+  return ""
+}
+
+function readNum(v: unknown, depth = 0): number | null {
+  if (v == null) return null
+  if (typeof v === "number") return Number.isFinite(v) && v >= 0 ? v : null
+  if (typeof v === "string") {
+    const n = Number(v.replace(/,/g, "").trim())
+    return Number.isFinite(n) && n >= 0 ? n : null
+  }
+  if (Array.isArray(v)) return v.length
+  if (typeof v === "object" && depth < 4) {
+    const o = v as Record<string, unknown>
+    for (const k of ["total", "count", "length", "response_count", "responses", "messages", "items", "data", "value"]) {
+      const n = readNum(o[k], depth + 1)
+      if (n != null) return n
+    }
+    for (const x of Object.values(o)) {
+      const n = readNum(x, depth + 1)
+      if (n != null) return n
+    }
+  }
+  return null
+}
+
+function isUserMessage(raw: any): boolean {
+  const sender = norm(readText(raw?.senderType ?? raw?.sender_type ?? raw?.sender ?? raw?.source))
+  if (sender) return ["user", "customer", "requester", "portal", "portal_user", "logged_in_user"].includes(sender)
+  return Boolean(raw?.isFromUser ?? raw?.is_from_user ?? raw?.mine)
+}
+
+function responseCount(raw: any): number {
+  for (const x of [raw?.responses_count, raw?.response_count, raw?.responses, raw?.response, raw?.messages_count, raw?.message_count, raw?.reply_count, raw?.replies_count, raw?.replies]) {
+    const n = readNum(x)
+    if (n != null) return n
+  }
+  const msgs = Array.isArray(raw?.messages) ? raw.messages : []
+  return msgs.length ? msgs.filter((m: any) => !isUserMessage(m)).length : 0
+}
+
+function mapTicket(raw: any): Ticket {
+  return {
+    id: s(raw?.id ?? raw?.ticketId ?? raw?.ticket_id),
+    subject: readText(raw?.subject ?? raw?.title ?? raw?.label ?? raw?.name) || "Untitled ticket",
+    status: readText(raw?.status ?? raw?.state ?? raw?.ticket_status) || "open",
+    priority: readText(raw?.priority ?? raw?.urgency ?? raw?.severity) || "normal",
+    responseCount: responseCount(raw),
+    createdAt: readText(raw?.createdAt ?? raw?.created_at) || null,
+    updatedAt: readText(raw?.updatedAt ?? raw?.updated_at ?? raw?.createdAt ?? raw?.created_at) || null,
+  }
+}
+
+function rowsFrom(body: any): any[] {
+  for (const x of [body?.data?.tickets, body?.data?.items, body?.data?.rows, body?.tickets, body?.items, body?.rows, body?.data, body]) {
+    if (Array.isArray(x)) return x
+  }
+  return []
+}
+
+function metaFrom(body: any): { page: number; last: number; per: number } | null {
+  const m = body?.data?.meta ?? body?.meta ?? body?.data?.pagination ?? body?.pagination
+  if (!m || typeof m !== "object") return null
+  const page = readNum(m?.current_page ?? m?.currentPage ?? m?.page)
+  const last = readNum(m?.last_page ?? m?.lastPage ?? m?.total_pages ?? m?.totalPages)
+  const per = readNum(m?.per_page ?? m?.perPage ?? m?.page_size ?? m?.pageSize)
+  if (page == null && last == null && per == null) return null
+  return { page: Math.max(1, Number(page ?? 1)), last: Math.max(1, Number(last ?? 1)), per: Math.max(1, Number(per ?? DEFAULT_PAGE_SIZE)) }
+}
+
+function statusBadge(status: string): string {
+  const key = norm(status)
+  if (["resolved", "closed", "done"].includes(key)) return "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+  if (["pending", "waiting", "in_progress", "pending_approval"].includes(key)) return "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+  if (["rejected", "failed"].includes(key)) return "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300"
+  return "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300"
+}
+
+function priorityBadge(priority: string): string {
+  const key = norm(priority)
+  if (["urgent"].includes(key)) return "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300"
+  if (["high"].includes(key)) return "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+  if (["low"].includes(key)) return "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+  return "border-slate-400/30 bg-slate-500/10 text-slate-700 dark:text-slate-300"
+}
+
+function displayText(value: string, fallback: string): string {
+  const t = value.trim().replace(/[_-]+/g, " ")
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : fallback
+}
+
+function validateTicketPayload(subject: string, message: string): { ok: boolean; nextErrors: CreateFieldErrors; cleanSubject: string; cleanMessage: string } {
+  const cleanSubject = subject.trim().replace(/\s+/g, " ")
+  const cleanMessage = message.trim()
+  const nextErrors: CreateFieldErrors = {}
+
+  if (!cleanSubject) {
+    nextErrors.subject = "Subject is required."
+  } else if (cleanSubject.length < 8) {
+    nextErrors.subject = "Subject should be at least 8 characters."
+  } else if (cleanSubject.length > 120) {
+    nextErrors.subject = "Subject should be 120 characters or less."
+  }
+
+  if (!cleanMessage) {
+    nextErrors.message = "Message is required."
+  } else if (cleanMessage.length < 24) {
+    nextErrors.message = "Message should be at least 24 characters so support can act quickly."
+  } else if (cleanMessage.length > 2000) {
+    nextErrors.message = "Message should be 2000 characters or less."
+  }
+
+  return { ok: Object.keys(nextErrors).length === 0, nextErrors, cleanSubject, cleanMessage }
+}
+
+function fmtDate(v?: string | null): string {
+  if (!v) return "-"
+  const d = new Date(v)
+  return Number.isNaN(d.getTime())
+    ? v
+    : d.toLocaleString(undefined, { year: "numeric", month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+}
+
+function pageItems(page: number, last: number): Array<number | string> {
+  if (last <= 7) return Array.from({ length: last }, (_, i) => i + 1)
+  const set = new Set<number>([1, last, page - 1, page, page + 1])
+  const sorted = [...set].filter((p) => p >= 1 && p <= last).sort((a, b) => a - b)
+  const out: Array<number | string> = []
+  for (let i = 0; i < sorted.length; i += 1) {
+    if (i > 0 && sorted[i] - sorted[i - 1] > 1) out.push("...")
+    out.push(sorted[i])
+  }
+  return out
+}
+
+export default function TicketsPage() {
+  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+  const [lastPage, setLastPage] = useState(1)
+  const [serverPaging, setServerPaging] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [createSubject, setCreateSubject] = useState("")
+  const [createMessage, setCreateMessage] = useState("")
+  const [createSeverity, setCreateSeverity] = useState("normal")
+  const [createBusy, setCreateBusy] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [createFieldErrors, setCreateFieldErrors] = useState<CreateFieldErrors>({})
+
+  const loadTickets = useCallback(async (targetPage: number, status: string, severity: string) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const q = new URLSearchParams({ page: String(targetPage), per_page: String(DEFAULT_PAGE_SIZE) })
+      if (status !== "all") q.set("status", status)
+      if (severity !== "all") q.set("priority", severity)
+      const res = await fetch(`/api/v1/portal/help/tickets?${q.toString()}`, { cache: "no-store" })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok || body?.success === false) throw new Error(s(body?.message).trim() || "Failed to load tickets")
+      setTickets(rowsFrom(body).map(mapTicket).filter((t) => t.id))
+      const meta = metaFrom(body)
+      if (meta) {
+        setServerPaging(true)
+        setLastPage(meta.last)
+        setPageSize(meta.per)
+        if (meta.page !== targetPage) setPage(meta.page)
+      } else {
+        setServerPaging(false)
+        setLastPage(1)
+        setPageSize(DEFAULT_PAGE_SIZE)
+      }
+    } catch (e: any) {
+      setTickets([])
+      setError(e?.message || "Failed to load tickets")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    const raw = typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null
+    if (!raw) return
+    try {
+      const parsed = JSON.parse(raw) as Partial<Filters>
+      setFilters({
+        search: s(parsed.search),
+        status: s(parsed.status) || "all",
+        severity: s(parsed.severity) || "all",
+        sort: parsed.sort === "oldest" ? parsed.sort : "newest",
+      })
+    } catch {
+      window.localStorage.removeItem(STORAGE_KEY)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash === "#create-ticket") setCreateOpen(true)
+  }, [])
+
+  useEffect(() => {
+    void loadTickets(page, filters.status, filters.severity)
+  }, [loadTickets, page, filters.status, filters.severity])
+
+  useEffect(() => {
+    if (!notice) return
+    const t = setTimeout(() => setNotice(null), 2600)
+    return () => clearTimeout(t)
+  }, [notice])
+
+  const filtered = useMemo(() => {
+    const query = filters.search.trim().toLowerCase()
+    const list = tickets.filter((t) => {
+      if (query && !`${t.id} ${t.subject} ${t.status} ${t.priority}`.toLowerCase().includes(query)) return false
+      return true
+    })
+    list.sort((a, b) => {
+      const ad = new Date(a.updatedAt || a.createdAt || 0).getTime()
+      const bd = new Date(b.updatedAt || b.createdAt || 0).getTime()
+      return filters.sort === "oldest" ? ad - bd : bd - ad
+    })
+    return list
+  }, [tickets, filters.search, filters.sort])
+
+  const uiLastPage = serverPaging ? Math.max(1, lastPage) : Math.max(1, Math.ceil(filtered.length / DEFAULT_PAGE_SIZE))
+  const visible = useMemo(() => (serverPaging ? filtered : filtered.slice((page - 1) * DEFAULT_PAGE_SIZE, page * DEFAULT_PAGE_SIZE)), [filtered, page, serverPaging])
+  useEffect(() => { if (!serverPaging && page > uiLastPage) setPage(uiLastPage) }, [serverPaging, page, uiLastPage])
+
+  const filterCount = Number(Boolean(filters.search.trim())) + Number(filters.status !== "all") + Number(filters.severity !== "all") + Number(filters.sort !== "newest")
+  const totalVisible = filtered.length
+  const openCount = filtered.filter((t) => ["open", "pending", "in_progress", "waiting"].includes(norm(t.status))).length
+  const resolvedCount = filtered.filter((t) => ["resolved", "closed", "done"].includes(norm(t.status))).length
+  const awaitingFirstResponse = filtered.filter((t) => t.responseCount === 0).length
+  const filterFieldClass = () =>
+    `space-y-1.5 transition-all duration-500 ease-out ${
+      filtersOpen ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0 pointer-events-none"
+    }`
+  const filterFieldStyle = (index: number): React.CSSProperties => ({
+    transitionDelay: filtersOpen ? `${80 + index * 70}ms` : "0ms",
+  })
+
+  const clearFilters = () => { setFilters(DEFAULT_FILTERS); setPage(1); setNotice("Filters cleared.") }
+  const saveFilters = () => { if (typeof window !== "undefined") window.localStorage.setItem(STORAGE_KEY, JSON.stringify(filters)); setNotice("Filters saved.") }
+  const exportCsv = () => {
+    if (!visible.length) return setNotice("No rows to export on this page.")
+    const head = [["Ticket ID", "Label", "Status", "Severity", "Dated"]]
+    const csv = [...head, ...visible.map((t) => [t.id, t.subject, t.status, t.priority, fmtDate(t.createdAt || t.updatedAt)])]
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n")
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `help-tickets-${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url)
+  }
+
+  const resetCreateForm = () => {
+    setCreateSubject("")
+    setCreateMessage("")
+    setCreateSeverity("normal")
+    setCreateError(null)
+    setCreateFieldErrors({})
+  }
+
+  async function submitTicket(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setCreateBusy(true)
+    setCreateError(null)
+    const check = validateTicketPayload(createSubject, createMessage)
+    setCreateFieldErrors(check.nextErrors)
+    if (!check.ok) {
+      setCreateBusy(false)
+      return
+    }
+    try {
+      const res = await fetch("/api/v1/portal/help/tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: check.cleanSubject,
+          message: check.cleanMessage,
+          priority: createSeverity,
+        }),
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok || body?.success === false) {
+        const errors = body?.errors ?? {}
+        const subjectErr = readText(errors?.subject?.[0] ?? errors?.title?.[0] ?? errors?.label?.[0])
+        const messageErr = readText(errors?.message?.[0] ?? errors?.content?.[0] ?? errors?.body?.[0])
+        if (subjectErr || messageErr) {
+          setCreateFieldErrors((prev) => ({
+            ...prev,
+            subject: subjectErr || prev.subject,
+            message: messageErr || prev.message,
+          }))
+        }
+        throw new Error(s(body?.message).trim() || "Failed to submit ticket")
+      }
+      resetCreateForm()
+      setCreateOpen(false)
+      setNotice("Ticket submitted successfully.")
+      setPage(1); await loadTickets(1, filters.status, filters.severity)
+    } catch (e: any) {
+      setCreateError(e?.message || "Failed to submit ticket")
+    } finally {
+      setCreateBusy(false)
+    }
+  }
+
+  return (
+    <div className="w-full antialiased relative">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(52rem_24rem_at_0%_0%,rgba(14,165,233,0.10),transparent_58%),radial-gradient(36rem_16rem_at_100%_0%,rgba(16,185,129,0.08),transparent_62%)]"
+      />
+      <div className="w-full space-y-7 sm:space-y-8">
+        <header className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-b from-background via-background to-muted/25 px-5 sm:px-7 py-6">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute right-0 top-0 h-24 w-24 -translate-y-6 translate-x-6 rounded-full bg-primary/10 blur-2xl"
+          />
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/85 px-3 py-1.5">
+                <LifeBuoy className="h-3.5 w-3.5 text-primary" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">Support Hub</span>
+              </div>
+              <h1 className="mt-3 text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">My tickets</h1>
+              <p className="mt-1 text-sm text-muted-foreground max-w-2xl">
+                Track support progress, prioritize urgent issues, and create better tickets with clearer details.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button asChild variant="outline" className={SECONDARY}>
+                <Link href="/dashboard/help">Help center<ArrowUpRight className="ml-1.5 h-4 w-4" /></Link>
+              </Button>
+              <Button type="button" variant="outline" className={SECONDARY} onClick={() => void loadTickets(page, filters.status, filters.severity)} disabled={loading}>
+                {loading ? "Refreshing..." : <><RefreshCw className="mr-1.5 h-4 w-4" />Refresh</>}
+              </Button>
+              <Button type="button" className={PRIMARY} onClick={() => setCreateOpen(true)}>
+                <Plus className="mr-1.5 h-4 w-4" />Create ticket
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-2xl border border-border/70 bg-gradient-to-br from-background to-muted/25 p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Visible tickets</p>
+            <p className="mt-2 text-2xl font-semibold text-foreground">{totalVisible}</p>
+          </div>
+          <div className="rounded-2xl border border-amber-200/60 bg-gradient-to-br from-background to-amber-500/5 p-4 dark:border-amber-500/25">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Open / pending</p>
+            <p className="mt-2 text-2xl font-semibold text-amber-700 dark:text-amber-300">{openCount}</p>
+          </div>
+          <div className="rounded-2xl border border-emerald-200/60 bg-gradient-to-br from-background to-emerald-500/5 p-4 dark:border-emerald-500/25">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Resolved / closed</p>
+            <p className="mt-2 text-2xl font-semibold text-emerald-700 dark:text-emerald-300">{resolvedCount}</p>
+          </div>
+          <div className="rounded-2xl border border-sky-200/60 bg-gradient-to-br from-background to-sky-500/5 p-4 dark:border-sky-500/25">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Awaiting first response</p>
+            <p className="mt-2 text-2xl font-semibold text-sky-700 dark:text-sky-300">{awaitingFirstResponse}</p>
+          </div>
+        </section>
+
+        <section className="space-y-2">
+          <div className="rounded-2xl px-4 sm:px-5 py-3.5 flex flex-wrap items-center gap-2.5 border border-border/70 bg-gradient-to-b from-background to-muted/20">
+            <Button type="button" variant="outline" className={DANGER} onClick={clearFilters}>
+              <X className="mr-1.5 h-4 w-4" />Clear
+            </Button>
+            <Button type="button" variant="outline" className={TERTIARY} onClick={saveFilters}>
+              <Save className="mr-1.5 h-4 w-4" />Save view
+            </Button>
+            <Button type="button" variant="outline" className={TERTIARY} onClick={() => setFiltersOpen((p) => !p)}>
+              <Filter className="mr-1.5 h-4 w-4" />Filters{filterCount > 0 && <span className="ml-1.5 h-1.5 w-1.5 rounded-full bg-primary" />}
+            </Button>
+            <Button type="button" variant="outline" className={TERTIARY} onClick={exportCsv}>
+              <Download className="mr-1.5 h-4 w-4" />Export
+            </Button>
+          </div>
+          <div
+            className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out ${
+              filtersOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+            }`}
+            aria-hidden={!filtersOpen}
+          >
+            <div className="overflow-hidden">
+              <div className="mx-4 sm:mx-5 mb-1 rounded-2xl border border-border/70 p-3 sm:p-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 bg-background/90">
+                <div className={filterFieldClass()} style={filterFieldStyle(0)}>
+                  <Label htmlFor="ticket-search" className="text-[10px] uppercase tracking-widest font-bold opacity-70">Search</Label>
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="ticket-search"
+                      value={filters.search}
+                      onChange={(e) => { setPage(1); setFilters((f) => ({ ...f, search: e.target.value })) }}
+                      placeholder="Search ticket label..."
+                      className="h-10 pl-9 border-border/70 bg-transparent focus-visible:ring-0 focus-visible:border-primary/50"
+                    />
+                  </div>
+                </div>
+                <div className={filterFieldClass()} style={filterFieldStyle(1)}>
+                  <Label htmlFor="ticket-status" className="text-[10px] uppercase tracking-widest font-bold opacity-70">Status</Label>
+                  <NativeSelect
+                    id="ticket-status"
+                    value={filters.status}
+                    onChange={(e) => { setPage(1); setFilters((f) => ({ ...f, status: e.target.value })) }}
+                    className="h-10 border-border/70 px-3 text-sm lg:h-10 focus:ring-0"
+                  >
+                    <NativeSelectOption value="all">All statuses</NativeSelectOption>
+                    <NativeSelectOption value="open">Open</NativeSelectOption>
+                    <NativeSelectOption value="pending">Pending</NativeSelectOption>
+                    <NativeSelectOption value="resolved">Resolved</NativeSelectOption>
+                    <NativeSelectOption value="closed">Closed</NativeSelectOption>
+                  </NativeSelect>
+                </div>
+                <div className={filterFieldClass()} style={filterFieldStyle(2)}>
+                  <Label htmlFor="ticket-severity" className="text-[10px] uppercase tracking-widest font-bold opacity-70">Severity</Label>
+                  <NativeSelect
+                    id="ticket-severity"
+                    value={filters.severity}
+                    onChange={(e) => { setPage(1); setFilters((f) => ({ ...f, severity: e.target.value })) }}
+                    className="h-10 border-border/70 px-3 text-sm lg:h-10 focus:ring-0"
+                  >
+                    <NativeSelectOption value="all">All severity</NativeSelectOption>
+                    <NativeSelectOption value="urgent">Urgent</NativeSelectOption>
+                    <NativeSelectOption value="high">High</NativeSelectOption>
+                    <NativeSelectOption value="normal">Normal</NativeSelectOption>
+                    <NativeSelectOption value="low">Low</NativeSelectOption>
+                  </NativeSelect>
+                </div>
+                <div className={filterFieldClass()} style={filterFieldStyle(3)}>
+                  <Label htmlFor="ticket-sort" className="text-[10px] uppercase tracking-widest font-bold opacity-70">Sort</Label>
+                  <NativeSelect
+                    id="ticket-sort"
+                    value={filters.sort}
+                    onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value as SortKey }))}
+                    className="h-10 border-border/70 px-3 text-sm lg:h-10 focus:ring-0"
+                  >
+                    <NativeSelectOption value="newest">Newest first</NativeSelectOption>
+                    <NativeSelectOption value="oldest">Oldest first</NativeSelectOption>
+                  </NativeSelect>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {notice && <p className="text-xs font-medium text-primary">{notice}</p>}
+
+        <Dialog
+          open={createOpen}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen && createBusy) return
+            setCreateOpen(nextOpen)
+            if (!nextOpen) resetCreateForm()
+          }}
+        >
+          <DialogContent className="max-w-2xl gap-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-0 shadow-none dark:border-slate-800 dark:bg-slate-900">
+            <div aria-hidden className="h-1.5 bg-emerald-500" />
+            <DialogHeader className="border-b border-slate-200 bg-white px-6 py-5 dark:border-slate-800 dark:bg-slate-950">
+              <DialogTitle className="text-lg font-semibold text-foreground">Create new ticket</DialogTitle>
+              <p className="text-sm text-muted-foreground">Be specific and include impact so we can prioritize and resolve faster.</p>
+            </DialogHeader>
+            <form onSubmit={submitTicket} className="space-y-5 bg-slate-50 px-6 py-5 dark:bg-slate-900">
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_220px]">
+                <div className="space-y-1.5">
+                  <Label htmlFor="ticket-subject" className="text-[10px] uppercase tracking-widest font-bold text-foreground/70">Subject</Label>
+                  <Input
+                    id="ticket-subject"
+                    value={createSubject}
+                    onChange={(e) => {
+                      setCreateSubject(e.target.value)
+                      if (createFieldErrors.subject) setCreateFieldErrors((prev) => ({ ...prev, subject: undefined }))
+                    }}
+                    placeholder="Example: Payment confirmation email not sent after checkout"
+                    className="h-11 rounded-xl border-slate-300 bg-white focus-visible:border-emerald-500/60 focus-visible:ring-0 dark:border-slate-700 dark:bg-slate-950"
+                    required
+                  />
+                  <div className="flex items-center justify-between">
+                    {createFieldErrors.subject ? <p className="text-xs text-rose-600">{createFieldErrors.subject}</p> : <span />}
+                    <p className="text-[11px] text-muted-foreground">{createSubject.trim().length}/120</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="ticket-priority" className="text-[10px] uppercase tracking-widest font-bold text-foreground/70">Severity</Label>
+                  <NativeSelect
+                    id="ticket-priority"
+                    value={createSeverity}
+                    onChange={(e) => setCreateSeverity(e.target.value)}
+                    className="h-11 rounded-xl border-slate-300 bg-white px-3 text-sm lg:h-11 focus:ring-0 dark:border-slate-700 dark:bg-slate-950"
+                  >
+                    <NativeSelectOption value="normal">Normal</NativeSelectOption>
+                    <NativeSelectOption value="high">High</NativeSelectOption>
+                    <NativeSelectOption value="urgent">Urgent</NativeSelectOption>
+                    <NativeSelectOption value="low">Low</NativeSelectOption>
+                  </NativeSelect>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="ticket-message" className="text-[10px] uppercase tracking-widest font-bold text-foreground/70">Issue details</Label>
+                <Textarea
+                  id="ticket-message"
+                  value={createMessage}
+                  onChange={(e) => {
+                    setCreateMessage(e.target.value)
+                    if (createFieldErrors.message) setCreateFieldErrors((prev) => ({ ...prev, message: undefined }))
+                  }}
+                  rows={5}
+                  placeholder={"What happened?\nWhat did you expect instead?\nHow can we reproduce it?\nInclude order/reference ID if available."}
+                  className="resize-none rounded-xl border-slate-300 bg-white focus-visible:border-emerald-500/60 focus-visible:ring-0 dark:border-slate-700 dark:bg-slate-950"
+                  required
+                />
+                <p className="text-[11px] text-muted-foreground">Tip: paste exact error text and mention when it started.</p>
+                <div className="flex items-center justify-between">
+                  {createFieldErrors.message ? <p className="text-xs text-rose-600">{createFieldErrors.message}</p> : <span />}
+                  <p className="text-[11px] text-muted-foreground">{createMessage.trim().length}/2000</p>
+                </div>
+              </div>
+              {createError && (
+                <p className="flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
+                  <AlertCircle className="h-4 w-4" />
+                  {createError}
+                </p>
+              )}
+              <div className="flex flex-wrap items-center gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+                <Button type="submit" className="h-10 rounded-xl border border-emerald-600 bg-emerald-600 px-4 text-xs font-semibold text-white transition-colors hover:bg-emerald-500" disabled={createBusy}>
+                  {createBusy ? "Submitting..." : <><CheckCircle2 className="mr-1.5 h-4 w-4" />Submit ticket</>}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 rounded-xl border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  disabled={createBusy}
+                  onClick={() => setCreateOpen(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        <section className="px-4 sm:px-5">
+          {loading && <Loading fullScreen={false} message="Loading tickets" className="py-14 bg-transparent" />}
+          {!loading && error && <p className="px-4 sm:px-5 py-10 text-sm text-rose-600 flex items-center gap-2"><AlertCircle className="h-4 w-4" />{error}</p>}
+          {!loading && !error && (
+            <>
+              <div className="overflow-x-auto rounded-3xl border border-border/70 bg-gradient-to-b from-background to-muted/20">
+              <Table className="min-w-[920px]">
+                <TableHeader className="bg-muted/35 border-b border-border/50">
+                  <TableRow className="hover:bg-transparent border-none">
+                    <TableHead className="h-12 pl-4 sm:pl-5 text-[11px] font-bold uppercase tracking-wider text-foreground">#</TableHead>
+                    <TableHead className="h-12 text-[11px] font-bold uppercase tracking-wider text-foreground">Subject</TableHead>
+                    <TableHead className="h-12 text-[11px] font-bold uppercase tracking-wider text-foreground">Status</TableHead>
+                    <TableHead className="h-12 text-[11px] font-bold uppercase tracking-wider text-foreground">Priority</TableHead>
+                    <TableHead className="h-12 text-[11px] font-bold uppercase tracking-wider text-foreground">Updated</TableHead>
+                    <TableHead className="h-12 pr-4 sm:pr-5 text-[11px] font-bold uppercase tracking-wider text-foreground text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visible.length === 0 ? (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell colSpan={6} className="py-12 text-center text-sm text-muted-foreground">
+                        <div className="mx-auto max-w-md space-y-2">
+                          <p className="text-sm font-medium text-foreground">No tickets found.</p>
+                          <p className="text-xs text-muted-foreground">Adjust filters or create a new ticket to get support faster.</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    visible.map((t, i) => (
+                      <TableRow key={t.id} className="h-14 border-b border-border/50 hover:bg-muted/25">
+                        <TableCell className="pl-4 sm:pl-5 font-medium text-foreground">{(page - 1) * pageSize + i + 1}</TableCell>
+                        <TableCell className="font-medium text-foreground whitespace-normal">
+                          <div className="space-y-1">
+                            <p className="leading-relaxed">{t.subject}</p>
+                            <p className="text-xs text-muted-foreground">ID: {t.id}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${statusBadge(t.status)}`}>
+                            {displayText(t.status, "Open")}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${priorityBadge(t.priority)}`}>
+                            {displayText(t.priority, "Normal")}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-foreground/90">{fmtDate(t.updatedAt || t.createdAt)}</TableCell>
+                        <TableCell className="pr-4 sm:pr-5 text-right">
+                          <Button asChild className="h-9 rounded-xl border border-primary/90 bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90">
+                            <Link href={`/dashboard/help/tickets/${encodeURIComponent(t.id)}`}><Eye className="mr-1.5 h-3.5 w-3.5" />Open</Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+              </div>
+              {uiLastPage > 1 && (
+                <div className="px-0 py-4 flex flex-wrap justify-end gap-1.5">
+                  {pageItems(page, uiLastPage).map((it, idx) => typeof it === "number"
+                    ? <Button key={`p-${it}`} type="button" variant="outline" className={`h-9 min-w-9 rounded-xl px-3 text-xs font-semibold ${page === it ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-muted/40"}`} onClick={() => setPage(it)}>{it}</Button>
+                    : <span key={`e-${idx}`} className="inline-flex h-9 min-w-9 items-center justify-center text-xs text-muted-foreground">...</span>)}
+                </div>
+              )}
+            </>
+          )}
+        </section>
+      </div>
+    </div>
+  )
+}

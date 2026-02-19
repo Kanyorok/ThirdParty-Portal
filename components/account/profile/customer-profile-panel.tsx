@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { AlertCircle, Briefcase, Calendar, Heart, User2 } from "lucide-react"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/common/card"
 import Loading from "@/components/common/custom-loader"
 import { getCustomerProfile } from "@/lib/api/profile-management"
 
@@ -21,15 +20,15 @@ export default function CustomerProfilePanel({ enabled }: CustomerProfilePanelPr
 
   if (!enabled) {
     return (
-      <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-        <CardHeader className="py-5 border-b border-border/60">
-          <CardTitle className="text-base">Customer profile</CardTitle>
-          <CardDescription>Not enabled for this account.</CardDescription>
-        </CardHeader>
-        <CardContent className="pb-6 pt-6">
+      <section className="border border-border/60 bg-background">
+        <div className="px-5 py-4 border-b border-border/60">
+          <h2 className="text-base font-semibold text-foreground">Customer profile</h2>
+          <p className="text-sm text-muted-foreground">Not enabled for this account.</p>
+        </div>
+        <div className="px-5 py-5">
           <div className="text-sm text-muted-foreground">Enable Customer to access customer workflows.</div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     )
   }
 
@@ -43,12 +42,12 @@ export default function CustomerProfilePanel({ enabled }: CustomerProfilePanelPr
 
   if (isError) {
     return (
-      <Card className="bg-card rounded-2xl border border-destructive/20 shadow-none py-0 gap-0">
-        <CardHeader className="py-5 border-b border-destructive/20">
-          <CardTitle className="text-base text-destructive">Customer profile</CardTitle>
-          <CardDescription>We couldn’t load customer details.</CardDescription>
-        </CardHeader>
-        <CardContent className="pb-6 pt-6 space-y-3">
+      <section className="border border-destructive/20 bg-background">
+        <div className="px-5 py-4 border-b border-destructive/20">
+          <h2 className="text-base font-semibold text-destructive">Customer profile</h2>
+          <p className="text-sm text-muted-foreground">We couldn’t load customer details.</p>
+        </div>
+        <div className="px-5 py-5 space-y-3">
           <div className="flex items-start gap-3 text-sm text-muted-foreground">
             <AlertCircle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
             <span>{(error as any)?.message || "Please try again."}</span>
@@ -61,8 +60,8 @@ export default function CustomerProfilePanel({ enabled }: CustomerProfilePanelPr
           >
             Retry
           </button>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     )
   }
 
@@ -75,66 +74,65 @@ export default function CustomerProfilePanel({ enabled }: CustomerProfilePanelPr
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-          <CardHeader className="py-5 border-b border-border/60">
-            <CardTitle className="text-sm">Date of birth</CardTitle>
-            <CardDescription>Birthdate on file.</CardDescription>
-          </CardHeader>
-          <CardContent className="pb-6 pt-6 flex items-center gap-2 text-sm font-semibold text-foreground">
+        <section className="border border-border/60 bg-background">
+          <div className="px-4 py-3 border-b border-border/60">
+            <h3 className="text-sm font-semibold text-foreground">Date of birth</h3>
+            <p className="text-xs text-muted-foreground">Birthdate on file.</p>
+          </div>
+          <div className="px-4 py-4 flex items-center gap-2 text-sm font-semibold text-foreground">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             {customer?.dateOfBirth ?? "—"}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-          <CardHeader className="py-5 border-b border-border/60">
-            <CardTitle className="text-sm">Gender</CardTitle>
-            <CardDescription>Gender selection.</CardDescription>
-          </CardHeader>
-          <CardContent className="pb-6 pt-6 flex items-center gap-2 text-sm font-semibold text-foreground">
+        <section className="border border-border/60 bg-background">
+          <div className="px-4 py-3 border-b border-border/60">
+            <h3 className="text-sm font-semibold text-foreground">Gender</h3>
+            <p className="text-xs text-muted-foreground">Gender selection.</p>
+          </div>
+          <div className="px-4 py-4 flex items-center gap-2 text-sm font-semibold text-foreground">
             <User2 className="h-4 w-4 text-muted-foreground" />
             {gender ?? "—"}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-          <CardHeader className="py-5 border-b border-border/60">
-            <CardTitle className="text-sm">Marital status</CardTitle>
-            <CardDescription>Relationship status.</CardDescription>
-          </CardHeader>
-          <CardContent className="pb-6 pt-6 flex items-center gap-2 text-sm font-semibold text-foreground">
+        <section className="border border-border/60 bg-background">
+          <div className="px-4 py-3 border-b border-border/60">
+            <h3 className="text-sm font-semibold text-foreground">Marital status</h3>
+            <p className="text-xs text-muted-foreground">Relationship status.</p>
+          </div>
+          <div className="px-4 py-4 flex items-center gap-2 text-sm font-semibold text-foreground">
             <Heart className="h-4 w-4 text-muted-foreground" />
             {marital ?? "—"}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-          <CardHeader className="py-5 border-b border-border/60">
-            <CardTitle className="text-sm">Occupation</CardTitle>
-            <CardDescription>Occupation category.</CardDescription>
-          </CardHeader>
-          <CardContent className="pb-6 pt-6 flex items-center gap-2 text-sm font-semibold text-foreground">
+        <section className="border border-border/60 bg-background">
+          <div className="px-4 py-3 border-b border-border/60">
+            <h3 className="text-sm font-semibold text-foreground">Occupation</h3>
+            <p className="text-xs text-muted-foreground">Occupation category.</p>
+          </div>
+          <div className="px-4 py-4 flex items-center gap-2 text-sm font-semibold text-foreground">
             <Briefcase className="h-4 w-4 text-muted-foreground" />
             {occupation ?? "—"}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
 
-      <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-        <CardHeader className="py-5 border-b border-border/60">
-          <CardTitle className="text-base">Customer details</CardTitle>
-          <CardDescription>Customer profile metadata.</CardDescription>
-        </CardHeader>
-        <CardContent className="pb-6 pt-6">
+      <section className="border border-border/60 bg-background">
+        <div className="px-5 py-4 border-b border-border/60">
+          <h2 className="text-base font-semibold text-foreground">Customer details</h2>
+          <p className="text-sm text-muted-foreground">Customer profile metadata.</p>
+        </div>
+        <div className="px-5 py-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Created</div>
               <div className="text-sm font-semibold text-foreground">{customer?.createdOn ?? "—"}</div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     </div>
   )
 }
-

@@ -1,14 +1,16 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { Sparkles } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { ArrowUpRight, CheckCircle2, CircleDashed, ShieldCheck, Sparkles } from "lucide-react"
 
+import { Button } from "@/components/common/button"
 import Loading from "@/components/common/custom-loader"
 import { useProfile } from "@/hooks/use-profile"
 import { computeBusinessCompletionPercent, computeMissingBusinessFields, resolveLogoUrl } from "@/components/account/profile/utils"
 import BusinessProfileCard from "@/components/account/profile/business-profile-card"
 import AccountOwnerCard from "@/components/account/profile/account-owner-card"
 import LogoDialog from "@/components/account/profile/logo-dialog"
+import UserImageDialog from "@/components/account/profile/user-image-dialog"
 import ChangePasswordCard from "@/components/account/profile/change-password-card"
 import CompanySidebarCard from "@/components/account/profile/company-sidebar-card"
 import ProfileTabsNav, { type ProfileTabKey } from "@/components/account/profile/profile-tabs-nav"
@@ -29,7 +31,9 @@ function LoadingState() {
 export default function ProfileSettings() {
   const [isEditing, setIsEditing] = useState(false)
   const [isLogoDialogOpen, setIsLogoDialogOpen] = useState(false)
+  const [isUserImageDialogOpen, setIsUserImageDialogOpen] = useState(false)
   const [optimisticLogoUrl, setOptimisticLogoUrl] = useState<string | null>(null)
+  const [optimisticUserImageUrl, setOptimisticUserImageUrl] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<ProfileTabKey>("party")
 
   const { profile, thirdPartyDetails, thirdParty, profileCompletion, isLoading, isUpdating, updateProfile, refetch } =
@@ -62,64 +66,165 @@ export default function ProfileSettings() {
     [profile, thirdParty, thirdPartyDetails],
   )
   const logoUrl = optimisticLogoUrl ?? resolvedLogoUrl
+  const resolvedUserImageUrl = useMemo(
+    () =>
+      (profile as any)?.image?.src ??
+      (profile as any)?.image_url ??
+      (profile as any)?.imageUrl ??
+      (profile as any)?.image ??
+      null,
+    [profile],
+  )
+  const userImageUrl = optimisticUserImageUrl ?? resolvedUserImageUrl
+
+  useEffect(() => {
+    if (resolvedLogoUrl || optimisticLogoUrl) return
+
+    let cancelled = false
+    fetch("/api/v1/profile/logo", { method: "GET", cache: "no-store" })
+      .then(async (res) => {
+        const body = await res.json().catch(() => null)
+        if (!res.ok || body?.success === false) return
+
+        const src =
+          body?.data?.logo?.src ??
+          body?.data?.logoUrl ??
+          body?.data?.logo_url ??
+          body?.data?.logo ??
+          body?.logo?.src ??
+          body?.logoUrl ??
+          body?.logo_url ??
+          body?.logo ??
+          null
+
+        if (!cancelled && typeof src === "string" && src.trim().length > 0) {
+          setOptimisticLogoUrl(src)
+        }
+      })
+      .catch(() => null)
+
+    return () => {
+      cancelled = true
+    }
+  }, [resolvedLogoUrl, optimisticLogoUrl])
+
+  useEffect(() => {
+    if (resolvedUserImageUrl || optimisticUserImageUrl) return
+
+    let cancelled = false
+    fetch("/api/v1/profile/user-image", { method: "GET", cache: "no-store" })
+      .then(async (res) => {
+        const body = await res.json().catch(() => null)
+        if (!res.ok || body?.success === false) return
+
+        const src =
+          body?.data?.image?.src ??
+          body?.data?.imageUrl ??
+          body?.data?.image_url ??
+          body?.data?.image ??
+          body?.image?.src ??
+          body?.imageUrl ??
+          body?.image_url ??
+          body?.image ??
+          null
+
+        if (!cancelled && typeof src === "string" && src.trim().length > 0) {
+          setOptimisticUserImageUrl(src)
+        }
+      })
+      .catch(() => null)
+
+    return () => {
+      cancelled = true
+    }
+  }, [resolvedUserImageUrl, optimisticUserImageUrl])
 
   const hasSupplier = Boolean(profile?.isSupplier ?? thirdParty?.isSupplier)
   const hasTenant = Boolean(profile?.isTenant ?? thirdParty?.isTenant)
   const hasCustomer = Boolean(profile?.isCustomer ?? thirdParty?.isCustomer)
+  const isProfileComplete = completionValue >= 100
+  const missingPreview = missingFields.slice(0, 3)
 
   if (isLoading) return <LoadingState />
 
   return (
-    <div className="w-full antialiased">
+    <div className="w-full antialiased relative">
       <div className="w-full space-y-6 sm:space-y-8">
-        <header className="space-y-4">
-          <div className="space-y-2.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">Profile</span>
+        <header className="border-b border-border/60 pb-6">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-2 border border-border/60 px-3 py-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">Profile management</span>
+              </div>
+
+              <h1 className="mt-3 text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+                {thirdPartyDetails?.thirdPartyName || "Profile"}
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground max-w-2xl">
+                Keep your business profile accurate so buyers can trust and engage with you faster.
+              </p>
             </div>
 
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-foreground">
-                  {thirdPartyDetails?.thirdPartyName || "Profile"}
-                </h1>
-                <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-                  Review and manage party details and enabled profiles in one place.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                <span
-                  className={[
-                    "inline-flex items-center rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider",
-                    isApproved
-                      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 dark:border-emerald-500/30"
-                      : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20 dark:border-amber-500/30",
-                  ].join(" ")}
-                  title={`Approval status: ${approvalStatusLabel}`}
-                >
-                  {approvalStatusLabel}
-                </span>
-
-                <span
-                  className={[
-                    "inline-flex items-center rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider",
-                    emailVerifiedOn
-                      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 dark:border-emerald-500/30"
-                      : "bg-muted text-muted-foreground border-border",
-                  ].join(" ")}
-                  title={emailVerifiedOn ? `Email verified on ${emailVerifiedOn}` : "Email not verified"}
-                >
-                  {emailVerifiedOn ? "Email verified" : "Email not verified"}
-                </span>
-              </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                className="h-10 rounded-xl text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground"
+                onClick={() => {
+                  setActiveTab("party")
+                  setIsEditing(true)
+                }}
+              >
+                {isProfileComplete ? "Edit profile" : "Complete profile"}
+                <ArrowUpRight className="ml-1.5 h-4 w-4" />
+              </Button>
             </div>
           </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span
+              className={[
+                "inline-flex items-center rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider",
+                isApproved
+                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 dark:border-emerald-500/30"
+                  : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20 dark:border-amber-500/30",
+              ].join(" ")}
+              title={`Approval status: ${approvalStatusLabel}`}
+            >
+              {isApproved ? <CheckCircle2 className="mr-1.5 h-3 w-3" /> : <CircleDashed className="mr-1.5 h-3 w-3" />}
+              {approvalStatusLabel}
+            </span>
+
+            <span
+              className={[
+                "inline-flex items-center rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider",
+                emailVerifiedOn
+                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 dark:border-emerald-500/30"
+                  : "bg-muted text-muted-foreground border-border",
+              ].join(" ")}
+              title={emailVerifiedOn ? `Email verified on ${emailVerifiedOn}` : "Email not verified"}
+            >
+              <ShieldCheck className="mr-1.5 h-3 w-3" />
+              {emailVerifiedOn ? "Email verified" : "Email not verified"}
+            </span>
+
+            <span className="inline-flex items-center rounded-full border border-border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Completion {completionValue}%
+            </span>
+          </div>
+
+          {!isProfileComplete && missingPreview.length > 0 && (
+            <div className="mt-4 border border-amber-500/20 bg-amber-500/10 px-3 py-2.5">
+              <p className="text-xs text-amber-900 dark:text-amber-200">
+                Next best action: add{" "}
+                <span className="font-semibold">{missingPreview.join(", ")}</span>
+                {missingFields.length > missingPreview.length ? ` and ${missingFields.length - missingPreview.length} more` : ""}.
+              </p>
+            </div>
+          )}
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 xl:gap-8">
-          <aside className="lg:col-span-4 xl:col-span-3 min-w-0 space-y-6 lg:sticky lg:top-6 self-start">
+          <aside className="lg:col-span-4 xl:col-span-3 min-w-0 space-y-6 lg:sticky lg:top-4 self-start">
             <CompanySidebarCard
               name={thirdPartyDetails?.thirdPartyName}
               tradingName={thirdPartyDetails?.tradingName}
@@ -152,18 +257,27 @@ export default function ProfileSettings() {
                   <BusinessProfileCard
                     thirdPartyDetails={thirdPartyDetails}
                     thirdParty={thirdParty}
-                    completionValue={completionValue}
-                    missingFields={missingFields}
                     isEditing={isEditing}
                     setIsEditing={setIsEditing}
                     isUpdating={isUpdating}
-                    onOpenLogo={() => setIsLogoDialogOpen(true)}
                     updateProfile={updateProfile as any}
                     refetch={refetch as any}
                   />
 
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    <AccountOwnerCard profile={profile} />
+                    <AccountOwnerCard
+                      profile={profile}
+                      imageUrl={userImageUrl}
+                      onEditImage={() => setIsUserImageDialogOpen(true)}
+                      onUpdateContact={async ({ email, phone }) => {
+                        await updateProfile({
+                          email,
+                          phone: phone ?? undefined,
+                        })
+                        await refetch?.()
+                      }}
+                      isSavingContact={isUpdating}
+                    />
                     <ChangePasswordCard />
                   </div>
                 </div>
@@ -182,6 +296,15 @@ export default function ProfileSettings() {
         onOpenChange={setIsLogoDialogOpen}
         logoUrl={logoUrl}
         onLogoUrlChange={setOptimisticLogoUrl}
+        onRefetch={refetch as any}
+      />
+      <UserImageDialog
+        open={isUserImageDialogOpen}
+        onOpenChange={setIsUserImageDialogOpen}
+        imageUrl={userImageUrl}
+        firstName={(profile as any)?.firstName ?? (profile as any)?.first_name}
+        lastName={(profile as any)?.lastName ?? (profile as any)?.last_name}
+        onImageUrlChange={setOptimisticUserImageUrl}
         onRefetch={refetch as any}
       />
     </div>

@@ -41,6 +41,12 @@ export const authOptions: NextAuthOptions = {
         }
 
         const u = data.user
+        const resolvedImageUrl =
+          u.image?.src ??
+          u.imageUrl ??
+          u.image_url ??
+          u.image ??
+          null
 
         return {
           id: String(u.id),
@@ -54,6 +60,9 @@ export const authOptions: NextAuthOptions = {
           phone: u.phone,
           gender: u.gender ?? null,
           image_id: u.imageId ?? null,
+          image_url: resolvedImageUrl,
+          imageUrl: resolvedImageUrl,
+          image: resolvedImageUrl,
           is_active: u.isActive ?? null,
           is_supplier: u.isSupplier,
           is_tenant: u.isTenant,
@@ -77,6 +86,7 @@ export const authOptions: NextAuthOptions = {
               supplier_data: u.supplier || null,
               tenant_data: u.tenant || null,
               customer_data: u.customer || null,
+              image_url: resolvedImageUrl,
             }
             : null,
         } as any
@@ -115,6 +125,9 @@ export const authOptions: NextAuthOptions = {
           gender: token.gender,
           image_id: token.image_id,
           imageId: token.image_id,
+          image_url: token.image_url,
+          imageUrl: token.image_url,
+          image: token.image ?? token.image_url,
           is_active: token.is_active,
           isActive: token.is_active,
           is_supplier: token.is_supplier,

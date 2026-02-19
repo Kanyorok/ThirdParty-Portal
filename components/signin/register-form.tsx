@@ -15,6 +15,8 @@ export default function RegisterForm() {
   const [step, setStep] = React.useState<1 | 2>(1)
   const [authError, setAuthError] = React.useState<string | null>(null)
   const [success, setSuccess] = React.useState(false)
+  const [submitState, setSubmitState] = React.useState<"idle" | "posting" | "success" | "error">("idle")
+  const [submitNotice, setSubmitNotice] = React.useState<string | null>(null)
   const [showPassword, setShowPassword] = React.useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
 
@@ -24,7 +26,6 @@ export default function RegisterForm() {
     metadata,
     isLoadingMetadata,
     metadataError,
-    onSubmit,
     isSubmitting,
     toggleType,
     selectedTypes,
@@ -39,9 +40,12 @@ export default function RegisterForm() {
 
   const createUser = form.watch("createUser")
 
+  const isPosting = submitState === "posting"
+  const isBusy = isSubmitting || isPosting
+
   React.useEffect(() => {
-    console.log("[v0] Form state - Step:", step, "CreateUser:", createUser, "IsSubmitting:", isSubmitting)
-  }, [step, createUser, isSubmitting])
+    console.log("[v0] Form state - Step:", step, "CreateUser:", createUser, "IsSubmitting:", isBusy)
+  }, [step, createUser, isBusy])
 
   const adminFields = [
     "user_FirstName",
@@ -55,14 +59,22 @@ export default function RegisterForm() {
 
   React.useEffect(() => {
     if (!verifyEmailUrl) return
-    router.replace(verifyEmailUrl)
-    resetVerifyEmailUrl()
+    setSubmitState("success")
+    setSubmitNotice("Registration submitted. Redirecting to email verification...")
+    const timeoutId = window.setTimeout(() => {
+      router.replace(verifyEmailUrl)
+      resetVerifyEmailUrl()
+    }, 900)
+
+    return () => window.clearTimeout(timeoutId)
   }, [verifyEmailUrl, router, resetVerifyEmailUrl])
 
   const handleNextStep = async (e: React.FormEvent) => {
     e.preventDefault()
     console.log("[v0] handleNextStep triggered, createUser:", createUser)
     setAuthError(null)
+    setSubmitNotice(null)
+    setSubmitState("idle")
 
     const fieldsToValidate = [
       "Name",
@@ -97,6 +109,8 @@ export default function RegisterForm() {
 
     if (!createUser) {
       console.log("[v0] Submitting without user creation")
+      setSubmitState("posting")
+      setSubmitNotice("Submitting your registration...")
       try {
         const values = form.getValues()
         console.log("[v0] Form values being submitted:", values)
@@ -104,10 +118,14 @@ export default function RegisterForm() {
         const registerResponse = getLastRegisterResponse()
         console.log("[v0] Register response:", registerResponse)
         if (registerResponse?.success && !getLastVerifyEmailUrl()) {
+          setSubmitState("success")
+          setSubmitNotice("Registration completed successfully.")
           setSuccess(true)
         }
       } catch (error: any) {
         console.log("[v0] Registration error:", error?.message)
+        setSubmitState("error")
+        setSubmitNotice("Registration failed. Please review the error and try again.")
         setAuthError(error?.message ?? "An unexpected error occurred.")
       }
       return
@@ -122,10 +140,12 @@ export default function RegisterForm() {
     e.preventDefault()
     console.log("[v0] handleFinalSubmit triggered")
     setAuthError(null)
-    if (isSubmitting) {
+    setSubmitNotice(null)
+    if (isBusy) {
       console.log("[v0] Already submitting, returning")
       return
     }
+    setSubmitState("idle")
 
     const valid = await form.trigger(adminFields as any)
     console.log("[v0] Step 2 validation result:", valid, "Errors:", form.formState.errors)
@@ -143,19 +163,39 @@ export default function RegisterForm() {
 
     try {
       console.log("[v0] Submitting with user creation")
+      setSubmitState("posting")
+      setSubmitNotice("Creating account and submitting registration...")
       const values = form.getValues()
       console.log("[v0] Form values being submitted:", values)
       await registerThirdParty(values)
       const registerResponse = getLastRegisterResponse()
       console.log("[v0] Register response:", registerResponse)
       if (registerResponse?.success && !getLastVerifyEmailUrl()) {
+        setSubmitState("success")
+        setSubmitNotice("Registration completed successfully.")
         setSuccess(true)
       }
     } catch (error: any) {
       console.log("[v0] Registration error:", error?.message)
+      setSubmitState("error")
+      setSubmitNotice("Registration failed. Please review the error and try again.")
       setAuthError(error?.message ?? "An unexpected error occurred.")
     }
   }
+
+  const getSubmitButtonLabel = (defaultLabel: string) => {
+    if (submitState === "posting") return "Submitting..."
+    if (submitState === "success") return "Submitted"
+    if (submitState === "error") return "Try Again"
+    return defaultLabel
+  }
+
+  const submitButtonTone = cn(
+    "h-14 text-white font-bold uppercase rounded-lg w-full tracking-widest transition-colors disabled:opacity-100 disabled:cursor-not-allowed",
+    submitState === "success" && "bg-emerald-600 hover:bg-emerald-600",
+    submitState === "error" && "bg-rose-600 hover:bg-rose-700",
+    (submitState === "idle" || submitState === "posting") && "bg-blue-600 hover:bg-blue-700"
+  )
 
   const inputStyle = "h-12 w-full border border-slate-200 bg-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all rounded-lg"
   const labelStyle = "text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2 block"
@@ -202,6 +242,12 @@ export default function RegisterForm() {
           </motion.div>
         )}
       </AnimatePresence>
+      {submitNotice && submitState !== "error" && (
+        <div className="mb-8 p-4 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg flex items-center gap-3">
+          <CheckCircle2 className="h-5 w-5" />
+          <span className="text-sm font-medium">{submitNotice}</span>
+        </div>
+      )}
 
       <form onSubmit={handleFinalSubmit} onKeyDown={e => e.key === "Enter" && e.preventDefault()} className="grid grid-cols-1 lg:grid-cols-12 gap-16">
         <div className="lg:col-span-8">
@@ -330,8 +376,27 @@ export default function RegisterForm() {
                 </button>
               </div>
 
-              <Button type="button" onClick={handleNextStep} disabled={isSubmitting} className="h-14 bg-blue-600 text-white font-bold uppercase rounded-lg w-full tracking-widest hover:bg-blue-700 transition-colors disabled:opacity-50">
-                {isSubmitting ? <Spinner /> : createUser ? "Continue to User Details" : "Complete Registration"}
+              <Button type="button" onClick={handleNextStep} disabled={isBusy} className={createUser ? "h-14 bg-blue-600 text-white font-bold uppercase rounded-lg w-full tracking-widest hover:bg-blue-700 transition-colors disabled:opacity-100 disabled:cursor-not-allowed" : submitButtonTone}>
+                {isBusy && !createUser ? (
+                  <>
+                    <Spinner className="mr-2" />
+                    {getSubmitButtonLabel("Complete Registration")}
+                  </>
+                ) : createUser ? (
+                  "Continue to User Details"
+                ) : submitState === "success" ? (
+                  <>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    {getSubmitButtonLabel("Complete Registration")}
+                  </>
+                ) : submitState === "error" ? (
+                  <>
+                    <AlertCircle className="mr-2 h-4 w-4" />
+                    {getSubmitButtonLabel("Complete Registration")}
+                  </>
+                ) : (
+                  getSubmitButtonLabel("Complete Registration")
+                )}
               </Button>
             </motion.div>
           ) : (
@@ -383,9 +448,26 @@ export default function RegisterForm() {
               </div>
 
               <div className="flex gap-4">
-                <Button type="button" onClick={() => setStep(1)} className="h-14 bg-slate-100 text-slate-600 font-bold rounded-lg px-8 uppercase tracking-widest hover:bg-slate-200 transition-colors">Back</Button>
-                <Button type="submit" disabled={isSubmitting} className="h-14 flex-1 bg-blue-600 text-white font-bold rounded-lg uppercase tracking-widest shadow-lg shadow-blue-100 hover:bg-blue-700 transition-colors disabled:opacity-50">
-                  {isSubmitting ? <Spinner /> : "Register"}
+                <Button type="button" onClick={() => { setStep(1); setSubmitState("idle"); setSubmitNotice(null) }} className="h-14 bg-slate-100 text-slate-600 font-bold rounded-lg px-8 uppercase tracking-widest hover:bg-slate-200 transition-colors">Back</Button>
+                <Button type="submit" disabled={isBusy} className={`h-14 flex-1 uppercase tracking-widest shadow-lg shadow-blue-100 ${submitButtonTone}`}>
+                  {isBusy ? (
+                    <>
+                      <Spinner className="mr-2" />
+                      {getSubmitButtonLabel("Register")}
+                    </>
+                  ) : submitState === "success" ? (
+                    <>
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      {getSubmitButtonLabel("Register")}
+                    </>
+                  ) : submitState === "error" ? (
+                    <>
+                      <AlertCircle className="mr-2 h-4 w-4" />
+                      {getSubmitButtonLabel("Register")}
+                    </>
+                  ) : (
+                    getSubmitButtonLabel("Register")
+                  )}
                 </Button>
               </div>
             </motion.div>

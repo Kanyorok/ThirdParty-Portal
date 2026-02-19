@@ -96,7 +96,7 @@ export const apiService = {
     formData.append("image", file)
 
     const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {}
-    const res = await fetch("/api/profile/image", {
+    const res = await fetch("/api/v1/profile/user-image", {
       method: "POST",
       headers,
       body: formData,
@@ -109,12 +109,14 @@ export const apiService = {
     }
 
     const imageUrl =
-      body?.imageUrl ??
-      body?.image_url ??
-      body?.image ??
+      body?.data?.image?.src ??
       body?.data?.imageUrl ??
       body?.data?.image_url ??
       body?.data?.image ??
+      body?.image?.src ??
+      body?.imageUrl ??
+      body?.image_url ??
+      body?.image ??
       body?.data?.url
 
     return {
@@ -161,6 +163,8 @@ export const profileService = {
       "LocationId",
       "PhysicalAddress",
       "Website",
+      "Email",
+      "Phone",
     ]
     const hasPortalPayload = portalFields.some((key) => Object.prototype.hasOwnProperty.call(payload, key))
     const endpoint = hasPortalPayload ? "/api/v1/profile" : "/api/third-party-profile"

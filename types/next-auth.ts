@@ -28,6 +28,11 @@ export type BaseUser = {
     image_url?: string | null
     [key: string]: unknown
   } | null
+  image_url?: string | null
+  imageUrl?: string | null
+  image?: string | null
+  image_id?: number | null
+  imageId?: number | null
   [key: string]: unknown
 }
 
@@ -44,4 +49,3 @@ export type UserProfile = {
   status?: string | null
   [key: string]: unknown
 }
-

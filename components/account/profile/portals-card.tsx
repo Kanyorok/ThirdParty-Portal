@@ -3,7 +3,6 @@
 import { Building2 } from "lucide-react"
 
 import { Button } from "@/components/common/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/common/card"
 
 type PortalsCardProps = {
   profile: any
@@ -12,12 +11,13 @@ type PortalsCardProps = {
 
 export default function PortalsCard({ profile, onSwitchTo }: PortalsCardProps) {
   return (
-    <Card className="bg-card rounded-2xl border border-border/60 shadow-none py-0 gap-0">
-      <CardHeader className="border-b border-border/60 py-5">
-        <CardTitle className="text-base">Portals</CardTitle>
-        <CardDescription>Quick access to your enabled portals.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3 pb-6">
+    <section className="border border-border/60 bg-background">
+      <div className="border-b border-border/60 px-5 py-4">
+        <h2 className="text-base font-semibold text-foreground">Portals</h2>
+        <p className="text-sm text-muted-foreground">Quick access to your enabled portals.</p>
+      </div>
+
+      <div className="space-y-3 px-5 py-5">
         {(["Supplier", "Tenant", "Customer"] as const).map((key) => {
           const enabled =
             key === "Supplier"
@@ -50,8 +50,7 @@ export default function PortalsCard({ profile, onSwitchTo }: PortalsCardProps) {
             </div>
           )
         })}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   )
 }
-

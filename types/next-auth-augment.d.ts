@@ -16,6 +16,9 @@ declare module "next-auth" {
       profile?: unknown
       gender?: unknown
       image_id?: number | null
+      image_url?: string | null
+      imageUrl?: string | null
+      image?: string | null
       is_active?: boolean | null
       email_verified_on?: string | null
       created_on?: string | null
@@ -54,6 +57,9 @@ declare module "next-auth" {
     profile?: unknown
     gender?: unknown
     image_id?: number | null
+    image_url?: string | null
+    imageUrl?: string | null
+    image?: string | null
     is_active?: boolean | null
     email_verified_on?: string | null
     created_on?: string | null
@@ -80,6 +86,9 @@ declare module "next-auth/jwt" {
     profile?: unknown
     gender?: unknown
     image_id?: number | null
+    image_url?: string | null
+    imageUrl?: string | null
+    image?: string | null
     is_active?: boolean | null
     email_verified_on?: string | null
     created_on?: string | null

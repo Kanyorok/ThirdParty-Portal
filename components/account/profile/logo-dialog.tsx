@@ -1,14 +1,14 @@
 "use client"
 
 import { type ChangeEvent, useEffect, useRef, useState, useTransition } from "react"
-import { ImageUp, Save, Trash2 } from "lucide-react"
+import { ImageUp, Save } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/common/button"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/common/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/common/avatar"
 import { cn } from "@/lib/utils"
-import Loading from "@/components/common/custom-loader"
+import { Spinner } from "@/components/common/spinner"
 
 type LogoDialogProps = {
   open: boolean
@@ -77,15 +77,24 @@ export default function LogoDialog({ open, onOpenChange, logoUrl, onLogoUrlChang
     }
 
     const formData = new FormData()
-    formData.append("profileImage", selectedLogo)
+    formData.append("logo", selectedLogo)
 
     startTransition(async () => {
       try {
-        const res = await fetch("/api/profile/image", { method: "POST", body: formData })
+        const res = await fetch("/api/v1/profile/logo", { method: "POST", body: formData })
         const body = await res.json().catch(() => ({}))
-        if (!res.ok) throw new Error(body?.message || "Failed to upload logo.")
+        if (!res.ok || body?.success === false) throw new Error(body?.message || "Failed to upload logo.")
 
-        const nextUrl = body?.image ?? body?.imageUrl ?? body?.data?.image ?? body?.data?.imageUrl ?? null
+        const nextUrl =
+          body?.data?.logo?.src ??
+          body?.data?.logoUrl ??
+          body?.data?.logo_url ??
+          body?.data?.logo ??
+          body?.logo?.src ??
+          body?.logoUrl ??
+          body?.logo_url ??
+          body?.logo ??
+          null
         onLogoUrlChange(typeof nextUrl === "string" && nextUrl.trim().length ? nextUrl : logoUrl)
 
         toast.success("Logo updated.")
@@ -93,23 +102,6 @@ export default function LogoDialog({ open, onOpenChange, logoUrl, onLogoUrlChang
         onOpenChange(false)
       } catch (error: any) {
         toast.error(error?.message || "Failed to upload logo.")
-      }
-    })
-  }
-
-  const removeLogo = async () => {
-    startTransition(async () => {
-      try {
-        const res = await fetch("/api/profile/image", { method: "DELETE" })
-        const body = await res.json().catch(() => ({}))
-        if (!res.ok) throw new Error(body?.message || "Failed to remove logo.")
-
-        onLogoUrlChange(null)
-        toast.success("Logo removed.")
-        await onRefetch?.()
-        onOpenChange(false)
-      } catch (error: any) {
-        toast.error(error?.message || "Failed to remove logo.")
       }
     })
   }
@@ -162,18 +154,6 @@ export default function LogoDialog({ open, onOpenChange, logoUrl, onLogoUrlChang
               {selectedLogo ? "Change selected" : "Choose file"}
             </label>
 
-            {logoUrl && !selectedLogo && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={removeLogo}
-                disabled={isPending}
-                className="h-11 rounded-xl text-xs font-medium text-destructive shadow-none"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Remove logo
-              </Button>
-            )}
           </div>
         </div>
 
@@ -189,7 +169,7 @@ export default function LogoDialog({ open, onOpenChange, logoUrl, onLogoUrlChang
             disabled={isPending || !selectedLogo}
             className="h-11 rounded-xl text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
           >
-            {isPending ? <Loading className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            {isPending ? <Spinner className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
             Save
           </Button>
         </DialogFooter>
@@ -197,4 +177,3 @@ export default function LogoDialog({ open, onOpenChange, logoUrl, onLogoUrlChang
     </Dialog>
   )
 }
-

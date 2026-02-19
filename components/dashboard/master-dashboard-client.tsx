@@ -19,9 +19,6 @@ import { PriorityActions } from "@/components/dashboard/priority-actions"
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/common/card"
 import { Button } from "@/components/common/button"
 import {
@@ -100,6 +97,7 @@ export function MasterDashboardClient({
     DEFAULT_WIDGET_PREFERENCES
   )
   const [widgetsHydrated, setWidgetsHydrated] = useState(false)
+  const [hasMounted, setHasMounted] = useState(false)
 
   const { setSummary, fetchSummary, error } = useDashboardStore(
     useShallow(s => ({
@@ -122,6 +120,10 @@ export function MasterDashboardClient({
       fetchSummary()
     }
   }, [dashboardData, setSummary, fetchSummary])
+
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -152,9 +154,11 @@ export function MasterDashboardClient({
     window.localStorage.setItem(storageKey, JSON.stringify(widgetPreferences))
   }, [widgetPreferences, activeProfile, widgetsHydrated])
 
+  const renderProfile = hasMounted ? activeProfile : initialProfile
+
   const registry = useMemo(
-    () => getDashboardRegistryEntry(activeProfile),
-    [activeProfile]
+    () => getDashboardRegistryEntry(renderProfile),
+    [renderProfile]
   )
 
   const visibleWidgetsCount = useMemo(
@@ -213,7 +217,7 @@ export function MasterDashboardClient({
 
       {widgetPreferences.priority && (
         <motion.section variants={itemVariants}>
-          <PriorityActions profile={activeProfile} />
+          <PriorityActions profile={renderProfile} />
         </motion.section>
       )}
 
@@ -231,7 +235,7 @@ export function MasterDashboardClient({
         <motion.section variants={itemVariants}>
           <Card className="rounded-3xl border border-border/50 bg-transparent shadow-none">
             <CardContent className="py-3">
-              <SummaryCharts profile={activeProfile} />
+              <SummaryCharts profile={renderProfile} />
             </CardContent>
           </Card>
         </motion.section>
