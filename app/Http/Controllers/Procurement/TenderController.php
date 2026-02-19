@@ -232,24 +232,55 @@ class TenderController extends Controller
 
     public function store(Request $request)
     {
+        // ── Idempotency guard ─────────────────────────────────────────────────
+        // Build a fingerprint from stable request fields so that re-submitting
+        // the same form within 60 seconds is treated as a duplicate.
+        // NOTE: the key is only WRITTEN after validation passes, so a failed
+        // validation (e.g. missing supplier) does not consume the quota.
+        $idempotencyKey = 'tender_store:' . Auth::id() . ':' . md5(implode('|', [
+            $request->input('title', ''),
+            $request->input('tender_type', ''),
+            $request->input('submission_deadline', ''),
+            $request->input('opening_date', ''),
+            $request->input('tender_category_id', ''),
+            $request->input('item_category_id', ''),
+        ]));
+
+        if (\Illuminate\Support\Facades\Cache::has($idempotencyKey)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'This tender was already submitted. Please wait a moment before trying again.');
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
+        // TenderTypeEnum::Restricted has backing value 'rs'
+        $isRestricted = $request->input('tender_type') === TenderTypeEnum::Restricted->value;
+
         $validated = $request->validate([
             'tender_category_id' => 'required|integer|exists:t_TenderCategories,Id',
-            'item_category_id' => 'required|integer|exists:t_ItemCategories,Id',
-            // 1. Submission Deadline must be today or in the future
+            'item_category_id'   => 'required|integer|exists:t_ItemCategories,Id',
             'submission_deadline' => 'required|date|after_or_equal:today',
-
-            // 2. Opening Date must be AFTER the submission deadline
-            'opening_date' => 'required|date|after:submission_deadline',
-            'title' => 'required|string|max:255',
-            'tender_type' => 'required|string',
-            'scope_of_work' => 'nullable|string',
-            'instructions' => 'nullable|string',
-            'currency_id' => 'required|integer|exists:t_Currencies,Id',
-            'documents.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
+            'opening_date'       => 'required|date|after:submission_deadline',
+            'title'              => 'required|string|max:255',
+            'tender_type'        => 'required|string',
+            'scope_of_work'      => 'nullable|string',
+            'instructions'       => 'nullable|string',
+            'currency_id'        => 'required|integer|exists:t_Currencies,Id',
+            'documents.*'        => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
+            // Restricted tenders MUST nominate at least one supplier at creation.
+            'suppliers'          => $isRestricted ? 'required|array|min:1' : 'nullable|array',
+            'suppliers.*'        => 'integer',
         ], [
             'submission_deadline.after_or_equal' => 'The submission deadline cannot be in the past.',
-            'opening_date.after' => 'The opening date must be after the submission deadline.',
+            'opening_date.after'                 => 'The opening date must be after the submission deadline.',
+            'suppliers.required'                 => 'A restricted tender must have at least one invited supplier.',
+            'suppliers.min'                      => 'A restricted tender must have at least one invited supplier.',
         ]);
+
+        // Validation passed — now lock the idempotency key so a true duplicate
+        // network retry (within 60 s) is rejected, but a corrected resubmit after
+        // a validation error is allowed (the key was never written on failure).
+        \Illuminate\Support\Facades\Cache::put($idempotencyKey, true, now()->addSeconds(60));
 
         DB::beginTransaction();
 
@@ -357,7 +388,7 @@ class TenderController extends Controller
                     //auto generated pr reference
                     $prReference = $this->generateManualItemPRReference($tender->TenderNo, $manualCounter++);
 
-                    TenderItems::create([
+                    TenderItems::Updateorcreate([
                         'TenderID' => $tenderId,
                         'SourceType' => 'MANUAL',
                         'ItemID' => $manualItem['item_id'] ?? null,
@@ -373,16 +404,14 @@ class TenderController extends Controller
                 }
             }
 
-            // Process suppliers
+            // Process suppliers (updateOrCreate prevents duplicate rows on retry)
             $suppliers = $request->input('suppliers', []);
             if (! empty($suppliers)) {
                 foreach ($suppliers as $supplierId) {
-                    TenderSupplier::create([
-                        'TenderID' => $tenderId,
-                        'SupplierID' => $supplierId,
-                        'CreatedBy' => Auth::id(),
-                        'ModifiedBy' => Auth::id(),
-                    ]);
+                    TenderSupplier::updateOrCreate(
+                        ['TenderID' => $tenderId, 'SupplierID' => $supplierId],
+                        ['CreatedBy' => Auth::id(), 'ModifiedBy' => Auth::id()]
+                    );
                 }
             }
 

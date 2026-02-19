@@ -23,28 +23,7 @@ class RFQ extends Model
     public const UPDATED_AT = 'ModifiedOn';
     public const DELETED_AT = 'DeletedOn';
 
-    protected static function boot()
-    {
-        parent::boot();
 
-        static::created(function ($rfq) {
-            $workflowService = app(\App\Services\Procurement\RFQ\RFQWorkflowService::class);
-            $user = \Illuminate\Support\Facades\Auth::user();
-            if ($user) {
-                Log::info('RFQ created, submitting to workflow', [
-                    'rfq_id' => $rfq->Id,
-                    'rfq_number' => $rfq->RFQNumber,
-                    'user_id' => $user->Id,
-                ]);
-
-                // Use the convenience method with proper type hints
-                $workflowService->submitRFQ($rfq, $user, 'RFQ Created');
-            }
-
-            app(\App\Services\Procurement\RFQ\RFQWorkflowService::class)
-                ->submitRFQ($rfq, $user, 'RFQ Created');
-        });
-    }
 
     /**
      * Get the primary key for workflow purposes
