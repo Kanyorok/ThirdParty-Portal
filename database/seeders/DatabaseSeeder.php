@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
         $this->call(ModuleSeeder::class);
         $this->call(RolePermissionSeeder::class);
         $this->call(DepartmentSeeder::class);
+        $this->call(JobGradeSeeder::class);
         $this->call(EmployeeSeeder::class);
         $this->call(ItemCategoriesSeeder::class);
         $this->call(UnitOfMeasureSeeder::class);

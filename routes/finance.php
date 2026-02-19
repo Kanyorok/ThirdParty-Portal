@@ -88,6 +88,8 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
     // AJAX routes for supplier search in new invoice entry
     Route::post('invoiceentry-v2/api/suppliers/quick-search', [InvoiceEntryV2Controller::class, 'quickSearchSuppliers'])->name('finance.invoiceentry-v2.api.suppliers.quick-search');
     Route::post('invoiceentry-v2/api/suppliers/search', [InvoiceEntryV2Controller::class, 'findSupplier'])->name('finance.invoiceentry-v2.api.suppliers.search');
+    Route::get('invoiceentry-v2/api/contracts', [InvoiceEntryV2Controller::class, 'getContracts'])->name('finance.invoiceentry-v2.api.contracts');
+    Route::get('invoiceentry-v2/api/contracts/{type}/{id}/milestones', [InvoiceEntryV2Controller::class, 'getContractMilestones'])->name('finance.invoiceentry-v2.api.contracts.milestones');
     Route::resource('customermaster', CustomerMasterController::class);
     Route::resource('invoicegeneration', InvoiceGenerationController::class);
     Route::resource('creditnote', CreditNoteController::class);
@@ -262,6 +264,9 @@ Route::middleware(['module:1100000'])->prefix('finance')->group(function () {
 
     Route::post('/paymentvoucher/{id}/approve', [PaymentVoucherController::class, 'approve'])->name('paymentvoucher.approve');
     Route::post('/paymentvoucher/{id}/reject', [PaymentVoucherController::class, 'reject'])->name('paymentvoucher.reject');
+    Route::get('/paymentvoucher/api/invoices/{invoiceId}/preview', [PaymentVoucherController::class, 'invoicePreview'])->name('paymentvoucher.invoice-preview');
+    Route::post('/paymentvoucher/contracts/{invoiceId}/apply-penalty', [PaymentVoucherController::class, 'applyContractPenalty'])->name('paymentvoucher.contracts.apply-penalty');
+    Route::post('/paymentvoucher/contracts/{invoiceId}/waive-hold', [PaymentVoucherController::class, 'waiveContractHold'])->name('paymentvoucher.contracts.waive-hold');
 
     //Approval Routes For simulations
 

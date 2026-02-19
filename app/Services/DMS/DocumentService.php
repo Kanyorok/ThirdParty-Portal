@@ -43,7 +43,7 @@ use Throwable;
 
 class DocumentService extends PermissionsService
 {
-    protected const CHECKSUM = 'sha256';
+    protected const string CHECKSUM = 'sha256';
     public ExtensionsEnum $type;
 
     public function __construct(public Document $document)
@@ -80,10 +80,10 @@ class DocumentService extends PermissionsService
     /**
      * @throws ErroredException
      */
-    public function sign(DMSSignature $signature, User $actor, int $Pages): static
+    public function sign(DMSSignature $signature, User $actor, int $Pages = 1): static
     {
         if (! $this->type->canSign()) {
-            throw new ErroredException('Document cannot be signed');
+            throw new ErroredException('Document cannot be signed ');
         }
         (new SignatureService($signature))->sign($this->document, $actor, $Pages);
 
@@ -196,19 +196,8 @@ class DocumentService extends PermissionsService
     /**
      * @throws ErroredException
      */
-    private static function _create(
-        Repository $repository,
-        User $actor,
-        DisksEnum $disk,
-        string $name,
-        ExtensionsEnum $extension,
-        string $path,
-        int $sizeInBytes,
-        string $checksum,
-        CategoryMaster $category = null,
-        bool $copyPermissions = true,
-        Collection $properties = null
-    ): DocumentService {
+    private static function _create(Repository $repository, User $actor, DisksEnum $disk, string $name, ExtensionsEnum $extension, string $path, int $sizeInBytes, string $checksum, CategoryMaster $category = null, bool $copyPermissions = true, Collection $properties = null): DocumentService
+    {
         try {
             return DB::transaction(static function () use ($path, $checksum, $properties, $sizeInBytes, $disk, $category, $extension, $repository, $name, $actor, $copyPermissions) {
                 $document = Document::create([
@@ -246,7 +235,7 @@ class DocumentService extends PermissionsService
     /**
      * @throws ErroredException
      */
-    protected function _newVersion(DisksEnum $disk, string $path, string $name, int $sizeInBytes, User $actor, ?Collection $properties = null, ?string $checksum = null): static
+    protected function _newVersion(DisksEnum $disk, string $path, string $name, int $sizeInBytes, User $actor, ?Collection $properties = null, ?string $checksum = null, ExtensionsEnum $extension = null): static
     {
 
         $this->document->versions()->create([
@@ -260,6 +249,12 @@ class DocumentService extends PermissionsService
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
         ]);
+
+        $this->document->update([
+            'Name' => $name,
+            'MimeType' => $extension ? $extension->getMimeType() : $this->document->MimeType,
+        ]);
+
         $generate = true;
 
         if ($properties instanceof Collection) {
@@ -365,7 +360,7 @@ class DocumentService extends PermissionsService
 
                 activity()->causedBy($actor)->performedOn($this->document)->event('checked-in')->log('document checked in');
 
-                return $this->_newVersion($disk, $path, $file->getClientOriginalName(), $file->getSize(), $actor, properties: (new UploadFileProperties($file, $extension))->getProperties(), checksum: base64_encode($checksum1 . '|' . $checksum2));
+                return $this->_newVersion($disk, $path, $file->getClientOriginalName(), $file->getSize(), $actor, properties: (new UploadFileProperties($file, $extension))->getProperties(), checksum: base64_encode($checksum1 . '|' . $checksum2), extension: $extension);
             });
         } catch (Throwable $e) {
             Log::error('Error checking in document: ' . $e);
@@ -381,7 +376,7 @@ class DocumentService extends PermissionsService
     public function newVersionFile(string $filePath, User $actor): static
     {
         if (! file_exists($filePath)) {
-            throw new ErroredException('File does not exist. !');
+            throw new ErroredException('File does not exist. !'.$filePath);
         }
 
         $extension = ExtensionsEnum::fromMimeType(mime_content_type($filePath));
@@ -390,10 +385,10 @@ class DocumentService extends PermissionsService
         $path = self::_saveFile($disk, file_get_contents($filePath));
         $checksum2 = hash_file(self::CHECKSUM, Storage::disk($disk->value)->path($path));
         $size = (int)filesize($filePath);
-        $name = "Signed " . pathinfo($this->document->Name, PATHINFO_FILENAME) . '.' . $extension->value;
+        $name = /*"Signed " .*/ pathinfo($this->document->Name, PATHINFO_FILENAME) . '.' . $extension->value;
         unlink($filePath);
 
-        return $this->_newVersion($disk, $path, $name, $size, $actor, checksum: base64_encode($checksum1 . '|' . $checksum2));
+        return $this->_newVersion($disk, $path, $name, $size, $actor, checksum: base64_encode($checksum1 . '|' . $checksum2), extension: $extension);
     }
 
     /**
@@ -417,7 +412,7 @@ class DocumentService extends PermissionsService
         $path = self::_saveFile($disk, $file->getContent());
         $checksum2 = hash_file(self::CHECKSUM, Storage::disk($disk->value)->path($path));
 
-        return $this->_newVersion($disk, $path, $file->getClientOriginalName(), $file->getSize(), $actor, properties: (new UploadFileProperties($file, $extension))->getProperties(), checksum: base64_encode($checksum1 . '|' . $checksum2));
+        return $this->_newVersion($disk, $path, $file->getClientOriginalName(), $file->getSize(), $actor, properties: (new UploadFileProperties($file, $extension))->getProperties(), checksum: base64_encode($checksum1 . '|' . $checksum2), extension: $extension);
     }
 
     public function validateToken(User $user, string $token): bool
@@ -541,7 +536,6 @@ class DocumentService extends PermissionsService
 
     private function _tagsHtml(): string
     {
-
         return '';
     }
 
@@ -606,10 +600,18 @@ class DocumentService extends PermissionsService
         return $this;
     }
 
-    public function summaryList(): string
+    public function summaryList(bool $withTrash = false, bool $refreshOnDelete = false): string
     {
+        $parameters = [];
+        if ($withTrash) {
+            $parameters = ['trash' => 'yes'];
+            if ($refreshOnDelete) {
+                $parameters['trashRefresh'] = 'yes';
+            }
+        }
+
         return '<span class="btn btn-outline-info modal-preview-document" title="' . $this->document->Name . '"
-                        data-url="' . route('file.embed-preview', [$this->document->DocumentId]) . '" id="document-' . $this->document->DocumentId . '">
+                        data-url="' .  route('file.embed-preview', array_merge([$this->document->DocumentId], $parameters)) . '" id="document-' . $this->document->DocumentId . '">
                     ' . $this->document->ext()?->getIcon() . "&nbsp;" . Str::limit(explode(".", $this->document->Name)[0], 10) . '.' . $this->document->ext()?->value . '</span>';
     }
 

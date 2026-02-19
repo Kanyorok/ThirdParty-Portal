@@ -21,8 +21,7 @@ class PrequalificationRoundController extends Controller
 {
     public function __construct()
     {
-        // Removed authorizeResource() - it runs too early, before LoginBranchId is set in session
-        // Using individual authorize() calls in each method instead (like RequisitionsController)
+        $this->authorizeResource(PrequalificationRound::class, 'prequalification_round');
     }
 
     public function index(Request $request): View

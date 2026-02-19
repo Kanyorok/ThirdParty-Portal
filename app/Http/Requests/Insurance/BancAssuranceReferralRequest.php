@@ -28,7 +28,7 @@ class BancAssuranceReferralRequest extends FormRequest
             'InsuranceProductId' => 'nullable|exists:t_InsuranceProducts,Id',
             'PreferredInsurerId' => 'required|exists:t_InsuranceProviders,Id',
             'Remarks' => 'nullable|string',
-            'AssignedTo' => 'nullable|exists:t_Employees,Id',
+            'AssignedTo' => 'nullable|exists:t_HREmployees,Id',
         ];
     }
 }

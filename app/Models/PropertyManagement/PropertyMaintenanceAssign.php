@@ -5,7 +5,7 @@ namespace App\Models\PropertyManagement;
 use App\Enums\Core\PostingEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use app\Models\PropertyManagement\PropertyMaintenanceWorkCompletion;
 use App\Models\ThirdParty\SupplierMaster;
 use App\Traits\Model\UserActorTrait;

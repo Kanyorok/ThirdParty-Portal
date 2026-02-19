@@ -7,7 +7,7 @@ use App\Models\Auth\ModelRole;
 use App\Models\Auth\Role;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Services\BR\BREncryption;
 use App\Services\Core\ModuleService;
 use Illuminate\Auth\Events\Lockout;

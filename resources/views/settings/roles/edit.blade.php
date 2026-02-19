@@ -2,7 +2,7 @@
     <form action="{{ route('roles.update',[$role->id]) }}" method="post" id="updateRoleForm"> @csrf
         <div class="col-12 mb-3">@method('put')
             <label class="form-label" for="RoleName">Role Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="RoleName" name="RoleName" required placeholder="RoleName" value="{{ $role->name }}">
+            <input type="text" class="form-control" id="RoleName" name="RoleName" value="{{ $role->name }}" readonly>
             <p id="RoleName_error" class="invalid-feedback d-none error col-12" role="alert"></p>
         </div>
 

@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Models\HR;
+
+use Illuminate\Database\Eloquent\Model;
+
+class StatutoryHousingLevyRate extends Model
+{
+    protected $table = 't_HRStatutoryHousingLevyRates';
+    protected $primaryKey = 'Id';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'Rate',
+        'CapAmount',
+        'EffectiveFrom',
+        'EffectiveTo',
+        'Description',
+        'IsActive',
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
+        'DeletedOn',
+    ];
+
+    protected $casts = [
+        'Rate' => 'decimal:4',
+        'CapAmount' => 'decimal:2',
+        'IsActive' => 'boolean',
+        'EffectiveFrom' => 'date',
+        'EffectiveTo' => 'date',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
+    ];
+}

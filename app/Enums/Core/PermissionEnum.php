@@ -96,7 +96,6 @@ enum PermissionEnum: string
     case DebtCollectionAssignment = 'debt-collection-assignment';
     case DebtCollectionAdmin = 'debt-collection-admin';
 
-
     //Socials
     case SocialRead = 'social-read';
     case SocialWrite = 'social-create';
@@ -116,12 +115,10 @@ enum PermissionEnum: string
     case UsersMessaging = 'users-messaging';
     case UsersSessions = 'users-nonExpiringSessions';
 
-
     case MeetingRooms = 'meeting-locations';
 
     case BoardManage = 'board-members-manage';
     case BoardMeeting = 'board-members-meetings';
-
 
     case TaskCreate = 'tasks-create';
     case TaskDelegate = 'tasks-delegate';
@@ -420,7 +417,6 @@ enum PermissionEnum: string
     case StockAdjustmentDelete = 'stockAdjustment-delete';
     case StockAdjustmentApproval = 'stockAdjustment-approval';
 
-
     case InventoryHoldReviewView = 'inventoryHoldReview-view';
     case InventoryHoldReviewCreate = 'inventoryHoldReview-create';
 
@@ -431,7 +427,6 @@ enum PermissionEnum: string
 
     case InventoryDashboardView = 'inventoryDashboard-view';
     case InventoryReportsView = 'inventoryReports-view';
-
     /*
      *
      * ========================================  Property Management  ========================================
@@ -463,21 +458,17 @@ enum PermissionEnum: string
     case PropertyStructuralDelete = 'propertystructural-delete';
     case PropertyStructuralView = 'propertystructural-view';
 
-
     //Pricing and Rates
     case PropertyRateAndPricingCreate = 'propertyrateandpricing-create';
     case PropertyRateAndPricingUpdate = 'propertyrateandpricing-update';
     case PropertyRateAndPricingDelete = 'propertyrateandpricing-delete';
     case PropertyRateAndPricingView = 'propertyrateandpricing-view';
 
-
     //Property Attachments
     case PropertyAttachmentsCreate = 'propertyattachments-create';
     case PropertyAttachmentsUpdate = 'propertyattachments-update';
     case PropertyAttachmentsDelete = 'propertyattachments-delete';
     case PropertyAttachmentsView = 'propertyattachments-view';
-
-
 
     //Tenant Mentenance
     case TenantMaintenanceCreate = 'tenantmaintenance-create';
@@ -491,14 +482,12 @@ enum PermissionEnum: string
     case TenantClearanceDelete = 'tenantclearance-delete';
     case TenantClearanceView = 'tenantclearance-view';
 
-
     //Property New Lease
     case PropertyNewLeaseCreate = 'propertynewlease-create';
     case PropertyNewLeaseUpdate = 'propertynewlease-update';
     case PropertyNewLeaseDelete = 'propertynewlease-delete';
     case PropertyNewLeaseView = 'propertynewlease-view';
     case PropertyNewLeaseApproval = 'propertynewlease-appoval';
-
 
     //Property lease schedule
     case PropertyLeaseScheduleCreate = 'propertyleaseschedule-create';
@@ -513,8 +502,6 @@ enum PermissionEnum: string
     case PropertyLeaseRenewalDelete = 'propertyleaserenewal-delete';
     case PropertyLeaseRenewalView = 'propertyleaserenewal-view';
     case PropertyLeaseRenewalApproval = 'propertyleaserenewal-approval';
-
-
 
     //Property Lease Termination
     case PropertyLeaseTerminationCreate = 'propertyleasetermination-create';
@@ -543,7 +530,6 @@ enum PermissionEnum: string
     case PropertyMaintenanceRequestDelete = 'propertymaintenancerequest-delete';
     case PropertyMaintenanceRequestView = 'propertymaintenancerequest-view';
 
-
     //Property Maintenance Assign
     case PropertyMaintenanceAssignCreate = 'propertymaintenanceassign-create';
     case PropertyMaintenanceAssignUpdate = 'propertymaintenanceassign-update';
@@ -556,13 +542,10 @@ enum PermissionEnum: string
     case PropertyMaintenanceWorkCompletionDelete = 'propertymaintenanceworkcompletion-delete';
     case PropertyMaintenanceWorkCompletionView = 'propertymaintenanceworkcompletion-view';
 
-
-
     /*
      *
      * ========================================  Insurance  ========================================
      */
-
 
     //Bancassurance Referral
     case BancassuranceReferralCreate = 'bancassurancereferral-create';
@@ -575,7 +558,6 @@ enum PermissionEnum: string
     case BancassurancePolicyView = 'bancassurancepolicy-view';
     case BancassurancePolicyUpdate = 'bancassurancepolicy-update';
     case BancassurancePolicyDelete = 'bancassurancepolicy-delete';
-
 
     // Bancassurance Customers
     case BancassuranceCustomersCreate = 'bancassurancecustomers-create';
@@ -607,7 +589,6 @@ enum PermissionEnum: string
     case BancassuranceUnderwritingCreate = 'bancassuranceunderwriting-create';
     case BancassuranceUnderwritingUpdate = 'bancassuranceunderwriting-update';
     case BancassuranceUnderwritingDelete = 'bancassuranceunderwriting-delete';
-
 
     //Bancasurance Claim
     case BancassuranceClaimView = 'bancassuranceclaim-view';
@@ -645,7 +626,6 @@ enum PermissionEnum: string
     case MedicalFundBeneficiaryUpdate = 'medicalfundbeneficiary-update';
     case MedicalFundBeneficiaryDelete = 'medicalfundbeneficiary-delete';
 
-
     // Insurance Provider
     case InsuranceProviderView = 'insuranceprovider-view';
     case InsuranceProviderCreate = 'insuranceprovider-create';
@@ -682,9 +662,6 @@ enum PermissionEnum: string
     case CommissionRuleCreate = 'commissionrule-create';
     case CommissionRuleUpdate = 'commissionrule-update';
     case CommissionRuleDelete = 'commissionrule-delete';
-
-
-
 
     /*
      *
@@ -862,7 +839,6 @@ enum PermissionEnum: string
     case FinancePaymentProcessingPosting = 'financePaymentProcessing-posting';
     case FinanceReceiptPosting = 'financeReceipt-posting';
 
-
     /*
     *
     * ========================================  FleetManagement  ========================================
@@ -881,7 +857,6 @@ enum PermissionEnum: string
     case FleetVehicleCreate = 'fleetVehicle-create';
     case FleetVehicleUpdate = 'fleetVehicle-update';
     case FleetVehicleDestroy = 'fleetVehicle-destroy';
-
 
     case FleetInsuranceTrackerView = 'fleetInsuranceTracker-view';
     case FleetInsuranceTrackerCreate = 'fleetInsuranceTracker-create';
@@ -939,8 +914,6 @@ enum PermissionEnum: string
     case VehicleInspectionCreate = 'vehicleInspection-create';
     case VehicleInspectionUpdate = 'vehicleInspection-update';
     case VehicleInspectionDestroy = 'vehicleInspection-destroy';
-
-
 
     /*
 *
@@ -1100,7 +1073,6 @@ enum PermissionEnum: string
             [self::ApproveNewBudget],
             [self::ApproveReallocation],
 
-
             ///////////////////////  Finance  /////////////////////////////////////
             [self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete],
             [self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete],
@@ -1123,7 +1095,6 @@ enum PermissionEnum: string
             [self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy],
             [self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy],
 
-
             //Property Management
             [self::PropertyCategoryView, self::PropertyCategoryCreate, self::PropertyCategoryUpdate, self::PropertyCategoryDelete],
             [self::PropertyTypeView, self::PropertyTypeCreate, self::PropertyTypeUpdate, self::PropertyTypeDelete],
@@ -1142,7 +1113,6 @@ enum PermissionEnum: string
             [self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView],
             [self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView],
             [self::PropertyRateAndPricingCreate, self::PropertyRateAndPricingUpdate, self::PropertyRateAndPricingDelete, self::PropertyRateAndPricingView],
-
 
             //Fleet
             [self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy],
@@ -1380,8 +1350,6 @@ enum PermissionEnum: string
             self::CommissionRuleView, self::CommissionRuleCreate, self::CommissionRuleUpdate, self::CommissionRuleDelete
             => ModulesEnum::Insurance,
 
-
-
             ///////////////^*********** Budget and Analytics ******************/////////////////
             self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete,
             self::BudgetActivityView, self::BudgetActivityCreate, self::BudgetActivityUpdate, self::BudgetActivityDelete,
@@ -1393,7 +1361,6 @@ enum PermissionEnum: string
             self::ApproveNewBudget,
             self::ApproveReallocation
             => ModulesEnum::BudgetLine,
-
 
             ////////////////////   Finance   ////////////////////////////
             self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete,
