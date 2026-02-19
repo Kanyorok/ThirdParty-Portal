@@ -479,30 +479,7 @@
             });
         });
 
-        $('#ProcurementPlan').on('change', function() {
-            let planId = $(this).val();
-            if (!planId) return;
 
-            let url = "{{ route('procurement.plan.details', ':id') }}".replace(':id', planId);
-            
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    const branchSelect = $('#Branch');
-                    const departmentSelect = $('#Department');
-
-                    branchSelect.empty().append('<option selected disabled>Select Branch</option>');
-                    departmentSelect.empty().append('<option selected disabled>Select Department</option>');
-
-                    data.branches.forEach(branch => {
-                        branchSelect.append(new Option(branch.Name, branch.Id));
-                    });
-
-                    data.departments.forEach(dept => {
-                        departmentSelect.append(new Option(dept.Name, dept.Id));
-                    });
-                });
-        });
     });
 </script>
 @endsection

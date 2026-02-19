@@ -20,7 +20,17 @@ class DepartmentNeedsService
     public function create(array $data, User $actor): DepartmentNeed
     {
         $branchId = session('LoginBranchId');
-        $departmentId = $actor->employee?->department?->Id;
+
+        // Ensure the user has a linked employee record with a department
+        $employee = $actor->employee;
+        if (! $employee) {
+            throw new \Exception('Your user account is not linked to an employee record. Please contact HR.');
+        }
+
+        $departmentId = $employee->DepartmentID;
+        if (! $departmentId) {
+            throw new \Exception('Your employee record does not have a department assigned. Please contact HR.');
+        }
 
         $itemId = $data['ItemID'];
 
@@ -87,8 +97,9 @@ class DepartmentNeedsService
 
             return $departmentNeed;
         } catch (\Exception $e) {
-            DB::rollBack();
-
+            // Don't call DB::rollBack() here — the caller's DB::transaction() handles rollback.
+            // Manually rolling back here conflicts with SP's SET XACT_ABORT ON which already
+            // aborts all transactions on error.
             throw $e;
         }
     }

@@ -35,7 +35,7 @@ class StockTakeController extends Controller
         $this->authorize(PermissionEnum::StockTakeCreate, StockTake::class);
         $branchId = session('LoginBranchId');
         $branches = Branch::where('Id', $branchId)->get();
-        $users = User::all();
+        $users = User::where('BranchId', $branchId)->orderBy('Name', 'asc')->get();
         $stocks = collect();
 
         return view('inventory.stockmanagement.stocktake.create', compact('branches', 'stocks', 'users'));
@@ -43,7 +43,7 @@ class StockTakeController extends Controller
 
     public function getStoreByBranch($storeId)
     {
-        $stores = Store::where('BranchID', $storeId)->get();
+        $stores = Store::where('BranchID', $storeId)->orderBy('StoreName')->get();
 
         return response()->json($stores);
     }
@@ -101,7 +101,8 @@ class StockTakeController extends Controller
             ->findOrFail($id);
         $branches = Branch::where('Id', $branchId)->get();
         $stores = Store::where('BranchID', $branchId)->get();
-        $users = User::all();
+        $users = User::where('BranchId', $branchId)->orderBy('Name', 'asc')->get();
+
 
         return view('inventory.stockmanagement.stocktake.edit', compact('stock', 'branches', 'stores', 'users'));
     }

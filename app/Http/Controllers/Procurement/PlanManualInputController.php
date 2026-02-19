@@ -97,8 +97,8 @@ class PlanManualInputController extends Controller
             : null;
         $planLineItem->ExecutionStatus = 'Pending';
         $planLineItem->ChangeRemarks = $validated['notes'] ?? null;
-        $planLineItem->BranchID = $user->employee->BranchId;
-        $planLineItem->DepartmentID = $user->employee->DepartmentId;
+        $planLineItem->BranchID = $user->employee->BranchID;
+        $planLineItem->DepartmentID = $user->employee->DepartmentID;
         $planLineItem->IsDeleted = 0;
         $planLineItem->CreatedBy = $user->id ?? 1;
         $planLineItem->ModifiedBy = $user->id ?? 1;

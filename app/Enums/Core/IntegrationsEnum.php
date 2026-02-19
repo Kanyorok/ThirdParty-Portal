@@ -15,6 +15,7 @@ enum IntegrationsEnum: string
     case SMS = 'sms';
     case InfoBip = 'ibp';
     case iTrack = 'itk';
+    case GoogleMaps = 'gmp';
     case PBX = 'pbx';
     case CoreBanking = 'cbs';
     case Channels = 'imb';
@@ -24,7 +25,6 @@ enum IntegrationsEnum: string
     case CRDB = 'cru';
     // Organization branding (name, motto, logo)
     case Organization = 'org';
-    case GoogleMaps = 'gmp';
     case LLM = 'llm';
 
     public function description(): string

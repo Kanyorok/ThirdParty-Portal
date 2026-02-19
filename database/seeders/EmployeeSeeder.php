@@ -19,6 +19,15 @@ class EmployeeSeeder extends Seeder
 {
     public function run(): void
     {
+        $adminEmail = 'admin@test.co.ke';
+
+        // Idempotent: skip if user already exists
+        if (User::where('Email', $adminEmail)->exists()) {
+            $this->command->info('EmployeeSeeder: admin user already exists, skipping.');
+
+            return;
+        }
+
         $actor = SystemHelper::user();
 
         $department = Department::query()->first();
@@ -31,45 +40,43 @@ class EmployeeSeeder extends Seeder
             throw new RuntimeException('No branch found');
         }
 
-        $role = Role::query()->latest('id')->first();
+        $role = Role::query()->where('name', 'admin')->first();
         if (! $role instanceof Role) {
-            throw new RuntimeException('No role found');
+            throw new RuntimeException('Admin role not found — run RolePermissionSeeder first');
         }
 
-        // --- Idempotent cleanup ---
-        $existingUser = User::withTrashed()->where('Email', 'admin@test.co.ke')->first();
-        if ($existingUser) {
-            ModelRole::where('model_id', $existingUser->Id)->delete();
-            $existingUser->forceDelete();
-        }
-
-        Employee::withTrashed()
-            ->where('Email', 'admin@test.co.ke')
-            ->get()
-            ->each->forceDelete();
-        // --- End cleanup ---
-
+        // Create the employee using the correct array-based API
         $employeeService = EmployeeService::create([
-            'DepartmentId'   => $department->Id,
-            'BranchId'       => $branch->Id,
-            'FirstName'      => 'Default',
-            'LastName'       => 'User',
-            'Email'          => 'admin@test.co.ke',
-            'Phone'          => '254700100100',
+            'FirstName' => 'Default',
+            'LastName' => 'User',
+            'Email' => $adminEmail,
+            'Phone' => '254700100100',
+            'Gender' => GenderEnum::Other,
+            'BranchID' => $branch->Id,
+            'DepartmentID' => $department->Id,
             'EmploymentDate' => now(),
-            'Gender'         => GenderEnum::Other->value,
-            'Status'         => 'Active',
-            'IsActive'       => 1,
+            'Status' => 'Active',
+            'IsActive' => 1,
         ], $actor);
 
+        // Create the linked user account
         $userService = $employeeService->createUserAccount($actor);
         $user = $userService->user;
 
+        // Insert directly into t_ModelRoles (the custom branch-role table).
+        // getBranch() in LoginRequest queries t_ModelRoles WHERE model_id=user.Id
+        // AND model_type=User::getPrimaryKey() AND BranchId=branch.Id.
+        // Spatie's roles() relationship writes to model_has_roles (a DIFFERENT table with no BranchId column).
+        ModelRole::create([
+            'model_id' => $user->Id,
+            'model_type' => User::getPrimaryKey(),
+            'role_id' => $role->id,
+            'BranchId' => $branch->Id,
+        ]);
+
+        // Override the UserID — must refresh() after so hashUser() reads 'CSADM', not the old generated UserID
         $user->update(['UserID' => 'CSADM']);
+        $user->refresh(); // ← ensures $user->UserID === 'CSADM' before hashing
         $user->update(['Password' => BREncryption::hashUser($user, '2')]);
-
-        $user->syncRolesWithBranch([$role], $branch->Id, $actor->Id);
-
-        $this->command->info("Seeded admin user CSADM linked to branch [{$branch->Id}] {$branch->Name} with role [{$role->name}].");
     }
 }

@@ -48,13 +48,38 @@ class RolePermissionSeeder extends Seeder
             $validPermissions[] = $perm->value;
         }
 
-        // 2. Delete permissions in DB that are NOT in Enum (for this guard)
-        //    Soft-deletes/hard-deletes depend on schema, but we want them GONE or disabled.
-        //    migration shows NO DeletedOn, so we proceed with DELETE.
-        DB::table($table)
+        // 2. Collect permission IDs that are referenced by workflow stages (FK protected)
+        $workflowPermissionIds = DB::table('t_WorkFlowStages')
+            ->whereNotNull('PermissionId')
+            ->distinct()
+            ->pluck('PermissionId')
+            ->all();
+
+        // Also collect permission IDs referenced by workflow limits
+        $workflowLimitPermissionIds = [];
+        if (\Illuminate\Support\Facades\Schema::hasTable('t_WorkFlowLimits') && \Illuminate\Support\Facades\Schema::hasColumn('t_WorkFlowLimits', 'PermissionId')) {
+            $workflowLimitPermissionIds = DB::table('t_WorkFlowLimits')
+                ->whereNotNull('PermissionId')
+                ->distinct()
+                ->pluck('PermissionId')
+                ->all();
+        }
+
+        $protectedPermissionIds = array_unique(array_merge($workflowPermissionIds, $workflowLimitPermissionIds));
+
+        // Delete permissions NOT in Enum AND NOT referenced by workflows
+        $deleteQuery = DB::table($table)
             ->where('guard_name', $guard)
-            ->whereNotIn('name', $validPermissions)
-            ->delete();
+            ->whereNotIn('name', $validPermissions);
+
+        if (! empty($protectedPermissionIds)) {
+            $deleteQuery->whereNotIn('id', $protectedPermissionIds);
+        }
+
+        $deleted = $deleteQuery->delete();
+        if ($deleted > 0) {
+            echo "  Removed {$deleted} obsolete permissions." . PHP_EOL;
+        }
 
             
         // 2. SKIP workflow permissions - they are special and belong to implemented workflows
@@ -77,13 +102,6 @@ class RolePermissionSeeder extends Seeder
         $rows = [];
 
         foreach (PermissionEnum::cases() as $perm) {
-            // Skip if this permission is used in workflow stages
-            if (in_array($perm->value, $workflowPermissionNames)) {
-                echo "  - Skipping workflow permission: {$perm->value}" . PHP_EOL;
-
-                continue;
-            }
-
             $rows[] = [
                 'name' => $perm->value,
                 'ModuleId' => $perm->module()->value,
