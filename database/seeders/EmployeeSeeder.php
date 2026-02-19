@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\Employee\GenderEnum;
 use App\Helpers\SystemHelper;
+use App\Models\Auth\ModelRole;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
@@ -41,9 +42,9 @@ class EmployeeSeeder extends Seeder
             throw new RuntimeException('No branch found');
         }
 
-        $role = Role::query()->latest('id')->first();
+        $role = Role::query()->where('name', 'admin')->first();
         if (! $role instanceof Role) {
-            throw new RuntimeException('No role found');
+            throw new RuntimeException('Admin role not found — run RolePermissionSeeder first');
         }
 
         // Create the employee using the correct array-based API
@@ -64,16 +65,20 @@ class EmployeeSeeder extends Seeder
         $userService = $employeeService->createUserAccount($actor);
         $user = $userService->user;
 
-        // Assign role
-        $user->assignRole($role);
+        // Insert directly into t_ModelRoles (the custom branch-role table).
+        // getBranch() in LoginRequest queries t_ModelRoles WHERE model_id=user.Id
+        // AND model_type=User::getPrimaryKey() AND BranchId=branch.Id.
+        // Spatie's roles() relationship writes to model_has_roles (a DIFFERENT table with no BranchId column).
+        ModelRole::create([
+            'model_id' => $user->Id,
+            'model_type' => User::getPrimaryKey(),
+            'role_id' => $role->id,
+            'BranchId' => $branch->Id,
+        ]);
 
-        // Override the UserID and Password
-        $user->refresh();
-        $user->update([
-            'UserID' => 'CSADM',
-        ]);
-        $user->update([
-            'Password' => BREncryption::hashUser($user, '2'),
-        ]);
+        // Override the UserID — must refresh() after so hashUser() reads 'CSADM', not the old generated UserID
+        $user->update(['UserID' => 'CSADM']);
+        $user->refresh(); // ← ensures $user->UserID === 'CSADM' before hashing
+        $user->update(['Password' => BREncryption::hashUser($user, '2')]);
     }
 }
