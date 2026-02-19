@@ -64,7 +64,7 @@ class SettingsController extends Controller
             ->with('srsConfig', ($srsConfig instanceof APICredential) ? $srsConfig->Configuration : new APICredential())
             ->with('iTrackConfig', ($iTrackConfig instanceof APICredential) ? $iTrackConfig->Configuration : new APICredential())
             ->with('crdbConfig', ($crdbConfig instanceof APICredential) ? $crdbConfig->Configuration : new APICredential())
-            ->with('gmaps', ($mapsConfig instanceof APICredential) ? $mapsConfig?->Configuration : null)
+            ->with('gmaps', ($mapsConfig instanceof APICredential) ? $mapsConfig->Configuration : null)
             ->with('orgConfig', ($org instanceof APICredential) ? $org->Configuration : new APICredential());
     }
 }
