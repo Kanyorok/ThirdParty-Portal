@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Random\RandomException;
@@ -104,6 +105,8 @@ class TransactionService
             }
         }
 
+        $lines = $this->applyInterbranchBalancing($lines);
+
         // 5) Stamp audit & batch
         $batch = $options['batch'] ?? $this->generateBatchNumber();
         $lines = $this->ensureAuditAndBatch($lines, $batch);
@@ -168,6 +171,8 @@ class TransactionService
 
             return $line;
         }, $lines);
+
+        $normalized = $this->applyInterbranchBalancing($normalized);
 
         $normalized = $this->ensureAuditAndBatch($normalized, $batch);
         $this->validateLines($normalized);
@@ -346,6 +351,215 @@ class TransactionService
         }
         if (abs($dr - $cr) > $tol) {
             throw new Exception("Unbalanced posting: DR={$dr} != CR={$cr}");
+        }
+    }
+
+    protected function getInterbranchGlAccountId(): int
+    {
+        $id = config('finance.interbranch_gl_account_id');
+        if ($id === null || $id === '') {
+            $id = env('INTERBRANCH_POSTING_GL_ACCOUNTID');
+        }
+
+        if ($id === null || $id === '' || ! is_numeric($id)) {
+            throw new Exception('Missing or invalid INTERBRANCH_POSTING_GL_ACCOUNTID configuration.');
+        }
+
+        $interbranchGlId = (int)$id;
+        if ($interbranchGlId <= 0) {
+            throw new Exception('Missing or invalid INTERBRANCH_POSTING_GL_ACCOUNTID configuration.');
+        }
+
+        return $interbranchGlId;
+    }
+
+    protected function loadAndValidateInterbranchGl(int $id): object
+    {
+        $flagColumn = null;
+        if (Schema::hasColumn('t_FinanceGLAccounts', 'IsInterbranchGL')) {
+            $flagColumn = 'IsInterbranchGL';
+        } elseif (Schema::hasColumn('t_FinanceGLAccounts', 'IsInterbranchL')) {
+            $flagColumn = 'IsInterbranchL';
+        }
+
+        if ($flagColumn === null) {
+            throw new Exception('Missing IsInterbranchGL column on t_FinanceGLAccounts; add it or adjust configuration.');
+        }
+
+        // Allow config value to be either actual PK Id or GLCode (e.g. 1300).
+        $account = DB::table('t_FinanceGLAccounts')
+            ->select('Id', 'GLCode', 'GLName', 'IsControlAccount', 'IsActive', 'DeletedOn', $flagColumn)
+            ->where('Id', $id)
+            ->where('IsControlAccount', 1)
+            ->where('IsActive', 1)
+            ->whereNull('DeletedOn')
+            ->where($flagColumn, 1)
+            ->first();
+
+        if (! $account) {
+            $account = DB::table('t_FinanceGLAccounts')
+                ->select('Id', 'GLCode', 'GLName', 'IsControlAccount', 'IsActive', 'DeletedOn', $flagColumn)
+                ->where('GLCode', (string)$id)
+                ->where('IsControlAccount', 1)
+                ->where('IsActive', 1)
+                ->whereNull('DeletedOn')
+                ->where($flagColumn, 1)
+                ->first();
+        }
+
+        if (! $account) {
+            throw new Exception("Configured interbranch GL account {$id} is missing or invalid. Checked both Id and GLCode. Ensure it is active, control, not deleted, and flagged as interbranch.");
+        }
+
+        return $account;
+    }
+
+    protected function applyInterbranchBalancing(array $lines): array
+    {
+        if (empty($lines)) {
+            return $lines;
+        }
+
+        $commonIdempotencyKey = null;
+        foreach ($lines as $line) {
+            $lineIdempotencyKey = trim((string)($line['IdempotencyKey'] ?? ''));
+            if ($lineIdempotencyKey !== '') {
+                $commonIdempotencyKey = $lineIdempotencyKey;
+                break;
+            }
+        }
+
+        $distinctBranches = [];
+        foreach ($lines as $line) {
+            if (! array_key_exists('BranchID', $line) || $line['BranchID'] === null || $line['BranchID'] === '') {
+                throw new Exception('BranchID is required for interbranch posting.');
+            }
+
+            $amount = abs((float)($line['Amount'] ?? 0));
+            if ($amount < 0.0001) {
+                continue;
+            }
+
+            $branchId = (int)$line['BranchID'];
+            $distinctBranches[$branchId] = true;
+        }
+
+        if (count($distinctBranches) <= 1) {
+            return $lines;
+        }
+
+        $configuredInterbranch = $this->getInterbranchGlAccountId();
+        $interbranchAccount = $this->loadAndValidateInterbranchGl($configuredInterbranch);
+        $interbranchGlId = (int)$interbranchAccount->Id;
+
+        $hasInterbranchLines = false;
+        foreach ($lines as $line) {
+            if ((int)($line['GLAccountID'] ?? 0) === $interbranchGlId) {
+                $hasInterbranchLines = true;
+                break;
+            }
+        }
+
+        if ($hasInterbranchLines) {
+            $this->assertBranchBalanced($lines);
+
+            return $lines;
+        }
+
+        $totalsByBranch = [];
+        $templatesByBranch = [];
+
+        foreach ($lines as $line) {
+            $amount = abs((float)($line['Amount'] ?? 0));
+            if ($amount < 0.0001) {
+                continue;
+            }
+
+            $branchId = (int)$line['BranchID'];
+            if (! isset($templatesByBranch[$branchId])) {
+                $templatesByBranch[$branchId] = $line;
+            }
+
+            if (! isset($totalsByBranch[$branchId])) {
+                $totalsByBranch[$branchId] = ['DR' => 0.0, 'CR' => 0.0];
+            }
+
+            $drcr = strtoupper((string)($line['DRCR'] ?? ''));
+            if ($drcr !== 'DR' && $drcr !== 'CR') {
+                throw new Exception("Invalid DRCR value '{$drcr}' while preparing interbranch balancing.");
+            }
+
+            $totalsByBranch[$branchId][$drcr] += $amount;
+        }
+
+        $interbranchLines = [];
+        foreach ($totalsByBranch as $branchId => $totals) {
+            $net = (float)$totals['DR'] - (float)$totals['CR'];
+            if (abs($net) <= 0.0001) {
+                continue;
+            }
+
+            $drcr = $net > 0 ? 'CR' : 'DR';
+            $template = $templatesByBranch[$branchId];
+            $narration = trim((string)($template['Narration'] ?? ''));
+
+            $interbranchLine = $template;
+            $interbranchLine['GLAccountID'] = $interbranchGlId;
+            $interbranchLine['DRCR'] = $drcr;
+            $interbranchLine['Amount'] = abs($net);
+            $interbranchLine['Narration'] = $narration !== ''
+                ? $narration . ' (Interbranch Clearing)'
+                : 'Interbranch Clearing';
+            $interbranchLine['SystemDescription'] = 'AUTO: Interbranch balancing';
+            if ($commonIdempotencyKey !== null) {
+                $interbranchLine['IdempotencyKey'] = $commonIdempotencyKey;
+            }
+
+            if (array_key_exists('IsDebit', $interbranchLine)) {
+                $interbranchLine['IsDebit'] = $drcr === 'DR';
+            }
+
+            $interbranchLines[] = $interbranchLine;
+        }
+
+        $merged = array_merge($lines, $interbranchLines);
+        $this->assertBranchBalanced($merged);
+
+        return $merged;
+    }
+
+    protected function assertBranchBalanced(array $lines, float $tol = 0.0001): void
+    {
+        $totalsByBranch = [];
+        foreach ($lines as $line) {
+            $amount = abs((float)($line['Amount'] ?? 0));
+            if ($amount < 0.0001) {
+                continue;
+            }
+
+            if (! array_key_exists('BranchID', $line) || $line['BranchID'] === null || $line['BranchID'] === '') {
+                throw new Exception('BranchID is required for interbranch posting.');
+            }
+
+            $branchId = (int)$line['BranchID'];
+            if (! isset($totalsByBranch[$branchId])) {
+                $totalsByBranch[$branchId] = ['DR' => 0.0, 'CR' => 0.0];
+            }
+
+            $drcr = strtoupper((string)($line['DRCR'] ?? ''));
+            if ($drcr !== 'DR' && $drcr !== 'CR') {
+                throw new Exception("Invalid DRCR value '{$drcr}' while validating branch balance.");
+            }
+
+            $totalsByBranch[$branchId][$drcr] += $amount;
+        }
+
+        foreach ($totalsByBranch as $branchId => $totals) {
+            $dr = (float)$totals['DR'];
+            $cr = (float)$totals['CR'];
+            if (abs($dr - $cr) > $tol) {
+                throw new Exception("Unbalanced branch posting for BranchID={$branchId}: DR={$dr} != CR={$cr}");
+            }
         }
     }
 
