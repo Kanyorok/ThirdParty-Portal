@@ -25,6 +25,7 @@ class EmployeeSeeder extends Seeder
         // Idempotent: skip if user already exists
         if (User::where('Email', $adminEmail)->exists()) {
             $this->command->info('EmployeeSeeder: admin user already exists, skipping.');
+
             return;
         }
 
@@ -47,16 +48,16 @@ class EmployeeSeeder extends Seeder
 
         // Create the employee using the correct array-based API
         $employeeService = EmployeeService::create([
-            'FirstName'      => 'Default',
-            'LastName'       => 'User',
-            'Email'          => $adminEmail,
-            'Phone'          => '254700100100',
-            'Gender'         => GenderEnum::Other,
-            'BranchID'       => $branch->Id,
-            'DepartmentID'   => $department->Id,
+            'FirstName' => 'Default',
+            'LastName' => 'User',
+            'Email' => $adminEmail,
+            'Phone' => '254700100100',
+            'Gender' => GenderEnum::Other,
+            'BranchID' => $branch->Id,
+            'DepartmentID' => $department->Id,
             'EmploymentDate' => now(),
-            'Status'         => 'Active',
-            'IsActive'       => 1,
+            'Status' => 'Active',
+            'IsActive' => 1,
         ], $actor);
 
         // Create the linked user account
@@ -76,4 +77,3 @@ class EmployeeSeeder extends Seeder
         ]);
     }
 }
-
