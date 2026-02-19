@@ -77,7 +77,7 @@ class GRNTransactionTypesSeeder extends Seeder
             [
                 'GLCode' => '1400',
                 'GLName' => 'Inventory - Raw Materials',
-                'GLAccountTypeID' => 1, // Asset
+                'GLAccountTypeID' => 'A', // Asset
                 'GLTypeGroupID' => 1, // Current Asset
                 'GLSubAccountTypeID' => 1, // Default sub-account type
                 'IsPostingAccount' => true,
@@ -92,7 +92,7 @@ class GRNTransactionTypesSeeder extends Seeder
             [
                 'GLCode' => '1450',
                 'GLName' => 'Inventory - Finished Goods',
-                'GLAccountTypeID' => 1, // Asset
+                'GLAccountTypeID' => 'A', // Asset
                 'GLTypeGroupID' => 1, // Current Asset
                 'GLSubAccountTypeID' => 1, // Default sub-account type
                 'IsPostingAccount' => true,
@@ -107,7 +107,7 @@ class GRNTransactionTypesSeeder extends Seeder
             [
                 'GLCode' => '1600',
                 'GLName' => 'Fixed Assets - Equipment',
-                'GLAccountTypeID' => 1, // Asset
+                'GLAccountTypeID' => 'A', // Asset
                 'GLTypeGroupID' => 2, // Fixed Asset
                 'GLSubAccountTypeID' => 1, // Default sub-account type
                 'IsPostingAccount' => true,
@@ -122,7 +122,7 @@ class GRNTransactionTypesSeeder extends Seeder
             [
                 'GLCode' => '2100',
                 'GLName' => 'Accounts Payable - Trade',
-                'GLAccountTypeID' => 2, // Liability
+                'GLAccountTypeID' => 'L', // Liability
                 'GLTypeGroupID' => 3, // Current Liability
                 'GLSubAccountTypeID' => 1, // Default sub-account type
                 'IsPostingAccount' => true,
@@ -137,7 +137,7 @@ class GRNTransactionTypesSeeder extends Seeder
             [
                 'GLCode' => '2150',
                 'GLName' => 'Accrued Expenses - Goods Received',
-                'GLAccountTypeID' => 2, // Liability
+                'GLAccountTypeID' => 'L', // Liability
                 'GLTypeGroupID' => 3, // Current Liability
                 'GLSubAccountTypeID' => 1, // Default sub-account type
                 'IsPostingAccount' => true,
@@ -152,7 +152,7 @@ class GRNTransactionTypesSeeder extends Seeder
             [
                 'GLCode' => '5100',
                 'GLName' => 'Office Expenses',
-                'GLAccountTypeID' => 4, // Expense
+                'GLAccountTypeID' => 'E', // Expense
                 'GLTypeGroupID' => 7, // Operating Expense
                 'GLSubAccountTypeID' => 1, // Default sub-account type
                 'IsPostingAccount' => true,
@@ -167,7 +167,7 @@ class GRNTransactionTypesSeeder extends Seeder
             [
                 'GLCode' => '5200',
                 'GLName' => 'Service Expenses',
-                'GLAccountTypeID' => 4, // Expense
+                'GLAccountTypeID' => 'E', // Expense
                 'GLTypeGroupID' => 7, // Operating Expense
                 'GLSubAccountTypeID' => 1, // Default sub-account type
                 'IsPostingAccount' => true,
