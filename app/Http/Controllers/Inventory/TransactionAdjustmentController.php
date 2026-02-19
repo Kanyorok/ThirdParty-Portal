@@ -135,7 +135,7 @@ class TransactionAdjustmentController extends Controller
 
         $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')
             ->orderBy('Description', 'asc')
-            ->get();    
+            ->get();
 
         return view('inventory.transactions.adjustments.edit', compact(
             'adjustment',

@@ -181,7 +181,7 @@ class StockConsumptionController extends Controller
             });
 
         $departments = Department::select('Id', 'Name')
-            ->orderBy('Name','asc')
+            ->orderBy('Name', 'asc')
             ->get()
             ->map(function ($department) {
                 return [
@@ -291,20 +291,21 @@ class StockConsumptionController extends Controller
             $query->where('Branch', $branchId);
         }
 
-            $items = $query->get();
-            return response()->json(
-                $items->map(function ($item) {
-                    return [
-                        'Id'         => $item->Id,
-                        'ItemName'   => $item->item?->ItemName ?? '',
-                        'UOM'        => $item->UOM,
-                        'UOMCode'    => $item->uom?->Code ?? '',
-                        'CurrentQty' => $item->CurrentQty,
-                    ];
-                })
-                ->sortBy('ItemName') 
-                ->values()           
-            );
+        $items = $query->get();
+
+        return response()->json(
+            $items->map(function ($item) {
+                return [
+                    'Id' => $item->Id,
+                    'ItemName' => $item->item?->ItemName ?? '',
+                    'UOM' => $item->UOM,
+                    'UOMCode' => $item->uom?->Code ?? '',
+                    'CurrentQty' => $item->CurrentQty,
+                ];
+            })
+            ->sortBy('ItemName')
+            ->values()
+        );
     }
 
     public function getIssuedToOptions(Request $request)

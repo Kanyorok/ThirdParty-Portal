@@ -32,7 +32,7 @@ class UOMConversionController extends Controller
         $this->authorize('create', UOMConversion::class);
         $uoms = UnitOfMeasure::all();
         $alternateUoms = UnitOfMeasure::where('BaseUnit', '0')
-         ->orderBy('Code','asc')
+         ->orderBy('Code', 'asc')
          ->get();
         $items = ItemMasterList::with('uom')->get();
 
@@ -56,7 +56,7 @@ class UOMConversionController extends Controller
         $uomConversion = UOMConversion::findOrFail($id);
         $uoms = UnitOfMeasure::all();
         $alternateUoms = UnitOfMeasure::where('BaseUnit', '0')
-         ->orderBy('Code','asc')
+         ->orderBy('Code', 'asc')
          ->get();
         $items = ItemMasterList::with('uom')->get();
 
