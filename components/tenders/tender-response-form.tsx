@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/card";
 import { Button } from "@/components/common/button";
 import { Textarea } from "@/components/common/textarea";
-import { Alert, AlertDescription } from "@/components/common/alert";
 import { toast } from "sonner";
 import { getBaseUrl } from "@/lib/api-base";
 import {
@@ -44,6 +43,7 @@ interface TenderResponseFormProps {
   invitation?: TenderInvitation | null;
   onUpdate?: () => void;
   onStartBid?: () => void;
+  bidAlreadySubmitted?: boolean;
 }
 
 export default function TenderResponseForm({
@@ -51,6 +51,7 @@ export default function TenderResponseForm({
   invitation,
   onUpdate,
   onStartBid,
+  bidAlreadySubmitted = false,
 }: TenderResponseFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [responseStatus, setResponseStatus] = useState<'accepted' | 'declined' | null>(null);
@@ -331,11 +332,25 @@ export default function TenderResponseForm({
                 <CheckCircle className="h-5 w-5" />
                 <div>
                   <p className="text-sm font-semibold">Invitation accepted</p>
-                  <p className="text-xs text-emerald-700">Proceed to bidding when ready.</p>
+                  <p className="text-xs text-emerald-700">
+                    {bidAlreadySubmitted
+                      ? "You already submitted a bid for this tender."
+                      : "Proceed to bidding when ready."
+                    }
+                  </p>
                 </div>
               </div>
-              <Button onClick={onStartBid} size="sm" className="bg-emerald-600 hover:bg-emerald-700">
-                Go to bidding
+              <Button
+                onClick={onStartBid}
+                size="sm"
+                disabled={bidAlreadySubmitted}
+                className={cn(
+                  bidAlreadySubmitted
+                    ? "bg-slate-200 text-slate-600 hover:bg-slate-200"
+                    : "bg-emerald-600 hover:bg-emerald-700"
+                )}
+              >
+                {bidAlreadySubmitted ? "Applied" : "Go to bidding"}
               </Button>
             </div>
           </CardContent>

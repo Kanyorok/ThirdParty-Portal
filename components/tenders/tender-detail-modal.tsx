@@ -16,13 +16,14 @@ import {
   XCircle,
   AlertTriangle,
   Download,
-  ArrowRight,
   RefreshCw,
   Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getBaseUrl } from "@/lib/api-base";
+import { resolveBidStatus } from "@/lib/bids/status";
+import { toast } from "sonner";
 import TenderResponseForm from "./tender-response-form";
 import TenderClarifications from "./tender-clarifications";
 import TenderBidForm from "./tender-bid-form";
@@ -97,6 +98,11 @@ export default function TenderDetailModal({
   const [documents, setDocuments] = useState<Tender["documents"]>(tender?.documents ?? []);
   const [docsLoading, setDocsLoading] = useState(false);
   const [docsError, setDocsError] = useState<string | null>(null);
+  const [isCheckingBid, setIsCheckingBid] = useState(false);
+  const [hasSubmittedBid, setHasSubmittedBid] = useState(false);
+  const [submittedBidAt, setSubmittedBidAt] = useState<string | null>(null);
+  const [submittedBidId, setSubmittedBidId] = useState<number | null>(null);
+  const [submittedBidStatus, setSubmittedBidStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!tender) return;
@@ -176,6 +182,7 @@ export default function TenderDetailModal({
   };
 
   const handleStartBid = () => {
+    if (isCheckingBid || hasSubmittedBid) return;
     setActiveTab("bidding");
     requestAnimationFrame(() => {
       contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -216,6 +223,88 @@ export default function TenderDetailModal({
       refreshDocuments();
     }
   }, [activeTab, refreshDocuments]);
+
+  const checkBidSubmission = useCallback(async () => {
+    if (!tender?.id) return;
+
+    try {
+      setIsCheckingBid(true);
+
+      const params = new URLSearchParams({
+        all: "true",
+        checkExisting: "true",
+        tenderId: String(tender.id),
+      });
+      if (tender.tenderNo) params.set("tenderNo", tender.tenderNo);
+
+      const response = await fetch(`${getBaseUrl()}/api/tender-bids?${params.toString()}`, {
+        headers: { Accept: "application/json" },
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(data?.message || "Failed to check existing bids");
+
+      const existingBid = data?.existingBid ?? null;
+      if (!existingBid) {
+        setHasSubmittedBid(false);
+        setSubmittedBidAt(null);
+        setSubmittedBidId(null);
+        setSubmittedBidStatus(null);
+        return;
+      }
+
+      const resolvedStatus = resolveBidStatus(existingBid?.bid_status ?? existingBid?.status, {
+        hasSubmittedTimestamp: Boolean(
+          existingBid?.submitted_at ||
+          existingBid?.submittedAt ||
+          existingBid?.received_at ||
+          existingBid?.receivedAt
+        ),
+      });
+      const isSubmitted = resolvedStatus === "submitted";
+      const submittedAt =
+        existingBid?.submitted_at ||
+        existingBid?.submittedAt ||
+        existingBid?.received_at ||
+        existingBid?.receivedAt ||
+        null;
+      const existingIdRaw = existingBid?.existing_bid_id ?? existingBid?.bid_id ?? existingBid?.id;
+      const existingId = Number(existingIdRaw);
+      const existingStatus = String(existingBid?.status || existingBid?.bid_status || "").trim() || null;
+
+      setHasSubmittedBid(isSubmitted);
+      setSubmittedBidAt(isSubmitted && submittedAt ? String(submittedAt) : null);
+      setSubmittedBidId(isSubmitted && Number.isFinite(existingId) ? existingId : null);
+      setSubmittedBidStatus(isSubmitted ? existingStatus : null);
+      if (isSubmitted) {
+        const metaParts: string[] = [];
+        if (Number.isFinite(existingId)) metaParts.push(`Bid ID #${existingId}`);
+        if (existingStatus) metaParts.push(`Status ${existingStatus}`);
+        toast.success(
+          `Bid already submitted${submittedAt ? ` on ${safeFormatDate(submittedAt, "dd MMM yyyy")}` : ""}${metaParts.length ? ` (${metaParts.join(" • ")})` : ""}.`
+        );
+      }
+    } catch {
+      setHasSubmittedBid(false);
+      setSubmittedBidAt(null);
+      setSubmittedBidId(null);
+      setSubmittedBidStatus(null);
+      toast.error("Could not verify existing bid status. Please refresh and try again.");
+    } finally {
+      setIsCheckingBid(false);
+    }
+  }, [tender?.id, tender?.tenderNo]);
+
+  useEffect(() => {
+    if (!isOpen || !tender?.id) {
+      setIsCheckingBid(false);
+      setHasSubmittedBid(false);
+      setSubmittedBidAt(null);
+      setSubmittedBidId(null);
+      setSubmittedBidStatus(null);
+      return;
+    }
+    checkBidSubmission();
+  }, [isOpen, tender?.id, checkBidSubmission]);
 
   if (!tender) return null;
 
@@ -263,8 +352,15 @@ export default function TenderDetailModal({
   const invitationReason = isRestrictedTenderType && invitationStatus !== "accepted"
     ? "Accept the invitation in Response before submitting your bid."
     : undefined;
-  const canSubmitBid = !closedReason && !invitationReason;
-  const bidBlockedReason = closedReason || invitationReason;
+  const appliedMeta = [
+    submittedBidId ? `Bid ID #${submittedBidId}` : null,
+    submittedBidStatus ? `Status ${submittedBidStatus}` : null,
+  ].filter(Boolean).join(" • ");
+  const alreadyAppliedReason = hasSubmittedBid
+    ? `You already applied${submittedBidAt ? ` on ${safeFormatDate(submittedBidAt, "dd MMM yyyy")}` : ""}${appliedMeta ? ` (${appliedMeta})` : ""}.`
+    : undefined;
+  const canSubmitBid = !isCheckingBid && !closedReason && !invitationReason && !hasSubmittedBid;
+  const bidBlockedReason = alreadyAppliedReason || closedReason || invitationReason;
   const tabTriggerClass =
     "rounded-lg px-3 py-2 text-[11px] font-semibold text-slate-600 transition-all duration-150 hover:text-slate-900 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:border data-[state=active]:border-slate-200/80";
 
@@ -460,12 +556,24 @@ export default function TenderDetailModal({
                     <div className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-3 shadow-none">
                       <div className="text-sm font-semibold text-slate-900">Recommended next step</div>
                       <p className="mt-1 text-xs text-slate-600">
-                        Move this opportunity forward by starting your bid now.
+                        Move this opportunity forward from the <strong>Bidding</strong> tab.
                       </p>
-                      <Button onClick={handleStartBid} variant="outline" size="sm" className="mt-3 border-indigo-200 text-indigo-700 hover:bg-indigo-50">
-                        Go to bidding
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
+                    </div>
+                  )}
+
+                  {isOpenStatus && hasSubmittedBid && (
+                    <div className="rounded-2xl border border-slate-200 bg-slate-100/70 p-3 shadow-none">
+                      <div className="text-sm font-semibold text-slate-800">You have applied</div>
+                      <p className="mt-1 text-xs text-slate-600">
+                        Your bid has already been submitted{submittedBidAt ? ` on ${safeFormatDate(submittedBidAt, "dd MMM yyyy")}` : ""}.
+                      </p>
+                      {(submittedBidId || submittedBidStatus) && (
+                        <p className="mt-1 text-[11px] text-slate-500">
+                          {submittedBidId ? `Bid ID #${submittedBidId}` : ""}
+                          {submittedBidId && submittedBidStatus ? " • " : ""}
+                          {submittedBidStatus ? `Status ${submittedBidStatus}` : ""}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -479,6 +587,7 @@ export default function TenderDetailModal({
                   invitation={invitation}
                   onUpdate={onInvitationUpdate}
                   onStartBid={handleStartBid}
+                  bidAlreadySubmitted={hasSubmittedBid}
                 />
               </TabsContent>
             )}
@@ -583,22 +692,6 @@ export default function TenderDetailModal({
             </TabsContent>
           </div>
         </Tabs>
-
-        <div className="sticky bottom-0 z-10 border-t border-slate-200/80 bg-white/95 px-6 lg:px-8 py-2.5 backdrop-blur">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm text-slate-600">
-              {canSubmitBid ? "Ready to proceed? Start your bid while details are fresh." : (bidBlockedReason || "Submission is currently unavailable.")}
-            </div>
-            <Button
-              onClick={handleStartBid}
-              disabled={!canSubmitBid}
-              className="h-9 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:text-slate-600"
-            >
-              Start bid
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        </div>
       </DialogContent>
     </Dialog>
   );

@@ -26,6 +26,7 @@ import {
   History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { resolveBidStatus } from "@/lib/bids/status";
 
 // Simple module scoped counter for fallback IDs (avoids window any casts)
 let docCounter = 0;
@@ -72,6 +73,12 @@ interface BidSubmission {
   submission_reference?: string;
 }
 
+type SubmittedBidInfo = {
+  id: number | null;
+  submittedAt: string | null;
+  status: string | null;
+};
+
 export default function TenderBidForm({
   tender,
   onFinalSubmitSuccess,
@@ -93,6 +100,7 @@ export default function TenderBidForm({
   const [isDragging, setIsDragging] = useState(false);
   const [existingBidId, setExistingBidId] = useState<number | null>(null);
   const [isEditingDraft, setIsEditingDraft] = useState(false);
+  const [submittedBidInfo, setSubmittedBidInfo] = useState<SubmittedBidInfo | null>(null);
   const [isLoadingExisting, setIsLoadingExisting] = useState(true);
   const [bidHistory, setBidHistory] = useState<BidSubmission[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -114,7 +122,9 @@ export default function TenderBidForm({
   ];
 
   const normalizeBidStatus = (bid: BidSubmission) =>
-    (bid.status || bid.bid_status || "").toString().toLowerCase();
+    resolveBidStatus(bid.status || bid.bid_status, {
+      hasSubmittedTimestamp: Boolean(bid.submitted_at || bid.received_at),
+    });
 
   const getBidTimestamp = (bid: BidSubmission) =>
     bid.submitted_at || bid.received_at || "";
@@ -136,7 +146,7 @@ export default function TenderBidForm({
 
     try {
       const noParam = tender.tenderNo ? `&tenderNo=${encodeURIComponent(tender.tenderNo)}` : "";
-      const response = await fetch(`/api/tender-bids?tenderId=${tender.id}${noParam}`);
+      const response = await fetch(`/api/tender-bids?all=true&tenderId=${tender.id}${noParam}`);
       const data = await response.json();
       const list: BidSubmission[] = Array.isArray(data?.data) ? data.data : [];
       const sorted = [...list].sort((a, b) => {
@@ -154,6 +164,7 @@ export default function TenderBidForm({
       if (!existing) {
         setExistingBidId(null);
         setIsEditingDraft(false);
+        setSubmittedBidInfo(null);
         return;
       }
 
@@ -163,18 +174,34 @@ export default function TenderBidForm({
       hydrateBidData(existing);
       setExistingBidId(existing.id || existing.bid_id || null);
       setIsEditingDraft(existingStatus === "draft");
+      setSubmittedBidInfo(
+        existingStatus === "submitted"
+          ? {
+              id: existing.id || existing.bid_id || null,
+              submittedAt: getBidTimestamp(existing) || null,
+              status: String(existing.status || existing.bid_status || "").trim() || null,
+            }
+          : null
+      );
 
       if (!showToast) return;
       if (existingStatus === "draft") {
         const formattedDate = existingDate ? new Date(existingDate).toLocaleDateString() : null;
         toast.info(`Draft bid loaded${formattedDate ? ` from ${formattedDate}` : ""}. You can edit and resubmit.`);
       } else {
-        const formattedDate = existingDate ? new Date(existingDate).toLocaleDateString() : null;
-        toast.success(`Final bid already submitted${formattedDate ? ` on ${formattedDate}` : ""}`);
+        toast.success(
+          buildExistingBidMessage({
+            id: existing.id || existing.bid_id || null,
+            submittedAt: existingDate,
+            status: String(existing.status || existing.bid_status || "").trim() || null,
+            fallback: "Final bid already submitted",
+          })
+        );
       }
     } catch {
       // Silent fail for existing bid check
       setBidHistory([]);
+      setSubmittedBidInfo(null);
     } finally {
       setIsLoadingExisting(false);
       setIsLoadingHistory(false);
@@ -311,6 +338,33 @@ export default function TenderBidForm({
     return `${currency || bidData.currency || "KES"} ${value.toLocaleString()}`;
   };
 
+  const formatServerStatus = (value?: string | null) => {
+    const normalized = String(value || "").trim();
+    if (!normalized) return "Submitted";
+    return normalized
+      .replace(/[_-]+/g, " ")
+      .split(" ")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(" ");
+  };
+
+  const buildExistingBidMessage = (params: {
+    id?: number | null;
+    submittedAt?: string | null;
+    status?: string | null;
+    fallback?: string;
+  }) => {
+    const parts: string[] = [];
+    if (params.id != null) parts.push(`Bid ID #${params.id}`);
+    if (params.submittedAt) {
+      const date = new Date(params.submittedAt);
+      if (!Number.isNaN(date.getTime())) parts.push(`Submitted ${date.toLocaleString()}`);
+    }
+    if (params.status) parts.push(`Status ${formatServerStatus(params.status)}`);
+    const suffix = parts.length ? ` (${parts.join(" • ")})` : "";
+    return `${params.fallback || "A final bid has already been submitted for this tender."}${suffix}`;
+  };
+
   const validateBid = () => {
 
     if (!tender.id) {
@@ -349,7 +403,14 @@ export default function TenderBidForm({
 
     // Prevent resubmission if a final bid already exists
     if (existingBidId && !isEditingDraft) {
-      toast.error("You have already submitted a final bid for this tender. No further changes are allowed.");
+      toast.error(
+        buildExistingBidMessage({
+          id: submittedBidInfo?.id ?? existingBidId,
+          submittedAt: submittedBidInfo?.submittedAt,
+          status: submittedBidInfo?.status,
+          fallback: "You have already submitted a final bid for this tender. No further changes are allowed.",
+        })
+      );
       return;
     }
 
@@ -378,6 +439,9 @@ export default function TenderBidForm({
 
     setIsSubmitting(true);
     setSubmitType(type);
+    const submitToastId = toast.loading(
+      type === "draft" ? "Saving draft bid..." : "Submitting bid..."
+    );
 
     try {
       const formData = new FormData();
@@ -407,6 +471,35 @@ export default function TenderBidForm({
       const data = await response.json();
 
       if (!response.ok) {
+        const existingBidPayload = data?.data && typeof data.data === "object" ? data.data : null;
+        const existingBidId = Number(existingBidPayload?.existing_bid_id);
+        const hasExistingBid = Number.isFinite(existingBidId) && existingBidId > 0;
+        const existingSubmittedAt = typeof existingBidPayload?.submitted_at === "string"
+          ? existingBidPayload.submitted_at
+          : null;
+        const existingStatus = typeof existingBidPayload?.status === "string"
+          ? existingBidPayload.status
+          : null;
+
+        if (hasExistingBid) {
+          setExistingBidId(existingBidId);
+          setIsEditingDraft(false);
+          setSubmittedBidInfo({
+            id: existingBidId,
+            submittedAt: existingSubmittedAt,
+            status: existingStatus,
+          });
+          await fetchBidContext(false);
+          throw new Error(
+            buildExistingBidMessage({
+              id: existingBidId,
+              submittedAt: existingSubmittedAt,
+              status: existingStatus,
+              fallback: data?.message || "A final bid has already been submitted for this tender.",
+            })
+          );
+        }
+
         if (response.status === 422 && data.errors) {
           // Handle validation errors from ERP
           const errorMessages: string[] = [];
@@ -441,15 +534,7 @@ export default function TenderBidForm({
 
           throw new Error(errorMessage);
         } else if (response.status === 409) {
-          const existingBidId = data?.data?.existing_bid_id;
-          const submittedAt = data?.data?.submitted_at;
-          if (typeof existingBidId === "number") {
-            setExistingBidId(existingBidId);
-            setIsEditingDraft(false);
-          }
-          await fetchBidContext(false);
-          const submittedDateText = submittedAt ? ` (Submitted: ${new Date(submittedAt).toLocaleString()})` : "";
-          throw new Error(`${data.message || "A final bid has already been submitted for this tender."}${submittedDateText}`);
+          throw new Error(data.message || "A final bid has already been submitted for this tender.");
         } else if (response.status === 403) {
           // Handle business logic errors from ERP (like expired deadlines)
           const messageText = (data.message || data.error || "").toString().toLowerCase();
@@ -489,8 +574,10 @@ export default function TenderBidForm({
           );
 
       if (fallbackToDraft) {
+        toast.dismiss(submitToastId);
         toast.warning(message);
       } else {
+        toast.dismiss(submitToastId);
         toast.success(message);
       }
 
@@ -523,12 +610,14 @@ export default function TenderBidForm({
       await fetchBidContext(false);
 
     } catch (err) {
+      toast.dismiss(submitToastId);
       toast.error(
         err instanceof Error
           ? err.message
           : "Failed to submit bid"
       );
     } finally {
+      toast.dismiss(submitToastId);
       setIsSubmitting(false);
       setSubmitType(null);
     }
@@ -536,6 +625,29 @@ export default function TenderBidForm({
 
   const cardTone = "gap-0 rounded-xl border border-slate-200/80 bg-white py-0 shadow-none";
   const finalBidLocked = !isLoadingExisting && existingBidId !== null && !isEditingDraft;
+  const bidAmountNumber = Number(bidData.bidAmount);
+  const validityNumber = Number(bidData.validityPeriod);
+  const deliveryNumber = Number(bidData.deliveryPeriod);
+  const hasBidAmount = Number.isFinite(bidAmountNumber) && bidAmountNumber > 0;
+  const hasCurrency = Boolean(bidData.currency?.trim());
+  const hasValidity = Number.isFinite(validityNumber) && validityNumber > 0;
+  const hasDelivery = Number.isFinite(deliveryNumber) && deliveryNumber > 0;
+  const hasDocuments = documents.length > 0;
+  const readinessScore = [hasBidAmount, hasCurrency, hasValidity, hasDelivery].filter(Boolean).length;
+  const readinessPercent = Math.round((readinessScore / 4) * 100);
+  const finalDisabledReason = finalBidLocked
+    ? "Final bid already submitted. This tender is locked for further submission."
+    : !canSubmitBid
+      ? (submissionBlockedReason || "You cannot submit a bid right now.")
+      : !hasBidAmount
+        ? "Enter a valid bid amount to continue."
+        : !hasCurrency
+          ? "Select a currency to continue."
+          : !hasValidity
+            ? "Enter a valid bid validity period."
+            : !hasDelivery
+              ? "Enter a valid delivery period."
+              : null;
 
   return (
     <div className="space-y-3">
@@ -561,7 +673,19 @@ export default function TenderBidForm({
         <Alert className="border-emerald-200 bg-emerald-50 py-2 text-emerald-800">
           <CheckCircle className="h-4 w-4" />
           <AlertDescription className="text-xs">
-            Final bid already submitted. Editing is locked.
+            <div className="space-y-1">
+              <p>Final bid already submitted. Editing is locked.</p>
+              {submittedBidInfo && (
+                <p className="text-[11px] text-emerald-700">
+                  {buildExistingBidMessage({
+                    id: submittedBidInfo.id,
+                    submittedAt: submittedBidInfo.submittedAt,
+                    status: submittedBidInfo.status,
+                    fallback: "Submission recorded",
+                  })}
+                </p>
+              )}
+            </div>
           </AlertDescription>
         </Alert>
       )}
@@ -585,6 +709,53 @@ export default function TenderBidForm({
           </AlertDescription>
         </Alert>
       )}
+
+      <Card className={cardTone}>
+        <CardHeader className="border-b border-slate-100 px-4 py-3">
+          <CardTitle className="flex items-center justify-between gap-2 text-sm font-semibold text-slate-800">
+            <span className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-indigo-600" />
+              Submission readiness
+            </span>
+            <Badge className="rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700">
+              {readinessPercent}% ready
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 px-4 py-3">
+          <div className="grid gap-2 sm:grid-cols-2">
+            {[
+              { done: hasBidAmount, label: "Bid amount entered" },
+              { done: hasCurrency, label: "Currency selected" },
+              { done: hasValidity, label: "Validity period set" },
+              { done: hasDelivery, label: "Delivery period set" },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className={cn(
+                  "flex items-center gap-2 rounded-lg border px-2.5 py-2 text-xs",
+                  item.done
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-slate-200 bg-slate-50 text-slate-600"
+                )}
+              >
+                <span className={cn("h-2 w-2 rounded-full", item.done ? "bg-emerald-500" : "bg-slate-400")} />
+                <span className="font-medium">{item.label}</span>
+              </div>
+            ))}
+          </div>
+          {!hasDocuments && (
+            <p className="text-[11px] text-amber-700">
+              Add at least one document for higher final-submission success.
+            </p>
+          )}
+          {finalDisabledReason && (
+            <p className="text-[11px] text-slate-600">
+              {finalDisabledReason}
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <Card className={cardTone}>
         <CardHeader className="border-b border-slate-100 px-4 py-3">
@@ -683,6 +854,7 @@ export default function TenderBidForm({
                   min="0"
                 />
               </div>
+              <p className="text-[11px] text-slate-500">Use the total amount you want evaluated.</p>
             </div>
 
             <div className="space-y-1.5">
@@ -762,7 +934,7 @@ export default function TenderBidForm({
           <Alert className="border-slate-200 bg-slate-50 py-2 text-slate-700">
             <Lock className="h-4 w-4" />
             <AlertDescription className="text-xs">
-              Supporting documents are optional, but recommended for stronger evaluation.
+              Supporting documents are optional, but strongly recommended for final submission.
             </AlertDescription>
           </Alert>
 
@@ -817,6 +989,9 @@ export default function TenderBidForm({
 
       <Card className={cardTone}>
         <CardContent className="space-y-3 px-4 py-3">
+          <div className="rounded-lg border border-indigo-200 bg-indigo-50/60 px-3 py-2 text-[11px] text-indigo-800">
+            Save draft to continue later, or submit once your bid is complete.
+          </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button
               onClick={() => handleSubmit('draft')}
@@ -839,7 +1014,7 @@ export default function TenderBidForm({
 
             <Button
               onClick={() => handleSubmit('final')}
-              disabled={isSubmitting || isLoadingExisting || finalBidLocked || !canSubmitBid}
+              disabled={isSubmitting || isLoadingExisting || finalBidLocked || !canSubmitBid || !hasBidAmount || !hasCurrency || !hasValidity || !hasDelivery}
               className="h-9 flex-1 bg-indigo-600 hover:bg-indigo-700"
             >
               {isSubmitting && submitType === 'final' ? (

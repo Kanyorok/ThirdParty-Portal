@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth-options"
 import { isClosedByDeadline } from "@/lib/deadline"
 import { resolveTenantIdFromSessionUser } from "@/lib/profile/resolve-tenant-id"
 import { isRoundActive, mapApiRound } from "@/lib/rounds"
+import { resolveBidStatus } from "@/lib/bids/status"
 
 export type PreqBreakdown = Record<
     "approved" | "submitted" | "under_review" | "rejected" | "not_applied",
@@ -43,6 +44,8 @@ export type TenantBreakdown = {
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL
+const DASHBOARD_BIDS_PER_PAGE = 100
+const DASHBOARD_BIDS_MAX_PAGES = 40
 
 type NormalizedPreqStatus = keyof PreqBreakdown
 
@@ -100,6 +103,116 @@ function computeRFQBreakdown(rfqs: any[]): RFQBreakdown {
     )
 }
 
+function pickRowsFromPayload(payload: any): any[] {
+    for (const candidate of [
+        payload?.data?.data,
+        payload?.data?.items,
+        payload?.data?.rows,
+        payload?.items,
+        payload?.rows,
+        payload?.data,
+        payload,
+    ]) {
+        if (Array.isArray(candidate)) return candidate
+    }
+    return []
+}
+
+function pickMetaFromPayload(payload: any) {
+    const source =
+        payload?.meta ??
+        payload?.data?.meta ??
+        payload?.pagination ??
+        payload?.data?.pagination ??
+        payload ??
+        {}
+
+    const page = Number(source?.current_page ?? source?.currentPage ?? source?.page)
+    const perPage = Number(source?.per_page ?? source?.perPage ?? source?.page_size ?? source?.pageSize ?? source?.limit)
+    const total = Number(source?.total ?? payload?.total)
+    const inferredLast =
+        Number.isFinite(total) && total > 0 && Number.isFinite(perPage) && perPage > 0
+            ? Math.ceil(total / perPage)
+            : 1
+    const last = Number(source?.last_page ?? source?.lastPage ?? source?.total_pages ?? source?.pages ?? inferredLast)
+
+    return {
+        currentPage: Number.isFinite(page) && page > 0 ? Math.trunc(page) : 1,
+        lastPage: Number.isFinite(last) && last > 0 ? Math.trunc(last) : 1,
+        total: Number.isFinite(total) && total >= 0 ? Math.trunc(total) : null,
+    }
+}
+
+function getBidIdentity(bid: any) {
+    const directId = bid?.id ?? bid?.bid_id
+    if (directId != null && String(directId).trim()) return `id:${String(directId).trim()}`
+
+    const reference = String(bid?.submission_reference ?? "").trim()
+    if (reference) return `ref:${reference}`
+
+    const tenderId = String(bid?.tender_id ?? "").trim()
+    const timestamp = String(bid?.submitted_at ?? bid?.received_at ?? bid?.updated_at ?? "").trim()
+    const amount = String(bid?.bid_amount ?? "").trim()
+    return `fallback:${tenderId}:${timestamp}:${amount}`
+}
+
+async function fetchAllBidSubmissions(params: {
+    apiBase: string
+    headers: HeadersInit
+    thirdPartyId: string | number
+}) {
+    const { apiBase, headers, thirdPartyId } = params
+    const requestBase = `${apiBase}/api/v1/supplier/bid-submissions`
+    const baseSearch = new URLSearchParams({
+        third_party_id: String(thirdPartyId),
+        page: "1",
+        per_page: String(DASHBOARD_BIDS_PER_PAGE),
+    })
+
+    const firstResponse = await fetch(`${requestBase}?${baseSearch.toString()}`, {
+        headers,
+        cache: "no-store",
+    })
+    const firstPayload = await firstResponse.json().catch(() => null)
+    if (!firstResponse.ok) throw new Error(firstPayload?.message || "Failed to load bids")
+
+    const rows = [...pickRowsFromPayload(firstPayload)]
+    const firstMeta = pickMetaFromPayload(firstPayload)
+    const lastPage = Math.min(firstMeta.lastPage, DASHBOARD_BIDS_MAX_PAGES)
+
+    if (lastPage > 1) {
+        const pageCalls: Array<Promise<any>> = []
+        for (let page = 2; page <= lastPage; page += 1) {
+            const pageSearch = new URLSearchParams(baseSearch)
+            pageSearch.set("page", String(page))
+            pageCalls.push(
+                fetch(`${requestBase}?${pageSearch.toString()}`, {
+                    headers,
+                    cache: "no-store",
+                }).then(async (res) => {
+                    if (!res.ok) return null
+                    return res.json().catch(() => null)
+                })
+            )
+        }
+
+        const pagePayloads = await Promise.all(pageCalls)
+        pagePayloads.forEach((payload) => {
+            if (!payload) return
+            rows.push(...pickRowsFromPayload(payload))
+        })
+    }
+
+    const deduped = Array.from(
+        new Map(rows.map((bid: any) => [getBidIdentity(bid), bid])).values()
+    )
+
+    return {
+        items: deduped,
+        total: firstMeta.total ?? deduped.length,
+    }
+}
+
 export async function getDashboardData() {
     const session = await getServerSession(authOptions)
 
@@ -133,10 +246,11 @@ export async function getDashboardData() {
             { headers, cache: "no-store" }
         ).then(r => r.json()),
 
-        fetch(
-            `${API_BASE}/api/v1/supplier/bid-submissions?third_party_id=${thirdPartyId}`,
-            { headers, cache: "no-store" }
-        ).then(r => r.json()),
+        fetchAllBidSubmissions({
+            apiBase: API_BASE as string,
+            headers,
+            thirdPartyId,
+        }),
     ])
 
     const user = session?.user as any
@@ -197,10 +311,18 @@ export async function getDashboardData() {
 
     const tendersAvailable = tenderVal?.total ?? tenderItems.length
     const bidsVal = bidsRes.status === "fulfilled" ? bidsRes.value : null
-    const bidItems = Array.isArray(bidsVal?.data) ? bidsVal.data : []
+    const bidItems = Array.isArray((bidsVal as any)?.items)
+        ? (bidsVal as any).items
+        : Array.isArray((bidsVal as any)?.data)
+            ? (bidsVal as any).data
+            : []
     const bidBreakdown: BidBreakdown = { draft: 0, submitted: 0, unknown: 0 }
     bidItems.forEach((bid: any) => {
-        const status = String(bid?.bid_status || bid?.status || "").toLowerCase()
+        const status = resolveBidStatus(bid?.bid_status || bid?.status, {
+            hasSubmittedTimestamp: Boolean(
+                bid?.submitted_at || bid?.submittedAt || bid?.received_at || bid?.receivedAt
+            ),
+        })
         if (status === "submitted") {
             bidBreakdown.submitted++
         } else if (status === "draft") {
@@ -209,8 +331,8 @@ export async function getDashboardData() {
             bidBreakdown.unknown++
         }
     })
-    const myBids = Number.isFinite(Number(bidsVal?.total))
-        ? Number(bidsVal?.total)
+    const myBids = Number.isFinite(Number((bidsVal as any)?.total))
+        ? Number((bidsVal as any)?.total)
         : bidItems.length
 
     let tenantBreakdown: TenantBreakdown | null = null
