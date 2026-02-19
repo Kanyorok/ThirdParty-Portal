@@ -10,7 +10,8 @@ use App\Models\Core\Task;
 use App\Models\CRM\DebtRecovery\LoanAssignment;
 use App\Models\CRM\Ticket;
 use App\Models\HR\Employee;
-use App\Services\HRM\UserService;
+use App\Services\HR\UserService;
+use App\Models\Auth\Team;
 use App\Traits\Controller\HasBranchRoles;
 use App\Traits\Model\ImageTrait;
 use App\Traits\Model\UserActorTrait;
@@ -130,40 +131,27 @@ class User extends Authenticatable
     // ✅ FIXED: Explicitly use Id for model_id
     public function syncRolesWithBranch(array|Collection $roles, int $branchId, int $actorId = 1): void
     {
-        // Remove existing roles for this user + branch
-        ModelRole::where([
-            'model_id' => $this->Id,  // Explicitly use Id
+        // Hard-delete old roles for this user + branch first to start clean
+        ModelRole::withTrashed()->where([
+            'model_id'   => $this->Id,
             'model_type' => self::getPrimaryKey(),
-            'BranchId' => $branchId,
-        ])->delete();
+            'BranchId'   => $branchId,
+        ])->forceDelete();
 
         foreach ($roles as $role) {
-            $roleModel = $role instanceof Role
+            // Accept any object implementing the Spatie RoleContract (both App\Models\Auth\Role
+            // and Spatie\Permission\Models\Role implement it), or look up by name string.
+            $roleModel = ($role instanceof \Spatie\Permission\Contracts\Role)
                 ? $role
                 : Role::where('name', $role)->firstOrFail();
 
-            // Prevent duplicate assignment using updateOrCreate logic or check-then-create
-            // We use firstOrCreate to avoid duplicates if run multiple times
-            ModelRole::firstOrCreate([
-                'model_id' => $this->Id,  // Explicitly use Id
+            ModelRole::create([
+                'model_id'   => $this->Id,
                 'model_type' => self::getPrimaryKey(),
-                'BranchId' => $branchId,
-            ], [
-                'role_id' => $roleModel->id,
-                'CreatedOn' => now(),
+                'BranchId'   => $branchId,
+                'role_id'    => $roleModel->id,
+                'CreatedOn'  => now(),
                 'ModifiedOn' => now(),
-            ]);
-
-            // If the role was different, we might want to update it, but requirements say "syncRolesWithBranch" usually implies setting THE role for that branch.
-            // If we strictly want to overwrite the role for that branch:
-            ModelRole::where([
-                'model_id' => $this->Id,
-                'model_type' => self::getPrimaryKey(),
-                'BranchId' => $branchId,
-            ])->update([
-                'role_id' => $roleModel->id,
-                'ModifiedOn' => now(),
-                'DeletedOn' => null, // Restore if soft deleted
             ]);
         }
     }
@@ -280,10 +268,12 @@ class User extends Authenticatable
             $permissions = array_map('trim', explode(',', $permissions));
         }
 
-        return $query->whereHas('roles.permissions', function (Builder $query) use ($permissions) {
-            $query->whereIn('name', $permissions);
-        })->orWhereHas('permissions', function (Builder $query) use ($permissions) {
-            $query->whereIn('name', $permissions);
+        // Uses the custom branchRoles relation (t_ModelRoles) instead of Spatie native relations,
+        // since this project manages roles via ModelRole rather than Spatie's model_has_roles table.
+        return $query->whereHas('branchRoles', function (Builder $q) use ($permissions) {
+            $q->whereHas('role.permissions', function (Builder $q2) use ($permissions) {
+                $q2->whereIn('name', $permissions);
+            });
         });
     }
 

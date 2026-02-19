@@ -20,7 +20,8 @@ class DepartmentNeedsService
     public function create(array $data, User $actor): DepartmentNeed
     {
         $branchId = session('LoginBranchId');
-        $departmentId = $actor->employee->DepartmentId;
+        $departmentId = $actor->employee?->department?->Id;
+
         $itemId = $data['ItemID'];
 
         // Prevent duplicate raise while a need is pending approval for same dept/branch/item

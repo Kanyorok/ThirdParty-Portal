@@ -79,7 +79,7 @@ class RequisitionsController extends Controller
                 ->first();
 
             $branchId = session('LoginBranchId');
-            $departmentId = $employee?->DepartmentId ?? null;
+            $departmentId = $employee?->DepartmentID ?? null;
             $departmentName = null;
 
             if ($departmentId) {
