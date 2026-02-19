@@ -425,6 +425,7 @@ class TransactionService
             $lineIdempotencyKey = trim((string)($line['IdempotencyKey'] ?? ''));
             if ($lineIdempotencyKey !== '') {
                 $commonIdempotencyKey = $lineIdempotencyKey;
+
                 break;
             }
         }
@@ -456,6 +457,7 @@ class TransactionService
         foreach ($lines as $line) {
             if ((int)($line['GLAccountID'] ?? 0) === $interbranchGlId) {
                 $hasInterbranchLines = true;
+
                 break;
             }
         }
