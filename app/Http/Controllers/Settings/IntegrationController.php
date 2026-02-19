@@ -13,6 +13,7 @@ use App\Services\CRMEmailService;
 use App\Services\ThirdParty\AIService;
 use App\Services\ThirdParty\CSSMSService;
 use App\Services\ThirdParty\FacebookService;
+use App\Services\ThirdParty\GoogleMapsService;
 use App\Services\ThirdParty\InfobipService;
 use App\Services\ThirdParty\iTrackService;
 use App\Services\ThirdParty\SSRSService;
@@ -57,6 +58,10 @@ class IntegrationController extends Controller
 
         if ($Integration->value === IntegrationsEnum::iTrack->value) {
             return $this->_iTrackConfiguration($request->getITrackUrl(), $request->validated('iTrack_Username'), $request->validated('iTrack_Password'), $request->user());
+        }
+
+        if ($Integration->value === IntegrationsEnum::GoogleMaps->value) {
+            return $this->_googleMapsConfig($request->str('GMaps_Key')->trim()->toString(), $request->user());
         }
 
         if ($Integration->value === IntegrationsEnum::LLM->value) {
@@ -432,5 +437,18 @@ class IntegrationController extends Controller
         }
 
         return $this->_saveData(IntegrationsEnum::Organization, $payload, $actor);
+    }
+
+    private function _googleMapsConfig(#[SensitiveParameter] string $apiKey, User $actor): JsonResponse
+    {
+        if (! GoogleMapsService::testConfig($apiKey)) {
+            throw ValidationException::withMessages([
+                'GMaps_Key' => ['invalid credentials'],
+            ]);
+        }
+
+        return $this->_saveData(IntegrationsEnum::GoogleMaps, [
+            'key' => Crypt::encryptString($apiKey),
+        ], $actor);
     }
 }
