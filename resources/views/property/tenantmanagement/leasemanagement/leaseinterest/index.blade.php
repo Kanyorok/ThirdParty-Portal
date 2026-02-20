@@ -6,7 +6,7 @@
 <div class="container mt-4">
 
 <div class="d-flex justify-content-between mb-3">
-<h5>Tenant Interests</h5>
+<small>This is a list of property interests</small>
 <a href="{{ route('property-interest.create') }}" class="btn btn-success btn-sm">
 + Add Interest
 </a>

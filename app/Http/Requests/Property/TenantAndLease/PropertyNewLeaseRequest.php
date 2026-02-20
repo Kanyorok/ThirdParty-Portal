@@ -14,6 +14,7 @@ class PropertyNewLeaseRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'InterestId' => 'nullable|exists:t_PropertyInterest,Id',
             'Tenant' => 'required|exists:t_TenantMaintenance,Id',
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
             'BlockID' => 'required|exists:t_PropertyBlock,Id',

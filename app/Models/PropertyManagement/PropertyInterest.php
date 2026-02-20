@@ -73,4 +73,8 @@ class PropertyInterest extends Model
     {
         return $this->hasOne(PropertyRateAndPricing::class, 'UnitId', 'UnitId');
     }
+    public function interest()
+    {
+        return $this->belongsTo(PropertyInterest::class, 'InterestId', 'Id');
+    }
 }

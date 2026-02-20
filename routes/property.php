@@ -178,6 +178,7 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     // Lease-only pricing lookup for autofill on new lease form
     Route::get('/propertyaddlease/pricing/{UnitId}', [PropertyNewLeaseController::class, 'getPricingUnit'])->name('getpricingunit.lease');
     Route::get('lease-offer/{Id}', [PropertyNewLeaseController::class, 'leaseOfferLetter'])->name('addlease.offer');
+    Route::get('lease/get-interest/{id}', [PropertyNewLeaseController::class, 'getInterestData'])->name('lease.getInterest');
 
 
 

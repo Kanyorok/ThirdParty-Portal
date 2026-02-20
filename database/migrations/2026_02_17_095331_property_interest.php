@@ -29,6 +29,9 @@ return new class extends Migration
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
         });
+        Schema::table('t_LeaseCreation', function (Blueprint $table) {
+            $table->foreignId('InterestId')->nullable()->constrained('t_PropertyInterest', 'Id');
+        });
     }
 
     /**
@@ -36,6 +39,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('t_LeaseCreation', function (Blueprint $table) {
+            $table->dropForeign(['InterestId']);
+            $table->dropColumn('InterestId');
+        });
         Schema::dropIfExists('t_PropertyInterest');
     }
 };

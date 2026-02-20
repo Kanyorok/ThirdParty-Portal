@@ -139,7 +139,7 @@
                 </div>
 
                 {{-- ================= ADDITIONAL INFO ================= --}}
-                <h6 class="fw-bold mb-2">Additional Information</h6>
+                <h6 class="fw-bold mb-2">Additional Information <span class="text-danger">*</span></h6>
                 <div class="mb-4">
                     <textarea name="AdditionalInformation"
                               class="form-control"

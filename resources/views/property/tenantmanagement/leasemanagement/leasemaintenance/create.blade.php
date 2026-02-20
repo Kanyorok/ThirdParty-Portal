@@ -21,6 +21,32 @@
 
 <div class="row g-3 mb-4">
 
+<div class="row g-3 mb-4">
+    <div class="col-md-12">
+        <label class="form-label">Select Interest</label>
+        <select name="InterestId" id="interest-select"
+                class="form-select @error('InterestId') is-invalid @enderror">
+
+            <option value="">-- Select Interest (Optional) --</option>
+
+            @foreach ($interests as $i)
+                <option value="{{ $i->Id }}"
+                    {{ old('InterestId')==$i->Id?'selected':'' }}>
+                    {{ $i->tenant->thirdParty->ThirdPartyName ?? '-' }}
+                    | {{ $i->property->PropertyName ?? '-' }}
+                    | {{ $i->unit->UnitCode ?? '-' }}
+                </option>
+            @endforeach
+
+        </select>
+
+        @error('InterestId')
+            <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+    </div>
+</div>
+
+
 <div class="col-md-6">
 <label class="form-label">Tenant <span class="text-danger">*</span></label>
 <select name="Tenant" class="form-select @error('Tenant') is-invalid @enderror">
@@ -214,10 +240,10 @@ rows="3">{{ old('SpecialTerms') }}</textarea>
 
 {{-- ================= Documents ================= --}}
 
-<h5 class="fw-bold border-bottom pb-2 mb-3">Upload Documents</h5>
+<h5 class="fw-bold border-bottom pb-2 mb-3">Upload Documents <span class="text-danger">*</span></h5>
 
 <input type="file" name="Document[]" multiple
-class="form-control mb-4 @error('Document') is-invalid @enderror">
+class="form-control mb-4 @error('Document') is-invalid @enderror" required>
 
 @error('Document')<div class="invalid-feedback mb-3">{{ $message }}</div>@enderror
 
@@ -234,57 +260,172 @@ class="form-control mb-4 @error('Document') is-invalid @enderror">
 {{-- ================= JS ================= --}}
 
 <script>
-const routes = {
-getBlocks:"{{ route('getblockbyproperty.lease',['PropertyId'=>'__ID__']) }}",
-getFloors:"{{ route('getfloorbyblock.lease',['BlockId'=>'__ID__']) }}",
-getUnits:"{{ route('getunitbyfloor.lease',['FloorId'=>'__ID__']) }}",
-getPricing:"{{ route('getpricingunit.lease',['UnitId'=>'__ID__']) }}"
-};
+document.addEventListener('DOMContentLoaded', () => {
 
-document.addEventListener('DOMContentLoaded',()=>{
+    // =============================
+    // Elements
+    // =============================
+    const interestSelect = document.getElementById('interest-select');
+    const propertySelect = document.getElementById('property-select');
+    const blockSelect = document.getElementById('block-select');
+    const floorSelect = document.getElementById('floor-select');
+    const unitSelect = document.getElementById('unit-select');
 
-const ps=document.getElementById('property-select'),
-bs=document.getElementById('block-select'),
-fs=document.getElementById('floor-select'),
-us=document.getElementById('unit-select');
+    const rentInput = document.querySelector('input[name="MonthlyRent"]');
+    const depositInput = document.querySelector('input[name="Deposit"]');
+    const serviceInput = document.querySelector('input[name="ServiceCharge"]');
+    const parkingInput = document.querySelector('input[name="ParkingFee"]');
+    const otherInput = document.querySelector('input[name="OtherCharges"]');
 
-const charges=document.querySelectorAll('.charge-field');
-const total=document.getElementById('TotalPayable');
+    const taxSelect = document.querySelector('select[name="TaxId"]');
+    const currencySelect = document.querySelector('select[name="CurrencyId"]');
 
-const reset=(el,label)=>el.innerHTML=`<option value="">-- ${label} --</option>`;
+    const startDateInput = document.querySelector('input[name="StartDate"]');
+    const endDateInput = document.querySelector('input[name="EndDate"]');
+    const paymentFreqSelect = document.querySelector('select[name="PaymentFrequency"]');
 
-ps.addEventListener('change',()=>{
-reset(bs,'Select Block'); reset(fs,'Select Floor'); reset(us,'Select Unit');
-if(!ps.value) return;
-fetch(routes.getBlocks.replace('__ID__',ps.value))
-.then(r=>r.json()).then(d=>{
-d.forEach(b=>bs.innerHTML+=`<option value="${b.Id}">${b.BlockName}</option>`);
-});
-});
+    const chargeFields = document.querySelectorAll('.charge-field');
+    const totalField = document.getElementById('TotalPayable');
 
-bs.addEventListener('change',()=>{
-reset(fs,'Select Floor'); reset(us,'Select Unit');
-if(!bs.value) return;
-fetch(routes.getFloors.replace('__ID__',bs.value))
-.then(r=>r.json()).then(d=>{
-d.forEach(f=>fs.innerHTML+=`<option value="${f.Id}">${f.FloorLabel}</option>`);
-});
-});
+    const routes = {
+        getBlocks: "{{ route('getblockbyproperty.lease', ['PropertyId' => '__ID__']) }}",
+        getFloors: "{{ route('getfloorbyblock.lease', ['BlockId' => '__ID__']) }}",
+        getUnits: "{{ route('getunitbyfloor.lease', ['FloorId' => '__ID__']) }}",
+        getPricing: "{{ route('getpricingunit.lease', ['UnitId' => '__ID__']) }}"
+    };
 
-fs.addEventListener('change',()=>{
-reset(us,'Select Unit');
-if(!fs.value) return;
-fetch(routes.getUnits.replace('__ID__',fs.value))
-.then(r=>r.json()).then(d=>{
-d.forEach(u=>us.innerHTML+=`<option value="${u.Id}">${u.UnitCode}</option>`);
-});
-});
+    // =============================
+    // Helper Functions
+    // =============================
+    const resetOptions = (select, label) => {
+        select.innerHTML = `<option value="">-- ${label} --</option>`;
+    };
 
-const calc=()=>{
-let t=0; charges.forEach(i=>t+=parseFloat(i.value)||0);
-total.value=t;
-};
-charges.forEach(i=>i.addEventListener('input',calc));
+    const loadBlocks = async (propertyId) => {
+        resetOptions(blockSelect, 'Select Block');
+        resetOptions(floorSelect, 'Select Floor');
+        resetOptions(unitSelect, 'Select Unit');
+        if (!propertyId) return;
+
+        const res = await fetch(routes.getBlocks.replace('__ID__', propertyId));
+        const blocks = await res.json();
+        blocks.forEach(b => {
+            blockSelect.insertAdjacentHTML('beforeend',
+                `<option value="${b.Id}">${b.BlockName}</option>`
+            );
+        });
+    };
+
+    const loadFloors = async (blockId) => {
+        resetOptions(floorSelect, 'Select Floor');
+        resetOptions(unitSelect, 'Select Unit');
+        if (!blockId) return;
+
+        const res = await fetch(routes.getFloors.replace('__ID__', blockId));
+        const floors = await res.json();
+        floors.forEach(f => {
+            floorSelect.insertAdjacentHTML('beforeend',
+                `<option value="${f.Id}">${f.FloorLabel}</option>`
+            );
+        });
+    };
+
+    const loadUnits = async (floorId) => {
+        resetOptions(unitSelect, 'Select Unit');
+        if (!floorId) return;
+
+        const res = await fetch(routes.getUnits.replace('__ID__', floorId));
+        const units = await res.json();
+        units.forEach(u => {
+            unitSelect.insertAdjacentHTML('beforeend',
+                `<option value="${u.Id}">${u.UnitCode}</option>`
+            );
+        });
+    };
+
+    const loadPricing = async (unitId) => {
+        if (!unitId) return;
+
+        const res = await fetch(routes.getPricing.replace('__ID__', unitId));
+        const p = await res.json();
+        if (!p) return;
+
+        rentInput.value = p.Rent ?? '';
+        depositInput.value = p.DepositAmount ?? '';
+        serviceInput.value = p.ServiceCharge ?? '';
+        parkingInput.value = p.ParkingFee ?? '';
+        otherInput.value = p.OtherCharges ?? '';
+
+        taxSelect.value = p.TaxId ?? '';
+        currencySelect.value = p.CurrencyId ?? '';
+
+        calculateTotal();
+    };
+
+    const calculateTotal = () => {
+        let total = 0;
+        chargeFields.forEach(f => total += parseFloat(f.value) || 0);
+        totalField.value = total;
+    };
+
+    chargeFields.forEach(f => f.addEventListener('input', calculateTotal));
+
+    // =============================
+    // Event Listeners
+    // =============================
+
+    // Cascading dropdowns
+    propertySelect.addEventListener('change', () => loadBlocks(propertySelect.value));
+    blockSelect.addEventListener('change', () => loadFloors(blockSelect.value));
+    floorSelect.addEventListener('change', () => loadUnits(floorSelect.value));
+    unitSelect.addEventListener('change', () => loadPricing(unitSelect.value));
+
+    // Interest select autofill
+    interestSelect?.addEventListener('change', async function () {
+        if (!this.value) return;
+
+        const res = await fetch(
+            "{{ route('lease.getInterest', '__ID__') }}".replace('__ID__', this.value)
+        );
+        const data = await res.json();
+
+        // =============================
+        // Basic Info
+        // =============================
+        document.querySelector('[name="Tenant"]').value = data.TenantId ?? '';
+        startDateInput.value = data.StartDate ?? '';
+        endDateInput.value = data.EndDate ?? '';
+        paymentFreqSelect.value = data.PaymentFrequency ?? '';
+        propertySelect.value = data.PropertyId ?? '';
+
+        // =============================
+        // Cascading selects
+        // =============================
+        await loadBlocks(data.PropertyId);
+        blockSelect.value = data.BlockId ?? '';
+        await loadFloors(data.BlockId);
+        floorSelect.value = data.FloorId ?? '';
+        await loadUnits(data.FloorId);
+        unitSelect.value = data.UnitId ?? '';
+
+        // =============================
+        // Financials
+        // =============================
+        if (data.pricing) {
+            rentInput.value = data.pricing.Rent ?? '';
+            depositInput.value = data.pricing.DepositAmount ?? '';
+            serviceInput.value = data.pricing.ServiceCharge ?? '';
+            parkingInput.value = data.pricing.ParkingFee ?? '';
+            otherInput.value = data.pricing.OtherCharges ?? '';
+
+            taxSelect.value = data.pricing.TaxId ?? '';
+            currencySelect.value = data.pricing.CurrencyId ?? '';
+
+            calculateTotal();
+        } else {
+            await loadPricing(data.UnitId);
+        }
+    });
 
 });
 </script>

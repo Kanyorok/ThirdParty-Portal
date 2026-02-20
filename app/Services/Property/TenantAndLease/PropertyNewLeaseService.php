@@ -11,6 +11,7 @@ use App\Models\Core\Currency;
 use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
+use App\Models\PropertyManagement\PropertyInterest;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyNewTenant;
@@ -33,6 +34,7 @@ class PropertyNewLeaseService
     }
 
     public function create(
+        ?PropertyInterest $Interest,
         PropertyNewTenant $Tenant,
         PropertyRegistry $PropertyID,
         PropertyBlock $BlockID,
@@ -74,6 +76,7 @@ class PropertyNewLeaseService
 
 
         $newlease = PropertyNewLease::create([
+            'InterestId' => $Interest?->Id,
             'LeaseNumber' => $leaseNumber,
             'Tenant' => $Tenant->Id,
             'PropertyID' => $PropertyID->Id,
@@ -130,6 +133,7 @@ class PropertyNewLeaseService
             otherCharges: $OtherCharges,
             user: $user
         );
+
 
         activity()->causedBy($user->Id)
             ->performedOn($newlease)

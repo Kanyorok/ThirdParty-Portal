@@ -270,16 +270,17 @@ class ModuleSeeder extends Seeder
             // First level - Tenant & Lease
             ['ModuleID' => 502000, 'Name' => 'Tenant & Lease', 'Icon' => '<i class="fas fa-users"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => null, 'RequiredPermission' => PermissionEnum::TenantMaintenanceView->value],
             ['ModuleID' => 502100, 'Name' => 'Tenant Maintenance', 'Icon' => null, 'Description' => '', 'ParentID' => 502000, 'Route' => 'addtenant.index', 'RequiredPermission' => PermissionEnum::TenantMaintenanceView->value],
-            ['ModuleID' => 502200, 'Name' => 'Tenant Clearance', 'Icon' => null, 'Description' => '', 'ParentID' => 502000, 'Route' => 'tenantclearance.index', 'RequiredPermission' => PermissionEnum::TenantClearanceView->value],
+            ['ModuleID' => 502300, 'Name' => 'Tenant Clearance', 'Icon' => null, 'Description' => '', 'ParentID' => 502000, 'Route' => 'tenantclearance.index', 'RequiredPermission' => PermissionEnum::TenantClearanceView->value],
 
             // Lease Management (under Tenant & Lease)
-            ['ModuleID' => 502300, 'Name' => 'Lease Management', 'Icon' => '<i class="fas fa-file-contract"></i>', 'Description' => '', 'ParentID' => 502000, 'Route' => null, 'RequiredPermission' => PermissionEnum::PropertyNewLeaseView->value],
-            ['ModuleID' => 502310, 'Name' => 'Lease Maintenance', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'addlease.index', 'RequiredPermission' => PermissionEnum::PropertyNewLeaseView->value],
-            ['ModuleID' => 502320, 'Name' => 'Lease Schedule', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'schedulelease.index', 'RequiredPermission' => PermissionEnum::PropertyLeaseScheduleView->value],
-            ['ModuleID' => 502330, 'Name' => 'Lease Renewal', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'renewlease.index', 'RequiredPermission' => PermissionEnum::PropertyLeaseRenewalView->value],
-            ['ModuleID' => 502340, 'Name' => 'Lease Termination', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => 'terminatelease.index', 'RequiredPermission' => PermissionEnum::PropertyLeaseTerminationView->value],
-            ['ModuleID' => 502390, 'Name' => 'Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502300, 'Route' => null, 'RequiredPermission' => PermissionEnum::PropertyNewLeaseApproval->value],
-            ['ModuleID' => 502391, 'Name' => 'Property Approvals', 'Icon' => null, 'Description' => '', 'ParentID' => 502390, 'Route' => 'propertyapproval.index', 'RequiredPermission' => PermissionEnum::PropertyNewLeaseApproval->value],
+            ['ModuleID' => 502200, 'Name' => 'Lease Management', 'Icon' => '<i class="fas fa-file-contract"></i>', 'Description' => '', 'ParentID' => 502000, 'Route' => null, 'RequiredPermission' => PermissionEnum::PropertyNewLeaseView->value],
+            ['ModuleID' => 502210, 'Name' => 'Lease Interest', 'Icon' => null, 'Description' => '', 'ParentID' => 502200, 'Route' => 'property-interest.index', 'RequiredPermission' => PermissionEnum::PropertyNewLeaseView->value],
+            ['ModuleID' => 502220, 'Name' => 'Lease Maintenance', 'Icon' => null, 'Description' => '', 'ParentID' => 502200, 'Route' => 'addlease.index', 'RequiredPermission' => PermissionEnum::PropertyNewLeaseView->value],
+            ['ModuleID' => 502230, 'Name' => 'Lease Schedule', 'Icon' => null, 'Description' => '', 'ParentID' => 502200, 'Route' => 'schedulelease.index', 'RequiredPermission' => PermissionEnum::PropertyLeaseScheduleView->value],
+            ['ModuleID' => 502240, 'Name' => 'Lease Renewal', 'Icon' => null, 'Description' => '', 'ParentID' => 502200, 'Route' => 'renewlease.index', 'RequiredPermission' => PermissionEnum::PropertyLeaseRenewalView->value],
+            ['ModuleID' => 502250, 'Name' => 'Lease Termination', 'Icon' => null, 'Description' => '', 'ParentID' => 502200, 'Route' => 'terminatelease.index', 'RequiredPermission' => PermissionEnum::PropertyLeaseTerminationView->value],
+            ['ModuleID' => 502290, 'Name' => 'Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 502200, 'Route' => null, 'RequiredPermission' => PermissionEnum::PropertyNewLeaseApproval->value],
+            ['ModuleID' => 502291, 'Name' => 'Approval Details', 'Icon' => null, 'Description' => '', 'ParentID' => 502290, 'Route' => 'propertyapproval.index', 'RequiredPermission' => PermissionEnum::PropertyNewLeaseApproval->value],
 
             // First level - Billing & Receipting
             ['ModuleID' => 503000, 'Name' => 'Billing & Receipting', 'Icon' => '<i class="fas fa-file-invoice-dollar"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => null, 'RequiredPermission' => PermissionEnum::PropertyInvoiceView->value],
