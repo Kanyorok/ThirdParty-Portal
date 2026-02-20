@@ -2,36 +2,48 @@
 @section('title', ' Committee Roles Overview')
 @section('content')
 <div class="container mt-4">
-     <a href="{{ route('assignrole.create') }}" class="btn btn-primary mb-3">Assign Role</a>
     <h4 class="mb-3">📄 Committee Roles Overview</h4>
     <div class="table-responsive">
         <table class="table table-striped table-bordered align-middle">
             <thead class="table-light">
                 <tr>
-                    <th>Tender Reference</th>
+                    <th>Reference</th>
                     <th>Member Name</th>
-                    <th>Assigned Role</th>
-                    <th>Appointment Date</th>
+                    <th>Previous Role</th>
+                    <th>New Role</th>
+                    <th>Changed On</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <th>Responded On</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Example Row -->
-                <tr>
-                    <td>TND/PROC/2025/001</td>
-                    <td>Grace A.</td>
-                    <td>Financial Evaluator</td>
-                    <td>2025-05-10</td>
-                    <td><span class="badge bg-success">Accepted</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary">Edit Role</button>
-                    </td>
-                </tr>
-                <!-- Repeat rows for other members -->
+                @forelse ($roleHistory as $history)
+                    <tr>
+                        <td>{{ $history->reference }}</td>
+                        <td>{{ $history->member_name }}</td>
+                        <td>{{ $history->PreviousRole ?? '—' }}</td>
+                        <td>{{ $history->NewRole }}</td>
+                        <td>{{ $history->ChangedOn ? \Carbon\Carbon::parse($history->ChangedOn)->format('d/m/Y H:i') : '—' }}</td>
+                        <td>
+                            @if ((int) $history->Status === 1)
+                                <span class="badge bg-success">Accepted</span>
+                            @elseif ((int) $history->Status === 2)
+                                <span class="badge bg-danger">Declined</span>
+                            @else
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            @endif
+                        </td>
+                        <td>{{ $history->RespondedOn ? \Carbon\Carbon::parse($history->RespondedOn)->format('d/m/Y H:i') : '—' }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="text-center py-4">No role changes have been made yet.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
 </div>
 
 @endsection
+

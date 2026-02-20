@@ -5,6 +5,7 @@ namespace App\Services\Procurement\Orders;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -478,5 +479,113 @@ class OrderService
         }
 
         return $fullyExhausted;
+    }
+
+    // -------------------------------------------------------------------------
+    // CRUD helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Retrieve a single Order model by primary key.
+     *
+     * @param  int|string  $id
+     * @return \App\Models\Procurement\Order|null
+     */
+    public function getOrder($id): ?\App\Models\Procurement\Order
+    {
+        try {
+            return \App\Models\Procurement\Order::findOrFail($id);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::warning("OrderService::getOrder – Order ID {$id} not found.");
+
+            return null;
+        } catch (\Throwable $e) {
+            Log::error("OrderService::getOrder – Unexpected error for ID {$id}: " . $e->getMessage());
+
+            return null;
+        }
+    }
+
+    /**
+     * Update the header fields of an existing Purchase Order.
+     *
+     * Only the fields that are safe to edit after creation are updated:
+     *   OrderDate, Terms (payment terms), Priority, ExtOrdNum (reference no),
+     *   AccountID (supplier), Notes, DeliveryTerms.
+     *
+     * @param  int|string  $id
+     * @param  array       $data  Validated request data
+     * @return bool  true on success, false on failure
+     */
+    public function updateOrder($id, array $data): bool
+    {
+        try {
+            $order = \App\Models\Procurement\Order::findOrFail($id);
+
+            // Map request field names → column names
+            $updatePayload = array_filter([
+                'OrderDate'      => $data['Date']     ?? null,
+                'terms'          => $data['terms']    ?? null,
+                'Priority'       => $data['priority'] ?? null,
+                'ExtOrdNum'      => $data['refNo']    ?? null,
+                'AccountID'      => $data['supplier'] ?? null,
+                'Notes'          => $data['notes']    ?? null,
+                'DeliveryTerms'  => $data['delivery_terms'] ?? null,
+                'ModifiedBy'     => Auth::id(),
+            ], fn ($v) => $v !== null);
+
+            $order->update($updatePayload);
+
+            // Recalculate totals if line items were also updated
+            // (line items themselves are managed through addPOLines / direct edits)
+            $this->AddPurchaseOrderSum($id);
+
+            Log::info("OrderService::updateOrder – Order ID {$id} updated successfully.", [
+                'fields_updated' => array_keys($updatePayload),
+                'updated_by'     => Auth::id(),
+            ]);
+
+            return true;
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error("OrderService::updateOrder – Order ID {$id} not found.");
+
+            return false;
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error("OrderService::updateOrder – SQL error for Order ID {$id}: " . $e->getMessage());
+
+            return false;
+        } catch (\Throwable $e) {
+            Log::error("OrderService::updateOrder – Unexpected error for Order ID {$id}: " . $e->getMessage());
+
+            return false;
+        }
+    }
+
+    /**
+     * Soft-delete a Purchase Order (sets DeletedOn via the SoftDeletes trait).
+     *
+     * @param  int|string  $id
+     * @return bool  true on success, false on failure
+     */
+    public function deleteOrder($id): bool
+    {
+        try {
+            $order = \App\Models\Procurement\Order::findOrFail($id);
+            $order->delete(); // honours the SoftDeletes trait (sets DeletedOn)
+
+            Log::info("OrderService::deleteOrder – Order ID {$id} soft-deleted.", [
+                'deleted_by' => Auth::id(),
+            ]);
+
+            return true;
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error("OrderService::deleteOrder – Order ID {$id} not found.");
+
+            return false;
+        } catch (\Throwable $e) {
+            Log::error("OrderService::deleteOrder – Unexpected error for Order ID {$id}: " . $e->getMessage());
+
+            return false;
+        }
     }
 }

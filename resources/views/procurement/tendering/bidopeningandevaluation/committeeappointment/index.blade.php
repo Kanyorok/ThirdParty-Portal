@@ -9,8 +9,24 @@
             + Appoint New Committee</a>
     </div>
 
+    <div class="d-flex justify-content-end mb-2">
+        <div class="input-group" style="max-width: 340px;">
+            <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+            <input
+                type="text"
+                id="committeeSearch"
+                class="form-control"
+                placeholder="Search by reference or description…"
+                autocomplete="off"
+            >
+            <button type="button" class="btn btn-outline-secondary" id="committeeSearchClear" title="Clear search">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
     <div class="table-responsive">
-            <table class="table table-striped table-bordered align-middle">
+            <table class="table table-striped table-bordered align-middle" id="committeesTable">
             <thead class="table-light">
             <tr>
                 <th>#</th>
@@ -77,61 +93,63 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <form id="committeeForm" action="{{ route('tendercommittee.store') }}" method="POST">
+            <form id="committeeForm" action="{{ route('tendercommittee.store') }}" method="POST" novalidate>
                 @csrf
                 @method('POST')
 
                 <div class="modal-body">
                     <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="committeeType" class="form-label">Committee Type</label>
-                            <select id="committeeType" class="form-select" name="committeeType" required>
+                        <div class="col-md-6 mb-3">
+                            <label for="committeeType" class="form-label">
+                                Committee Type <span class="text-danger">*</span>
+                            </label>
+                            <select id="committeeType" class="form-select" name="committeeType">
                                 <option value="">-- Select Type --</option>
                                 <option value="tender">Tender</option>
                                 <option value="rfq">RFQ</option>
                             </select>
+                            <div class="invalid-feedback" id="committeeType-error"></div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label for="referenceId" class="form-label">Reference</label>
-                            <select id="referenceId" class="form-select select2-reference" name="referenceId" required>
+                        <div class="col-md-6 mb-3">
+                            <label for="referenceId" class="form-label">
+                                Reference <span class="text-danger">*</span>
+                            </label>
+                            <select id="referenceId" class="form-select select2-reference" name="referenceId">
                                 <option value=""></option>
                             </select>
+                            <div class="text-danger small mt-1" id="referenceId-error" style="display:none;"></div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label for="appointmentDate" class="form-label">Appointment Date</label>
-                            <input type="date" class="form-control" name="appointmentDate" id="appointmentDate" min="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}" required>
+                        <div class="col-md-6 mb-3">
+                            <label for="appointmentDate" class="form-label">
+                                Appointment Date <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" class="form-control" name="appointmentDate" id="appointmentDate"
+                                   min="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}">
+                            <div class="invalid-feedback" id="appointmentDate-error"></div>
                         </div>
-                        @error('appointmentDate')
-                        <div class="alert alert-danger mt-2">{{ $message }}</div>
-                        @enderror
                     </div>
 
                     <div class="mb-3">
-                        <label for="committeeMembers" class="form-label">Select Committee Members</label>
-                        <select class="form-select" id="committeeMembers" multiple required name="committeeMembers[]">
-                            <!-- Populate from system user list -->
+                        <label for="committeeMembers" class="form-label">
+                            Select Committee Members <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="committeeMembers" name="committeeMembers[]" multiple>
                             @foreach ($employees as $item)
                                 <option value="{{ $item->Id }}">
                                     {{ optional($item->employee)->full_name ?? $item->Name }} - {{ optional(optional($item->employee)->role)->Name ?? 'N/A' }}
                                 </option>
                             @endforeach
                         </select>
-                        @error('committeeMembers')
-                        <div class="alert alert-danger mt-2">{{ $message }}</div>
-                        @enderror
+                        <div class="invalid-feedback" id="committeeMembers-error"></div>
                         <small class="form-text text-muted">Hold CTRL/CMD to select multiple users.</small>
                     </div>
                 </div>
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button
-                        type="submit"
-                        class="btn btn-success"
-                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();"
-                    >
+                    <button type="button" id="appointCommitteeBtn" class="btn btn-success">
                         Appoint Committee
                     </button>
                 </div>
@@ -169,41 +187,90 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script>
-    // Wait for jQuery and DOM to be ready
-    $(document).ready(function() {
-        const committeeTypeSelect = document.getElementById("committeeType");
-        const referenceSelect = document.getElementById("referenceId");
-        const form = document.getElementById("committeeForm");
+    $(document).ready(function () {
+        const committeeTypeSelect = document.getElementById('committeeType');
+        const referenceSelect     = document.getElementById('referenceId');
+        const form                = document.getElementById('committeeForm');
+        const submitBtn           = document.getElementById('appointCommitteeBtn');
 
-        // Initialize Select2 for Reference dropdown
+        /* ─── helpers ───────────────────────────────────────────────── */
+
+        function setFieldError(inputEl, errorDivId, message) {
+            const errDiv = document.getElementById(errorDivId);
+            if (!errDiv) return;
+            if (message) {
+                inputEl.classList.add('is-invalid');
+                errDiv.textContent = message;
+                if (errDiv.classList.contains('text-danger')) errDiv.style.display = 'block';
+            } else {
+                inputEl.classList.remove('is-invalid');
+                errDiv.textContent = '';
+                if (errDiv.classList.contains('text-danger')) errDiv.style.display = 'none';
+            }
+        }
+
+        function clearAllErrors() {
+            [
+                ['committeeType',    'committeeType-error'],
+                ['referenceId',      'referenceId-error'],
+                ['appointmentDate',  'appointmentDate-error'],
+                ['committeeMembers', 'committeeMembers-error'],
+            ].forEach(([id, errId]) => {
+                const el = document.getElementById(id);
+                if (el) setFieldError(el, errId, null);
+            });
+            $('.select2-reference').next('.select2-container').find('.select2-selection').css('border-color', '');
+        }
+
+        function highlightSelect2Error(hasError) {
+            $('.select2-reference').next('.select2-container').find('.select2-selection')
+                .css('border-color', hasError ? '#dc3545' : '');
+        }
+
+        /* ─── reset modal on close ──────────────────────────────────── */
+
+        $('#addCommitteeModal').on('hidden.bs.modal', function () {
+            form.reset();
+            clearAllErrors();
+            referenceSelect.innerHTML = '<option value=""></option>';
+            if ($('.select2-reference').hasClass('select2-hidden-accessible')) {
+                $('.select2-reference').val(null).trigger('change');
+            }
+            const appt = document.getElementById('appointmentDate');
+            if (appt) {
+                const pad = n => String(n).padStart(2, '0');
+                const n = new Date();
+                appt.value = `${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())}`;
+            }
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Appoint Committee';
+            form.action = "{{ route('tendercommittee.store') }}";
+        });
+
+        /* ─── Select2 initialisation ────────────────────────────────── */
+
         function initializeSelect2() {
             if ($('.select2-reference').length && typeof $.fn.select2 !== 'undefined') {
-                // Destroy existing instance if any
                 if ($('.select2-reference').hasClass('select2-hidden-accessible')) {
                     $('.select2-reference').select2('destroy');
                 }
-                
                 $('.select2-reference').select2({
                     placeholder: '-- Select Reference --',
                     allowClear: true,
                     width: '100%',
-                    dropdownParent: $('#addCommitteeModal')
+                    dropdownParent: $('#addCommitteeModal'),
                 });
             }
         }
 
-        // Initialize Select2 when modal is shown
-        $('#addCommitteeModal').on('shown.bs.modal', function () {
-            initializeSelect2();
-        });
-
-        // Initialize on page load
+        $('#addCommitteeModal').on('shown.bs.modal', function () { initializeSelect2(); });
         initializeSelect2();
 
-        // Initialize appointment date field similar to Raise Needs
+        /* ─── Appointment date (flatpickr) ──────────────────────────── */
+
         const appt = document.getElementById('appointmentDate');
         if (appt) {
-            const pad = (n) => String(n).padStart(2, '0');
+            const pad = n => String(n).padStart(2, '0');
             const now = new Date();
             const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
             appt.min = todayStr;
@@ -216,56 +283,173 @@
                 allowInput: true,
                 minDate: 'today',
                 defaultDate: new Date(),
-                disableMobile: true
-            });
-
-            appt.addEventListener('change', () => {
-                if (appt.value && appt.value < appt.min) {
-                    appt.setCustomValidity('Date cannot be earlier than today.');
-                    appt.reportValidity();
-                    appt.value = appt.min;
-                    appt.setCustomValidity('');
-                }
+                disableMobile: true,
+                onChange(_, dateStr) {
+                    if (dateStr) setFieldError(appt, 'appointmentDate-error', null);
+                },
             });
         }
 
+        /* ─── Committee Type → load references ──────────────────────── */
+
         if (committeeTypeSelect) {
-            committeeTypeSelect.addEventListener("change", function () {
-                const selectedType = this.value;
+            committeeTypeSelect.addEventListener('change', function () {
+                const type = this.value;
+                setFieldError(committeeTypeSelect, 'committeeType-error', null);
 
-                // Change form action based on type
-                if (selectedType === 'rfq') {
-                    form.action = "{{ route('rfqcommittee.store') }}";
-                } else {
-                    form.action = "{{ route('tendercommittee.store') }}";
-                }
+                form.action = type === 'rfq'
+                    ? "{{ route('rfqcommittee.store') }}"
+                    : "{{ route('tendercommittee.store') }}";
 
-                // Destroy existing Select2 before loading new data
                 if ($('.select2-reference').hasClass('select2-hidden-accessible')) {
                     $('.select2-reference').select2('destroy');
                 }
-
-                // Load references
+                setFieldError(referenceSelect, 'referenceId-error', null);
+                highlightSelect2Error(false);
                 referenceSelect.innerHTML = '<option value="">Loading...</option>';
-                fetch(`/procurement/committee-references/${selectedType}`)
-                    .then(response => response.json())
+
+                if (!type) {
+                    referenceSelect.innerHTML = '<option value=""></option>';
+                    setTimeout(initializeSelect2, 100);
+                    return;
+                }
+
+                fetch(`/procurement/committee-references/${type}`)
+                    .then(r => r.json())
                     .then(data => {
                         referenceSelect.innerHTML = '<option value=""></option>';
                         data.forEach(item => {
                             const ref = item.RefNo ?? item.RFQNumber ?? 'N/A';
-                            referenceSelect.innerHTML += `<option value="${item.Id}">${ref} ${item.Title ? '| ' + item.Title : ''}</option>`;
+                            referenceSelect.innerHTML += `<option value="${item.Id}">${ref}${item.Title ? ' | ' + item.Title : ''}</option>`;
                         });
-                        
-                        // Re-initialize Select2 after loading new options
                         setTimeout(initializeSelect2, 100);
                     })
-                    .catch(error => {
-                        console.error("Error fetching data:", error);
+                    .catch(err => {
+                        console.error('Error fetching references:', err);
                         referenceSelect.innerHTML = '<option value="">Error loading options</option>';
-                        
-                        // Re-initialize Select2 even on error
                         setTimeout(initializeSelect2, 100);
                     });
+            });
+        }
+
+        /* ─── Clear errors when user corrects fields ─────────────────── */
+
+        $(document).on('change', '.select2-reference', function () {
+            if ($(this).val()) {
+                setFieldError(referenceSelect, 'referenceId-error', null);
+                highlightSelect2Error(false);
+            }
+        });
+
+        document.getElementById('committeeMembers')?.addEventListener('change', function () {
+            if (this.selectedOptions.length > 0) {
+                setFieldError(this, 'committeeMembers-error', null);
+            }
+        });
+
+        /* ─── Submit: validate → submit ──────────────────────────────── */
+
+        submitBtn.addEventListener('click', function () {
+            clearAllErrors();
+            let valid = true;
+
+            if (!committeeTypeSelect.value) {
+                setFieldError(committeeTypeSelect, 'committeeType-error', 'The Committee Type field is required.');
+                valid = false;
+            }
+
+            if (!referenceSelect.value) {
+                setFieldError(referenceSelect, 'referenceId-error', 'The Reference field is required.');
+                highlightSelect2Error(true);
+                valid = false;
+            }
+
+            const apptEl = document.getElementById('appointmentDate');
+            if (!apptEl || !apptEl.value) {
+                setFieldError(apptEl, 'appointmentDate-error', 'The Appointment Date field is required.');
+                valid = false;
+            }
+
+            const membersEl = document.getElementById('committeeMembers');
+            if (!membersEl || membersEl.selectedOptions.length === 0) {
+                setFieldError(membersEl, 'committeeMembers-error', 'The Committee Members field is required. Please select at least one member.');
+                valid = false;
+            }
+
+            if (!valid) return;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            form.submit();
+        });
+
+        /* ─── Live search for committees table ─────────────────────────── */
+
+        const searchInput  = document.getElementById('committeeSearch');
+        const searchClear  = document.getElementById('committeeSearchClear');
+        const tableBody    = document.querySelector('#committeesTable tbody');
+        const infoText     = document.querySelector('.small.text-muted');
+
+        function filterTable() {
+            const term = searchInput.value.trim().toLowerCase();
+            const rows = tableBody.querySelectorAll('tr[data-searchable]');
+            let visible = 0;
+
+            rows.forEach(row => {
+                const ref  = (row.dataset.ref  || '').toLowerCase();
+                const desc = (row.dataset.desc || '').toLowerCase();
+                const match = !term || ref.includes(term) || desc.includes(term);
+                row.style.display = match ? '' : 'none';
+                if (match) visible++;
+            });
+
+            // Show / hide "no results" placeholder
+            let noResultsRow = tableBody.querySelector('.no-search-results');
+            if (visible === 0 && term) {
+                if (!noResultsRow) {
+                    noResultsRow = document.createElement('tr');
+                    noResultsRow.className = 'no-search-results';
+                    noResultsRow.innerHTML = '<td colspan="8" class="text-center py-4 text-muted">No committees match your search.</td>';
+                    tableBody.appendChild(noResultsRow);
+                }
+                noResultsRow.style.display = '';
+            } else if (noResultsRow) {
+                noResultsRow.style.display = 'none';
+            }
+
+            // Update entry-count text
+            if (infoText) {
+                if (term) {
+                    infoText.textContent = `Showing ${visible} result${visible !== 1 ? 's' : ''} for "${searchInput.value.trim()}"`;
+                } else {
+                    // Restore original server-rendered text
+                    infoText.textContent = infoText.dataset.original || infoText.textContent;
+                }
+            }
+        }
+
+        // Store original info text for restoration
+        if (infoText) infoText.dataset.original = infoText.textContent;
+
+        // Stamp each data row with searchable attributes
+        tableBody.querySelectorAll('tr:not(.no-search-results)').forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 4) {
+                row.dataset.searchable = '1';
+                row.dataset.ref  = cells[2].textContent.trim();
+                row.dataset.desc = cells[3].textContent.trim();
+            }
+        });
+
+        if (searchInput) {
+            searchInput.addEventListener('input', filterTable);
+        }
+
+        if (searchClear) {
+            searchClear.addEventListener('click', function () {
+                searchInput.value = '';
+                filterTable();
+                searchInput.focus();
             });
         }
     });

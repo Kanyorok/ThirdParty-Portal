@@ -451,21 +451,34 @@ class TenderController extends Controller
                 return redirect()->back()->with('error', 'Only draft tenders can be submitted.');
             }
 
-            if ($tender->ApprovalStatus !== null) {
+            // Read ApprovalStatus as raw DB value to avoid enum cast error on legacy '0' default.
+            // Allow submission when: never submitted (null/'0'/'') OR previously rejected ('R').
+            // Block only if PENDING ('P') or APPROVED ('A').
+            $rawApprovalStatus = DB::table($tender->getTable())
+                ->where($tender->getKeyName(), $tender->Id)
+                ->value('ApprovalStatus');
+            $isAlreadySubmitted = (
+                $rawApprovalStatus !== null
+                && $rawApprovalStatus !== '0'
+                && $rawApprovalStatus !== ''
+                && $rawApprovalStatus !== TenderApprovalStatusEnum::REJECTED->value
+            );
+            if ($isAlreadySubmitted) {
                 return redirect()->back()->with('error', 'This tender has already been submitted for approval.');
             }
 
-            // Check if tender has items
+            // Check if tender has items (stored in t_TenderItems)
             $itemCount = TenderItems::where('TenderID', $tender->Id)->count();
             if ($itemCount === 0) {
-                return redirect()->back()->with('error', 'Cannot submit tender without items.');
+                return redirect()->back()->with('error', 'This tender has no items. Please edit the tender and add at least one item before submitting for approval.');
             }
 
-            // For restricted tenders, ensure suppliers are selected
-            if ($tender->TenderType === TenderTypeEnum::Restricted) {
+            // For restricted tenders, ensure suppliers are selected.
+            // Suppliers are stored in t_TenderSuppliers via TenderSupplier model.
+            if ($tender->isRestricted()) {
                 $supplierCount = TenderSupplier::where('TenderID', $tender->Id)->count();
                 if ($supplierCount === 0) {
-                    return redirect()->back()->with('error', 'Restricted tenders require at least one supplier to be invited. Please edit the tender and add suppliers before submitting for approval.');
+                    return redirect()->back()->with('error', 'This is a Restricted tender. You must invite at least one supplier before submitting for approval. Please edit the tender and add suppliers under the "Add Suppliers to Invite" section.');
                 }
             }
 
@@ -532,20 +545,25 @@ class TenderController extends Controller
 
             // Check permissions
             $isSubmitter = ($tender->CreatedBy == $userId);
-            $canApprove = false;
-            $showApprovalButtons = false;
-            $canEdit = false;
 
-            //  Determine edit permissions
-            // Can edit if: (1) Status is Draft AND (2) Not yet submitted (ApprovalStatus is NULL) OR rejected
+            // Determine edit permissions
+            // Read raw ApprovalStatus to avoid enum cast errors on legacy '0' DB default.
+            // Treat null, '0', and '' as "not yet submitted" (same as null).
+            $rawApprovalStatus = $tender->getRawOriginal('ApprovalStatus');
+            $approvalStatusIsNull  = ($rawApprovalStatus === null || $rawApprovalStatus === '0' || $rawApprovalStatus === '');
+            $approvalStatusPending  = ($rawApprovalStatus === TenderApprovalStatusEnum::PENDING->value);  // 'P'
+            $approvalStatusRejected = ($rawApprovalStatus === TenderApprovalStatusEnum::REJECTED->value); // 'R'
+
+            $canEdit = false;
             if ($tender->Status === TenderStatusEnum::Draft) {
-                if ($tender->ApprovalStatus === null || $tender->ApprovalStatus === TenderApprovalStatusEnum::REJECTED) {
+                if ($approvalStatusIsNull || $approvalStatusRejected) {
                     $canEdit = $isSubmitter; // Only creator can edit
                 }
             }
 
-            // Only check approval permissions if tender is pending
-            if ($tender->ApprovalStatus === TenderApprovalStatusEnum::PENDING) {
+            $canApprove = false;
+            $showApprovalButtons = false;
+            if ($approvalStatusPending) {
                 $canApprove = $this->workflow->canApproveModel($tender, $user);
 
                 // Submitter cannot approve their own tender
@@ -1641,8 +1659,12 @@ class TenderController extends Controller
             ]);
         }
 
-        // Remove duplicates based on supplier ID (a supplier might have multiple records)
-        $result = $suppliers->unique('Id')->values();
+        // Remove duplicates: first by ID (same SupplierMaster record), then by name
+        // (two different DB rows for the same supplier person/company)
+        $result = $suppliers
+            ->unique('Id')
+            ->unique('SupplierName')
+            ->values();
 
         // Log::info('Suppliers prepared for UI: ' . $result->count());
         try {

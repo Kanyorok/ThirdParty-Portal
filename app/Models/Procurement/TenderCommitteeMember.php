@@ -24,6 +24,7 @@ class TenderCommitteeMember extends Model
         'UserID',
         'TenderID',
         'Role',
+        'PendingRole',
         'Response',
         'IsActive',
         'HasEvaluated',
@@ -41,6 +42,7 @@ class TenderCommitteeMember extends Model
         'UserID' => 'integer',
         'TenderID' => 'integer',
         'Role' => 'string',
+        'PendingRole' => 'string',
         'Response' => 'integer',
         'IsActive' => 'boolean',
         'CreatedBy' => 'integer',
@@ -93,6 +95,13 @@ class TenderCommitteeMember extends Model
     public function tenderCommitteeEvaluations()
     {
         return $this->hasMany(TenderCommitteeEvaluation::class, 'MemberID', 'Id');
+    }
+
+    public function roleHistory()
+    {
+        return $this->hasMany(CommitteeRoleHistory::class, 'MemberID', 'id')
+            ->where('MemberType', 'tender')
+            ->orderByDesc('ChangedOn');
     }
 
     public function tender()

@@ -81,7 +81,7 @@ class User extends Authenticatable
 
     protected ?Role $effectiveRole = null;
 
-    // ✅ FIXED: Use Id instead of UserID for polymorphic relationships
+
     public function getRoleNames(): Collection
     {
         $branchId = session('LoginBranchId');
@@ -105,7 +105,7 @@ class User extends Authenticatable
         return collect($roles)->intersect($roleNames)->isNotEmpty();
     }
 
-    // ✅ FIXED: Use Id instead of UserID
+    
     public function getPermissionsViaRoles(): Collection
     {
         $branchId = session('LoginBranchId');
@@ -128,7 +128,7 @@ class User extends Authenticatable
         return $this->getPermissionsViaRoles()->contains('name', $permission);
     }
 
-    // ✅ FIXED: Explicitly use Id for model_id
+    
     public function syncRolesWithBranch(array|Collection $roles, int $branchId, int $actorId = 1): void
     {
         // Hard-delete old roles for this user + branch first to start clean
