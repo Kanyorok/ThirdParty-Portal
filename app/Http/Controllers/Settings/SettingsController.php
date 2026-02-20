@@ -34,10 +34,6 @@ class SettingsController extends Controller
         return view('settings.users');
     }
 
-    /**
-     * Handle the incoming request.
-     * @throws AuthorizationException
-     */
     public function integrations(): View
     {
         $this->authorize('viewAny', APICredential::class);
@@ -53,6 +49,7 @@ class SettingsController extends Controller
         $srsConfig = $all->where('Integration', IntegrationsEnum::ReportService->value)->first();
         $iTrackConfig = $all->where('Integration', IntegrationsEnum::iTrack->value)->first();
         $crdbConfig = $all->where('Integration', IntegrationsEnum::CRDB->value)->first();
+        $mapsConfig = $all->where('Integration', IntegrationsEnum::GoogleMaps->value)->first();
         $org = $all->where('Integration', IntegrationsEnum::Organization->value)->first();
 
         return view('settings.integrations')
@@ -67,6 +64,7 @@ class SettingsController extends Controller
             ->with('srsConfig', ($srsConfig instanceof APICredential) ? $srsConfig->Configuration : new APICredential())
             ->with('iTrackConfig', ($iTrackConfig instanceof APICredential) ? $iTrackConfig->Configuration : new APICredential())
             ->with('crdbConfig', ($crdbConfig instanceof APICredential) ? $crdbConfig->Configuration : new APICredential())
+            ->with('gmaps', ($mapsConfig instanceof APICredential) ? $mapsConfig->Configuration : null)
             ->with('orgConfig', ($org instanceof APICredential) ? $org->Configuration : new APICredential());
     }
 }
