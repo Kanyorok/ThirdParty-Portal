@@ -33,7 +33,6 @@ type LocalErrors = {
   confirmNewPassword?: string
 }
 
-const inputClassName = "h-11 rounded-xl bg-background px-4 shadow-none focus-visible:ring-2 focus-visible:ring-ring/40"
 const PASSWORD_MESSAGE_MAP: Record<string, string> = {
   "auth.password_changed_ok": "Password changed successfully.",
 }
@@ -176,12 +175,12 @@ export default function ChangePasswordCard() {
 
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="h-11 rounded-xl text-xs font-medium shadow-none">
+            <Button variant="outline" size="sm" className="text-xs font-medium">
               Change password
             </Button>
           </DialogTrigger>
 
-          <DialogContent className="sm:max-w-[440px] max-h-[85vh] overflow-y-auto bg-popover border-border/60 shadow-none">
+          <DialogContent className="sm:max-w-[440px] max-h-[85vh] overflow-y-auto bg-popover border-border/60">
             <DialogHeader>
               <DialogTitle>Change Password</DialogTitle>
               <DialogDescription>
@@ -204,7 +203,6 @@ export default function ChangePasswordCard() {
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className={inputClassName}
                 />
                 {localErrors.currentPassword ? <p className="text-xs text-destructive">{localErrors.currentPassword}</p> : null}
               </div>
@@ -216,7 +214,6 @@ export default function ChangePasswordCard() {
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className={inputClassName}
                 />
                 {localErrors.newPassword ? <p className="text-xs text-destructive">{localErrors.newPassword}</p> : null}
               </div>
@@ -228,7 +225,6 @@ export default function ChangePasswordCard() {
                   type="password"
                   value={confirmNewPassword}
                   onChange={(e) => setConfirmNewPassword(e.target.value)}
-                  className={inputClassName}
                 />
                 {localErrors.confirmNewPassword ? (
                   <p className="text-xs text-destructive">{localErrors.confirmNewPassword}</p>
@@ -238,7 +234,7 @@ export default function ChangePasswordCard() {
 
             <DialogFooter>
               <DialogClose asChild>
-                <Button type="button" variant="outline" disabled={isSubmitting} className="h-11 rounded-xl text-xs font-medium shadow-none">
+                <Button type="button" variant="outline" size="sm" disabled={isSubmitting} className="text-xs font-medium">
                   <X className="mr-2 h-4 w-4" /> Cancel
                 </Button>
               </DialogClose>
@@ -246,7 +242,8 @@ export default function ChangePasswordCard() {
               <Button
                 onClick={onSubmit}
                 disabled={isSubmitting}
-                className="h-11 rounded-xl text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                size="sm"
+                className="text-xs font-medium"
               >
                 {isSubmitting ? <Spinner className="mr-2 h-4 w-4" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
                 Save

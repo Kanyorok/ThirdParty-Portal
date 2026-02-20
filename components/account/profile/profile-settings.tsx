@@ -168,7 +168,8 @@ export default function ProfileSettings() {
 
             <div className="flex flex-wrap items-center gap-2">
               <Button
-                className="h-10 rounded-xl text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground"
+                size="sm"
+                className="text-xs font-medium"
                 onClick={() => {
                   setActiveTab("party")
                   setIsEditing(true)

@@ -39,11 +39,9 @@ export default function PortalsCard({ profile, onSwitchTo }: PortalsCardProps) {
                 type="button"
                 disabled={!enabled}
                 onClick={() => onSwitchTo(key)}
-                className={
-                  enabled
-                    ? "ml-auto h-9 px-4 rounded-xl text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
-                    : "ml-auto h-9 px-4 rounded-xl text-xs font-medium bg-muted text-muted-foreground shadow-none"
-                }
+                variant={enabled ? "default" : "secondary"}
+                size="sm"
+                className="ml-auto text-xs font-medium"
               >
                 Switch
               </Button>

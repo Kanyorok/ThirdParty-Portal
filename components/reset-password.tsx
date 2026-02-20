@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/common/alert"
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, Shield, Loader2, Check, X } from "lucide-react"
 import { ContactSection } from "@/components/signin/contact-section"
 import { resetPassword, validateResetToken } from "@/actions/auth-actions"
+import { cn } from "@/lib/utils"
 
 const resetPasswordSchema = z
     .object({
@@ -123,15 +124,15 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
 
     if (state.type === "success") {
         return (
-            <div className="w-full max-w-md mx-auto space-y-6">
+            <div className="mx-auto w-full max-w-md space-y-6">
                 <div className="text-center space-y-4">
-                    <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                        <CheckCircle className="w-8 h-8 text-green-600" />
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-emerald-500/25 bg-emerald-500/10">
+                        <CheckCircle className="h-8 w-8 text-emerald-600" />
                     </div>
-                    <h2 className="text-2xl font-semibold">Password reset successful!</h2>
-                    <p className="text-gray-600 text-sm">You can now sign in with your new password.</p>
+                    <h2 className="text-3xl font-semibold tracking-tight text-foreground">Password reset successful</h2>
+                    <p className="text-sm text-muted-foreground">You can now sign in with your new password.</p>
                 </div>
-                <Button onClick={() => router.push("/signin")} className="w-full">
+                <Button onClick={() => router.push("/signin")} className="h-12 w-full">
                     <Shield className="w-4 h-4 mr-2" />
                     Continue to sign in
                 </Button>
@@ -142,52 +143,53 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
 
     if (tokenValid === false) {
         return (
-            <div className="w-full max-w-md mx-auto space-y-6 text-center">
-                <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-                    <AlertCircle className="w-8 h-8 text-red-600" />
+            <div className="mx-auto w-full max-w-md space-y-6 text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-rose-500/25 bg-rose-500/10">
+                    <AlertCircle className="h-8 w-8 text-rose-600" />
                 </div>
-                <h2 className="text-2xl font-semibold">Invalid or expired link</h2>
-                <Button onClick={() => router.push("/forgot-password")} className="w-full">Request new link</Button>
+                <h2 className="text-3xl font-semibold tracking-tight text-foreground">Invalid or expired link</h2>
+                <p className="text-sm text-muted-foreground">{state.message || "Request a new link to continue."}</p>
+                <Button onClick={() => router.push("/forgot-password")} className="h-12 w-full">Request new link</Button>
                 <ContactSection />
             </div>
         )
     }
 
-    if (tokenValid === null) return <div className="text-center py-12"><Loader2 className="animate-spin mx-auto" /></div>
+    if (tokenValid === null) return <div className="py-12 text-center"><Loader2 className="mx-auto animate-spin text-primary" /></div>
 
     return (
-        <div className="w-full max-w-md mx-auto space-y-6">
+        <div className="mx-auto w-full max-w-md space-y-7">
             <div className="text-center space-y-2">
-                <h2 className="text-2xl font-semibold">Create new password</h2>
-                <p className="text-gray-600 text-sm">Choose a strong password to secure your account.</p>
+                <h2 className="text-3xl font-semibold tracking-tight text-foreground">Create new password</h2>
+                <p className="text-sm text-muted-foreground">Choose a strong password to secure your account.</p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <div className="space-y-2">
-                    <Label htmlFor="password">New password</Label>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                <div className="space-y-1.5">
+                    <Label htmlFor="password" className="text-[11px] font-semibold tracking-wide text-slate-600">New password</Label>
                     <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Lock className={cn("pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2", errors.password ? "text-rose-500" : "text-muted-foreground")} />
                         <Input
                             id="password"
                             type={showPassword ? "text" : "password"}
-                            className="pl-10 pr-10"
+                            className={cn("h-12 bg-background/95 pl-10 pr-10", errors.password && "border-rose-400 focus-visible:border-rose-500 focus-visible:ring-rose-200")}
                             {...register("password")}
                             disabled={isPending}
                         />
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2">
-                            {showPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground" aria-label={showPassword ? "Hide password" : "Show password"}>
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                     </div>
                     {watchedPassword && (
-                        <div className="p-3 bg-gray-50 rounded-lg border space-y-2">
+                        <div className="space-y-2 rounded-xl border border-border/70 bg-secondary/60 p-3">
                             <div className="flex gap-1">
                                 {[1, 2, 3, 4].map(i => (
-                                    <div key={i} className={`h-1.5 flex-1 rounded-full ${strengthData.score >= i ? 'bg-blue-500' : 'bg-gray-200'}`} />
+                                    <div key={i} className={cn("h-1.5 flex-1 rounded-full", strengthData.score >= i ? "bg-primary" : "bg-border")} />
                                 ))}
                             </div>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                                 {strengthData.reqs.map((r, i) => (
-                                    <div key={i} className={`text-xs flex items-center gap-1 ${r.test ? "text-green-600" : "text-gray-400"}`}>
+                                    <div key={i} className={cn("flex items-center gap-1 text-xs", r.test ? "text-emerald-600 dark:text-emerald-300" : "text-muted-foreground")}>
                                         {r.test ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />} {r.label}
                                     </div>
                                 ))}
@@ -195,37 +197,37 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
                         </div>
                     )}
                     {errors.password && (
-                        <p className="text-red-600 text-xs">{errors.password.message}</p>
+                        <p className="text-xs font-medium text-rose-600">{errors.password.message}</p>
                     )}
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm password</Label>
+                <div className="space-y-1.5">
+                    <Label htmlFor="confirmPassword" className="text-[11px] font-semibold tracking-wide text-slate-600">Confirm password</Label>
                     <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Lock className={cn("pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2", errors.confirmPassword ? "text-rose-500" : "text-muted-foreground")} />
                         <Input
                             id="confirmPassword"
                             type={showConfirmPassword ? "text" : "password"}
-                            className="pl-10 pr-10"
+                            className={cn("h-12 bg-background/95 pl-10 pr-10", errors.confirmPassword && "border-rose-400 focus-visible:border-rose-500 focus-visible:ring-rose-200")}
                             {...register("confirmPassword")}
                             disabled={isPending}
                         />
-                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2">
-                            {showConfirmPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
+                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground" aria-label={showConfirmPassword ? "Hide password" : "Show password"}>
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                     </div>
                     {watchedConfirmPassword && watchedConfirmPassword === watchedPassword && (
-                        <p className="text-green-600 text-xs flex items-center gap-1"><Check className="h-3 w-3" /> Passwords match</p>
+                        <p className="flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-300"><Check className="h-3 w-3" /> Passwords match</p>
                     )}
                     {errors.confirmPassword && (
-                        <p className="text-red-600 text-xs">{errors.confirmPassword.message}</p>
+                        <p className="text-xs font-medium text-rose-600">{errors.confirmPassword.message}</p>
                     )}
                 </div>
 
                 {state.type === "error" && <Alert variant="destructive"><AlertDescription>{state.message}</AlertDescription></Alert>}
 
-                <Button type="submit" className="w-full" disabled={isPending || !isValid}>
-                    {isPending ? <Loader2 className="animate-spin mr-2" /> : <Shield className="mr-2" />} Update password
+                <Button type="submit" className="h-12 w-full rounded-xl text-sm font-semibold" disabled={isPending || !isValid}>
+                    {isPending ? <Loader2 className="mr-2 animate-spin" /> : <Shield className="mr-2 h-4 w-4" />} Update password
                 </Button>
             </form>
             <ContactSection />

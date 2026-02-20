@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { AlertCircle, BadgeCheck, Clock, Hash, Layers } from "lucide-react"
 
 import Loading from "@/components/common/custom-loader"
+import { Button } from "@/components/common/button"
 import { getSupplierProfile } from "@/lib/api/profile-management"
 
 type SupplierProfilePanelProps = {
@@ -52,14 +53,9 @@ export default function SupplierProfilePanel({ enabled }: SupplierProfilePanelPr
             <AlertCircle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
             <span>{(error as any)?.message || "Please try again."}</span>
           </div>
-          <button
-            type="button"
-            onClick={() => refetch()}
-            className="h-10 px-4 rounded-xl text-xs font-semibold border border-border/60 hover:bg-muted/40"
-            disabled={isFetching}
-          >
+          <Button type="button" variant="outline" size="sm" className="text-xs font-semibold" onClick={() => refetch()} disabled={isFetching}>
             Retry
-          </button>
+          </Button>
         </div>
       </section>
     )

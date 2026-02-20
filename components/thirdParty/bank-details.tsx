@@ -264,7 +264,7 @@ export default function BankDetailsForm() {
                                         <FormItem>
                                             <FormLabel className="text-xs">Bank Name</FormLabel>
                                             <FormControl>
-                                                <Input className="h-9 text-sm" placeholder="e.g., KCB" {...field} />
+                                                <Input placeholder="e.g., KCB" {...field} />
                                             </FormControl>
                                             <FormMessage className="text-xs" />
                                         </FormItem>
@@ -274,7 +274,7 @@ export default function BankDetailsForm() {
                                         <FormItem>
                                             <FormLabel className="text-xs">Branch</FormLabel>
                                             <FormControl>
-                                                <Input className="h-9 text-sm" placeholder="e.g., Main Branch" {...field} />
+                                                <Input placeholder="e.g., Main Branch" {...field} />
                                             </FormControl>
                                             <FormMessage className="text-xs" />
                                         </FormItem>
@@ -284,7 +284,7 @@ export default function BankDetailsForm() {
                                         <FormItem>
                                             <FormLabel className="text-xs">Account Number</FormLabel>
                                             <FormControl>
-                                                <Input className="h-9 text-sm font-mono" placeholder="1234567890" {...field} />
+                                                <Input className="font-mono" placeholder="1234567890" {...field} />
                                             </FormControl>
                                             <FormMessage className="text-xs" />
                                         </FormItem>
@@ -295,7 +295,7 @@ export default function BankDetailsForm() {
                                             <FormLabel className="text-xs">Currency</FormLabel>
                                             <Select value={String(field.value)} onValueChange={(v) => field.onChange(parseInt(v))}>
                                                 <FormControl>
-                                                    <SelectTrigger className="h-9 text-sm">
+                                                    <SelectTrigger className="w-full">
                                                         <SelectValue placeholder="Select" />
                                                     </SelectTrigger>
                                                 </FormControl>
@@ -318,7 +318,7 @@ export default function BankDetailsForm() {
                                         <FormItem className="md:col-span-2">
                                             <FormLabel className="text-xs">SWIFT Code</FormLabel>
                                             <FormControl>
-                                                <Input className="h-9 text-sm font-mono uppercase" placeholder="ABCDEFXX" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value.toUpperCase())} />
+                                                <Input className="font-mono uppercase" placeholder="ABCDEFXX" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value.toUpperCase())} />
                                             </FormControl>
                                             <FormMessage className="text-xs" />
                                         </FormItem>

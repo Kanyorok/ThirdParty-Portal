@@ -69,7 +69,7 @@ function resolveNotificationState(profile?: ThirdPartyProfile): NotificationStat
 
 function PreferenceSkeleton() {
     return (
-        <Card className="rounded-2xl border border-border/60 bg-card shadow-none py-0 gap-0">
+        <Card className="py-0 gap-0">
             <CardHeader className="border-b border-border/60 py-5">
                 <Skeleton className="h-5 w-44" />
                 <Skeleton className="h-4 w-72" />
@@ -173,13 +173,13 @@ export default function NotificationSettingsPage() {
                     </div>
                 </div>
                 <Separator />
-                <Card className="rounded-2xl border border-destructive/20 bg-card shadow-none">
+                <Card className="border-destructive/20">
                     <CardContent className="p-6 space-y-4">
                         <div className="flex items-start gap-3 rounded-xl bg-destructive/5 p-4 text-sm text-destructive">
                             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                             <span>{errorMessage}</span>
                         </div>
-                        <Button onClick={handleRetry} variant="outline" className="h-10 rounded-xl border-border/60 shadow-none">
+                        <Button onClick={handleRetry} variant="outline" size="sm">
                             <RefreshCcw className="mr-2 h-4 w-4" />
                             Retry
                         </Button>
@@ -203,7 +203,7 @@ export default function NotificationSettingsPage() {
 
             <Separator />
 
-            <Card className="rounded-2xl border border-border/60 bg-card shadow-none py-0 gap-0">
+            <Card className="py-0 gap-0">
                 <CardHeader className="border-b border-border/60 py-5">
                     <CardTitle className="text-base">Delivery Preferences</CardTitle>
                     <CardDescription>Choose channels used for alerts and periodic account updates.</CardDescription>
@@ -273,15 +273,10 @@ export default function NotificationSettingsPage() {
                         Priority actions and alerts in the bell menu are sourced from backend notifications.
                     </p>
                     <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-                        <Button
-                            variant="outline"
-                            className="h-10 rounded-xl border-border/60 bg-background shadow-none"
-                            onClick={handleReset}
-                            disabled={!hasUnsavedChanges || isSaving}
-                        >
+                        <Button variant="outline" size="sm" onClick={handleReset} disabled={!hasUnsavedChanges || isSaving}>
                             Reset
                         </Button>
-                        <Button className="h-10 rounded-xl shadow-none" onClick={handleSave} disabled={!hasUnsavedChanges || isSaving}>
+                        <Button size="sm" onClick={handleSave} disabled={!hasUnsavedChanges || isSaving}>
                             {isSaving ? <Spinner className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                             Save changes
                         </Button>
@@ -289,7 +284,7 @@ export default function NotificationSettingsPage() {
                 </CardFooter>
             </Card>
 
-            <Card className="rounded-2xl border border-border/60 bg-card shadow-none">
+            <Card>
                 <CardContent className="p-6 space-y-4">
                     <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/20 p-4">
                         <Bell className="mt-0.5 h-4 w-4 text-primary" />
@@ -298,10 +293,10 @@ export default function NotificationSettingsPage() {
                         </p>
                     </div>
                     <div className="flex flex-col gap-2 sm:flex-row">
-                        <Button asChild className="h-11 rounded-xl shadow-none">
+                        <Button asChild size="lg">
                             <Link href="/dashboard/notifications">Open notifications</Link>
                         </Button>
-                        <Button asChild variant="outline" className="h-11 rounded-xl border-border/60 bg-background shadow-none">
+                        <Button asChild variant="outline" size="lg">
                             <Link href="/dashboard/settings/profile">Open profile settings</Link>
                         </Button>
                     </div>

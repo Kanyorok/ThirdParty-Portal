@@ -17,8 +17,6 @@ type AccountOwnerCardProps = {
   isSavingContact?: boolean
 }
 
-const inputClassName = "h-10 rounded-xl bg-background px-3 text-sm shadow-none focus-visible:ring-2 focus-visible:ring-ring/40"
-
 export default function AccountOwnerCard({
   profile,
   imageUrl,
@@ -157,7 +155,7 @@ export default function AccountOwnerCard({
               aria-label="Update profile image"
               className="group/image rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
             >
-              <Avatar className="h-14 w-14 rounded-2xl border border-border/60 bg-card shadow-sm transition-colors group-hover/image:border-primary/40">
+              <Avatar className="h-14 w-14 rounded-2xl border border-border/60 bg-card transition-colors group-hover/image:border-primary/40">
                 {avatarSrc ? <AvatarImage src={avatarSrc} alt={`${ownerName} avatar`} className="object-cover" /> : null}
                 <AvatarFallback className="rounded-2xl bg-muted text-muted-foreground font-semibold">
                   {ownerInitials}
@@ -165,7 +163,7 @@ export default function AccountOwnerCard({
               </Avatar>
             </button>
           ) : (
-            <Avatar className="h-14 w-14 rounded-2xl border border-border/60 bg-card shadow-sm">
+            <Avatar className="h-14 w-14 rounded-2xl border border-border/60 bg-card">
               {avatarSrc ? <AvatarImage src={avatarSrc} alt={`${ownerName} avatar`} className="object-cover" /> : null}
               <AvatarFallback className="rounded-2xl bg-muted text-muted-foreground font-semibold">
                 {ownerInitials}
@@ -206,7 +204,7 @@ export default function AccountOwnerCard({
                     type="email"
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
-                    className={inputClassName}
+                    className="h-10"
                     placeholder="you@company.com"
                     disabled={isSavingContact}
                   />
@@ -218,7 +216,7 @@ export default function AccountOwnerCard({
                   <Input
                     value={phoneInput}
                     onChange={(e) => setPhoneInput(e.target.value)}
-                    className={inputClassName}
+                    className="h-10"
                     placeholder="+254700000000"
                     disabled={isSavingContact}
                   />
@@ -234,7 +232,8 @@ export default function AccountOwnerCard({
             <Button
               type="button"
               variant="outline"
-              className="h-9 rounded-xl text-xs font-medium shadow-none"
+              size="sm"
+              className="text-xs font-medium"
               onClick={handleStartEditContact}
               disabled={!onUpdateContact || isSavingContact}
             >
@@ -246,7 +245,8 @@ export default function AccountOwnerCard({
               <Button
                 type="button"
                 variant="outline"
-                className="h-9 rounded-xl text-xs font-medium shadow-none"
+                size="sm"
+                className="text-xs font-medium"
                 onClick={handleCancelEditContact}
                 disabled={isSavingContact}
               >
@@ -255,7 +255,8 @@ export default function AccountOwnerCard({
               </Button>
               <Button
                 type="button"
-                className="h-9 rounded-xl text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                size="sm"
+                className="text-xs font-medium"
                 onClick={handleSaveContact}
                 disabled={isSavingContact}
               >
@@ -292,7 +293,8 @@ export default function AccountOwnerCard({
           <CollapsibleTrigger asChild>
             <Button
               variant="ghost"
-              className="mt-4 h-9 w-full justify-between rounded-xl px-3 text-xs font-medium text-muted-foreground hover:bg-muted"
+              size="sm"
+              className="mt-4 w-full justify-between px-3 text-xs font-medium text-muted-foreground hover:bg-muted"
             >
               Details
               <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />

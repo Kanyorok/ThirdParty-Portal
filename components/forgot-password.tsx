@@ -14,6 +14,7 @@ import { Label } from "@/components/common/label"
 import { Alert, AlertDescription } from "@/components/common/alert"
 import { ContactSection } from "@/components/signin/contact-section"
 import { requestPasswordReset, type AuthResult } from "@/actions/auth-actions"
+import { cn } from "@/lib/utils"
 
 const forgotPasswordSchema = z.object({
     email: z.string().email("Please enter a valid email address"),
@@ -99,24 +100,24 @@ export function ForgotPasswordForm() {
             <div className="w-full max-w-md mx-auto">
                 <div className="space-y-6">
                     <div className="text-center space-y-4">
-                        <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                            <CheckCircle className="w-8 h-8 text-green-600" />
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-emerald-500/25 bg-emerald-500/10">
+                            <CheckCircle className="h-8 w-8 text-emerald-600" />
                         </div>
                         <div className="space-y-2">
-                            <h2 className="text-2xl font-semibold text-gray-900">Check your email</h2>
-                            <p className="text-gray-600 text-sm leading-relaxed">
+                            <h2 className="text-3xl font-semibold tracking-tight text-foreground">Check your email</h2>
+                            <p className="text-sm leading-relaxed text-muted-foreground">
                                 {state.message || "We've sent password reset instructions to"}{" "}
-                                <span className="font-medium text-gray-900">{state.email}</span>
+                                <span className="font-semibold text-foreground">{state.email}</span>
                             </p>
                         </div>
                     </div>
 
-                    <Alert className="border-blue-200 bg-blue-50">
-                        <Mail className="h-4 w-4 text-blue-600" />
-                        <AlertDescription className="text-blue-800">
+                    <Alert className="border-primary/20 bg-primary/5">
+                        <Mail className="h-4 w-4 text-primary" />
+                        <AlertDescription className="text-foreground">
                             <div className="space-y-2">
-                                <p className="font-medium">What's next?</p>
-                                <ul className="text-sm space-y-1 ml-4">
+                                <p className="text-sm font-semibold">What's next?</p>
+                                <ul className="ml-4 space-y-1 text-sm text-muted-foreground">
                                     <li>• Check your email inbox (and spam folder)</li>
                                     <li>• Click the reset link within 15 minutes</li>
                                     <li>• Create a new secure password</li>
@@ -126,7 +127,7 @@ export function ForgotPasswordForm() {
                     </Alert>
 
                     <div className="space-y-4">
-                        <Button onClick={onResend} variant="outline" className="w-full" disabled={isSubmitting || isResending}>
+                        <Button onClick={onResend} variant="outline" className="h-12 w-full rounded-xl text-sm font-semibold" disabled={isSubmitting || isResending}>
                             {isResending ? (
                                 <>
                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -139,7 +140,7 @@ export function ForgotPasswordForm() {
                                 </>
                             )}
                         </Button>
-                        <Button onClick={() => router.push("/signin")} variant="ghost" className="w-full">
+                        <Button onClick={() => router.push("/signin")} variant="ghost" className="h-12 w-full rounded-xl text-sm font-semibold">
                             <ArrowLeft className="w-4 h-4 mr-2" />
                             Back to sign in
                         </Button>
@@ -152,30 +153,30 @@ export function ForgotPasswordForm() {
 
     return (
         <div className="w-full max-w-md mx-auto">
-            <div className="space-y-6">
-                <div className="text-center space-y-2">
-                    <h2 className="text-2xl font-semibold text-gray-900">Forgot your password?</h2>
-                    <p className="text-gray-600 text-sm leading-relaxed">
+            <div className="space-y-7">
+                <div className="space-y-2 text-center">
+                    <h2 className="text-3xl font-semibold tracking-tight text-foreground">Forgot your password?</h2>
+                    <p className="text-sm leading-relaxed text-muted-foreground">
                         No worries! Enter your email address and we'll send you instructions to reset your password.
                     </p>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email address</Label>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="email" className="text-[11px] font-semibold tracking-wide text-slate-600">Email address</Label>
                         <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Mail className={cn("pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2", errors.email ? "text-rose-500" : "text-muted-foreground")} />
                             <Input
                                 id="email"
                                 type="email"
-                                placeholder="Enter your email address"
-                                className={`pl-10 ${errors.email ? "border-red-300 bg-red-50" : "border-gray-200"}`}
+                                placeholder="name@company.com"
+                                className={cn("h-12 bg-background/95 pl-10", errors.email && "border-rose-400 focus-visible:border-rose-500 focus-visible:ring-rose-200")}
                                 {...register("email")}
                                 disabled={isSubmitting}
                             />
                         </div>
                         {errors.email && (
-                            <p className="text-red-600 text-sm flex items-center gap-1">
+                            <p className="flex items-center gap-1 text-xs font-medium text-rose-600">
                                 <AlertCircle className="h-3 w-3" />
                                 {errors.email.message}
                             </p>
@@ -190,13 +191,13 @@ export function ForgotPasswordForm() {
                     )}
 
                     {state.type === "rate_limited" && (
-                        <Alert className="border-amber-200 bg-amber-50">
-                            <Clock className="h-4 w-4 text-amber-600" />
-                            <AlertDescription className="text-amber-800">{state.message}</AlertDescription>
+                        <Alert className="border-amber-500/25 bg-amber-500/10 text-amber-800 dark:text-amber-200">
+                            <Clock className="h-4 w-4 text-amber-600 dark:text-amber-200" />
+                            <AlertDescription className="text-amber-800 dark:text-amber-200">{state.message}</AlertDescription>
                         </Alert>
                     )}
 
-                    <Button type="submit" className="w-full" disabled={isSubmitting || !isValid || !watchedEmail?.trim()}>
+                    <Button type="submit" className="h-12 w-full rounded-xl text-sm font-semibold" disabled={isSubmitting || !isValid || !watchedEmail?.trim()}>
                         {isSubmitting ? (
                             <>
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -211,18 +212,18 @@ export function ForgotPasswordForm() {
                     </Button>
 
                     <div className="text-center">
-                        <Link href="/signin" className="text-sm text-gray-600 hover:text-gray-900 hover:underline inline-flex items-center gap-1">
+                        <Link href="/signin" className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground hover:underline">
                             <ArrowLeft className="w-3 h-3" />
                             Back to sign in
                         </Link>
                     </div>
                 </form>
 
-                <Alert className="border-gray-200 bg-gray-50">
-                    <Shield className="h-4 w-4 text-gray-600" />
-                    <AlertDescription className="text-gray-700">
+                <Alert className="border-border/70 bg-secondary/55">
+                    <Shield className="h-4 w-4 text-muted-foreground" />
+                    <AlertDescription className="text-muted-foreground">
                         <div className="space-y-1">
-                            <p className="font-medium text-sm">Security Notice</p>
+                            <p className="text-sm font-semibold text-foreground">Security notice</p>
                             <p className="text-xs">
                                 For security reasons, we'll send reset instructions regardless of whether the email exists. Links expire after 15 minutes.
                             </p>

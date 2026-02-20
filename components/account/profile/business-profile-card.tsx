@@ -27,7 +27,6 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>
 
-const inputClassName = "h-11 rounded-xl bg-background px-4 shadow-none focus-visible:ring-2 focus-visible:ring-ring/40"
 const BUSINESS_FORM_ID = "business-profile-form"
 
 type BusinessProfileCardProps = {
@@ -132,7 +131,8 @@ export default function BusinessProfileCard({
               <Button
                 type="button"
                 variant="outline"
-                className="h-9 rounded-xl text-xs font-medium shadow-none"
+                size="sm"
+                className="text-xs font-medium"
                 disabled={isUpdating}
                 onClick={handleCancelEdit}
               >
@@ -141,7 +141,8 @@ export default function BusinessProfileCard({
               <Button
                 type="submit"
                 form={BUSINESS_FORM_ID}
-                className="h-9 rounded-xl text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                size="sm"
+                className="text-xs font-medium"
                 disabled={isUpdating}
               >
                 {isUpdating ? <Spinner className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
@@ -152,7 +153,8 @@ export default function BusinessProfileCard({
             <Button
               type="button"
               variant="outline"
-              className="h-9 rounded-xl text-xs font-medium shadow-none"
+              size="sm"
+              className="text-xs font-medium"
               disabled={isUpdating}
               onClick={() => setIsEditing(true)}
             >
@@ -207,7 +209,8 @@ export default function BusinessProfileCard({
                     <Button
                       type="button"
                       variant="ghost"
-                      className="h-9 w-full justify-between rounded-xl px-3 text-xs font-medium text-muted-foreground hover:bg-muted"
+                      size="sm"
+                      className="w-full justify-between px-3 text-xs font-medium text-muted-foreground hover:bg-muted"
                     >
                       Business details
                       <ChevronDown className={cn("h-4 w-4 transition-transform", isMetaOpen && "rotate-180")} />
@@ -266,7 +269,7 @@ export default function BusinessProfileCard({
                     <FormItem className="md:col-span-2">
                       <FormLabel className="text-xs font-semibold text-foreground">Legal name</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} className={inputClassName} placeholder="Company legal name" />
+                        <Input {...field} value={field.value || ""} placeholder="Company legal name" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
@@ -280,7 +283,7 @@ export default function BusinessProfileCard({
                     <FormItem>
                       <FormLabel className="text-xs font-semibold text-foreground">Trading name</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} className={inputClassName} placeholder="Brand / trading name" />
+                        <Input {...field} value={field.value || ""} placeholder="Brand / trading name" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
@@ -294,7 +297,7 @@ export default function BusinessProfileCard({
                     <FormItem>
                       <FormLabel className="text-xs font-semibold text-foreground">Registration number</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} className={cn(inputClassName, "font-mono")} placeholder="e.g. C123456" />
+                        <Input {...field} value={field.value || ""} className="font-mono" placeholder="e.g. C123456" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
@@ -308,7 +311,7 @@ export default function BusinessProfileCard({
                     <FormItem>
                       <FormLabel className="text-xs font-semibold text-foreground">Tax PIN</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} className={cn(inputClassName, "font-mono")} placeholder="e.g. P123456789A" />
+                        <Input {...field} value={field.value || ""} className="font-mono" placeholder="e.g. P123456789A" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
@@ -322,7 +325,7 @@ export default function BusinessProfileCard({
                     <FormItem className="md:col-span-2">
                       <FormLabel className="text-xs font-semibold text-foreground">Website</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} className={inputClassName} placeholder="https://example.com" />
+                        <Input {...field} value={field.value || ""} placeholder="https://example.com" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
@@ -336,7 +339,7 @@ export default function BusinessProfileCard({
                     <FormItem className="md:col-span-2">
                       <FormLabel className="text-xs font-semibold text-foreground">Address</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} className={inputClassName} placeholder="Street, City, Country" />
+                        <Input {...field} value={field.value || ""} placeholder="Street, City, Country" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
@@ -350,7 +353,7 @@ export default function BusinessProfileCard({
                     <FormItem>
                       <FormLabel className="text-xs font-semibold text-foreground">Company email</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} type="email" className={inputClassName} placeholder="info@company.com" />
+                        <Input {...field} value={field.value || ""} type="email" placeholder="info@company.com" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
@@ -364,7 +367,7 @@ export default function BusinessProfileCard({
                     <FormItem>
                       <FormLabel className="text-xs font-semibold text-foreground">Company phone</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} className={inputClassName} placeholder="+254700000000" />
+                        <Input {...field} value={field.value || ""} placeholder="+254700000000" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>

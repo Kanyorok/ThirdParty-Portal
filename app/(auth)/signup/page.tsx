@@ -9,23 +9,23 @@ export const metadata: Metadata = {
 
 export default function RegisterPage() {
   return (
-    <main className="min-h-screen bg-white flex flex-col items-center justify-center py-12">
-      <div className="w-full max-w-2xl px-6">
-        <div className="border border-slate-100 bg-white mb-8">
-          <div className="p-8 sm:p-16">
-            <RegisterForm />
-            <div className="flex items-center justify-center gap-3">
-              <span className="text-sm text-slate-400 font-medium tracking-tight">
-                Already have an account?
-              </span>
-              <Link
-                href="/signin"
-                className="text-sm font-bold text-slate-900 border-b-2 border-slate-900 pb-0.5 hover:text-slate-500 hover:border-slate-500 transition-all"
-              >
-                Sign In
-              </Link>
-            </div>
-          </div>
+    <main className="min-h-screen bg-[linear-gradient(180deg,#eef5ff_0%,#f9fbff_42%,#ffffff_100%)] py-12">
+      <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-10 text-center">
+          <h1 className="text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">Create your account</h1>
+          <p className="mt-3 text-sm font-medium text-slate-500">Verify your email to activate access.</p>
+        </div>
+        <RegisterForm />
+        <div className="mt-8 flex items-center justify-center gap-2 pt-2">
+          <span className="text-sm text-slate-500">
+            Already have an account?
+          </span>
+          <Link
+            href="/signin"
+            className="text-sm font-semibold text-[#0e63f4] transition-colors hover:text-[#0a54d1]"
+          >
+            Sign In
+          </Link>
         </div>
       </div>
     </main>
