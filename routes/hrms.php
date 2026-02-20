@@ -127,6 +127,7 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     // HR Config — Job Grades & Roles
     Route::resource('config/job-grades', JobGradeController::class)->names('config.jobgrades')->except(['show']);
     Route::resource('config/job-roles', JobRoleController::class)->names('config.jobroles')->except(['show']);
+    Route::post('config/job-roles/{id}/activate', [JobRoleController::class, 'activate'])->name('config.jobroles.activate');
     Route::resource('config/religions', ReligionController::class)->names('config.religions')->except(['show']);
 
     // HR Config — KPI setup (stubs)
@@ -171,6 +172,7 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     Route::resource('statutory/allowances', PayrollAllowanceController::class)->names('statutory.allowances')->except(['show']);
     Route::resource('statutory/allowances/{allowance}/rules', PayrollAllowanceRuleController::class)->names('statutory.allowances.rules')->except(['show']);
     Route::resource('statutory/reliefs', \App\Http\Controllers\HR\StatutoryReliefController::class)->names('statutory.reliefs')->except(['show']);
+    Route::post('statutory/reliefs/{id}/activate', [\App\Http\Controllers\HR\StatutoryReliefController::class, 'activate'])->name('statutory.reliefs.activate');
 
     // Exit Management Config
     Route::resource('config/exit-types', ExitTypeController::class)->names('config.exit-types')->except(['show', 'destroy']);
