@@ -9,7 +9,6 @@ use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Log;
 
 class RFQ extends Model
 {
@@ -22,8 +21,6 @@ class RFQ extends Model
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
     public const DELETED_AT = 'DeletedOn';
-
-
 
     /**
      * Get the primary key for workflow purposes

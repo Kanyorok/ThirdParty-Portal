@@ -11,7 +11,6 @@ use App\Models\CRM\DebtRecovery\LoanAssignment;
 use App\Models\CRM\Ticket;
 use App\Models\HR\Employee;
 use App\Services\HR\UserService;
-use App\Models\Auth\Team;
 use App\Traits\Controller\HasBranchRoles;
 use App\Traits\Model\ImageTrait;
 use App\Traits\Model\UserActorTrait;
@@ -81,7 +80,6 @@ class User extends Authenticatable
 
     protected ?Role $effectiveRole = null;
 
-
     public function getRoleNames(): Collection
     {
         $branchId = session('LoginBranchId');
@@ -105,7 +103,6 @@ class User extends Authenticatable
         return collect($roles)->intersect($roleNames)->isNotEmpty();
     }
 
-    
     public function getPermissionsViaRoles(): Collection
     {
         $branchId = session('LoginBranchId');
@@ -128,14 +125,13 @@ class User extends Authenticatable
         return $this->getPermissionsViaRoles()->contains('name', $permission);
     }
 
-    
     public function syncRolesWithBranch(array|Collection $roles, int $branchId, int $actorId = 1): void
     {
         // Hard-delete old roles for this user + branch first to start clean
         ModelRole::withTrashed()->where([
-            'model_id'   => $this->Id,
+            'model_id' => $this->Id,
             'model_type' => self::getPrimaryKey(),
-            'BranchId'   => $branchId,
+            'BranchId' => $branchId,
         ])->forceDelete();
 
         foreach ($roles as $role) {
@@ -146,11 +142,11 @@ class User extends Authenticatable
                 : Role::where('name', $role)->firstOrFail();
 
             ModelRole::create([
-                'model_id'   => $this->Id,
+                'model_id' => $this->Id,
                 'model_type' => self::getPrimaryKey(),
-                'BranchId'   => $branchId,
-                'role_id'    => $roleModel->id,
-                'CreatedOn'  => now(),
+                'BranchId' => $branchId,
+                'role_id' => $roleModel->id,
+                'CreatedOn' => now(),
                 'ModifiedOn' => now(),
             ]);
         }

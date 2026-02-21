@@ -105,46 +105,24 @@ class RequisitionsController extends Controller
             $procurementPlans = $this->service->fetchProcurementPlan();
 
             return view('procurement.requisitions.create', [
-                'details'          => $details ?? [],
-                'branchId'         => $branchId,
-                'departmentId'     => $departmentId,
-                'departmentName'   => $departmentName,
+                'details' => $details ?? [],
+                'branchId' => $branchId,
+                'departmentId' => $departmentId,
+                'departmentName' => $departmentName,
                 'procurementPlans' => $procurementPlans ?? [],
             ]);
         } catch (\Exception $e) {
             Log::error('Requisition create failed: ' . $e->getMessage());
 
             return view('procurement.requisitions.create', [
-                'details'          => [],
-                'branchId'         => null,
-                'departmentId'     => null,
+                'details' => [],
+                'branchId' => null,
+                'departmentId' => null,
                 'procurementPlans' => [],
             ])->with('error', 'An error occurred: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * Idempotency strategy
-     * ─────────────────────────────────────────────────────────────────────────
-     * 1. The client sends a unique `Idempotency-Key` header per *intended*
-     *    request (e.g. a UUID generated in the browser before the form submit).
-     *    If no header is present we fall back to a hash of the validated
-     *    payload — good enough for simple UIs that don't support headers.
-     *
-     * 2. First call   → acquire lock → run → cache success result → release
-     *                   lock → return result.
-     *
-     * 3. Duplicate    → cached result found → return it immediately (same
-     *    (success)       HTTP 200, same body, no DB write).
-     *
-     * 4. In-flight    → lock is held by another process → return HTTP 409 so
-     *                   the client knows to wait briefly and retry.
-     *
-     * 5. Failed call  → result is NOT cached → next request is treated as a
-     *                   fresh attempt and allowed to proceed normally.
-     */
     public function store(RequisitionRequest $request): JsonResponse
     {
         $this->authorize('create', Requisitions::class);
@@ -161,11 +139,6 @@ class RequisitionsController extends Controller
 
             $validatedData = $request->validated();
 
-            // ------------------------------------------------------------------
-            // 1. Build the idempotency key
-            //    Prefer an explicit client-supplied header so two genuinely
-            //    *different* requisitions with identical fields never collide.
-            // ------------------------------------------------------------------
             $clientKey = $request->header('Idempotency-Key');
 
             $idempotencyKey = $clientKey
@@ -173,18 +146,14 @@ class RequisitionsController extends Controller
                 : 'requisition_idem:' . $actor->Id . ':' . md5(json_encode($validatedData));
 
             $resultCacheKey = $idempotencyKey . ':result';
-            $lockKey        = $idempotencyKey . ':lock';
+            $lockKey = $idempotencyKey . ':lock';
 
-            // ------------------------------------------------------------------
-            // 2. Replay a previously cached success response (step 3 above).
-            //    This is what makes the endpoint truly idempotent — the client
-            //    gets back the exact same response without touching the DB.
-            // ------------------------------------------------------------------
+
             $cached = Cache::get($resultCacheKey);
 
             if ($cached !== null) {
                 Log::info('Idempotent replay for requisition store.', [
-                    'user_id'         => $actor->Id,
+                    'user_id' => $actor->Id,
                     'idempotency_key' => $idempotencyKey,
                     'cached_response' => $cached,
                 ]);
@@ -192,11 +161,6 @@ class RequisitionsController extends Controller
                 return response()->json(array_merge($cached, ['replayed' => true]), 200);
             }
 
-            // ------------------------------------------------------------------
-            // 3. Acquire a short-lived atomic lock (step 4 above).
-            //    If another request with the same key is currently being
-            //    processed, return 409 instead of queuing behind it.
-            // ------------------------------------------------------------------
             $lock = Cache::lock($lockKey, self::IDEMPOTENCY_LOCK_TTL);
 
             if (! $lock->get()) {
@@ -206,12 +170,9 @@ class RequisitionsController extends Controller
                 ], 409);
             }
 
-            // ------------------------------------------------------------------
-            // 4. Process the request, always releasing the lock afterwards.
-            // ------------------------------------------------------------------
+
             try {
-                // Re-check the cache inside the lock in case another process
-                // succeeded and cached its result between steps 2 and 3.
+
                 $cached = Cache::get($resultCacheKey);
 
                 if ($cached !== null) {
@@ -228,25 +189,22 @@ class RequisitionsController extends Controller
 
                 if ($result['status'] === 'success') {
                     $responseBody = [
-                        'success'        => true,
-                        'message'        => $result['message'],
-                        'route'          => route('requisition.show', ['requisition' => $result['requisition_id']]),
+                        'success' => true,
+                        'message' => $result['message'],
+                        'route' => route('requisition.show', ['requisition' => $result['requisition_id']]),
                         'requisition_id' => $result['requisition_id'] ?? null,
                     ];
 
-                    // Cache the success result so retries get the same response.
-                    // We do NOT cache failures — a failed attempt should be
-                    // retryable.
+
                     Cache::put($resultCacheKey, $responseBody, self::IDEMPOTENCY_TTL);
 
                     return response()->json($responseBody, 200);
                 }
 
-                // Service returned a non-success status — log and return error.
-                // The result is intentionally NOT cached so the client can retry.
+
                 Log::error('Failed to create requisition.', [
-                    'input'            => $validatedData,
-                    'user_id'          => $actor->Id ?? null,
+                    'input' => $validatedData,
+                    'user_id' => $actor->Id ?? null,
                     'service_response' => $result,
                 ]);
 
@@ -256,9 +214,7 @@ class RequisitionsController extends Controller
                 ], 500);
 
             } finally {
-                // Always release the lock — even if an exception is thrown.
-                // Without this the lock would be held for IDEMPOTENCY_LOCK_TTL
-                // seconds, blocking all retries for that window.
+
                 $lock->release();
             }
 
@@ -299,9 +255,9 @@ class RequisitionsController extends Controller
             $currentDocStatus = strtoupper(trim($requisition->DocStatus ?? 'DR'));
 
             Log::info('Submitting requisition', [
-                'requisition_id'     => $id,
+                'requisition_id' => $id,
                 'current_doc_status' => $currentDocStatus,
-                'item_count'         => $itemCount,
+                'item_count' => $itemCount,
             ]);
 
             // Check if already in workflow (PE = Pending, AP = Approved, RE = Rejected)
@@ -345,7 +301,7 @@ class RequisitionsController extends Controller
                 DB::table('t_Requisitions')
                     ->where('Id', $requisition->Id)
                     ->update([
-                        'DocStatus'  => 'PE',
+                        'DocStatus' => 'PE',
                         'ModifiedBy' => $user->Id,
                         'ModifiedOn' => now(),
                     ]);
@@ -354,7 +310,7 @@ class RequisitionsController extends Controller
 
                 Log::info('Requisition submitted successfully', [
                     'requisition_id' => $id,
-                    'user_id'        => $user->Id,
+                    'user_id' => $user->Id,
                 ]);
 
                 return redirect()
@@ -363,6 +319,7 @@ class RequisitionsController extends Controller
 
             } catch (\Exception $e) {
                 DB::rollBack();
+
                 throw $e;
             }
 
@@ -389,7 +346,7 @@ class RequisitionsController extends Controller
             $requisition = Requisitions::findOrFail($id);
             $this->authorize('view', $requisition);
 
-            $requisitionInfo     = $this->service->getRelatedRequisition($id);
+            $requisitionInfo = $this->service->getRelatedRequisition($id);
             $requisitionlineInfo = $this->requisitionItemService->getRequisitionRelatedItems($id);
 
             // Get workflow status
@@ -438,7 +395,7 @@ class RequisitionsController extends Controller
             $requisition = Requisitions::findOrFail($id);
             $this->authorize('approve', $requisition);
 
-            $action  = strtolower($request->input('action'));
+            $action = strtolower($request->input('action'));
             $remarks = (string) ($request->input('comments') ?? $request->input('remarks') ?? $request->input('rejection_reason') ?? '');
 
             // Validate action
@@ -469,10 +426,11 @@ class RequisitionsController extends Controller
                         DB::table('t_Requisitions')
                             ->where('Id', $requisition->Id)
                             ->update([
-                                'DocStatus'  => 'AP',
+                                'DocStatus' => 'AP',
                                 'ModifiedBy' => $user->Id,
                                 'ModifiedOn' => now(),
                             ]);
+
                         break;
 
                     case 'reject':
@@ -487,10 +445,11 @@ class RequisitionsController extends Controller
                         DB::table('t_Requisitions')
                             ->where('Id', $requisition->Id)
                             ->update([
-                                'DocStatus'  => 'RE',
+                                'DocStatus' => 'RE',
                                 'ModifiedBy' => $user->Id,
                                 'ModifiedOn' => now(),
                             ]);
+
                         break;
 
                     case 'return':
@@ -505,10 +464,11 @@ class RequisitionsController extends Controller
                         DB::table('t_Requisitions')
                             ->where('Id', $requisition->Id)
                             ->update([
-                                'DocStatus'  => 'DR',
+                                'DocStatus' => 'DR',
                                 'ModifiedBy' => $user->Id,
                                 'ModifiedOn' => now(),
                             ]);
+
                         break;
                 }
 
@@ -521,6 +481,7 @@ class RequisitionsController extends Controller
 
             } catch (\Exception $e) {
                 DB::rollBack();
+
                 throw $e;
             }
 
@@ -565,13 +526,13 @@ class RequisitionsController extends Controller
                 ->get();
 
             return response()->json([
-                'branches'    => $branches,
+                'branches' => $branches,
                 'departments' => $departments,
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to get plan details: ' . $e->getMessage(), [
-                'plan_id'   => $id,
+                'plan_id' => $id,
                 'exception' => $e->getTraceAsString(),
             ]);
 
@@ -591,7 +552,7 @@ class RequisitionsController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data'    => $details,
+                'data' => $details,
             ]);
 
         } catch (\Exception $e) {
@@ -600,7 +561,7 @@ class RequisitionsController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch requisitions.',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -614,10 +575,10 @@ class RequisitionsController extends Controller
             $requisition = Requisitions::findOrFail($id);
             $this->authorize('view', $requisition);
 
-            $details         = $this->requisitionItemService->getRequisitionRelatedItems($id);
-            $types           = $this->service->getItemTypes();
+            $details = $this->requisitionItemService->getRequisitionRelatedItems($id);
+            $types = $this->service->getItemTypes();
             $requisitionInfo = $this->service->getRelatedRequisition($id);
-            $uoms            = UnitOfMeasure::all();
+            $uoms = UnitOfMeasure::all();
 
             return view('procurement.requisitions.show', compact('details', 'types', 'id', 'requisitionInfo', 'uoms'));
 

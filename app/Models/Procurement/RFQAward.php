@@ -188,12 +188,12 @@ class RFQAward extends Model
     public function approve(\App\Models\Auth\User $user, ?string $remarks = null): bool
     {
         return $this->update([
-            'AwardStatus'      => self::STATUS_APPROVED,
-            'ApprovedBy'       => $user->Id,
-            'ApprovedOn'       => now(),
-            'ApprovalRemarks'  => $remarks,
-            'ModifiedBy'       => $user->Id,
-            'ModifiedOn'       => now(),
+            'AwardStatus' => self::STATUS_APPROVED,
+            'ApprovedBy' => $user->Id,
+            'ApprovedOn' => now(),
+            'ApprovalRemarks' => $remarks,
+            'ModifiedBy' => $user->Id,
+            'ModifiedOn' => now(),
         ]);
     }
 
@@ -204,10 +204,10 @@ class RFQAward extends Model
     public function reject(\App\Models\Auth\User $user, ?string $reason = null): bool
     {
         return $this->update([
-            'AwardStatus'      => self::STATUS_REJECTED,
-            'ApprovalRemarks'  => $reason,
-            'ModifiedBy'       => $user->Id,
-            'ModifiedOn'       => now(),
+            'AwardStatus' => self::STATUS_REJECTED,
+            'ApprovalRemarks' => $reason,
+            'ModifiedBy' => $user->Id,
+            'ModifiedOn' => now(),
         ]);
     }
 }

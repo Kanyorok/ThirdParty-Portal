@@ -917,7 +917,7 @@ class ContractsController extends Controller
 
         try {
             $workflow = $this->getWorkflow($type);
-            
+
             // Use UnderReview status (rv)
             $workflow->submit(
                 $award,

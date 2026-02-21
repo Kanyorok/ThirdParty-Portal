@@ -70,15 +70,15 @@ class TenderAcceptController extends Controller
             $currentEmployeeId = optional(Auth::user())->EmployeeId;
 
             $validated = $request->validate([
-                'tender_id'       => 'nullable|exists:t_Tenders,Id',
+                'tender_id' => 'nullable|exists:t_Tenders,Id',
                 'tender_response' => 'nullable|in:1,2',
                 'tender_comments' => 'nullable|string|max:1000',
-                'rfq_id'          => 'nullable|exists:t_RFQ,Id',
-                'rfq_response'    => 'nullable|in:1,2',
-                'rfq_comments'    => 'nullable|string|max:1000',
+                'rfq_id' => 'nullable|exists:t_RFQ,Id',
+                'rfq_response' => 'nullable|in:1,2',
+                'rfq_comments' => 'nullable|string|max:1000',
             ]);
 
-            // --- Tender response ---
+
             if ($request->filled('tender_id') && $request->filled('tender_response')) {
                 $tenderMember = TenderCommitteeMember::where(function ($q) use ($currentUserId) {
                     $q->where('UserID', $currentUserId)
@@ -92,8 +92,8 @@ class TenderAcceptController extends Controller
                     $response = (int) $request->tender_response;
 
                     $updateData = [
-                        'Response'   => $response,
-                        'reason'     => $request->tender_comments,
+                        'Response' => $response,
+                        'reason' => $request->tender_comments,
                         'ModifiedBy' => $currentUserId,
                         'ModifiedOn' => now(),
                     ];
@@ -102,7 +102,7 @@ class TenderAcceptController extends Controller
                     if ($tenderMember->PendingRole) {
                         if ($response === 1) {
                             // Accept: apply the pending role
-                            $updateData['Role']        = $tenderMember->PendingRole;
+                            $updateData['Role'] = $tenderMember->PendingRole;
                             $updateData['PendingRole'] = null;
                         } else {
                             // Decline: discard pending role, keep current
@@ -120,9 +120,9 @@ class TenderAcceptController extends Controller
                             ->orderByDesc('ChangedOn')
                             ->limit(1)
                             ->update([
-                                'Status'      => $historyStatus,
+                                'Status' => $historyStatus,
                                 'RespondedOn' => now(),
-                                'ModifiedOn'  => now(),
+                                'ModifiedOn' => now(),
                             ]);
                     }
 
@@ -130,7 +130,7 @@ class TenderAcceptController extends Controller
                 }
             }
 
-            // --- RFQ response ---
+
             if ($request->filled('rfq_id') && $request->filled('rfq_response')) {
                 $rfqMember = RFQCommitteeMember::where(function ($q) use ($currentUserId, $currentEmployeeId) {
                     $q->where('UserID', $currentUserId)
@@ -148,8 +148,8 @@ class TenderAcceptController extends Controller
                     $response = (int) $request->rfq_response;
 
                     $updateData = [
-                        'Response'   => $response,
-                        'reason'     => $request->rfq_comments,
+                        'Response' => $response,
+                        'reason' => $request->rfq_comments,
                         'ModifiedBy' => $currentUserId,
                         'ModifiedOn' => now(),
                     ];
@@ -157,7 +157,7 @@ class TenderAcceptController extends Controller
                     // Handle pending role change
                     if ($rfqMember->PendingRole) {
                         if ($response === 1) {
-                            $updateData['Role']        = $rfqMember->PendingRole;
+                            $updateData['Role'] = $rfqMember->PendingRole;
                             $updateData['PendingRole'] = null;
                         } else {
                             $updateData['PendingRole'] = null;
@@ -173,9 +173,9 @@ class TenderAcceptController extends Controller
                             ->orderByDesc('ChangedOn')
                             ->limit(1)
                             ->update([
-                                'Status'      => $historyStatus,
+                                'Status' => $historyStatus,
                                 'RespondedOn' => now(),
-                                'ModifiedOn'  => now(),
+                                'ModifiedOn' => now(),
                             ]);
                     }
 

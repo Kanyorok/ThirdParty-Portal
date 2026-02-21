@@ -11,7 +11,7 @@ class CommitteeRoleHistory extends Model
     public const UPDATED_AT = 'ModifiedOn';
 
     /** Response status constants */
-    public const STATUS_PENDING  = 0;
+    public const STATUS_PENDING = 0;
     public const STATUS_ACCEPTED = 1;
     public const STATUS_DECLINED = 2;
 
@@ -32,14 +32,14 @@ class CommitteeRoleHistory extends Model
     ];
 
     protected $casts = [
-        'MemberID'    => 'integer',
+        'MemberID' => 'integer',
         'CommitteeID' => 'integer',
-        'Status'      => 'integer',
-        'ChangedBy'   => 'integer',
-        'ChangedOn'   => 'datetime',
+        'Status' => 'integer',
+        'ChangedBy' => 'integer',
+        'ChangedOn' => 'datetime',
         'RespondedOn' => 'datetime',
-        'CreatedOn'   => 'datetime',
-        'ModifiedOn'  => 'datetime',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
     ];
 
     /* ------------------------------------------------------------------ */
@@ -61,8 +61,8 @@ class CommitteeRoleHistory extends Model
     {
         return match ($this->MemberType) {
             'tender' => $this->belongsTo(TenderCommitteeMember::class, 'MemberID', 'id'),
-            'rfq'    => $this->belongsTo(RFQCommitteeMember::class, 'MemberID', 'id'),
-            default  => null,
+            'rfq' => $this->belongsTo(RFQCommitteeMember::class, 'MemberID', 'id'),
+            default => null,
         };
     }
 
@@ -90,7 +90,7 @@ class CommitteeRoleHistory extends Model
         return match ((int) $this->Status) {
             self::STATUS_ACCEPTED => 'Accepted',
             self::STATUS_DECLINED => 'Declined',
-            default               => 'Pending',
+            default => 'Pending',
         };
     }
 }

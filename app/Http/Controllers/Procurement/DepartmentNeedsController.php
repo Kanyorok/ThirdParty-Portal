@@ -54,18 +54,18 @@ class DepartmentNeedsController extends Controller
             ]);
 
             // Provide defaults for optional fields the service expects
-            $validated['FiscalYear']    = $validated['FiscalYear'] ?? now()->year;
+            $validated['FiscalYear'] = $validated['FiscalYear'] ?? now()->year;
             $validated['PriorityLevel'] = $validated['PriorityLevel'] ?? 'Normal';
-            $validated['IsEmergency']   = $validated['IsEmergency'] ?? false;
-            
-        $idempotencyKey = 'department_need_store_' . Auth::id() . ':' . md5(json_encode($validated));
+            $validated['IsEmergency'] = $validated['IsEmergency'] ?? false;
 
-        // If we already have a pending request from this client, reject this one.
-        if (Cache::has($idempotencyKey)) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['error' => 'Please wait a moment before submitting again.']);
-        }
+            $idempotencyKey = 'department_need_store_' . Auth::id() . ':' . md5(json_encode($validated));
+
+            // If we already have a pending request from this client, reject this one.
+            if (Cache::has($idempotencyKey)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['error' => 'Please wait a moment before submitting again.']);
+            }
 
 
             // Guard: ensure the chosen item has an estimated/actual price configured and > 0
@@ -86,7 +86,7 @@ class DepartmentNeedsController extends Controller
 
             // Set the lock for this user and request
             $lock = Cache::lock($idempotencyKey, 60); // Lock for 60 seconds
-            if (!$lock->get()) {
+            if (! $lock->get()) {
                 return redirect()->back()
                     ->withInput()
                     ->withErrors(['error' => 'Please wait a moment before submitting again.']);
@@ -94,12 +94,13 @@ class DepartmentNeedsController extends Controller
 
             try {
                 DB::transaction(function () use ($validated, $service, $request) {
-                $actor = $request->user();
-                $service->create($validated, $actor);
-               });
-                 } finally {
-                   optional($lock)->release();
-                 }
+                    $actor = $request->user();
+                    $service->create($validated, $actor);
+                });
+            } finally {
+                optional($lock)->release();
+            }
+
             return redirect()->route('procurementdepartmentalplan.index')
                 ->with('success', 'Department need created!');
         } catch (\Exception $e) {

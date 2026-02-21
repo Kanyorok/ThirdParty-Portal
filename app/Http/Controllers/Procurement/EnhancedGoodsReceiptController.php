@@ -697,17 +697,17 @@ class EnhancedGoodsReceiptController extends Controller
             return response()->json(['error' => 'GRN not found'], 404);
         }
 
-        $first       = $lines->first();
-        $totalValue  = $lines->sum(fn ($l) => $l->TotalValue > 0 ? $l->TotalValue : ($l->ReceivedQTY * $l->UnitPrice));
-        $poNumber    = optional($first->order)->OrderNo ?? $poId;
-        $supplier    = $first->supplier?->thirdParty?->thirdParty?->TradingName
+        $first = $lines->first();
+        $totalValue = $lines->sum(fn ($l) => $l->TotalValue > 0 ? $l->TotalValue : ($l->ReceivedQTY * $l->UnitPrice));
+        $poNumber = optional($first->order)->OrderNo ?? $poId;
+        $supplier = $first->supplier?->thirdParty?->thirdParty?->TradingName
             ?? $first->supplier?->thirdParty?->thirdParty?->ThirdPartyName
             ?? 'N/A';
         $receivedDate = $first->ReceivedDate
             ? \Carbon\Carbon::parse($first->ReceivedDate)->format('d M Y')
             : '—';
-        $statusLabel  = $first->InspectionStatus?->label() ?? ucfirst($first->InspectionStatus ?? 'draft');
-        $statusColor  = $first->InspectionStatus?->badgeColor() ?? 'warning';
+        $statusLabel = $first->InspectionStatus?->label() ?? ucfirst($first->InspectionStatus ?? 'draft');
+        $statusColor = $first->InspectionStatus?->badgeColor() ?? 'warning';
 
         $html = "
         <div class='mb-3'>
@@ -745,12 +745,12 @@ class EnhancedGoodsReceiptController extends Controller
                 <tbody>";
 
         foreach ($lines as $line) {
-            $itemName    = $line->item?->ItemName ?? $line->ItemNo ?? 'N/A';
-            $lineTotal   = $line->TotalValue > 0 ? $line->TotalValue : ($line->ReceivedQTY * $line->UnitPrice);
-            $procBadge   = match ($line->ProcessingStatus ?? '') {
-                'processed'  => "<span class='badge bg-success'>Processed</span>",
-                'error'      => "<span class='badge bg-danger'>Error</span>",
-                default      => "<span class='badge bg-secondary'>Pending</span>",
+            $itemName = $line->item?->ItemName ?? $line->ItemNo ?? 'N/A';
+            $lineTotal = $line->TotalValue > 0 ? $line->TotalValue : ($line->ReceivedQTY * $line->UnitPrice);
+            $procBadge = match ($line->ProcessingStatus ?? '') {
+                'processed' => "<span class='badge bg-success'>Processed</span>",
+                'error' => "<span class='badge bg-danger'>Error</span>",
+                default => "<span class='badge bg-secondary'>Pending</span>",
             };
 
             $html .= "

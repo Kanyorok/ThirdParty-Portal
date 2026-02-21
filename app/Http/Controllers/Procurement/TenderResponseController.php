@@ -20,10 +20,10 @@ class TenderResponseController extends Controller
 
     public function create()
     {
-       $tenders = Tender::where('ApprovalStatus', TenderApprovalStatusEnum::APPROVED)
+        $tenders = Tender::where('ApprovalStatus', TenderApprovalStatusEnum::APPROVED)
     ->whereNotIn('Status', [
-        \App\Enums\TenderStatusEnum::OpeningInProgress->value,
-        \App\Enums\TenderStatusEnum::Awarded->value,
+         \App\Enums\TenderStatusEnum::OpeningInProgress->value,
+         \App\Enums\TenderStatusEnum::Awarded->value,
     ])
     ->where('SubmissionDeadline', '>', now())
     ->select('Id', 'TenderNo', 'Title')

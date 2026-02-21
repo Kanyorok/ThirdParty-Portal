@@ -85,7 +85,7 @@ class PurchaseOrderController extends Controller
 
             Log::info('PurchaseOrderController@index paginator', [
                 'perPage' => $perPage,
-                'total'   => $details->total(),
+                'total' => $details->total(),
             ]);
 
             return view('procurement.orders.index', compact('details'));
@@ -122,8 +122,8 @@ class PurchaseOrderController extends Controller
                 ->get();
 
             $rfqResponses = $this->rfqService->fetchRFQ();
-            $uniqueRfqs   = collect($rfqResponses)->unique('RFQNumber')->values();
-            $suppliers    = SupplierService::getSuppliers();
+            $uniqueRfqs = collect($rfqResponses)->unique('RFQNumber')->values();
+            $suppliers = SupplierService::getSuppliers();
 
             $paymentTerms = $this->fetchPaymentTerms();
 
@@ -134,13 +134,13 @@ class PurchaseOrderController extends Controller
                 ->select('tr.Id', 'tt.TaxTypeName', 'tr.Rate')
                 ->get();
 
-            $awardedRfqs    = $this->orderSourceService->getAwardedRFQs();
+            $awardedRfqs = $this->orderSourceService->getAwardedRFQs();
             $awardedTenders = $this->orderSourceService->getAwardedTenders();
-            $contracts      = $this->orderSourceService->getContracts();
+            $contracts = $this->orderSourceService->getContracts();
 
             // Contract prefill support
             $prefillContract = null;
-            $contractId      = request('contractId');
+            $contractId = request('contractId');
 
             if (! empty($contractId)) {
                 try {
@@ -161,7 +161,7 @@ class PurchaseOrderController extends Controller
 
                     if ($contractRow && ! empty($contractRow->ContractRef)) {
                         $uniqueRfqs = collect($uniqueRfqs);
-                        $exists     = $uniqueRfqs->contains(fn ($r) => ($r->RFQNumber ?? null) === ($contractRow->ContractRef ?? null));
+                        $exists = $uniqueRfqs->contains(fn ($r) => ($r->RFQNumber ?? null) === ($contractRow->ContractRef ?? null));
 
                         if (! $exists) {
                             $uniqueRfqs = $uniqueRfqs->prepend((object) ['RFQNumber' => $contractRow->ContractRef]);
@@ -169,20 +169,20 @@ class PurchaseOrderController extends Controller
 
                         $rfqResponsesCol = collect($rfqResponses ?? []);
                         $rfqResponsesCol = $rfqResponsesCol->prepend((object) [
-                            'RFQNumber'    => $contractRow->ContractRef,
-                            'SupplierId'   => (int) ($contractRow->ThirdPartyId ?? 0),
-                            'SupplierID'   => (int) ($contractRow->ThirdPartyId ?? 0),
+                            'RFQNumber' => $contractRow->ContractRef,
+                            'SupplierId' => (int) ($contractRow->ThirdPartyId ?? 0),
+                            'SupplierID' => (int) ($contractRow->ThirdPartyId ?? 0),
                             'SupplierName' => $contractRow->SupplierName ?? '',
-                            'Address'      => $contractRow->Address ?? '',
+                            'Address' => $contractRow->Address ?? '',
                         ]);
                         $rfqResponses = $rfqResponsesCol->values();
 
                         $prefillContract = [
-                            'ref'          => $contractRow->ContractRef,
-                            'supplierId'   => (int) ($contractRow->SupplierId ?? 0),
+                            'ref' => $contractRow->ContractRef,
+                            'supplierId' => (int) ($contractRow->SupplierId ?? 0),
                             'thirdPartyId' => (int) ($contractRow->ThirdPartyId ?? 0),
                             'supplierName' => $contractRow->SupplierName ?? '',
-                            'address'      => $contractRow->Address ?? '',
+                            'address' => $contractRow->Address ?? '',
                         ];
                     }
                 } catch (\Throwable $e) {
@@ -193,86 +193,52 @@ class PurchaseOrderController extends Controller
             $sourceType = $prefillContract ? 'CONTRACT' : 'RFQ';
 
             return view('procurement.orders.create', [
-                'itemTypes'            => $itemTypes ?? [],
-                'allItems'             => $allItems ?? collect(),
-                'rfqs'                 => $uniqueRfqs ?? [],
-                'rfqResponses'         => $rfqResponses ?? [],
-                'suppliers'            => $suppliers ?? [],
-                'paymentTerms'         => $paymentTerms ?? [],
-                'prefillContract'      => $prefillContract,
-                'sourceType'           => $sourceType,
-                'contracts'            => $contracts ?? collect(),
-                'awardedRfqs'          => $awardedRfqs ?? collect(),
-                'convertedRFQIds'      => [],
-                'awardedTenders'       => $awardedTenders ?? collect(),
-                'convertedTenderIds'   => [],
+                'itemTypes' => $itemTypes ?? [],
+                'allItems' => $allItems ?? collect(),
+                'rfqs' => $uniqueRfqs ?? [],
+                'rfqResponses' => $rfqResponses ?? [],
+                'suppliers' => $suppliers ?? [],
+                'paymentTerms' => $paymentTerms ?? [],
+                'prefillContract' => $prefillContract,
+                'sourceType' => $sourceType,
+                'contracts' => $contracts ?? collect(),
+                'awardedRfqs' => $awardedRfqs ?? collect(),
+                'convertedRFQIds' => [],
+                'awardedTenders' => $awardedTenders ?? collect(),
+                'convertedTenderIds' => [],
                 'usedReferenceNumbers' => [],
-                'taxRules'             => $taxRules ?? collect(),
+                'taxRules' => $taxRules ?? collect(),
             ]);
         } catch (\Exception $e) {
             Log::error('Data fetch failed: ' . $e->getMessage());
 
             return view('procurement.orders.create', [
-                'suppliers'            => [],
-                'itemTypes'            => [],
-                'allItems'             => collect(),
-                'rfqs'                 => [],
-                'rfqResponses'         => [],
-                'paymentTerms'         => $this->fetchPaymentTerms(),
-                'awardedRfqs'          => [],
-                'convertedRFQIds'      => [],
-                'contracts'            => collect(),
-                'sourceType'           => 'RFQ',
-                'prefillContract'      => null,
+                'suppliers' => [],
+                'itemTypes' => [],
+                'allItems' => collect(),
+                'rfqs' => [],
+                'rfqResponses' => [],
+                'paymentTerms' => $this->fetchPaymentTerms(),
+                'awardedRfqs' => [],
+                'convertedRFQIds' => [],
+                'contracts' => collect(),
+                'sourceType' => 'RFQ',
+                'prefillContract' => null,
                 'usedReferenceNumbers' => [],
-                'taxRules'             => collect(),
+                'taxRules' => collect(),
             ])->with('error', 'An error occurred: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Store a newly created Purchase Order.
-     *
-     * Idempotency strategy
-     * ─────────────────────────────────────────────────────────────────────────
-     * This method is the most expensive in the controller — it creates a PO
-     * header, inserts N line items, recalculates totals, updates source info,
-     * and submits an approval workflow. A double-submit (back button, network
-     * retry, impatient double-click) would produce a duplicate PO and duplicate
-     * workflow entries, so idempotency is critical here.
-     *
-     * 1. Client sends a unique `Idempotency-Key` header per *intended* request
-     *    (e.g. a UUID generated in JS before the form submit). Falls back to a
-     *    payload hash when no header is present.
-     *
-     * 2. First call   → acquire lock → run → cache PO id + order number →
-     *                   release lock → redirect to show page.
-     *
-     * 3. Duplicate    → cached result found → redirect to the same PO without
-     *    (success)       touching the DB.
-     *
-     * 4. In-flight    → lock is held → redirect back with a "please wait" error
-     *                   so the user knows not to submit again.
-     *
-     * 5. Failed call  → result is NOT cached → retry is treated as a fresh
-     *                   attempt.
-     *
-     * The lock TTL is set to 60 s because this operation is heavier than a
-     * simple INSERT — it iterates over line items and calls the workflow service.
-     */
     public function store(PurchaseOrderRequest $request)
     {
         $this->authorize('create', Order::class);
 
         try {
             $validated = $request->validated();
-            $actor     = auth()->user();
+            $actor = auth()->user();
 
-            // ------------------------------------------------------------------
-            // 1. Build the idempotency key.
-            //    Prefer an explicit client-supplied header so two genuinely
-            //    *different* POs with identical fields never collide.
-            // ------------------------------------------------------------------
+
             $clientKey = $request->header('Idempotency-Key');
 
             $idempotencyKey = $clientKey
@@ -280,19 +246,16 @@ class PurchaseOrderController extends Controller
                 : 'po_idem:' . $actor->id . ':' . md5(json_encode($validated));
 
             $resultCacheKey = $idempotencyKey . ':result';
-            $lockKey        = $idempotencyKey . ':lock';
+            $lockKey = $idempotencyKey . ':lock';
 
-            // ------------------------------------------------------------------
-            // 2. Replay a previously cached success response (step 3 above).
-            //    The user is sent to the already-created PO without any DB work.
-            // ------------------------------------------------------------------
+
             $cached = Cache::get($resultCacheKey);
 
             if ($cached !== null) {
                 Log::info('Idempotent replay for PO store.', [
-                    'user_id'         => $actor->id,
+                    'user_id' => $actor->id,
                     'idempotency_key' => $idempotencyKey,
-                    'po_id'           => $cached['po_id'],
+                    'po_id' => $cached['po_id'],
                 ]);
 
                 return redirect()
@@ -300,9 +263,7 @@ class PurchaseOrderController extends Controller
                     ->with('success', "Purchase Order already created (duplicate request ignored). LPO Number: {$cached['order_no']}");
             }
 
-            // ------------------------------------------------------------------
-            // 3. Acquire a short-lived atomic lock (step 4 above).
-            // ------------------------------------------------------------------
+
             $lock = Cache::lock($lockKey, self::IDEMPOTENCY_LOCK_TTL);
 
             if (! $lock->get()) {
@@ -322,12 +283,10 @@ class PurchaseOrderController extends Controller
                         ->with('success', "Purchase Order already created (duplicate request ignored). LPO Number: {$cached['order_no']}");
                 }
 
-                // --------------------------------------------------------------
-                // 4. Validate quantities against the source document.
-                // --------------------------------------------------------------
+
                 if ($request->has('SourceType') && $request->has('SourceId')) {
                     $sourceType = $request->input('SourceType');
-                    $sourceId   = $request->input('SourceId');
+                    $sourceId = $request->input('SourceId');
 
                     $availableItems = collect();
 
@@ -346,12 +305,12 @@ class PurchaseOrderController extends Controller
 
                         if ($availableItems->isNotEmpty()) {
                             $availableMap = $availableItems->pluck('quantity', 'itemCode')->toArray();
-                            $itemNameMap  = $availableItems->pluck('itemName', 'itemCode')->toArray();
+                            $itemNameMap = $availableItems->pluck('itemName', 'itemCode')->toArray();
 
                             foreach ($validated['itemCode'] as $idx => $code) {
                                 $qty = $validated['quantity'][$idx];
                                 if (isset($availableMap[$code]) && $qty > $availableMap[$code]) {
-                                    $name      = $itemNameMap[$code] ?? $code;
+                                    $name = $itemNameMap[$code] ?? $code;
                                     $remaining = $availableMap[$code];
 
                                     // Release the lock before redirecting back — the
@@ -372,10 +331,8 @@ class PurchaseOrderController extends Controller
                     }
                 }
 
-                // --------------------------------------------------------------
-                // 5. Create the PO header.
-                // --------------------------------------------------------------
-                $taxes      = $validated['tax'] ?? [];
+
+                $taxes = $validated['tax'] ?? [];
                 $firstTaxId = $taxes[0] ?? null;
                 if ($firstTaxId === '' || $firstTaxId === '0' || $firstTaxId === 0) {
                     $firstTaxId = null;
@@ -399,14 +356,11 @@ class PurchaseOrderController extends Controller
 
                 $poId = $poResult['po_id'];
 
-                // --------------------------------------------------------------
-                // 6. Add PO line items.
-                // --------------------------------------------------------------
-                $itemCodes  = $validated['itemCode'];
+                $itemCodes = $validated['itemCode'];
                 $quantities = $validated['quantity'];
                 $unitPrices = $validated['unitPrice'];
-                $taxes      = $validated['tax'] ?? [];
-                $discounts  = $validated['discount'] ?? [];
+                $taxes = $validated['tax'] ?? [];
+                $discounts = $validated['discount'] ?? [];
                 $lineTotals = $validated['lineTotal'];
 
                 foreach ($itemCodes as $index => $itemCode) {
@@ -428,31 +382,25 @@ class PurchaseOrderController extends Controller
 
                     if ($lineResult['status'] !== 'success') {
                         Log::warning('Failed to add PO line item', [
-                            'po_id'     => $poId,
+                            'po_id' => $poId,
                             'item_code' => $itemCode,
-                            'error'     => $lineResult['message'] ?? 'Unknown error',
+                            'error' => $lineResult['message'] ?? 'Unknown error',
                         ]);
                     }
                 }
 
-                // --------------------------------------------------------------
-                // 7. Calculate PO totals.
-                // --------------------------------------------------------------
+
                 $this->orderService->AddPurchaseOrderSum($poId);
 
-                // --------------------------------------------------------------
-                // 8. Record source document reference.
-                // --------------------------------------------------------------
+
                 if ($request->has('SourceType') && $request->has('SourceId')) {
                     Order::where('Id', $poId)->update([
                         'SourceType' => $request->input('SourceType'),
-                        'SourceId'   => $request->input('SourceId'),
+                        'SourceId' => $request->input('SourceId'),
                     ]);
                 }
 
-                // --------------------------------------------------------------
-                // 9. Submit approval workflow (non-fatal if it fails).
-                // --------------------------------------------------------------
+
                 try {
                     $order = Order::findOrFail($poId);
                     $this->workflowService->submit(
@@ -470,21 +418,18 @@ class PurchaseOrderController extends Controller
                     // Non-fatal: the PO exists; the approver can re-submit manually.
                 }
 
-                // --------------------------------------------------------------
-                // 10. Cache the success result so retries replay it (step 3).
-                //     Failures are intentionally NOT cached so they can be retried.
-                // --------------------------------------------------------------
+
                 $orderNo = $poResult['order_no'] ?? '';
 
                 Cache::put($resultCacheKey, [
-                    'po_id'    => $poId,
+                    'po_id' => $poId,
                     'order_no' => $orderNo,
                 ], self::IDEMPOTENCY_TTL);
 
                 Log::info('Purchase Order created successfully.', [
-                    'po_id'    => $poId,
+                    'po_id' => $poId,
                     'order_no' => $orderNo,
-                    'user_id'  => $actor->id,
+                    'user_id' => $actor->id,
                 ]);
 
                 return redirect()
@@ -503,9 +448,7 @@ class PurchaseOrderController extends Controller
                     ->with('error', 'An error occurred while creating the Purchase Order: ' . $e->getMessage());
 
             } finally {
-                // Always release the lock — even on exception.
-                // Without this it would be held for IDEMPOTENCY_LOCK_TTL seconds,
-                // blocking every retry for that entire window.
+
                 $lock->release();
             }
 
@@ -533,10 +476,10 @@ class PurchaseOrderController extends Controller
             $this->authorize('view', $order);
 
             $orderInfo = $this->orderService->fetchOrderDetails($id);
-            $lineInfo  = $this->orderService->fetchOrderLineDetails($id);
+            $lineInfo = $this->orderService->fetchOrderLineDetails($id);
 
             Log::info('Order details and line items fetched', [
-                'order_id'   => $id,
+                'order_id' => $id,
                 'line_count' => count($lineInfo),
             ]);
 
@@ -545,15 +488,15 @@ class PurchaseOrderController extends Controller
 
             try {
                 $workflowData = $this->workflowService->getWorkflowStatus($order->getMorphClass(), $order->getKey());
-                $historyArr   = $workflowData['completedApprovals'] ?? [];
-                $stageName    = $workflowData['currentStage']['name'] ?? 'Stage';
+                $historyArr = $workflowData['completedApprovals'] ?? [];
+                $stageName = $workflowData['currentStage']['name'] ?? 'Stage';
 
                 $fetchedHistory = collect($historyArr)->map(function ($item) use ($stageName) {
                     $obj = (object) $item;
                     $obj->StatusId = $obj->StatusId ?? 'A';
-                    $obj->stage    = $obj->stage ?? (object) ['StageName' => $stageName];
-                    $obj->status   = $obj->status ?? (object) ['Description' => 'Approved'];
-                    $obj->creator  = $obj->creator ?? (object) ['Name' => $item->Name ?? 'Unknown'];
+                    $obj->stage = $obj->stage ?? (object) ['StageName' => $stageName];
+                    $obj->status = $obj->status ?? (object) ['Description' => 'Approved'];
+                    $obj->creator = $obj->creator ?? (object) ['Name' => $item->Name ?? 'Unknown'];
 
                     return $obj;
                 });
@@ -563,18 +506,18 @@ class PurchaseOrderController extends Controller
             } catch (\Exception $e) {
                 Log::warning('Failed to fetch workflow history', [
                     'order_id' => $id,
-                    'error'    => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
             }
 
             // Append a "Submitted" entry so initiation is always visible (oldest, so pushed last).
             $history->push((object) [
-                'stage'     => (object) ['StageName' => 'Initiation'],
-                'status'    => (object) ['Description' => 'Submitted'],
-                'creator'   => (object) ['Name' => $order->creator->Name ?? 'Unknown'],
+                'stage' => (object) ['StageName' => 'Initiation'],
+                'status' => (object) ['Description' => 'Submitted'],
+                'creator' => (object) ['Name' => $order->creator->Name ?? 'Unknown'],
                 'CreatedOn' => $order->CreatedOn,
-                'Notes'     => 'Order initiated',
-                'StatusId'  => '',
+                'Notes' => 'Order initiated',
+                'StatusId' => '',
             ]);
 
             // Check if the current user can approve
@@ -584,20 +527,20 @@ class PurchaseOrderController extends Controller
             } catch (\Exception $e) {
                 Log::warning('Failed to check approval permission', [
                     'order_id' => $id,
-                    'error'    => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
                 $canApprove = false;
             }
 
             // Get workflow status
             try {
-                $workflowStatus  = $this->workflowService->getWorkflowStatus($order->getMorphClass(), $order->getKey());
+                $workflowStatus = $this->workflowService->getWorkflowStatus($order->getMorphClass(), $order->getKey());
                 $isFullyApproved = ($workflowStatus['totalPending'] ?? 0) === 0;
                 Log::info('Workflow status fetched', ['order_id' => $id, 'status' => $workflowStatus]);
             } catch (\Exception $e) {
                 Log::warning('Failed to get workflow status, using fallback', [
                     'order_id' => $id,
-                    'error'    => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
 
                 $pendingApprovals = DB::table('t_WorkFlowPending as p')
@@ -611,7 +554,7 @@ class PurchaseOrderController extends Controller
                     ->map(fn ($row) => (array) $row)
                     ->toArray();
 
-                $workflowStatus  = ['pendingApprovals' => $pendingApprovals];
+                $workflowStatus = ['pendingApprovals' => $pendingApprovals];
                 $isFullyApproved = count($pendingApprovals) === 0;
             }
 
@@ -655,9 +598,9 @@ class PurchaseOrderController extends Controller
 
             $this->authorize('update', $order);
 
-            $suppliers   = SupplierService::getSuppliers();
-            $orderInfo   = $this->orderService->fetchOrderDetails($id);
-            $lineInfo    = $this->orderService->fetchOrderLineDetails($id);
+            $suppliers = SupplierService::getSuppliers();
+            $orderInfo = $this->orderService->fetchOrderDetails($id);
+            $lineInfo = $this->orderService->fetchOrderLineDetails($id);
             $paymentTerms = $this->fetchPaymentTerms();
 
             return view(
@@ -772,7 +715,7 @@ class PurchaseOrderController extends Controller
             $this->authorize('view', $order);
 
             $orderInfo = $this->orderService->fetchOrderDetails($id);
-            $lineInfo  = $this->orderService->fetchOrderLineDetails($id);
+            $lineInfo = $this->orderService->fetchOrderLineDetails($id);
 
             return view('procurement.orders.approval', compact('orderInfo', 'lineInfo'));
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
@@ -831,7 +774,7 @@ class PurchaseOrderController extends Controller
             if ($order->CreatedBy == auth()->id()) {
                 Log::warning('Maker-checker violation: User attempted to approve own PO', [
                     'order_id' => $id,
-                    'user_id'  => auth()->id(),
+                    'user_id' => auth()->id(),
                 ]);
 
                 return redirect()->back()->with('error', 'You cannot approve your own Purchase Order (Maker-Checker rule).');
@@ -932,21 +875,21 @@ class PurchaseOrderController extends Controller
         }
     }
 
-   
+
     // JSON endpoints
-  
+
     public function getItemDetails($item): JsonResponse
     {
         try {
             return response()->json([
                 'success' => true,
-                'data'    => $this->itemService->getItemDetails($item),
+                'data' => $this->itemService->getItemDetails($item),
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch items.',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -956,7 +899,7 @@ class PurchaseOrderController extends Controller
         try {
             return response()->json([
                 'success' => true,
-                'data'    => SupplierService::getSuppliers(),
+                'data' => SupplierService::getSuppliers(),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -982,13 +925,13 @@ class PurchaseOrderController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data'    => ['Address' => $address],
+                'data' => ['Address' => $address],
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch supplier details.',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -1014,13 +957,13 @@ class PurchaseOrderController extends Controller
         try {
             return response()->json([
                 'success' => true,
-                'data'    => $this->rfqService->RFQTOPO($id),
+                'data' => $this->rfqService->RFQTOPO($id),
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch RFQ.',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -1030,7 +973,7 @@ class PurchaseOrderController extends Controller
         try {
             return response()->json([
                 'success' => true,
-                'data'    => $this->orderSourceService->getAwardedRFQs(),
+                'data' => $this->orderSourceService->getAwardedRFQs(),
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to fetch awarded RFQs: ' . $e->getMessage());
@@ -1038,7 +981,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch awarded RFQs',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -1048,7 +991,7 @@ class PurchaseOrderController extends Controller
         try {
             return response()->json([
                 'success' => true,
-                'data'    => $this->orderSourceService->getAwardedTenders(),
+                'data' => $this->orderSourceService->getAwardedTenders(),
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to fetch awarded Tenders: ' . $e->getMessage());
@@ -1056,7 +999,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch awarded Tenders',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -1066,7 +1009,7 @@ class PurchaseOrderController extends Controller
         try {
             return response()->json([
                 'success' => true,
-                'data'    => $this->orderSourceService->getTenderItems($tenderId),
+                'data' => $this->orderSourceService->getTenderItems($tenderId),
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to fetch Tender Items: ' . $e->getMessage());
@@ -1074,7 +1017,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -1082,12 +1025,12 @@ class PurchaseOrderController extends Controller
     public function getContractItems($contractId)
     {
         try {
-            $type  = request('type', 'tender');
+            $type = request('type', 'tender');
             $items = $this->orderSourceService->getContractItems($contractId, $type);
 
             return response()->json([
                 'success' => true,
-                'data'    => $items,
+                'data' => $items,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to fetch Contract Items: ' . $e->getMessage());
@@ -1095,7 +1038,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch Contract Items',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -1105,7 +1048,7 @@ class PurchaseOrderController extends Controller
         try {
             return response()->json([
                 'success' => true,
-                'data'    => $this->orderSourceService->getDirectPlans(),
+                'data' => $this->orderSourceService->getDirectPlans(),
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to fetch direct plans: ' . $e->getMessage());
@@ -1113,7 +1056,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch direct plans',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -1160,11 +1103,11 @@ class PurchaseOrderController extends Controller
     {
         try {
             $supplierId = request('supplierId');
-            $items      = $this->orderSourceService->getRFQItems($rfqId, $supplierId);
+            $items = $this->orderSourceService->getRFQItems($rfqId, $supplierId);
 
             return response()->json([
                 'success' => true,
-                'data'    => $items,
+                'data' => $items,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to get RFQ items: ' . $e->getMessage());
@@ -1172,7 +1115,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch RFQ items',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -1182,7 +1125,7 @@ class PurchaseOrderController extends Controller
         try {
             return response()->json([
                 'success' => true,
-                'data'    => $this->orderSourceService->getDirectPlanItems($planId),
+                'data' => $this->orderSourceService->getDirectPlanItems($planId),
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to fetch Direct Plan Items: ' . $e->getMessage());
@@ -1190,7 +1133,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch Direct Plan Items',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -1217,7 +1160,7 @@ class PurchaseOrderController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data'    => $categories,
+                'data' => $categories,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to get plan categories: ' . $e->getMessage());
@@ -1225,7 +1168,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch categories',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -1251,7 +1194,7 @@ class PurchaseOrderController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data'    => $suppliers,
+                'data' => $suppliers,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to fetch prequalified suppliers: ' . $e->getMessage());
@@ -1259,11 +1202,10 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch suppliers',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
-
 
     /**
      * Fetch payment terms from CodeDetails, with a fallback raw query.

@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\Auth\User;
 use App\Models\HR\Employee;
+use App\Models\Procurement\CommitteeRoleHistory;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQCommittee;
 use App\Models\Procurement\RFQCommitteeMember;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderCommittee;
 use App\Models\Procurement\TenderCommitteeMember;
-use App\Models\Procurement\CommitteeRoleHistory;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -423,36 +423,36 @@ class TenderCommitteeController extends Controller
                 if ($isRoleChanging) {
                     // Role is changing — store as pending, reset response, log history
                     $member->update([
-                        'UserID'      => $resolvedUserId ?? $member->UserID,
+                        'UserID' => $resolvedUserId ?? $member->UserID,
                         'PendingRole' => $role,
-                        'Response'    => 0,  // reset to Pending
-                        'IsActive'    => true,
-                        'DeletedBy'   => null,
-                        'DeletedOn'   => null,
-                        'ModifiedBy'  => $userId,
-                        'ModifiedOn'  => $now,
+                        'Response' => 0,  // reset to Pending
+                        'IsActive' => true,
+                        'DeletedBy' => null,
+                        'DeletedOn' => null,
+                        'ModifiedBy' => $userId,
+                        'ModifiedOn' => $now,
                     ]);
 
                     CommitteeRoleHistory::create([
-                        'MemberType'   => $committeeType,
-                        'MemberID'     => $member->id,
-                        'CommitteeID'  => $committeeKey,
+                        'MemberType' => $committeeType,
+                        'MemberID' => $member->id,
+                        'CommitteeID' => $committeeKey,
                         'PreviousRole' => $currentRole,
-                        'NewRole'      => $role,
-                        'Status'       => CommitteeRoleHistory::STATUS_PENDING,
-                        'ChangedBy'    => $userId,
-                        'ChangedOn'    => $now,
-                        'CreatedOn'    => $now,
-                        'ModifiedOn'   => $now,
+                        'NewRole' => $role,
+                        'Status' => CommitteeRoleHistory::STATUS_PENDING,
+                        'ChangedBy' => $userId,
+                        'ChangedOn' => $now,
+                        'CreatedOn' => $now,
+                        'ModifiedOn' => $now,
                     ]);
                 } else {
                     // No role change — normal update
                     $member->update([
-                        'UserID'     => $resolvedUserId ?? $member->UserID,
-                        'Role'       => $role,
-                        'IsActive'   => true,
-                        'DeletedBy'  => null,
-                        'DeletedOn'  => null,
+                        'UserID' => $resolvedUserId ?? $member->UserID,
+                        'Role' => $role,
+                        'IsActive' => true,
+                        'DeletedBy' => null,
+                        'DeletedOn' => null,
                         'ModifiedBy' => $userId,
                         'ModifiedOn' => $now,
                     ]);

@@ -481,16 +481,6 @@ class OrderService
         return $fullyExhausted;
     }
 
-    // -------------------------------------------------------------------------
-    // CRUD helpers
-    // -------------------------------------------------------------------------
-
-    /**
-     * Retrieve a single Order model by primary key.
-     *
-     * @param  int|string  $id
-     * @return \App\Models\Procurement\Order|null
-     */
     public function getOrder($id): ?\App\Models\Procurement\Order
     {
         try {
@@ -524,25 +514,24 @@ class OrderService
 
             // Map request field names → column names
             $updatePayload = array_filter([
-                'OrderDate'      => $data['Date']     ?? null,
-                'terms'          => $data['terms']    ?? null,
-                'Priority'       => $data['priority'] ?? null,
-                'ExtOrdNum'      => $data['refNo']    ?? null,
-                'AccountID'      => $data['supplier'] ?? null,
-                'Notes'          => $data['notes']    ?? null,
-                'DeliveryTerms'  => $data['delivery_terms'] ?? null,
-                'ModifiedBy'     => Auth::id(),
+                'OrderDate' => $data['Date'] ?? null,
+                'terms' => $data['terms'] ?? null,
+                'Priority' => $data['priority'] ?? null,
+                'ExtOrdNum' => $data['refNo'] ?? null,
+                'AccountID' => $data['supplier'] ?? null,
+                'Notes' => $data['notes'] ?? null,
+                'DeliveryTerms' => $data['delivery_terms'] ?? null,
+                'ModifiedBy' => Auth::id(),
             ], fn ($v) => $v !== null);
 
             $order->update($updatePayload);
 
-            // Recalculate totals if line items were also updated
-            // (line items themselves are managed through addPOLines / direct edits)
+
             $this->AddPurchaseOrderSum($id);
 
             Log::info("OrderService::updateOrder – Order ID {$id} updated successfully.", [
                 'fields_updated' => array_keys($updatePayload),
-                'updated_by'     => Auth::id(),
+                'updated_by' => Auth::id(),
             ]);
 
             return true;

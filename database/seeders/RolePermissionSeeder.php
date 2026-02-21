@@ -81,7 +81,7 @@ class RolePermissionSeeder extends Seeder
             echo "  Removed {$deleted} obsolete permissions." . PHP_EOL;
         }
 
-            
+
         // 2. SKIP workflow permissions - they are special and belong to implemented workflows
         //    Do NOT delete, update, or touch workflow-related permissions as they impact approvals
         //    Get list of permissions that are referenced in workflow stages

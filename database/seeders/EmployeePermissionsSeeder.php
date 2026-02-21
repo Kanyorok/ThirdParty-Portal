@@ -57,6 +57,3 @@ class EmployeePermissionsSeeder extends Seeder
         $this->command->info('✓ Permission cache cleared');
     }
 }
-
-
-

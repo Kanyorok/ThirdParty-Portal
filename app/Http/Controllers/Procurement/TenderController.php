@@ -258,23 +258,23 @@ class TenderController extends Controller
 
         $validated = $request->validate([
             'tender_category_id' => 'required|integer|exists:t_TenderCategories,Id',
-            'item_category_id'   => 'required|integer|exists:t_ItemCategories,Id',
+            'item_category_id' => 'required|integer|exists:t_ItemCategories,Id',
             'submission_deadline' => 'required|date|after_or_equal:today',
-            'opening_date'       => 'required|date|after:submission_deadline',
-            'title'              => 'required|string|max:255',
-            'tender_type'        => 'required|string',
-            'scope_of_work'      => 'nullable|string',
-            'instructions'       => 'nullable|string',
-            'currency_id'        => 'required|integer|exists:t_Currencies,Id',
-            'documents.*'        => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
+            'opening_date' => 'required|date|after:submission_deadline',
+            'title' => 'required|string|max:255',
+            'tender_type' => 'required|string',
+            'scope_of_work' => 'nullable|string',
+            'instructions' => 'nullable|string',
+            'currency_id' => 'required|integer|exists:t_Currencies,Id',
+            'documents.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
             // Restricted tenders MUST nominate at least one supplier at creation.
-            'suppliers'          => $isRestricted ? 'required|array|min:1' : 'nullable|array',
-            'suppliers.*'        => 'integer',
+            'suppliers' => $isRestricted ? 'required|array|min:1' : 'nullable|array',
+            'suppliers.*' => 'integer',
         ], [
             'submission_deadline.after_or_equal' => 'The submission deadline cannot be in the past.',
-            'opening_date.after'                 => 'The opening date must be after the submission deadline.',
-            'suppliers.required'                 => 'A restricted tender must have at least one invited supplier.',
-            'suppliers.min'                      => 'A restricted tender must have at least one invited supplier.',
+            'opening_date.after' => 'The opening date must be after the submission deadline.',
+            'suppliers.required' => 'A restricted tender must have at least one invited supplier.',
+            'suppliers.min' => 'A restricted tender must have at least one invited supplier.',
         ]);
 
         // Validation passed — now lock the idempotency key so a true duplicate
@@ -550,8 +550,8 @@ class TenderController extends Controller
             // Read raw ApprovalStatus to avoid enum cast errors on legacy '0' DB default.
             // Treat null, '0', and '' as "not yet submitted" (same as null).
             $rawApprovalStatus = $tender->getRawOriginal('ApprovalStatus');
-            $approvalStatusIsNull  = ($rawApprovalStatus === null || $rawApprovalStatus === '0' || $rawApprovalStatus === '');
-            $approvalStatusPending  = ($rawApprovalStatus === TenderApprovalStatusEnum::PENDING->value);  // 'P'
+            $approvalStatusIsNull = ($rawApprovalStatus === null || $rawApprovalStatus === '0' || $rawApprovalStatus === '');
+            $approvalStatusPending = ($rawApprovalStatus === TenderApprovalStatusEnum::PENDING->value);  // 'P'
             $approvalStatusRejected = ($rawApprovalStatus === TenderApprovalStatusEnum::REJECTED->value); // 'R'
 
             $canEdit = false;
@@ -1634,33 +1634,27 @@ class TenderController extends Controller
                 $itemCategoryIds = array_merge($itemCategoryIds, $topLevelSet);
             }
 
-            // Log the final ItemCategoryIds for this supplier
-            if ($supplierMaster->Id == 2) { // Uma Yang - use SupplierMaster.Id
-                // Log::info("Building ItemCategoryIds for supplier (SupplierMaster ID " . $supplierMaster->Id . ")", [
-                //     'supplier_name' => $thirdParty->ThirdPartyName,
-                //     'supplier_category_ids' => $supplierCategoryIds->toArray(),
-                //     'final_item_category_ids' => array_values(array_unique(array_map('intval', $itemCategoryIds))),
-                //     'count' => count(array_unique($itemCategoryIds))
+            if ($supplierMaster->Id == 2) {
+
             }
 
             $suppliers->push([
-                'Id' => $supplierMaster->Id,  // CRITICAL FIX: Use SupplierMaster.Id, not t_Suppliers.Id
-                'SupplierId' => $supplierMaster->Id,  // Explicitly add SupplierId for frontend
+                'Id' => $supplierMaster->Id,
+                'SupplierId' => $supplierMaster->Id,
                 'SupplierName' => $thirdParty->ThirdPartyName,
                 'ThirdPartyName' => $thirdParty->ThirdPartyName,
-                'Email' => $thirdParty->Email ?? '', // Include Email for restricted tender invitations
+                'Email' => $thirdParty->Email ?? '',
                 'Phone' => $thirdParty->Phone ?? '',
-                'CategoryId' => null, // No longer used - categories come from SupplierCategory mapping
-                'SupplierCategoryID' => $supplierCategoryIds->first(), // Prefer first mapped category if any
-                'ItemCategoryIds' => array_values(array_unique(array_map('intval', $itemCategoryIds))), // All categories supplier can serve (incl. top-level)
+                'CategoryId' => null,
+                'SupplierCategoryID' => $supplierCategoryIds->first(),
+                'ItemCategoryIds' => array_values(array_unique(array_map('intval', $itemCategoryIds))),
                 'RoundID' => $supplier->RoundID,
-                'ApplicationStatus' => 'Prequalified', // Since they're in t_Suppliers, they're prequalified
-                'ThirdPartyID' => $supplierMaster->ThirdPartyId, // FIX: Use SupplierMaster->ThirdPartyId
+                'ApplicationStatus' => 'Prequalified',
+                'ThirdPartyID' => $supplierMaster->ThirdPartyId,
             ]);
         }
 
-        // Remove duplicates: first by ID (same SupplierMaster record), then by name
-        // (two different DB rows for the same supplier person/company)
+
         $result = $suppliers
             ->unique('Id')
             ->unique(function ($item) {
@@ -1668,11 +1662,11 @@ class TenderController extends Controller
             })
             ->values();
 
-        // Log::info('Suppliers prepared for UI: ' . $result->count());
+
         try {
             if ($result->isNotEmpty()) {
                 $sample = $result->take(3);
-                // Log::info('Suppliers sample (first 3)', ['sample' => $sample]);
+
             }
         } catch (\Throwable $e) {
             // guard
@@ -1681,10 +1675,6 @@ class TenderController extends Controller
         return $result;
     }
 
-    /**
-     * Public API for fetching prequalified suppliers for a specific category.
-     * Returns JSON format expected by the frontend.
-     */
     public function getPrequalifiedSuppliersForCategory($categoryId)
     {
         $suppliers = $this->getPrequalifiedSuppliers();

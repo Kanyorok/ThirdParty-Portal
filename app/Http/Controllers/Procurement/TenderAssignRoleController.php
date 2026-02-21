@@ -51,7 +51,7 @@ class TenderAssignRoleController extends Controller
                 $memberName = $resolvedEmployee?->full_name ?? $resolvedUser?->Name ?? 'N/A';
 
                 $history->member_name = $memberName;
-                $history->reference   = $reference;
+                $history->reference = $reference;
 
                 return $history;
             });

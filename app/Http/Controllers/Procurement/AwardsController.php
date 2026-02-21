@@ -6,18 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQAward;
+use App\Models\Procurement\RFQCommittee;
 use App\Models\Procurement\RFQCommitteeMember;
 use App\Models\Procurement\RFQCriteria;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\RFQSupplierResponseEvaluation;
-use App\Models\Procurement\TenderSupplier;
-use App\Models\Procurement\TenderAward;
 use App\Models\Procurement\Tender;
-use App\Models\Procurement\TenderCommitteeEvaluation;
+use App\Models\Procurement\TenderAward;
 use App\Models\Procurement\TenderCommittee;
+use App\Models\Procurement\TenderCommitteeEvaluation;
 use App\Models\Procurement\TenderCommitteeMember;
-use App\Models\Procurement\RFQCommittee;
+use App\Models\Procurement\TenderSupplier;
 use App\Services\Procurement\TenderScoringService;
 use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\Request;
@@ -560,54 +560,54 @@ class AwardsController extends Controller
                 }
 
 
-            // Check if any queued/active award exists for this tender.
-            $existingActiveAward = TenderAward::where('TenderID', (int)$request->tender_id)
-                ->whereIn('AwardStatus', $this->blockingAwardStatuses())
-                ->orderByDesc('Id')
-                ->first();
+                // Check if any queued/active award exists for this tender.
+                $existingActiveAward = TenderAward::where('TenderID', (int)$request->tender_id)
+                    ->whereIn('AwardStatus', $this->blockingAwardStatuses())
+                    ->orderByDesc('Id')
+                    ->first();
 
-            if ($existingActiveAward) {
-                return redirect()->back()->with(
-                    'error',
-                    'An award already exists for this tender with status "' . $existingActiveAward->AwardStatus .
-                    '". Cancel it first before creating another award.'
-                );
-            }
+                if ($existingActiveAward) {
+                    return redirect()->back()->with(
+                        'error',
+                        'An award already exists for this tender with status "' . $existingActiveAward->AwardStatus .
+                        '". Cancel it first before creating another award.'
+                    );
+                }
 
-            // Ensure evaluator completion before allowing award:
-            // every accepted active evaluator must either submit or be marked [SKIPPED].
-            $pendingEvaluatorCount = DB::table('t_TenderCommitteeMembers as m')
-                ->where('m.TenderID', (int)$request->tender_id)
-                ->where('m.IsActive', 1)
-                ->where('m.Response', 1)
-                ->where(function ($q) {
-                    $q->whereNull('m.reason')
-                        ->orWhere(function ($inner) {
-                            $inner->whereRaw("UPPER(LTRIM(RTRIM(m.reason))) NOT LIKE 'SKIPPED:%'")
-                                ->whereRaw("UPPER(LTRIM(RTRIM(m.reason))) NOT LIKE '[[]SKIPPED[]]%'");
-                        });
-                })
-                ->where(function ($q) {
-                    $q->whereNull('m.HasEvaluated')
-                        ->orWhere('m.HasEvaluated', 0);
-                })
-                ->whereNotExists(function ($q) {
-                    $q->select(DB::raw(1))
-                        ->from('t_TenderCommitteeEvaluations as e')
-                        ->whereColumn('e.TenderID', 'm.TenderID')
-                        ->whereColumn('e.MemberID', 'm.Id');
-                })
-                ->count();
+                // Ensure evaluator completion before allowing award:
+                // every accepted active evaluator must either submit or be marked [SKIPPED].
+                $pendingEvaluatorCount = DB::table('t_TenderCommitteeMembers as m')
+                    ->where('m.TenderID', (int)$request->tender_id)
+                    ->where('m.IsActive', 1)
+                    ->where('m.Response', 1)
+                    ->where(function ($q) {
+                        $q->whereNull('m.reason')
+                            ->orWhere(function ($inner) {
+                                $inner->whereRaw("UPPER(LTRIM(RTRIM(m.reason))) NOT LIKE 'SKIPPED:%'")
+                                    ->whereRaw("UPPER(LTRIM(RTRIM(m.reason))) NOT LIKE '[[]SKIPPED[]]%'");
+                            });
+                    })
+                    ->where(function ($q) {
+                        $q->whereNull('m.HasEvaluated')
+                            ->orWhere('m.HasEvaluated', 0);
+                    })
+                    ->whereNotExists(function ($q) {
+                        $q->select(DB::raw(1))
+                            ->from('t_TenderCommitteeEvaluations as e')
+                            ->whereColumn('e.TenderID', 'm.TenderID')
+                            ->whereColumn('e.MemberID', 'm.Id');
+                    })
+                    ->count();
 
-            if ($pendingEvaluatorCount > 0) {
-                return redirect()->back()->with(
-                    'error',
-                    'Evaluation is still pending for one or more evaluators. Complete evaluations or mark pending evaluators as skipped from the consolidation page.'
-                );
-            }
+                if ($pendingEvaluatorCount > 0) {
+                    return redirect()->back()->with(
+                        'error',
+                        'Evaluation is still pending for one or more evaluators. Complete evaluations or mark pending evaluators as skipped from the consolidation page.'
+                    );
+                }
 
-            $user = Auth::user();
-            $id = $request->tender_id;
+                $user = Auth::user();
+                $id = $request->tender_id;
 
                 $awardData = [
                     'TenderID' => $id,
@@ -804,7 +804,7 @@ class AwardsController extends Controller
                 throw new \Exception('Failed to submit award to workflow');
             }
 
-            
+
             $award->update([
                 'AwardStatus' => $statusSubmitted,
                 'ModifiedBy' => $user->Id,
@@ -819,7 +819,7 @@ class AwardsController extends Controller
                 ->withProperties(['action' => 'submit_for_approval', 'type' => $type])
                 ->log('Submitted ' . $type . ' award for approval: Award ID ' . $award->Id);
 
-            return redirect()->route('procawards.index') 
+            return redirect()->route('procawards.index')
                 ->with('success', ucfirst($type) . ' Award submitted for approval successfully.');
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -1012,7 +1012,7 @@ class AwardsController extends Controller
                 // 2. Notify Suppliers
                 if ($type === 'tender') {
                     $this->notifySuccessfulBidders($award);
-                
+
                     if ($award->NotifyUnsuccessfulBidders) {
                         $this->notifyUnsuccessfulBidders($award);
                     }
@@ -1041,7 +1041,7 @@ class AwardsController extends Controller
 
             return redirect()->route('procawards.index')
                 ->with('success', ucfirst($type) . ' Award approved successfully.');
-        }catch (\Throwable $th) {
+        } catch (\Throwable $th) {
             DB::rollBack();
             Log::error("--- APPROVE AWARD ERROR --- " . $th->getMessage());
             Log::error($th->getTraceAsString());
@@ -1050,13 +1050,11 @@ class AwardsController extends Controller
         }
     }
 
-
-
     public function reject(Request $request, $id = null)
     {
-       $request->validate([
-             'reason' => 'required|string|max:1000',
-        ]);
+        $request->validate([
+              'reason' => 'required|string|max:1000',
+         ]);
 
         $awardId = $request->award_id ?? $id;
 
@@ -1146,11 +1144,11 @@ class AwardsController extends Controller
                     'ModifiedBy' => $user->Id,
                     'ModifiedOn' => now(),
                 ]);
-            $this->deactivateTenderCommittee((int) $award->TenderID, (int) $user->Id);
+                $this->deactivateTenderCommittee((int) $award->TenderID, (int) $user->Id);
             } else {
                 $award->reject($user, $request->reason);
-              
-            $this->deactivateRfqCommittee((int) $award->RFQID, (int) $user->Id);
+
+                $this->deactivateRfqCommittee((int) $award->RFQID, (int) $user->Id);
 
                 // Notify creator for RFQ
                 $creator = \App\Models\Auth\User::find($award->CreatedBy);
@@ -1201,8 +1199,6 @@ class AwardsController extends Controller
             return redirect()->back()->with('error', 'Failed to reject award: ' . $th->getMessage());
         }
     }
-
-
 
     /**
      * Cancel a pending award (re-open tender for re-award)
@@ -1653,7 +1649,6 @@ class AwardsController extends Controller
                 'ModifiedOn' => $now,
             ]);
     }
-     
 
     protected function notifySuccessfulBidders($award)
     {
@@ -1719,10 +1714,6 @@ class AwardsController extends Controller
     /**
      * Send notifications to unsuccessful bidders
      */
-   
-    
-
-
     protected function deactivateRfqCommittee(int $rfqId, int $actorId): void
     {
         $now = now();
@@ -1754,7 +1745,6 @@ class AwardsController extends Controller
                 'ModifiedOn' => $now,
             ]);
     }
-
 
     protected function notifyUnsuccessfulBidders($award)
     {
