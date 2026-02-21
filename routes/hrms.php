@@ -126,7 +126,9 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
 
     // HR Config — Job Grades & Roles
     Route::resource('config/job-grades', JobGradeController::class)->names('config.jobgrades')->except(['show']);
+    Route::post('config/job-grades/{grade}/activate', [JobGradeController::class, 'activate'])->name('config.jobgrades.activate');
     Route::resource('config/job-roles', JobRoleController::class)->names('config.jobroles')->except(['show']);
+    Route::post('config/job-roles/{role}/activate', [JobRoleController::class, 'activate'])->name('config.jobroles.activate');
     Route::resource('config/religions', ReligionController::class)->names('config.religions')->except(['show']);
 
     // HR Config — KPI setup (stubs)
@@ -167,10 +169,20 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
 
     // Statutory & Payroll Rules
     Route::resource('statutory/deductions', \App\Http\Controllers\HR\PayrollDeductionController::class)->names('statutory.deductions')->except(['show']);
+    Route::post('statutory/deductions/{deduction}/activate', [\App\Http\Controllers\HR\PayrollDeductionController::class, 'activate'])->name('statutory.deductions.activate');
     Route::resource('statutory/deductions/{deduction}/rules', \App\Http\Controllers\HR\PayrollDeductionRuleController::class)->names('statutory.deductions.rules')->except(['show']);
+    Route::post('statutory/deductions/{deduction}/rules/{rule}/activate', [\App\Http\Controllers\HR\PayrollDeductionRuleController::class, 'activate'])->name('statutory.deductions.rules.activate');
     Route::resource('statutory/allowances', PayrollAllowanceController::class)->names('statutory.allowances')->except(['show']);
+    Route::post('statutory/allowances/{allowance}/activate', [PayrollAllowanceController::class, 'activate'])->name('statutory.allowances.activate');
     Route::resource('statutory/allowances/{allowance}/rules', PayrollAllowanceRuleController::class)->names('statutory.allowances.rules')->except(['show']);
+    Route::post('statutory/allowances/{allowance}/rules/{rule}/activate', [PayrollAllowanceRuleController::class, 'activate'])->name('statutory.allowances.rules.activate');
     Route::resource('statutory/reliefs', \App\Http\Controllers\HR\StatutoryReliefController::class)->names('statutory.reliefs')->except(['show']);
+    Route::post('statutory/reliefs/{relief}/activate', [\App\Http\Controllers\HR\StatutoryReliefController::class, 'activate'])->name('statutory.reliefs.activate');
+    Route::resource('statutory/nhif', \App\Http\Controllers\HR\StatutoryNhifController::class)->names('statutory.nhif')->except(['show']);
+    Route::resource('statutory/nssf', \App\Http\Controllers\HR\StatutoryNssfController::class)->names('statutory.nssf')->except(['show']);
+    Route::resource('statutory/paye', \App\Http\Controllers\HR\StatutoryPayeController::class)->names('statutory.paye')->except(['show']);
+    Route::resource('statutory/housinglevy', \App\Http\Controllers\HR\StatutoryHousingLevyController::class)->names('statutory.housinglevy')->except(['show']);
+    Route::resource('statutory/fringe', \App\Http\Controllers\HR\StatutoryFringeBenefitController::class)->names('statutory.fringe')->except(['show']);
 
     // Exit Management Config
     Route::resource('config/exit-types', ExitTypeController::class)->names('config.exit-types')->except(['show', 'destroy']);
@@ -356,7 +368,9 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     // Time & Attendance
     Route::resource('attendance/devices', \App\Http\Controllers\HR\AttendanceDeviceController::class)->names('attendance.devices')->except(['show']);
     Route::get('attendance/logs', [\App\Http\Controllers\HR\AttendanceRawLogController::class, 'index'])->name('attendance.logs.index');
+    Route::get('attendance/logs', [\App\Http\Controllers\HR\AttendanceRawLogController::class, 'index'])->name('attendance.logs'); // alias for views
     Route::get('attendance/daily', [\App\Http\Controllers\HR\AttendanceDailySummaryController::class, 'index'])->name('attendance.daily.index');
+    Route::get('attendance/daily', [\App\Http\Controllers\HR\AttendanceDailySummaryController::class, 'index'])->name('attendance.daily'); // alias for views
     Route::get('attendance/overtime', [\App\Http\Controllers\HR\OvertimeRequestController::class, 'index'])->name('attendance.overtime.index');
     Route::get('attendance/overtime/create', [\App\Http\Controllers\HR\OvertimeRequestController::class, 'create'])->name('attendance.overtime.create');
     Route::post('attendance/overtime', [\App\Http\Controllers\HR\OvertimeRequestController::class, 'store'])->name('attendance.overtime.store');
@@ -368,6 +382,7 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
         ->except(['show']);
     Route::get('attendance/exceptions', [\App\Http\Controllers\HR\AttendanceExceptionController::class, 'index'])->name('attendance.exceptions.index');
     Route::post('attendance/exceptions/{id}/resolve', [\App\Http\Controllers\HR\AttendanceExceptionController::class, 'resolve'])->name('attendance.exceptions.resolve');
+    Route::get('attendance/reports', [\App\Http\Controllers\HR\AttendanceReportController::class, 'index'])->name('attendance.reports.index');
 
     // Leave Management
     Route::get('leave/requests/eligible-types', [\App\Http\Controllers\HR\LeaveRequestController::class, 'eligibleTypes'])->name('leave.requests.eligible_types');
@@ -382,6 +397,8 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     Route::post('leave/balances/load-yearly', [\App\Http\Controllers\HR\LeaveBalanceController::class, 'loadYearlyBalances'])->name('leave.balances.load_yearly');
     Route::get('leave/balances/export', [\App\Http\Controllers\HR\LeaveBalanceController::class, 'export'])->name('leave.balances.export');
     Route::get('leave/calendar', [\App\Http\Controllers\HR\LeaveRequestController::class, 'calendar'])->name('leave.calendar.index');
+    Route::get('leave/calendar/data', [\App\Http\Controllers\HR\LeaveRequestController::class, 'calendarData'])->name('leave.calendar.data');
+    Route::get('leave/reports', [\App\Http\Controllers\HR\LeaveReportController::class, 'index'])->name('leave.reports.index');
 
     // Payroll Management
     Route::get('payroll', [\App\Http\Controllers\HR\PayrollDashboardController::class, 'index'])->name('payroll.dashboard');
@@ -397,6 +414,7 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     Route::post('payroll/runs/{id}/approve', [\App\Http\Controllers\HR\PayrollRunController::class, 'approve'])->name('payroll.runs.approve');
     Route::post('payroll/runs/{id}/reject', [\App\Http\Controllers\HR\PayrollRunController::class, 'reject'])->name('payroll.runs.reject');
     Route::post('payroll/runs/{id}/employees/{employeeId}/recalc', [\App\Http\Controllers\HR\PayrollRunController::class, 'recalcLine'])->name('payroll.runs.recalc');
+    Route::post('payroll/runs/{id}/recalc-all', [\App\Http\Controllers\HR\PayrollRunController::class, 'recalcAll'])->name('payroll.runs.recalcAll');
     Route::get('payroll/runs/{id}/bank-file', [\App\Http\Controllers\HR\PayrollRunController::class, 'bankFile'])->name('payroll.runs.bankfile');
     Route::get('payroll/runs/{id}/eft', [\App\Http\Controllers\HR\PayrollRunController::class, 'eftXml'])->name('payroll.runs.eft');
     Route::get('payroll/runs/{id}/employees/{employeeId}/payslip', [\App\Http\Controllers\HR\PayrollRunController::class, 'payslip'])->name('payroll.runs.payslip');
@@ -425,6 +443,7 @@ Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     Route::post('payroll/loans/{id}/approve', [\App\Http\Controllers\HR\StaffLoanController::class, 'approve'])->name('payroll.loans.approve');
     Route::post('payroll/loans/{id}/reject', [\App\Http\Controllers\HR\StaffLoanController::class, 'reject'])->name('payroll.loans.reject');
     Route::resource('payroll/loans', \App\Http\Controllers\HR\StaffLoanController::class)->names('payroll.loans')->only(['index','create','store','show']);
+    Route::post('payroll/loans/{id}/cancel', [\App\Http\Controllers\HR\StaffLoanController::class, 'cancel'])->name('payroll.loans.cancel');
     Route::get('payroll/gratuity', [\App\Http\Controllers\HR\GratuityController::class, 'index'])->name('payroll.gratuity.index');
     Route::get('payroll/gratuity/create', [\App\Http\Controllers\HR\GratuityController::class, 'create'])->name('payroll.gratuity.create');
     Route::post('payroll/gratuity', [\App\Http\Controllers\HR\GratuityController::class, 'store'])->name('payroll.gratuity.store');

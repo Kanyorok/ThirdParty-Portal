@@ -37,6 +37,8 @@ class FinanceGLAccounts extends Model
         'GLDigits',
         'Description',
         'IsActive',
+        'IsInterbranchGL',
+        'InterbranchRole',
 
         'CreatedBy',
         'CreatedOn',
