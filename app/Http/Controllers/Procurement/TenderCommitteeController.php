@@ -84,7 +84,7 @@ class TenderCommitteeController extends Controller
 
         // Only active (non-deleted) users linked to employees can be assigned to committees.
         $employees = User::query()
-            ->with(['employee.role:id,name'])
+            ->with(['employee','branchRoles.role'])
             ->whereNotNull('EmployeeId')
             ->whereNull('DeletedOn')
             ->orderBy('Name')
@@ -307,7 +307,7 @@ class TenderCommitteeController extends Controller
             ->values();
 
         $availableMembers = User::query()
-            ->with(['employee.role:id,name'])
+            ->with(['employee.role'])
             ->whereNotNull('EmployeeId')
             ->whereNull('DeletedOn')
             ->when($currentMemberValues->isNotEmpty(), function ($query) use ($currentMemberValues) {

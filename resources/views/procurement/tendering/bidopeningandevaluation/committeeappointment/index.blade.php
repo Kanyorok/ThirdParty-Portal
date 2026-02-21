@@ -136,11 +136,13 @@
                             Select Committee Members <span class="text-danger">*</span>
                         </label>
                         <select class="form-select" id="committeeMembers" name="committeeMembers[]" multiple>
-                            @foreach ($employees as $item)
-                                <option value="{{ $item->Id }}">
-                                    {{ optional($item->employee)->full_name ?? $item->Name }} - {{ optional(optional($item->employee)->role)->Name ?? 'N/A' }}
-                                </option>
-                            @endforeach
+                           @foreach ($employees as $item)
+                            <option value="{{ $item->Id }}">
+                                {{ optional($item->employee)->full_name ?? $item->Name }}
+                                -
+                                {{ $item->branchRoles->first()?->role?->name ?? 'N/A' }}
+                            </option>
+                        @endforeach
                         </select>
                         <div class="invalid-feedback" id="committeeMembers-error"></div>
                         <small class="form-text text-muted">Hold CTRL/CMD to select multiple users.</small>

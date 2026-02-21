@@ -20,12 +20,14 @@ class TenderResponseController extends Controller
 
     public function create()
     {
-        $tenders = Tender::where('ApprovalStatus', TenderApprovalStatusEnum::APPROVED)
-            ->whereNot('Status', \App\Enums\TenderStatusEnum::OpeningInProgress->value)
-            ->whereNot('Status', \App\Enums\TenderStatusEnum::Awarded->value)
-            ->where('SubmissionDeadline', '>', now())
-            ->select('Id', 'TenderNo', 'Title')
-            ->get();
+       $tenders = Tender::where('ApprovalStatus', TenderApprovalStatusEnum::APPROVED)
+    ->whereNotIn('Status', [
+        \App\Enums\TenderStatusEnum::OpeningInProgress->value,
+        \App\Enums\TenderStatusEnum::Awarded->value,
+    ])
+    ->where('SubmissionDeadline', '>', now())
+    ->select('Id', 'TenderNo', 'Title')
+    ->get();
 
 
 
@@ -38,7 +40,11 @@ class TenderResponseController extends Controller
                     'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName
                         ?? $supplier->supplierMaster->thirdParty->ThirdPartyName,
                 ];
-            });
+            })
+            ->unique(function ($supplier) {
+                return strtolower(trim($supplier->SupplierName ?? ''));
+            })
+            ->values();
 
         return view('procurement.tendering.suppliermanagement.invitationresponsetracking.create', compact('tenders', 'suppliers'));
     }
@@ -173,7 +179,9 @@ class TenderResponseController extends Controller
                 ];
             })
             ->unique('Id') // Start by unique ID
-            ->unique('SupplierName') // Ensure unique names in dropdown
+            ->unique(function ($item) {
+                return strtolower(trim($item['SupplierName'] ?? ''));
+            }) // Ensure unique names in dropdown
             ->values();
 
         // Log::info('Invited Suppliers Count for Tender ' . $tenderId . ': ' . $suppliers->count());

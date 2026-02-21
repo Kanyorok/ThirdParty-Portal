@@ -11,6 +11,7 @@ use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQAward;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderAward;
+use Illuminate\Container\Attributes\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -916,7 +917,7 @@ class ContractsController extends Controller
 
         try {
             $workflow = $this->getWorkflow($type);
-
+            
             // Use UnderReview status (rv)
             $workflow->submit(
                 $award,

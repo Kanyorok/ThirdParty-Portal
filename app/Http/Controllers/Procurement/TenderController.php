@@ -1663,7 +1663,9 @@ class TenderController extends Controller
         // (two different DB rows for the same supplier person/company)
         $result = $suppliers
             ->unique('Id')
-            ->unique('SupplierName')
+            ->unique(function ($item) {
+                return strtolower(trim($item['SupplierName'] ?? ''));
+            })
             ->values();
 
         // Log::info('Suppliers prepared for UI: ' . $result->count());
