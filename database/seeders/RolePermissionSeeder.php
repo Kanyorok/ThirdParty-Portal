@@ -81,6 +81,23 @@ class RolePermissionSeeder extends Seeder
             echo "  Removed {$deleted} obsolete permissions." . PHP_EOL;
         }
 
+
+        // 2. SKIP workflow permissions - they are special and belong to implemented workflows
+        //    Do NOT delete, update, or touch workflow-related permissions as they impact approvals
+        //    Get list of permissions that are referenced in workflow stages
+        $workflowPermissionIds = DB::table('t_WorkFlowStages')
+            ->whereNotNull('PermissionID')
+            ->distinct()
+            ->pluck('PermissionID')
+            ->all();
+
+        $workflowPermissionNames = DB::table($table)
+            ->whereIn('id', $workflowPermissionIds)
+            ->pluck('name')
+            ->all();
+
+        echo "Skipping " . count($workflowPermissionNames) . " workflow-related permissions..." . PHP_EOL;
+
         // 3. Prepare rows for Upsert
         $rows = [];
 

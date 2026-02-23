@@ -18,11 +18,13 @@ class TenderCommitteeMember extends Model
     public const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_TenderCommitteeMembers';
+
     protected $fillable = [
         'CommitteeID',
         'UserID',
         'TenderID',
         'Role',
+        'PendingRole',
         'Response',
         'IsActive',
         'HasEvaluated',
@@ -40,6 +42,7 @@ class TenderCommitteeMember extends Model
         'UserID' => 'integer',
         'TenderID' => 'integer',
         'Role' => 'string',
+        'PendingRole' => 'string',
         'Response' => 'integer',
         'IsActive' => 'boolean',
         'CreatedBy' => 'integer',
@@ -56,7 +59,7 @@ class TenderCommitteeMember extends Model
         'DeletedOn',
     ];
 
-    protected $primaryKey = 'Id';
+    protected $primaryKey = 'id';
 
     // Compatibility bridge: DB uses lowercase `id`, legacy code often reads/writes `Id`.
     public function getIdAttribute()
@@ -91,7 +94,14 @@ class TenderCommitteeMember extends Model
 
     public function tenderCommitteeEvaluations()
     {
-        return $this->hasMany(TenderCommitteeEvaluation::class, 'TenderCommitteeMemberID', 'Id');
+        return $this->hasMany(TenderCommitteeEvaluation::class, 'MemberID', 'Id');
+    }
+
+    public function roleHistory()
+    {
+        return $this->hasMany(CommitteeRoleHistory::class, 'MemberID', 'id')
+            ->where('MemberType', 'tender')
+            ->orderByDesc('ChangedOn');
     }
 
     public function tender()

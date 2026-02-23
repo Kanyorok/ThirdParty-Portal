@@ -198,7 +198,7 @@
                                 onclick="showReadOutSummary({{ $item->Id }})">
                             <i class="fas fa-microphone"></i> Read Out
                         </button>
-                    @elseif(isset($tender) && $tender->OpeningDate && $tender->OpeningDate <= now())
+                    @elseif(isset($tender) && $tender->Status === \App\Enums\TenderStatusEnum::OpeningInProgress)
                         <!-- Ceremony started but bid not opened yet - show opening action -->
                         <button class="btn btn-sm btn-warning mb-1"
                                 onclick="openIndividualBid({{ $item->Id }})"
@@ -255,15 +255,15 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Officers Present</label>
+                            <label class="form-label fw-bold">Officers Present *</label>
                             <textarea class="form-control" name="officers_present" rows="2"
-                                      placeholder="List procurement officers and witnesses present during ceremony"></textarea>
+                                      placeholder="List procurement officers and witnesses present during ceremony"required></textarea>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Ceremony Notes</label>
+                            <label class="form-label fw-bold">Ceremony Notes *</label>
                             <textarea class="form-control" name="ceremony_notes" rows="3"
-                                      placeholder="Any special notes or observations about the opening ceremony"></textarea>
+                                      placeholder="Any special notes or observations about the opening ceremony"required></textarea>
                         </div>
 
                         <div class="alert alert-warning">

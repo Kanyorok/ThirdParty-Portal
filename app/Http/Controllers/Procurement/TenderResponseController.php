@@ -21,11 +21,14 @@ class TenderResponseController extends Controller
     public function create()
     {
         $tenders = Tender::where('ApprovalStatus', TenderApprovalStatusEnum::APPROVED)
-            ->whereNot('Status', \App\Enums\TenderStatusEnum::OpeningInProgress->value)
-            ->whereNot('Status', \App\Enums\TenderStatusEnum::Awarded->value)
-            ->where('SubmissionDeadline', '>', now())
-            ->select('Id', 'TenderNo', 'Title')
-            ->get();
+    ->whereNotIn('Status', [
+         \App\Enums\TenderStatusEnum::OpeningInProgress->value,
+         \App\Enums\TenderStatusEnum::Awarded->value,
+    ])
+    ->where('SubmissionDeadline', '>', now())
+    ->select('Id', 'TenderNo', 'Title')
+    ->get();
+
 
 
         $suppliers = Supplier::with('supplierMaster.thirdParty')
@@ -37,7 +40,11 @@ class TenderResponseController extends Controller
                     'SupplierName' => $supplier->supplierMaster->thirdParty->TradingName
                         ?? $supplier->supplierMaster->thirdParty->ThirdPartyName,
                 ];
-            });
+            })
+            ->unique(function ($supplier) {
+                return strtolower(trim($supplier->SupplierName ?? ''));
+            })
+            ->values();
 
         return view('procurement.tendering.suppliermanagement.invitationresponsetracking.create', compact('tenders', 'suppliers'));
     }
@@ -143,9 +150,9 @@ class TenderResponseController extends Controller
         // Note: SupplierMaster connects to ThirdParty via ThirdPartyId
         $query = \App\Models\ThirdParty\SupplierMaster::whereNull('DeletedOn')
             ->where(function ($q) {
-                // Include if Approved (Active) OR IsPrequalified
+                // Include if Approved (Active)and IsPrequalified
                 $q->where('ApprovalStatus', \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved)
-                  ->orWhere('IsPrequalified', true);
+                  ->where('IsPrequalified', true);
             })
             ->whereNotIn('Id', $respondedMasterIds) // Exclude MASTERS who have alrady responded via any child
             ->with(['thirdParty']);
@@ -172,7 +179,9 @@ class TenderResponseController extends Controller
                 ];
             })
             ->unique('Id') // Start by unique ID
-            ->unique('SupplierName') // Ensure unique names in dropdown
+            ->unique(function ($item) {
+                return strtolower(trim($item['SupplierName'] ?? ''));
+            }) // Ensure unique names in dropdown
             ->values();
 
         // Log::info('Invited Suppliers Count for Tender ' . $tenderId . ': ' . $suppliers->count());

@@ -36,6 +36,7 @@ class RFQCommitteeMember extends Model
         'UserID',
         'RFQID',
         'Role',
+        'PendingRole',
         'Response',
         'IsActive',
         'HasEvaluated',
@@ -53,6 +54,7 @@ class RFQCommitteeMember extends Model
         'UserID' => 'integer',
         'RFQID' => 'integer',
         'Role' => 'string',
+        'PendingRole' => 'string',
         'Response' => 'integer',
         'IsActive' => 'boolean',
         'HasEvaluated' => 'boolean',
@@ -93,6 +95,13 @@ class RFQCommitteeMember extends Model
     public function deletedBy()
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
+    }
+
+    public function roleHistory()
+    {
+        return $this->hasMany(CommitteeRoleHistory::class, 'MemberID', 'id')
+            ->where('MemberType', 'rfq')
+            ->orderByDesc('ChangedOn');
     }
 
     public static function getPrimaryKey(): string

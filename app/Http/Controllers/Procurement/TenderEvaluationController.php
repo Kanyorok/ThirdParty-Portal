@@ -58,6 +58,7 @@ class TenderEvaluationController extends Controller
         if ($existingMemberId) {
             $alreadyEvaluated = TenderCommitteeEvaluation::where('TenderID', $tender->Id)
                 ->where('MemberID', $existingMemberId)
+                ->where('SupplierID', $bid->SupplierId)
                 ->exists();
             if ($alreadyEvaluated) {
                 return redirect()->route('evaluationdashboard.index')

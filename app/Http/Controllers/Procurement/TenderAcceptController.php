@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Procurement\CommitteeRoleHistory;
 use App\Models\Procurement\RFQCommitteeMember;
 use App\Models\Procurement\TenderCommitteeMember;
 use Illuminate\Http\Request;
@@ -13,11 +14,10 @@ class TenderAcceptController extends Controller
 {
     public function index()
     {
-        // Get the current user ID (not EmployeeId) as committee members are stored by User ID
         $currentUserId = Auth::id();
         $currentEmployeeId = optional(Auth::user())->EmployeeId;
 
-        // Tenders pending response
+        // Tenders: pending response (Response=0/null) OR pending role change
         $tenders = TenderCommitteeMember::where(function ($q) use ($currentUserId, $currentEmployeeId) {
             $q->where('UserID', $currentUserId);
             if ($currentEmployeeId) {
@@ -27,12 +27,15 @@ class TenderAcceptController extends Controller
             ->whereNotNull('TenderID')
             ->whereHas('tender')
             ->where(function ($q) {
-                $q->whereNull('Response')->orWhere('Response', 0);
+                $q->where(function ($sub) {
+                    $sub->whereNull('Response')->orWhere('Response', 0);
+                })
+                ->orWhereNotNull('PendingRole');
             })
             ->with(['tender:Id,TenderNo,Title', 'createdBy:Id,Name'])
             ->get();
 
-        // RFQs pending response (support both User.Id and legacy EmployeeId mapping)
+        // RFQs: pending response (Response=0/null) OR pending role change
         $rfq = RFQCommitteeMember::where(function ($q) use ($currentUserId, $currentEmployeeId) {
             $q->where('UserID', $currentUserId);
             if ($currentEmployeeId) {
@@ -42,7 +45,10 @@ class TenderAcceptController extends Controller
             ->whereNotNull('RFQID')
             ->whereHas('rfq')
             ->where(function ($q) {
-                $q->whereNull('Response')->orWhere('Response', 0);
+                $q->where(function ($sub) {
+                    $sub->whereNull('Response')->orWhere('Response', 0);
+                })
+                ->orWhereNotNull('PendingRole');
             })
             ->with(['rfq:Id,RFQNumber', 'createdBy:Id,Name'])
             ->get();
@@ -57,15 +63,12 @@ class TenderAcceptController extends Controller
 
     public function store(Request $request)
     {
-
         try {
             DB::beginTransaction();
 
-            // Get current user and employee IDs to match both canonical and legacy committee records
             $currentUserId = Auth::id();
             $currentEmployeeId = optional(Auth::user())->EmployeeId;
 
-            // Validate response input to only accept 1 (accept) or 2 (decline)
             $validated = $request->validate([
                 'tender_id' => 'nullable|exists:t_Tenders,Id',
                 'tender_response' => 'nullable|in:1,2',
@@ -75,25 +78,61 @@ class TenderAcceptController extends Controller
                 'rfq_comments' => 'nullable|string|max:1000',
             ]);
 
-            // Update tender committee response if submitted
+
             if ($request->filled('tender_id') && $request->filled('tender_response')) {
-                TenderCommitteeMember::where(function ($q) use ($currentUserId) {
+                $tenderMember = TenderCommitteeMember::where(function ($q) use ($currentUserId) {
                     $q->where('UserID', $currentUserId)
                         ->orWhereHas('user', fn ($uq) => $uq->where('Id', $currentUserId))
                         ->orWhereHas('userByEmployee', fn ($uq) => $uq->where('Id', $currentUserId));
                 })
                     ->where('TenderID', $request->tender_id)
-                    ->update([
-                        'Response' => (int)$request->tender_response,
+                    ->first();
+
+                if ($tenderMember) {
+                    $response = (int) $request->tender_response;
+
+                    $updateData = [
+                        'Response' => $response,
                         'reason' => $request->tender_comments,
                         'ModifiedBy' => $currentUserId,
                         'ModifiedOn' => now(),
-                    ]);
+                    ];
+
+                    // Handle pending role change
+                    if ($tenderMember->PendingRole) {
+                        if ($response === 1) {
+                            // Accept: apply the pending role
+                            $updateData['Role'] = $tenderMember->PendingRole;
+                            $updateData['PendingRole'] = null;
+                        } else {
+                            // Decline: discard pending role, keep current
+                            $updateData['PendingRole'] = null;
+                        }
+
+                        // Update the history record
+                        $historyStatus = $response === 1
+                            ? CommitteeRoleHistory::STATUS_ACCEPTED
+                            : CommitteeRoleHistory::STATUS_DECLINED;
+
+                        CommitteeRoleHistory::where('MemberType', 'tender')
+                            ->where('MemberID', $tenderMember->id)
+                            ->where('Status', CommitteeRoleHistory::STATUS_PENDING)
+                            ->orderByDesc('ChangedOn')
+                            ->limit(1)
+                            ->update([
+                                'Status' => $historyStatus,
+                                'RespondedOn' => now(),
+                                'ModifiedOn' => now(),
+                            ]);
+                    }
+
+                    $tenderMember->update($updateData);
+                }
             }
 
-            // Update RFQ committee response if submitted
+
             if ($request->filled('rfq_id') && $request->filled('rfq_response')) {
-                RFQCommitteeMember::where(function ($q) use ($currentUserId, $currentEmployeeId) {
+                $rfqMember = RFQCommitteeMember::where(function ($q) use ($currentUserId, $currentEmployeeId) {
                     $q->where('UserID', $currentUserId)
                         ->orWhereHas('user', fn ($uq) => $uq->where('Id', $currentUserId))
                         ->orWhereHas('userByEmployee', fn ($uq) => $uq->where('Id', $currentUserId));
@@ -103,12 +142,45 @@ class TenderAcceptController extends Controller
                     }
                 })
                     ->where('RFQID', $request->rfq_id)
-                    ->update([
-                        'Response' => (int)$request->rfq_response,
+                    ->first();
+
+                if ($rfqMember) {
+                    $response = (int) $request->rfq_response;
+
+                    $updateData = [
+                        'Response' => $response,
                         'reason' => $request->rfq_comments,
                         'ModifiedBy' => $currentUserId,
                         'ModifiedOn' => now(),
-                    ]);
+                    ];
+
+                    // Handle pending role change
+                    if ($rfqMember->PendingRole) {
+                        if ($response === 1) {
+                            $updateData['Role'] = $rfqMember->PendingRole;
+                            $updateData['PendingRole'] = null;
+                        } else {
+                            $updateData['PendingRole'] = null;
+                        }
+
+                        $historyStatus = $response === 1
+                            ? CommitteeRoleHistory::STATUS_ACCEPTED
+                            : CommitteeRoleHistory::STATUS_DECLINED;
+
+                        CommitteeRoleHistory::where('MemberType', 'rfq')
+                            ->where('MemberID', $rfqMember->id)
+                            ->where('Status', CommitteeRoleHistory::STATUS_PENDING)
+                            ->orderByDesc('ChangedOn')
+                            ->limit(1)
+                            ->update([
+                                'Status' => $historyStatus,
+                                'RespondedOn' => now(),
+                                'ModifiedOn' => now(),
+                            ]);
+                    }
+
+                    $rfqMember->update($updateData);
+                }
             }
 
             DB::commit();

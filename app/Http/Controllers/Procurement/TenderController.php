@@ -232,13 +232,34 @@ class TenderController extends Controller
 
     public function store(Request $request)
     {
+        // ── Idempotency guard ─────────────────────────────────────────────────
+        // Build a fingerprint from stable request fields so that re-submitting
+        // the same form within 60 seconds is treated as a duplicate.
+        // NOTE: the key is only WRITTEN after validation passes, so a failed
+        // validation (e.g. missing supplier) does not consume the quota.
+        $idempotencyKey = 'tender_store:' . Auth::id() . ':' . md5(implode('|', [
+            $request->input('title', ''),
+            $request->input('tender_type', ''),
+            $request->input('submission_deadline', ''),
+            $request->input('opening_date', ''),
+            $request->input('tender_category_id', ''),
+            $request->input('item_category_id', ''),
+        ]));
+
+        if (\Illuminate\Support\Facades\Cache::has($idempotencyKey)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'This tender was already submitted. Please wait a moment before trying again.');
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
+        // TenderTypeEnum::Restricted has backing value 'rs'
+        $isRestricted = $request->input('tender_type') === TenderTypeEnum::Restricted->value;
+
         $validated = $request->validate([
             'tender_category_id' => 'required|integer|exists:t_TenderCategories,Id',
             'item_category_id' => 'required|integer|exists:t_ItemCategories,Id',
-            // 1. Submission Deadline must be today or in the future
             'submission_deadline' => 'required|date|after_or_equal:today',
-
-            // 2. Opening Date must be AFTER the submission deadline
             'opening_date' => 'required|date|after:submission_deadline',
             'title' => 'required|string|max:255',
             'tender_type' => 'required|string',
@@ -246,10 +267,20 @@ class TenderController extends Controller
             'instructions' => 'nullable|string',
             'currency_id' => 'required|integer|exists:t_Currencies,Id',
             'documents.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
+            // Restricted tenders MUST nominate at least one supplier at creation.
+            'suppliers' => $isRestricted ? 'required|array|min:1' : 'nullable|array',
+            'suppliers.*' => 'integer',
         ], [
             'submission_deadline.after_or_equal' => 'The submission deadline cannot be in the past.',
             'opening_date.after' => 'The opening date must be after the submission deadline.',
+            'suppliers.required' => 'A restricted tender must have at least one invited supplier.',
+            'suppliers.min' => 'A restricted tender must have at least one invited supplier.',
         ]);
+
+        // Validation passed — now lock the idempotency key so a true duplicate
+        // network retry (within 60 s) is rejected, but a corrected resubmit after
+        // a validation error is allowed (the key was never written on failure).
+        \Illuminate\Support\Facades\Cache::put($idempotencyKey, true, now()->addSeconds(60));
 
         DB::beginTransaction();
 
@@ -357,7 +388,7 @@ class TenderController extends Controller
                     //auto generated pr reference
                     $prReference = $this->generateManualItemPRReference($tender->TenderNo, $manualCounter++);
 
-                    TenderItems::create([
+                    TenderItems::Updateorcreate([
                         'TenderID' => $tenderId,
                         'SourceType' => 'MANUAL',
                         'ItemID' => $manualItem['item_id'] ?? null,
@@ -373,16 +404,14 @@ class TenderController extends Controller
                 }
             }
 
-            // Process suppliers
+            // Process suppliers (updateOrCreate prevents duplicate rows on retry)
             $suppliers = $request->input('suppliers', []);
             if (! empty($suppliers)) {
                 foreach ($suppliers as $supplierId) {
-                    TenderSupplier::create([
-                        'TenderID' => $tenderId,
-                        'SupplierID' => $supplierId,
-                        'CreatedBy' => Auth::id(),
-                        'ModifiedBy' => Auth::id(),
-                    ]);
+                    TenderSupplier::updateOrCreate(
+                        ['TenderID' => $tenderId, 'SupplierID' => $supplierId],
+                        ['CreatedBy' => Auth::id(), 'ModifiedBy' => Auth::id()]
+                    );
                 }
             }
 
@@ -422,21 +451,34 @@ class TenderController extends Controller
                 return redirect()->back()->with('error', 'Only draft tenders can be submitted.');
             }
 
-            if ($tender->ApprovalStatus !== null) {
+            // Read ApprovalStatus as raw DB value to avoid enum cast error on legacy '0' default.
+            // Allow submission when: never submitted (null/'0'/'') OR previously rejected ('R').
+            // Block only if PENDING ('P') or APPROVED ('A').
+            $rawApprovalStatus = DB::table($tender->getTable())
+                ->where($tender->getKeyName(), $tender->Id)
+                ->value('ApprovalStatus');
+            $isAlreadySubmitted = (
+                $rawApprovalStatus !== null
+                && $rawApprovalStatus !== '0'
+                && $rawApprovalStatus !== ''
+                && $rawApprovalStatus !== TenderApprovalStatusEnum::REJECTED->value
+            );
+            if ($isAlreadySubmitted) {
                 return redirect()->back()->with('error', 'This tender has already been submitted for approval.');
             }
 
-            // Check if tender has items
+            // Check if tender has items (stored in t_TenderItems)
             $itemCount = TenderItems::where('TenderID', $tender->Id)->count();
             if ($itemCount === 0) {
-                return redirect()->back()->with('error', 'Cannot submit tender without items.');
+                return redirect()->back()->with('error', 'This tender has no items. Please edit the tender and add at least one item before submitting for approval.');
             }
 
-            // For restricted tenders, ensure suppliers are selected
-            if ($tender->TenderType === TenderTypeEnum::Restricted) {
+            // For restricted tenders, ensure suppliers are selected.
+            // Suppliers are stored in t_TenderSuppliers via TenderSupplier model.
+            if ($tender->isRestricted()) {
                 $supplierCount = TenderSupplier::where('TenderID', $tender->Id)->count();
                 if ($supplierCount === 0) {
-                    return redirect()->back()->with('error', 'Restricted tenders require at least one supplier to be invited. Please edit the tender and add suppliers before submitting for approval.');
+                    return redirect()->back()->with('error', 'This is a Restricted tender. You must invite at least one supplier before submitting for approval. Please edit the tender and add suppliers under the "Add Suppliers to Invite" section.');
                 }
             }
 
@@ -503,20 +545,25 @@ class TenderController extends Controller
 
             // Check permissions
             $isSubmitter = ($tender->CreatedBy == $userId);
-            $canApprove = false;
-            $showApprovalButtons = false;
-            $canEdit = false;
 
-            //  Determine edit permissions
-            // Can edit if: (1) Status is Draft AND (2) Not yet submitted (ApprovalStatus is NULL) OR rejected
+            // Determine edit permissions
+            // Read raw ApprovalStatus to avoid enum cast errors on legacy '0' DB default.
+            // Treat null, '0', and '' as "not yet submitted" (same as null).
+            $rawApprovalStatus = $tender->getRawOriginal('ApprovalStatus');
+            $approvalStatusIsNull = ($rawApprovalStatus === null || $rawApprovalStatus === '0' || $rawApprovalStatus === '');
+            $approvalStatusPending = ($rawApprovalStatus === TenderApprovalStatusEnum::PENDING->value);  // 'P'
+            $approvalStatusRejected = ($rawApprovalStatus === TenderApprovalStatusEnum::REJECTED->value); // 'R'
+
+            $canEdit = false;
             if ($tender->Status === TenderStatusEnum::Draft) {
-                if ($tender->ApprovalStatus === null || $tender->ApprovalStatus === TenderApprovalStatusEnum::REJECTED) {
+                if ($approvalStatusIsNull || $approvalStatusRejected) {
                     $canEdit = $isSubmitter; // Only creator can edit
                 }
             }
 
-            // Only check approval permissions if tender is pending
-            if ($tender->ApprovalStatus === TenderApprovalStatusEnum::PENDING) {
+            $canApprove = false;
+            $showApprovalButtons = false;
+            if ($approvalStatusPending) {
                 $canApprove = $this->workflow->canApproveModel($tender, $user);
 
                 // Submitter cannot approve their own tender
@@ -1503,9 +1550,10 @@ class TenderController extends Controller
         // FIX: 'types' is on ThirdParties (party), not SupplierMaster (thirdParty)
         $supplierQuery = \App\Models\ThirdParies\Supplier::query()
             ->where('Active_Status', 1)
-            /* ->whereHas('thirdParty.party.types', function ($q) {
-                 $q->where('Code', 'like', 'SU-%');
-             })*/
+            ->whereHas('thirdParty', function ($q) {
+                $q->where('ApprovalStatus', \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved)
+                  ->where('IsPrequalified', true);
+            })
             ->with(['thirdParty.party', 'supplierCategory.itemCategories']);
 
         $prequalifiedSuppliers = $supplierQuery->get();
@@ -1586,39 +1634,39 @@ class TenderController extends Controller
                 $itemCategoryIds = array_merge($itemCategoryIds, $topLevelSet);
             }
 
-            // Log the final ItemCategoryIds for this supplier
-            if ($supplierMaster->Id == 2) { // Uma Yang - use SupplierMaster.Id
-                // Log::info("Building ItemCategoryIds for supplier (SupplierMaster ID " . $supplierMaster->Id . ")", [
-                //     'supplier_name' => $thirdParty->ThirdPartyName,
-                //     'supplier_category_ids' => $supplierCategoryIds->toArray(),
-                //     'final_item_category_ids' => array_values(array_unique(array_map('intval', $itemCategoryIds))),
-                //     'count' => count(array_unique($itemCategoryIds))
+            if ($supplierMaster->Id == 2) {
+
             }
 
             $suppliers->push([
-                'Id' => $supplierMaster->Id,  // CRITICAL FIX: Use SupplierMaster.Id, not t_Suppliers.Id
-                'SupplierId' => $supplierMaster->Id,  // Explicitly add SupplierId for frontend
+                'Id' => $supplierMaster->Id,
+                'SupplierId' => $supplierMaster->Id,
                 'SupplierName' => $thirdParty->ThirdPartyName,
                 'ThirdPartyName' => $thirdParty->ThirdPartyName,
-                'Email' => $thirdParty->Email ?? '', // Include Email for restricted tender invitations
+                'Email' => $thirdParty->Email ?? '',
                 'Phone' => $thirdParty->Phone ?? '',
-                'CategoryId' => null, // No longer used - categories come from SupplierCategory mapping
-                'SupplierCategoryID' => $supplierCategoryIds->first(), // Prefer first mapped category if any
-                'ItemCategoryIds' => array_values(array_unique(array_map('intval', $itemCategoryIds))), // All categories supplier can serve (incl. top-level)
+                'CategoryId' => null,
+                'SupplierCategoryID' => $supplierCategoryIds->first(),
+                'ItemCategoryIds' => array_values(array_unique(array_map('intval', $itemCategoryIds))),
                 'RoundID' => $supplier->RoundID,
-                'ApplicationStatus' => 'Prequalified', // Since they're in t_Suppliers, they're prequalified
-                'ThirdPartyID' => $supplierMaster->ThirdPartyId, // FIX: Use SupplierMaster->ThirdPartyId
+                'ApplicationStatus' => 'Prequalified',
+                'ThirdPartyID' => $supplierMaster->ThirdPartyId,
             ]);
         }
 
-        // Remove duplicates based on supplier ID (a supplier might have multiple records)
-        $result = $suppliers->unique('Id')->values();
 
-        // Log::info('Suppliers prepared for UI: ' . $result->count());
+        $result = $suppliers
+            ->unique('Id')
+            ->unique(function ($item) {
+                return strtolower(trim($item['SupplierName'] ?? ''));
+            })
+            ->values();
+
+
         try {
             if ($result->isNotEmpty()) {
                 $sample = $result->take(3);
-                // Log::info('Suppliers sample (first 3)', ['sample' => $sample]);
+
             }
         } catch (\Throwable $e) {
             // guard
@@ -1627,10 +1675,6 @@ class TenderController extends Controller
         return $result;
     }
 
-    /**
-     * Public API for fetching prequalified suppliers for a specific category.
-     * Returns JSON format expected by the frontend.
-     */
     public function getPrequalifiedSuppliersForCategory($categoryId)
     {
         $suppliers = $this->getPrequalifiedSuppliers();
@@ -1706,7 +1750,7 @@ class TenderController extends Controller
             return [];
         }
 
-        // **FIX: Map results to integers**
+        //  Map results to integers**
         $ids = DB::table('t_TenderCategoryItemTypes')
             ->where('TenderCategoryId', $tenderCategoryId)
             ->where('IsActive', 1)
@@ -1744,9 +1788,6 @@ class TenderController extends Controller
     }
 
     // Validate an item is within tender's top-level category and allowed item types
-    // Replace your isItemAllowedForTender method with this debug version:
-    // Replace your existing isItemAllowedForTender method with this version
-    // Validate an item is within tender's top-level category and allowed item types
     private function isItemAllowedForTender(int $itemId, int $tenderTopCategoryId, array $allowedTypeIds): bool
     {
         $item = ItemMasterList::select('Id', 'Category', 'ItemType')->find($itemId);
@@ -1757,8 +1798,7 @@ class TenderController extends Controller
             return false;
         }
 
-        // t_Items.ItemType is FK to t_ItemTypes.Id (e.g., 9 for Stock)
-        // allowedTypeIds contains t_ItemTypes.Id values allowed for this Tender Category
+    
 
         $itemTypeId = (int)$item->ItemType;
         $allowedTypeIds = array_map('intval', $allowedTypeIds);
@@ -1850,16 +1890,15 @@ class TenderController extends Controller
                 'procurementMode',
             ])->findOrFail($id);
 
-            // Get workflow status using the service method
+           
             $workflowStatus = $this->workflow->getStatus($tender);
 
-            // Get full workflow history with relationships
             $history = $tender->workflowHistory()
                 ->with(['creator', 'status', 'stage', 'modifier'])
                 ->orderBy('CreatedOn', 'desc')
                 ->get();
 
-            // Extract workflow information
+           
             $hasWorkflow = $workflowStatus['hasWorkflow'] ?? false;
             $currentStage = $workflowStatus['currentStage'] ?? null;
             $pendingApprovers = collect($workflowStatus['pendingApprovers'] ?? []);

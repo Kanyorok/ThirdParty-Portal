@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         /* Globally hide any original select element converted to Select2 */
-        .select2-hidden-accessible {
+        /* .select2-hidden-accessible {
             border: 0 !important;
             clip: rect(0 0 0 0) !important;
             height: 1px !important;
@@ -15,7 +15,7 @@
             padding: 0 !important;
             position: absolute !important;
             width: 1px !important;
-        }
+        } */
 
         /* Ensure Select2 container displays properly */
         .select2-container {
@@ -69,8 +69,15 @@
                         <div class="col-md-6 mb-3">
                             <label for="supplier_id" class="form-label">Select Supplier <span class="text-danger">*</span></label>
                             <select name="supplier_id" id="supplier_id" class="form-control" required>
-                                <option value="">Search Supplier...</option>
+                                <option value="">Select Supplier</option>
+                                @foreach($suppliers as $supplier)
+                                    <option value="{{ $supplier->Id }}" {{ old('supplier_id') == $supplier->Id ? 'selected' : '' }}>
+                                        {{ $supplier->party->ThirdPartyName ?? 'Unknown' }} 
+                                        {{ $supplier->party->RegistrationNumber ? '('.$supplier->party->RegistrationNumber.')' : '' }}
+                                    </option>
+                                @endforeach
                             </select>
+
                             @error('supplier_id') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
                     </div>
@@ -131,48 +138,14 @@ $(document).ready(function() {
     $('.select2-container--default').remove(); // remove any floating orphans
 
     $supplierSelect.select2({
-            placeholder: "Search Supplier...",
+            placeholder: "Select Supplier",
             allowClear: true,
-            width: '100%',
-            minimumInputLength: 0,
-            ajax: {
-                url: "{{ route('suppliers.search') }}",
-                dataType: 'json',
-                delay: 250,
-                data: function (params) {
-                    return {
-                        q: params.term || '', 
-                        page: params.page || 1
-                    };
-                },
-                processResults: function (data) {
-                    return {
-                        results: $.map(data, function (item) {
-                            return {
-                                text: item.company_name + (item.registration_number ? ' (' + item.registration_number + ')' : ''),
-                                id: item.id
-                            }
-                        })
-                    };
-                },
-                cache: true,
-                error: function(xhr, status, error) {
-                    console.error("Supplier Search Error:", xhr.responseText);
-                }
-            },
-            language: {
-                searching: function() {
-                    return "Searching...";
-                },
-                noResults: function() {
-                    return "No suppliers found";
-                }
-            }
+            width: '100%'
     });
 
     // When Supplier is selected, fetch their categories
-    $supplierSelect.on('select2:select', function(e) {
-        var supplierId = e.params.data.id;
+    $supplierSelect.on('change', function(e) { // Changed to 'change' or 'select2:select'
+        var supplierId = $(this).val();
         loadCategories(supplierId);
     });
     

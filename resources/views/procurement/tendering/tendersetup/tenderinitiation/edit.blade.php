@@ -35,18 +35,25 @@
                         <div class="text-danger">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Tender Type</label>
-                        <select class="form-select" id="tenderType" name="TenderType" required>
-                            <option value="">-- Select Tender Type --</option>
-                            @foreach (\App\Enums\TenderTypeEnum::cases() as $item)
-                                <option value="{{ $item->value }}" {{$tender->TenderType === $item?'selected':''}}>{{ $item->displayName() }}</option>
-                            @endforeach
-                        </select>
-                        @error('TenderType')
-                        <div class="text-danger">{{ $message }}</div>
-                        @enderror
+                  <div class="col-md-4">
+                      <label class="form-label fw-bold">Tender Type</label>
+
+                       <select class="form-select" id="tenderType" name="TenderType" required>
+        <option value="">-- Select Tender Type --</option>
+
+        @foreach(\App\Enums\TenderTypeEnum::cases() as $type)
+            <option value="{{ $type->value }}"
+                {{ old('TenderType', $tender->TenderType?->value ?? '') == $type->value ? 'selected' : '' }}>
+                {{ $type->displayName() }}
+            </option>
+        @endforeach
+                    </select>
+
+                    @error('TenderType')
+        <div class="text-danger">{{ $message }}</div>
+                    @enderror
                     </div>
+
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Initiated By</label>
                         <input type="text" class="form-control" value="{{auth()->user()->Name}}" readonly>
@@ -125,8 +132,10 @@
     </div>
 
     <!-- Attached Documents Section -->
-   {{--
-    @if(isset($documents) && $documents->isNotEmpty())
+    @php
+        $tenderDocuments = $tender->documents()->get(['t_Documents.Id', 't_Documents.DocumentId', 'MimeType', 'Name', 't_Documents.CreatedOn']);
+    @endphp
+    @if($tenderDocuments->isNotEmpty())
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <h5 class="card-title mb-3">📎 Attached Documents</h5>
@@ -135,75 +144,54 @@
                     <thead class="table-light">
                         <tr>
                             <th style="width: 5%">#</th>
-                            <th style="width: 40%">File Name</th>
+                            <th style="width: 45%">File Name</th>
                             <th style="width: 15%">File Type</th>
-                            <th style="width: 15%">Size</th>
-                            <th style="width: 15%">Uploaded</th>
-                            <th style="width: 10%" class="text-center">Actions</th>
+                            <th style="width: 20%">Uploaded</th>
+                            <th style="width: 15%" class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($documents as $doc)
+                        @foreach($tenderDocuments as $doc)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
                             <td>
-                                <i class="fas fa-file-{{ $doc->getFileIcon() }} text-primary me-2"></i>
-                                {{ $doc->FileName ?? $doc->Name ?? 'Document' }}
+                                <i class="fas fa-file-{{ $doc->ext()?->getIcon('fa') ?? 'alt' }} text-primary me-2"></i>
+                                {{ $doc->Name ?? 'Document' }}
                             </td>
                             <td>
                                 <span class="badge bg-secondary">
-                                    {{ strtoupper($doc->FileExtension ?? 'N/A') }}
+                                    {{ strtoupper($doc->ext()?->value ?? 'N/A') }}
                                 </span>
                             </td>
-                            <td>{{ $doc->getFormattedSize() }}</td>
                             <td>
                                 <small class="text-muted">
                                     {{ $doc->CreatedOn ? \Carbon\Carbon::parse($doc->CreatedOn)->format('M d, Y H:i') : 'N/A' }}
                                 </small>
                             </td>
                             <td class="text-center">
-                                @if($doc->canView())
-                                --}}{{-- View Document - Uses the DocumentActionsController preview --}}{{--
-                                <a href="{{ route('file.preview', ['document' => $doc->Id]) }}"
-                                    class="btn btn-sm btn-outline-primary"
-                                    title="View Document"
-                                    target="_blank">
+                                {{-- Preview Document (embed-preview modal) --}}
+                                <span class="btn btn-sm btn-outline-primary modal-preview-document"
+                                    title="{{ $doc->Name }}"
+                                    data-url="{{ route('file.embed-preview', [$doc->DocumentId]) }}"
+                                    id="document-{{ $doc->DocumentId }}">
                                     <i class="fas fa-eye"></i>
-                                </a>
-
-                                --}}{{-- Download Document - Need to find the repository first --}}{{--
-                                @php
-                                // Get the repository ID from document relation
-                                $repositoryId = $doc->RepositoryId ?? $doc->repository?->Id ?? null;
-                                @endphp
-
-                                @if($repositoryId)
-                                <a href="{{ route('file-download.store', ['repository' => $repositoryId, 'document' => $doc->Id]) }}"
-                                    class="btn btn-sm btn-outline-success"
-                                    title="Download">
-                                    <i class="fas fa-download"></i>
-                                </a>
-                                @else
-                                <span class="text-muted small" title="Repository not found">
-                                    <i class="fas fa-download"></i>
                                 </span>
-                                @endif
-                                @else
-                                <span class="text-muted small">No access</span>
-                                @endif
 
+                                {{-- Download Document --}}
+                                <form action="{{ route('file-download.store', [$doc->DocumentId]) }}" method="post" style="display: inline;">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-success" title="Download">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </form>
+
+                                {{-- Delete Document (Draft tenders only) --}}
                                 @canDelete('tender')
                                 @if($tender->Status === \App\Enums\TenderStatusEnum::Draft)
-                                --}}{{-- Delete Document - Uses repository-based route --}}{{--
-                                @php
-                                $repositoryId = $doc->RepositoryId ?? $doc->repository?->Id ?? null;
-                                @endphp
-
-                                @if($repositoryId)
-                                <form action="{{ route('files.destroy', ['repository' => $repositoryId, 'document' => $doc->Id]) }}"
+                                <form action="{{ route('initiatetender.document.delete', ['id' => $tender->Id, 'documentId' => $doc->DocumentId]) }}"
                                     method="POST"
                                     style="display: inline;"
-                                    onsubmit="return confirm('Are you sure you want to delete \'{{ addslashes($doc->FileName ?? $doc->Name ?? 'this document') }}\'? This action cannot be undone.');">
+                                    onsubmit="return confirm('Are you sure you want to delete \'{{ addslashes($doc->Name ?? 'this document') }}\'? This action cannot be undone.');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"
@@ -212,11 +200,6 @@
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
-                                @else
-                                <span class="text-muted small" title="Cannot delete - repository not found">
-                                    <i class="fas fa-trash-alt"></i>
-                                </span>
-                                @endif
                                 @endif
                                 @endcanDelete
                             </td>
@@ -616,6 +599,7 @@
     </div>
 </div>
 
+@include('snippets.actions.preview-files')
 @endsection
 
 @push('scripts')
@@ -632,4 +616,5 @@
         }
     })();
 </script>
+
 @endpush
