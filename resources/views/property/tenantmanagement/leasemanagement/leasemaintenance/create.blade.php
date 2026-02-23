@@ -184,7 +184,7 @@ class="form-control charge-field @error($name) is-invalid @enderror">
 @endforeach
 
 <div class="col-md-4">
-<label class="form-label">Total Payable ((Exclusive of Deposit))</label>
+<label class="form-label">Total Payable (Exclusive of Deposit)</label>
 <input type="number" id="TotalPayable" class="form-control" readonly>
 </div>
 
@@ -192,13 +192,13 @@ class="form-control charge-field @error($name) is-invalid @enderror">
 
 {{-- ================= Due Day ================= --}}
 
-<h5 class="fw-bold border-bottom pb-2 mb-3">Payment Due Date</h5>
+<h5 class="fw-bold border-bottom pb-2 mb-3">Payment Due Date <span class="text-danger">*</span></h5>
 
 <div class="col-md-4 mb-4">
 <input type="number" name="DueDay"
 value="{{ old('DueDay') }}"
 class="form-control @error('DueDay') is-invalid @enderror"
-min="1" max="28">
+min="1" max="28" required placeholder="Enter day of month (1-28)">
 @error('DueDay')<div class="invalid-feedback">{{ $message }}</div>@enderror
 </div>
 
