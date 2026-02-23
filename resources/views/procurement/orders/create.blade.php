@@ -413,8 +413,9 @@ function populateItems(items) {
         $tr.append($itemTd);
 
         // Item Name (Displayed in "itemDescription" textarea as per user requirement)
+        // Item Name (Displayed in "itemDescription" textarea as per user requirement)
         // User requested: "in the ItemName fireld it fetches the itemDescription of the ItemName" -> implying it SHOULD be Name
-        const itemDescription = it.itemName || ''; 
+        const itemDescription = it.description || it.itemName || ''; 
         $tr.append(`<td class="text-start"><textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="5" readonly style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0;resize:none;">${itemDescription}</textarea></td>`);
 
         // Quantity field with max validation

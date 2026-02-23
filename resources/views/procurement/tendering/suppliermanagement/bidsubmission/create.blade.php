@@ -50,6 +50,7 @@
                             @error('supplier_name')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                            <div class="form-text text-muted">Only suppliers who have accepted the tender invitation will appear here.</div>
                         </div>
                     </div>
                 </div>
@@ -85,9 +86,16 @@
 
                         <!-- Payment Terms -->
                         <div class="col-md-4 mb-3">
-                            <label for="paymentTerms" class="form-label">Payment Terms</label>
-                            <input type="text" class="form-control @error('payment_terms') is-invalid @enderror" id="paymentTerms" name="payment_terms" placeholder="e.g. 30 Days Net">
-                            @error('payment_terms') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <label>Payment Terms <span class="text-danger">*</span></label>
+                <select class="form-control terms @error('terms') is-invalid @enderror" name="terms" id="terms" required>
+                    <option selected disabled>Select Payment Term</option>
+                    @foreach (($paymentTerms ?? []) as $term)
+                    <option value="{{ $term->ID }}" {{ old('terms') == $term->ID ? 'selected' : '' }}>{{ $term->Description }}</option>
+                    @endforeach
+                </select>
+                @error('terms')
+                <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
                         </div>
                      </div>
 

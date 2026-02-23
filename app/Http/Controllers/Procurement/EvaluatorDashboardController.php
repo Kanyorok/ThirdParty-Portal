@@ -28,7 +28,7 @@ class EvaluatorDashboardController extends Controller
         $needsCriteriaSetup = ! TenderSection::where('IsActive', 1)->exists();
 
         // Get tenders where user is a committee member and has accepted (support dual mapping)
-        $tenderIds = TenderCommitteeMember::where(function ($q) use ($currentUserId) {
+        $memberRecords = TenderCommitteeMember::where(function ($q) use ($currentUserId) {
             $q->where('UserID', $currentUserId)
                 ->orWhereHas('userByEmployee', function ($uq) use ($currentUserId) {
                     $uq->where('Id', $currentUserId);
@@ -36,7 +36,20 @@ class EvaluatorDashboardController extends Controller
         })
             ->where('IsActive', 1)
             ->where('Response', 1)
-            ->pluck('TenderID');
+            ->select('CommitteeID', 'TenderID')
+            ->get();
+
+        $committeeIds = $memberRecords->pluck('CommitteeID')->filter();
+        $directTenderIds = $memberRecords->pluck('TenderID')->filter();
+
+        // Get tenders linked to these committees (via TenderID or ReferenceId)
+        $committeeTenderIds = TenderCommittee::whereIn('Id', $committeeIds)
+            ->get()
+            ->flatMap(function ($committee) {
+                return array_filter([$committee->TenderID, $committee->ReferenceId]);
+            });
+
+        $tenderIds = $directTenderIds->merge($committeeTenderIds)->unique();
 
         if ($tenderIds->isEmpty()) {
             return view('procurement.tendering.bidopeningandevaluation.evaluationdashboard.index', [

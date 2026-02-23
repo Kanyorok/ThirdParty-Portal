@@ -9,6 +9,43 @@
         </div>
     </div>
 
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if ($errors->count() > 0)
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    {{-- Evaluation Status Alert --}}
+    @if (isset($isEvaluationComplete) && !$isEvaluationComplete)
+        <div class="alert alert-warning">
+            <strong><i class="fas fa-exclamation-triangle me-2"></i>Evaluation Incomplete</strong>
+            <p class="mb-1">{{ $evaluatedMembersCount ?? 0 }} of {{ $acceptedMembersCount ?? 0 }} committee members have submitted their evaluations.</p>
+            @if (!empty($pendingMembers))
+                <small>Pending: {{ implode(', ', $pendingMembers) }}</small>
+            @endif
+            <p class="mt-2 mb-0"><em>Award cannot be made until all committee members complete their evaluations.</em></p>
+        </div>
+    @endif
+
     <div class="row mb-3">
         <div class="col-md-6"><strong>Item:</strong> {{ $tender->Title ?? 'N/A' }}</div>
         <div class="col-md-6">
@@ -124,26 +161,26 @@
                                     <i class="fas fa-user-friends"></i>
                                 </a>
                             </div>
-                            @if(!empty($awardBlocks))
-                                @if($row['is_awarded'])
-                                    <span class="badge bg-success"><i class="fas fa-trophy"></i> Awarded</span>
+                            @if(empty($awardBlocks) || !$awardBlocks)
+                                @if(isset($isEvaluationComplete) && !$isEvaluationComplete)
+                                    <button type="button" class="btn btn-sm btn-secondary" disabled 
+                                            title="All committee members must complete evaluations before awarding">
+                                        <i class="fas fa-hourglass-half"></i> Award
+                                    </button>
                                 @else
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Tender already awarded">
-                                        <i class="fas fa-ban"></i> Award
-                                    </button>
+                                    <form method="POST" action="{{ route('procawards.store') }}" class="d-inline" onsubmit="return submitAwardForm(this);">
+                                        @csrf
+                                        <input type="hidden" name="tender_id" value="{{ $tender->Id }}">
+                                        <input type="hidden" name="award_type" value="tender">
+                                        <input type="hidden" name="winning_supplier_id" value="{{ $row['supplier_id'] }}">
+                                        <input type="hidden" name="award_justification" value="Awarded based on highest consolidated average score">
+                                        <input type="hidden" name="awarded_amount" value="{{ $row['bid_amount'] ?? 0 }}">
+                                        <input type="hidden" name="technical_score" value="{{ $row['average'] }}">
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="fas fa-trophy"></i> Award
+                                        </button>
+                                    </form>
                                 @endif
-                            @elseif(!empty($canAward))
-                                <form method="POST" action="{{ route('procawards.store') }}" class="d-inline">
-                                    @csrf
-                                    <input type="hidden" name="tender_id" value="{{ $tender->Id }}">
-                                    <input type="hidden" name="winning_supplier_id" value="{{ $row['supplier_id'] }}">
-                                    <input type="hidden" name="award_justification" value="Awarded based on highest consolidated average score">
-                                    <input type="hidden" name="technical_score" value="{{ $row['average'] }}">
-                                    <input type="hidden" name="total_score" value="{{ $row['average'] }}">
-                                    <button type="submit" class="btn btn-sm btn-success">
-                                        <i class="fas fa-trophy"></i> Award
-                                    </button>
-                                </form>
                             @else
                                 <button type="button"
                                         class="btn btn-sm btn-outline-secondary"
@@ -190,6 +227,32 @@ function rejectAllBids() {
         alert('Feature coming soon: Reject all bids functionality');
     }
 }
+
+function submitAwardForm(form) {
+    const btn = form.querySelector('button[type="submit"]');
+    if (btn) {
+        // Change text immediately
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        
+        // Disable after a short delay to ensure form submission event propagates
+        setTimeout(() => {
+            btn.disabled = true;
+        }, 50);
+    }
+    return true; // Use simple return true to allow submission
+}
+
+function disableSubmitButton(form) {
+    // Legacy support or for other forms
+    return submitAwardForm(form);
+}
+
+// Initialize tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  return new bootstrap.Tooltip(tooltipTriggerEl)
+})
 </script>
 @endsection
 
