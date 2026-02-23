@@ -1750,7 +1750,7 @@ class TenderController extends Controller
             return [];
         }
 
-        // **FIX: Map results to integers**
+        //  Map results to integers**
         $ids = DB::table('t_TenderCategoryItemTypes')
             ->where('TenderCategoryId', $tenderCategoryId)
             ->where('IsActive', 1)
@@ -1788,9 +1788,6 @@ class TenderController extends Controller
     }
 
     // Validate an item is within tender's top-level category and allowed item types
-    // Replace your isItemAllowedForTender method with this debug version:
-    // Replace your existing isItemAllowedForTender method with this version
-    // Validate an item is within tender's top-level category and allowed item types
     private function isItemAllowedForTender(int $itemId, int $tenderTopCategoryId, array $allowedTypeIds): bool
     {
         $item = ItemMasterList::select('Id', 'Category', 'ItemType')->find($itemId);
@@ -1801,8 +1798,7 @@ class TenderController extends Controller
             return false;
         }
 
-        // t_Items.ItemType is FK to t_ItemTypes.Id (e.g., 9 for Stock)
-        // allowedTypeIds contains t_ItemTypes.Id values allowed for this Tender Category
+    
 
         $itemTypeId = (int)$item->ItemType;
         $allowedTypeIds = array_map('intval', $allowedTypeIds);
@@ -1894,16 +1890,15 @@ class TenderController extends Controller
                 'procurementMode',
             ])->findOrFail($id);
 
-            // Get workflow status using the service method
+           
             $workflowStatus = $this->workflow->getStatus($tender);
 
-            // Get full workflow history with relationships
             $history = $tender->workflowHistory()
                 ->with(['creator', 'status', 'stage', 'modifier'])
                 ->orderBy('CreatedOn', 'desc')
                 ->get();
 
-            // Extract workflow information
+           
             $hasWorkflow = $workflowStatus['hasWorkflow'] ?? false;
             $currentStage = $workflowStatus['currentStage'] ?? null;
             $pendingApprovers = collect($workflowStatus['pendingApprovers'] ?? []);
