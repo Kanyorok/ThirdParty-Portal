@@ -27,7 +27,7 @@ class RFQ extends Model
      */
     public static function getPrimaryKey(): string
     {
-        return 'RFQId'; // This is the morph alias used in workflow tables
+        return 't_RFQ'; // This is the morph alias used in workflow tables
     }
 
     protected $fillable = [
@@ -134,14 +134,14 @@ class RFQ extends Model
     public function workflowHistory()
     {
         return $this->hasMany(WorkflowHistory::class, 'SourceID', 'Id')
-            ->where('Source', 'RFQId')
+            ->where('Source', 't_RFQ')
             ->whereNull('DeletedOn');
     }
 
     public function workflowPending()
     {
-        return $this->hasMany(WorkflowPending::class, 'SourceID', 'RFQId')
-            ->where('Source', 'RFQId')
+        return $this->hasMany(WorkflowPending::class, 'SourceID', 'Id')
+            ->where('Source', 't_RFQ')
             ->whereNull('DeletedOn');
     }
 
