@@ -11,6 +11,23 @@ class PropertyInterestRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'PropertyId' => $this->property_id,
+            'BlockId' => $this->block_id,
+            'FloorId' => $this->floor_id,
+            'UnitId' => $this->unit_id,
+            'TenantId' => $this->tenant_id,
+            'InterestedStartDate' => $this->interested_start_date,
+            'InterestedEndDate' => $this->interested_end_date,
+            'PaymentFrequency' => $this->payment_frequency,
+            'AdditionalInformation' => $this->additional_information,
+            'CreatedBy' => $this->input('CreatedBy'),
+            'ModifiedBy' => $this->input('ModifiedBy'),
+        ]);
+    }
+
     public function rules(): array
     {
         return [
@@ -24,6 +41,9 @@ class PropertyInterestRequest extends FormRequest
             'InterestedEndDate' => 'required|date|after_or_equal:InterestedStartDate',
 
             'PaymentFrequency' => 'required|exists:t_CodeDetails,ID',
+
+            'CreatedBy' => 'required|exists:t_Users,Id',
+            'ModifiedBy' => 'required|exists:t_Users,Id',
 
             'AdditionalInformation' => 'nullable|string|max:255',
         ];

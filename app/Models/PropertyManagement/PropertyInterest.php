@@ -2,10 +2,12 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Models\Auth\User;
 use App\Models\Workflow\CodeDetail;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyInterest extends Model
@@ -69,12 +71,36 @@ class PropertyInterest extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
     }
+
     public function price()
     {
         return $this->hasOne(PropertyRateAndPricing::class, 'UnitId', 'UnitId');
     }
+
     public function interest()
     {
         return $this->belongsTo(PropertyInterest::class, 'InterestId', 'Id');
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+    }
+
+    public function modifiedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
+    }
+
+    public function deletedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'DeletedBy', 'Id');
+    }
+
+    public function delete()
+    {
+        // Perform soft delete without forcing DeletedBy to be set here
+        // The controller will handle setting DeletedBy before calling delete()
+        return parent::delete();
     }
 }
