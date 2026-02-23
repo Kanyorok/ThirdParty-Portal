@@ -750,8 +750,8 @@ class RFQController extends Controller
     private function getManualWorkflowHistory($rfqId)
     {
         return DB::table('t_WorkflowHistory as wh')
-            ->join('t_Users as u', 'wh.UserId', '=', 'u.Id')
-            ->where('wh.Source', 'RFQId')
+            ->join('t_Users as u', 'wh.CreatedBy', '=', 'u.Id')
+            ->where('wh.Source', 't_RFQ')
             ->where('wh.SourceID', $rfqId)
             ->whereNull('wh.DeletedOn')
             ->select(
@@ -772,7 +772,7 @@ class RFQController extends Controller
         $pending = DB::table('t_WorkflowPending as wp')
             ->join('t_WorkflowStages as ws', 'wp.StageId', '=', 'ws.Id')
             ->join('t_Users as u', 'wp.UserId', '=', 'u.Id')
-            ->where('wp.Source', 'RFQId')
+            ->where('wp.Source', 't_RFQ')
             ->where('wp.SourceID', $rfqId)
             ->whereNull('wp.DeletedOn')
             ->select(
