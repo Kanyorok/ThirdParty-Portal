@@ -167,12 +167,12 @@
                                                     $hasContract = $rfqAward && $rfqAward->hasContract();
                                                 @endphp
                                                 @if($hasContract)
-                                                    <a href="{{ route('contracts.show', $row['award_id'] ?? $row['id']) }}"
+                                                    <a href="{{ route('contracts.show', ['id' => $row['award_id'] ?? $row['id'], 'type' => 'rfq']) }}"
                                                        class="btn btn-sm btn-info" title="View Contract">
                                                         <i class="fas fa-file-contract"></i> Contract
                                                     </a>
                                                 @else
-                                                    <a href="{{ route('contracts.createFromAward', $row['award_id'] ?? $row['id']) }}"
+                                                    <a href="{{ route('contracts.createFromAward', ['awardId' => $row['award_id'] ?? $row['id'], 'type' => 'rfq']) }}"
                                                        class="btn btn-sm btn-primary" title="Create Contract">
                                                         <i class="fas fa-file-contract"></i> Create Contract
                                                     </a>

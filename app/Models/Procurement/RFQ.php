@@ -9,7 +9,6 @@ use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Log;
 
 class RFQ extends Model
 {
@@ -23,35 +22,12 @@ class RFQ extends Model
     public const UPDATED_AT = 'ModifiedOn';
     public const DELETED_AT = 'DeletedOn';
 
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::created(function ($rfq) {
-            $workflowService = app(\App\Services\Procurement\RFQ\RFQWorkflowService::class);
-            $user = \Illuminate\Support\Facades\Auth::user();
-            if ($user) {
-                Log::info('RFQ created, submitting to workflow', [
-                    'rfq_id' => $rfq->Id,
-                    'rfq_number' => $rfq->RFQNumber,
-                    'user_id' => $user->Id,
-                ]);
-
-                // Use the convenience method with proper type hints
-                $workflowService->submitRFQ($rfq, $user, 'RFQ Created');
-            }
-
-            app(\App\Services\Procurement\RFQ\RFQWorkflowService::class)
-                ->submitRFQ($rfq, $user, 'RFQ Created');
-        });
-    }
-
     /**
      * Get the primary key for workflow purposes
      */
     public static function getPrimaryKey(): string
     {
-        return 'RFQId'; // This is the morph alias used in workflow tables
+        return 't_RFQ'; // This is the morph alias used in workflow tables
     }
 
     protected $fillable = [
@@ -158,14 +134,14 @@ class RFQ extends Model
     public function workflowHistory()
     {
         return $this->hasMany(WorkflowHistory::class, 'SourceID', 'Id')
-            ->where('Source', 'RFQId')
+            ->where('Source', 't_RFQ')
             ->whereNull('DeletedOn');
     }
 
     public function workflowPending()
     {
-        return $this->hasMany(WorkflowPending::class, 'SourceID', 'RFQId')
-            ->where('Source', 'RFQId')
+        return $this->hasMany(WorkflowPending::class, 'SourceID', 'Id')
+            ->where('Source', 't_RFQ')
             ->whereNull('DeletedOn');
     }
 

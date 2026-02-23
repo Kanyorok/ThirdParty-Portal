@@ -18,23 +18,25 @@
                 <td>{{ $doc['size'] ?? 'N/A' }}</td>
                 <td>
                     @if(isset($doc['dms_document']) && $doc['dms_document'])
-                        {{-- Use DocumentService for DMS-backed documents --}}
-                        {!! (new \App\Services\DMS\DocumentService($doc['dms_document']))->summaryList() !!}
+                        {{-- DMS-backed document - use bid-responsiveness route for preview --}}
+                        <span class="btn btn-sm btn-outline-primary modal-preview-document"
+                              title="{{ $doc['filename'] }}"
+                              data-url="{{ url('/procurement/bid-responsiveness/' . $bidId . '/document/' . $doc['dms_document']->DocumentId) }}"
+                              id="document-{{ $doc['dms_document']->DocumentId }}">
+                            <i class="fas fa-eye"></i> View
+                        </span>
                     @elseif(isset($doc['document_id']) && $doc['document_id'])
-                        {{-- DMS document ID exists but document wasn't loaded - show view link --}}
-                        <a href="{{ route('file.embed-preview', ['document' => $doc['document_id']]) }}" 
-                           class="btn btn-sm btn-outline-primary modal-preview-document"
-                           data-url="{{ route('file.embed-preview', ['document' => $doc['document_id']]) }}"
-                           title="View {{ $doc['filename'] }}">
+                        {{-- DMS document ID exists but document wasn't loaded --}}
+                        <span class="btn btn-sm btn-outline-primary modal-preview-document"
+                              title="{{ $doc['filename'] }}"
+                              data-url="{{ url('/procurement/bid-responsiveness/' . $bidId . '/document/' . $doc['document_id']) }}">
                             <i class="fas fa-eye"></i> View
-                        </a>
+                        </span>
                     @elseif($doc['can_view'] ?? false)
-                        {{-- Legacy format - use controller method --}}
-                        <button class="btn btn-sm btn-outline-primary" 
-                                onclick="viewDocument({{ $bidId }}, '{{ $doc['id'] }}')"
-                                title="View Document">
-                            <i class="fas fa-eye"></i> View
-                        </button>
+                        {{-- Legacy format - no DMS backing --}}
+                        <span class="badge bg-warning text-dark" title="Preview not available for legacy uploads">
+                            <i class="fas fa-exclamation-triangle"></i> Preview N/A
+                        </span>
                     @else
                         <span class="badge bg-secondary">🔒 Sealed</span>
                     @endif

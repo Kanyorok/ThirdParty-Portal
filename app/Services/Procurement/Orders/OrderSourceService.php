@@ -346,7 +346,7 @@ class OrderSourceService
                 'i.ItemCode as itemCode',
                 'i.ItemName as itemName',
                 'pli.MergedQty as quantity',
-                DB::raw('COALESCE(i.ItemPrice, 0) as unitPrice'),
+                DB::raw('COALESCE(pli.EstimatedUnitCost, i.ItemPrice, 0) as unitPrice'),
                 'i.ItemDescription as description',
                 'i.UOM as uom',
                 'i.ItemType as itemType'

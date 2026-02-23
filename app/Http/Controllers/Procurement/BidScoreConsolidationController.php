@@ -110,6 +110,7 @@ class BidScoreConsolidationController extends Controller
                 'e.LastName'
             )
             ->orderBy('m.Id')
+            ->distinct()
             ->get()
             ->map(function ($row) use ($rawEvaluations) {
                 $name = trim(($row->FirstName ? $row->FirstName . ' ' : '') . ($row->LastName ?? ''));
@@ -197,6 +198,7 @@ class BidScoreConsolidationController extends Controller
                 'supplier_name' => $bidder['name'],
                 'evaluator_scores' => $memberScores,
                 'average' => $consolidatedAverage,
+                'bid_amount' => $bidder['bid_amount'],
                 'has_award' => $awardBlocks,
                 'is_awarded' => $activeAward ? ((int)$activeAward->WinningSupplierID === (int)$supplierId) : false,
             ];
@@ -210,6 +212,37 @@ class BidScoreConsolidationController extends Controller
             $row['rank'] = $idx + 1;
         }
 
+        // Check for evaluation completeness per member
+        $totalCriteriaCount = collect($sections)->sum(function ($s) {
+            return count($s['criteria']);
+        });
+
+        $totalEvaluators = $evaluators->count();
+        $totalBidders = $bidders->count();
+        $requiredEvaluationsPerMember = $totalBidders * $totalCriteriaCount;
+
+        $pendingMembers = [];
+        $evaluatedMembersCount = 0;
+
+        if ($totalBidders > 0 && $totalCriteriaCount > 0) {
+            foreach ($evaluators as $evaluator) {
+                // Count unique evaluations for this member
+                $memberEvalCount = $rawEvaluations->where('MemberID', $evaluator['id'])
+                    ->unique(function ($item) {
+                        return $item->SupplierId . '-' . $item->CriteriaID;
+                    })->count();
+
+                if ($memberEvalCount >= $requiredEvaluationsPerMember) {
+                    $evaluatedMembersCount++;
+                } else {
+                    $pendingMembers[] = $evaluator['name'];
+                }
+            }
+        }
+
+        $isEvaluationComplete = ($totalEvaluators > 0 && $totalBidders > 0 && $totalCriteriaCount > 0)
+                                && (count($pendingMembers) === 0);
+
         return [
             'tender' => $tender,
             'bidders' => $bidders,
@@ -221,7 +254,11 @@ class BidScoreConsolidationController extends Controller
             'canAward' => $canAward,
             // For header display (award info), use the active award if present
             'existingAward' => $activeAward,
-            'awardBlocks' => $awardBlocks,
+            'awardBlocks' => $activeAward ? true : false,
+            'isEvaluationComplete' => $isEvaluationComplete,
+            'acceptedMembersCount' => $totalEvaluators,
+            'evaluatedMembersCount' => $evaluatedMembersCount,
+            'pendingMembers' => $pendingMembers,
         ];
     }
 

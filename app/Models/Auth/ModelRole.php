@@ -21,7 +21,6 @@ class ModelRole extends Model
 
     protected $fillable = [
         'model_id', 'model_type', 'role_id', 'BranchId',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string

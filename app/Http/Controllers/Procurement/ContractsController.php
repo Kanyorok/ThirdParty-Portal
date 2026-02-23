@@ -11,6 +11,7 @@ use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQAward;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderAward;
+use Illuminate\Container\Attributes\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -819,7 +820,9 @@ class ContractsController extends Controller
         $award = null;
 
         if ($type === 'rfq') {
-            $award = RFQAward::where('Id', $awardId)->first();
+            $award = RFQAward::where('Id', $awardId)
+                ->where('AwardStatus', 'Approved')
+                ->first();
         } else {
             $award = TenderAward::where('Id', $awardId)
                 ->where('AwardStatus', 'Approved')

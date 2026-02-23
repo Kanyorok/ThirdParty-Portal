@@ -7,6 +7,7 @@ use App\Helpers\SystemHelper;
 use App\Models\Auth\ModelRole;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
+use App\Models\HR\Employee;
 use App\Models\HRM\Department;
 use App\Services\BR\BREncryption;
 use App\Services\HR\EmployeeService;
@@ -16,9 +17,6 @@ use Spatie\Permission\Models\Role;
 
 class EmployeeSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $adminEmail = 'admin@test.co.ke';

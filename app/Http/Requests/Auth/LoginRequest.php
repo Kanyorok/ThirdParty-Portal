@@ -47,7 +47,9 @@ class LoginRequest extends FormRequest
 
         $modelRole = ModelRole::query()->where('model_id', $user->Id)
             ->where('model_type', User::getPrimaryKey())
-            ->where('BranchId', $branch->Id)->with('role')->first();
+            ->where('BranchId', $branch->Id)
+            ->with('role')
+            ->first();
 
         $role = $modelRole?->role;
         if (! $modelRole instanceof ModelRole || ! $role instanceof Role) {

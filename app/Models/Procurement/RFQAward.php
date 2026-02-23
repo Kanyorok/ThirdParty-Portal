@@ -88,6 +88,11 @@ class RFQAward extends Model
 
     public function approvedByUser(): BelongsTo
     {
+        return $this->belongsTo(\App\Models\Auth\User::class, 'ApprovedBy', 'Id');
+    }
+
+    public function milestones(): HasMany
+    {
         return $this->hasMany(ContractMilestone::class, 'ContractSourceID', 'Id')
             ->where('ContractSourceType', 'rfq');
     }
@@ -174,5 +179,35 @@ class RFQAward extends Model
     public function hasContract(): bool
     {
         return ! empty($this->ContractStatus) && $this->ContractStatus !== 'Pending Contract';
+    }
+
+    /**
+     * Approve this RFQ award.
+     * Called by AwardsController::approve() after the workflow step succeeds.
+     */
+    public function approve(\App\Models\Auth\User $user, ?string $remarks = null): bool
+    {
+        return $this->update([
+            'AwardStatus' => self::STATUS_APPROVED,
+            'ApprovedBy' => $user->Id,
+            'ApprovedOn' => now(),
+            'ApprovalRemarks' => $remarks,
+            'ModifiedBy' => $user->Id,
+            'ModifiedOn' => now(),
+        ]);
+    }
+
+    /**
+     * Reject this RFQ award.
+     * Called by AwardsController::reject() after the workflow step succeeds.
+     */
+    public function reject(\App\Models\Auth\User $user, ?string $reason = null): bool
+    {
+        return $this->update([
+            'AwardStatus' => self::STATUS_REJECTED,
+            'ApprovalRemarks' => $reason,
+            'ModifiedBy' => $user->Id,
+            'ModifiedOn' => now(),
+        ]);
     }
 }

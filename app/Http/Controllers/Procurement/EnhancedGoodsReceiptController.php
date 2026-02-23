@@ -84,7 +84,15 @@ class EnhancedGoodsReceiptController extends Controller
         // Get approved POs that don't have complete GRNs
         $availablePOs = $this->getAvailablePurchaseOrders();
 
-        return view('procurement.goods-receipt.create', compact('availablePOs'));
+        // Fetch real stores from the database
+        $stores = DB::table('t_Stores')
+            ->where('Status', 1)
+            ->whereNull('DeletedOn')
+            ->select('Id', 'StoreName')
+            ->orderBy('StoreName')
+            ->get();
+
+        return view('procurement.goods-receipt.create', compact('availablePOs', 'stores'));
     }
 
     /**
@@ -673,5 +681,101 @@ class EnhancedGoodsReceiptController extends Controller
         }
 
         return 'Pending';
+    }
+
+    /**
+     * Return an HTML snippet for the GRN Summary modal (AJAX)
+     */
+    public function showSummary(string $grnId, string $poId)
+    {
+        $lines = EnhancedGoodsReceipt::with(['item', 'receiver', 'supplier'])
+            ->where('GRNID', $grnId)
+            ->where('POID', $poId)
+            ->get();
+
+        if ($lines->isEmpty()) {
+            return response()->json(['error' => 'GRN not found'], 404);
+        }
+
+        $first = $lines->first();
+        $totalValue = $lines->sum(fn ($l) => $l->TotalValue > 0 ? $l->TotalValue : ($l->ReceivedQTY * $l->UnitPrice));
+        $poNumber = optional($first->order)->OrderNo ?? $poId;
+        $supplier = $first->supplier?->thirdParty?->thirdParty?->TradingName
+            ?? $first->supplier?->thirdParty?->thirdParty?->ThirdPartyName
+            ?? 'N/A';
+        $receivedDate = $first->ReceivedDate
+            ? \Carbon\Carbon::parse($first->ReceivedDate)->format('d M Y')
+            : '—';
+        $statusLabel = $first->InspectionStatus?->label() ?? ucfirst($first->InspectionStatus ?? 'draft');
+        $statusColor = $first->InspectionStatus?->badgeColor() ?? 'warning';
+
+        $html = "
+        <div class='mb-3'>
+            <div class='row g-2'>
+                <div class='col-md-6'>
+                    <table class='table table-sm table-borderless mb-0'>
+                        <tr><th class='text-muted' style='width:40%'>GRN ID</th><td><strong>{$grnId}</strong></td></tr>
+                        <tr><th class='text-muted'>PO Number</th><td>{$poNumber}</td></tr>
+                        <tr><th class='text-muted'>Supplier</th><td>{$supplier}</td></tr>
+                    </table>
+                </div>
+                <div class='col-md-6'>
+                    <table class='table table-sm table-borderless mb-0'>
+                        <tr><th class='text-muted' style='width:40%'>Received</th><td>{$receivedDate}</td></tr>
+                        <tr><th class='text-muted'>Status</th><td><span class='badge bg-{$statusColor}'>{$statusLabel}</span></td></tr>
+                        <tr><th class='text-muted'>Total Value</th><td><strong>KES " . number_format($totalValue, 2) . "</strong></td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <hr>
+        <h6 class='mb-2'>Line Items ({$lines->count()})</h6>
+        <div class='table-responsive'>
+            <table class='table table-sm table-hover'>
+                <thead class='table-light'>
+                    <tr>
+                        <th>Item</th>
+                        <th class='text-center'>Ordered Qty</th>
+                        <th class='text-center'>Received Qty</th>
+                        <th class='text-end'>Unit Price</th>
+                        <th class='text-end'>Total</th>
+                        <th>Processing</th>
+                    </tr>
+                </thead>
+                <tbody>";
+
+        foreach ($lines as $line) {
+            $itemName = $line->item?->ItemName ?? $line->ItemNo ?? 'N/A';
+            $lineTotal = $line->TotalValue > 0 ? $line->TotalValue : ($line->ReceivedQTY * $line->UnitPrice);
+            $procBadge = match ($line->ProcessingStatus ?? '') {
+                'processed' => "<span class='badge bg-success'>Processed</span>",
+                'error' => "<span class='badge bg-danger'>Error</span>",
+                default => "<span class='badge bg-secondary'>Pending</span>",
+            };
+
+            $html .= "
+                    <tr>
+                        <td>{$itemName}</td>
+                        <td class='text-center'>" . ($line->OrderedQTY ?? $line->POQTY ?? '—') . "</td>
+                        <td class='text-center'>{$line->ReceivedQTY}</td>
+                        <td class='text-end'>KES " . number_format($line->UnitPrice, 2) . "</td>
+                        <td class='text-end'>KES " . number_format($lineTotal, 2) . "</td>
+                        <td>{$procBadge}</td>
+                    </tr>";
+        }
+
+        $html .= "
+                </tbody>
+                <tfoot class='table-light'>
+                    <tr>
+                        <th colspan='4' class='text-end'>Grand Total</th>
+                        <th class='text-end'>KES " . number_format($totalValue, 2) . "</th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>";
+
+        return response($html);
     }
 }

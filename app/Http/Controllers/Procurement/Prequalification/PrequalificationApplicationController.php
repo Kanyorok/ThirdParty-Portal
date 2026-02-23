@@ -732,7 +732,13 @@ class PrequalificationApplicationController extends Controller
             $rounds->push($prequalificationRound);
         }
 
-        return view('procurement.suppliers.prequalification.supplier-applications.create', compact('prequalificationRound', 'rounds'));
+        // Fetch active suppliers for dropdown
+        $suppliers = \App\Models\ThirdParty\SupplierMaster::query()
+            ->with('party')
+            ->where('ApprovalStatus', \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved)
+            ->get();
+
+        return view('procurement.suppliers.prequalification.supplier-applications.create', compact('prequalificationRound', 'rounds', 'suppliers'));
     }
 
     public function storeManual(Request $request)
