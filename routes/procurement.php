@@ -126,6 +126,16 @@ Route::middleware(['module:300000'])->group(function () {
         'updateQuantity',
     ])->name('requisitionLine.updateQuantity');
 
+    Route::patch('requisitionLine/{lineId}/quantity', [
+    \App\Http\Controllers\Procurement\RequisitionItemsController::class,
+    'updateQuantity',
+])->name('requisitionLine.patchQuantity');
+
+    Route::patch('requisitionLine/{lineId}/uom', [
+    \App\Http\Controllers\Procurement\RequisitionItemsController::class,
+    'updateUom',
+])->name('requisitionLine.patchUom');
+
     Route::delete('requisitionLine/{lineId}', [
         \App\Http\Controllers\Procurement\RequisitionItemsController::class,
         'destroy',

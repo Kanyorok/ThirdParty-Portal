@@ -1798,7 +1798,7 @@ class TenderController extends Controller
             return false;
         }
 
-    
+
 
         $itemTypeId = (int)$item->ItemType;
         $allowedTypeIds = array_map('intval', $allowedTypeIds);
@@ -1890,7 +1890,7 @@ class TenderController extends Controller
                 'procurementMode',
             ])->findOrFail($id);
 
-           
+
             $workflowStatus = $this->workflow->getStatus($tender);
 
             $history = $tender->workflowHistory()
@@ -1898,7 +1898,7 @@ class TenderController extends Controller
                 ->orderBy('CreatedOn', 'desc')
                 ->get();
 
-           
+
             $hasWorkflow = $workflowStatus['hasWorkflow'] ?? false;
             $currentStage = $workflowStatus['currentStage'] ?? null;
             $pendingApprovers = collect($workflowStatus['pendingApprovers'] ?? []);

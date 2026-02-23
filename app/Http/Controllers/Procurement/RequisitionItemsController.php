@@ -668,6 +668,40 @@ class RequisitionItemsController extends Controller
         }
     }
 
+    public function updateUom(Request $request, $lineId)
+    {
+        try {
+            $request->validate([
+                'uom_id' => 'required|integer|min:1',
+            ]);
+
+            $result = RequisitionItemService::updateLineUom(
+                $lineId,
+                $request->input('uom_id'),
+                Auth::user()
+            );
+
+            if ($result['status'] === 'success') {
+                return response()->json([
+                    'success' => true,
+                    'message' => $result['message'],
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'],
+            ], 400);
+        } catch (\Exception $e) {
+            Log::error('Controller: Failed to update UOM: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update UOM',
+            ], 500);
+        }
+    }
+
     public function destroy($lineId)
     {
         try {

@@ -180,9 +180,13 @@ class TenderSubmissionController extends Controller
                 }
             }
 
+            // Find all supplier IDs that share the same SupplierMasterId to prevent duplicate bids for the same company
+            $masterId = $supplier->SupplierMasterId ?? ($supplier->supplierMaster ? $supplier->supplierMaster->Id : null);
+            $relatedSupplierIds = $masterId ? Supplier::where('SupplierMasterId', $masterId)->pluck('Id')->toArray() : [$supplier->Id];
+
             // Check for duplicate submission inside the lock
             $existingSubmission = BidSubmission::where('TenderRef', $request->tender_ref)
-                ->where('SupplierId', $supplier->Id)
+                ->whereIn('SupplierId', $relatedSupplierIds)
                 ->exists();
 
             if ($existingSubmission) {
@@ -300,6 +304,11 @@ class TenderSubmissionController extends Controller
         $submittedSupplierIds = BidSubmission::where('TenderRef', $tender->TenderNo)
             ->pluck('SupplierId');
 
+        // Get all related supplier IDs for the same companies to exclude them completely
+        $masterIds = Supplier::whereIn('Id', $submittedSupplierIds)->pluck('SupplierMasterId')->filter();
+        $excludedSupplierIds = Supplier::whereIn('SupplierMasterId', $masterIds)->pluck('Id')->toArray();
+        $allExcludedIds = array_unique(array_merge($submittedSupplierIds->toArray(), $excludedSupplierIds));
+
         $query = Supplier::query()
             // Only suppliers who are Approved & Prequalified
             ->whereHas('supplierMaster', function ($q) {
@@ -307,7 +316,7 @@ class TenderSubmissionController extends Controller
                   ->where('IsPrequalified', true);
             })
             // Exclude already submitted suppliers
-            ->whereNotIn('Id', $submittedSupplierIds);
+            ->whereNotIn('Id', $allExcludedIds);
 
         // Handle restricted tenders: only show suppliers who accepted invitations
         if ($tender->TenderType === \App\Enums\TenderTypeEnum::Restricted) {

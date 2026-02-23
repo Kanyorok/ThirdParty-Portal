@@ -146,15 +146,31 @@ class RequisitionService
             if (! $statusId) {
             }
 
-            // Get urgency - if not available, use NULL
+            // Resolve urgency for auto-populated plan lines.
+            // Do not allow NULL because UrgencyID is NOT NULL in t_RequisitionLines.
             $urgencyId = DB::table('t_CodeDetails')
-                ->where('CodeID', 'UrgencyLevel')
-                ->where('IsActive', 1)
+                ->whereIn('CodeID', ['UrgencyLevel', 'Urgency'])
+                ->where(function ($q) {
+                    $q->where('Value', '3')
+                        ->orWhere('Value', 'M')
+                        ->orWhere('Description', 'Medium');
+                })
                 ->whereNull('DeletedOn')
                 ->orderBy('ID')
                 ->value('ID');
 
+            // Fallback: first non-deleted urgency code if "Medium" cannot be resolved.
             if (! $urgencyId) {
+                $urgencyId = DB::table('t_CodeDetails')
+                    ->whereIn('CodeID', ['UrgencyLevel', 'Urgency'])
+                    ->whereNull('DeletedOn')
+                    ->orderBy('ID')
+                    ->value('ID');
+            }
+
+            // Last-resort fallback to canonical medium-like value used in this module.
+            if (! $urgencyId) {
+                $urgencyId = 3;
             }
 
             // FIXED: Properly join to get item type information
@@ -167,9 +183,9 @@ class RequisitionService
                     'pli.LineItemID',
                     'pli.ItemID',
                     // 'pli.ItemDescription as PlanDescription', // Column does not exist
-                    'pli.MergedQty as PlanQuantity',
-                    'pli.UOMID',
-                    'pli.UnitPrice',
+                    DB::raw('ISNULL(pli.MergedQty, ISNULL(pli.OriginalQTY, 0)) as PlanQuantity'),
+                    'pli.UnitOfMeasure as UOMID',
+                    'pli.EstimatedUnitCost as UnitPrice',
                     'itm.ItemName',
                     'itm.ItemDescription as ItemDescription',
                     'itm.ItemType as ItemTypeId',
@@ -211,27 +227,17 @@ class RequisitionService
                     }
 
                     // Get UOM - try to get the actual UOM code
-                    $uomName = 'Unit'; // Default
-                    if (! empty($item->UOMID)) {
-                        $uom = DB::table('t_UOM')
-                            ->where('Id', $item->UOMID)
-                            ->first();
-
-                        if ($uom) {
-                            $uomName = $uom->Code ?? $uom->Name ?? $uomName;
-                        } else {
-                        }
-                    }
+                   $uomId = $item->UOMID ?? null;
 
                     // Prepare description - use the most descriptive available
                     $description = trim($item->PlanDescription ?? $item->ItemDescription ?? $item->ItemName ?? 'Item');
 
                     // Prepare insert data with all required fields
                     $insertData = [
-                        'RequisitionID' => $requisitionId,
+                        'RequisitionId' => $requisitionId,
                         'Item' => $item->ItemID,
                         'Description' => $description,
-                        'UOM' => $uomName,
+                        'UOM' => $uomId,
                         'Quantity' => $remainingQty,
                         'ExpectedPrice' => $item->UnitPrice ?? 0,
                         'PlanLineRef' => $item->LineItemID,
@@ -246,9 +252,8 @@ class RequisitionService
                         $insertData['StatusID'] = $statusId;
                     }
 
-                    if ($urgencyId) {
-                        $insertData['UrgencyID'] = $urgencyId;
-                    }
+                    // Always set urgency for auto-populated rows (column is NOT NULL).
+                    $insertData['UrgencyID'] = $urgencyId;
 
                     if (! empty($item->ItemTypeId)) {
                         $insertData['Type'] = $item->ItemTypeId;
@@ -328,8 +333,11 @@ class RequisitionService
                     ELSE \'Draft\'
                 END as Status,
                 t_Requisitions.CreatedOn,
-                SUM(ISNULL(t_RequisitionLines.Quantity, 0) * ISNULL(t_RequisitionLines.ExpectedPrice, 0)) as ExpectedPrice,
-                COUNT(CASE WHEN t_RequisitionLines.Id IS NOT NULL THEN 1 END) as itemcount,
+                SUM(CASE WHEN t_RequisitionLines.DeletedOn IS NULL
+                    THEN ISNULL(t_RequisitionLines.Quantity, 0) * ISNULL(t_RequisitionLines.ExpectedPrice, 0)
+                    ELSE 0
+                END) as ExpectedPrice,
+                COUNT(CASE WHEN t_RequisitionLines.Id IS NOT NULL AND t_RequisitionLines.DeletedOn IS NULL THEN 1 END) as itemcount,
                 CASE 
                     WHEN t_ConsolidatedProcurementPlan.PlanID IS NOT NULL 
                     THEN t_ConsolidatedProcurementPlan.Title + \' - \' + t_ConsolidatedProcurementPlan.ReferenceNumber
@@ -380,8 +388,11 @@ class RequisitionService
                 't_Requisitions.CreatedOn',
                 DB::raw('ISNULL(t_Users.Name, t_Requisitions.CreatedBy) AS CreatedBy'),
                 't_Requisitions.Id',
-                DB::raw('SUM(ISNULL(t_RequisitionLines.Quantity, 0) * ISNULL(t_RequisitionLines.ExpectedPrice, 0)) AS ExpectedPrice'),
-                DB::raw('COUNT(t_RequisitionLines.Id) AS itemcount'),
+                DB::raw('SUM(CASE WHEN t_RequisitionLines.DeletedOn IS NULL
+                    THEN ISNULL(t_RequisitionLines.Quantity, 0) * ISNULL(t_RequisitionLines.ExpectedPrice, 0)
+                    ELSE 0
+                END) AS ExpectedPrice'),
+                DB::raw('COUNT(CASE WHEN t_RequisitionLines.DeletedOn IS NULL THEN t_RequisitionLines.Id END) AS itemcount'),
                 DB::raw("CASE 
                     WHEN t_ConsolidatedProcurementPlan.PlanID IS NOT NULL 
                     THEN t_ConsolidatedProcurementPlan.Title + ' - ' + t_ConsolidatedProcurementPlan.ReferenceNumber
@@ -464,3 +475,4 @@ class RequisitionService
         return $query->get();
     }
 }
+
