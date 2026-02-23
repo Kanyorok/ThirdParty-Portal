@@ -169,44 +169,40 @@ class BidResponsivenessController extends Controller
     }
 
     /**
-     * View document content (placeholder for future DMS integration)
+     * View/preview a document attached to a bid submission.
+     * Uses procurement permissions instead of DMS permissions.
      */
     public function viewDocument($bidId, $documentId)
     {
-        $this->authorize(PermissionEnum::BidSubmissionRead);
+        try {
+            $this->authorize(PermissionEnum::BidSubmissionRead);
 
-        $submission = BidSubmission::findOrFail($bidId);
+            $submission = BidSubmission::findOrFail($bidId);
 
-        if (! $submission->canAccessDocuments()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Documents are not accessible yet.',
-            ], 403);
+            if (! $submission->canAccessDocuments()) {
+                abort(403, 'Documents are not accessible yet.');
+            }
+
+            // Find the DMS document
+            $document = \App\Models\DMS\Document::where('DocumentId', $documentId)
+                ->with(['current', 'repository'])
+                ->first();
+
+            if (! $document) {
+                abort(404, 'Document not found.');
+            }
+
+            $service = new \App\Services\DMS\DocumentService($document);
+
+            // Serve the embed preview view (same as DMS preview controller)
+            return view('dms.files.embed')
+                ->with('file', $document)
+                ->with('service', $service);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Bid document preview failed for bid {$bidId}, document {$documentId}: " . $e->getMessage());
+
+            return response('Failed to load preview: ' . $e->getMessage(), 500);
         }
-
-        // In a real implementation, this would decrypt and serve the document
-        $encryptedDocs = json_decode($submission->EncryptedDocuments, true) ?? [];
-        $document = collect($encryptedDocs)->firstWhere('id', $documentId);
-
-        if (! $document) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Document not found.',
-            ], 404);
-        }
-
-        // For now, return document metadata
-        // TODO: Implement actual document decryption and viewing
-        return response()->json([
-            'success' => true,
-            'message' => 'Document viewing will be implemented with DMS integration',
-            'data' => [
-                'document_info' => $document,
-                'supplier' => $submission->SupplierName,
-                'tender' => $submission->TenderRef,
-                'note' => 'Document decryption and viewing requires DMS integration',
-            ],
-        ]);
     }
 
     /**

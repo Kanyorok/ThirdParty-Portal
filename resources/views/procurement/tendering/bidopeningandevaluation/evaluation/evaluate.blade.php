@@ -10,6 +10,7 @@
             @csrf
             <input type="hidden" name="TenderId" value="{{ $TenderId }}">
 
+            @if(isset($tenderSections) && count($tenderSections) > 0)
             <table class="table table-bordered">
                 <thead class="table-light">
                 <tr>
@@ -79,6 +80,26 @@
                 <a href="{{ route('tenderevaluations.index') }}" class="btn btn-secondary">Back</a>
                 <button type="submit" class="btn btn-primary" id="saveCriteriaBtn">Save Criteria</button>
             </div>
+            @else
+            <div class="alert alert-warning" role="alert">
+                <h5 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> No Evaluation Criteria Configured</h5>
+                <p class="mb-2">
+                    No evaluation sections or criteria have been set up for this tender yet.
+                    Before committee members can evaluate bids, an administrator must configure the evaluation framework.
+                </p>
+                <hr>
+                <p class="mb-0">
+                    <strong>What to do:</strong> Go to
+                    <a href="{{ route('tender-criteria', $TenderId) }}" class="alert-link">
+                        Evaluation Criteria Setup
+                    </a>
+                    to add sections and criteria for this tender.
+                </p>
+            </div>
+            <div class="mt-3">
+                <a href="{{ route('tenderevaluations.index') }}" class="btn btn-secondary">Back</a>
+            </div>
+            @endif
         </form>
     </div>
 

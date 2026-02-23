@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\Auth\User;
 use App\Models\HR\Employee;
+use App\Models\Procurement\CommitteeRoleHistory;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQCommittee;
 use App\Models\Procurement\RFQCommitteeMember;
@@ -81,10 +82,11 @@ class TenderCommitteeController extends Controller
             'query' => $request->query(),
         ]);
 
-        // Only users linked to employees can be assigned to committees.
+        // Only active (non-deleted) users linked to employees can be assigned to committees.
         $employees = User::query()
-            ->with(['employee.role:Id,Name'])
+            ->with(['employee','branchRoles.role'])
             ->whereNotNull('EmployeeId')
+            ->whereNull('DeletedOn')
             ->orderBy('Name')
             ->get(['Id', 'Name', 'EmployeeId']);
 
@@ -232,7 +234,14 @@ class TenderCommitteeController extends Controller
             if ($committee) {
                 $committeeKey = (int) ($committee->getKey() ?? 0);
                 $committeeMembers = TenderCommitteeMember::query()
-                    ->with(['committee', 'user.employee', 'userByEmployee.employee'])
+                    ->with([
+                        'committee',
+                        'user' => fn ($q) => $q->withTrashed(),
+                        'user.employee',
+                        'userByEmployee' => fn ($q) => $q->withTrashed(),
+                        'userByEmployee.employee',
+                        'roleHistory',
+                    ])
                     ->where(function ($query) use ($committeeKey, $id) {
                         if ($committeeKey > 0) {
                             $query->where('CommitteeID', $committeeKey)
@@ -261,7 +270,14 @@ class TenderCommitteeController extends Controller
             if ($committee) {
                 $committeeKey = (int) ($committee->getKey() ?? 0);
                 $committeeMembers = RFQCommitteeMember::query()
-                    ->with(['committee', 'user.employee', 'userByEmployee.employee'])
+                    ->with([
+                        'committee',
+                        'user' => fn ($q) => $q->withTrashed(),
+                        'user.employee',
+                        'userByEmployee' => fn ($q) => $q->withTrashed(),
+                        'userByEmployee.employee',
+                        'roleHistory',
+                    ])
                     ->where(function ($query) use ($committeeKey, $id) {
                         if ($committeeKey > 0) {
                             $query->where('CommitteeID', $committeeKey)
@@ -291,8 +307,9 @@ class TenderCommitteeController extends Controller
             ->values();
 
         $availableMembers = User::query()
-            ->with(['employee.role:Id,Name'])
+            ->with(['employee.role'])
             ->whereNotNull('EmployeeId')
+            ->whereNull('DeletedOn')
             ->when($currentMemberValues->isNotEmpty(), function ($query) use ($currentMemberValues) {
                 $query->whereNotIn('Id', $currentMemberValues->all())
                     ->whereNotIn('EmployeeId', $currentMemberValues->all());
@@ -400,15 +417,46 @@ class TenderCommitteeController extends Controller
                     $member->restore();
                 }
 
-                $member->update([
-                    'UserID' => $resolvedUserId ?? $member->UserID,
-                    'Role' => $role,
-                    'IsActive' => true,
-                    'DeletedBy' => null,
-                    'DeletedOn' => null,
-                    'ModifiedBy' => $userId,
-                    'ModifiedOn' => $now,
-                ]);
+                $currentRole = $member->Role ?? 'Member';
+                $isRoleChanging = $role !== $currentRole;
+
+                if ($isRoleChanging) {
+                    // Role is changing — store as pending, reset response, log history
+                    $member->update([
+                        'UserID' => $resolvedUserId ?? $member->UserID,
+                        'PendingRole' => $role,
+                        'Response' => 0,  // reset to Pending
+                        'IsActive' => true,
+                        'DeletedBy' => null,
+                        'DeletedOn' => null,
+                        'ModifiedBy' => $userId,
+                        'ModifiedOn' => $now,
+                    ]);
+
+                    CommitteeRoleHistory::create([
+                        'MemberType' => $committeeType,
+                        'MemberID' => $member->id,
+                        'CommitteeID' => $committeeKey,
+                        'PreviousRole' => $currentRole,
+                        'NewRole' => $role,
+                        'Status' => CommitteeRoleHistory::STATUS_PENDING,
+                        'ChangedBy' => $userId,
+                        'ChangedOn' => $now,
+                        'CreatedOn' => $now,
+                        'ModifiedOn' => $now,
+                    ]);
+                } else {
+                    // No role change — normal update
+                    $member->update([
+                        'UserID' => $resolvedUserId ?? $member->UserID,
+                        'Role' => $role,
+                        'IsActive' => true,
+                        'DeletedBy' => null,
+                        'DeletedOn' => null,
+                        'ModifiedBy' => $userId,
+                        'ModifiedOn' => $now,
+                    ]);
+                }
                 $updatedCount++;
             }
 
@@ -597,6 +645,7 @@ class TenderCommitteeController extends Controller
 
         $usersById = User::query()
             ->whereIn('Id', $candidateIds->all())
+            ->whereNull('DeletedOn')
             ->pluck('Id', 'Id');
 
         $remaining = $candidateIds
@@ -606,6 +655,7 @@ class TenderCommitteeController extends Controller
         $usersByEmployee = $remaining->isNotEmpty()
             ? User::query()
                 ->whereIn('EmployeeId', $remaining->all())
+                ->whereNull('DeletedOn')
                 ->pluck('Id', 'EmployeeId')
             : collect();
 

@@ -184,7 +184,7 @@ class TenderOpeningController extends Controller
             $submission = BidSubmission::with(['supplier.thirdParty', 'tender'])->findOrFail($submissionId);
 
             // Validate ceremony is in progress
-            if (! $submission->tender || ! $submission->tender->OpeningDate || $submission->tender->OpeningDate > now()) {
+            if (! $submission->tender || ! $submission->tender->OpeningDate || $submission->tender->Status !== \App\Enums\TenderStatusEnum::OpeningInProgress) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Opening ceremony has not been started for this tender.',

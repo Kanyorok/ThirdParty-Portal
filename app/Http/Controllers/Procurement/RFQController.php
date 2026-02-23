@@ -10,11 +10,23 @@ use App\Models\ThirdParies\Supplier;
 use App\Services\Procurement\RFQ\RFQWorkflowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class RFQController extends Controller
 {
+    /**
+     * How long (seconds) to cache a successful store response for idempotency replay.
+     */
+    private const IDEMPOTENCY_TTL = 86400; // 24 hours
+
+    /**
+     * How long (seconds) to hold the processing lock.
+     * Must exceed the slowest expected execution of the store operation.
+     */
+    private const IDEMPOTENCY_LOCK_TTL = 30;
+
     public function __construct(protected RFQWorkflowService $workflowService)
     {
     }
@@ -79,32 +91,7 @@ class RFQController extends Controller
         $rfqs = $query->paginate(10)->withQueryString();
 
         // Get requisitions for the modal
-        $requisitions = DB::table('t_Requisitions as r')
-            ->join('t_CodeDetails as cd', function ($join) {
-                $join->on('r.DocStatus', '=', 'cd.Value')
-                     ->where('cd.CodeId', '=', 'RequisitionStatus');
-            })
-            ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
-            ->leftJoin('t_ConsolidatedProcurementPlan as cpp', 'r.PlanRef', '=', 'cpp.PlanID')
-            ->where('cd.Description', 'Approved')
-            ->where('cd.IsActive', 1)
-            ->whereNull('cd.DeletedOn')
-            ->whereNull('r.DeletedOn')
-            ->whereNotExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('t_RFQLines as existing_rfql')
-                    ->join('t_RFQ as existing_rfq', 'existing_rfql.RFQId', '=', 'existing_rfq.Id')
-                    ->whereColumn('existing_rfql.RequisitionLineId', 'rl.Id')
-                    ->whereNull('existing_rfq.DeletedOn')
-                    ->whereNotIn('existing_rfq.Status', ['Re', 'Rejected', 'RE']);
-            })
-            ->select(
-                'r.Id',
-                'r.RequisitionNo',
-                DB::raw("COALESCE(cpp.Title + ' - ' + cpp.ReferenceNumber, '') as PlanTitle")
-            )
-            ->distinct()
-            ->get();
+        $requisitions = $this->getAvailableRequisitions();
 
         // Build CreatedBy map
         $createdByIds = $rfqs->pluck('CreatedBy')->unique()->filter()->values()->all();
@@ -130,33 +117,7 @@ class RFQController extends Controller
     {
         $this->authorize('create', RFQ::class);
 
-        $requisitions = DB::table('t_Requisitions as r')
-            ->join('t_CodeDetails as cd', function ($join) {
-                $join->on('r.DocStatus', '=', 'cd.Value')
-                ->where('cd.CodeId', '=', 'RequisitionStatus');
-            })
-            ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
-            ->leftJoin('t_ConsolidatedProcurementPlan as cpp', 'r.PlanRef', '=', 'cpp.PlanID')
-            ->where('cd.Description', 'Approved')
-            ->where('cd.IsActive', 1)
-            ->whereNull('cd.DeletedOn')
-            ->whereNull('r.DeletedOn') // Also check requisition not deleted
-            ->whereNotExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('t_RFQLines as existing_rfql')
-                    ->join('t_RFQ as existing_rfq', 'existing_rfql.RFQId', '=', 'existing_rfq.Id')
-                    ->whereColumn('existing_rfql.RequisitionLineId', 'rl.Id')
-                    ->whereNull('existing_rfq.DeletedOn')
-                    ->whereNotIn('existing_rfq.Status', ['Re', 'Rejected', 'RE']);
-            })
-            ->select(
-                'r.Id',
-                'r.RequisitionNo',
-                DB::raw("COALESCE(cpp.Title + ' - ' + cpp.ReferenceNumber, '') as PlanTitle")
-            )
-            ->distinct()
-            ->get();
-
+        $requisitions = $this->getAvailableRequisitions();
         $categories = ItemCategories::all();
         $suppliers = Supplier::all();
 
@@ -165,57 +126,168 @@ class RFQController extends Controller
 
     /**
      * Store a newly created resource in storage.
+     *
+     * Idempotency strategy
+     * ─────────────────────────────────────────────────────────────────────────
+     * 1. Client sends a unique `Idempotency-Key` header per *intended* request
+     *    (e.g. a UUID generated in the browser before the form submit).
+     *    If no header is present we fall back to a hash of the validated
+     *    payload — good enough for simple UIs that don't support headers.
+     *
+     * 2. First call   → acquire lock → run → cache success result → release
+     *                   lock → return result.
+     *
+     * 3. Duplicate    → cached result found → redirect to the same RFQ
+     *    (success)       without touching the DB.
+     *
+     * 4. In-flight    → lock is held by another process → return error so the
+     *                   client knows to wait briefly and try again.
+     *
+     * 5. Failed call  → result is NOT cached → next request is treated as a
+     *                   fresh attempt and allowed to proceed normally.
+     *
+     * Additionally, RFQ number generation is wrapped in a DB-level lock so
+     * concurrent requests can never generate the same number.
      */
     public function store(Request $request)
     {
         $this->authorize('create', RFQ::class);
 
-        $request->validate([
+        $validated = $request->validate([
             'RequisitionId' => 'required|exists:t_Requisitions,Id',
             'Comments' => 'nullable|string|max:255',
-            'SubmissionDeadline' => [
-                'required',
-                'date',
-                'after:today',
-            ],
+            'SubmissionDeadline' => ['required', 'date', 'after:today'],
         ], [
             'SubmissionDeadline.after' => 'Submission deadline must be at least tomorrow.',
         ]);
 
-        $prefix = 'RFQ-';
-        $lastRFQ = RFQ::where('RFQNumber', 'like', $prefix . '%')
-            ->orderBy('Id', 'desc')
-            ->first();
-        $lastNumber = $lastRFQ ? intval(substr($lastRFQ->RFQNumber, strlen($prefix))) : 0;
-        $newRFQNumber = $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
+        $actor = Auth::user();
 
-        // Get the proper status value for 'Pending'
-        $pendingStatus = DB::table('t_CodeDetails')
-            ->where('CodeId', 'RequisitionStatus')
-            ->where('Description', 'Pending')
-            ->where('IsActive', 1)
-            ->whereNull('DeletedOn')
-            ->value('Value');
 
-        // Create the RFQ
-        $rfq = RFQ::create([
-            'RFQNumber' => $newRFQNumber,
-            'RequisitionId' => $request->RequisitionId,
-            'Comments' => $request->Comments,
-            'SubmissionDeadline' => $request->SubmissionDeadline,
-            'CreatedBy' => Auth::user()->Id,
-            'ModifiedBy' => Auth::user()->Id,
-            'Status' => $pendingStatus ?? 'pe', // Use Value, not Description
-        ]);
+        //  Build the idempotency key
+        //    Prefer an explicit client-supplied header so two genuinely
+        //    *different* RFQs with identical fields never collide.
 
-        Log::info('RFQ created successfully', [
-            'rfq_id' => $rfq->Id,
-            'rfq_number' => $rfq->RFQNumber,
-            'status' => $rfq->Status,
-        ]);
+        $clientKey = $request->header('Idempotency-Key');
 
-        return redirect()->route('rfqs.show', $rfq->Id)
-            ->with('success', 'RFQ created successfully.');
+        $idempotencyKey = $clientKey
+            ? 'rfq_idem:' . $actor->Id . ':' . $clientKey
+            : 'rfq_idem:' . $actor->Id . ':' . md5(json_encode($validated));
+
+        $resultCacheKey = $idempotencyKey . ':result';
+        $lockKey = $idempotencyKey . ':lock';
+
+
+        //    The client gets redirected to the same RFQ without a DB write.
+
+        $cached = Cache::get($resultCacheKey);
+
+        if ($cached !== null) {
+            Log::info('Idempotent replay for RFQ store.', [
+                'user_id' => $actor->Id,
+                'idempotency_key' => $idempotencyKey,
+                'rfq_id' => $cached['rfq_id'],
+            ]);
+
+            return redirect()->route('rfqs.show', $cached['rfq_id'])
+                ->with('success', 'RFQ already created successfully (duplicate request ignored).');
+        }
+
+
+
+        //    If another request with the same key is currently being
+        //    processed, bail out instead of queuing behind it.
+
+        $lock = Cache::lock($lockKey, self::IDEMPOTENCY_LOCK_TTL);
+
+        if (! $lock->get()) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Your previous request is still being processed. Please wait a moment and try again.');
+        }
+
+        try {
+            // Re-check the cache inside the lock in case another process
+            // succeeded between steps 2 and 3 (double-checked locking).
+            $cached = Cache::get($resultCacheKey);
+
+            if ($cached !== null) {
+                return redirect()->route('rfqs.show', $cached['rfq_id'])
+                    ->with('success', 'RFQ already created successfully (duplicate request ignored).');
+            }
+
+
+            // 4.Generate RFQ number and create the record inside a DB
+            //    transaction. Using lockForUpdate() on the last-RFQ query
+            //    prevents two concurrent requests from generating the same
+            //    number even if the cache lock somehow allows both through.
+
+            $rfq = DB::transaction(function () use ($validated, $actor) {
+                $prefix = 'RFQ-';
+
+                // Lock the row so concurrent transactions queue here instead
+                // of reading the same "last number" simultaneously.
+                $lastRFQ = RFQ::where('RFQNumber', 'like', $prefix . '%')
+                    ->orderBy('Id', 'desc')
+                    ->lockForUpdate()
+                    ->first();
+
+                $lastNumber = $lastRFQ ? intval(substr($lastRFQ->RFQNumber, strlen($prefix))) : 0;
+                $newRFQNumber = $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
+
+                // Get the proper status value for 'Pending'
+                $pendingStatus = DB::table('t_CodeDetails')
+                    ->where('CodeId', 'RequisitionStatus')
+                    ->where('Description', 'Pending')
+                    ->where('IsActive', 1)
+                    ->whereNull('DeletedOn')
+                    ->value('Value');
+
+                return RFQ::create([
+                    'RFQNumber' => $newRFQNumber,
+                    'RequisitionId' => $validated['RequisitionId'],
+                    'Comments' => $validated['Comments'] ?? null,
+                    'SubmissionDeadline' => $validated['SubmissionDeadline'],
+                    'CreatedBy' => $actor->Id,
+                    'ModifiedBy' => $actor->Id,
+                    'Status' => $pendingStatus ?? 'pe',
+                ]);
+            });
+
+            Log::info('RFQ created successfully', [
+                'rfq_id' => $rfq->Id,
+                'rfq_number' => $rfq->RFQNumber,
+                'status' => $rfq->Status,
+                'user_id' => $actor->Id,
+            ]);
+
+            //  Cache the success result so retries are replayed (step 3).
+            //    Failures are intentionally NOT cached so they can be retried.
+
+            Cache::put($resultCacheKey, ['rfq_id' => $rfq->Id], self::IDEMPOTENCY_TTL);
+
+            return redirect()->route('rfqs.show', $rfq->Id)
+                ->with('success', 'RFQ created successfully.');
+
+        } catch (\Throwable $e) {
+            Log::error('Failed to create RFQ.', [
+                'user_id' => $actor->Id,
+                'input' => $validated,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Do NOT cache — allow the user to retry.
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to create RFQ. Please try again.');
+
+        } finally {
+            // Always release the lock, even if an exception was thrown.
+            // Without this it would be held for IDEMPOTENCY_LOCK_TTL seconds,
+            // blocking every retry for that window.
+            $lock->release();
+        }
     }
 
     /**
@@ -236,36 +308,51 @@ class RFQController extends Controller
 
         // Check if RFQ has at least one line item
         if ($rfq->rfqLines()->count() < 1) {
-            Log::warning('Submit blocked - no line items', [
-                'rfq_id' => $rfq->Id,
-            ]);
+            Log::warning('Submit blocked - no line items', ['rfq_id' => $rfq->Id]);
 
             return redirect()->back()->with('error', 'Cannot submit an RFQ without any items. Please add at least one RFQ line.');
         }
 
-        // Check if RFQ is already submitted (Has pending approvals)
+        // Check if RFQ is already submitted (has pending approvals)
         $pendingApprovals = $this->workflowService->getPendingApprovals($rfq);
         if (count($pendingApprovals) > 0) {
             return redirect()->back()->with('error', 'RFQ is already submitted for approval.');
         }
 
+        try {
+            $result = $this->workflowService->submitRFQ($rfq, Auth::user(), 'Submitted via UI');
 
-        // Use Workflow Service to submit for approval
-        $result = $this->workflowService->submitRFQ($rfq, Auth::user(), 'Submitted via UI');
+            // Refresh to get updated status
+            $rfq->refresh();
 
-        // Refresh to get updated status
-        $rfq->refresh();
+            Log::info('Submit for approval completed', [
+                'rfq_id' => $rfq->Id,
+                'result' => $result,
+                'new_status' => $rfq->Status,
+            ]);
 
-        Log::info('Submit for approval completed', [
-            'rfq_id' => $rfq->Id,
-            'result' => $result,
-            'new_status' => $rfq->Status,
-        ]);
+            if ($result) {
+                return redirect()->back()->with('success', 'RFQ submitted for Approval successfully.');
+            }
 
-        if ($result) {
-            return redirect()->back()->with('success', 'RFQ submitted for Approval successfully.');
-        } else {
             return redirect()->back()->with('error', 'Failed to submit RFQ for approval. Please check workflow configuration.');
+
+        } catch (\App\Exceptions\ErroredException $e) {
+            Log::warning('Submit blocked by workflow service', [
+                'rfq_id' => $rfq->Id,
+                'reason' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->with('error', $e->getMessage());
+
+        } catch (\Throwable $e) {
+            Log::error('Failed to submit RFQ', [
+                'rfq_id' => $rfq->Id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to submit RFQ for approval. Please try again.');
         }
     }
 
@@ -286,14 +373,12 @@ class RFQController extends Controller
 
         // Check if RFQ has at least one line item
         if ($rfq->rfqLines()->count() < 1) {
-            Log::warning('Approval blocked - no line items', [
-                'rfq_id' => $rfq->Id,
-            ]);
+            Log::warning('Approval blocked - no line items', ['rfq_id' => $rfq->Id]);
 
             return redirect()->back()->with('error', 'Cannot approve an RFQ without any items.');
         }
 
-        // Use Workflow Service to approve (using convenience method)
+        // Use Workflow Service to approve
         $result = $this->workflowService->approveRFQ($rfq, Auth::user(), 'Approved via UI');
 
         // Refresh to get updated status
@@ -308,9 +393,9 @@ class RFQController extends Controller
 
         if ($result) {
             return redirect()->back()->with('success', 'RFQ has been approved successfully.');
-        } else {
-            return redirect()->back()->with('error', 'Failed to approve RFQ. Please check workflow configuration.');
         }
+
+        return redirect()->back()->with('error', 'Failed to approve RFQ. Please check workflow configuration.');
     }
 
     /**
@@ -352,14 +437,14 @@ class RFQController extends Controller
 
         $request->validate([
             'suppliers' => 'required|array|min:1',
-            'suppliers.*' => 'exists:t_SupplierMaster,Id', // Validate against SupplierMaster
+            'suppliers.*' => 'exists:t_SupplierMaster,Id',
         ], [
             'suppliers.required' => 'Please select at least one supplier.',
             'suppliers.min' => 'Please select at least one supplier.',
         ]);
 
         $supplierMasterIds = collect($request->suppliers)
-            ->map(fn ($v) => (int)$v)
+            ->map(fn ($v) => (int) $v)
             ->unique()
             ->values()
             ->all();
@@ -450,19 +535,16 @@ class RFQController extends Controller
         $usedEmails = [];
 
         foreach ($recipientRows as $row) {
-            $email = trim((string)$row->Email);
+            $email = trim((string) $row->Email);
             if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) && ! in_array(strtolower($email), $usedEmails, true)) {
-                $recipients[] = [
-                    'name' => $row->TradingName,
-                    'email' => $email,
-                ];
+                $recipients[] = ['name' => $row->TradingName, 'email' => $email];
                 $usedEmails[] = strtolower($email);
             }
         }
 
         // Send emails to suppliers
         $actor = Auth::user();
-        $successfulEmals = 0;
+        $successfulEmails = 0;
 
         if ($actor && ! empty($recipients)) {
             $subject = 'RFQ Invitation: ' . $rfq->RFQNumber;
@@ -474,7 +556,6 @@ class RFQController extends Controller
                 '<p>Submission Deadline: <b>' . e($submissionDeadlineFormatted) . '</b></p>' .
                 '<p>Please log in to the supplier portal to view details and submit your response.</p>';
 
-            // Send individual emails to preserve privacy
             foreach ($recipients as $recipient) {
                 $to = [[$recipient['name'] => $recipient['email']]];
                 $personalBody = '<p>Hello ' . e($recipient['name']) . ',</p>' . $bodyTemplate;
@@ -488,11 +569,11 @@ class RFQController extends Controller
                         'ThirdParty',
                         '',
                         [],
-                        [], // No BCC
+                        [],
                         \App\Enums\EmailPriorityEnum::Important
                     );
                     $service->send(true);
-                    $successfulEmals++;
+                    $successfulEmails++;
 
                     Log::info('Email sent to supplier', [
                         'rfq_id' => $rfq->Id,
@@ -508,7 +589,7 @@ class RFQController extends Controller
             }
         }
 
-        return redirect()->back()->with('success', 'RFQ published. ' . $successfulEmals . ' invitation email(s) sent.');
+        return redirect()->back()->with('success', 'RFQ published. ' . $successfulEmails . ' invitation email(s) sent.');
     }
 
     /**
@@ -546,9 +627,9 @@ class RFQController extends Controller
 
         if ($result) {
             return redirect()->back()->with('success', 'RFQ has been rejected successfully.');
-        } else {
-            return redirect()->back()->with('error', 'Failed to reject RFQ.');
         }
+
+        return redirect()->back()->with('error', 'Failed to reject RFQ.');
     }
 
     /**
@@ -556,19 +637,17 @@ class RFQController extends Controller
      */
     public function show($id)
     {
-        // Get the RFQ and its associated RFQLines
         $rfq = RFQ::with('rfqLines', 'rfqLines.uom', 'requisition')->findOrFail($id);
         $this->authorize('view', $rfq);
-
 
         // Gather item category IDs from RFQ lines and include ancestors and descendants
         $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique()->filter()->values();
         $allCategoryIds = collect();
+
         foreach ($itemCategoryIds as $catId) {
             $cat = \App\Models\Inventory\ItemCategories::find($catId);
             if ($cat) {
                 $allCategoryIds->push($cat->Id);
-                // include ancestors so if classification includes a parent, subcategory items still qualify
                 $parent = $cat->parent;
                 while ($parent) {
                     $allCategoryIds->push($parent->Id);
@@ -577,13 +656,11 @@ class RFQController extends Controller
             }
         }
 
-        // include descendants (BFS) so if a parent item category is mapped, its subcategories are covered
+        // Include descendants (BFS)
         $queue = collect($itemCategoryIds);
         while ($queue->isNotEmpty()) {
             $currentBatch = $queue->splice(0, 100)->all();
-            $children = DB::table('t_ItemCategories')
-                ->whereIn('ParentId', $currentBatch)
-                ->pluck('Id');
+            $children = DB::table('t_ItemCategories')->whereIn('ParentId', $currentBatch)->pluck('Id');
             $newChildren = $children->diff($allCategoryIds);
             if ($newChildren->isNotEmpty()) {
                 $allCategoryIds = $allCategoryIds->merge($newChildren);
@@ -599,7 +676,6 @@ class RFQController extends Controller
             ->whereNull('tpu.DeletedOn')
             ->groupBy('tpu.ThirdPartyId');
 
-        // FIXED: Select suppliers from SupplierMaster directly
         $suppliers = DB::table('t_SupplierMaster as sm')
             ->join('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
             ->leftJoinSub($thirdPartyUserEmailSub, 'tpu', function ($join) {
@@ -607,10 +683,10 @@ class RFQController extends Controller
             })
             ->whereNull('sm.DeletedOn')
             ->whereNull('tp.DeletedOn')
-            ->where('sm.ApprovalStatus', 'A') // Only approved suppliers
-            ->where('sm.IsPrequalified', 1)   // Only prequalified suppliers
+            ->where('sm.ApprovalStatus', 'A')
+            ->where('sm.IsPrequalified', 1)
             ->select(
-                'sm.Id', // Use SupplierMaster Id
+                'sm.Id',
                 'sm.ThirdPartyId',
                 'tp.TradingName as SupplierName',
                 'tp.BusinessType',
@@ -622,10 +698,9 @@ class RFQController extends Controller
         Log::info('Suppliers fetched for RFQ', [
             'rfq_id' => $rfq->Id,
             'supplier_count' => $suppliers->count(),
-            'suppliers' => $suppliers->toArray(),
         ]);
 
-        // Load RFQ responses (supplier quotations) with items and supplier info for printing
+        // Load RFQ responses with items and supplier info for printing
         $rfqResponses = RFQResponse::with(['items.uom', 'supplier.supplierMaster.party'])
             ->where('RFQId', $rfq->Id)
             ->get();
@@ -649,8 +724,7 @@ class RFQController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to get workflow data', [
                 'rfq_id' => $rfq->Id,
-                'supplier_count' => $suppliers->count(),
-                'suppliers' => $suppliers->toArray(),
+                'error' => $e->getMessage(),
             ]);
         }
 
@@ -677,6 +751,7 @@ class RFQController extends Controller
     {
         $rfq = RFQ::findOrFail($id);
         $this->authorize('update', $rfq);
+
         $request->validate([
             'ItemCategoryId' => 'required|exists:t_ItemCategories,id',
             'Comments' => 'nullable|string|max:255',
@@ -685,16 +760,13 @@ class RFQController extends Controller
             'suppliers.*' => 'exists:t_Suppliers,Id',
         ]);
 
-
-        // Update RFQ details
         $rfq->update([
             'ItemCategoryId' => $request->ItemCategoryId,
             'Comments' => $request->Comments,
             'SubmissionDeadline' => $request->SubmissionDeadline,
-            'ModifiedBy' => \Illuminate\Support\Facades\Auth::user()->Id,
+            'ModifiedBy' => Auth::user()->Id,
         ]);
 
-        // Update suppliers in the pivot table
         $rfq->suppliers()->sync($request->suppliers);
 
         return redirect()->route('rfqs.show', $rfq->Id)->with('success', 'RFQ updated successfully.');
@@ -713,13 +785,11 @@ class RFQController extends Controller
     }
 
     /**
- * Get categories from requisition for RFQ line creation
- * Add this method to your RFQController
- */
+     * Get categories from requisition for RFQ line creation.
+     */
     public function getRequisitionCategories($requisitionId)
     {
         try {
-            // Get distinct item categories from requisition lines
             $categories = DB::table('t_RequisitionLines as rl')
                 ->join('t_ItemCategories as ic', 'rl.ItemCategoryId', '=', 'ic.Id')
                 ->where('rl.RequisitionID', $requisitionId)
@@ -745,7 +815,42 @@ class RFQController extends Controller
     }
 
     /**
-     * Get workflow history manually
+     * Returns approved requisitions that have not yet been fully covered by
+     * an active (non-rejected) RFQ. Extracted to avoid duplication between
+     * index() and create().
+     */
+    private function getAvailableRequisitions()
+    {
+        return DB::table('t_Requisitions as r')
+            ->join('t_CodeDetails as cd', function ($join) {
+                $join->on('r.DocStatus', '=', 'cd.Value')
+                     ->where('cd.CodeId', '=', 'RequisitionStatus');
+            })
+            ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
+            ->leftJoin('t_ConsolidatedProcurementPlan as cpp', 'r.PlanRef', '=', 'cpp.PlanID')
+            ->where('cd.Description', 'Approved')
+            ->where('cd.IsActive', 1)
+            ->whereNull('cd.DeletedOn')
+            ->whereNull('r.DeletedOn')
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('t_RFQLines as existing_rfql')
+                    ->join('t_RFQ as existing_rfq', 'existing_rfql.RFQId', '=', 'existing_rfq.Id')
+                    ->whereColumn('existing_rfql.RequisitionLineId', 'rl.Id')
+                    ->whereNull('existing_rfq.DeletedOn')
+                    ->whereNotIn('existing_rfq.Status', ['Re', 'Rejected', 'RE']);
+            })
+            ->select(
+                'r.Id',
+                'r.RequisitionNo',
+                DB::raw("COALESCE(cpp.Title + ' - ' + cpp.ReferenceNumber, '') as PlanTitle")
+            )
+            ->distinct()
+            ->get();
+    }
+
+    /**
+     * Get workflow history manually (fallback).
      */
     private function getManualWorkflowHistory($rfqId)
     {
@@ -754,18 +859,13 @@ class RFQController extends Controller
             ->where('wh.Source', 't_RFQ')
             ->where('wh.SourceID', $rfqId)
             ->whereNull('wh.DeletedOn')
-            ->select(
-                'wh.Action',
-                'u.Name as UserName',
-                'wh.ActionDate',
-                'wh.Notes'
-            )
+            ->select('wh.Action', 'u.Name as UserName', 'wh.ActionDate', 'wh.Notes')
             ->orderBy('wh.ActionDate', 'desc')
             ->get();
     }
 
     /**
-     * Get pending approvals manually
+     * Get pending approvals manually (fallback).
      */
     private function getManualPendingApprovals($rfqId)
     {
@@ -775,19 +875,13 @@ class RFQController extends Controller
             ->where('wp.Source', 't_RFQ')
             ->where('wp.SourceID', $rfqId)
             ->whereNull('wp.DeletedOn')
-            ->select(
-                'ws.StageName as stage_name',
-                'u.Name as user_name',
-                'wp.Status'
-            )
+            ->select('ws.StageName as stage_name', 'u.Name as user_name', 'wp.Status')
             ->get();
 
-        return $pending->map(function ($item) {
-            return (object)[
-                'stage_name' => $item->stage_name,
-                'user_name' => $item->user_name,
-                'status' => $item->Status ?? 'Pending',
-            ];
-        })->toArray();
+        return $pending->map(fn ($item) => (object) [
+            'stage_name' => $item->stage_name,
+            'user_name' => $item->user_name,
+            'status' => $item->Status ?? 'Pending',
+        ])->toArray();
     }
 }

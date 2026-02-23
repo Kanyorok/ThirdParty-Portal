@@ -24,9 +24,17 @@
                 <strong>Guidance:</strong> Tender Initiation supports two types: Open (all suppliers can bid) and Restricted (only invited suppliers based on the selected item category). Add items to the tender by clicking Add to Grid.
             </span>
         </div>
-     {{-- Status Display Section --}}
-{{-- Show 'Ready to Submit' ONLY if Status is Draft AND Approval is  Pending --}}
-@if($tender->Status === \App\Enums\TenderStatusEnum::Draft && $tender->ApprovalStatus !== \App\Enums\TenderApprovalStatusEnum::PENDING)
+@php
+    // Read raw DB value to avoid ValueError when column contains legacy '0' default.
+    $rawApprovalStatus = $tender->getRawOriginal('ApprovalStatus');
+    $approvalIsPending  = ($rawApprovalStatus === \App\Enums\TenderApprovalStatusEnum::PENDING->value);
+    $approvalIsApproved = ($rawApprovalStatus === \App\Enums\TenderApprovalStatusEnum::APPROVED->value);
+    $approvalIsRejected = ($rawApprovalStatus === \App\Enums\TenderApprovalStatusEnum::REJECTED->value);
+    $approvalIsNull     = !$approvalIsPending && !$approvalIsApproved && !$approvalIsRejected;
+    $hasItems           = \App\Models\Procurement\TenderItems::where('TenderID', $tender->Id)->exists();
+@endphp
+{{-- Show 'Ready to Submit' ONLY if Status is Draft AND not yet Pending --}}
+@if($tender->Status === \App\Enums\TenderStatusEnum::Draft && !$approvalIsPending)
     {{-- DRAFT STATE: Show info that tender needs to be submitted --}}
     <div class="alert alert-info" role="alert">
         <i class="fas fa-info-circle me-2"></i>
@@ -47,12 +55,40 @@
             <div class="card-body">
                 <p class="mb-3">Once you submit this tender for approval, you will no longer be able to edit it until it is approved or rejected.</p>
                 
+                {{-- Warning: no items added yet --}}
+                @if(!$hasItems)
+                    <div class="alert alert-danger d-flex align-items-start" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
+                        <div>
+                            <strong>Items Required:</strong> This tender has no items. You must add at least one item before submitting for approval.
+                            <br><a href="{{ route('initiatetender.edit', $tender->Id) }}" class="btn btn-sm btn-danger mt-2">
+                                <i class="fas fa-edit me-1"></i>Edit Tender &amp; Add Items
+                            </a>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Warning for restricted tender with no suppliers --}}
+                @if($tender->isRestricted() && $suppliers->isEmpty())
+                    <div class="alert alert-danger d-flex align-items-start" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
+                        <div>
+                            <strong>Suppliers Required:</strong> This is a <strong>Restricted Tender</strong> and must have at least one invited supplier before it can be submitted for approval.
+                            <br><a href="{{ route('initiatetender.edit', $tender->Id) }}" class="btn btn-sm btn-danger mt-2">
+                                <i class="fas fa-edit me-1"></i>Edit Tender &amp; Add Suppliers
+                            </a>
+                        </div>
+                    </div>
+                @endif
+                
                 <form action="{{ route('initiatetender.submit', $tender->Id) }}" 
                       method="POST" 
-                      onsubmit="return confirm('Are you sure you want to submit this tender for approval? You will not be able to edit it until it is reviewed.');">
+                      onsubmit="return confirm('Are you sure you want to submit this tender for approval? You will not be able to edit it until it is reviewed.');"
+                      id="submitApprovalForm">
                     @csrf
                     @method('POST')
-                    <button type="submit" class="btn btn-primary btn-lg">
+                    <button type="submit" class="btn btn-primary btn-lg"
+                        {{ (!$hasItems || ($tender->isRestricted() && $suppliers->isEmpty())) ? 'disabled' : '' }}>
                         <i class="fas fa-paper-plane me-2"></i>Submit for Approval
                     </button>
                     <a href="{{ route('initiatetender.edit', $tender->Id) }}" class="btn btn-outline-secondary btn-lg">
@@ -62,8 +98,9 @@
             </div>
         </div>
     @endif
+
     
-@elseif($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::PENDING)
+@elseif($approvalIsPending)
     {{-- PENDING APPROVAL STATE --}}
     <div class="alert alert-warning" role="alert">
         <i class="fas fa-clock me-2"></i>
@@ -106,31 +143,84 @@
         </div>
     @endif
     
-@elseif($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::APPROVED)
+@elseif($approvalIsApproved)
     {{-- APPROVED STATE --}}
     <div class="alert alert-success" role="alert">
         <i class="fas fa-check-circle me-2"></i>
         <strong>Approved:</strong> This tender has been approved and published.
     </div>
     
-@elseif($tender->ApprovalStatus == \App\Enums\TenderApprovalStatusEnum::REJECTED)
-    {{-- REJECTED STATE --}}
+@elseif($approvalIsRejected)
+    {{-- REJECTED STATE: Show rejection notice AND allow resubmit --}}
     <div class="alert alert-danger" role="alert">
         <i class="fas fa-times-circle me-2"></i>
-        <strong>Rejected:</strong> This tender was rejected. 
+        <strong>Rejected:</strong> This tender was rejected.
         @if($isSubmitter)
-            <br>Please review the workflow history for details, make necessary corrections, and resubmit.
-            <br><a href="{{ route('initiatetender.edit', $tender->Id) }}" class="btn btn-sm btn-outline-primary mt-2">
-                <i class="fas fa-edit me-1"></i>Edit Tender
-            </a>
+            <br>Please review the workflow history for details, make any necessary corrections, and resubmit.
         @else
             Please review the workflow history for details.
         @endif
     </div>
+
+    {{-- Resubmit card (only for the original submitter) --}}
+    @if($isSubmitter)
+        <div class="card mb-4 border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-redo me-2"></i>Resubmit for Approval
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">This tender was rejected. You may edit it and resubmit for approval.</p>
+
+                {{-- Warning: no items --}}
+                @if(!$hasItems)
+                    <div class="alert alert-warning d-flex align-items-start" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
+                        <div>
+                            <strong>Items Required:</strong> This tender has no items. Add at least one item before resubmitting.
+                            <br><a href="{{ route('initiatetender.edit', $tender->Id) }}" class="btn btn-sm btn-outline-danger mt-2">
+                                <i class="fas fa-edit me-1"></i>Edit Tender &amp; Add Items
+                            </a>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Warning: restricted + no suppliers --}}
+                @if($tender->isRestricted() && $suppliers->isEmpty())
+                    <div class="alert alert-warning d-flex align-items-start" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
+                        <div>
+                            <strong>Suppliers Required:</strong> This is a Restricted Tender. Add at least one invited supplier before resubmitting.
+                            <br><a href="{{ route('initiatetender.edit', $tender->Id) }}" class="btn btn-sm btn-outline-danger mt-2">
+                                <i class="fas fa-edit me-1"></i>Edit Tender &amp; Add Suppliers
+                            </a>
+                        </div>
+                    </div>
+                @endif
+
+                <div class="d-flex gap-2">
+                    <form action="{{ route('initiatetender.submit', $tender->Id) }}"
+                          method="POST"
+                          onsubmit="return confirm('Resubmit this tender for approval?');">
+                        @csrf
+                        @method('POST')
+                        <button type="submit" class="btn btn-danger"
+                            {{ (!$hasItems || ($tender->isRestricted() && $suppliers->isEmpty())) ? 'disabled' : '' }}>
+                            <i class="fas fa-paper-plane me-2"></i>Resubmit for Approval
+                        </button>
+                    </form>
+                    <a href="{{ route('initiatetender.edit', $tender->Id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-edit me-2"></i>Edit Tender First
+                    </a>
+                </div>
+            </div>
+        </div>
+    @endif
 @endif
 
 {{-- Workflow History Link --}}
-@if($tender->ApprovalStatus !== null)
+@if($approvalIsPending || $approvalIsApproved || $approvalIsRejected)
     <div class="mb-3">
         <a href="{{ route('initiatetender.workflow-history', $tender->Id) }}" 
            class="btn btn-outline-secondary btn-sm">
