@@ -108,7 +108,7 @@ class PropertyUnitController extends Controller
             'BlockID' => 'required|exists:t_PropertyBlock,Id',
             'FloorID' => 'required|exists:t_PropertyFloor,Id',
             'UnitCode' => 'required|string|max:50',
-            'UnitSize' => 'required|integer|min:0',
+            'UnitSize' => 'required|integer|min:1',
             'IsRentable' => 'required|boolean',
             'CurrentStatus' => 'required|boolean',
             'Remarks' => 'nullable|string|max:50',
