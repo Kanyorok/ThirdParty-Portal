@@ -440,6 +440,8 @@ Route::middleware(['module:300000'])->group(function () {
     Route::resource('bidscores', BidScoreConsolidationController::class);
     Route::post('bidscores/{tenderId}/consolidate', [BidScoreConsolidationController::class, 'storeConsolidation'])
         ->name('bidscores.consolidate');
+    Route::post('bidscores/{tenderId}/evaluators/{memberId}/skip', [BidScoreConsolidationController::class, 'skipEvaluator'])
+        ->name('bidscores.skip-evaluator');
     Route::get('bidscores/{tenderId}/section-drilldown', [BidScoreConsolidationController::class, 'sectionDrilldown'])->name('bidscores.section-drilldown');
     Route::get('bidscores/{tenderId}/evaluator-drilldown', [BidScoreConsolidationController::class, 'evaluatorDrilldown'])->name('bidscores.evaluator-drilldown');
     Route::get('bidscores/{tenderId}/{supplierId}/drilldown', [BidScoreConsolidationController::class, 'show'])->name('bidscores.drilldown');
@@ -771,6 +773,10 @@ Route::prefix('contracts/lifecycle')->name('contracts.lifecycle.')->group(functi
     Route::post('{id}/terminate', [ContractsLifecycleController::class, 'submitTermination'])->name('terminate.submit')->where('id', '[0-9]+');
     Route::get('{id}/execute', [ContractsLifecycleController::class, 'monitorExecution'])->name('execution')->where('id', '[0-9]+');
     Route::post('{id}/execute', [ContractsLifecycleController::class, 'executeAction'])->name('execution.submit')->where('id', '[0-9]+');
+    Route::post('{id}/milestones', [ContractsLifecycleController::class, 'milestoneStore'])->name('milestones.store')->where('id', '[0-9]+');
+    Route::post('{id}/milestones/{milestoneId}/checklist', [ContractsLifecycleController::class, 'checklistStore'])->name('milestones.checklist.store')->where(['id' => '[0-9]+', 'milestoneId' => '[0-9]+']);
+    Route::post('{id}/milestones/{milestoneId}/checklist/{checklistId}/toggle', [ContractsLifecycleController::class, 'checklistToggle'])->name('milestones.checklist.toggle')->where(['id' => '[0-9]+', 'milestoneId' => '[0-9]+', 'checklistId' => '[0-9]+']);
+    Route::post('{id}/milestones/{milestoneId}/status', [ContractsLifecycleController::class, 'milestoneStatus'])->name('milestones.status')->where(['id' => '[0-9]+', 'milestoneId' => '[0-9]+']);
 });
 
 

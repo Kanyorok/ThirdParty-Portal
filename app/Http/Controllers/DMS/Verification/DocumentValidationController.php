@@ -5,7 +5,9 @@ namespace App\Http\Controllers\DMS\Verification;
 use App\Enums\Core\IntegrationsEnum;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DMS\ApproveDocumentValidationRequest;
 use App\Http\Requests\DMS\UploadDocumentRequest;
+use App\Models\DMS\DMSSignature;
 use App\Models\DMS\Document;
 use App\Models\DMS\DocumentValidation;
 use App\Models\Settings\APICredential;
@@ -34,11 +36,11 @@ class DocumentValidationController extends Controller
             });
 
             try {
-                return Datatables::of($query->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
+                return Datatables::of($query->lock('WITH(NOLOCK)')->with('type')->select('*'))->addIndexColumn()
                     ->addColumn('action', function (DocumentValidation $documentValidation) {
                         return '<a href="' . route('dms.validation.show', $documentValidation->ValidationId) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</a>';
                     })->editColumn('Type', function (DocumentValidation $documentValidation) {
-                        return $documentValidation->Type->description();
+                        return $documentValidation->type->Name;
                     })->addColumn('Stage', function (DocumentValidation $documentValidation) {
 
                         if (is_null($documentValidation->DocumentId)) {
@@ -61,9 +63,9 @@ class DocumentValidationController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($documentValidationId)
+    public function show(Request $request, $documentValidationId)
     {
-        $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->with(['attributes', 'creator'])->first();
+        $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->with(['properties', 'creator','document'])->first();
         if (! $documentValidation instanceof DocumentValidation) {
             return redirect()->back()->with('error', 'Invalid validation provided');
         }
@@ -73,21 +75,48 @@ class DocumentValidationController extends Controller
             $document = null;
         }
 
-        return view('dms.validation.show', compact('documentValidation', 'document'));
+        return view('dms.validation.show', compact('documentValidation', 'document'))
+            ->with('signatures', DMSSignature::query()->userCreator($request->user())->lock('WITH(NOLOCK)')->get(["Id", "SignatureId", "Name"]));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function approve(Request $request, $documentValidationId): JsonResponse
+    public function approve(ApproveDocumentValidationRequest $request, $documentValidationId): JsonResponse
     {
-        $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->whereNull('ApprovedBy')->first();
-        if (! $documentValidation instanceof DocumentValidation) {
-            return $this->errored('Invalid validation provided');
+        $actor = $request->user();
+        $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->whereNull('ApprovedBy')->with('document')->first();
+        if (! $documentValidation instanceof DocumentValidation || ! $documentValidation->document instanceof Document) {
+            return $this->errored('Invalid validation provided or cannot validate');
         }
 
-        $actor = $request->user();
+        $signature = $request->getSignature($actor);
 
+        try {
+            return DB::transaction(function () use ($documentValidation, $actor, $signature) {
+                $documentValidation->update([
+                    'ApprovedBy' => $actor->Id,
+                    'ApprovedOn' => now(),
+                ]);
+
+                activity()->causedBy($actor)
+                    ->performedOn($documentValidation)
+                    ->event('approve')
+                    ->log('Approved document validation');
+
+                (new DocumentService($documentValidation->document))->sign($signature, $actor, 1);
+
+                return $this->succeeded('Document validated successfully', route('dms.validation.index'));
+            });
+        } catch (ErroredException $e) {
+            $e->toJson();
+        } catch (\Exception | \Throwable $e) {
+            Log::error('Error validating document: ' .$e);
+        }
+
+        return $this->errored('Unexpected error, try again later');
+
+        /*
         try {
             $ApiCred = APICredential::query()->where('Integration', IntegrationsEnum::DMSCoreBanking->value)->latest('Id')->first();
             if (! $ApiCred instanceof APICredential) {
@@ -147,7 +176,38 @@ class DocumentValidationController extends Controller
             Log::error('Error validating document: ' . $e->getMessage());
 
             return $this->errored('Unexpected error, try again later');
+        }*/
+    }
+
+    public function reject(Request $request, $documentValidationId): JsonResponse
+    {
+        $actor = $request->user();
+        $documentValidation = DocumentValidation::query()->where('ValidationId', $documentValidationId)->whereNull('ApprovedBy')->with('document')->first();
+        if (! $documentValidation instanceof DocumentValidation && $documentValidation->document instanceof Document) {
+            return $this->errored('Invalid validation provided or cannot validate');
         }
+
+        try {
+            return DB::transaction(function () use ($documentValidation, $actor) {
+                $documentValidation->update([
+                    'ApprovedBy' => $actor->Id,
+                    'ApprovedOn' => now(),
+                ]);
+
+                activity()->causedBy($actor)
+                    ->performedOn($documentValidation)
+                    ->event('reject')
+                    ->log('Rejected document validation');
+
+                return $this->succeeded('Document validation rejected.', route('dms.validation.index'));
+            });
+        } catch (ErroredException $e) {
+            $e->toJson();
+        } catch (\Exception | \Throwable $e) {
+            Log::error('Error validating document: ' .$e);
+        }
+
+        return $this->errored('Unexpected error, try again later');
     }
 
     /**

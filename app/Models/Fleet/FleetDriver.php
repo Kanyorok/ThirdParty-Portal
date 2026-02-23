@@ -4,7 +4,7 @@ namespace App\Models\Fleet;
 
 use App\Models\Core\Approval\CodeDetail;
 use App\Models\DMS\Image;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;

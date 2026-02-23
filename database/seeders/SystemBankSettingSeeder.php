@@ -28,6 +28,7 @@ class SystemBankSettingSeeder extends Seeder
                 'EmailID' => 'info@example.com',
                 'Website' => 'https://example.com',
                 'BankRegNumber' => 'REG-0001',
+                'EmployerTaxPIN' => null,
                 'AuditedDate' => now()->toDateString(),
                 'BankTypeID' => null,
                 'ImageID' => null,

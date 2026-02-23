@@ -239,8 +239,10 @@ abstract class ApprovalWorkflowService
         $this->logWorkflowState($table, $sourceId, 'BEFORE_ACTION');
 
         try {
-            DB::beginTransaction();
-
+            // NOTE: No DB::beginTransaction() here — the stored procedures manage their
+            // own transactions with SET XACT_ABORT ON. Wrapping SP calls in PHP transactions
+            // creates nested savepoints (trans2) that SQL Server destroys on XACT_ABORT,
+            // causing "Cannot roll back trans2" errors.
 
             DB::statement("SET NOCOUNT OFF");
 
@@ -281,8 +283,6 @@ abstract class ApprovalWorkflowService
             //  Check state AFTER calling SP
             $this->logWorkflowState($table, $sourceId, 'AFTER_ACTION');
 
-            DB::commit();
-
             $result = [
                 'success' => true,
                 'message' => $result[0]->Message ?? 'Action recorded successfully',
@@ -291,22 +291,27 @@ abstract class ApprovalWorkflowService
             ];
 
             //  Use the properly defined $currentStageId
-            if ($result['stageCompleted']) {
-                // Always call advanceToNextStage - it handles both moving to next stage AND finalizing if no next stage exists
+            // Only advance to next stage for APPROVALS, not rejections.
+            // The SP's Section 12 already handles rejection completely:
+            // it updates the source table status, cleans up pending records,
+            // and returns. Calling advanceToNextStage after rejection would
+            // overwrite the rejected status with an approved status.
+            $isRejection = isset($result['workflowStatus'])
+                && stripos($result['workflowStatus'], 'reject') !== false;
+
+            if ($result['stageCompleted'] && ! $isRejection) {
+                // Advance to next stage or finalize approval if no next stage exists
                 $this->advanceToNextStage($table, $sourceId, $currentStageId, $actor->Id, $statusColumn);
-            } else {
             }
 
             return $result;
         } catch (ErroredException $e) {
-            DB::rollBack();
             Log::error("ErroredException in _executeWorkflowAction", [
                 'message' => $e->getMessage(),
             ]);
 
             throw $e;
         } catch (\Throwable $e) {
-            DB::rollBack();
             Log::error('Error in _executeWorkflowAction', [
                 'error' => $e->getMessage(),
                 'table' => $table,
@@ -494,41 +499,23 @@ abstract class ApprovalWorkflowService
 
 
         try {
-            // Start a SINGLE transaction for everything
-            DB::beginTransaction();
+            // NOTE: No DB::beginTransaction() here — the stored procedures manage their
+            // own transactions with SET XACT_ABORT ON. The caller (controller/service)
+            // wraps this in DB::transaction() which is the single top-level transaction.
 
-            // Prevent double submission -> Handle as "Restart" or "Self-Heal"
-            $existingSubmission = DB::table('t_WorkFlowHistory')
+            // Prevent double submission only when there are active pending approvers.
+            // History rows can remain with isApproved = null after transitions, so they are
+            // not reliable as a sole "already submitted" marker.
+            $hasActivePending = WorkflowPending::query()
                 ->where('Source', $table)
-                ->where('SourceID', (string)$sourceId)
-                ->where('isApproved', null)
+                ->where('SourceID', (string) $sourceId)
                 ->whereNull('DeletedOn')
-                ->first();
+                ->exists();
 
-            if ($existingSubmission) {
-                Log::warning("Found existing pending submission - restarting workflow", [
-                    'table' => $table,
-                    'sourceId' => $sourceId,
-                    'historyId' => $existingSubmission->Id,
-                ]);
+            if ($hasActivePending) {
+                Log::warning("Already submitted (active pending exists)", ['table' => $table, 'sourceId' => $sourceId]);
 
-                // Soft-delete the stale/zombie history entry
-                DB::table('t_WorkFlowHistory')
-                    ->where('Id', $existingSubmission->Id)
-                    ->update([
-                        'DeletedOn' => now(),
-                        'DeletedBy' => $actor->Id,
-                        'Notes' => ($existingSubmission->Notes ?? '') . ' [Restarted]',
-                    ]);
-
-                // Also clean up any pending approvals to ensure clean slate
-                DB::table('t_WorkFlowPending')
-                    ->where('Source', $table)
-                    ->where('SourceID', (string)$sourceId)
-                    ->update([
-                        'DeletedOn' => now(),
-                        'DeletedBy' => $actor->Id,
-                    ]);
+                throw new ErroredException("This item has already been submitted for approval");
             }
 
             // Get first stage
@@ -556,11 +543,12 @@ abstract class ApprovalWorkflowService
 
             // Call stored procedure (still within the same transaction)
             $result = DB::select(
-                'EXEC p_ProcessWorkflowPending @Source = ?, @SourceID = ?, @StageID = ?',
+                'EXEC p_ProcessWorkflowPending @Source = ?, @SourceID = ?, @StageID = ?, @Amount = ?',
                 [
                     $table,
                     (string)$sourceId,
                     (int)$stage->Id,
+                    $amount,
                 ]
             );
 
@@ -608,13 +596,9 @@ abstract class ApprovalWorkflowService
             // Log state after creating pending approvals
             $this->logWorkflowState($table, $sourceId, 'AFTER_SUBMISSION');
 
-            // Commit everything together
-            DB::commit();
-
 
             return true;
         } catch (ErroredException $e) {
-            DB::rollBack();
             Log::error("ErroredException in submittedAction", [
                 'message' => $e->getMessage(),
                 'table' => $table,
@@ -623,7 +607,6 @@ abstract class ApprovalWorkflowService
 
             throw $e;
         } catch (\Throwable $e) {
-            DB::rollBack();
             Log::error('Error in submittedAction', [
                 'error' => $e->getMessage(),
                 'table' => $table,
@@ -957,15 +940,15 @@ abstract class ApprovalWorkflowService
         }
     }
 
-    //advancing to the nect stage
+    //advancing to the next stage
+    // NOTE: No DB::beginTransaction() here — the stored procedures manage their own
+    // transactions with SET XACT_ABORT ON. Adding PHP-level transactions around SP calls
+    // creates nested savepoints that SQL Server destroys, causing "Cannot roll back trans2" errors.
     private function advanceToNextStage(string $table, string|int $sourceId, ?int $currentStageId, int $userId, string $statusColumn = 'Status'): void
     {
         try {
-            DB::beginTransaction();
-
             if (! $currentStageId) {
                 Log::warning("Cannot advance: currentStageId is null", ['table' => $table, 'sourceId' => $sourceId]);
-                DB::rollBack();
 
                 return;
             }
@@ -977,7 +960,6 @@ abstract class ApprovalWorkflowService
 
             if (! $currentStage) {
                 Log::warning("Current stage not found", ['stageId' => $currentStageId]);
-                DB::rollBack();
 
                 return;
             }
@@ -1036,8 +1018,8 @@ abstract class ApprovalWorkflowService
 
                 try {
                     $spResult = DB::select(
-                        'EXEC p_ProcessWorkflowPending @Source = ?, @SourceID = ?, @StageID = ?',
-                        [$table, (string)$sourceId, (int)$nextStage->Id]
+                        'EXEC p_ProcessWorkflowPending @Source = ?, @SourceID = ?, @StageID = ?, @Amount = ?',
+                        [$table, (string)$sourceId, (int)$nextStage->Id, $amount]
                     );
 
 
@@ -1052,20 +1034,8 @@ abstract class ApprovalWorkflowService
                         }
                     }
 
-                    // Get the users who were just inserted for notification
-                    $insertedUsers = DB::table('t_WorkFlowPending as p')
-                        ->join('t_Users as u', 'p.UserId', '=', 'u.Id')
-                        ->where('p.Source', $table)
-                        ->where('p.SourceID', (string)$sourceId)
-                        ->where('p.Stage', (string)$nextStage->Id)
-                        ->whereNull('p.DeletedOn')
-                        ->select('u.Id', 'u.Name', 'u.Email')
-                        ->get();
-
-                    // Notify next-stage approvers
-                    if ($insertedUsers->count() > 0) {
-                        $this->notifyNextStageApprovers($insertedUsers, $nextStage, $table, $sourceId);
-                    }
+                    // SP already sends email notifications to next-stage approvers
+                    // No need for duplicate notification from PHP side
                 } catch (ErroredException $e) {
                     throw $e;
                 } catch (\Throwable $e) {
@@ -1076,8 +1046,6 @@ abstract class ApprovalWorkflowService
 
                     throw new ErroredException("Failed to advance to next stage: " . $e->getMessage());
                 }
-
-                DB::commit();
             } else {
                 // No next stage - workflow fully approved
 
@@ -1129,11 +1097,8 @@ abstract class ApprovalWorkflowService
                     ]);
                     // Don't throw - workflow is complete, this is just a status update issue
                 }
-
-                DB::commit();
             }
         } catch (\Throwable $e) {
-            DB::rollBack();
             Log::error("Failed to advance stage", [
                 'error' => $e->getMessage(),
                 'table' => $table,

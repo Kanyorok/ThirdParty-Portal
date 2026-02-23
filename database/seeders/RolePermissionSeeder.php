@@ -48,33 +48,43 @@ class RolePermissionSeeder extends Seeder
             $validPermissions[] = $perm->value;
         }
 
-        // 2. SKIP workflow permissions - they are special and belong to implemented workflows
-        //    Do NOT delete, update, or touch workflow-related permissions as they impact approvals
-        //    Get list of permissions that are referenced in workflow stages
+        // 2. Collect permission IDs that are referenced by workflow stages (FK protected)
         $workflowPermissionIds = DB::table('t_WorkFlowStages')
-            ->whereNotNull('PermissionID')
+            ->whereNotNull('PermissionId')
             ->distinct()
-            ->pluck('PermissionID')
+            ->pluck('PermissionId')
             ->all();
 
-        $workflowPermissionNames = DB::table($table)
-            ->whereIn('id', $workflowPermissionIds)
-            ->pluck('name')
-            ->all();
+        // Also collect permission IDs referenced by workflow limits
+        $workflowLimitPermissionIds = [];
+        if (\Illuminate\Support\Facades\Schema::hasTable('t_WorkFlowLimits') && \Illuminate\Support\Facades\Schema::hasColumn('t_WorkFlowLimits', 'PermissionId')) {
+            $workflowLimitPermissionIds = DB::table('t_WorkFlowLimits')
+                ->whereNotNull('PermissionId')
+                ->distinct()
+                ->pluck('PermissionId')
+                ->all();
+        }
 
-        echo "Skipping " . count($workflowPermissionNames) . " workflow-related permissions..." . PHP_EOL;
+        $protectedPermissionIds = array_unique(array_merge($workflowPermissionIds, $workflowLimitPermissionIds));
 
-        // 3. Prepare rows for Upsert (excluding workflow permissions)
+        // Delete permissions NOT in Enum AND NOT referenced by workflows
+        $deleteQuery = DB::table($table)
+            ->where('guard_name', $guard)
+            ->whereNotIn('name', $validPermissions);
+
+        if (! empty($protectedPermissionIds)) {
+            $deleteQuery->whereNotIn('id', $protectedPermissionIds);
+        }
+
+        $deleted = $deleteQuery->delete();
+        if ($deleted > 0) {
+            echo "  Removed {$deleted} obsolete permissions." . PHP_EOL;
+        }
+
+        // 3. Prepare rows for Upsert
         $rows = [];
 
         foreach (PermissionEnum::cases() as $perm) {
-            // Skip if this permission is used in workflow stages
-            if (in_array($perm->value, $workflowPermissionNames)) {
-                echo "  - Skipping workflow permission: {$perm->value}" . PHP_EOL;
-
-                continue;
-            }
-
             $rows[] = [
                 'name' => $perm->value,
                 'ModuleId' => $perm->module()->value,
@@ -102,10 +112,8 @@ class RolePermissionSeeder extends Seeder
         }
 
         // Fetch ALL permission ids for this guard (existing + newly inserted)
-        // EXCEPT workflow permissions - don't assign them to admin role automatically
         $permissionIds = DB::table($table)
             ->where('guard_name', $guard)
-            ->whereNotIn('id', $workflowPermissionIds) // Skip workflow permissions
             ->pluck('id')
             ->all();
 

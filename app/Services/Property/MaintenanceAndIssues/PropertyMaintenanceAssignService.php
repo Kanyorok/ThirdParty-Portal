@@ -5,7 +5,7 @@ namespace App\Services\Property\MaintenanceAndIssues;
 use App\Enums\Core\PostingEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\PropertyManagement\PropertyMaintenanceAssign;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
 use App\Models\ThirdParty\SupplierMaster;

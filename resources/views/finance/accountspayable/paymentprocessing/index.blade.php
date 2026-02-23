@@ -49,8 +49,10 @@
                             <th>#</th>
                             <th>Voucher No</th>
                             <th>Invoice Ref</th>
+                            <th>Invoice Mode</th>
                             <th>Payment Method</th>
                             <th class="text-end">Amount</th>
+                            <th>Exception</th>
                             <th>Status</th>
                             <th>Payment Type</th>
                             {{--                            <th>Description</th>--}}
@@ -63,8 +65,20 @@
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $item->VoucherNo ?? '-' }}</td>
                                 <td>{{ $item->invoice->InvoiceNumber ?? '-' }}</td>
+                                <td>
+                                    <span class="badge {{ strtoupper(($item->invoice?->InvoiceSourceType ?? 'PO')) === 'CONTRACT' ? 'bg-info text-dark' : 'bg-secondary' }}">
+                                        {{ strtoupper($item->invoice?->InvoiceSourceType ?? 'PO') }}
+                                    </span>
+                                </td>
                                 <td>{{ $item->PaymentMethod ?? '-' }}</td>
                                 <td class="text-end">{{ $item->TotalAmount ? number_format($item->TotalAmount, 2) : '-' }}</td>
+                                <td>
+                                    @if(($item->invoice?->IsOnHold ?? false))
+                                        <span class="badge bg-danger" title="{{ $item->invoice?->HoldReason ?? '' }}">On Hold</span>
+                                    @else
+                                        <span class="badge bg-success">None</span>
+                                    @endif
+                                </td>
                                 <td>
                                     @if($item->IsProcessed)
                                         <span class="badge bg-success">
@@ -104,7 +118,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="p-0">
+                                <td colspan="10" class="p-0">
                                     <div class="text-center p-4 border rounded-3 bg-light">
                                         <p class="mb-3 text-muted fs-5">
                                             <i class="fas fa-info-circle me-2 text-info"></i>

@@ -128,7 +128,6 @@ class ItemMasterListController extends Controller
                 foreach (array_slice($errors, 0, 20) as $error) {
                     $errorMessage .= "• {$error}<br>";
                 }
-
                 if (count($errors) > 20) {
                     $errorMessage .= "<br>... and " . (count($errors) - 20) . " more errors.";
                 }
@@ -211,7 +210,7 @@ class ItemMasterListController extends Controller
 
     public function show($Id)
     {
-        $item = ItemMasterList::with('category.parent')->findOrFail($Id);
+        $item = ItemMasterList::with('category.parent', 'inventoryType.type', 'itemType.type')->findOrFail($Id);
         $this->authorize('view', $item);
 
         return view('inventory.itemmaster.itemmasterlist.show', compact('item'));
@@ -265,6 +264,7 @@ class ItemMasterListController extends Controller
 
         if ($request->has('remove_image') && $request->input('remove_image') == '1') {
             if ($item->ImageId) {
+                // @phpstan-ignore-next-line - Image model is deprecated but still functional
                 \App\Models\DMS\Image::destroy($item->ImageId);
                 $item->ImageId = null;
             }

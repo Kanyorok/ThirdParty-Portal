@@ -35,7 +35,7 @@ enum ModulesEnum: int
             self::DMS => 'Document Management',
             self::Legal => 'Legal',
             self::Insurance => 'Bank Assurance',
-            self::HRM => 'User Management',
+            self::HRM => 'Human Capital Suite',
             self::Finance => 'Finance',
             self::Settings => 'Settings',
             self::BudgetLine => 'Budget & Analytics',

@@ -388,7 +388,7 @@ class TenderEvaluationsController extends Controller
                 ->causedBy(Auth::id())
                 ->log('Saved tender criteria for tender ID: ' . $tenderId);
 
-            return redirect()->back()->with('success', 'Tender criteria saved successfully.');
+            return redirect()->route('tenderevaluations.index')->with('success', 'Tender criteria saved successfully.');
         } catch (Exception $e) {
             DB::rollBack();
 

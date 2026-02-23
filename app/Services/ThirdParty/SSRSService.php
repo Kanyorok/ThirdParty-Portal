@@ -26,10 +26,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SSRSService
 {
-    public const UserParameter = 'LoginUser';
-
+    public const string UserParameter = 'LoginUser';
     protected PendingRequest $_query;
-
     protected string $_serverAPIUrl;
     public string $serverURL;
     protected string $_cookiePath;
@@ -203,7 +201,6 @@ class SSRSService
      * Parse SSRS XML report output into a standardized format.
      * Handles flat tables, parent-child, and grandparent-parent-child hierarchies.
      *
-     * @throws ErroredException
      */
     public function parseReportXml(string $xmlString): Collection
     {

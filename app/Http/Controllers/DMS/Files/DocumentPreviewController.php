@@ -21,6 +21,8 @@ class DocumentPreviewController extends Controller
     {
         $this->authorize('view', $document);
 
-        return view('dms.files.embed')->with('file', $document)->with('service', new DocumentService($document));
+        return view('dms.files.embed')->with('file', $document)->with('service', new DocumentService($document))
+            ->with('trashRefresh', ($request->has('trashRefresh') && $request->boolean('trashRefresh')))
+            ->with('withTrash', ($request->has('trash') && $request->boolean('trash')));
     }
 }

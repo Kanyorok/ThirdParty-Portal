@@ -28,7 +28,7 @@ class FleetDriverAssignmentRequest extends FormRequest
             'AssignmentDate' => 'required|date',
             'UnassignmentDate' => 'nullable|date|after_or_equal:AssignmentDate',
             'Purpose' => 'nullable|string|max:255',
-            'AssignedBy' => 'required|exists:t_Employees,Id',
+            'AssignedBy' => 'required|exists:t_HREmployees,Id',
             'Notes' => 'nullable|string',
 
 

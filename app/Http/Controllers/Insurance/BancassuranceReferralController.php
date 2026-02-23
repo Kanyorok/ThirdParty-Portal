@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\BancAssuranceReferralRequest;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
-use App\Models\HRM\Employee;
+use App\Models\HR\Employee;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancAssuranceReferral;
 use App\Models\Insurance\InsuranceProduct;
@@ -172,7 +172,7 @@ class BancassuranceReferralController extends Controller
     {
         $this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
         $request->validate([
-            'AssignedTo' => 'required|exists:t_Employees,Id',
+            'AssignedTo' => 'required|exists:t_HREmployees,Id',
         ]);
 
         $referral = BancAssuranceReferral::findOrFail($Id);

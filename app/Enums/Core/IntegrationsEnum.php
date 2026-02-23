@@ -15,6 +15,7 @@ enum IntegrationsEnum: string
     case SMS = 'sms';
     case InfoBip = 'ibp';
     case iTrack = 'itk';
+    case GoogleMaps = 'gmp';
     case PBX = 'pbx';
     case CoreBanking = 'cbs';
     case Channels = 'imb';
@@ -33,6 +34,7 @@ enum IntegrationsEnum: string
             self::SMS => __('Craft SMS Gateway'),
             self::InfoBip => 'Infobip (Email)',
             self::iTrack => 'iTrack (Car Tracking)',
+            self::GoogleMaps => 'Google Maps API',
             self::PBX => '3CX Credentials',
             self::Email => 'Email Configuration',
             self::Facebook => 'Facebook Configuration',

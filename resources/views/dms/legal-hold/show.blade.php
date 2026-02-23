@@ -331,7 +331,7 @@
         }
 
         function fetchActivitiesTable() {
-            /*  if (!$.fn.DataTable.isDataTable('#holdActivitiesTable')) {
+              if (!$.fn.DataTable.isDataTable('#holdActivitiesTable')) {
                   $('#holdActivitiesTable').DataTable({
                       processing: true,
                       serverSide: true,
@@ -349,7 +349,7 @@
                           {"visible": false, "targets": [0, 1]}
                       ],
                       ajax: {
-                          url: '{ { route('file.activities',[$file->DocumentId]) }}',
+                          url: '{{ route('hold-files.activities',[$hold->Ref]) }}',
                           error: function (jqXHR) {
                               codeNotify(jqXHR.status);
                           }
@@ -368,7 +368,7 @@
                   });
               } else {
                   $('#holdActivitiesTable').DataTable().ajax.reload();
-              }*/
+              }
         }
     </script>
 @endsection

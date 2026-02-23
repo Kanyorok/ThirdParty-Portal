@@ -78,6 +78,9 @@ class IntegrationRequest extends FormRequest
             // Channels Integration Validation Rules
             'Channel_Callback' => ['exclude_unless:Integration,' . IntegrationsEnum::Channels->value, 'required', 'string', 'url:http,https', 'active_url', 'max:200'],
 
+            // Channels Integration Validation Rules
+            'GMaps_Key' => ['exclude_unless:Integration,' . IntegrationsEnum::GoogleMaps->value, 'required', 'string', 'max:200'],
+
             // Artificial Intelligence Integration Validation Rules
             'LLM_API_Key' => ['exclude_unless:Integration,' . IntegrationsEnum::LLM->value, 'required', 'string'],
             'LLM_Provider' => ['exclude_unless:Integration,' . IntegrationsEnum::LLM->value, 'required', 'string', Rule::enum(Provider::class)],

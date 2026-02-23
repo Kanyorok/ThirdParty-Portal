@@ -2,7 +2,6 @@
 
 namespace App\Traits\Controller;
 
-use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Traits\HasRoles as BaseHasRoles;
 
 trait HasBranchRoles
@@ -21,8 +20,8 @@ trait HasBranchRoles
             $this->roles()->syncWithoutDetaching([
                 $roleId => array_merge([
                     'BranchId' => $branchId,
-                    'CreatedBy' => Auth::id(),
-                    'ModifiedBy' => Auth::id(),
+                    'CreatedOn' => now(),
+                    'ModifiedOn' => now(),
                 ], $extra),
             ]);
         }
@@ -35,18 +34,4 @@ trait HasBranchRoles
 
         return $this;
     }
-
-    /**
-     * Optionally override Spatie's roles() if needed for additional logic.
-     */
-    /*   public function roles(): MorphToMany
-       {
-           return $this->morphToMany(
-               config('permission.models.role'),
-               'model',
-               config('permission.table_names.model_has_roles'),
-               config('permission.column_names.model_morph_key'),
-               'role_id'
-           )->withPivot(['BranchId', 'CreatedBy', 'ModifiedBy'])->withTimestamps();
-       }*/
 }

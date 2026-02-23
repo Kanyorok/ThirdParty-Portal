@@ -208,9 +208,7 @@
                     </div>
                 </div>
             </div>
-            @if (View::hasSection('page-alerts'))
-                @yield('page-alerts')
-            @endif
+
             @yield('content')
         </div>
     </div>
