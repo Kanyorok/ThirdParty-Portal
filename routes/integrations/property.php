@@ -7,7 +7,7 @@ use App\Http\Controllers\API\Property\PropertyMaintenanceRequestController;
 use App\Http\Controllers\API\Property\PropertyViewController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('property')->group(function () {
+Route::prefix('property')->middleware(['auth.thirdparty'])->group(function () {
     // Property View Routes
     Route::get('rentable-properties', [PropertyViewController::class, 'index']);
 
