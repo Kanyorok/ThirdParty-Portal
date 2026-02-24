@@ -117,6 +117,13 @@ return [
         'Pending' => WorkflowStatus::Pending->value,    // 'P'
         'Submitted for Approval' => WorkflowStatus::Submitted->value,  // 'S'
     ],
+     
+    't_RFQ' => [
+    'Approved' => 'Ap',   // or exact Value from t_CodeDetails for RequisitionStatus/Approved
+    'Rejected' => 'Re',
+    'Pending' => 'Pe',
+    'Submitted for Approval' => 'Su',
+],
 
     'SupplierID' => [
         'Approved' => \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved->value,  // 'A'
