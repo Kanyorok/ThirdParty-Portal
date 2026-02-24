@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Approval\WorkflowPending;
 use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Models\Procurement\ContractMilestone;
 use App\Models\Procurement\ContractPenaltyRule;
 use App\Models\Procurement\RFQ;
-use App\Models\Core\Approval\CodeDetail;
 use App\Models\Procurement\RFQAward;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderAward;
@@ -1166,7 +1166,7 @@ class ContractsController extends Controller
             ->with('success', 'Addendum added successfully.');
     }
 
-      public function fetchPaymentTerms()
+    public function fetchPaymentTerms()
     {
         try {
             $terms = CodeDetail::query()

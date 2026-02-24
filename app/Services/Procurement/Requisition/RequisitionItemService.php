@@ -346,46 +346,46 @@ class RequisitionItemService
      * Update getRequisitionRelatedItems to include plan reference
      */
     public static function getRequisitionRelatedItems($RequisitionId)
-{
-    return DB::table(DB::raw('t_RequisitionLines WITH (NOLOCK)'))
-        ->leftJoin(DB::raw('t_Items WITH (NOLOCK)'), 't_RequisitionLines.Item', '=', 't_Items.Id')
-        ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_RequisitionLines.CreatedBy', '=', 't_Users.Id')
-        ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.Category', '=', 't_ItemCategories.Id')
-        ->leftJoin(DB::raw('t_uom WITH (NOLOCK)'), 't_uom.Id', '=', 't_RequisitionLines.UOM') // UOM stored as Code string in lines
-        ->leftJoin(DB::raw('t_ItemTypes WITH (NOLOCK)'), 't_Items.ItemType', '=', 't_ItemTypes.Id') // FIXED: join on Id not TypeName
-        ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), 't_ItemTypes.TypeName', '=', 't_CodeDetails.Id')
-        ->where('t_RequisitionLines.RequisitionId', $RequisitionId) 
-        ->whereNull('t_RequisitionLines.DeletedOn')
-        ->select([
-            't_RequisitionLines.Id',
-            't_RequisitionLines.Quantity',
-            DB::raw("ISNULL(t_Items.ItemName, t_RequisitionLines.Description) as ItemName"),
-            't_RequisitionLines.Description',
-            't_Users.Name as UserName',
-            't_RequisitionLines.UOM as UOMID',
-            DB::raw("COALESCE(t_uom.Code, CAST(t_RequisitionLines.UOM as VARCHAR(50))) as UOM"),
-            't_CodeDetails.Description as Type',
-            't_ItemCategories.Name as Category',
-            't_RequisitionLines.PlanLineRef',
-            DB::raw("CASE WHEN t_RequisitionLines.PlanLineRef IS NOT NULL THEN 1 ELSE 0 END as IsFromPlan"),
-            't_RequisitionLines.ExpectedPrice as UnitPrice',
-            DB::raw('t_RequisitionLines.ExpectedPrice * t_RequisitionLines.Quantity as ExpectedPrice'),
-            't_RequisitionLines.StatusID as Status',
-            't_RequisitionLines.UrgencyID as Urgency', // FIXED: return integer for blade urgency map
-            // Plan quantity info for remaining qty display
-            DB::raw("ISNULL((
+    {
+        return DB::table(DB::raw('t_RequisitionLines WITH (NOLOCK)'))
+            ->leftJoin(DB::raw('t_Items WITH (NOLOCK)'), 't_RequisitionLines.Item', '=', 't_Items.Id')
+            ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_RequisitionLines.CreatedBy', '=', 't_Users.Id')
+            ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.Category', '=', 't_ItemCategories.Id')
+            ->leftJoin(DB::raw('t_uom WITH (NOLOCK)'), 't_uom.Id', '=', 't_RequisitionLines.UOM') // UOM stored as Code string in lines
+            ->leftJoin(DB::raw('t_ItemTypes WITH (NOLOCK)'), 't_Items.ItemType', '=', 't_ItemTypes.Id') // FIXED: join on Id not TypeName
+            ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), 't_ItemTypes.TypeName', '=', 't_CodeDetails.Id')
+            ->where('t_RequisitionLines.RequisitionId', $RequisitionId)
+            ->whereNull('t_RequisitionLines.DeletedOn')
+            ->select([
+                't_RequisitionLines.Id',
+                't_RequisitionLines.Quantity',
+                DB::raw("ISNULL(t_Items.ItemName, t_RequisitionLines.Description) as ItemName"),
+                't_RequisitionLines.Description',
+                't_Users.Name as UserName',
+                't_RequisitionLines.UOM as UOMID',
+                DB::raw("COALESCE(t_uom.Code, CAST(t_RequisitionLines.UOM as VARCHAR(50))) as UOM"),
+                't_CodeDetails.Description as Type',
+                't_ItemCategories.Name as Category',
+                't_RequisitionLines.PlanLineRef',
+                DB::raw("CASE WHEN t_RequisitionLines.PlanLineRef IS NOT NULL THEN 1 ELSE 0 END as IsFromPlan"),
+                't_RequisitionLines.ExpectedPrice as UnitPrice',
+                DB::raw('t_RequisitionLines.ExpectedPrice * t_RequisitionLines.Quantity as ExpectedPrice'),
+                't_RequisitionLines.StatusID as Status',
+                't_RequisitionLines.UrgencyID as Urgency', // FIXED: return integer for blade urgency map
+                // Plan quantity info for remaining qty display
+                DB::raw("ISNULL((
                 SELECT TOP 1 ISNULL(pli.MergedQty, ISNULL(pli.OriginalQTY, 0))
                 FROM t_PlanLineItem pli WITH (NOLOCK)
                 WHERE pli.LineItemID = t_RequisitionLines.PlanLineRef
             ), 0) as PlanQuantity"),
-            DB::raw("ISNULL((
+                DB::raw("ISNULL((
                 SELECT ISNULL(SUM(rl2.Quantity), 0)
                 FROM t_RequisitionLines rl2 WITH (NOLOCK)
                 WHERE rl2.PlanLineRef = t_RequisitionLines.PlanLineRef
                   AND rl2.Id != t_RequisitionLines.Id
                   AND rl2.DeletedOn IS NULL
             ), 0) as UsedQuantity"),
-            DB::raw("ISNULL((
+                DB::raw("ISNULL((
                 SELECT TOP 1 ISNULL(pli.MergedQty, ISNULL(pli.OriginalQTY, 0))
                 FROM t_PlanLineItem pli WITH (NOLOCK)
                 WHERE pli.LineItemID = t_RequisitionLines.PlanLineRef
@@ -395,10 +395,9 @@ class RequisitionItemService
                 WHERE rl2.PlanLineRef = t_RequisitionLines.PlanLineRef
                   AND rl2.DeletedOn IS NULL
             ), 0) as RemainingQuantity"),
-            DB::raw("FORMAT(t_RequisitionLines.CreatedOn, 'dd-MM-yyyy HH:mm') as CreatedOn"),
-        ])
-        ->orderBy('t_RequisitionLines.CreatedOn', 'desc')
-        ->get();
-}
-   
+                DB::raw("FORMAT(t_RequisitionLines.CreatedOn, 'dd-MM-yyyy HH:mm') as CreatedOn"),
+            ])
+            ->orderBy('t_RequisitionLines.CreatedOn', 'desc')
+            ->get();
+    }
 }

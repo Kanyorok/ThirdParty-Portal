@@ -227,7 +227,7 @@ class RequisitionService
                     }
 
                     // Get UOM - try to get the actual UOM code
-                   $uomId = $item->UOMID ?? null;
+                    $uomId = $item->UOMID ?? null;
 
                     // Prepare description - use the most descriptive available
                     $description = trim($item->PlanDescription ?? $item->ItemDescription ?? $item->ItemName ?? 'Item');
@@ -475,4 +475,3 @@ class RequisitionService
         return $query->get();
     }
 }
-

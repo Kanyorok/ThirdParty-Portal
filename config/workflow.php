@@ -117,7 +117,7 @@ return [
         'Pending' => WorkflowStatus::Pending->value,    // 'P'
         'Submitted for Approval' => WorkflowStatus::Submitted->value,  // 'S'
     ],
-     
+
     't_RFQ' => [
     'Approved' => 'Ap',   // or exact Value from t_CodeDetails for RequisitionStatus/Approved
     'Rejected' => 'Re',
