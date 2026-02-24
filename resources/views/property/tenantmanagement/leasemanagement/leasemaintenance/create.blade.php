@@ -210,7 +210,7 @@ class="form-control charge-field @error($name) is-invalid @enderror">
 @endforeach
 
 <div class="col-md-4">
-<label class="form-label">Total Payable (Exclusive of Deposit)</label>
+<label class="form-label">Total Payable (Excl. Deposit)</label>
 <input type="number" id="TotalPayable" class="form-control" readonly>
 </div>
 

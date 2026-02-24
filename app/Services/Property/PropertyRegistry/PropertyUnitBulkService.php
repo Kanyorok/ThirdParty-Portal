@@ -116,9 +116,9 @@ class PropertyUnitBulkService
                     throw new Exception("UnitSize must be a number");
                 }
 
-                // Parse boolean fields
-                $isRentable = self::parseBoolean($row['IsRentable'] ?? 0);
-                $currentStatus = self::parseBoolean($row['CurrentStatus'] ?? 0);
+                // Validate and parse boolean fields
+                $isRentable = self::parseBoolean($row['IsRentable'] ?? '', 'IsRentable');
+                $currentStatus = self::parseBoolean($row['CurrentStatus'] ?? '', 'CurrentStatus');
 
                 // Create unit
                 $unit = PropertyUnit::create([
@@ -155,9 +155,11 @@ class PropertyUnitBulkService
     }
 
     /**
-     * Parse boolean value from various formats
+     * Parse and validate boolean value from various formats
+     * Accepts: 1, 0, yes, no, true, false (case-insensitive)
+     * Throws exception for invalid values
      */
-    private static function parseBoolean($value): int
+    private static function parseBoolean($value, $fieldName): int
     {
         if (is_bool($value)) {
             return $value ? 1 : 0;
@@ -169,6 +171,10 @@ class PropertyUnitBulkService
             return 1;
         }
 
-        return 0;
+        if (in_array($value, ['0', 'no', 'false', 'off'], true)) {
+            return 0;
+        }
+
+        throw new Exception("Invalid value for $fieldName: '$value'. Accepted values are: 1, 0, yes, no, true, false");
     }
 }

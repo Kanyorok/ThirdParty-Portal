@@ -171,8 +171,8 @@
                     <li><strong>FloorID</strong> - Floor ID</li>
                     <li><strong>UnitCode</strong> - Unit code</li>
                     <li><strong>UnitSize</strong> - Size in numbers</li>
-                    <li><strong>IsRentable</strong> - 1/0 or Yes/No</li>
-                    <li><strong>CurrentStatus</strong> - 1/0 or Yes/No</li>
+                    <li><strong>Rentable</strong> - 1, 0, yes, no, true, false</li>
+                    <li><strong>Vacant</strong> - 1, 0, yes, no, true, false</li>
                 </ul>
             </div>
         </div>
@@ -186,7 +186,7 @@
                     <li>Include headers in first row</li>
                     <li>PropertyID, BlockID, FloorID must exist</li>
                     <li>UnitSize must be numeric</li>
-                    <li>Use 1/Yes for true, 0/No for false</li>
+                    <li><strong>Rentable & Vacant:</strong> Use only 1, 0, yes, no, true, false</li>
                     <li>Remarks is optional</li>
                 </ul>
             </div>
