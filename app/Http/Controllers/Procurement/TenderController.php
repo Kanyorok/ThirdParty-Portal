@@ -2399,7 +2399,9 @@ class TenderController extends Controller
             // Replicate DocumentPreviewController logic
             return view('dms.files.embed')
                 ->with('file', $document)
-                ->with('service', new \App\Services\DMS\DocumentService($document));
+                ->with('service', new \App\Services\DMS\DocumentService($document))
+                ->with('trashRefresh', false)
+                ->with('withTrash', false);
         } catch (\Exception $e) {
             Log::error("Failed to preview document {$documentId}: " . $e->getMessage());
 

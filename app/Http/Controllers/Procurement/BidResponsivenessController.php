@@ -197,7 +197,9 @@ class BidResponsivenessController extends Controller
             // Serve the embed preview view (same as DMS preview controller)
             return view('dms.files.embed')
                 ->with('file', $document)
-                ->with('service', $service);
+                ->with('service', $service)
+                ->with('trashRefresh', false)
+                ->with('withTrash', false);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Bid document preview failed for bid {$bidId}, document {$documentId}: " . $e->getMessage());
 

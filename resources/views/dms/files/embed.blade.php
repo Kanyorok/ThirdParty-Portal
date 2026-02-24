@@ -1,3 +1,8 @@
+@php
+    $withTrash = $withTrash ?? false;
+    $trashRefresh = $trashRefresh ?? false;
+@endphp
+
 <div class="row">
     <div class="col-12" style="min-height: 100px" id="FilePreviewPage">
         @include('dms.files.preview')

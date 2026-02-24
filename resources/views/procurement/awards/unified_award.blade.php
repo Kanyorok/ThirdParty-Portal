@@ -270,6 +270,7 @@
                                 <form action="{{ route('awards.submit-approval', $existingAward->Id) }}" method="POST" class="d-inline">
                                     @csrf
                                     <input type="hidden" name="award_id" value="{{ $existingAward->Id }}">
+                                    <input type="hidden" name="award_type" value="rfq">
                                     <button type="submit" class="btn btn-warning text-dark me-2">
                                         <i class="fas fa-paper-plane"></i> Submit for Approval
                                     </button>

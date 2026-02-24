@@ -33,6 +33,7 @@ class CriteriaController extends Controller
         $validated = $request->validate([
             'CriteriaName' => 'required|string|max:255',
             'Description' => 'nullable|string',
+            'IsActive' => 'required|boolean',
         ]);
 
         DB::beginTransaction();
@@ -41,6 +42,7 @@ class CriteriaController extends Controller
             $criteria = $section->criteria()->create([
                 'CriteriaName' => $validated['CriteriaName'],
                 'Description' => $validated['Description'] ?? null,
+                'IsActive' => (int) $validated['IsActive'],
             ]);
 
             activity()
@@ -58,32 +60,35 @@ class CriteriaController extends Controller
         return back()->with('success', 'Criteria created successfully!');
     }
 
-    public function update(Request $request, Section $section, Criteria $criteria): RedirectResponse
+    public function update(Request $request, Section $section, Criteria $criterion): RedirectResponse
     {
-        $this->authorize('update', $criteria);
+        abort_unless((int) $criterion->SectionID === (int) $section->Id, 404);
+        $this->authorize('update', $criterion);
         // CORRECTED: Validation rules now match the model's fillable field names
         $validated = $request->validate([
             'CriteriaName' => 'required|string|max:255',
             'Description' => 'nullable|string',
+            'IsActive' => 'required|boolean',
         ]);
 
         DB::beginTransaction();
 
         try {
-            $oldValues = $criteria->getOriginal();
+            $oldValues = $criterion->getOriginal();
             // CORRECTED: The assignment now uses the correct validated keys
-            $criteria->CriteriaName = $validated['CriteriaName'];
-            $criteria->Description = $validated['Description'] ?? null;
-            $criteria->save();
+            $criterion->CriteriaName = $validated['CriteriaName'];
+            $criterion->Description = $validated['Description'] ?? null;
+            $criterion->IsActive = (int) $validated['IsActive'];
+            $criterion->save();
 
             activity()
-                ->performedOn($criteria)
+                ->performedOn($criterion)
                 ->causedBy(Auth::user())
                 ->withProperties([
                     'old' => $oldValues,
-                    'new' => $criteria->getChanges(),
+                    'new' => $criterion->getChanges(),
                 ])
-                ->log('Updated criteria: ' . $criteria->CriteriaName);
+                ->log('Updated criteria: ' . $criterion->CriteriaName);
 
             DB::commit();
         } catch (\Throwable $th) {
@@ -95,17 +100,18 @@ class CriteriaController extends Controller
         return redirect()->back()->with('success', 'Criteria updated successfully!');
     }
 
-    public function destroy(Section $section, Criteria $criteria): RedirectResponse
+    public function destroy(Section $section, Criteria $criterion): RedirectResponse
     {
-        $this->authorize('delete', $criteria);
+        abort_unless((int) $criterion->SectionID === (int) $section->Id, 404);
+        $this->authorize('delete', $criterion);
         DB::beginTransaction();
 
         try {
-            $criteriaName = $criteria->CriteriaName;
-            $criteria->delete();
+            $criteriaName = $criterion->CriteriaName;
+            $criterion->delete();
 
             activity()
-                ->performedOn($criteria)
+                ->performedOn($criterion)
                 ->causedBy(Auth::user())
                 ->withProperties(['criteria_name' => $criteriaName])
                 ->log('Deleted criteria: ' . $criteriaName);

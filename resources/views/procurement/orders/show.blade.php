@@ -20,25 +20,30 @@
     <div class="card shadow-sm" id="printable-area">
         <div class="card-body">
             @if(isset($orderInfo))
-            <div class="row mb-3">
-                <div class="col-md-4"><strong>LPO No:</strong> {{ $orderInfo->ExtOrdNum ?? '--' }}</div>
-                <div class="col-md-4"><strong>Order No:</strong> {{ $orderInfo->OrderNo ?? '--' }}</div>
+            <div class="row g-2 mb-3 po-detail-grid">
                 <div class="col-md-4">
-                    <strong>Date:</strong> {{ isset($orderInfo->OrderDate) ? \Carbon\Carbon::parse($orderInfo->OrderDate)->format('d/m/Y') : '--' }}
-                </div>
-            </div>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <strong>Supplier:</strong> {{ $orderInfo->SupplierName ?? $orderInfo->TradingName ?? ('Supplier #' . ($orderInfo->SupplierId ?? '')) }}
-                </div>
-                <div class="col-md-6"><strong>Address:</strong> {{ $orderInfo->SupplierAddress ?? '' }}</div>
-            </div>
-            <div class="row mb-3">
-                <div class="col-md-4"><strong>Priority:</strong> {{ $orderInfo->Priority ?? '--' }}</div>
-                <div class="col-md-4"><strong>Payment Terms:</strong> {{ $orderInfo->TermsDescription ?? '--' }}
+                    <div class="po-detail-line"><span class="po-detail-label">LPO No:</span><span class="po-detail-value">{{ $orderInfo->ExtOrdNum ?? '--' }}</span></div>
                 </div>
                 <div class="col-md-4">
-                    <strong>Branch:</strong> {{ $orderInfo->BranchName ?? $orderInfo->BranchID ?? '--' }}
+                    <div class="po-detail-line"><span class="po-detail-label">Order No:</span><span class="po-detail-value">{{ $orderInfo->OrderNo ?? '--' }}</span></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="po-detail-line"><span class="po-detail-label">Date:</span><span class="po-detail-value">{{ isset($orderInfo->OrderDate) ? \Carbon\Carbon::parse($orderInfo->OrderDate)->format('d/m/Y') : '--' }}</span></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="po-detail-line"><span class="po-detail-label">Supplier:</span><span class="po-detail-value">{{ $orderInfo->SupplierName ?? $orderInfo->TradingName ?? ('Supplier #' . ($orderInfo->SupplierId ?? '')) }}</span></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="po-detail-line"><span class="po-detail-label">Address:</span><span class="po-detail-value">{{ $orderInfo->SupplierAddress ?? '--' }}</span></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="po-detail-line"><span class="po-detail-label">Branch:</span><span class="po-detail-value">{{ $orderInfo->BranchName ?? $orderInfo->BranchID ?? '--' }}</span></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="po-detail-line"><span class="po-detail-label">Priority:</span><span class="po-detail-value">{{ $orderInfo->Priority ?? '--' }}</span></div>
+                </div>
+                <div class="col-md-8">
+                    <div class="po-detail-line"><span class="po-detail-label">Payment Terms:</span><span class="po-detail-value">{{ $orderInfo->TermsDescription ?? '--' }}</span></div>
                 </div>
             </div>
 
@@ -196,6 +201,19 @@
 </div>
 
 <style>
+    .po-detail-grid .po-detail-line {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .po-detail-label {
+        min-width: 105px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .po-detail-value {
+        overflow-wrap: anywhere;
+    }
     @media print {
         body * {
             visibility: hidden;
@@ -215,6 +233,11 @@
         }
         .no-print {
             display: none !important;
+        }
+    }
+    @media (max-width: 767.98px) {
+        .po-detail-label {
+            min-width: 95px;
         }
     }
 </style>
