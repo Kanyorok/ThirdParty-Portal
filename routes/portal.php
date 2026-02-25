@@ -89,6 +89,8 @@ Route::prefix('profile')->middleware(['auth.thirdparty'])->group(function () {
 
 Route::middleware(['auth.thirdparty'])->prefix('portal')->group(function () {
     Route::get('notifications', [NotificationController::class, 'index']);
+    Route::get('notifications/preferences', [NotificationController::class, 'preferences']);
+    Route::put('notifications/preferences', [NotificationController::class, 'updatePreferences']);
     Route::post('notifications/{type}/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 

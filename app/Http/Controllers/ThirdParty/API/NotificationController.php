@@ -15,6 +15,8 @@ use Illuminate\Support\Str;
 
 class NotificationController extends Controller
 {
+    private const NOTIFICATION_CHANNELS = ['in_app', 'email', 'sms'];
+
     public function index(Request $request): JsonResponse
     {
         $user = $this->resolveAuthenticatedUser($request);
@@ -35,7 +37,83 @@ class NotificationController extends Controller
                 'total' => $notifications->count(),
                 'unread' => $unreadCount,
             ],
+            'preferences' => $this->getNotificationPreferences($user),
             'notifications' => NotificationResource::collection($notifications),
+        ]);
+    }
+
+    public function preferences(Request $request): JsonResponse
+    {
+        $user = $this->resolveAuthenticatedUser($request);
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'message' => __('auth.unauthenticated'),
+            ], 401);
+        }
+
+        return response()->json([
+            'success' => true,
+            'preferences' => $this->getNotificationPreferences($user),
+        ]);
+    }
+
+    public function updatePreferences(Request $request): JsonResponse
+    {
+        $user = $this->resolveAuthenticatedUser($request);
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'message' => __('auth.unauthenticated'),
+            ], 401);
+        }
+
+        $validated = $request->validate([
+            'preference' => 'nullable|string|in:all,in_app,email,sms,none',
+            'channels' => 'nullable|array',
+            'channels.*' => 'string|in:in_app,email,sms',
+            'muteAll' => 'nullable|boolean',
+        ]);
+
+        $current = $this->getNotificationPreferences($user);
+        $channels = $current['channels'];
+        $muteAll = $current['muteAll'];
+
+        if (array_key_exists('preference', $validated) && $validated['preference'] !== null) {
+            [$channels, $muteAll] = $this->mapPreferenceToState($validated['preference']);
+        } else {
+            if (array_key_exists('channels', $validated)) {
+                $channels = collect($validated['channels'] ?? [])
+                    ->map(fn ($value) => strtolower((string) $value))
+                    ->filter(fn ($value) => in_array($value, self::NOTIFICATION_CHANNELS, true))
+                    ->unique()
+                    ->values()
+                    ->all();
+            }
+
+            if (array_key_exists('muteAll', $validated)) {
+                $muteAll = (bool) $validated['muteAll'];
+            }
+        }
+
+        if ($muteAll) {
+            $channels = [];
+        }
+
+        $extra = $this->normalizeExtra($user->Extra ?? null);
+        $extra['notification_preferences'] = [
+            'channels' => $channels,
+            'muteAll' => $muteAll,
+        ];
+
+        $user->forceFill(['Extra' => $extra])->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification preferences updated successfully.',
+            'preferences' => $this->getNotificationPreferences($user->fresh()),
         ]);
     }
 
@@ -140,19 +218,33 @@ class NotificationController extends Controller
     private function collectNotifications(ThirdPartyUser $user): Collection
     {
         $items = collect();
+        $preferences = $this->getNotificationPreferences($user);
+        $channels = $preferences['channels'] ?? [];
 
-        $smsQuery = SMS::query();
-        $this->applyPartyFilter($smsQuery, $user);
-        $smsRecords = $smsQuery->orderByDesc('CreatedOn')->limit(40)->get();
-        foreach ($smsRecords as $sms) {
-            $items->push($this->mapSmsNotification($sms));
+        if (($preferences['muteAll'] ?? false) === true) {
+            return $items;
         }
 
-        $emailQuery = Email::query();
-        $this->applyPartyFilter($emailQuery, $user);
-        $emailRecords = $emailQuery->orderByDesc('CreatedOn')->limit(40)->get();
-        foreach ($emailRecords as $email) {
-            $items->push($this->mapEmailNotification($email));
+        $allowInApp = in_array('in_app', $channels, true);
+        $allowSms = $allowInApp || in_array('sms', $channels, true) || in_array('all', $channels, true);
+        $allowEmail = $allowInApp || in_array('email', $channels, true) || in_array('all', $channels, true);
+
+        if ($allowSms) {
+            $smsQuery = SMS::query();
+            $this->applyPartyFilter($smsQuery, $user);
+            $smsRecords = $smsQuery->orderByDesc('CreatedOn')->limit(40)->get();
+            foreach ($smsRecords as $sms) {
+                $items->push($this->mapSmsNotification($sms));
+            }
+        }
+
+        if ($allowEmail) {
+            $emailQuery = Email::query();
+            $this->applyPartyFilter($emailQuery, $user);
+            $emailRecords = $emailQuery->orderByDesc('CreatedOn')->limit(40)->get();
+            foreach ($emailRecords as $email) {
+                $items->push($this->mapEmailNotification($email));
+            }
         }
 
         return $items->sortByDesc('created_at')->values()->take(40);
@@ -296,5 +388,72 @@ class NotificationController extends Controller
         }
 
         return false;
+    }
+
+    private function getNotificationPreferences(ThirdPartyUser $user): array
+    {
+        $defaults = [
+            'channels' => self::NOTIFICATION_CHANNELS,
+            'muteAll' => false,
+        ];
+
+        $extra = $this->normalizeExtra($user->Extra ?? null);
+        $stored = $extra['notification_preferences'] ?? [];
+        if (! is_array($stored)) {
+            $stored = [];
+        }
+
+        $channels = collect($stored['channels'] ?? $defaults['channels'])
+            ->map(fn ($value) => strtolower((string) $value))
+            ->filter(fn ($value) => in_array($value, self::NOTIFICATION_CHANNELS, true))
+            ->unique()
+            ->values()
+            ->all();
+
+        $muteAll = (bool) ($stored['muteAll'] ?? $defaults['muteAll']);
+        if ($muteAll) {
+            $channels = [];
+        }
+
+        return [
+            'preference' => $this->stateToPreference($channels, $muteAll),
+            'channels' => $channels,
+            'muteAll' => $muteAll,
+            'availableChannels' => self::NOTIFICATION_CHANNELS,
+        ];
+    }
+
+    private function mapPreferenceToState(string $preference): array
+    {
+        $preference = strtolower($preference);
+
+        return match ($preference) {
+            'none' => [[], true],
+            'in_app' => [['in_app'], false],
+            'email' => [['email'], false],
+            'sms' => [['sms'], false],
+            default => [self::NOTIFICATION_CHANNELS, false], // all
+        };
+    }
+
+    private function stateToPreference(array $channels, bool $muteAll): string
+    {
+        if ($muteAll) {
+            return 'none';
+        }
+
+        sort($channels);
+        $allChannels = self::NOTIFICATION_CHANNELS;
+        sort($allChannels);
+
+        if ($channels === $allChannels) {
+            return 'all';
+        }
+
+        if (count($channels) === 1) {
+            return $channels[0];
+        }
+
+        return 'custom';
     }
 }

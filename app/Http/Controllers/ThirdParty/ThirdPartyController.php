@@ -37,13 +37,80 @@ class ThirdPartyController extends Controller
                 $query = ThirdParties::query()
                     ->with(['businessType:Id,Description', 'country:Id,Name,Flag', 'types:TypeId,Code,Description', 'status:Id,Description']);
 
-                return DataTables::of($query)->editColumn('types', function (ThirdParties $thirdParties) {
-                    return $thirdParties->types->pluck('Description')->map(fn ($type) => "<span class='badge bg-primary'>{$type}</span>")->implode(' ');
-                })->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')->setRowData([
-                    'dbl_click_url' => function (ThirdParties $thirdParties) {
-                        return route('thirdparty.parties.show', $thirdParties->Id);
-                    },
-                ])->addIndexColumn()->rawColumns(['types'])->make();
+                if ($request->filled('name')) {
+                    $name = trim((string) $request->input('name'));
+                    $query->where(function ($q) use ($name) {
+                        $q->where('ThirdPartyName', 'like', "%{$name}%")
+                            ->orWhere('TradingName', 'like', "%{$name}%");
+                    });
+                }
+
+                if ($request->filled('id_number')) {
+                    $idOrReg = trim((string) $request->input('id_number'));
+                    $query->where(function ($q) use ($idOrReg) {
+                        $q->where('RegistrationNumber', 'like', "%{$idOrReg}%")
+                            ->orWhere('TaxPIN', 'like', "%{$idOrReg}%");
+                    });
+                }
+
+                if ($request->filled('_business') && $request->input('_business') !== 'all') {
+                    $businessType = trim((string) $request->input('_business'));
+                    $query->whereHas('businessType', function ($q) use ($businessType) {
+                        $q->where('Value', $businessType);
+                    });
+                }
+
+                if ($request->filled('_type') && $request->input('_type') !== 'all') {
+                    $type = strtoupper(trim((string) $request->input('_type')));
+
+                    $query->where(function ($q) use ($type) {
+                        // Primary source: pivot role linkage to t_ThirdPartyTypes.
+                        $q->whereHas('types', function ($sub) use ($type) {
+                            $sub->where('Code', $type);
+                        });
+
+                        // Backward compatibility for legacy/mixed records.
+                        if ($type === ThirdPartyService::TypeSupplier) {
+                            $q->orWhereHas('supplierMaster')
+                                ->orWhereIn('ThirdPartyType', ['S', 'SU']);
+                        } elseif ($type === ThirdPartyService::TypeTenant) {
+                            $q->orWhereHas('tenantProfile')
+                                ->orWhereIn('ThirdPartyType', ['T', 'TN']);
+                        } elseif ($type === ThirdPartyService::TypeCustomer) {
+                            $q->orWhereHas('customerProfile')
+                                ->orWhereIn('ThirdPartyType', ['C', 'CU']);
+                        }
+                    });
+                }
+
+                return DataTables::of($query)
+                    ->editColumn('types', function (ThirdParties $thirdParties) {
+                        return $thirdParties->types->pluck('Description')->map(fn ($type) => "<span class='badge bg-primary'>{$type}</span>")->implode(' ');
+                    })
+                    ->orderColumn('business_type.Description', function ($q, $order) {
+                        $q->leftJoin('t_CodeDetails as business_type_sort', 'business_type_sort.Id', '=', 't_ThirdParties.BusinessType')
+                            ->orderBy('business_type_sort.Description', $order)
+                            ->select('t_ThirdParties.*');
+                    })
+                    ->orderColumn('country.Name', function ($q, $order) {
+                        $q->leftJoin('t_Countries as country_sort', 'country_sort.Id', '=', 't_ThirdParties.CountryId')
+                            ->orderBy('country_sort.Name', $order)
+                            ->select('t_ThirdParties.*');
+                    })
+                    ->orderColumn('status.Description', function ($q, $order) {
+                        $q->leftJoin('t_CodeDetails as status_sort', 'status_sort.Id', '=', 't_ThirdParties.Status')
+                            ->orderBy('status_sort.Description', $order)
+                            ->select('t_ThirdParties.*');
+                    })
+                    ->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')
+                    ->setRowData([
+                        'dbl_click_url' => function (ThirdParties $thirdParties) {
+                            return route('thirdparty.parties.show', $thirdParties->Id);
+                        },
+                    ])
+                    ->addIndexColumn()
+                    ->rawColumns(['types'])
+                    ->make();
             } catch (Throwable $e) {
                 Log::error('Failed to load third parties: ' . $e->getMessage());
 

@@ -69,10 +69,54 @@ class ThirdPartyWebController extends Controller
 
             // 🏷 Filter by type
             if ($request->filled('type')) {
-                $typeFilter = $request->input('type');
-                $query->whereHas('types', function ($q) use ($typeFilter) {
-                    $q->where('TypeId', $typeFilter)
-                        ->orWhere('Code', 'like', "%{$typeFilter}%");
+                $typeFilter = trim((string) $request->input('type'));
+                $normalizedType = strtoupper($typeFilter);
+                $typeEnum = ThirdPartyTypeEnum::tryFrom($normalizedType);
+
+                $query->where(function ($typeQuery) use ($typeFilter, $normalizedType, $typeEnum) {
+                    $typeQuery->whereHas('types', function ($q) use ($typeFilter, $normalizedType, $typeEnum) {
+                        if (is_numeric($typeFilter)) {
+                            $q->where('t_ThirdPartyTypes.TypeId', (int) $typeFilter);
+
+                            return;
+                        }
+
+                        if ($typeEnum instanceof ThirdPartyTypeEnum) {
+                            $codePrefix = match ($typeEnum) {
+                                ThirdPartyTypeEnum::Supplier => 'SU',
+                                ThirdPartyTypeEnum::Tenant => 'TN',
+                                ThirdPartyTypeEnum::Customer => 'CU',
+                            };
+
+                            $q->where(function ($match) use ($typeEnum, $codePrefix, $normalizedType) {
+                                $match->where('t_ThirdPartyTypes.Description', $typeEnum->label())
+                                    ->orWhere('t_ThirdPartyTypes.Code', 'like', $codePrefix . '%')
+                                    ->orWhere('t_ThirdPartyTypes.Code', 'like', $normalizedType . '%');
+                            });
+
+                            return;
+                        }
+
+                        $q->where(function ($match) use ($typeFilter, $normalizedType) {
+                            $match->where('t_ThirdPartyTypes.Description', 'like', "%{$typeFilter}%")
+                                ->orWhere('t_ThirdPartyTypes.Code', 'like', "%{$normalizedType}%");
+                        });
+                    });
+
+                    // Fallback to legacy ThirdPartyType column for records not fully migrated to pivot types.
+                    if ($typeEnum instanceof ThirdPartyTypeEnum) {
+                        $typeQuery->orWhere('t_ThirdParties.ThirdPartyType', $typeEnum->value);
+
+                        return;
+                    }
+
+                    if (is_numeric($typeFilter)) {
+                        $typeQuery->orWhere('t_ThirdParties.ThirdPartyType', $typeFilter);
+
+                        return;
+                    }
+
+                    $typeQuery->orWhere('t_ThirdParties.ThirdPartyType', $normalizedType);
                 });
             }
 

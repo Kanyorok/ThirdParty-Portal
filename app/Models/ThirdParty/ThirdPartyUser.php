@@ -50,6 +50,7 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
         'Password',
         'EmailVerifiedOn',
         'IsActive',
+        'Extra',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
@@ -70,6 +71,7 @@ class ThirdPartyUser extends Authenticatable implements CanResetPasswordContract
         'CreatedBy' => 'integer',
         'ModifiedBy' => 'integer',
         'DeletedBy' => 'integer',
+        'Extra' => 'array',
         'IsActive' => 'boolean',
         // 'Password' => 'hashed', // using this conflicts with BREncryption SHA-256!
         // 'Gender' => GenderEnum::class,
