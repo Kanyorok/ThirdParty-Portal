@@ -190,12 +190,18 @@
 
                                 <!-- Terms and Conditions -->
                                 <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Payment Terms <span
-                                                class="text-danger">*</span></label>
-                                        <textarea name="payment_terms" class="form-control" rows="3"
-                                                  placeholder="Specify payment schedule, milestones, and conditions">{{ old('payment_terms', $award->PaymentTerms ?? 'Payment upon delivery and acceptance of goods/services as per agreed milestones') }}</textarea>
-                                    </div>
+                                      <div class="col-md-4 mt-2">
+                <label>Payment Terms <span class="text-danger">*</span></label>
+                <select class="form-control terms @error('payment_terms') is-invalid @enderror" name="payment_terms" id="payment_terms" required>
+                    <option selected disabled>Select Payment Term</option>
+                    @foreach (($paymentTerms ?? []) as $term)
+                    <option value="{{ $term->ID }}" {{ old('payment_terms') == $term->ID ? 'selected' : '' }}>{{ $term->Description }}</option>
+                    @endforeach
+                </select>
+                @error('payment_terms')
+                <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
+            </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Delivery Terms</label>
                                         <textarea name="delivery_terms" class="form-control" rows="3"

@@ -66,6 +66,7 @@ class GoodsReceiptController extends Controller
         // Fetch all order lines with item details
         $OrderLines = DB::connection('sqlsrv')->table('t_OrderLines as ol')
             ->join('t_items as i', 'ol.iStockCodeID', '=', 'i.Id')
+            ->leftJoin('t_ItemCategories as ic', 'i.Category', '=', 'ic.Id')
             ->leftJoin('t_CodeDetails as cd', 'i.InventoryType', '=', 'cd.Id')
             ->select(
                 'ol.Id',
@@ -74,9 +75,11 @@ class GoodsReceiptController extends Controller
                 'ol.fQuantity',
                 'ol.fUnitPriceExcl',
                 'cd.Description as InventoryType',
+                'i.ItemCode',
                 'i.ItemName',
                 'i.ItemDescription',
                 'i.Category',
+                'ic.CategoryCode',
                 'i.UOM'
             )
             ->get();

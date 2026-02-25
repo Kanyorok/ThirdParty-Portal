@@ -41,6 +41,8 @@ Route::prefix('prequalification')
                 ->name('prequalification-evaluation.prequalify.bulk');
             Route::post('rounds/{roundId}/prequalify/{thirdPartyId}/{categoryId}', 'prequalifySupplier')
                 ->name('prequalification-evaluation.prequalify.single');
+            Route::post('rounds/{roundId}/reject/{thirdPartyId}/{categoryId}', 'rejectSupplier')
+                ->name('prequalification-evaluation.reject.single');
             Route::post('rounds/expire/run', 'expireRounds')
                 ->name('prequalification-evaluation.rounds.expire');
             Route::get('evaluations/datatable', 'datatable')

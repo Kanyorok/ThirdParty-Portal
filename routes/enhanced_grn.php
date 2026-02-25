@@ -20,7 +20,12 @@ Route::prefix('goods-receipt')->name('goods-receipt.')->group(function () {
     Route::get('/create', [EnhancedGoodsReceiptController::class, 'create'])->name('create');
     Route::post('/', [EnhancedGoodsReceiptController::class, 'store'])->name('store');
 
-    // GRN details and processing
+    // Reports and summaries — MUST come before wildcard /{grnId}/{poId}
+    Route::get('/summary/{grnId}/{poId}', [EnhancedGoodsReceiptController::class, 'showSummary'])->name('summary');
+    Route::get('/reports/processing-status', [EnhancedGoodsReceiptController::class, 'processingStatusReport'])->name('reports.processing-status');
+    Route::get('/reports/item-type-analysis', [EnhancedGoodsReceiptController::class, 'itemTypeAnalysisReport'])->name('reports.item-type-analysis');
+
+    // GRN details and processing — wildcard routes last
     Route::get('/{grnId}/{poId}', [EnhancedGoodsReceiptController::class, 'show'])->name('show');
     Route::post('/process/{grnId}/{poId}', [EnhancedGoodsReceiptController::class, 'processGRN'])->name('process');
 
@@ -29,11 +34,6 @@ Route::prefix('goods-receipt')->name('goods-receipt.')->group(function () {
     Route::get('/api/line-details/{lineId}', [EnhancedGoodsReceiptController::class, 'getLineDetails'])->name('api.line-details');
     Route::post('/api/retry-processing/{lineId}', [EnhancedGoodsReceiptController::class, 'retryProcessing'])->name('api.retry-processing');
     Route::post('/api/quality-check/{grnLineId}', [EnhancedGoodsReceiptController::class, 'updateQualityStatus'])->name('quality-check');
-
-    // Reports and summaries
-    Route::get('/summary/{grnId}/{poId}', [EnhancedGoodsReceiptController::class, 'showSummary'])->name('summary');
-    Route::get('/reports/processing-status', [EnhancedGoodsReceiptController::class, 'processingStatusReport'])->name('reports.processing-status');
-    Route::get('/reports/item-type-analysis', [EnhancedGoodsReceiptController::class, 'itemTypeAnalysisReport'])->name('reports.item-type-analysis');
 });
 
 // Legacy GRN routes (for backward compatibility)

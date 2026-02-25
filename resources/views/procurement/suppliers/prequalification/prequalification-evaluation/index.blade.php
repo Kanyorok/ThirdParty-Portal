@@ -119,6 +119,7 @@ $(document).ready(function() {
     const TOKEN = '{{ csrf_token() }}';
     const EVAL_SHOW_URL = '{{ route('prequalification.prequalification-evaluation.show', ':appId') }}';
     const PREQUALIFY_SINGLE_URL = '{{ route('prequalification.prequalification-evaluation.prequalify.single', ['roundId' => ':roundId', 'thirdPartyId' => ':thirdPartyId', 'categoryId' => ':categoryId']) }}';
+    const REJECT_SINGLE_URL = '{{ route('prequalification.prequalification-evaluation.reject.single', ['roundId' => ':roundId', 'thirdPartyId' => ':thirdPartyId', 'categoryId' => ':categoryId']) }}';
     
     // Common DataTable configuration
     const commonConfig = {
@@ -175,6 +176,10 @@ $(document).ready(function() {
                     .replace(':roundId', row.round_id)
                     .replace(':thirdPartyId', row.supplier_id)
                     .replace(':categoryId', row.category_id);
+                const rejectUrl = REJECT_SINGLE_URL
+                    .replace(':roundId', row.round_id)
+                    .replace(':thirdPartyId', row.supplier_id)
+                    .replace(':categoryId', row.category_id);
                 
                 let html = '';
                 
@@ -203,6 +208,16 @@ $(document).ready(function() {
                     html += `<span class="btn btn-sm btn-secondary disabled" title="Already Prequalified">
                         <i class="fas fa-check-circle"></i>
                     </span>`;
+                }
+
+                // Reject option for failed applications in under-review queue.
+                if (row.decision === 'Failed' && row.status !== 'Rejected') {
+                    html += ` <form method="POST" action="${rejectUrl}" class="d-inline reject-form ms-1">
+                        <input type="hidden" name="_token" value="${TOKEN}">
+                        <button type="submit" class="btn btn-sm btn-danger" title="Reject Supplier for Category">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </form>`;
                 }
                 
                 return html;
@@ -342,6 +357,39 @@ $(document).ready(function() {
             error: function(xhr) {
                 console.error('Single prequalify error:', xhr);
                 const message = xhr.responseJSON?.message || 'Failed to prequalify supplier';
+                alert(message);
+                btn.prop('disabled', false).html(originalHtml);
+            }
+        });
+    });
+
+    // Individual Reject Form Handler (delegated event)
+    $(document).on('submit', '.reject-form', function(e) {
+        e.preventDefault();
+
+        if (!confirm('Are you sure you want to reject this supplier for this category?')) {
+            return;
+        }
+
+        const form = $(this);
+        const btn = form.find('button[type="submit"]');
+        const originalHtml = btn.html();
+
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+        $.ajax({
+            url: form.attr('action'),
+            method: 'POST',
+            data: form.serialize(),
+            success: function(response) {
+                alert(response.message || 'Supplier rejected successfully');
+                pendingDt.ajax.reload();
+                passedDt.ajax.reload();
+                failedDt.ajax.reload();
+            },
+            error: function(xhr) {
+                console.error('Single reject error:', xhr);
+                const message = xhr.responseJSON?.message || 'Failed to reject supplier';
                 alert(message);
                 btn.prop('disabled', false).html(originalHtml);
             }

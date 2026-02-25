@@ -14,6 +14,7 @@ class PropertyNewLeaseRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'InterestId' => 'nullable|exists:t_PropertyInterest,Id',
             'Tenant' => 'required|exists:t_TenantMaintenance,Id',
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
             'BlockID' => 'required|exists:t_PropertyBlock,Id',
@@ -41,6 +42,34 @@ class PropertyNewLeaseRequest extends FormRequest
         ];
     }
 
+    protected function prepareForValidation(): void
+    {
+        $fields = [
+            'MonthlyRent',
+            'Deposit',
+            'ServiceCharge',
+            'ParkingFee',
+            'OtherCharges',
+        ];
+
+        $sanitized = [];
+
+        foreach ($fields as $field) {
+            if ($this->has($field)) {
+                $value = $this->input($field);
+                if (is_string($value)) {
+                    $value = str_replace([',', ' '], ['', ''], $value);
+                    $value = trim($value);
+                }
+                $sanitized[$field] = $value;
+            }
+        }
+
+        if (!empty($sanitized)) {
+            $this->merge($sanitized);
+        }
+    }
+
     public function messages(): array
     {
         return [
@@ -53,10 +82,15 @@ class PropertyNewLeaseRequest extends FormRequest
             'EndDate' => 'End date must be on or after the start date.',
             'PaymentFrequency.required' => 'Please select a payment frequency.',
             'MonthlyRent.required' => 'Monthly rent is required.',
+            'MonthlyRent.numeric' => 'Monthly rent must be a number.',
             'Deposit.required' => 'Deposit amount is required.',
+            'Deposit.numeric' => 'Deposit must be a number.',
             'ServiceCharge' => 'Service Charge amount is required.',
+            'ServiceCharge.numeric' => 'Service Charge must be a number.',
             'ParkingFee' => 'Parking Fee amount is required.',
+            'ParkingFee.numeric' => 'Parking Fee must be a number.',
             'OtherCharges' => 'Other Charges amount is required.',
+            'OtherCharges.numeric' => 'Other Charges must be a number.',
             'DueDay.required' => 'Due day is required.',
             'DueDay.between' => 'Due day must be between 1 and 28.',
             'SpecialTerms.max' => 'Special terms must not exceed 255 characters.',

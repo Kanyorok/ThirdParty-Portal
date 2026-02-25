@@ -124,31 +124,35 @@
                 <th>Amount / Details</th>
             </tr>
             <tr>
-                <td>Monthly Rent</td>
-                <td>{{ number_format($lease->MonthlyRent, 2) }} {{ $lease->currency->Symbol}} </td>
+                <td>Rent</td>
+                <td>{{ number_format($lease->MonthlyRent, 2) }} {{ $lease->currency->SymbolNative ?? 'Cu'}} </td>
             </tr>
             <tr>
                 <td>Security Deposit</td>
-                <td>{{ number_format($lease->Deposit, 2) }} {{ $lease->currency->Symbol}}</td>
+                <td>{{ number_format($lease->Deposit, 2) }} {{ $lease->currency->SymbolNative ?? 'Cu'}}</td>
             </tr>
             <tr>
                 <td>Service Charge</td>
-                <td>{{ number_format($lease->ServiceCharge, 2) }} {{ $lease->currency->Symbol}}</td>
+                <td>{{ number_format($lease->ServiceCharge, 2) }} {{ $lease->currency->SymbolNative ?? 'Cu'}}</td>
             </tr>
             <tr>
                 <td>Parking Fee</td>
-                <td>{{ number_format($lease->ParkingFee, 2) }} {{ $lease->currency->Symbol}}</td>
+                <td>{{ number_format($lease->ParkingFee, 2) }} {{ $lease->currency->SymbolNative ?? 'Cu'}}</td>
             </tr>
             <tr>
                 <td>Other Charges</td>
-                <td>{{ number_format($lease->OtherCharges, 2) }} {{ $lease->currency->Symbol}}</td>
+                <td>{{ number_format($lease->OtherCharges, 2) }} {{ $lease->currency->SymbolNative ?? 'Cu'}}</td>
             </tr>
             <tr>
-                <td>Payment Frequency</td>
+                <td><strong>Total Payable</strong></td>
+                <td><strong>{{ number_format($lease->MonthlyRent + $lease->Deposit + $lease->ServiceCharge + $lease->ParkingFee + $lease->OtherCharges, 2) }} {{ $lease->currency->SymbolNative ?? 'Cu'}}</strong></td>
+            </tr>
+            <tr>
+                <td></td>Payment Frequency</td>
                 <td>{{ $lease->code->Description ?? '-' }}</td>
             </tr>
             <tr>
-                <td>Due Day</td>
+                <td>Due Date</td>
                 <td>{{ $lease->DueDay }}</td>
             </tr>
             <tr>

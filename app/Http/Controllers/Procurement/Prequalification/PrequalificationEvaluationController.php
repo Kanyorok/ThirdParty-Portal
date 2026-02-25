@@ -417,7 +417,7 @@ class PrequalificationEvaluationController extends Controller
             try {
                 PrequalificationApplication::where([
                     'RoundID' => $roundId,
-                    'SupplierID' => $thirdPartyId,
+                    'SupplierID' => $supplierMasterId,
                     'CategoryID' => $categoryId,
                 ])->update(['Status' => PrequalificationApplicationEnum::Prequalified]);
             } catch (\Throwable $e) {
@@ -434,6 +434,145 @@ class PrequalificationEvaluationController extends Controller
         }
 
         return back()->with('success', 'Supplier prequalified for this category.');
+    }
+
+    /**
+     * Reject a supplier for a specific round/category after failed review.
+     * Route params order: {roundId}/{thirdPartyId}/{categoryId}
+     */
+    public function rejectSupplier(Request $request, int $roundId, int $thirdPartyId, int $categoryId): RedirectResponse|\Illuminate\Http\JsonResponse
+    {
+        $now = Carbon::now();
+        $userId = Auth::id();
+        $reason = trim((string) $request->input('reason', 'Rejected after failed evaluation'));
+
+        $round = \App\Models\Procurement\Prequalification\PrequalificationRound::find($roundId);
+        if (! $round) {
+            $message = "Round $roundId not found.";
+            if (request()->expectsJson()) {
+                return response()->json(['status' => 'error', 'message' => $message], 422);
+            }
+
+            return back()->with('error', $message);
+        }
+
+        $thirdParty = ThirdParties::find($thirdPartyId);
+        if (! $thirdParty) {
+            $message = "Supplier (ThirdParty) $thirdPartyId not found.";
+            if (request()->expectsJson()) {
+                return response()->json(['status' => 'error', 'message' => $message], 422);
+            }
+
+            return back()->with('error', $message);
+        }
+
+        $supplierMaster = \App\Models\ThirdParty\SupplierMaster::where('ThirdPartyId', $thirdPartyId)->first();
+        if (! $supplierMaster) {
+            $message = 'Supplier Master record not found for this party.';
+            if (request()->expectsJson()) {
+                return response()->json(['status' => 'error', 'message' => $message], 422);
+            }
+
+            return back()->with('error', $message);
+        }
+        $supplierMasterId = $supplierMaster->Id;
+
+        $categoryExists = DB::table('t_SupplierCategories')
+            ->where('SupplierCategoryID', $categoryId)
+            ->exists();
+        if (! $categoryExists) {
+            $message = "Category $categoryId not found.";
+            if (request()->expectsJson()) {
+                return response()->json(['status' => 'error', 'message' => $message], 422);
+            }
+
+            return back()->with('error', $message);
+        }
+
+        DB::transaction(function () use ($roundId, $thirdPartyId, $supplierMasterId, $categoryId, $now, $userId, $reason) {
+            // Remove category-level prequalification if present.
+            DB::table('t_PrequalificationRoundSupplierCategory')
+                ->where('RoundID', $roundId)
+                ->where('ThirdPartyID', $thirdPartyId)
+                ->where('SupplierCategoryID', $categoryId)
+                ->delete();
+
+            // Keep supplier row but mark inactive for this category/round.
+            Supplier::updateOrCreate(
+                ['SupplierMasterId' => $supplierMasterId, 'RoundID' => $roundId, 'CategoryId' => $categoryId],
+                [
+                    'Active_Status' => 0,
+                    'CreatedOn' => $now,
+                    'CreatedBy' => $userId,
+                    'ModifiedOn' => $now,
+                    'ModifiedBy' => $userId,
+                ]
+            );
+
+            $applications = PrequalificationApplication::where([
+                'RoundID' => $roundId,
+                'SupplierID' => $supplierMasterId,
+                'CategoryID' => $categoryId,
+            ])->get();
+
+            foreach ($applications as $application) {
+                $proxyUserId = \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyID', $thirdPartyId)->value('Id');
+                $auditUserId = $proxyUserId ?? $userId;
+
+                $acs = ApplicationCategoryStatus::firstOrNew([
+                    'ApplicationId' => $application->ApplicationID,
+                    'CategoryId' => $categoryId,
+                ]);
+                $prevStatus = $acs->exists ? $acs->Status : null;
+                $prevProgress = $acs->exists ? (float)$acs->ProgressPercent : 0.0;
+                if (! $acs->exists) {
+                    $acs->CreatedBy = $auditUserId;
+                    $acs->CreatedOn = $now;
+                }
+                $acs->Status = 'R';
+                $acs->ProgressPercent = 100.00;
+                $acs->Stage = 'decision';
+                $acs->StageLabel = 'Rejected';
+                $acs->DecisionDate = $now;
+                $acs->RejectionReason = $reason;
+                $acs->ModifiedBy = $auditUserId;
+                $acs->ModifiedOn = $now;
+                $acs->save();
+
+                CategoryProgressHistory::create([
+                    'ApplicationCategoryId' => $acs->Id,
+                    'PreviousStatus' => $prevStatus,
+                    'NewStatus' => 'R',
+                    'PreviousProgress' => $prevProgress,
+                    'NewProgress' => 100.00,
+                    'ChangedBy' => $userId,
+                    'Notes' => $reason,
+                    'CreatedBy' => $userId,
+                    'CreatedOn' => $now,
+                ]);
+
+                $application->Status = PrequalificationApplicationEnum::Rejected;
+                $application->ModifiedBy = $userId;
+                $application->save();
+            }
+
+            // Keep SupplierMaster prequalified flag aligned with remaining active category approvals.
+            $hasAnyPrequalification = DB::table('t_PrequalificationRoundSupplierCategory')
+                ->where('ThirdPartyID', $thirdPartyId)
+                ->exists();
+
+            \App\Models\ThirdParty\SupplierMaster::where('Id', $supplierMasterId)->update([
+                'IsPrequalified' => $hasAnyPrequalification ? 1 : 0,
+                'ModifiedOn' => $now,
+                'ModifiedBy' => $userId,
+            ]);
+        });
+
+        if (request()->expectsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Supplier rejected for this category.']);
+        }
+
+        return back()->with('success', 'Supplier rejected for this category.');
     }
 
     /**

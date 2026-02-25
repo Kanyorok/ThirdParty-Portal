@@ -143,7 +143,8 @@ class ProcurementSchedulePlanController extends Controller
         }
 
         return redirect()->route('Procurement-Plan-Schedule.index')
-            ->with('success', 'Schedules saved successfully.');
+            ->with('success', 'Schedules saved successfully.')
+            ->with('selected_plan_id', $request->input('pending_plan_id'));
     }
 
     public function edit($lineItemId, Request $request)

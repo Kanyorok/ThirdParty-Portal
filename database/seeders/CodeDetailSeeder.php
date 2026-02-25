@@ -784,6 +784,13 @@ class CodeDetailSeeder extends Seeder
 
 
 
+            ['CodeID' => 'tender_award', 'Description' => 'Draft', 'Value' => 'Dr','DisplayOrder' => 1],
+            ['CodeID' => 'tender_award', 'Description' => 'Approved', 'Value' => 'Ap','DisplayOrder' => 2],
+            ['CodeID' => 'tender_award', 'Description' => 'Rejected', 'Value' => 'Re','DisplayOrder' => 3],
+            ['CodeID' => 'tender_award', 'Description' => 'Under Review', 'Value' => 'rv','DisplayOrder' => 4],
+
+
+
         ];
 
         foreach ($static as $index => $item) {

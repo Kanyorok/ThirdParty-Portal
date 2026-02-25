@@ -155,7 +155,7 @@
                                     </tr>
                                     <tr>
                                         <td><strong>Contact Person:</strong></td>
-                                        <td>{{ $contract->winningSupplier->supplierMaster->party->ContactPerson ?? 'N/A' }}</td>
+                                        <td>{{ $contract->winningSupplier->supplierMaster->party->ThirdPartyName ?? 'N/A' }}</td>
                                     </tr>
                                     <tr>
                                         <td><strong>Email:</strong></td>

@@ -77,6 +77,25 @@
         </div>
     @endif
 
+    {{-- Evaluation Completeness Alert --}}
+    @if(!$existingAward && isset($evaluationCompleteness) && !$evaluationCompleteness['is_complete'])
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-1"></i>
+            <strong>Evaluations Incomplete:</strong>
+            {{ $evaluationCompleteness['members_completed'] }} of {{ $evaluationCompleteness['total_members'] }}
+            committee member(s) have completed evaluations for all {{ $evaluationCompleteness['total_bids'] }}
+            {{ $type === 'rfq' ? 'supplier response(s)' : 'bid(s)' }}.
+            <strong>Award creation is disabled until all evaluations are done.</strong>
+            @if(!empty($evaluationCompleteness['pending_members']))
+                <br><small class="text-muted mt-1 d-block">
+                    <i class="fas fa-user-clock me-1"></i>Pending:
+                    {{ implode(', ', $evaluationCompleteness['pending_members']) }}
+                </small>
+            @endif
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <!-- Main Award Content -->
     <div class="card shadow-sm">
         <div class="card-header {{ $type === 'rfq' ? 'bg-success' : 'bg-primary' }} text-white d-flex justify-content-between align-items-center">
@@ -233,7 +252,16 @@
                             @endif
 
                             @if(!$existingAward)
-                                <button type="submit" class="btn {{ $type === 'rfq' ? 'btn-success' : 'btn-primary' }}">
+                                @php
+                                    $evaluationsIncomplete = (isset($evaluationCompleteness) && !$evaluationCompleteness['is_complete']);
+                                @endphp
+                                <button type="submit" class="btn {{ $type === 'rfq' ? 'btn-success' : 'btn-primary' }}"
+                                    {{ $evaluationsIncomplete ? 'disabled' : '' }}
+                                    @if($evaluationsIncomplete)
+                                        title="All committee members must complete evaluations for all bids before awarding"
+                                        data-bs-toggle="tooltip"
+                                    @endif
+                                >
                                     <i class="fas fa-check"></i> Create Award (Pending Approval)
                                 </button>
                             @elseif($existingAward->AwardStatus === 'Pending' && !$showApprovalButtons && $type === 'rfq')
@@ -242,6 +270,7 @@
                                 <form action="{{ route('awards.submit-approval', $existingAward->Id) }}" method="POST" class="d-inline">
                                     @csrf
                                     <input type="hidden" name="award_id" value="{{ $existingAward->Id }}">
+                                    <input type="hidden" name="award_type" value="rfq">
                                     <button type="submit" class="btn btn-warning text-dark me-2">
                                         <i class="fas fa-paper-plane"></i> Submit for Approval
                                     </button>

@@ -10,6 +10,7 @@ use App\Services\Procurement\ProcurementPlan\DepartmentNeedsService;
 use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -47,7 +48,25 @@ class DepartmentNeedsController extends Controller
                 'EstimatedUnitCost' => ['required', 'numeric', 'gt:0'],
                 'RequestedDate' => ['required', 'date', 'after_or_equal:today'],
                 'Justification' => ['nullable', 'string'],
+                'FiscalYear' => ['nullable', 'integer'],
+                'PriorityLevel' => ['nullable', 'string'],
+                'IsEmergency' => ['nullable', 'boolean'],
             ]);
+
+            // Provide defaults for optional fields the service expects
+            $validated['FiscalYear'] = $validated['FiscalYear'] ?? now()->year;
+            $validated['PriorityLevel'] = $validated['PriorityLevel'] ?? 'Normal';
+            $validated['IsEmergency'] = $validated['IsEmergency'] ?? false;
+
+            $idempotencyKey = 'department_need_store_' . Auth::id() . ':' . md5(json_encode($validated));
+
+            // If we already have a pending request from this client, reject this one.
+            if (Cache::has($idempotencyKey)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['error' => 'Please wait a moment before submitting again.']);
+            }
+
 
             // Guard: ensure the chosen item has an estimated/actual price configured and > 0
             $hasValidPrice = \App\Models\Inventory\ItemMasterList::query()
@@ -65,10 +84,22 @@ class DepartmentNeedsController extends Controller
                     ->withErrors(['ItemID' => 'Cannot raise a need for an item without a configured estimated cost.']);
             }
 
-            DB::transaction(function () use ($request, $service) {
-                $actor = $request->user();
-                $service->create($request->all(), $actor);
-            });
+            // Set the lock for this user and request
+            $lock = Cache::lock($idempotencyKey, 60); // Lock for 60 seconds
+            if (! $lock->get()) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['error' => 'Please wait a moment before submitting again.']);
+            }
+
+            try {
+                DB::transaction(function () use ($validated, $service, $request) {
+                    $actor = $request->user();
+                    $service->create($validated, $actor);
+                });
+            } finally {
+                optional($lock)->release();
+            }
 
             return redirect()->route('procurementdepartmentalplan.index')
                 ->with('success', 'Department need created!');

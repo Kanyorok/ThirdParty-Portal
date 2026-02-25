@@ -16,17 +16,29 @@ use App\Services\ThirdParties\SupplierService;
 use App\Services\Workflow\ApprovalWorkflow;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PurchaseOrderController extends Controller
 {
+    /**
+     * How long (seconds) to cache a successful store response for idempotency replay.
+     */
+    private const IDEMPOTENCY_TTL = 86400; // 24 hours
+
+    /**
+     * How long (seconds) to hold the processing lock.
+     * Must exceed the slowest expected execution of store() — header + lines + totals + workflow.
+     */
+    private const IDEMPOTENCY_LOCK_TTL = 60;
+
     public function __construct(
         protected ItemService $itemService,
         protected OrderService $orderService,
         protected DocumentApprovalService $documentApprovalService,
         protected RFQService $rfqService,
-        protected ApprovalWorkflow $workflowService,  // Changed type hint
+        protected ApprovalWorkflow $workflowService,
         protected OrderSourceService $orderSourceService
     ) {
         $this->middleware('ajax')->except([
@@ -60,7 +72,7 @@ class PurchaseOrderController extends Controller
     }
 
     /**
-     * Display a listing of purchase orders
+     * Display a listing of purchase orders.
      */
     public function index()
     {
@@ -70,7 +82,11 @@ class PurchaseOrderController extends Controller
             $perPage = (int) request()->query('perPage', 20);
             $perPage = $perPage > 0 ? $perPage : 20;
             $details = $this->orderService->fetchOrdersPaginated($perPage);
-            Log::info('PurchaseOrderController@index paginator', ['perPage' => $perPage, 'total' => $details->total()]);
+
+            Log::info('PurchaseOrderController@index paginator', [
+                'perPage' => $perPage,
+                'total' => $details->total(),
+            ]);
 
             return view('procurement.orders.index', compact('details'));
         } catch (\Exception $e) {
@@ -81,7 +97,7 @@ class PurchaseOrderController extends Controller
     }
 
     /**
-     * Show the form for creating a new purchase order
+     * Show the form for creating a new purchase order.
      */
     public function create()
     {
@@ -90,7 +106,6 @@ class PurchaseOrderController extends Controller
         try {
             $itemTypes = $this->itemService->getTypes();
 
-            // Load all items for the dropdown
             $allItems = DB::table('t_Items as i')
                 ->leftJoin('t_ItemTypes as it', 'i.ItemType', '=', 'it.Id')
                 ->leftJoin('t_ItemCategories as ic', 'i.Category', '=', 'ic.Id')
@@ -110,25 +125,12 @@ class PurchaseOrderController extends Controller
             $uniqueRfqs = collect($rfqResponses)->unique('RFQNumber')->values();
             $suppliers = SupplierService::getSuppliers();
 
-            // Fetch payment terms from t_CodeDetails
-            $paymentTerms = CodeDetail::query()
-                ->where('CodeID', 'PaymentTerm')
-                ->orderBy('DisplayOrder')
-                ->get(['ID', 'Description']);
+            $paymentTerms = $this->fetchPaymentTerms();
 
-            if ($paymentTerms->isEmpty()) {
-                $paymentTerms = DB::table('t_CodeDetails')
-                    ->whereIn(DB::raw('RTRIM(LTRIM(CodeID))'), ['PaymentTerm', 'PaymentTerms'])
-                    ->orderBy('DisplayOrder')
-                    ->select('ID', 'Description')
-                    ->get();
-            }
-
-            // Fetch Tax Rules
             $taxRules = DB::table('t_FinanceTaxRuleConfiguration as tr')
                 ->join('t_FinanceTaxType as tt', 'tr.TaxTypeId', '=', 'tt.Id')
                 ->whereNull('tr.DeletedOn')
-                ->where('tr.Status', 1) // Status is bit/int 1 for Active
+                ->where('tr.Status', 1)
                 ->select('tr.Id', 'tt.TaxTypeName', 'tr.Rate')
                 ->get();
 
@@ -139,6 +141,7 @@ class PurchaseOrderController extends Controller
             // Contract prefill support
             $prefillContract = null;
             $contractId = request('contractId');
+
             if (! empty($contractId)) {
                 try {
                     $contractRow = DB::table('t_TenderAwards as ta')
@@ -150,7 +153,7 @@ class PurchaseOrderController extends Controller
                             'ta.ContractRef',
                             'ta.WinningSupplierID as SupplierId',
                             DB::raw('tp.Id as ThirdPartyId'),
-                            DB::raw("tp.TradingName as SupplierName"),
+                            DB::raw('tp.TradingName as SupplierName'),
                             DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
                         )
                         ->where('ta.Id', (int) $contractId)
@@ -158,9 +161,8 @@ class PurchaseOrderController extends Controller
 
                     if ($contractRow && ! empty($contractRow->ContractRef)) {
                         $uniqueRfqs = collect($uniqueRfqs);
-                        $exists = $uniqueRfqs->contains(function ($r) use ($contractRow) {
-                            return ($r->RFQNumber ?? null) === ($contractRow->ContractRef ?? null);
-                        });
+                        $exists = $uniqueRfqs->contains(fn ($r) => ($r->RFQNumber ?? null) === ($contractRow->ContractRef ?? null));
+
                         if (! $exists) {
                             $uniqueRfqs = $uniqueRfqs->prepend((object) ['RFQNumber' => $contractRow->ContractRef]);
                         }
@@ -201,30 +203,14 @@ class PurchaseOrderController extends Controller
                 'sourceType' => $sourceType,
                 'contracts' => $contracts ?? collect(),
                 'awardedRfqs' => $awardedRfqs ?? collect(),
-                'convertedRFQIds' => $convertedRFQIds ?? [],
+                'convertedRFQIds' => [],
                 'awardedTenders' => $awardedTenders ?? collect(),
-                'convertedTenderIds' => $convertedTenderIds ?? [],
-                'usedReferenceNumbers' => $usedReferenceNumbers ?? [],
+                'convertedTenderIds' => [],
+                'usedReferenceNumbers' => [],
                 'taxRules' => $taxRules ?? collect(),
             ]);
         } catch (\Exception $e) {
             Log::error('Data fetch failed: ' . $e->getMessage());
-
-            try {
-                $paymentTerms = CodeDetail::query()
-                    ->where('CodeID', 'PaymentTerm')
-                    ->orderBy('DisplayOrder')
-                    ->get(['ID', 'Description']);
-                if ($paymentTerms->isEmpty()) {
-                    $paymentTerms = DB::table('t_CodeDetails')
-                        ->whereIn(DB::raw('RTRIM(LTRIM(CodeID))'), ['PaymentTerm', 'PaymentTerms'])
-                        ->orderBy('DisplayOrder')
-                        ->select('ID', 'Description')
-                        ->get();
-                }
-            } catch (\Throwable $te) {
-                $paymentTerms = collect();
-            }
 
             return view('procurement.orders.create', [
                 'suppliers' => [],
@@ -232,7 +218,7 @@ class PurchaseOrderController extends Controller
                 'allItems' => collect(),
                 'rfqs' => [],
                 'rfqResponses' => [],
-                'paymentTerms' => $paymentTerms ?? [],
+                'paymentTerms' => $this->fetchPaymentTerms(),
                 'awardedRfqs' => [],
                 'convertedRFQIds' => [],
                 'contracts' => collect(),
@@ -244,262 +230,302 @@ class PurchaseOrderController extends Controller
         }
     }
 
-    /**
-     * Store a newly created Purchase Order
-     */
     public function store(PurchaseOrderRequest $request)
     {
+        $this->authorize('create', Order::class);
+
         try {
             $validated = $request->validated();
+            $actor = auth()->user();
 
-            // Extract main PO data
-            $supplier = $validated['supplier'];
-            $poDate = $validated['Date'];
-            $rfqNo = $validated['refNo'] ?? null;
-            $priority = $validated['priority'] ?? null;
-            $terms = $validated['terms'];
 
-            // Get tax ID from the first line item (assuming single tax policy for PO header)
-            $taxes = $validated['tax'] ?? [];
-            $firstTaxId = $taxes[0] ?? null;
-            if ($firstTaxId === '' || $firstTaxId === '0' || $firstTaxId === 0) {
-                $firstTaxId = null;
+            $clientKey = $request->header('Idempotency-Key');
+
+            $idempotencyKey = $clientKey
+                ? 'po_idem:' . $actor->id . ':' . $clientKey
+                : 'po_idem:' . $actor->id . ':' . md5(json_encode($validated));
+
+            $resultCacheKey = $idempotencyKey . ':result';
+            $lockKey = $idempotencyKey . ':lock';
+
+
+            $cached = Cache::get($resultCacheKey);
+
+            if ($cached !== null) {
+                Log::info('Idempotent replay for PO store.', [
+                    'user_id' => $actor->id,
+                    'idempotency_key' => $idempotencyKey,
+                    'po_id' => $cached['po_id'],
+                ]);
+
+                return redirect()
+                    ->route('purchaseOrder.show', $cached['po_id'])
+                    ->with('success', "Purchase Order already created (duplicate request ignored). LPO Number: {$cached['order_no']}");
             }
 
-            // Validate Quantity against Source
-            if ($request->has('SourceType') && $request->has('SourceId')) {
-                $sourceType = $request->input('SourceType');
-                $sourceId = $request->input('SourceId');
 
-                $availableItems = collect();
+            $lock = Cache::lock($lockKey, self::IDEMPOTENCY_LOCK_TTL);
 
-                try {
-                    if ($sourceType === 'CONTRACT') {
-                        $availableItems = $this->orderSourceService->getContractItems($sourceId, 'tender');
-                    } elseif ($sourceType === 'CONTRACT-RFQ') {
-                        $availableItems = $this->orderSourceService->getContractItems($sourceId, 'rfq');
-                    } elseif ($sourceType === 'RFQ') {
-                        $availableItems = $this->orderSourceService->getRFQItems($sourceId);
-                    } elseif ($sourceType === 'TENDER') {
-                        $availableItems = $this->orderSourceService->getTenderItems($sourceId);
-                    } elseif ($sourceType === 'PLAN') {
-                        $availableItems = $this->orderSourceService->getDirectPlanItems($sourceId);
-                    }
+            if (! $lock->get()) {
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->with('error', 'Your previous request is still being processed. Please wait a moment and try again.');
+            }
 
-                    if ($availableItems->isNotEmpty()) {
-                        $availableMap = $availableItems->pluck('quantity', 'itemCode')->toArray();
-                        $itemMaps = $availableItems->pluck('itemName', 'itemCode')->toArray(); // For error message
+            try {
+                // Re-check the cache inside the lock (double-checked locking).
+                $cached = Cache::get($resultCacheKey);
 
-                        $reqItemCodes = $validated['itemCode'];
-                        $reqQuantities = $validated['quantity'];
+                if ($cached !== null) {
+                    return redirect()
+                        ->route('purchaseOrder.show', $cached['po_id'])
+                        ->with('success', "Purchase Order already created (duplicate request ignored). LPO Number: {$cached['order_no']}");
+                }
 
-                        foreach ($reqItemCodes as $idx => $code) {
-                            $qty = $reqQuantities[$idx];
-                            if (isset($availableMap[$code])) {
-                                $remaining = $availableMap[$code];
-                                if ($qty > $remaining) {
-                                    $name = $itemMaps[$code] ?? $code;
 
-                                    return back()->withInput()->with('error', "Quantity for item '{$name}' exceeds remaining quantity. Available: {$remaining}, Requested: {$qty}");
+                if ($request->has('SourceType') && $request->has('SourceId')) {
+                    $sourceType = $request->input('SourceType');
+                    $sourceId = $request->input('SourceId');
+
+                    $availableItems = collect();
+
+                    try {
+                        if ($sourceType === 'CONTRACT') {
+                            $availableItems = $this->orderSourceService->getContractItems($sourceId, 'tender');
+                        } elseif ($sourceType === 'CONTRACT-RFQ') {
+                            $availableItems = $this->orderSourceService->getContractItems($sourceId, 'rfq');
+                        } elseif ($sourceType === 'RFQ') {
+                            $availableItems = $this->orderSourceService->getRFQItems($sourceId);
+                        } elseif ($sourceType === 'TENDER') {
+                            $availableItems = $this->orderSourceService->getTenderItems($sourceId);
+                        } elseif ($sourceType === 'PLAN') {
+                            $availableItems = $this->orderSourceService->getDirectPlanItems($sourceId);
+                        }
+
+                        if ($availableItems->isNotEmpty()) {
+                            $availableMap = $availableItems->pluck('quantity', 'itemCode')->toArray();
+                            $itemNameMap = $availableItems->pluck('itemName', 'itemCode')->toArray();
+
+                            foreach ($validated['itemCode'] as $idx => $code) {
+                                $qty = $validated['quantity'][$idx];
+                                if (isset($availableMap[$code]) && $qty > $availableMap[$code]) {
+                                    $name = $itemNameMap[$code] ?? $code;
+                                    $remaining = $availableMap[$code];
+
+                                    // Release the lock before redirecting back — the
+                                    // operation hasn't started so a retry should be free.
+                                    $lock->release();
+
+                                    return back()->withInput()->with(
+                                        'error',
+                                        "Quantity for item '{$name}' exceeds remaining quantity. Available: {$remaining}, Requested: {$qty}"
+                                    );
                                 }
                             }
                         }
+                    } catch (\Exception $e) {
+                        Log::warning('Source quantity validation failed, proceeding anyway.', [
+                            'error' => $e->getMessage(),
+                        ]);
                     }
-                } catch (\Exception $e) {
-                }
-            }
-
-            // Create the PO header using OrderService
-            $poResult = $this->orderService->addPO(
-                $supplier,
-                $poDate,
-                $rfqNo,
-                $priority,
-                $terms,
-                auth()->user(),
-                $firstTaxId
-            );
-
-            if ($poResult['status'] !== 'success') {
-                return back()
-                    ->withInput()
-                    ->with('error', $poResult['message'] ?? 'Failed to create Purchase Order');
-            }
-
-            $poId = $poResult['po_id'];
-
-            // Add PO line items
-            $itemCodes = $validated['itemCode'];
-            $quantities = $validated['quantity'];
-            $unitPrices = $validated['unitPrice'];
-            $taxes = $validated['tax'] ?? [];
-            $discounts = $validated['discount'] ?? [];
-            $lineTotals = $validated['lineTotal'];
-
-            // Fetch tax rates map for lookup [Id => Rate]
-            // We now pass Tax ID directly to SP which handles lookup.
-
-            foreach ($itemCodes as $index => $itemCode) {
-                // Determine tax ID: if the submitted value is a rule ID, use it.
-                // The select dropdown validates it is one of the rule IDs.
-                $taxId = $taxes[$index] ?? null;
-                // Ensure empty string becomes null for database
-                if ($taxId === '' || $taxId === '0' || $taxId === 0) {
-                    $taxId = null;
                 }
 
-                $lineResult = $this->orderService->addPOLines(
-                    $itemCode,
-                    $quantities[$index],
-                    $unitPrices[$index],
-                    $taxId,
-                    $discounts[$index] ?? 0,
-                    $lineTotals[$index],
-                    auth()->user(),
-                    $poId
+
+                $taxes = $validated['tax'] ?? [];
+                $firstTaxId = $taxes[0] ?? null;
+                if ($firstTaxId === '' || $firstTaxId === '0' || $firstTaxId === 0) {
+                    $firstTaxId = null;
+                }
+
+                $poResult = $this->orderService->addPO(
+                    $validated['supplier'],
+                    $validated['Date'],
+                    $validated['refNo'] ?? null,
+                    $validated['priority'] ?? null,
+                    $validated['terms'],
+                    $actor,
+                    $firstTaxId
                 );
 
-                if ($lineResult['status'] !== 'success') {
-                    Log::warning('Failed to add PO line item', [
-                        'po_id' => $poId,
-                        'item_code' => $itemCode,
-                        'error' => $lineResult['message'] ?? 'Unknown error',
+                if ($poResult['status'] !== 'success') {
+                    return back()
+                        ->withInput()
+                        ->with('error', $poResult['message'] ?? 'Failed to create Purchase Order');
+                }
+
+                $poId = $poResult['po_id'];
+
+                $itemCodes = $validated['itemCode'];
+                $quantities = $validated['quantity'];
+                $unitPrices = $validated['unitPrice'];
+                $taxes = $validated['tax'] ?? [];
+                $discounts = $validated['discount'] ?? [];
+                $lineTotals = $validated['lineTotal'];
+
+                foreach ($itemCodes as $index => $itemCode) {
+                    $taxId = $taxes[$index] ?? null;
+                    if ($taxId === '' || $taxId === '0' || $taxId === 0) {
+                        $taxId = null;
+                    }
+
+                    $lineResult = $this->orderService->addPOLines(
+                        $itemCode,
+                        $quantities[$index],
+                        $unitPrices[$index],
+                        $taxId,
+                        $discounts[$index] ?? 0,
+                        $lineTotals[$index],
+                        $actor,
+                        $poId
+                    );
+
+                    if ($lineResult['status'] !== 'success') {
+                        Log::warning('Failed to add PO line item', [
+                            'po_id' => $poId,
+                            'item_code' => $itemCode,
+                            'error' => $lineResult['message'] ?? 'Unknown error',
+                        ]);
+                    }
+                }
+
+
+                $this->orderService->AddPurchaseOrderSum($poId);
+
+
+                if ($request->has('SourceType') && $request->has('SourceId')) {
+                    Order::where('Id', $poId)->update([
+                        'SourceType' => $request->input('SourceType'),
+                        'SourceId' => $request->input('SourceId'),
                     ]);
                 }
-            }
 
-            // Calculate PO totals
-            $this->orderService->AddPurchaseOrderSum($poId);
 
-            // Update Source info if present (important for Contracts/Direct)
-            if ($request->has('SourceType') && $request->has('SourceId')) {
-                Order::where('Id', $poId)->update([
-                    'SourceType' => $request->input('SourceType'),
-                    'SourceId' => $request->input('SourceId'),
-                ]);
-            }
+                try {
+                    $order = Order::findOrFail($poId);
+                    $this->workflowService->submit(
+                        $order,
+                        $actor,
+                        ApprovalEnum::Submitted,
+                        'Purchase Order created and submitted for approval'
+                    );
+                    Log::info('Approval workflow submitted for PO', ['po_id' => $poId]);
+                } catch (\Exception $e) {
+                    Log::warning('Failed to submit approval workflow for PO', [
+                        'po_id' => $poId,
+                        'error' => $e->getMessage(),
+                    ]);
+                    // Non-fatal: the PO exists; the approver can re-submit manually.
+                }
 
-            // Prepare redirect response first
-            $orderNo = $poResult['order_no'] ?? '';
-            $redirectResponse = redirect()
-                ->route('purchaseOrder.show', $poId)
-                ->with('success', "Purchase Order created successfully. LPO Number: {$orderNo}");
 
-            // Initialize approval workflow for the newly created PO (after preparing response)
-            try {
-                $order = Order::findOrFail($poId);
-                $this->workflowService->submit($order, auth()->user(), ApprovalEnum::Submitted, 'Purchase Order created and submitted for approval');
-                Log::info('Approval workflow submitted for PO', ['po_id' => $poId]);
-            } catch (\Exception $e) {
-                Log::warning('Failed to submit approval workflow for PO', [
+                $orderNo = $poResult['order_no'] ?? '';
+
+                Cache::put($resultCacheKey, [
                     'po_id' => $poId,
-                    'error' => $e->getMessage(),
+                    'order_no' => $orderNo,
+                ], self::IDEMPOTENCY_TTL);
+
+                Log::info('Purchase Order created successfully.', [
+                    'po_id' => $poId,
+                    'order_no' => $orderNo,
+                    'user_id' => $actor->id,
                 ]);
-                // Don't fail the entire operation if workflow initiation fails
+
+                return redirect()
+                    ->route('purchaseOrder.show', $poId)
+                    ->with('success', "Purchase Order created successfully. LPO Number: {$orderNo}");
+
+            } catch (\Exception $e) {
+                // Do NOT cache — the user should be able to retry.
+                Log::error('Error creating Purchase Order', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+
+                return back()
+                    ->withInput()
+                    ->with('error', 'An error occurred while creating the Purchase Order: ' . $e->getMessage());
+
+            } finally {
+
+                $lock->release();
             }
 
-            return $redirectResponse;
         } catch (\Exception $e) {
-            Log::error('Error creating Purchase Order', [
+            Log::error('Unexpected error in PO store', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
 
             return back()
                 ->withInput()
-                ->with('error', 'An error occurred while creating the Purchase Order: ' . $e->getMessage());
+                ->with('error', 'An unexpected error occurred. Please try again.');
         }
     }
 
+    /**
+     * Display the specified purchase order.
+     */
     public function show(Request $request, string $id)
     {
         try {
-            Log::info("Loading PO show page", ['order_id' => $id]);
+            Log::info('Loading PO show page', ['order_id' => $id]);
 
             $order = Order::findOrFail($id);
             $this->authorize('view', $order);
-            Log::info("Order found and authorized", ['order_id' => $id]);
 
             $orderInfo = $this->orderService->fetchOrderDetails($id);
-            Log::info("Order details fetched", ['order_id' => $id]);
-
             $lineInfo = $this->orderService->fetchOrderLineDetails($id);
-            Log::info("Line items fetched", ['order_id' => $id, 'line_count' => count($lineInfo)]);
 
-            // Use the generic workflow service with error handling
+            Log::info('Order details and line items fetched', [
+                'order_id' => $id,
+                'line_count' => count($lineInfo),
+            ]);
+
+            // Fetch workflow history
             $history = collect();
 
             try {
-                // Use getWorkflowStatus as requested
                 $workflowData = $this->workflowService->getWorkflowStatus($order->getMorphClass(), $order->getKey());
                 $historyArr = $workflowData['completedApprovals'] ?? [];
-                $stageName = isset($workflowData['currentStage']['name']) ? $workflowData['currentStage']['name'] : 'Stage';
+                $stageName = $workflowData['currentStage']['name'] ?? 'Stage';
 
                 $fetchedHistory = collect($historyArr)->map(function ($item) use ($stageName) {
-                    $obj = (object)$item;
-                    if (! isset($obj->StatusId)) {
-                        $obj->StatusId = 'A';
-                    }
-                    if (! isset($obj->stage)) {
-                        $obj->stage = (object)['StageName' => $stageName];
-                    }
-                    if (! isset($obj->status)) {
-                        $obj->status = (object)['Description' => 'Approved'];
-                    }
-                    if (! isset($obj->creator)) {
-                        $obj->creator = (object)['Name' => $item->Name ?? 'Unknown'];
-                    }
+                    $obj = (object) $item;
+                    $obj->StatusId = $obj->StatusId ?? 'A';
+                    $obj->stage = $obj->stage ?? (object) ['StageName' => $stageName];
+                    $obj->status = $obj->status ?? (object) ['Description' => 'Approved'];
+                    $obj->creator = $obj->creator ?? (object) ['Name' => $item->Name ?? 'Unknown'];
 
                     return $obj;
                 });
 
                 $history = $history->merge($fetchedHistory);
-
-                Log::info("Workflow history fetched via getWorkflowStatus", ['order_id' => $id, 'history_count' => $history->count()]);
+                Log::info('Workflow history fetched', ['order_id' => $id, 'history_count' => $history->count()]);
             } catch (\Exception $e) {
-                Log::warning("Failed to fetch workflow history", [
+                Log::warning('Failed to fetch workflow history', [
                     'order_id' => $id,
                     'error' => $e->getMessage(),
                 ]);
             }
 
-            // Manually add "Submitted" entry to ensure at least initiation is visible
-            // This runs regardless of fetch success
-            $submitted = (object)[
-                'stage' => (object)['StageName' => 'Initiation'],
-                'status' => (object)['Description' => 'Submitted'],
-                'creator' => (object)['Name' => $order->creator->Name ?? 'Unknown'],
+            // Append a "Submitted" entry so initiation is always visible (oldest, so pushed last).
+            $history->push((object) [
+                'stage' => (object) ['StageName' => 'Initiation'],
+                'status' => (object) ['Description' => 'Submitted'],
+                'creator' => (object) ['Name' => $order->creator->Name ?? 'Unknown'],
                 'CreatedOn' => $order->CreatedOn,
                 'Notes' => 'Order initiated',
                 'StatusId' => '',
-            ];
-            $history->prepend($submitted); // Prepend to be at the start (or Push if order matters? Ascending vs Descending)
-            // View typically iterates top-down. History usually Descending?
-            // If View is "History", usually Newest First?
-            // "Submitted" is Oldest.
-            // If View shows List, usually we want Chronological?
-            // Let's check View again.
-            // View line 117 foreach($history as $record).
-            // It doesn't sort.
-            // Controller `historyForModel` ordered by `CreatedOn desc`.
-            // So Newest First.
-            // So "Submitted" (Oldest) should be LAST (Pushed).
-            // But if I want it to appear at bottom of list...
-            // Wait, if I use Push, it goes to end of collection.
-            // If View iterates, it shows at bottom.
-            // Does View show Newest on Top?
-            // `historyForModel` did `orderBy('CreatedOn', 'desc')`.
-            // So yes, Newest on Top.
-            // So "Submitted" should be at the BOTTOM (End).
-            // So `$history->push($submitted)` is correct.
+            ]);
 
-
-            // Check if user can approve
+            // Check if the current user can approve
             try {
                 $canApprove = $this->workflowService->canApproveModel($order, auth()->user());
-                Log::info("Can approve check completed", ['order_id' => $id, 'can_approve' => $canApprove]);
+                Log::info('Can-approve check completed', ['order_id' => $id, 'can_approve' => $canApprove]);
             } catch (\Exception $e) {
-                Log::warning("Failed to check approval permission", [
+                Log::warning('Failed to check approval permission', [
                     'order_id' => $id,
                     'error' => $e->getMessage(),
                 ]);
@@ -510,30 +536,29 @@ class PurchaseOrderController extends Controller
             try {
                 $workflowStatus = $this->workflowService->getWorkflowStatus($order->getMorphClass(), $order->getKey());
                 $isFullyApproved = ($workflowStatus['totalPending'] ?? 0) === 0;
-                Log::info("Workflow status fetched", ['order_id' => $id, 'status' => $workflowStatus]);
+                Log::info('Workflow status fetched', ['order_id' => $id, 'status' => $workflowStatus]);
             } catch (\Exception $e) {
-                Log::warning("Failed to get workflow status via service, using fallback", [
+                Log::warning('Failed to get workflow status, using fallback', [
                     'order_id' => $id,
                     'error' => $e->getMessage(),
                 ]);
 
-                // Fallback: Query pending table directly to ensure approvers are shown
-                $pendingApprovals = \Illuminate\Support\Facades\DB::table('t_WorkFlowPending as p')
+                $pendingApprovals = DB::table('t_WorkFlowPending as p')
                     ->join('t_WorkFlowStages as s', 'p.StageId', '=', 's.Id')
                     ->leftJoin('t_Users as u', 'p.UserId', '=', 'u.Id')
                     ->leftJoin('t_WorkFlowGroups as g', 'p.GroupId', '=', 'g.Id')
                     ->where('p.Source', $order->getTable())
                     ->where('p.SourceID', $order->Id)
-                    ->select('s.StageName as stage', \Illuminate\Support\Facades\DB::raw("COALESCE(u.Name, g.Name, 'Unknown') as approver"))
+                    ->select('s.StageName as stage', DB::raw("COALESCE(u.Name, g.Name, 'Unknown') as approver"))
                     ->get()
-                    ->map(fn ($row) => (array)$row)
+                    ->map(fn ($row) => (array) $row)
                     ->toArray();
 
                 $workflowStatus = ['pendingApprovals' => $pendingApprovals];
                 $isFullyApproved = count($pendingApprovals) === 0;
             }
 
-            Log::info("Rendering view", ['order_id' => $id]);
+            Log::info('Rendering PO show view', ['order_id' => $id]);
 
             if ($request->ajax()) {
                 return view(
@@ -546,14 +571,13 @@ class PurchaseOrderController extends Controller
                 'procurement.orders.show',
                 compact('orderInfo', 'lineInfo', 'history', 'canApprove', 'isFullyApproved', 'workflowStatus')
             );
+
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            Log::warning("Unauthorized access to Order ID: {$id}", [
-                'user_id' => auth()->id(),
-            ]);
+            Log::warning("Unauthorized access to Order ID: {$id}", ['user_id' => auth()->id()]);
 
             return redirect()->back()->with('error', 'Unauthorized access.');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            Log::error("Order ID {$id} not found");
+            Log::error("Order ID {$id} not found.");
 
             return redirect()->back()->with('error', 'Order not found.');
         }
@@ -564,15 +588,38 @@ class PurchaseOrderController extends Controller
      */
     public function edit($id)
     {
-        $order = $this->orderService->getOrder($id);
-        $this->authorize('update', $order);
+        try {
+            $order = $this->orderService->getOrder($id);
 
-        if (! $order) {
-            return redirect()->back()->with('error', 'Order not found.');
+            if (! $order) {
+                return redirect()->route('purchaseOrder.index')
+                    ->with('error', 'Order not found.');
+            }
+
+            $this->authorize('update', $order);
+
+            $suppliers = SupplierService::getSuppliers();
+            $orderInfo = $this->orderService->fetchOrderDetails($id);
+            $lineInfo = $this->orderService->fetchOrderLineDetails($id);
+            $paymentTerms = $this->fetchPaymentTerms();
+
+            return view(
+                'procurement.orders.edit',
+                compact('order', 'orderInfo', 'lineInfo', 'suppliers', 'paymentTerms')
+            );
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            Log::warning("Unauthorized access to edit Order ID: {$id}", [
+                'user_id' => auth()->id(),
+            ]);
+
+            return redirect()->back()->with('error', 'Unauthorized access.');
+        } catch (\Exception $e) {
+            Log::error("Failed to load edit page for Order ID {$id}", [
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to load order edit page.');
         }
-        $suppliers = SupplierService::getSuppliers();
-
-        return view('procurement.orders.edit', compact('order', 'suppliers'));
     }
 
     /**
@@ -580,12 +627,44 @@ class PurchaseOrderController extends Controller
      */
     public function update(PurchaseOrderRequest $request, $id)
     {
-        $order = $this->orderService->getOrder($id);
-        $this->authorize('update', $order);
+        try {
+            $order = $this->orderService->getOrder($id);
 
-        $this->orderService->updateOrder($id, $request->validated());
+            if (! $order) {
+                return redirect()->route('purchaseOrder.index')
+                    ->with('error', 'Order not found.');
+            }
 
-        return redirect()->route('orders.show', $id)->with('success', 'Order updated successfully.');
+            $this->authorize('update', $order);
+
+            $updated = $this->orderService->updateOrder($id, $request->validated());
+
+            if (! $updated) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Failed to update order. Please try again.');
+            }
+
+            Log::info("Order ID {$id} updated successfully by user " . auth()->id());
+
+            return redirect()->route('purchaseOrder.show', $id)
+                ->with('success', 'Order updated successfully.');
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            Log::warning("Unauthorized update attempt on Order ID: {$id}", [
+                'user_id' => auth()->id(),
+            ]);
+
+            return redirect()->back()->with('error', 'Unauthorized access.');
+        } catch (\Exception $e) {
+            Log::error("Failed to update Order ID {$id}", [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'An unexpected error occurred while updating the order.');
+        }
     }
 
     /**
@@ -597,21 +676,37 @@ class PurchaseOrderController extends Controller
             $order = Order::findOrFail($id);
             $this->authorize('delete', $order);
 
-            $this->orderService->deleteOrder($id);
+            $deleted = $this->orderService->deleteOrder($id);
 
-            return redirect()->route('orders.index')->with('success', 'Order deleted successfully.');
+            if (! $deleted) {
+                return redirect()->back()->with('error', 'Failed to delete order. Please try again.');
+            }
+
+            Log::info("Order ID {$id} deleted by user " . auth()->id());
+
+            return redirect()->route('purchaseOrder.index')->with('success', 'Order deleted successfully.');
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            Log::warning("Unauthorized delete attempt on Order ID: {$id}", [
+                'user_id' => auth()->id(),
+            ]);
+
+            return redirect()->back()->with('error', 'Unauthorized access.');
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error("Order ID {$id} not found for deletion.");
+
+            return redirect()->route('purchaseOrder.index')->with('error', 'Order not found.');
         } catch (\Exception $e) {
-            Log::error("Failed to fetch order ID {$id}", [
+            Log::error("Failed to delete order ID {$id}", [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return redirect()->back()->with('error', 'Failed to fetch order.');
+            return redirect()->back()->with('error', 'Failed to delete order.');
         }
     }
 
     /**
-     * Show approval page
+     * Show the approval page.
      */
     public function approval($id)
     {
@@ -622,27 +717,20 @@ class PurchaseOrderController extends Controller
             $orderInfo = $this->orderService->fetchOrderDetails($id);
             $lineInfo = $this->orderService->fetchOrderLineDetails($id);
 
-            return view(
-                'procurement.orders.approval',
-                compact('orderInfo', 'lineInfo')
-            );
+            return view('procurement.orders.approval', compact('orderInfo', 'lineInfo'));
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            Log::warning("Unauthorized access to Order approval ID: {$id}", [
-                'user_id' => auth()->id(),
-            ]);
+            Log::warning("Unauthorized access to Order approval ID: {$id}", ['user_id' => auth()->id()]);
 
             return redirect()->back()->with('error', 'Unauthorized access.');
         } catch (\Exception $e) {
-            Log::error("Failed to load approval page for Order ID {$id}", [
-                'error' => $e->getMessage(),
-            ]);
+            Log::error("Failed to load approval page for Order ID {$id}", ['error' => $e->getMessage()]);
 
             return redirect()->back()->with('error', 'Failed to load approval page.');
         }
     }
 
     /**
-     * Submit order for approval
+     * Submit an order for approval.
      */
     public function submit(Request $request, $id)
     {
@@ -653,7 +741,7 @@ class PurchaseOrderController extends Controller
             $result = $this->workflowService->submit(
                 $order,
                 auth()->user(),
-                ApprovalEnum::Submitted,  // Pass the enum
+                ApprovalEnum::Submitted,
                 $request->input('remarks', 'Submitted for approval')
             );
 
@@ -663,17 +751,14 @@ class PurchaseOrderController extends Controller
 
             return redirect()->back()->with('error', 'Failed to submit order for approval.');
         } catch (\Exception $e) {
-            Log::error('Order submission failed', [
-                'order_id' => $id,
-                'error' => $e->getMessage(),
-            ]);
+            Log::error('Order submission failed', ['order_id' => $id, 'error' => $e->getMessage()]);
 
             return redirect()->back()->with('error', 'Failed to submit order: ' . $e->getMessage());
         }
     }
 
     /**
-     * Approve an order
+     * Approve an order.
      */
     public function approve(Request $request, $id)
     {
@@ -681,12 +766,11 @@ class PurchaseOrderController extends Controller
             $order = Order::findOrFail($id);
             $this->authorize('approve', $order);
 
-            // Handle rejection delegation
             if ($request->input('action') === 'reject') {
                 return $this->reject($request, $id);
             }
 
-            // Maker-Checker Rule: Prevent self-approval
+            // Maker-Checker Rule: prevent self-approval
             if ($order->CreatedBy == auth()->id()) {
                 Log::warning('Maker-checker violation: User attempted to approve own PO', [
                     'order_id' => $id,
@@ -699,9 +783,9 @@ class PurchaseOrderController extends Controller
             $result = $this->workflowService->approve(
                 $order,
                 auth()->user(),
-                ApprovalEnum::Approved,  // Pass the enum
+                ApprovalEnum::Approved,
                 $request->input('remarks', 'Approved'),
-                'DocStatus'  // Explicitly pass the status column
+                'DocStatus'
             );
 
             if ($result) {
@@ -710,17 +794,14 @@ class PurchaseOrderController extends Controller
 
             return redirect()->back()->with('error', 'Failed to approve order.');
         } catch (\Exception $e) {
-            Log::error('Order approval failed', [
-                'order_id' => $id,
-                'error' => $e->getMessage(),
-            ]);
+            Log::error('Order approval failed', ['order_id' => $id, 'error' => $e->getMessage()]);
 
             return redirect()->back()->with('error', 'Failed to approve order: ' . $e->getMessage());
         }
     }
 
     /**
-     * Reject an order
+     * Reject an order.
      */
     public function reject(Request $request, $id)
     {
@@ -731,9 +812,9 @@ class PurchaseOrderController extends Controller
             $result = $this->workflowService->reject(
                 $order,
                 auth()->user(),
-                ApprovalEnum::Rejected,  // Pass the enum
+                ApprovalEnum::Rejected,
                 $request->input('remarks', 'Rejected'),
-                'DocStatus'  // Explicitly pass the status column
+                'DocStatus'
             );
 
             if ($result) {
@@ -742,17 +823,14 @@ class PurchaseOrderController extends Controller
 
             return redirect()->back()->with('error', 'Failed to reject order.');
         } catch (\Exception $e) {
-            Log::error('Order rejection failed', [
-                'order_id' => $id,
-                'error' => $e->getMessage(),
-            ]);
+            Log::error('Order rejection failed', ['order_id' => $id, 'error' => $e->getMessage()]);
 
             return redirect()->back()->with('error', 'Failed to reject order: ' . $e->getMessage());
         }
     }
 
     /**
-     * Return order for modification
+     * Return an order for modification.
      */
     public function return(Request $request, $id)
     {
@@ -760,11 +838,10 @@ class PurchaseOrderController extends Controller
             $order = Order::findOrFail($id);
             $this->authorize('approve', $order);
 
-            // Use Pending status to return for modification
             $result = $this->workflowService->approve(
                 $order,
                 auth()->user(),
-                ApprovalEnum::Pending,  // Return to pending
+                ApprovalEnum::Pending,
                 $request->input('remarks', 'Returned for modification'),
                 'DocStatus'
             );
@@ -775,17 +852,14 @@ class PurchaseOrderController extends Controller
 
             return redirect()->back()->with('error', 'Failed to return order.');
         } catch (\Exception $e) {
-            Log::error('Order return failed', [
-                'order_id' => $id,
-                'error' => $e->getMessage(),
-            ]);
+            Log::error('Order return failed', ['order_id' => $id, 'error' => $e->getMessage()]);
 
             return redirect()->back()->with('error', 'Failed to return order: ' . $e->getMessage());
         }
     }
 
     /**
-     * Add comment to order workflow
+     * Add a comment to the order workflow.
      */
     public function comment(Request $request, $id)
     {
@@ -793,29 +867,23 @@ class PurchaseOrderController extends Controller
             $order = Order::findOrFail($id);
             $this->authorize('view', $order);
 
-            // You can implement a comment method in ApprovalWorkflow if needed
-            // For now, return info message
             return redirect()->back()->with('info', 'Comment feature not yet implemented.');
         } catch (\Exception $e) {
-            Log::error('Failed to add comment', [
-                'order_id' => $id,
-                'error' => $e->getMessage(),
-            ]);
+            Log::error('Failed to add comment', ['order_id' => $id, 'error' => $e->getMessage()]);
 
             return redirect()->back()->with('error', 'Failed to add comment: ' . $e->getMessage());
         }
     }
 
-    // Add these methods after your comment() method:
+
+    // JSON endpoints
 
     public function getItemDetails($item): JsonResponse
     {
         try {
-            $details = $this->itemService->getItemDetails($item);
-
             return response()->json([
                 'success' => true,
-                'data' => $details,
+                'data' => $this->itemService->getItemDetails($item),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -829,11 +897,9 @@ class PurchaseOrderController extends Controller
     public function getSuppliers(): JsonResponse
     {
         try {
-            $suppliers = SupplierService::getSuppliers();
-
             return response()->json([
                 'success' => true,
-                'data' => $suppliers,
+                'data' => SupplierService::getSuppliers(),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -848,6 +914,7 @@ class PurchaseOrderController extends Controller
         try {
             $details = SupplierService::getSupplierDetails($supplier);
             $address = '';
+
             if ($details) {
                 if (is_array($details) && isset($details['Address'])) {
                     $address = $details['Address'];
@@ -858,9 +925,7 @@ class PurchaseOrderController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'Address' => $address,
-                ],
+                'data' => ['Address' => $address],
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -878,11 +943,11 @@ class PurchaseOrderController extends Controller
         try {
             $RFQ = $this->rfqService->fetchRFQ();
         } catch (\Exception $e) {
-            Log::error('Error fetching RFQS: ' . $e->getMessage());
+            Log::error('Error fetching RFQs: ' . $e->getMessage());
             $RFQ = collect();
         }
 
-        return view("procurement.orders.rfqlink", compact('RFQ'));
+        return view('procurement.orders.rfqlink', compact('RFQ'));
     }
 
     public function fetchRFQDetails($id): JsonResponse
@@ -890,11 +955,9 @@ class PurchaseOrderController extends Controller
         $this->authorize('create', Order::class);
 
         try {
-            $RFQData = $this->rfqService->RFQTOPO($id);
-
             return response()->json([
                 'success' => true,
-                'data' => $RFQData,
+                'data' => $this->rfqService->RFQTOPO($id),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -944,11 +1007,9 @@ class PurchaseOrderController extends Controller
     public function getTenderItems($tenderId)
     {
         try {
-            $items = $this->orderSourceService->getTenderItems($tenderId);
-
             return response()->json([
                 'success' => true,
-                'data' => $items,
+                'data' => $this->orderSourceService->getTenderItems($tenderId),
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to fetch Tender Items: ' . $e->getMessage());
@@ -985,19 +1046,17 @@ class PurchaseOrderController extends Controller
     public function getDirectPlans(): JsonResponse
     {
         try {
-            $plans = $this->orderSourceService->getDirectPlans();
-
             return response()->json([
                 'success' => true,
-                'data' => $plans,
+                'data' => $this->orderSourceService->getDirectPlans(),
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to fetch direct plans: ' . $e->getMessage());
 
             return response()->json([
-               'success' => false,
-               'message' => 'Failed to fetch direct plans',
-               'error' => $e->getMessage(),
+                'success' => false,
+                'message' => 'Failed to fetch direct plans',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -1019,7 +1078,6 @@ class PurchaseOrderController extends Controller
 
     public function getDirectPlanCategories(): JsonResponse
     {
-        // Placeholder implementation - return empty or actual categories linked to plans
         try {
             return response()->json(['success' => true, 'data' => []]);
         } catch (\Exception $e) {
@@ -1030,7 +1088,6 @@ class PurchaseOrderController extends Controller
     public function getPrequalifiedSuppliers($categoryId): JsonResponse
     {
         try {
-            // Basic implementation to return empty list or actual logic if tables known
             return response()->json(['success' => true, 'data' => []]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'data' => []]);
@@ -1066,11 +1123,9 @@ class PurchaseOrderController extends Controller
     public function getDirectPlanItems($planId)
     {
         try {
-            $items = $this->orderSourceService->getDirectPlanItems($planId);
-
             return response()->json([
                 'success' => true,
-                'data' => $items,
+                'data' => $this->orderSourceService->getDirectPlanItems($planId),
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to fetch Direct Plan Items: ' . $e->getMessage());
@@ -1086,12 +1141,11 @@ class PurchaseOrderController extends Controller
     public function getPlanItemCategories($planId): JsonResponse
     {
         try {
-            // Get distinct categories from plan line items for this plan
             $directMethod = DB::table('t_CodeDetails')
                 ->where('CodeID', 'ProcurementMethod')
                 ->where(function ($q) {
                     $q->where('Description', 'LIKE', '%Direct%')
-                        ->orWhere('Value', 'Like', '%Direct%');
+                        ->orWhere('Value', 'LIKE', '%Direct%');
                 })
                 ->value('ID');
 
@@ -1122,30 +1176,21 @@ class PurchaseOrderController extends Controller
     public function prequalifiedSuppliersByCategory($categoryId): JsonResponse
     {
         try {
-            // Get all prequalified suppliers (Active Suppliers)
-            // Use t_Suppliers as the source of active status
-            // Correct logic: t_Suppliers -> t_SupplierMaster -> t_ThirdParties
             $suppliers = DB::table('t_Suppliers as s')
-            ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
-            ->join('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
-            ->where('s.Active_Status', 1)
-            ->whereNull('s.DeletedOn')
-            ->groupBy(
-                'sm.Id',
-                'tp.Id',
-                'tp.TradingName',
-                'tp.ThirdPartyName',
-                'tp.PhysicalAddress'
-            )
-            ->select(
-                DB::raw('MIN(s.Id) as SupplierId'),
-                'sm.Id as SupplierMasterId',
-                'tp.Id as ThirdPartyId',
-                DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName, '') as SupplierName"),
-                DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
-            )
-            ->orderBy('SupplierName')
-            ->get();
+                ->join('t_SupplierMaster as sm', 's.SupplierMasterId', '=', 'sm.Id')
+                ->join('t_ThirdParties as tp', 'sm.ThirdPartyId', '=', 'tp.Id')
+                ->where('s.Active_Status', 1)
+                ->whereNull('s.DeletedOn')
+                ->groupBy('sm.Id', 'tp.Id', 'tp.TradingName', 'tp.ThirdPartyName', 'tp.PhysicalAddress')
+                ->select(
+                    DB::raw('MIN(s.Id) as SupplierId'),
+                    'sm.Id as SupplierMasterId',
+                    'tp.Id as ThirdPartyId',
+                    DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName, '') as SupplierName"),
+                    DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
+                )
+                ->orderBy('SupplierName')
+                ->get();
 
             return response()->json([
                 'success' => true,
@@ -1159,6 +1204,34 @@ class PurchaseOrderController extends Controller
                 'message' => 'Failed to fetch suppliers',
                 'error' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Fetch payment terms from CodeDetails, with a fallback raw query.
+     * Extracted to avoid duplication between create() and its error fallback.
+     */
+    public function fetchPaymentTerms()
+    {
+        try {
+            $terms = CodeDetail::query()
+                ->where('CodeID', 'PaymentTerm')
+                ->orderBy('DisplayOrder')
+                ->get(['ID', 'Description']);
+
+            if ($terms->isEmpty()) {
+                $terms = DB::table('t_CodeDetails')
+                    ->whereIn(DB::raw('RTRIM(LTRIM(CodeID))'), ['PaymentTerm', 'PaymentTerms'])
+                    ->orderBy('DisplayOrder')
+                    ->select('ID', 'Description')
+                    ->get();
+            }
+
+            return $terms;
+        } catch (\Throwable $e) {
+            Log::warning('Failed to fetch payment terms: ' . $e->getMessage());
+
+            return collect();
         }
     }
 }

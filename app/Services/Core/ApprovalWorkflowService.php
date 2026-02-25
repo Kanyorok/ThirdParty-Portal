@@ -1191,6 +1191,12 @@ abstract class ApprovalWorkflowService
                 return (string) $approvedValue;
             }
 
+            // Prefer CodeDetails lookup using the module CodeID when available.
+            $codeDetailsApprovedValue = $this->getApprovedStatusFromCodeDetails($workflowSource, $table);
+            if ($codeDetailsApprovedValue !== null) {
+                return $codeDetailsApprovedValue;
+            }
+
             // Look for common status patterns in the table's code details
             $commonApprovedStatuses = ['a', 'approved', 'complete', 'completed', 'done', 'final'];
 
@@ -1236,6 +1242,44 @@ abstract class ApprovalWorkflowService
             // Ultimate fallback
             return 'a';
         }
+    }
+
+    /**
+     * Resolve final approved status directly from t_CodeDetails for known workflow sources.
+     */
+    private function getApprovedStatusFromCodeDetails(string $workflowSource, string $table): ?string
+    {
+        $codeId = $this->resolveStatusCodeId($workflowSource, $table);
+        if (! $codeId) {
+            return null;
+        }
+
+        $value = DB::table('t_CodeDetails')
+            ->where('CodeID', $codeId)
+            ->whereIn('Description', ['Approved', 'Approval'])
+            ->whereNull('DeletedOn')
+            ->orderByRaw("CASE WHEN Description = 'Approved' THEN 0 ELSE 1 END")
+            ->value('Value');
+
+        return $value ? (string) $value : null;
+    }
+
+    /**
+     * Resolve status CodeID for modules that store status values in t_CodeDetails.
+     */
+    private function resolveStatusCodeId(string $workflowSource, string $table): ?string
+    {
+        $normalizedSource = strtolower(trim($workflowSource));
+        $normalizedTable = strtolower(trim($table));
+
+        $codeIdBySource = [
+            't_rfq' => 'RequisitionStatus',
+            'rfqid' => 'RequisitionStatus',
+        ];
+
+        return $codeIdBySource[$normalizedSource]
+            ?? $codeIdBySource[$normalizedTable]
+            ?? null;
     }
 
     /**

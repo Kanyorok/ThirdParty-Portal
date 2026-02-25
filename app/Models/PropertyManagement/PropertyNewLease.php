@@ -47,6 +47,7 @@ class PropertyNewLease extends Model
         'IsOfferGenerated',
         'CurrencyId',
         'TaxId',
+        'InterestId',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
@@ -115,4 +116,10 @@ class PropertyNewLease extends Model
     {
         return $this->hasMany(PropertyInvoice::class, 'Lease', 'Id');
     }
+
+    public function interest()
+    {
+        return $this->belongsTo(PropertyInterest::class, 'InterestId', 'Id');
+    }
+
 }

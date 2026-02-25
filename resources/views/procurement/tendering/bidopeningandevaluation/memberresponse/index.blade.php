@@ -17,13 +17,25 @@
                     <option value="" disabled selected>-- Select Tender --</option>
                     @foreach ($tenders as $entry)
                         @if($entry->tender)
-                            <option value="{{ $entry->tender->Id }}">
+                            <option value="{{ $entry->tender->Id }}"
+                                    data-role="{{ $entry->Role ?? 'Member' }}"
+                                    data-pending-role="{{ $entry->PendingRole }}">
                                 {{ $entry->tender->TenderNo ?? 'No Tender No' }}
                                 - {{ $entry->tender->Title ?? 'No Title' }}
+                                @if ($entry->PendingRole)
+                                    (Role Change: {{ $entry->Role ?? 'Member' }} → {{ $entry->PendingRole }})
+                                @else
+                                    (Role: {{ $entry->Role ?? 'Member' }})
+                                @endif
                             </option>
                         @endif
                     @endforeach
                 </select>
+            </div>
+
+            {{-- Role info display --}}
+            <div class="mb-3" id="tender-role-info" style="display:none;">
+                <div class="alert alert-info py-2 mb-0" id="tender-role-alert"></div>
             </div>
 
             <div class="mb-3">
@@ -61,12 +73,24 @@
                     <option value="" disabled selected>-- Select RFQ --</option>
                     @foreach ($rfq as $entry)
                         @if($entry->rfq)
-                            <option value="{{ $entry->rfq->Id }}">
+                            <option value="{{ $entry->rfq->Id }}"
+                                    data-role="{{ $entry->Role ?? 'Member' }}"
+                                    data-pending-role="{{ $entry->PendingRole }}">
                                 {{ $entry->rfq->RFQNumber ?? 'No RFQ Number' }}
+                                @if ($entry->PendingRole)
+                                    (Role Change: {{ $entry->Role ?? 'Member' }} → {{ $entry->PendingRole }})
+                                @else
+                                    (Role: {{ $entry->Role ?? 'Member' }})
+                                @endif
                             </option>
                         @endif
                     @endforeach
                 </select>
+            </div>
+
+            {{-- Role info display --}}
+            <div class="mb-3" id="rfq-role-info" style="display:none;">
+                <div class="alert alert-info py-2 mb-0" id="rfq-role-alert"></div>
             </div>
 
             <div class="mb-3">
@@ -110,4 +134,35 @@
     </script>
 @endif
 
+{{-- Dynamic role info display when selecting a tender/RFQ --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    function setupRoleDisplay(selectId, infoId, alertId) {
+        const select = document.getElementById(selectId);
+        const info = document.getElementById(infoId);
+        const alert = document.getElementById(alertId);
+        if (!select || !info || !alert) return;
+
+        select.addEventListener('change', function () {
+            const opt = select.options[select.selectedIndex];
+            const role = opt.getAttribute('data-role') || 'Member';
+            const pendingRole = opt.getAttribute('data-pending-role');
+
+            if (pendingRole) {
+                alert.innerHTML = '<strong>⚠️ Role Change Pending:</strong> ' + role + ' → <strong>' + pendingRole + '</strong>';
+                alert.className = 'alert alert-warning py-2 mb-0';
+            } else {
+                alert.innerHTML = '<strong>Assigned Role:</strong> ' + role;
+                alert.className = 'alert alert-info py-2 mb-0';
+            }
+            info.style.display = 'block';
+        });
+    }
+
+    setupRoleDisplay('tender_id', 'tender-role-info', 'tender-role-alert');
+    setupRoleDisplay('rfq_id', 'rfq-role-info', 'rfq-role-alert');
+});
+</script>
+
 @endsection
+

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Core\Approval\WorkflowPending;
 use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Models\Procurement\ContractMilestone;
@@ -11,6 +12,7 @@ use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQAward;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderAward;
+use Illuminate\Container\Attributes\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -175,8 +177,9 @@ class ContractsController extends Controller
         }
 
         $taxRules = $this->getActiveTaxRules();
+        $paymentTerms = $this->fetchPaymentTerms();
 
-        return view('procurement.contracts.contractcreation.create', compact('award', 'awardType', 'taxRules'));
+        return view('procurement.contracts.contractcreation.create', ['award' => $award, 'awardType' => $awardType, 'taxRules' => $taxRules, 'paymentTerms' => $paymentTerms ?? []]);
     }
 
     /**
@@ -200,7 +203,7 @@ class ContractsController extends Controller
             'contract_tax_id' => 'nullable|exists:t_FinanceTaxRuleConfiguration,Id',
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after:start_date',
-            'payment_terms' => 'required|string',
+            'payment_terms' => 'required|exists:t_CodeDetails,ID',
             'delivery_terms' => 'nullable|string',
             'special_conditions' => 'nullable|string',
             'penalty_type' => 'nullable|in:PER_DAY_DELAY,PERCENT,FIXED',
@@ -359,8 +362,9 @@ class ContractsController extends Controller
 
         $penaltyRule = $this->getActivePenaltyRule($type, (int) $award->Id);
         $taxRules = $this->getActiveTaxRules();
+        $paymentTerms = $this->fetchPaymentTerms();
 
-        return view('procurement.contracts.contractcreation.edit', compact('award', 'type', 'penaltyRule', 'taxRules'));
+        return view('procurement.contracts.contractcreation.edit', compact('award', 'type', 'penaltyRule', 'taxRules', 'paymentTerms'));
     }
 
     /**
@@ -375,7 +379,7 @@ class ContractsController extends Controller
             'contract_tax_id' => 'nullable|exists:t_FinanceTaxRuleConfiguration,Id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
-            'payment_terms' => 'required|string',
+             'payment_terms' => 'required|exists:t_CodeDetails,ID',
             'delivery_terms' => 'nullable|string',
             'special_conditions' => 'nullable|string',
             'penalty_type' => 'nullable|in:PER_DAY_DELAY,PERCENT,FIXED',
@@ -819,7 +823,9 @@ class ContractsController extends Controller
         $award = null;
 
         if ($type === 'rfq') {
-            $award = RFQAward::where('Id', $awardId)->first();
+            $award = RFQAward::where('Id', $awardId)
+                ->where('AwardStatus', 'Approved')
+                ->first();
         } else {
             $award = TenderAward::where('Id', $awardId)
                 ->where('AwardStatus', 'Approved')
@@ -1158,5 +1164,29 @@ class ContractsController extends Controller
 
         return redirect()->route('contracts.show', ['id' => $id, 'type' => $type])
             ->with('success', 'Addendum added successfully.');
+    }
+
+    public function fetchPaymentTerms()
+    {
+        try {
+            $terms = CodeDetail::query()
+                ->where('CodeID', 'PaymentTerm')
+                ->orderBy('DisplayOrder')
+                ->get(['ID', 'Description']);
+
+            if ($terms->isEmpty()) {
+                $terms = DB::table('t_CodeDetails')
+                    ->whereIn(DB::raw('RTRIM(LTRIM(CodeID))'), ['PaymentTerm', 'PaymentTerms'])
+                    ->orderBy('DisplayOrder')
+                    ->select('ID', 'Description')
+                    ->get();
+            }
+
+            return $terms;
+        } catch (\Throwable $e) {
+            Log::warning('Failed to fetch payment terms: ' . $e->getMessage());
+
+            return collect();
+        }
     }
 }

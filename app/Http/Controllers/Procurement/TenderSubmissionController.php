@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Core\Approval\CodeDetail;
 use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\Tender;
+use App\Models\Procurement\TenderInvitation;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -33,6 +35,19 @@ class TenderSubmissionController extends Controller
     {
         $this->authorize(\App\Enums\Core\PermissionEnum::BidSubmissionWrite->value);
         $currencies = \App\Models\Core\Currency::all();
+
+        $paymentTerms = CodeDetail::query()
+                ->where('CodeID', 'PaymentTerm')
+                ->orderBy('DisplayOrder')
+                ->get(['ID', 'Description']);
+
+        if ($paymentTerms->isEmpty()) {
+            $paymentTerms = DB::table('t_CodeDetails')
+                ->whereIn(DB::raw('RTRIM(LTRIM(CodeID))'), ['PaymentTerm', 'PaymentTerms'])
+                ->orderBy('DisplayOrder')
+                ->select('ID', 'Description')
+                ->get();
+        }
         // Exclude tenders that already have submissions & filter by Published status
         $tenders = Tender::select('Id', 'TenderNo', 'Title', 'TenderType', 'SubmissionDeadline')
             ->where('Status', \App\Enums\TenderStatusEnum::Published->value)
@@ -66,7 +81,7 @@ class TenderSubmissionController extends Controller
             ->where('CodeID', 'SubmissionMode')
             ->get(['ID', 'Description']);
 
-        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes', 'currencies'));
+        return view('procurement.tendering.suppliermanagement.bidsubmission.create', compact('tenders', 'suppliers', 'submissionModes', 'currencies', 'paymentTerms'));
     }
 
     public function view($Id)
@@ -143,7 +158,7 @@ class TenderSubmissionController extends Controller
                 return redirect()->back()->withErrors(['supplier_name' => 'Selected supplier not found.'])->withInput();
             }
 
-            // Check if tender is Restricted and if supplier is invited
+            // For Restricted tenders: supplier must be invited AND have accepted the invitation
             if ($tender->TenderType === \App\Enums\TenderTypeEnum::Restricted) {
                 $isInvited = $tender->invitedSuppliers()->where('t_Suppliers.Id', $supplier->Id)->exists();
                 if (! $isInvited) {
@@ -151,11 +166,27 @@ class TenderSubmissionController extends Controller
 
                     return redirect()->back()->withErrors(['supplier_name' => 'This supplier is not invited to this restricted tender.'])->withInput();
                 }
+
+                // Check if supplier has accepted the tender invitation
+                $hasAcceptedInvitation = TenderInvitation::where('TenderId', $tender->Id)
+                    ->where('SupplierId', $supplier->Id)
+                    ->where('ResponseStatus', TenderInvitation::STATUS_ACCEPTED)
+                    ->exists();
+
+                if (! $hasAcceptedInvitation) {
+                    DB::rollBack();
+
+                    return redirect()->back()->withErrors(['supplier_name' => 'This supplier has not accepted the tender invitation. Please record their acceptance first.'])->withInput();
+                }
             }
+
+            // Find all supplier IDs that share the same SupplierMasterId to prevent duplicate bids for the same company
+            $masterId = $supplier->SupplierMasterId ?? ($supplier->supplierMaster ? $supplier->supplierMaster->Id : null);
+            $relatedSupplierIds = $masterId ? Supplier::where('SupplierMasterId', $masterId)->pluck('Id')->toArray() : [$supplier->Id];
 
             // Check for duplicate submission inside the lock
             $existingSubmission = BidSubmission::where('TenderRef', $request->tender_ref)
-                ->where('SupplierId', $supplier->Id)
+                ->whereIn('SupplierId', $relatedSupplierIds)
                 ->exists();
 
             if ($existingSubmission) {
@@ -171,32 +202,41 @@ class TenderSubmissionController extends Controller
             $encryptedDocumentsData = [];
             $masterEncryptionKey = null;
 
+            $documentService = null;
+
             if ($request->hasFile('bid_files')) {
                 $file = $request->file('bid_files');
                 $masterEncryptionKey = Str::random(32);
 
-                // Generate unique filename
-                $originalName = $file->getClientOriginalName();
-                $extension = $file->getClientOriginalExtension();
-                // Safe unique name
-                $encryptedFileName = 'bid_manual_' . $tender->TenderNo . '_' . $supplier->Id . '_' . time() . '.' . $extension;
+                try {
+                    // Create DMS Document
+                    $documentService = \App\Services\DMS\DocumentService::createUpload(
+                        \App\Services\DMS\RepositoryService::module(\App\Enums\Core\ModulesEnum::Procurement),
+                        $file,
+                        $request->user(),
+                        false
+                    );
 
-                // Store file in secure location
-                $storagePath = $file->store('bid-documents', 'local');
+                    $dmsDocument = $documentService->document;
 
-                // Create metadata
-                $documentInfo = [
-                    'original_name' => $originalName,
-                    'stored_path' => $storagePath,
-                    'encrypted_filename' => $encryptedFileName,
-                    'file_size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                    'document_type' => 'manual_submission',
-                    'encrypted_at' => now()->toISOString(),
-                    'encryption_method' => 'Laravel-Crypt',
-                ];
+                    // Create metadata
+                    $documentInfo = [
+                        'document_id' => $dmsDocument->DocumentId, // Critical for preview
+                        'original_name' => $file->getClientOriginalName(),
+                        'stored_path' => $dmsDocument->current->FilePath, // Use DMS path
+                        'encrypted_filename' => $dmsDocument->current->Name,
+                        'file_size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                        'document_type' => 'manual_submission',
+                        'encrypted_at' => now()->toISOString(),
+                        'encryption_method' => 'Laravel-Crypt',
+                    ];
 
-                $encryptedDocumentsData[] = $documentInfo;
+                    $encryptedDocumentsData[] = $documentInfo;
+
+                } catch (\Exception $e) {
+                    throw $e;
+                }
             }
 
             // Prepare encryption columns
@@ -229,6 +269,12 @@ class TenderSubmissionController extends Controller
                 'EncryptionEnvelope' => $encryptionEnvelope,
             ]);
 
+            // faster attachment
+            if ($documentService) {
+                // Use getPrimaryKey() to match the morphMap key
+                $documentService->attach(\App\Models\Procurement\BidSubmission::getPrimaryKey(), $bidSubmission->Id, $request->user());
+            }
+
             $redirect = redirect()->route('tendersubmission.index')
                 ->with('success', 'Bid submission recorded successfully.');
 
@@ -247,13 +293,8 @@ class TenderSubmissionController extends Controller
 
     public function getInvitedSuppliers($tenderId)
     {
-        // Try finding by TenderNo first (as it's passed from Select2 value)
-        $tender = Tender::where('TenderNo', $tenderId)->first();
-
-        // Fallback to ID if not found
-        if (! $tender) {
-            $tender = Tender::find($tenderId);
-        }
+        // Find tender by TenderNo or Id
+        $tender = Tender::where('TenderNo', $tenderId)->first() ?? Tender::find($tenderId);
 
         if (! $tender) {
             return response()->json(['error' => 'Tender not found'], 404);
@@ -261,24 +302,35 @@ class TenderSubmissionController extends Controller
 
         // Get IDs of suppliers who already submitted for this tender
         $submittedSupplierIds = BidSubmission::where('TenderRef', $tender->TenderNo)
-            ->pluck('SupplierId')
-            ->toArray();
+            ->pluck('SupplierId');
 
-        $query = Supplier::query();
+        // Get all related supplier IDs for the same companies to exclude them completely
+        $masterIds = Supplier::whereIn('Id', $submittedSupplierIds)->pluck('SupplierMasterId')->filter();
+        $excludedSupplierIds = Supplier::whereIn('SupplierMasterId', $masterIds)->pluck('Id')->toArray();
+        $allExcludedIds = array_unique(array_merge($submittedSupplierIds->toArray(), $excludedSupplierIds));
 
-        // If Restricted, only show invited suppliers
+        $query = Supplier::query()
+            // Only suppliers who are Approved & Prequalified
+            ->whereHas('supplierMaster', function ($q) {
+                $q->where('ApprovalStatus', \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved)
+                  ->where('IsPrequalified', true);
+            })
+            // Exclude already submitted suppliers
+            ->whereNotIn('Id', $allExcludedIds);
+
+        // Handle restricted tenders: only show suppliers who accepted invitations
         if ($tender->TenderType === \App\Enums\TenderTypeEnum::Restricted) {
-            $query->whereIn('Id', $tender->invitedSuppliers()->pluck('t_Suppliers.Id'));
+            $query->whereHas('tenderInvitations', function ($q) use ($tender) {
+                $q->where('TenderId', $tender->Id)
+                  ->where('ResponseStatus', TenderInvitation::STATUS_ACCEPTED);
+            });
         }
 
-        // Exclude suppliers who have already submitted
-        $query->whereNotIn('Id', $submittedSupplierIds);
-
-        // Fetch suppliers with details
+        // Eager load related party details
         $suppliers = $query->with(['supplierMaster.party'])->get();
 
-        // Map to format expected by frontend (Id, SupplierName)
-        $data = $suppliers->unique('Id')->map(function ($supplier) {
+        // Format for frontend
+        $data = $suppliers->map(function ($supplier) {
             $name = $supplier->supplierMaster->party->TradingName
                 ?? $supplier->supplierMaster->party->ThirdPartyName
                 ?? 'Unknown Supplier';
