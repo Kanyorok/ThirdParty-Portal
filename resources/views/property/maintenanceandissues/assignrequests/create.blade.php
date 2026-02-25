@@ -103,7 +103,7 @@
             </div>
 
             <div class="col-md-4">
-                <label class="form-label">Internal Technician</label>
+                <label class="form-label">Internal Technician<span class="text-danger">*</span></label>
                 <select class="form-select" name="InternalTechnician" id="internalTechnicianSelect">
                     <option value="">-- Select --</option>
                     @foreach ($employees as $emp)
@@ -119,7 +119,7 @@
             </div>
 
             <div class="col-md-4">
-                <label class="form-label">Prequalified Vendor</label>
+                <label class="form-label">Prequalified Vendor<span class="text-danger">*</span></label>
                 <select class="form-select" name="PrequalifiedVendor" id="vendorSelect">
                     <option value="">-- Select --</option>
                     @foreach ($suppliers as $sup)

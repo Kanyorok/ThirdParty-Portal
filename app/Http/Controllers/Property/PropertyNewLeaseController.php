@@ -14,6 +14,7 @@ use App\Models\Core\Currency;
 use App\Models\Finance\FinanceTaxRuleConfiguration;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
+use App\Models\PropertyManagement\PropertyInterest;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyNewTenant;
@@ -65,9 +66,38 @@ class PropertyNewLeaseController extends Controller
 
         $newtenants = PropertyNewTenant::where('IsActive', true)->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
+        $interests = PropertyInterest::with(['tenant.thirdParty', 'property', 'unit'])->get();
 
-        return view('property.tenantmanagement.leasemanagement.leasemaintenance.create', compact('newtenants', 'properties', 'codes', 'taxtypes', 'Currencies'));
+
+        return view('property.tenantmanagement.leasemanagement.leasemaintenance.create', compact('newtenants', 'properties', 'codes', 'taxtypes', 'Currencies','interests'));
     }
+
+    public function getInterestData($id)
+    {
+        $interest = PropertyInterest::with(
+            'tenant',
+            'property',
+            'block',
+            'floor',
+            'unit',
+            'price'
+        )->findOrFail($id);
+
+        return response()->json([
+            'TenantId' => $interest->TenantId,
+            'PropertyId' => $interest->PropertyId,
+            'BlockId' => $interest->BlockId,
+            'FloorId' => $interest->FloorId,
+            'UnitId' => $interest->UnitId,
+            'StartDate' => $interest->InterestedStartDate,
+            'EndDate' => $interest->InterestedEndDate,
+            'PaymentFrequency' => $interest->PaymentFrequency,
+
+            // pricing
+            'pricing' => $interest->price
+        ]);
+    }
+
 
     public function getPricingUnit($UnitId)
     {
@@ -155,9 +185,11 @@ class PropertyNewLeaseController extends Controller
         $paymentFrequency = CodeDetail::findOrFail($data['PaymentFrequency']);
         $CurrencyId = Currency::findOrFail($data['CurrencyId']);
         $TaxId = FinanceTaxRuleConfiguration::findOrFail($data['TaxId']);
+        $InterestId =  PropertyInterest::findOrFail($data['InterestId']) ?? null;
 
         foreach ($request->file('Document', []) as $uploadedFile) {
             $this->service->create(
+                $InterestId,
                 $tenant,
                 $property,
                 $block,
@@ -179,7 +211,7 @@ class PropertyNewLeaseController extends Controller
                 $request->user(),
                 $CurrencyId,
                 $TaxId,
-                $uploadedFile
+                $uploadedFile ?? null
             );
         }
 

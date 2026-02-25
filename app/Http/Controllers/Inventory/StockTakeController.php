@@ -109,7 +109,7 @@ class StockTakeController extends Controller
 
     public function update(Request $request, $id)
     {
-        $this->authorize('update', StockTake::class);
+        $this->authorize(PermissionEnum::StockTakeUpdate, StockTake::class);
 
         $validated = $request->validate([
             'BranchId' => 'required|exists:t_Branches,Id',
@@ -172,7 +172,7 @@ class StockTakeController extends Controller
 
     public function destroy($id)
     {
-        $this->authorize(PermissionEnum::StockTakeDestroy, StockTake::class);
+        $this->authorize(PermissionEnum::StockTakeDelete, StockTake::class);
 
         try {
             $branchId = session('LoginBranchId');
