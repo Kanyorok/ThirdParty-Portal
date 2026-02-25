@@ -1,41 +1,16 @@
-import { getBaseUrl } from "../api-base"
 import { CreateMaintenanceRequestPayload } from "@/types/maintenance"
-
-const request = async (
-    url: string,
-    accessToken: string,
-    options: RequestInit = {}
-) => {
-    const API_BASE_URL = getBaseUrl()
-    if (!API_BASE_URL) throw new Error("API base URL is not defined")
-
-    const isFormData = options.body instanceof FormData
-
-    const res = await fetch(`${API_BASE_URL}${url}`, {
-        ...options,
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-            ...(isFormData
-                ? {}
-                : {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                }),
-            ...options.headers,
-        },
-    })
-
-    if (!res.ok) {
-        const errData = await res.json().catch(() => ({}))
-        throw new Error(errData.message || `Request failed: ${res.status}`)
-    }
-
-    return res.json()
-}
+import { propertyRequest } from "@/lib/api/property-client"
 
 export const maintenanceService = {
     getRequests: (token: string, page = 1, search = "") =>
-        request(`/api/v1/property/maintenancerequest?page=${page}&search=${search}`, token),
+        propertyRequest("/api/v1/property/maintenancerequest", {
+            method: "GET",
+            accessToken: token,
+            query: {
+                page,
+                search: search || undefined,
+            },
+        }),
 
     createRequest: (data: CreateMaintenanceRequestPayload, token: string) => {
         const formData = new FormData()
@@ -52,17 +27,22 @@ export const maintenanceService = {
             })
         }
 
-        return request("/api/v1/property/maintenancerequest", token, {
+        return propertyRequest("/api/v1/property/maintenancerequest", {
             method: "POST",
-            body: formData,
+            accessToken: token,
+            formData,
         })
     },
 
     getRequest: (id: number, token: string) =>
-        request(`/api/v1/property/maintenancerequest/${id}`, token),
+        propertyRequest(`/api/v1/property/maintenancerequest/${id}`, {
+            method: "GET",
+            accessToken: token,
+        }),
 
     deleteRequest: (id: number, token: string) =>
-        request(`/api/v1/property/maintenancerequest/${id}`, token, {
+        propertyRequest(`/api/v1/property/maintenancerequest/${id}`, {
             method: "DELETE",
+            accessToken: token,
         }),
 }

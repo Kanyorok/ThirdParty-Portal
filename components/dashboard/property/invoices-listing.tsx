@@ -5,6 +5,7 @@ import { PaginatedResponse } from "@/types/property"
 import { usePagination } from "@/components/providers/pagination-provider"
 import { InvoiceDetailSheet } from "@/components/dashboard/property/invoice-detail-sheet"
 import { cn } from "@/lib/utils"
+import { downloadInvoicePdf } from "@/lib/api/invoices"
 import {
     FileText,
     Calendar,
@@ -21,13 +22,13 @@ import {
 interface InvoicesListProps {
     initialData: PaginatedResponse<any>
     tenantId?: number
+    accessToken?: string
 }
 
-export function InvoicesList({ initialData, tenantId }: InvoicesListProps) {
+export function InvoicesList({ initialData, tenantId, accessToken }: InvoicesListProps) {
     const { isPending } = usePagination()
     const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null)
     const invoices = initialData?.data || []
-    const currentTenantId = tenantId ?? 9
 
     const getStatusDetails = (status: string) => {
         switch (status) {
@@ -54,8 +55,8 @@ export function InvoicesList({ initialData, tenantId }: InvoicesListProps) {
         }
     }
 
-    const handleDownload = (id: number) => {
-        window.open(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/property/invoices/download/${id}`, '_blank');
+    const handleDownload = async (id: number) => {
+        await downloadInvoicePdf(id, accessToken);
     };
 
     return (
@@ -171,7 +172,11 @@ export function InvoicesList({ initialData, tenantId }: InvoicesListProps) {
                                                     <span className="text-xs font-medium">View</span>
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDownload(invoice.id)}
+                                                    onClick={() => {
+                                                        handleDownload(invoice.id).catch((error) => {
+                                                            console.error("Invoice download failed", error)
+                                                        })
+                                                    }}
                                                     className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all group/btn"
                                                 >
                                                     <Download className="h-4 w-4 transition-transform group-hover/btn:-translate-y-0.5" strokeWidth={2} />
@@ -189,7 +194,8 @@ export function InvoicesList({ initialData, tenantId }: InvoicesListProps) {
             <InvoiceDetailSheet
                 id={selectedInvoiceId}
                 onClose={() => setSelectedInvoiceId(null)}
-                tenantId={currentTenantId}
+                tenantId={tenantId}
+                accessToken={accessToken}
             />
         </>
     )

@@ -103,6 +103,22 @@ function computeRFQBreakdown(rfqs: any[]): RFQBreakdown {
     )
 }
 
+type TenderLifecycle = keyof TenderBreakdown
+
+function resolveTenderLifecycle(tender: any): TenderLifecycle {
+    const status = String(tender?.status ?? tender?.Status ?? "")
+        .trim()
+        .toLowerCase()
+    const submissionDeadline = tender?.submissionDeadline ?? tender?.SubmissionDeadline ?? null
+    const closedByDeadline = isClosedByDeadline(
+        submissionDeadline == null ? null : String(submissionDeadline)
+    )
+
+    if (closedByDeadline || status === "cl" || status === "closed") return "closed"
+    if (status === "dr" || status === "draft" || status === "archived") return "draft"
+    return "open"
+}
+
 function pickRowsFromPayload(payload: any): any[] {
     for (const candidate of [
         payload?.data?.data,
@@ -259,9 +275,7 @@ export async function getDashboardData() {
     }
 
     const tenantId = resolveTenantIdFromSessionUser(user)
-    const hasTenantProfile = Boolean(
-        (user?.isTenant ?? user?.is_tenant) && tenantId
-    )
+    const hasTenantProfile = Boolean(user?.isTenant ?? user?.is_tenant)
 
     const preqItems =
         preqRes.status === "fulfilled"
@@ -299,17 +313,15 @@ export async function getDashboardData() {
             : []
     const tenderBreakdown: TenderBreakdown = { open: 0, draft: 0, closed: 0 }
     tenderItems.forEach((tender: any) => {
-        const status = String(tender?.status || tender?.Status || "").toLowerCase()
-        if (status === "dr" || status === "draft") {
-            tenderBreakdown.draft++
-        } else if (status === "cl" || status === "closed" || status === "archived") {
-            tenderBreakdown.closed++
-        } else {
-            tenderBreakdown.open++
-        }
+        const lifecycle = resolveTenderLifecycle(tender)
+        tenderBreakdown[lifecycle] += 1
     })
 
-    const tendersAvailable = tenderVal?.total ?? tenderItems.length
+    const totalTenders = Number.isFinite(Number(tenderVal?.total))
+        ? Number(tenderVal?.total)
+        : tenderItems.length
+    const openTenders = tenderBreakdown.open
+    const tendersAvailable = openTenders
     const bidsVal = bidsRes.status === "fulfilled" ? bidsRes.value : null
     const bidItems = Array.isArray((bidsVal as any)?.items)
         ? (bidsVal as any).items
@@ -337,14 +349,21 @@ export async function getDashboardData() {
 
     let tenantBreakdown: TenantBreakdown | null = null
 
-    if (hasTenantProfile && tenantId) {
+    if (hasTenantProfile) {
+        const leaseParams = new URLSearchParams({ page: "1" })
+        const invoiceParams = new URLSearchParams({ page: "1" })
+        if (tenantId) {
+            leaseParams.set("id", String(tenantId))
+            invoiceParams.set("tenant_id", String(tenantId))
+        }
+
         const [leasesRes, invoicesRes] = await Promise.allSettled([
-            fetch(`${API_BASE}/api/v1/property/leases/tenant?id=${tenantId}&page=1`, {
+            fetch(`${API_BASE}/api/v1/property/leases/tenant?${leaseParams.toString()}`, {
                 headers,
                 cache: "no-store",
             }).then((r) => r.json()),
             fetch(
-                `${API_BASE}/api/v1/property/invoices/tenant?tenant_id=${tenantId}&page=1`,
+                `${API_BASE}/api/v1/property/invoices/tenant?${invoiceParams.toString()}`,
                 {
                     headers,
                     cache: "no-store",
@@ -439,6 +458,8 @@ export async function getDashboardData() {
             completedPreq,
             directInvites: rfqData.length,
             tendersAvailable,
+            openTenders,
+            totalTenders,
             rfqsInvited: rfqBreakdown.invited,
             myBids,
             submittedBids: bidBreakdown.submitted,

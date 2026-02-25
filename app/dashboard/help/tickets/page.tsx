@@ -11,6 +11,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/common/native-sel
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/common/table"
 import { Textarea } from "@/components/common/textarea"
 import { AlertCircle, ArrowUpRight, CheckCircle2, Download, Eye, Filter, LifeBuoy, Plus, RefreshCw, Save, Search, X } from "lucide-react"
+import { toast } from "sonner"
 
 const STORAGE_KEY = "portal_help_ticket_filters_v2"
 const DEFAULT_PAGE_SIZE = 10
@@ -23,6 +24,7 @@ type Ticket = { id: string; subject: string; status: string; priority: string; r
 type SortKey = "newest" | "oldest"
 type Filters = { search: string; status: string; severity: string; sort: SortKey }
 type CreateFieldErrors = { subject?: string; message?: string }
+type NoticeTone = "success" | "info"
 
 const DEFAULT_FILTERS: Filters = { search: "", status: "all", severity: "all", sort: "newest" }
 
@@ -142,16 +144,12 @@ function validateTicketPayload(subject: string, message: string): { ok: boolean;
 
   if (!cleanSubject) {
     nextErrors.subject = "Subject is required."
-  } else if (cleanSubject.length < 8) {
-    nextErrors.subject = "Subject should be at least 8 characters."
   } else if (cleanSubject.length > 120) {
     nextErrors.subject = "Subject should be 120 characters or less."
   }
 
   if (!cleanMessage) {
     nextErrors.message = "Message is required."
-  } else if (cleanMessage.length < 24) {
-    nextErrors.message = "Message should be at least 24 characters so support can act quickly."
   } else if (cleanMessage.length > 2000) {
     nextErrors.message = "Message should be 2000 characters or less."
   }
@@ -179,11 +177,22 @@ function pageItems(page: number, last: number): Array<number | string> {
   return out
 }
 
+function createdTicketIdFrom(body: any): string {
+  return s(
+    body?.data?.ticket?.id ??
+      body?.data?.id ??
+      body?.ticket?.id ??
+      body?.id ??
+      body?.ticket_id ??
+      body?.data?.ticket_id,
+  ).trim()
+}
+
 export default function TicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
+  const [notice, setNotice] = useState<{ message: string; tone: NoticeTone } | null>(null)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [lastPage, setLastPage] = useState(1)
@@ -254,6 +263,7 @@ export default function TicketsPage() {
 
   useEffect(() => {
     if (!notice) return
+    if (notice.tone === "success") return
     const t = setTimeout(() => setNotice(null), 2600)
     return () => clearTimeout(t)
   }, [notice])
@@ -289,10 +299,10 @@ export default function TicketsPage() {
     transitionDelay: filtersOpen ? `${80 + index * 70}ms` : "0ms",
   })
 
-  const clearFilters = () => { setFilters(DEFAULT_FILTERS); setPage(1); setNotice("Filters cleared.") }
-  const saveFilters = () => { if (typeof window !== "undefined") window.localStorage.setItem(STORAGE_KEY, JSON.stringify(filters)); setNotice("Filters saved.") }
+  const clearFilters = () => { setFilters(DEFAULT_FILTERS); setPage(1); setNotice({ message: "Filters cleared.", tone: "info" }) }
+  const saveFilters = () => { if (typeof window !== "undefined") window.localStorage.setItem(STORAGE_KEY, JSON.stringify(filters)); setNotice({ message: "Filters saved.", tone: "info" }) }
   const exportCsv = () => {
-    if (!visible.length) return setNotice("No rows to export on this page.")
+    if (!visible.length) return setNotice({ message: "No rows to export on this page.", tone: "info" })
     const head = [["Ticket ID", "Label", "Status", "Severity", "Dated"]]
     const csv = [...head, ...visible.map((t) => [t.id, t.subject, t.status, t.priority, fmtDate(t.createdAt || t.updatedAt)])]
       .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n")
@@ -328,15 +338,18 @@ export default function TicketsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           subject: check.cleanSubject,
+          title: check.cleanSubject,
           message: check.cleanMessage,
+          description: check.cleanMessage,
           priority: createSeverity,
+          severity: createSeverity,
         }),
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok || body?.success === false) {
         const errors = body?.errors ?? {}
         const subjectErr = readText(errors?.subject?.[0] ?? errors?.title?.[0] ?? errors?.label?.[0])
-        const messageErr = readText(errors?.message?.[0] ?? errors?.content?.[0] ?? errors?.body?.[0])
+        const messageErr = readText(errors?.message?.[0] ?? errors?.description?.[0] ?? errors?.content?.[0] ?? errors?.body?.[0])
         if (subjectErr || messageErr) {
           setCreateFieldErrors((prev) => ({
             ...prev,
@@ -344,14 +357,27 @@ export default function TicketsPage() {
             message: messageErr || prev.message,
           }))
         }
-        throw new Error(s(body?.message).trim() || "Failed to submit ticket")
+        const serverMessage = s(body?.message).trim() || "Failed to submit ticket"
+        throw new Error(serverMessage)
       }
+      const createdTicketId = createdTicketIdFrom(body)
       resetCreateForm()
       setCreateOpen(false)
-      setNotice("Ticket submitted successfully.")
-      setPage(1); await loadTickets(1, filters.status, filters.severity)
+      const successMessage = createdTicketId
+        ? `Ticket #${createdTicketId} submitted and routed to support.`
+        : "Ticket submitted and routed to support."
+      setNotice({ message: successMessage, tone: "success" })
+      toast.success(successMessage, {
+        className:
+          "!border-emerald-500/40 !bg-emerald-50 !text-emerald-800 dark:!border-emerald-500/35 dark:!bg-emerald-950/45 dark:!text-emerald-200",
+      })
+      setFilters((prev) => ({ ...prev, search: "", status: "all", severity: "all" }))
+      setPage(1)
+      await loadTickets(1, "all", "all")
     } catch (e: any) {
-      setCreateError(e?.message || "Failed to submit ticket")
+      const message = e?.message || "Failed to submit ticket"
+      setCreateError(message)
+      toast.error(message)
     } finally {
       setCreateBusy(false)
     }
@@ -496,7 +522,26 @@ export default function TicketsPage() {
           </div>
         </section>
 
-        {notice && <p className="text-xs font-medium text-primary">{notice}</p>}
+        {notice && (
+          <div
+            className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium ${
+              notice.tone === "success"
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                : "border-primary/25 bg-primary/10 text-primary"
+            }`}
+          >
+            {notice.tone === "success" ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Filter className="h-3.5 w-3.5" />}
+            {notice.message}
+            <button
+              type="button"
+              onClick={() => setNotice(null)}
+              className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-md text-current/80 transition-colors hover:bg-black/5 hover:text-current dark:hover:bg-white/10"
+              aria-label="Dismiss notice"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
 
         <Dialog
           open={createOpen}
@@ -573,18 +618,9 @@ export default function TicketsPage() {
                   {createError}
                 </p>
               )}
-              <div className="flex flex-wrap items-center gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
-                <Button type="submit" className="h-10 rounded-xl border border-emerald-600 bg-emerald-600 px-4 text-xs font-semibold text-white transition-colors hover:bg-emerald-500" disabled={createBusy}>
+              <div className="border-t border-slate-200 pt-4 dark:border-slate-800">
+                <Button type="submit" className="h-11 w-full rounded-xl border border-emerald-600 bg-emerald-600 px-6 text-sm font-semibold text-white transition-colors hover:bg-emerald-500" disabled={createBusy}>
                   {createBusy ? "Submitting..." : <><CheckCircle2 className="mr-1.5 h-4 w-4" />Submit ticket</>}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10 rounded-xl border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                  disabled={createBusy}
-                  onClick={() => setCreateOpen(false)}
-                >
-                  Cancel
                 </Button>
               </div>
             </form>

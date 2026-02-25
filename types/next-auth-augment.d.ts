@@ -8,6 +8,9 @@ declare module "next-auth" {
       id?: string
       user_id?: number
       userId?: number
+      tenant_id?: number | null
+      tenantId?: number | null
+      tenantMaintenanceId?: number | null
       third_party_id?: number | null
       is_supplier?: boolean
       is_tenant?: boolean
@@ -44,6 +47,9 @@ declare module "next-auth" {
     id?: string
     user_id?: number
     userId?: number
+    tenant_id?: number | null
+    tenantId?: number | null
+    tenantMaintenanceId?: number | null
     third_party_id?: number | null
     first_name?: string
     last_name?: string
@@ -73,6 +79,9 @@ declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
     user_id?: number
     userId?: number
+    tenant_id?: number | null
+    tenantId?: number | null
+    tenantMaintenanceId?: number | null
     third_party_id?: number | null
     first_name?: string
     last_name?: string

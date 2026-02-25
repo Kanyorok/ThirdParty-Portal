@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { InvoicesList } from "@/components/dashboard/property/invoices-listing"
 import { Skeleton } from "@/components/common/skeleton"
@@ -13,7 +13,12 @@ import { cn } from "@/lib/utils"
 import { useSearchParams } from "next/navigation"
 import { getInvoices } from "@/lib/api/invoices"
 import { useSession } from "next-auth/react"
-import { resolveTenantIdFromSessionUser } from "@/lib/profile/resolve-tenant-id"
+import {
+    resolveTenantIdFromProfilesPayload,
+    resolveTenantIdFromSessionUser,
+} from "@/lib/profile/resolve-tenant-id"
+import { resolveUserIdFromSessionUser } from "@/lib/profile/resolve-user-id"
+import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
 
 export default function InvoicesRegistry() {
     const [searchQuery, setSearchQuery] = useState("")
@@ -21,12 +26,45 @@ export default function InvoicesRegistry() {
     const searchParams = useSearchParams()
 
     const page = Number(searchParams.get("page")) || 1
-    const { data: session } = useSession()
-    const tenantId = resolveTenantIdFromSessionUser(session?.user) ?? 9
+    const { data: session, status } = useSession()
+    const sessionTenantId = resolveTenantIdFromSessionUser(session?.user)
+    const [tenantId, setTenantId] = useState<number | null>(sessionTenantId)
+    const userId = resolveUserIdFromSessionUser(session?.user)
+    const accessToken = resolveSessionAccessToken(session as any)
+    const isSessionLoading = status === "loading"
+
+    useEffect(() => {
+        setTenantId(sessionTenantId)
+    }, [sessionTenantId])
+
+    useEffect(() => {
+        if (tenantId) return
+        if (!session?.user) return
+
+        let active = true
+        fetch("/api/portal/profiles", { cache: "no-store" })
+            .then(async (res) => {
+                if (!res.ok) return null
+                return res.json().catch(() => null)
+            })
+            .then((payload) => {
+                if (!active || !payload) return
+                const resolved = resolveTenantIdFromProfilesPayload(payload, [userId])
+                if (resolved) setTenantId(resolved)
+            })
+            .catch(() => {
+                // Best effort fallback only.
+            })
+
+        return () => {
+            active = false
+        }
+    }, [tenantId, session?.user, userId])
 
     const { data, isLoading, isError, refetch, isFetching } = useQuery({
-        queryKey: ['invoices', page, debouncedSearch, tenantId],
-        queryFn: () => getInvoices(page, tenantId, debouncedSearch),
+        queryKey: ['invoices', page, debouncedSearch, tenantId, accessToken],
+        queryFn: () => getInvoices(page, tenantId, debouncedSearch, accessToken),
+        enabled: Boolean(accessToken),
         placeholderData: (previousData) => previousData,
     })
 
@@ -86,7 +124,7 @@ export default function InvoicesRegistry() {
                 </div>
             </header>
 
-            {isLoading && !data ? (
+            {(isLoading || isSessionLoading) && !data ? (
                 <div className="rounded-[2.5rem] border border-border/40 bg-background/50 overflow-hidden">
                     <div className="h-20 bg-sky-50/50 dark:bg-sky-950/20 border-b border-sky-100 dark:border-sky-900/30 px-10 flex items-center gap-6">
                         <Skeleton className="h-5 w-40 rounded-full" />
@@ -114,7 +152,7 @@ export default function InvoicesRegistry() {
                             "transition-all duration-700 ease-in-out",
                             isFetching && data ? 'opacity-30 grayscale blur-[3px] pointer-events-none' : 'opacity-100'
                         )}>
-                            <InvoicesList initialData={data} tenantId={tenantId} />
+                            <InvoicesList initialData={data} tenantId={tenantId} accessToken={accessToken} />
                         </div>
 
                         {hasData && (

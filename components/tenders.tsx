@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { format } from "date-fns"
-import { ArrowUpRight, FileCheck2, Inbox, Loader2, Search, Timer, X } from "lucide-react"
+import { ArrowUpRight, FileCheck2, Inbox, Search, Timer, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import Loading from "@/components/common/custom-loader"
 import { Input } from "@/components/common/input"
 import { Button } from "@/components/common/button"
 import {
@@ -56,30 +57,17 @@ function statusText(status: string) {
 
 function statusTone(status: string, closedByDeadline = false) {
   if (closedByDeadline || status === "cl") {
-    return "bg-rose-50/90 text-rose-700 border-rose-200"
+    return "text-rose-700 border-rose-200"
   }
   switch (status) {
     case "pb":
-      return "bg-emerald-50/90 text-emerald-700 border-emerald-200"
+      return "text-emerald-700 border-emerald-200"
     case "dr":
-      return "bg-slate-100 text-slate-700 border-slate-200"
+      return "text-slate-700 border-slate-200"
     case "opening_in_progress":
-      return "bg-amber-50/90 text-amber-700 border-amber-200"
+      return "text-amber-700 border-amber-200"
     default:
-      return "bg-slate-100 text-slate-700 border-slate-200"
-  }
-}
-
-function invitationTone(status: string) {
-  switch (status) {
-    case "accepted":
-      return "bg-emerald-50/90 text-emerald-700 border-emerald-200"
-    case "pending":
-      return "bg-amber-50/90 text-amber-700 border-amber-200"
-    case "declined":
-      return "bg-rose-50/90 text-rose-700 border-rose-200"
-    default:
-      return "bg-slate-100 text-slate-700 border-slate-200"
+      return "text-slate-700 border-slate-200"
   }
 }
 
@@ -112,6 +100,7 @@ function deadlineMeta(deadline?: string | null) {
 
 type AnyRecord = Record<string, any>
 type TenderLifecycle = "active" | "closed" | "archived"
+type TenderAccessFilter = "all" | "open-to-all" | "direct-invites"
 
 function resolveLifecycle(statusValue: string, closedByDeadline: boolean): TenderLifecycle {
   if (closedByDeadline || statusValue === "cl") return "closed"
@@ -119,9 +108,40 @@ function resolveLifecycle(statusValue: string, closedByDeadline: boolean): Tende
   return "active"
 }
 
+function resolveAccessFilter(typeValue: string, hasInvitation: boolean): Exclude<TenderAccessFilter, "all"> {
+  const normalized = String(typeValue ?? "").trim().toLowerCase()
+  if (
+    [
+      "rs",
+      "restricted",
+      "direct",
+      "direct_invite",
+      "direct-invites",
+      "invite_only",
+      "invite-only",
+      "invited",
+      "private",
+    ].includes(normalized)
+  ) {
+    return "direct-invites"
+  }
+  if (["op", "open", "open_to_all", "open-to-all", "public"].includes(normalized)) {
+    return "open-to-all"
+  }
+  return hasInvitation ? "direct-invites" : "open-to-all"
+}
+
+function tenderActionLabel(isActionable: boolean, closingSoon: boolean, isDirectInvite: boolean) {
+  if (!isActionable) return "View details"
+  if (closingSoon) return "Respond now"
+  if (isDirectInvite) return "Accept invite"
+  return "Start bid"
+}
+
 export default function TendersFilter() {
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("all")
+  const [access, setAccess] = useState<TenderAccessFilter>("all")
   const [loading, setLoading] = useState(false)
   const [tenders, setTenders] = useState<unknown[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -148,10 +168,10 @@ export default function TendersFilter() {
         const invitation = isRecord(entry) && isRecord(entry.invitation) ? entry.invitation : entry
         const tenderId = String(
           invitation?.TenderId ??
-            invitation?.tenderId ??
-            entry?.tender?.id ??
-            entry?.tender?.Id ??
-            ""
+          invitation?.tenderId ??
+          entry?.tender?.id ??
+          entry?.tender?.Id ??
+          ""
         ).trim()
         if (tenderId) map[tenderId] = invitation
       })
@@ -239,15 +259,24 @@ export default function TendersFilter() {
   }, [tenders])
 
   const filteredTenders = useMemo(() => {
-    if (status === "all") return tenders
     return tenders.filter((t) => {
       const o = isRecord(t) ? t : {}
+      const id = String(pick(o, ["id", "Id", "TenderID", "tender_id"]) ?? "").trim()
       const statusValue = String(pick(o, ["status", "Status"]) ?? "").toLowerCase()
       const deadline = String(pick(o, ["submissionDeadline", "SubmissionDeadline"]) ?? "")
       const lifecycle = resolveLifecycle(statusValue, deadlineMeta(deadline || null).closed)
-      return lifecycle === status
+      const matchesStatus = status === "all" ? true : lifecycle === status
+      if (!matchesStatus) return false
+
+      if (access === "all") return true
+
+      const tenderType = String(
+        pick(o, ["tenderType", "TenderType", "tender_type", "type", "Type"]) ?? ""
+      )
+      const accessType = resolveAccessFilter(tenderType, Boolean(id && invitationMap[id]))
+      return accessType === access
     })
-  }, [status, tenders])
+  }, [access, invitationMap, status, tenders])
 
   const selectedTenderId =
     selected && isRecord(selected)
@@ -255,267 +284,289 @@ export default function TendersFilter() {
       : ""
   const selectedInvitation = selectedTenderId ? invitationMap[selectedTenderId] ?? null : null
 
-  const statCards = [
-    {
-      label: "Active",
-      value: summary.active,
-      tone: "text-indigo-600",
-      accent: "bg-indigo-500/80",
-      surface: "bg-indigo-50/55 border-indigo-200/80",
-    },
-    {
-      label: "Closed",
-      value: summary.closed,
-      tone: "text-rose-600",
-      accent: "bg-rose-500/80",
-      surface: "bg-rose-50/55 border-rose-200/80",
-    },
-    {
-      label: "Archived",
-      value: summary.archived,
-      tone: "text-slate-700",
-      accent: "bg-slate-500/70",
-      surface: "bg-slate-100/65 border-slate-200/90",
-    },
-  ]
+  const normalizedTenders = useMemo(() => {
+    return filteredTenders.map((t) => {
+      const o = isRecord(t) ? t : {}
+      const id = String(pick(o, ["id", "Id", "TenderID", "tender_id"]) ?? "")
+      const title = String(pick(o, ["title", "TenderTitle"]) ?? "Untitled Tender")
+      const ref = String(pick(o, ["tenderNo", "TenderNo"]) ?? "—")
+      const statusValue = String(pick(o, ["status", "Status"]) ?? "").toLowerCase()
+      const typeValue = String(
+        pick(o, ["tenderType", "TenderType", "tender_type", "type", "Type"]) ?? ""
+      )
+      const deadlineRaw = String(pick(o, ["submissionDeadline", "SubmissionDeadline"]) ?? "")
+      const parsedDeadline = deadlineRaw ? new Date(deadlineRaw) : null
+      const deadlineText =
+        parsedDeadline && !Number.isNaN(parsedDeadline.getTime())
+          ? format(parsedDeadline, "dd MMM yyyy")
+          : "No deadline"
+      const deadline = deadlineMeta(deadlineRaw || null)
+      const invitation = invitationMap[id]
+      const accessType = resolveAccessFilter(typeValue, Boolean(invitation))
+      const typeText = accessType === "direct-invites" ? "Direct invite" : "Open to all"
+      const effectiveStatusValue = deadline.closed ? "cl" : statusValue
+      const isActionable = statusValue === "pb" && !deadline.closed
+      const isDirectInvite = accessType === "direct-invites"
+      const rowAccentBorder = deadline.closed
+        ? "border-l-rose-400"
+        : statusValue === "pb"
+          ? "border-l-indigo-500"
+          : statusValue === "opening_in_progress"
+            ? "border-l-amber-400"
+            : "border-l-slate-300"
+      const actionLabel = tenderActionLabel(isActionable, deadline.closingSoon, isDirectInvite)
+
+      return {
+        key: id || `${ref}-${title}`,
+        raw: o as AnyRecord,
+        title,
+        ref,
+        deadline,
+        deadlineText,
+        typeText,
+        effectiveStatusValue,
+        isActionable,
+        isDirectInvite,
+        actionLabel,
+        rowAccentBorder,
+      }
+    })
+  }, [filteredTenders, invitationMap])
+
+  const accessSummary = useMemo(() => {
+    let openToAll = 0
+    let directInvites = 0
+
+    tenders.forEach((t) => {
+      const o = isRecord(t) ? t : {}
+      const id = String(pick(o, ["id", "Id", "TenderID", "tender_id"]) ?? "").trim()
+      const tenderType = String(
+        pick(o, ["tenderType", "TenderType", "tender_type", "type", "Type"]) ?? ""
+      )
+      const accessType = resolveAccessFilter(tenderType, Boolean(id && invitationMap[id]))
+      if (accessType === "direct-invites") directInvites += 1
+      else openToAll += 1
+    })
+
+    return { openToAll, directInvites }
+  }, [invitationMap, tenders])
+
+  const statusFilterOptions = [
+    { value: "all", label: "All", count: tenders.length },
+    { value: "active", label: "Active", count: summary.active },
+    { value: "closed", label: "Closed", count: summary.closed },
+    { value: "archived", label: "Archived", count: summary.archived },
+  ] as const
+
+  const accessFilterOptions = [
+    { value: "all", label: "All types", count: tenders.length },
+    { value: "open-to-all", label: "Open to all", count: accessSummary.openToAll },
+    { value: "direct-invites", label: "Direct invites", count: accessSummary.directInvites },
+  ] as const
+
+  const sections = useMemo(() => {
+    if (status !== "all" || access !== "all") {
+      return [{ id: "matching", title: "Matching tenders", items: normalizedTenders }]
+    }
+
+    const priority = normalizedTenders.filter(
+      (item) => item.isActionable && (item.deadline.closingSoon || item.isDirectInvite)
+    )
+    const remaining = normalizedTenders.filter(
+      (item) => !(item.isActionable && (item.deadline.closingSoon || item.isDirectInvite))
+    )
+
+    const grouped: Array<{ id: string; title: string; items: typeof normalizedTenders }> = []
+    if (priority.length) grouped.push({ id: "priority", title: "Priority opportunities", items: priority })
+    if (remaining.length) grouped.push({ id: "all", title: "All opportunities", items: remaining })
+    return grouped
+  }, [access, normalizedTenders, status])
 
   return (
-    <section className="w-full space-y-5 rounded-2xl border border-slate-200/70 bg-gradient-to-b from-slate-50/60 via-white to-white p-3 sm:p-4">
-      <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-start gap-4">
-          <div className="mt-1 h-9 w-1 rounded-full bg-indigo-600" />
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
-                Available Tenders
-              </h1>
-              <span className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
-                {summary.active} active
-              </span>
+    <section className="w-full space-y-5 [&_*]:shadow-none [&_*]:drop-shadow-none">
+      <header className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 text-primary">
+              <FileCheck2 className="h-4 w-4" />
             </div>
+            <h1 className="text-xl font-semibold tracking-tight text-foreground">Available Tenders</h1>
           </div>
         </div>
 
-        <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+            <span>Total: {tenders.length}</span>
+            <span aria-hidden>-</span>
+            <span>Active: {summary.active}</span>
+          </div>
           <Button
             asChild
-            className="h-9 rounded-full border border-indigo-600 bg-indigo-600 px-3 text-xs font-semibold text-white hover:bg-indigo-700"
+            variant="outline"
+            className="h-9 rounded-xl border-border/60 !bg-transparent px-3 text-xs font-semibold hover:!bg-transparent"
           >
             <Link href="/dashboard/supplier/bids">
               My bids
-              <FileCheck2 className="ml-1.5 h-4 w-4" />
+              <ArrowUpRight className="ml-1.5 h-4 w-4" />
             </Link>
           </Button>
-
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search tender ref or title"
-              className="h-9 rounded-full border-slate-300 pl-10 pr-9 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-            />
-            {search ? (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full hover:bg-slate-100"
-              >
-                <X className="h-4 w-4 text-slate-400" />
-              </button>
-            ) : null}
-          </div>
-
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="h-9 w-full rounded-full border-slate-300 bg-white text-xs font-medium sm:w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="closed">Closed</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </header>
 
-      <div className="flex flex-wrap gap-2">
-        {[
-          { id: "all", label: "All", count: tenders.length },
-          { id: "active", label: "Active", count: summary.active },
-          { id: "closed", label: "Closed", count: summary.closed },
-          { id: "archived", label: "Archived", count: summary.archived },
-        ].map((item) => (
-          <button
-            type="button"
-            key={item.id}
-            onClick={() => setStatus(item.id)}
-            className={cn(
-              "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition",
-              status === item.id
-                ? "border-indigo-200 bg-indigo-50 text-indigo-700"
-                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-            )}
-          >
-            <span>{item.label}</span>
-            <span
-              className={cn(
-                "inline-flex h-5 min-w-5 items-center justify-center rounded-md px-1.5 text-[11px]",
-                status === item.id ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-600"
-              )}
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+        <div className="relative w-full lg:flex-1">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by tender ref or title"
+            className="h-10 rounded-full border-border/60 bg-transparent pl-10 pr-9 text-sm focus:border-primary/50 focus:ring-0"
+          />
+          {search ? (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full"
             >
-              {item.count}
-            </span>
-          </button>
-        ))}
+              <X className="h-4 w-4 text-slate-400" />
+            </button>
+          ) : null}
+        </div>
+
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:flex">
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger className="h-10 min-w-[170px] rounded-full border-border/60 bg-transparent text-xs font-medium shadow-none">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {statusFilterOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label} ({option.count})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={access} onValueChange={(value) => setAccess(value as TenderAccessFilter)}>
+            <SelectTrigger className="h-10 min-w-[180px] rounded-full border-border/60 bg-transparent text-xs font-medium shadow-none">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {accessFilterOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label} ({option.count})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-3">
-        {statCards.map((card) => (
-          <div
-            key={card.label}
-            className={cn(
-              "relative overflow-hidden rounded-2xl border px-3.5 py-2.5",
-              card.surface
-            )}
-          >
-            <div className={cn("absolute left-0 top-0 h-0.5 w-full", card.accent)} />
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              {card.label}
-            </div>
-            <div className={cn("mt-2 text-2xl font-semibold", card.tone)}>{card.value}</div>
-          </div>
-        ))}
-      </div>
+      {loading ? (
+        <Loading
+          fullScreen={false}
+          message="Loading tenders"
+          className="rounded-2xl border border-dashed border-border/50 !bg-transparent py-10"
+        />
+      ) : null}
 
-      <div className="space-y-2">
-        {loading ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
-            <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
-            Loading tenders…
-          </div>
-        ) : null}
+      {!loading && filteredTenders.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border/50 p-6 text-center text-sm text-muted-foreground">
+          <Inbox className="mx-auto mb-2 h-5 w-5 text-slate-400" />
+          No tenders in this view.
+        </div>
+      ) : null}
 
-        {!loading && filteredTenders.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
-            <Inbox className="mx-auto mb-2 h-5 w-5 text-slate-400" />
-            No tenders in this filter
-          </div>
-        ) : null}
+      {!loading && filteredTenders.length > 0 ? (
+        <div className="space-y-4">
+          {sections.map((section) => (
+            <section key={section.id} className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {section.title}
+                </h2>
+                <span className="text-xs text-muted-foreground">{section.items.length}</span>
+              </div>
 
-        {!loading
-          ? filteredTenders.map((t) => {
-              const o = isRecord(t) ? t : {}
-              const id = String(pick(o, ["id", "Id", "TenderID", "tender_id"]) ?? "")
-              const title = String(pick(o, ["title", "TenderTitle"]) ?? "Untitled Tender")
-              const ref = String(pick(o, ["tenderNo", "TenderNo"]) ?? "—")
-              const statusValue = String(pick(o, ["status", "Status"]) ?? "").toLowerCase()
-              const typeValue = String(pick(o, ["tenderType", "TenderType"]) ?? "").toLowerCase()
-              const deadlineRaw = String(pick(o, ["submissionDeadline", "SubmissionDeadline"]) ?? "")
-              const parsedDeadline = deadlineRaw ? new Date(deadlineRaw) : null
-              const deadlineText =
-                parsedDeadline && !Number.isNaN(parsedDeadline.getTime())
-                  ? format(parsedDeadline, "dd MMM yyyy")
-                  : "No deadline"
-              const deadline = deadlineMeta(deadlineRaw || null)
-
-              const typeText =
-                typeValue === "rs" || typeValue === "restricted" ? "Restricted" : "Open"
-              const invitation = invitationMap[id]
-              const invitationStatus = String(
-                invitation?.ResponseStatus ?? invitation?.responseStatus ?? ""
-              ).toLowerCase()
-              const isActionable = statusValue === "pb" && !deadline.closed
-              const rowAccent = deadline.closed
-                ? "before:bg-rose-400/80"
-                : statusValue === "pb"
-                  ? "before:bg-indigo-500/80"
-                  : statusValue === "opening_in_progress"
-                    ? "before:bg-amber-400/80"
-                    : "before:bg-slate-300/80"
-
-              return (
-                <button
-                  type="button"
-                  key={id || `${ref}-${title}`}
-                  className={cn(
-                    "group relative w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-200 sm:px-5 sm:py-4",
-                    "before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:rounded-l-2xl before:content-['']",
-                    rowAccent,
-                    isActionable
-                      ? "hover:border-indigo-200 hover:bg-indigo-50/35"
-                      : "hover:border-slate-300 hover:bg-slate-50/70"
-                  )}
-                  onClick={() => openTender(o as AnyRecord)}
-                >
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div className="min-w-0 space-y-1.5">
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                        <span className="font-mono">{ref}</span>
-                        <span className="h-1 w-1 rounded-full bg-slate-300" />
-                        <span>{deadlineText}</span>
+              <div className="space-y-2">
+                {section.items.map((tender) => (
+                  <div
+                    key={tender.key}
+                    className={cn(
+                      "flex flex-col gap-3 rounded-2xl border border-l-4 p-4 sm:flex-row sm:items-start sm:justify-between",
+                      tender.isActionable ? "border-primary/30" : "border-border/60",
+                      tender.rowAccentBorder
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => openTender(tender.raw)}
+                      className="flex min-w-0 flex-1 items-start gap-3 text-left"
+                    >
+                      <div
+                        className={cn(
+                          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border",
+                          tender.deadline.closed
+                            ? "border-rose-200 text-rose-700"
+                            : tender.deadline.closingSoon
+                              ? "border-amber-200 text-amber-700"
+                              : tender.isActionable
+                                ? "border-emerald-200 text-emerald-700"
+                                : "border-border/60 text-muted-foreground"
+                        )}
+                      >
+                        <Timer className="h-4 w-4" />
                       </div>
-                      <h3 className="truncate text-base font-semibold text-slate-900 sm:text-lg">
-                        {title}
-                      </h3>
-                      <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <span
-                          className={cn(
-                            "inline-flex rounded-full border px-2.5 py-1 font-semibold",
-                            statusTone(statusValue, deadline.closed)
-                          )}
-                        >
-                          {statusText(statusValue)}
-                        </span>
-                        <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-semibold text-slate-600">
-                          {typeText}
-                        </span>
-                        <span className={cn("inline-flex items-center gap-1 font-medium", deadline.tone)}>
-                          <Timer className="h-3.5 w-3.5" />
-                          {deadline.label}
-                        </span>
-                        {invitationStatus ? (
+
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold leading-snug text-foreground">
+                          {tender.title}
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <span className="font-mono">{tender.ref}</span>
+                          <span aria-hidden>-</span>
+                          <span>{tender.deadlineText}</span>
+                          <span className="inline-flex rounded-full border border-border/60 px-2 py-0.5 font-semibold">
+                            {tender.typeText}
+                          </span>
                           <span
                             className={cn(
-                              "inline-flex rounded-full border px-2.5 py-1 font-semibold capitalize",
-                              invitationTone(invitationStatus)
+                              "inline-flex rounded-full border px-2 py-0.5 font-semibold",
+                              statusTone(tender.effectiveStatusValue, tender.deadline.closed)
                             )}
                           >
-                            Invite: {invitationStatus}
+                            {statusText(tender.effectiveStatusValue)}
                           </span>
-                        ) : null}
+                          <span className={cn("inline-flex items-center gap-1 font-medium", tender.deadline.tone)}>
+                            <Timer className="h-3.5 w-3.5" />
+                            {tender.deadline.label}
+                          </span>
+                        </div>
                       </div>
-                    </div>
+                    </button>
 
-                    <div className="flex items-center">
-                      <Button
-                        size="sm"
-                        variant={isActionable ? "default" : "outline"}
-                        className={cn(
-                          "h-8 rounded-full px-3 text-xs font-semibold",
-                          isActionable
-                            ? "border border-indigo-600 bg-indigo-600 text-white hover:bg-indigo-700"
-                            : "border-slate-300 text-slate-700 hover:bg-slate-50"
-                        )}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          openTender(o as AnyRecord)
-                        }}
-                      >
-                        View details
-                        <ArrowUpRight className="ml-1 h-4 w-4" />
-                      </Button>
-                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className={cn(
+                        "h-8 rounded-full border-border/60 !bg-transparent px-3 text-xs font-semibold hover:!bg-transparent",
+                        tender.isActionable && "border-primary/50 text-primary"
+                      )}
+                      onClick={() => openTender(tender.raw)}
+                    >
+                      {tender.actionLabel}
+                      <ArrowUpRight className="ml-1 h-4 w-4" />
+                    </Button>
                   </div>
-                </button>
-              )
-            })
-          : null}
-      </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : null}
 
       {error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        <div className="border border-rose-200 p-4 text-sm text-rose-700">
           {error}
         </div>
       ) : null}

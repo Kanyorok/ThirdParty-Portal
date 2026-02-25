@@ -17,14 +17,15 @@ import { getInvoiceDetails } from "@/lib/api/invoices"
 interface InvoiceDetailSheetProps {
     id: number | null
     onClose: () => void
-    tenantId: number
+    tenantId?: number | null
+    accessToken?: string
 }
 
-export function InvoiceDetailSheet({ id, onClose, tenantId }: InvoiceDetailSheetProps) {
+export function InvoiceDetailSheet({ id, onClose, tenantId, accessToken }: InvoiceDetailSheetProps) {
     const { data: response, isLoading } = useQuery({
-        queryKey: ['invoice', id, tenantId],
-        queryFn: () => getInvoiceDetails(id!, tenantId),
-        enabled: !!id,
+        queryKey: ['invoice', id, tenantId, accessToken],
+        queryFn: () => getInvoiceDetails(id!, tenantId, accessToken),
+        enabled: !!id && !!accessToken,
     })
 
     const invoice = response?.data;

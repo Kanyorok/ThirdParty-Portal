@@ -13,10 +13,11 @@ import { Button } from "@/components/common/button"
 import { maintenanceService } from "@/lib/api/maintenance"
 import { useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
 
 export default function MaintenancePage() {
     const { data: session } = useSession()
-    const accessToken = session?.accessToken || ""
+    const accessToken = resolveSessionAccessToken(session as any)
     const searchParams = useSearchParams()
     const page = parseInt(searchParams.get("page") || "1")
     const [searchQuery, setSearchQuery] = useState("")

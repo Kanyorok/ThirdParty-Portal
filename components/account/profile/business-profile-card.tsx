@@ -167,36 +167,36 @@ export default function BusinessProfileCard({
       <div className="px-5 py-5">
         {!isEditing ? (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-1">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-1 border-b border-border/60 pb-3">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Legal name</div>
                 <div className="text-sm font-semibold text-foreground">{thirdPartyDetails?.thirdPartyName || "—"}</div>
               </div>
-              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-1">
+              <div className="space-y-1 border-b border-border/60 pb-3">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Trading name</div>
                 <div className="text-sm font-semibold text-foreground">{thirdPartyDetails?.tradingName || "—"}</div>
               </div>
-              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-1">
+              <div className="space-y-1 border-b border-border/60 pb-3">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Registration number</div>
                 <div className="text-sm font-semibold text-foreground">{thirdPartyDetails?.registrationNumber || "—"}</div>
               </div>
-              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-1">
+              <div className="space-y-1 border-b border-border/60 pb-3">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Tax PIN</div>
                 <div className="text-sm font-semibold text-foreground">{thirdPartyDetails?.taxPIN || "—"}</div>
               </div>
-              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-1 md:col-span-2">
+              <div className="space-y-1 border-b border-border/60 pb-3 md:col-span-2">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Website</div>
                 <div className="text-sm font-semibold text-foreground">{thirdPartyDetails?.website || "—"}</div>
               </div>
-              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-1 md:col-span-2">
+              <div className="space-y-1 border-b border-border/60 pb-3 md:col-span-2">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Address</div>
                 <div className="text-sm font-semibold text-foreground">{thirdPartyDetails?.physicalAddress || "—"}</div>
               </div>
-              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-1 md:col-span-2">
+              <div className="space-y-1 border-b border-border/60 pb-3 md:col-span-2">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Company email</div>
                 <div className="text-sm font-semibold text-foreground">{thirdPartyDetails?.email || "—"}</div>
               </div>
-              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-1 md:col-span-2">
+              <div className="space-y-1 border-b border-border/60 pb-3 md:col-span-2">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Company phone</div>
                 <div className="text-sm font-semibold text-foreground">{thirdPartyDetails?.phone || "—"}</div>
               </div>
@@ -212,16 +212,12 @@ export default function BusinessProfileCard({
                       size="sm"
                       className="w-full justify-between px-3 text-xs font-medium text-muted-foreground hover:bg-muted"
                     >
-                      Business details
+                      Additional details
                       <ChevronDown className={cn("h-4 w-4 transition-transform", isMetaOpen && "rotate-180")} />
                     </Button>
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
-                      <div className="space-y-1">
-                        <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Third party ID</div>
-                        <div className="text-xs font-semibold text-foreground">{thirdParty?.id ?? "—"}</div>
-                      </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 border-l-2 border-border/60 pl-3">
                       <div className="space-y-1">
                         <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Supplier ID</div>
                         <div className="text-xs font-semibold text-foreground">{thirdParty?.supplierId ?? "—"}</div>

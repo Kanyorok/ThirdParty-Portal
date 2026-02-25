@@ -1,13 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Calendar, ChevronDown, ImageUp, Mail, PencilLine, Phone, Save, X } from "lucide-react"
+import { Calendar, ImageUp, Mail, PencilLine, Phone, Save, X } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/common/avatar"
 import { Button } from "@/components/common/button"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/common/collapsible"
 import { Input } from "@/components/common/input"
-import { cn } from "@/lib/utils"
 
 type AccountOwnerCardProps = {
   profile: any
@@ -24,7 +22,6 @@ export default function AccountOwnerCard({
   onUpdateContact,
   isSavingContact = false,
 }: AccountOwnerCardProps) {
-  const [isOpen, setIsOpen] = useState(false)
   const [remoteAvatarSrc, setRemoteAvatarSrc] = useState<string | null>(null)
   const [isEditingContact, setIsEditingContact] = useState(false)
   const [emailInput, setEmailInput] = useState("")
@@ -47,9 +44,6 @@ export default function AccountOwnerCard({
   const createdOn = profile?.createdOn ?? null
   const modifiedOn = profile?.modifiedOn ?? null
   const isActive = typeof profile?.isActive === "boolean" ? profile.isActive : null
-  const ownerUserId = profile?.userId ?? profile?.user_id ?? profile?.id ?? null
-  const ownerThirdPartyId = profile?.thirdPartyId ?? null
-
   useEffect(() => {
     setEmailInput(profile?.email ?? "")
     setPhoneInput(profile?.phone ?? "")
@@ -282,45 +276,22 @@ export default function AccountOwnerCard({
           )}
         </div>
 
-        <div className="mt-4 rounded-xl border border-border/60 bg-muted/30 p-3">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Calendar className="h-4 w-4 text-primary/80" />
-            <span>Last updated: {modifiedOn ?? "—"}</span>
-          </div>
-        </div>
-
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-4 w-full justify-between px-3 text-xs font-medium text-muted-foreground hover:bg-muted"
-            >
-              Details
-              <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
-              <div className="space-y-1">
-                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">User ID</div>
-                <div className="text-xs font-semibold text-foreground">{ownerUserId ?? "—"}</div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Third party ID</div>
-                <div className="text-xs font-semibold text-foreground">{ownerThirdPartyId ?? "—"}</div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Created</div>
-                <div className="text-xs font-semibold text-foreground">{createdOn ?? "—"}</div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Updated</div>
-                <div className="text-xs font-semibold text-foreground">{modifiedOn ?? "—"}</div>
+        <div className="mt-4 border-t border-border/60 pt-3">
+          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Timeline</div>
+          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div className="border-l-2 border-border/60 pl-3">
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Created</div>
+              <div className="text-xs font-semibold text-foreground">{createdOn ?? "—"}</div>
+            </div>
+            <div className="border-l-2 border-border/60 pl-3">
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Updated</div>
+              <div className="inline-flex items-center gap-2 text-xs font-semibold text-foreground">
+                <Calendar className="h-3.5 w-3.5 text-primary/80" />
+                {modifiedOn ?? "—"}
               </div>
             </div>
-          </CollapsibleContent>
-        </Collapsible>
+          </div>
+        </div>
       </div>
     </section>
   )

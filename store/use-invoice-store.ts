@@ -1,23 +1,21 @@
 import { create } from 'zustand';
+import { getInvoices } from "@/lib/api/invoices";
 
 interface InvoiceStore {
     invoices: any[];
     meta: any;
     isLoading: boolean;
-    fetchInvoices: (page: number, tenantId: number) => Promise<void>;
+    fetchInvoices: (page: number, tenantId?: number | null, accessToken?: string) => Promise<void>;
 }
 
 export const useInvoiceStore = create<InvoiceStore>((set) => ({
     invoices: [],
     meta: null,
     isLoading: false,
-    fetchInvoices: async (page, tenantId) => {
+    fetchInvoices: async (page, tenantId, accessToken) => {
         set({ isLoading: true });
         try {
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/v1/property/invoices/tenant?tenant_id=${tenantId}&page=${page}`
-            );
-            const result = await response.json();
+            const result = await getInvoices(page, tenantId, "", accessToken);
             set({ invoices: result.data, meta: result.meta });
         } catch (error) {
             console.error("Failed to fetch invoices", error);

@@ -43,9 +43,9 @@ function resolveCounts(raw?: DashboardSummaryResponse | null) {
         0
 
     const tendersAvailable =
+        summary.openTenders ??
         summary.tendersAvailable ??
         summary.availableTenders ??
-        summary.openTenders ??
         0
 
     const completedPreq =
@@ -187,7 +187,7 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             href: "/dashboard/supplier/rfqs",
         },
         {
-            title: "Available tenders",
+            title: "Open tenders",
             count: resolved.tendersAvailable,
             icon: FileSearch,
             description: "Open tenders you can apply to.",

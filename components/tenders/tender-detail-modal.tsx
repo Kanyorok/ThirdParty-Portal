@@ -237,8 +237,10 @@ export default function TenderDetailModal({
       });
       if (tender.tenderNo) params.set("tenderNo", tender.tenderNo);
 
-      const response = await fetch(`${getBaseUrl()}/api/tender-bids?${params.toString()}`, {
+      const response = await fetch(`/api/tender-bids?${params.toString()}`, {
         headers: { Accept: "application/json" },
+        credentials: "same-origin",
+        cache: "no-store",
       });
       const data = await response.json().catch(() => null);
       if (!response.ok) throw new Error(data?.message || "Failed to check existing bids");
@@ -288,7 +290,7 @@ export default function TenderDetailModal({
       setSubmittedBidAt(null);
       setSubmittedBidId(null);
       setSubmittedBidStatus(null);
-      toast.error("Could not verify existing bid status. Please refresh and try again.");
+      // Keep bid flow available even if status verification fails.
     } finally {
       setIsCheckingBid(false);
     }

@@ -72,9 +72,9 @@ export default function LoginPage() {
     }
 
     return (
-        <main className="min-h-[100dvh] bg-[linear-gradient(180deg,#eef5ff_0%,#f9fbff_42%,#ffffff_100%)] px-4 sm:px-6 lg:px-8">
+        <main className="min-h-[100dvh] px-4 sm:px-6 lg:px-8">
             <div className="mx-auto flex min-h-[100dvh] w-full max-w-7xl items-center justify-center py-8 sm:py-10">
-                <div className="mx-auto w-full max-w-[460px] space-y-8">
+                <div className="mx-auto w-full max-w-[620px] space-y-8">
                     <header className="space-y-3 text-center">
                         <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">Welcome back</h1>
                         <p className="text-sm font-medium text-muted-foreground">Sign in to continue to your portal.</p>
@@ -98,7 +98,7 @@ export default function LoginPage() {
                                     {...register("email")}
                                     placeholder="name@company.com"
                                     disabled={isSubmitting}
-                                    className={cn("h-12 bg-background/95 pl-10 pr-10", showError("email") && "border-rose-400 focus-visible:border-rose-500 focus-visible:ring-rose-200")}
+                                    className={cn("h-12 bg-transparent pl-10 pr-10", showError("email") && "border-rose-400 focus-visible:border-rose-500 focus-visible:ring-rose-200")}
                                 />
                                 {emailValue && (
                                     <button
@@ -124,7 +124,7 @@ export default function LoginPage() {
                                     {...register("password")}
                                     placeholder="Enter your password"
                                     disabled={isSubmitting}
-                                    className={cn("h-12 bg-background/95 pl-10 pr-10", showError("password") && "border-rose-400 focus-visible:border-rose-500 focus-visible:ring-rose-200")}
+                                    className={cn("h-12 bg-transparent pl-10 pr-10", showError("password") && "border-rose-400 focus-visible:border-rose-500 focus-visible:ring-rose-200")}
                                 />
                                 <button
                                     type="button"

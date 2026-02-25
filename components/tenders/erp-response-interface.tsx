@@ -1,64 +1,64 @@
-"use client";
+"use client"
 
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/card";
-import { Button } from "@/components/common/button";
-import { Textarea } from "@/components/common/textarea";
-import { Badge } from "@/components/common/badge";
-import { Alert, AlertDescription } from "@/components/common/alert";
-import { toast } from "sonner";
-import { 
+import React, { useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/card"
+import { Button } from "@/components/common/button"
+import { Textarea } from "@/components/common/textarea"
+import { Badge } from "@/components/common/badge"
+import { Alert, AlertDescription } from "@/components/common/alert"
+import { toast } from "sonner"
+import {
   MessageSquare,
   Send,
   Globe,
   User,
   Shield,
   CheckCircle
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+} from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface TenderClarification {
-  id: number;
-  tenderId: string;
-  supplierId: number;
-  question: string;
-  questionDate: string;
-  response?: string;
-  responseDate?: string;
-  responseBy?: string;
-  status: 'pending' | 'answered' | 'closed';
-  isPublic: boolean;
-  attachments?: string[];
-  createdBy: string;
-  createdOn: string;
-  modifiedBy?: string;
-  modifiedOn?: string;
+  id: number
+  tenderId: string
+  supplierId: number
+  question: string
+  questionDate: string
+  response?: string
+  responseDate?: string
+  responseBy?: string
+  status: 'pending' | 'answered' | 'closed'
+  isPublic: boolean
+  attachments?: string[]
+  createdBy: string
+  createdOn: string
+  modifiedBy?: string
+  modifiedOn?: string
 }
 
 interface ERPResponseInterfaceProps {
-  clarifications: TenderClarification[];
-  onResponseSubmitted: () => void;
+  clarifications: TenderClarification[]
+  onResponseSubmitted: () => void
 }
 
 export default function ERPResponseInterface({ clarifications, onResponseSubmitted }: ERPResponseInterfaceProps) {
-  const [selectedClarification, setSelectedClarification] = useState<TenderClarification | null>(null);
-  const [response, setResponse] = useState("");
-  const [responseBy, setResponseBy] = useState("Procurement Team");
-  const [publishToAll, setPublishToAll] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedClarification, setSelectedClarification] = useState<TenderClarification | null>(null)
+  const [response, setResponse] = useState("")
+  const [responseBy, setResponseBy] = useState("Procurement Team")
+  const [publishToAll, setPublishToAll] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Filter pending clarifications
-  const pendingClarifications = clarifications.filter(c => c.status === 'pending');
-  
+  const pendingClarifications = clarifications.filter(c => c.status === 'pending')
+
   // (debug removed)
 
   const handleSubmitResponse = async () => {
     if (!selectedClarification || !response.trim()) {
-      toast.error("Please select a clarification and enter a response");
-      return;
+      toast.error("Please select a clarification and enter a response")
+      return
     }
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
 
     try {
       const apiResponse = await fetch(`/api/tender-clarifications/${selectedClarification.id}/respond`, {
@@ -72,34 +72,34 @@ export default function ERPResponseInterface({ clarifications, onResponseSubmitt
           publishToAll: publishToAll,
           status: 'answered',
         }),
-      });
+      })
 
-      const data = await apiResponse.json();
+      const data = await apiResponse.json()
 
       if (!apiResponse.ok) {
-        throw new Error(data.message || 'Failed to submit response');
+        throw new Error(data.message || 'Failed to submit response')
       }
 
-      toast.success("Response submitted successfully!");
-      setResponse("");
-      setSelectedClarification(null);
-      setPublishToAll(false);
-      onResponseSubmitted(); // Refresh parent component
+      toast.success("Response submitted successfully!")
+      setResponse("")
+      setSelectedClarification(null)
+      setPublishToAll(false)
+      onResponseSubmitted() // Refresh parent component
 
     } catch (error) {
-      console.error('Error submitting ERP response:', error);
-      toast.success("Response submitted successfully!"); // Temporary for demo - will work when ERP is connected
-      setResponse("");
-      setSelectedClarification(null);
-      setPublishToAll(false);
-      onResponseSubmitted();
+      console.error('Error submitting ERP response:', error)
+      toast.success("Response submitted successfully!") // Temporary for demo - will work when ERP is connected
+      setResponse("")
+      setSelectedClarification(null)
+      setPublishToAll(false)
+      onResponseSubmitted()
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   if (pendingClarifications.length === 0) {
-    return null; // Don't show if no pending clarifications
+    return null // Don't show if no pending clarifications
   }
 
   return (
@@ -156,8 +156,8 @@ export default function ERPResponseInterface({ clarifications, onResponseSubmitt
                     </Badge>
                   </div>
                   <p className="text-sm font-medium mb-1">
-                    {clarification.question.length > 100 
-                      ? `${clarification.question.substring(0, 100)}...` 
+                    {clarification.question.length > 100
+                      ? `${clarification.question.substring(0, 100)}...`
                       : clarification.question}
                   </p>
                   <p className="text-xs text-gray-600">
@@ -217,7 +217,7 @@ export default function ERPResponseInterface({ clarifications, onResponseSubmitt
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription className="text-xs">
-                {publishToAll 
+                {publishToAll
                   ? "✅ This response will be visible to ALL invited suppliers for transparency."
                   : "👤 This response will only be sent to the supplier who asked the question."
                 }
@@ -246,5 +246,5 @@ export default function ERPResponseInterface({ clarifications, onResponseSubmitt
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
