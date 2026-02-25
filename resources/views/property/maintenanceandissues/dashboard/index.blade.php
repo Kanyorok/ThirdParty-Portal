@@ -179,9 +179,9 @@
                     <td>
                         @php $priority = $assign->request->priority->Description ?? '-'; @endphp
                         <span class="badge
-                            @if($priority === 'High') bg-danger
-                            @elseif($priority === 'Medium') bg-warning text-dark
-                            @elseif($priority === 'Low') bg-info
+                            @if($priority === 'Critical') bg-danger
+                            @elseif($priority === 'High') bg-warning text-dark
+                            @elseif($priority === 'Medium') bg-info
                             @else bg-secondary @endif">
                             {{ $priority }}
                         </span>

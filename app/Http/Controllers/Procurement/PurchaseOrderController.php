@@ -1211,7 +1211,7 @@ class PurchaseOrderController extends Controller
      * Fetch payment terms from CodeDetails, with a fallback raw query.
      * Extracted to avoid duplication between create() and its error fallback.
      */
-    private function fetchPaymentTerms()
+    public function fetchPaymentTerms()
     {
         try {
             $terms = CodeDetail::query()

@@ -5,6 +5,7 @@ use App\Http\Controllers\Property\PropertyAttachmentsController;
 use App\Http\Controllers\Property\PropertyBlockController;
 use App\Http\Controllers\Property\PropertyCategoryController;
 use App\Http\Controllers\Property\PropertyFloorController;
+use App\Http\Controllers\Property\PropertyInterestController;
 use App\Http\Controllers\Property\PropertyInvoiceController;
 use App\Http\Controllers\Property\PropertyLeaseRenewalController;
 use App\Http\Controllers\Property\PropertyLeaseScheduleController;
@@ -141,6 +142,19 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     Route::get('propertyaddtenant/edit/{Id}', [PropertyNewTenantController::class, 'edit'])->name('addtenant.edit');
     Route::put('propertyaddtenant/edit/{Id}', [PropertyNewTenantController::class, 'update'])->name('addtenant.update');
 
+    Route::get('property-interest', [PropertyInterestController::class, 'index'])->name('property-interest.index');
+    Route::get('property-interest/create', [PropertyInterestController::class, 'create'])->name('property-interest.create');
+    Route::post('property-interest', [PropertyInterestController::class, 'store'])->name('property-interest.store');
+    Route::get('property-interest/show/{Id}', [PropertyInterestController::class, 'show'])->name('property-interest.show');
+    Route::get('property-interest/edit/{Id}', [PropertyInterestController::class, 'edit'])->name('property-interest.edit');
+    Route::put('property-interest/edit/{Id}', [PropertyInterestController::class, 'update'])->name('property-interest.update');
+    Route::delete('property-interest/delete/{Id}', [PropertyInterestController::class, 'destroy'])->name('property-interest.destroy');
+    Route::get('property-interest/blocks/{PropertyId}', [PropertyInterestController::class, 'getBlockByProperty'])->name('getblockbyproperty.interest');
+    Route::get('property-interest/floors/{BlockId}', [PropertyInterestController::class, 'getFloorByBlock'])->name('getfloorbyblock.interest');
+    Route::get('property-interest/units/{FloorId}', [PropertyInterestController::class, 'getUnitByFloor'])->name('getunitbyfloor.interest');
+    Route::get('property-interest/unit-pricing/{UnitId}', [PropertyInterestController::class, 'getPricingByUnit'])->name('getunitpricing.interest');
+
+
 
     Route::get('propertytenantclearance', [PropertyTenantClearanceController::class, 'index'])->name('tenantclearance.index');
     Route::get('propertytenantclearance/create', [PropertyTenantClearanceController::class, 'create'])->name('tenantclearance.create');
@@ -164,6 +178,7 @@ Route::middleware(['module:500000'])->namespace('Property')->prefix('property')-
     // Lease-only pricing lookup for autofill on new lease form
     Route::get('/propertyaddlease/pricing/{UnitId}', [PropertyNewLeaseController::class, 'getPricingUnit'])->name('getpricingunit.lease');
     Route::get('lease-offer/{Id}', [PropertyNewLeaseController::class, 'leaseOfferLetter'])->name('addlease.offer');
+    Route::get('lease/get-interest/{id}', [PropertyNewLeaseController::class, 'getInterestData'])->name('lease.getInterest');
 
 
 

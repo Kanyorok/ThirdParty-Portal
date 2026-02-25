@@ -184,11 +184,14 @@ function populatePODetails() {
 
         itemsBody.insertAdjacentHTML('beforeend', `
             <tr>
-                <td><input type="text" class="form-control form-control-sm"
-                           name="items[${index}][ItemNo]" value="${item.iStockCodeID}" readonly></td>
+                <td>
+                    <input type="hidden" name="items[${index}][ItemNo]" value="${item.iStockCodeID}">
+                    <input type="text" class="form-control form-control-sm"
+                           value="${item.ItemCode ?? item.iStockCodeID}" readonly>
+                </td>
                 <td>${item.ItemName ?? ''}</td>
                 <td>${item.ItemDescription ?? ''}</td>
-                <td>${item.Category ?? ''}</td>
+                <td>${item.CategoryCode ?? item.Category ?? ''}</td>
                 <td>${item.UOM ?? ''}</td>
                 <td class="text-center">${item.fQuantity}</td>
                 <td class="text-center text-muted">${receivedSoFar}</td>

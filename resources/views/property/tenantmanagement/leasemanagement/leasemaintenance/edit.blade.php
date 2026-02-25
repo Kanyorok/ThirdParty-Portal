@@ -11,7 +11,7 @@
     @method('PUT')
 
     <div class="card shadow-sm border-0">
-        <div class="card-header bg-light fw-bold py-3">Edit Lease Agreement</div>
+        <div class="card-header bg-primary fw-bold py-3">Lease Agreement</div>
 
         <div class="card-body">
 
@@ -162,48 +162,48 @@
 
                 <div class="col-md-4">
                     <label class="form-label">Rent <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control shadow-sm charge-field @error('MonthlyRent') is-invalid @enderror"
+                    <input type="text" class="form-control shadow-sm charge-field @error('MonthlyRent') is-invalid @enderror"
                         name="MonthlyRent" value="{{ $newlease->MonthlyRent }}" required>
                     @error('MonthlyRent')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="col-md-4">
                     <label class="form-label">Deposit <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control shadow-sm @error('Deposit') is-invalid @enderror"
+                    <input type="text" class="form-control shadow-sm charge-field @error('Deposit') is-invalid @enderror"
                         name="Deposit" value="{{ $newlease->Deposit }}" required>
                     @error('Deposit')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="col-md-4">
                     <label class="form-label">Service Charge <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control shadow-sm charge-field @error('ServiceCharge') is-invalid @enderror"
+                    <input type="text" class="form-control shadow-sm charge-field @error('ServiceCharge') is-invalid @enderror"
                         name="ServiceCharge" value="{{ $newlease->ServiceCharge }}" required>
                     @error('ServiceCharge')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="col-md-4">
                     <label class="form-label">Parking Fee <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control shadow-sm charge-field @error('ParkingFee') is-invalid @enderror"
+                    <input type="text" class="form-control shadow-sm charge-field @error('ParkingFee') is-invalid @enderror"
                         name="ParkingFee" value="{{ $newlease->ParkingFee }}" required>
                     @error('ParkingFee')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="col-md-4">
                     <label class="form-label">Other Charges <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control shadow-sm charge-field @error('OtherCharges') is-invalid @enderror"
+                    <input type="text" class="form-control shadow-sm charge-field @error('OtherCharges') is-invalid @enderror"
                         name="OtherCharges" value="{{ $newlease->OtherCharges }}" required>
                     @error('OtherCharges')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label">Total Payable <span class="text-danger">*</span></label>
-                    <input type="number" id="TotalPayable" class="form-control shadow-sm" readonly>
+                    <label class="form-label">Total Payable (Excl. Deposit) <span class="text-danger">*</span></label>
+                    <input type="text" id="TotalPayable" class="form-control shadow-sm" readonly>
                 </div>
             </div>
 
             {{-- DUE DATE --}}
             <div class="mb-4">
-                <label class="form-label">Due Day (1–28) <span class="text-danger">*</span></label>
+                <label class="form-label">Payment Due Date (1–28) <span class="text-danger">*</span></label>
                 <input type="number" name="DueDay" class="form-control shadow-sm @error('DueDay') is-invalid @enderror"
                     min="1" max="28" value="{{ $newlease->DueDay }}" required>
                 @error('DueDay')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -250,7 +250,7 @@
 </form>
 </div>
 
-{{-- ================= JS (MATCHES CREATE PAGE) ================= --}}
+{{-- ================= JS ================= --}}
 <script>
 const routes = {
     getBlocks: "{{ route('getblockbyproperty.lease', ['PropertyId' => '__ID__']) }}",
@@ -278,14 +278,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const taxInput = document.querySelector('select[name="TaxId"]');
     const currencyInput = document.querySelector('select[name="CurrencyId"]');
 
-    // calculate total now that values preloaded
+    // ================= NUMBER FORMATTING WITH COMMAS =================
+    const formatNumber = (value) => value ? parseFloat(value).toLocaleString('en-US') : '';
+    const unformatNumber = (value) => parseFloat(value.replace(/,/g, '')) || 0;
+
+    chargeFields.forEach(input => {
+        input.type = "text"; // so commas display
+        input.value = formatNumber(input.value);
+
+        input.addEventListener('input', function () {
+            let raw = this.value.replace(/,/g,'');
+            if(!isNaN(raw) && raw !== '') this.value = formatNumber(raw);
+            calculateTotal();
+        });
+    });
+
+    // ================= TOTAL CALCULATION EXCLUDING DEPOSIT =================
     const calculateTotal = () => {
         let total = 0;
-        chargeFields.forEach(i => total += parseFloat(i.value) || 0);
-        totalField.value = total;
+        chargeFields.forEach(i => {
+            if(i.name !== 'Deposit') {
+                total += unformatNumber(i.value);
+            }
+        });
+        totalField.type = "text";
+        totalField.value = formatNumber(total);
     };
     calculateTotal();
 
+    // Remove commas before submitting form
+    document.getElementById('leaseForm').addEventListener('submit', function() {
+        chargeFields.forEach(input => {
+            input.value = unformatNumber(input.value);
+        });
+    });
+
+    // ================= RESET OPTIONS =================
     const resetOptions = (select, lbl) => {
         select.innerHTML = `<option value="">-- ${lbl} --</option>`;
     };
@@ -348,11 +376,11 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(p => {
                 if (!p) return;
 
-                rentInput.value = p.Rent ?? '';
-                depositInput.value = p.DepositAmount ?? '';
-                serviceInput.value = p.ServiceCharge ?? '';
-                parkingInput.value = p.ParkingFee ?? '';
-                otherInput.value = p.OtherCharges ?? '';
+                rentInput.value = formatNumber(p.Rent ?? '');
+                depositInput.value = formatNumber(p.DepositAmount ?? '');
+                serviceInput.value = formatNumber(p.ServiceCharge ?? '');
+                parkingInput.value = formatNumber(p.ParkingFee ?? '');
+                otherInput.value = formatNumber(p.OtherCharges ?? '');
 
                 taxInput.value = p.TaxId ?? '';
                 currencyInput.value = p.CurrencyId ?? '';
@@ -361,9 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     });
 
-    chargeFields.forEach(input =>
-        input.addEventListener('input', calculateTotal)
-    );
 });
 </script>
 

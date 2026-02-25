@@ -140,6 +140,7 @@ class EnhancedGoodsReceiptController extends Controller
         // 3. Fetch all order lines with item details
         $OrderLines = DB::table('t_OrderLines as ol')
             ->join('t_items as i', 'ol.iStockCodeID', '=', 'i.Id')
+            ->leftJoin('t_ItemCategories as ic', 'i.Category', '=', 'ic.Id')
             ->leftJoin('t_CodeDetails as cd', 'i.InventoryType', '=', 'cd.Id')
             ->select(
                 'ol.Id',
@@ -148,9 +149,11 @@ class EnhancedGoodsReceiptController extends Controller
                 'ol.fQuantity',
                 'ol.fUnitPriceExcl',
                 'cd.Description as InventoryType',
+                'i.ItemCode',
                 'i.ItemName',
                 'i.ItemDescription',
                 'i.Category',
+                'ic.CategoryCode',
                 'i.UOM'
             )
             ->get();
@@ -233,6 +236,7 @@ class EnhancedGoodsReceiptController extends Controller
                 ->leftJoin('t_CodeDetails as cd', 'i.InventoryType', '=', 'cd.Id')
                 ->leftJoin('t_ItemTypes as it', 'i.ItemType', '=', 'it.Id')
                 ->leftJoin('t_UOM as u', 'i.UOM', '=', 'u.Id')
+                ->leftJoin('t_ItemCategories as ic', 'i.Category', '=', 'ic.Id')
                 ->where('ol.iOrderID', $poId)
                 ->whereNull('ol.DeletedOn')
                 ->select(
@@ -240,11 +244,13 @@ class EnhancedGoodsReceiptController extends Controller
                     'ol.iStockCodeID',
                     'ol.fQuantity',
                     'ol.fUnitPriceExcl',
+                    'i.ItemCode',
                     'i.ItemName',
                     'i.ItemDescription',
                     'i.ItemType',
                     'it.TypeName as ItemTypeName',
-                    'u.Name as UOMName'
+                    'u.Name as UOMName',
+                    'ic.CategoryCode'
                 )
                 ->get();
 
@@ -295,8 +301,10 @@ class EnhancedGoodsReceiptController extends Controller
                     $poDetails['lines'][] = [
                         'id' => $line->Id,
                         'item_id' => $line->iStockCodeID,
+                        'item_code' => $line->ItemCode,
                         'item_name' => $line->ItemName ?? 'Unknown Item',
                         'item_description' => $line->ItemDescription ?? '',
+                        'category_code' => $line->CategoryCode,
                         'item_type' => $itemType,
                         'item_type_display' => $this->getItemTypeDisplay($itemType),
                         'ordered_qty' => (float)$line->fQuantity,

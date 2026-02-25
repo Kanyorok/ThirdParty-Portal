@@ -30,6 +30,7 @@
         // Normalize status for comparison
         $currentStatus = strtolower(trim($requisitionInfo->Status ?? 'draft'));
         $hasItems = $details->count() > 0;
+        $hasPlanRequisition = !empty($requisitionInfo->PlanRef);
 
         // Determine if we can add items and submit
         $canAddItems = in_array($currentStatus, ['draft']);
@@ -40,7 +41,7 @@
         @endphp
 
         {{-- Add Items button - only for Draft --}}
-        @if($canAddItems)
+        @if($canAddItems && !$hasPlanRequisition)
         <button class="btn btn-primary modal-create-item ms-2" type="button">
             <i class="fas fa-plus-circle"></i> Add Items
         </button>
@@ -76,7 +77,11 @@
 @if($details->isEmpty() && isset($requisitionInfo) && strtolower($requisitionInfo->Status) === 'draft')
 <div class="alert alert-warning" role="alert">
     <i class="fas fa-exclamation-triangle"></i>
+    @if(!empty($requisitionInfo->PlanRef))
+    No available items found in the selected plan.
+    @else
     No items added yet. Please add items before submitting for approval.
+    @endif
 </div>
 @endif
 
@@ -91,6 +96,9 @@
                 <th>Description</th>
                 <th>UOM</th>
                 <th>Quantity</th>
+                @if(isset($requisitionInfo->PlanRef) && $requisitionInfo->PlanRef)
+                <th>Remaining Qty</th>
+                @endif
                 <th>Est. Unit Cost</th>
                 <th>Estimated Cost</th>
                 <th>Urgency</th>
@@ -106,27 +114,54 @@
                 <td>{{ $item->Type }}</td>
                 <td>
                     {{ $item->ItemName }}
-                    Plan
-                    </span>
-
                 </td>
                 <td>{{ $item->Description }}</td>
-                <td>{{ $item->UOM }}</td>
                 <td>
-                    @if(isset($requisitionInfo) && strtolower($requisitionInfo->Status ?? '') === 'draft')
+                    @if(isset($requisitionInfo) && strtolower($requisitionInfo->Status ?? '') === 'draft' && !empty($requisitionInfo->PlanRef) && !empty($item->IsFromPlan))
+                    <select class="form-control form-control-sm line-uom"
+                        data-line-id="{{ $item->Id }}"
+                        data-original-value="{{ $item->UOMID }}"
+                        style="min-width: 120px;">
+                        @foreach($uoms as $uom)
+                        <option value="{{ $uom->Id }}" {{ (string)$uom->Id === (string)$item->UOMID ? 'selected' : '' }}>
+                            {{ $uom->Code ?? $uom->Name ?? $uom->Id }}
+                        </option>
+                        @endforeach
+                    </select>
+                    @else
+                    {{ $item->UOM }}
+                    @endif
+                </td>
+                <td>
+                    @if(isset($requisitionInfo) && strtolower($requisitionInfo->Status ?? '') === 'draft' && !empty($requisitionInfo->PlanRef) && !empty($item->IsFromPlan))
                     <!-- Editable quantity for draft status -->
                     <input type="number"
                         class="form-control form-control-sm plan-item-quantity"
                         data-line-id="{{ $item->Id }}"
                         data-unit-price="{{ $item->UnitPrice ?? 0 }}"
+                        data-is-from-plan="{{ (int)($item->IsFromPlan ?? 0) }}"
+                        data-max-qty="{{ (float)($item->PlanQuantity ?? 0) - (float)($item->UsedQuantity ?? 0) }}"
+                        data-original-value="{{ (float)$item->Quantity }}"
                         value="{{ $item->Quantity }}"
                         min="0.01"
                         step="any"
                         style="width: 100px;">
+                    <small class="text-muted d-block mt-1">
+                        Max: {{ number_format(((float)($item->PlanQuantity ?? 0) - (float)($item->UsedQuantity ?? 0)), 2) }}
+                    </small>
                     @else
                     {{ $item->Quantity }}
                     @endif
                 </td>
+                @if(isset($requisitionInfo->PlanRef) && $requisitionInfo->PlanRef)
+                <td id="remaining-qty-{{ $item->Id }}">
+                    @if(!empty($item->IsFromPlan))
+                    {{ number_format(max((((float)($item->PlanQuantity ?? 0) - (float)($item->UsedQuantity ?? 0)) - (float)$item->Quantity), 0), 2) }}
+                    @else
+                    -
+                    @endif
+                </td>
+                @endif
                 <td>{{ isset($item->UnitPrice) && is_numeric($item->UnitPrice) ? number_format($item->UnitPrice, 2) : 'N/A' }}</td>
                 <td id="total-price-{{ $item->Id }}">
                     {{ isset($item->ExpectedPrice) && is_numeric($item->ExpectedPrice) ? number_format($item->ExpectedPrice, 2) : '0.00' }}
@@ -143,7 +178,7 @@
                 @if(isset($requisitionInfo) && strtolower($requisitionInfo->Status ?? '') === 'draft')
                 <td>
                     <button type="button"
-                        class="btn btn-sm btn-danger remove-plan-item"
+                        class="btn btn-sm btn-danger remove-item"
                         data-line-id="{{ $item->Id }}"
                         title="Remove item">
                         <i class="fas fa-trash"></i>
@@ -153,7 +188,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="{{ isset($requisitionInfo) && strtolower($requisitionInfo->Status ?? '') === 'draft' ? '10' : '9' }}" class="text-center">
+                <td colspan="{{ isset($requisitionInfo) && strtolower($requisitionInfo->Status ?? '') === 'draft' ? (isset($requisitionInfo->PlanRef) && $requisitionInfo->PlanRef ? '11' : '10') : (isset($requisitionInfo->PlanRef) && $requisitionInfo->PlanRef ? '10' : '9') }}" class="text-center">
                     @if(isset($requisitionInfo->PlanRef) && $requisitionInfo->PlanRef)
                     No items available from the selected procurement plan.
                     @else
@@ -166,9 +201,9 @@
         @if($details->count() > 0)
         <tfoot>
             <tr class="table-active">
-                <th colspan="7" class="text-end">Total Estimated Cost:</th>
-                <th colspan="{{ isset($requisitionInfo) && strtolower($requisitionInfo->Status ?? '') === 'draft' ? '3' : '2' }}">
-                    {{ number_format($details->sum('ExpectedPrice'), 2) }}
+                <th colspan="{{ isset($requisitionInfo->PlanRef) && $requisitionInfo->PlanRef ? '8' : '7' }}" class="text-end">Total Estimated Cost:</th>
+                <th id="table-total-estimated-cost">{{ number_format($details->sum('ExpectedPrice'), 2) }}</th>
+                <th colspan="{{ isset($requisitionInfo) && strtolower($requisitionInfo->Status ?? '') === 'draft' ? '2' : '1' }}">
                 </th>
             </tr>
         </tfoot>
@@ -315,6 +350,37 @@
     // Check if plan exists based on requisition info
     const requisitionInfo = @json($requisitionInfo);
     const hasPlan = {{ isset($requisitionInfo->PlanRef) && $requisitionInfo->PlanRef ? 'true' : 'false' }};
+    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+    function formatNumber(value) {
+        return Number(value || 0).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function refreshTableTotal() {
+        let total = 0;
+
+        $('#requsitionItemsTable tbody tr').each(function() {
+            const $quantityInput = $(this).find('.plan-item-quantity');
+            if ($quantityInput.length) {
+                const qty = parseFloat($quantityInput.val() || 0) || 0;
+                const unitPrice = parseFloat($quantityInput.data('unit-price') || 0) || 0;
+                total += qty * unitPrice;
+            } else {
+                const rowId = $(this).attr('id');
+                if (rowId) {
+                    const lineId = rowId.replace('row-', '');
+                    const totalText = $(`#total-price-${lineId}`).text().replace(/,/g, '');
+                    const currentTotal = parseFloat(totalText || 0) || 0;
+                    total += currentTotal;
+                }
+            }
+        });
+
+        $('#table-total-estimated-cost').text(formatNumber(total));
+    }
 
     function getRequisitionIdFromUrl() {
         return requisitionId || window.location.pathname.split('/').pop();
@@ -559,8 +625,100 @@
                 $('#EstimatedPrice').val($(this).val());
             }
         });
+
+        $(document).on('change', '.plan-item-quantity', function() {
+            const $input = $(this);
+            const lineId = $input.data('line-id');
+            const isFromPlan = Number($input.data('is-from-plan')) === 1;
+            const maxQty = parseFloat($input.data('max-qty') || 0) || 0;
+            const newQty = parseFloat($input.val() || 0) || 0;
+            const oldQty = parseFloat($input.data('original-value') || 0) || 0;
+            const unitPrice = parseFloat($input.data('unit-price') || 0) || 0;
+
+            if (newQty <= 0) {
+                alert('Quantity must be greater than 0.');
+                $input.val(oldQty);
+                return;
+            }
+
+            if (isFromPlan && maxQty > 0 && newQty > maxQty) {
+                alert(`Quantity cannot exceed available plan quantity (${formatNumber(maxQty)}).`);
+                $input.val(oldQty);
+                return;
+            }
+
+            $input.prop('disabled', true);
+
+            $.ajax({
+                url: `/procurement/requisitionLine/${lineId}/quantity`,
+                type: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: {
+                    quantity: newQty
+                },
+                success: function() {
+                    $input.data('original-value', newQty);
+                    $(`#total-price-${lineId}`).text(formatNumber(newQty * unitPrice));
+
+                    if (isFromPlan) {
+                        const remainingAfterCurrent = Math.max(maxQty - newQty, 0);
+                        $(`#remaining-qty-${lineId}`).text(formatNumber(remainingAfterCurrent));
+                    }
+
+                    refreshTableTotal();
+                },
+                error: function(xhr) {
+                    const message = xhr?.responseJSON?.message || 'Failed to update quantity.';
+                    alert(message);
+                    $input.val(oldQty);
+                    $(`#total-price-${lineId}`).text(formatNumber(oldQty * unitPrice));
+                },
+                complete: function() {
+                    $input.prop('disabled', false);
+                }
+            });
+        });
+
+        $(document).on('change', '.line-uom', function() {
+            const $select = $(this);
+            const lineId = $select.data('line-id');
+            const newUomId = $select.val();
+            const oldUomId = $select.data('original-value');
+
+            if (!newUomId) {
+                $select.val(oldUomId);
+                return;
+            }
+
+            $select.prop('disabled', true);
+
+            $.ajax({
+                url: `/procurement/requisitionLine/${lineId}/uom`,
+                type: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: {
+                    uom_id: newUomId
+                },
+                success: function() {
+                    $select.data('original-value', newUomId);
+                },
+                error: function(xhr) {
+                    const message = xhr?.responseJSON?.message || 'Failed to update UOM.';
+                    alert(message);
+                    $select.val(oldUomId);
+                },
+                complete: function() {
+                    $select.prop('disabled', false);
+                }
+            });
+        });
+
         // Delete item handler
-        $(document).on('click', '.remove-plan-item', function(e) {
+        $(document).on('click', '.remove-item', function(e) {
             e.preventDefault();
             const itemId = $(this).data('line-id');
 
@@ -569,7 +727,7 @@
                     url: '/procurement/requisitionLine/' + itemId,
                     type: 'DELETE',
                     headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        'X-CSRF-TOKEN': csrfToken
                     },
                     success: function(response) {
                          location.reload();

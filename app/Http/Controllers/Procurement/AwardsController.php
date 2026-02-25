@@ -751,40 +751,71 @@ class AwardsController extends Controller
         return null;
     }
 
-    public function submitForApproval($id)
+    public function submitForApproval(Request $request, $id)
     {
         try {
             DB::beginTransaction();
             $user = Auth::user();
-            $award = TenderAward::find($id);
+            $requestedType = strtolower((string) ($request->input('award_type') ?? $request->input('type') ?? ''));
+
+            $award = null;
             $type = 'tender';
             $workflowService = $this->workflow;
             $statusEnum = \App\Enums\TenderAwardStatusEnum::SUBMITTED;
             $statusSubmitted = TenderAward::STATUS_SUBMITTED;
             $validStatuses = [TenderAward::STATUS_DRAFT, TenderAward::STATUS_PENDING];
-            // 2. Try RFQAward
-            if (! $award) {
+
+            if ($requestedType === 'rfq') {
                 $award = RFQAward::find($id);
                 $type = 'rfq';
                 $workflowService = $this->rfqWorkflow;
                 $statusEnum = \App\Enums\RFQAwardStatusEnum::SUBMITTED;
-                $statusSubmitted = \App\Models\Procurement\RFQAward::STATUS_SUBMITTED;
-                $validStatuses = [RFQAward::STATUS_PENDING, 'Pending'];
-
+                $statusSubmitted = RFQAward::STATUS_SUBMITTED;
+                $validStatuses = [RFQAward::STATUS_PENDING];
+            } elseif ($requestedType === 'tender') {
+                $award = TenderAward::find($id);
+            } else {
+                // Backward-compatible fallback when type is not provided.
+                $award = TenderAward::find($id);
                 if (! $award) {
-                    return redirect()->back()->with('error', 'Award not found.');
+                    $award = RFQAward::find($id);
+                    $type = 'rfq';
+                    $workflowService = $this->rfqWorkflow;
+                    $statusEnum = \App\Enums\RFQAwardStatusEnum::SUBMITTED;
+                    $statusSubmitted = RFQAward::STATUS_SUBMITTED;
+                    $validStatuses = [RFQAward::STATUS_PENDING];
                 }
             }
-            // Prevent submitting if another queued/active award already exists for this tender.
-            $duplicateQueuedAward = TenderAward::where('TenderID', (int)$award->TenderID)
-                ->where('Id', '<>', (int)$award->Id)
-                ->whereIn('AwardStatus', $this->blockingAwardStatuses())
-                ->exists();
-            if ($duplicateQueuedAward) {
-                return redirect()->back()->with(
-                    'error',
-                    'Another award for this tender is already in queue. Cancel the existing queued award before submitting this one.'
-                );
+
+            if (! $award) {
+                return redirect()->back()->with('error', 'Award not found.');
+            }
+
+            // Prevent submitting when another queued/active award exists for the same source.
+            if ($type === 'tender') {
+                $duplicateQueuedAward = TenderAward::where('TenderID', (int) $award->TenderID)
+                    ->where('Id', '<>', (int) $award->Id)
+                    ->whereIn('AwardStatus', $this->blockingAwardStatuses())
+                    ->exists();
+
+                if ($duplicateQueuedAward) {
+                    return redirect()->back()->with(
+                        'error',
+                        'Another award for this tender is already in queue. Cancel the existing queued award before submitting this one.'
+                    );
+                }
+            } else {
+                $duplicateQueuedAward = RFQAward::where('RFQId', (int) $award->RFQId)
+                    ->where('Id', '<>', (int) $award->Id)
+                    ->whereIn('AwardStatus', $this->blockingAwardStatuses())
+                    ->exists();
+
+                if ($duplicateQueuedAward) {
+                    return redirect()->back()->with(
+                        'error',
+                        'Another award for this RFQ is already in queue. Cancel the existing queued award before submitting this one.'
+                    );
+                }
             }
 
             // Validation: Must be in Draft or Pending status

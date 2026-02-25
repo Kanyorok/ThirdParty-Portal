@@ -116,13 +116,8 @@
         <div class="mb-3">
           <label class="form-label fw-bold">Select Procurement Plan:</label>
           <select class="form-select" id="selectedProcurementPlan" name="procurement_plan_id"
-            onchange="loadPlanItemsForPlan()">
-            <option selected disabled>-- Choose Procurement Plan --</option>
-            @foreach ($procurementPlan as $item)
-            {{-- @if (!$item->isUsed()) --}}
-            <option value="{{$item->PlanID}}">{{$item->Title}} - {{$item->ReferenceNumber}}</option>
-
-            @endforeach
+            onchange="loadPlanItemsForPlan()" disabled>
+            <option selected disabled>-- Select Tender Category and Item Category first --</option>
           </select>
         </div>
 
@@ -246,9 +241,8 @@
   (function() {
     'use strict';
 
-    // ============================================================================
     // DOM REFERENCES
-    // ============================================================================
+    
     const tenderCatSel = document.getElementById('tenderCategory');
     const itemCatSel = document.getElementById('itemCategory');
     const openTender = document.getElementById('openTender');
@@ -258,9 +252,8 @@
     const supplierMatchCount = document.getElementById('supplierMatchCount');
     const DEBUG = Boolean(@json(config('app.debug', false)));
 
-    // ============================================================================
     // DATA FROM BACKEND
-    // ============================================================================
+   
     const suppliers = @json($suppliers ?? []);
     const allItemsWithCategoryIds = @json($allItemsWithCategoryIds ?? []);
     const planItemsByPlan = @json($procurementPlansOutput ?? []);
@@ -284,9 +277,58 @@
     if (DEBUG) {
     }
 
-    // ============================================================================
+  
     // PLAN ITEMS: Load items for selected plan
-    // ============================================================================
+   
+    function resetPlanItemDropdown(message = '-- Select Item (Tender-method, not already used) --') {
+      const itemSel = document.getElementById('planItemSelect');
+      if (!itemSel) return;
+      itemSel.innerHTML = `<option selected disabled>${message}</option>`;
+    }
+
+    function refreshProcurementPlanDropdown() {
+      const planSel = document.getElementById('selectedProcurementPlan');
+      if (!planSel) return;
+
+      const hasTenderCategory = Boolean(tenderCatSel && tenderCatSel.value);
+      const hasItemCategory = Boolean(itemCatSel && itemCatSel.value);
+      const canShowPlans = hasTenderCategory && hasItemCategory;
+
+      planSel.disabled = !canShowPlans;
+
+      if (!canShowPlans) {
+        planSel.innerHTML = '<option selected disabled>-- Select Tender Category and Item Category first --</option>';
+        resetPlanItemDropdown('-- Select Procurement Plan first --');
+        return;
+      }
+
+      const selectedCategory = itemCatSel.value;
+      planSel.innerHTML = '<option selected disabled>-- Choose Procurement Plan --</option>';
+
+      let planCount = 0;
+      availablePlans.forEach(p => {
+        const planItems = planItemsByPlan[String(p.PlanID)] || [];
+        const hasMatchingItems = planItems.some(it => String(it.categoryId) === String(selectedCategory));
+
+        if (hasMatchingItems) {
+          const opt = document.createElement('option');
+          opt.value = p.PlanID;
+          opt.textContent = `${p.Title} - ${p.ReferenceNumber}`;
+          planSel.appendChild(opt);
+          planCount++;
+        }
+      });
+
+      if (planCount === 0) {
+        const opt = document.createElement('option');
+        opt.disabled = true;
+        opt.textContent = '-- No Plans found for this Category --';
+        planSel.appendChild(opt);
+      }
+
+      resetPlanItemDropdown();
+    }
+
     function loadPlanItemsForPlan() {
       const planSel = document.getElementById('selectedProcurementPlan');
       const itemSel = document.getElementById('planItemSelect');
@@ -299,6 +341,13 @@
 
       const planId = planSel.value;
       itemSel.innerHTML = '<option selected disabled>-- Select Item --</option>';
+      const hasTenderCategory = Boolean(tenderCatSel && tenderCatSel.value);
+      const hasItemCategory = Boolean(itemCatSel && itemCatSel.value);
+
+      if (!hasTenderCategory || !hasItemCategory) {
+        itemSel.innerHTML = '<option selected disabled>-- Select Tender Category and Item Category first --</option>';
+        return;
+      }
 
       if (!planId) {
         return;
@@ -709,7 +758,10 @@
 
     // Tender category change
     if (tenderCatSel) {
-      tenderCatSel.addEventListener('change', refreshItemCategories);
+      tenderCatSel.addEventListener('change', async () => {
+        await refreshItemCategories();
+        refreshProcurementPlanDropdown();
+      });
     }
 
     // Item category change
@@ -722,43 +774,7 @@
           populateSuppliers(itemCatSel.value);
         }
 
-        // Enable plan select after category selection AND filter available plans
-        const planSel = document.getElementById('selectedProcurementPlan');
-        if (planSel) {
-            const selectedCategory = itemCatSel.value;
-            const hasCategory = Boolean(selectedCategory);
-            planSel.disabled = !hasCategory;
-            planSel.innerHTML = '<option selected disabled>-- Choose Procurement Plan --</option>';
-
-            if (hasCategory) {
-               let planCount = 0;
-               availablePlans.forEach(p => {
-                    // Check if this plan has ANY items matching the category
-                    const planItems = planItemsByPlan[String(p.PlanID)] || [];
-                    const hasMatchingItems = planItems.some(it => String(it.categoryId) === String(selectedCategory));
-
-                    if (hasMatchingItems) {
-                        const opt = document.createElement('option');
-                        opt.value = p.PlanID;
-                        opt.textContent = `${p.Title} - ${p.ReferenceNumber}`;
-                        planSel.appendChild(opt);
-                        planCount++;
-                    }
-               });
-               
-               if (planCount === 0) {
-                   const opt = document.createElement('option');
-                   opt.disabled = true;
-                   opt.textContent = '-- No Plans found for this Category --';
-                   planSel.appendChild(opt);
-               }
-            }
-            // Clear items dropdown since plan might have changed or been cleared
-            const planItemSel = document.getElementById('planItemSelect');
-            if (planItemSel) {
-                planItemSel.innerHTML = '<option selected disabled>-- Select Item (Tender-method, not already used) --</option>';
-            }
-        }
+        refreshProcurementPlanDropdown();
       });
     }
 
@@ -827,15 +843,8 @@
         refreshItemCategories();
       }
 
-      // Disable plan select until item category is chosen
-      const planSel = document.getElementById('selectedProcurementPlan');
-      if (planSel) {
-        const hasCategory = itemCatSel && itemCatSel.value;
-        planSel.disabled = !hasCategory;
-        if (!hasCategory) {
-          planSel.innerHTML = '<option selected disabled>-- Choose Procurement Plan (select Item Category first) --</option>';
-        }
-      }
+      // Strict plan gating: require both Tender Category and Item Category
+      refreshProcurementPlanDropdown();
 
       // Show supplier section if Restricted is preselected
       if (restricted && restricted.checked) {

@@ -34,6 +34,7 @@
         <thead>
         <tr>
             <th>#</th>
+            <th>Need ID</th>
             <th>Item Name</th>
             <th>Category</th>
             <th>Quantity</th>
@@ -48,6 +49,7 @@
         @forelse ($departmentneedviews as $index => $departmentneedview)
             <tr>
                 <td>{{ $index + 1 ?? 'N/A' }}</td>
+                <td>{{ $departmentneedview->NeedID ?? 'N/A' }}</td>
                 <td>{{ $departmentneedview->item->ItemName ?? 'N/A' }}</td>
                 <td>{{ $departmentneedview->item->category->Name ?? 'N/A' }}</td>
                 <td>{{ $departmentneedview->RequestedQty ?? 'N/A' }}</td>

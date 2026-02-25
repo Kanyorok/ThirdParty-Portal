@@ -132,10 +132,22 @@
                                 <!-- Terms and Conditions -->
                                 <div class="row mb-3">
                                     <div class="col-md-6">
-                                        <label class="form-label">Payment Terms <span class="text-danger">*</span></label>
-                                        <textarea name="payment_terms" class="form-control" rows="3"
-                                                  placeholder="Specify payment schedule, milestones, and conditions">{{ old('payment_terms', $award->PaymentTerms ?? '') }}</textarea>
-                                    </div>
+                        <label for="terms" class="form-label fw-semibold">Payment Terms <span class="text-danger">*</span></label>
+                        <select id="terms" name="payment_terms" required class="form-select @error('payment_terms') is-invalid @enderror">
+                            <option value="">-- Select Terms --</option>
+                            @foreach($paymentTerms ?? [] as $term)
+                                @php
+                                    $termId   = $term->ID ?? $term->Id ?? '';
+                                    $termDesc = $term->Description ?? $term->description ?? '';
+                                    $currentTerms = $award->payment_terms ?? null;
+                                @endphp
+                                <option value="{{ $termId }}" {{ old('payment_terms', $currentTerms) == $termId ? 'selected' : '' }}>
+                                    {{ $termDesc }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('payment_terms') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Delivery Terms</label>
                                         <textarea name="delivery_terms" class="form-control" rows="3"
