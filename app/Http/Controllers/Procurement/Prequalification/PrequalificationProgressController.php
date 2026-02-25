@@ -43,10 +43,21 @@ class PrequalificationProgressController extends Controller
         }
 
         $categories = $application->categoryStatuses->map(function ($catStatus) {
+            $statusCode = (string) $catStatus->Status;
+            $statusLabel = match ($statusCode) {
+                'A', 'P' => 'Approved',
+                'R' => 'Rejected',
+                'U', 'V' => 'Under Review',
+                'S' => 'Submitted',
+                'D', 'C' => 'Pending',
+                default => 'Submitted',
+            };
+
             return [
                 'category_id' => $catStatus->CategoryId,
                 'category_name' => $catStatus->category?->CategoryName,
-                'status' => $catStatus->Status,
+                'status' => $statusCode,
+                'status_label' => $statusLabel,
                 'progress_percent' => (float)$catStatus->ProgressPercent,
                 'stage' => $catStatus->Stage,
                 'stage_label' => $catStatus->StageLabel,
@@ -60,7 +71,14 @@ class PrequalificationProgressController extends Controller
 
         return response()->json([
             'data' => [
-                'overall_status' => $application->Status?->getLabel() ?? 'Submitted',
+                'overall_status' => match ((string)($application->Status?->value ?? $application->Status)) {
+                    'A', 'P' => 'Approved',
+                    'R' => 'Rejected',
+                    'U', 'V' => 'Under Review',
+                    'S' => 'Submitted',
+                    'D', 'C' => 'Pending',
+                    default => 'Submitted',
+                },
                 'categories' => $categories,
                 'summary' => $summary,
             ],
@@ -165,13 +183,17 @@ class PrequalificationProgressController extends Controller
         $total = $categoryStatuses->count();
         $approved = $categoryStatuses->where('Status', 'A')->count();
         $rejected = $categoryStatuses->where('Status', 'R')->count();
-        $pending = $categoryStatuses->whereIn('Status', ['D', 'S', 'U', 'C'])->count();
+        $submitted = $categoryStatuses->where('Status', 'S')->count();
+        $underReview = $categoryStatuses->whereIn('Status', ['U', 'V'])->count();
+        $pending = $categoryStatuses->whereIn('Status', ['D', 'C'])->count();
         $overall = $total > 0 ? ($categoryStatuses->sum('ProgressPercent') / $total) : 0.0;
 
         return [
             'total_categories' => $total,
             'approved_categories' => $approved,
             'rejected_categories' => $rejected,
+            'submitted_categories' => $submitted,
+            'under_review_categories' => $underReview,
             'pending_categories' => $pending,
             'overall_progress' => round($overall, 2),
         ];

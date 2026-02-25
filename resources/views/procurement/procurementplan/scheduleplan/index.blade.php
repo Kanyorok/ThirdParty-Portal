@@ -17,7 +17,7 @@
                         <select class="form-select" id="approved-plan-select">
                             <option selected disabled>-- Choose Plan --</option>
                             @foreach ($draftedplans as $plan)
-                                <option value="{{ $plan->PlanID }}">{{ $plan->ReferenceNumber }}
+                                <option value="{{ $plan->PlanID }}" {{ session('selected_plan_id') == $plan->PlanID ? 'selected' : '' }}>{{ $plan->ReferenceNumber }}
                                     – {{ $plan->Title }}</option>
                             @endforeach
                         </select>
@@ -122,6 +122,11 @@
                                 nError('An error occurred while loading items.');
                             });
                     });
+
+                    // Auto-load items if a plan is already selected via session
+                    @if(session('selected_plan_id'))
+                        loadBtn.click();
+                    @endif
                 });
             </script>
         @endpush

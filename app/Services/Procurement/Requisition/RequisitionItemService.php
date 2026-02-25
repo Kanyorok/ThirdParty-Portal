@@ -207,7 +207,8 @@ class RequisitionItemService
                         ->whereNull('DeletedOn')
                         ->sum('Quantity');
 
-                    $availableQty = $planItem->Quantity - $usedQty;
+                    $planQty = (float) ($planItem->MergedQty ?? $planItem->OriginalQTY ?? $planItem->Quantity ?? 0);
+                    $availableQty = $planQty - $usedQty;
 
                     if ($newQty > $availableQty) {
                         return [
@@ -237,6 +238,60 @@ class RequisitionItemService
             return [
                 'status' => 'error',
                 'message' => 'Failed to update quantity',
+            ];
+        }
+    }
+
+    public static function updateLineUom($lineId, $uomId, User $actor)
+    {
+        try {
+            $line = DB::table('t_RequisitionLines')->where('Id', $lineId)->first();
+
+            if (! $line) {
+                return [
+                    'status' => 'error',
+                    'message' => 'Line item not found',
+                ];
+            }
+
+            $requisition = DB::table('t_Requisitions')->where('Id', $line->RequisitionID)->first();
+            if (! $requisition || strtoupper((string) $requisition->DocStatus) !== 'DR') {
+                return [
+                    'status' => 'error',
+                    'message' => 'Cannot update items after submission',
+                ];
+            }
+
+            $uom = DB::table('t_UOM')
+                ->where('Id', $uomId)
+                ->whereNull('DeletedOn')
+                ->first();
+
+            if (! $uom) {
+                return [
+                    'status' => 'error',
+                    'message' => 'Invalid UOM selected',
+                ];
+            }
+
+            DB::table('t_RequisitionLines')
+                ->where('Id', $lineId)
+                ->update([
+                    'UOM' => $uomId,
+                    'ModifiedBy' => $actor->Id,
+                    'ModifiedOn' => now(),
+                ]);
+
+            return [
+                'status' => 'success',
+                'message' => 'UOM updated successfully',
+            ];
+        } catch (\Exception $e) {
+            Log::error('Failed to update UOM: ' . $e->getMessage());
+
+            return [
+                'status' => 'error',
+                'message' => 'Failed to update UOM',
             ];
         }
     }
@@ -296,39 +351,50 @@ class RequisitionItemService
             ->leftJoin(DB::raw('t_Items WITH (NOLOCK)'), 't_RequisitionLines.Item', '=', 't_Items.Id')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_RequisitionLines.CreatedBy', '=', 't_Users.Id')
             ->leftJoin(DB::raw('t_ItemCategories WITH (NOLOCK)'), 't_Items.Category', '=', 't_ItemCategories.Id')
-            ->leftJoin(DB::raw('t_uom WITH (NOLOCK)'), 't_Items.UOM', '=', 't_uom.Id')
-            ->leftJoin(DB::raw('t_ItemTypes WITH (NOLOCK)'), 't_Items.ItemType', '=', 't_ItemTypes.TypeName')
+            ->leftJoin(DB::raw('t_uom WITH (NOLOCK)'), 't_uom.Id', '=', 't_RequisitionLines.UOM') // UOM stored as Code string in lines
+            ->leftJoin(DB::raw('t_ItemTypes WITH (NOLOCK)'), 't_Items.ItemType', '=', 't_ItemTypes.Id') // FIXED: join on Id not TypeName
             ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), 't_ItemTypes.TypeName', '=', 't_CodeDetails.Id')
             ->where('t_RequisitionLines.RequisitionId', $RequisitionId)
             ->whereNull('t_RequisitionLines.DeletedOn')
             ->select([
                 't_RequisitionLines.Id',
                 't_RequisitionLines.Quantity',
-                't_Items.ItemName as ItemName',
-                't_Items.ItemDescription as Description',
+                DB::raw("ISNULL(t_Items.ItemName, t_RequisitionLines.Description) as ItemName"),
+                't_RequisitionLines.Description',
                 't_Users.Name as UserName',
-                't_uom.Code as UOM',
+                't_RequisitionLines.UOM as UOMID',
+                DB::raw("COALESCE(t_uom.Code, CAST(t_RequisitionLines.UOM as VARCHAR(50))) as UOM"),
                 't_CodeDetails.Description as Type',
                 't_ItemCategories.Name as Category',
-                't_RequisitionLines.PlanLineRef', // Include plan reference
+                't_RequisitionLines.PlanLineRef',
                 DB::raw("CASE WHEN t_RequisitionLines.PlanLineRef IS NOT NULL THEN 1 ELSE 0 END as IsFromPlan"),
-                DB::raw("ISNULL((SELECT TOP 1 dn.NeedID
-                          FROM t_PlanLineItem pli WITH (NOLOCK)
-                          JOIN t_DepartmentNeeds dn WITH (NOLOCK)
-                            ON dn.ItemID = pli.ItemID
-                           AND dn.BranchID = pli.BranchID
-                           AND dn.DepartmentID = pli.DepartmentID
-                         WHERE pli.LineItemID = t_RequisitionLines.PlanLineRef), 'N/A') as NeedRef"),
                 't_RequisitionLines.ExpectedPrice as UnitPrice',
                 DB::raw('t_RequisitionLines.ExpectedPrice * t_RequisitionLines.Quantity as ExpectedPrice'),
                 't_RequisitionLines.StatusID as Status',
-                DB::raw("CASE
-                WHEN t_RequisitionLines.UrgencyID = 1 THEN 'Very High'
-                WHEN t_RequisitionLines.UrgencyID = 2 THEN 'High'
-                WHEN t_RequisitionLines.UrgencyID = 3 THEN 'Medium'
-                WHEN t_RequisitionLines.UrgencyID = 4 THEN 'Low'
-                ELSE 'Unknown'
-            END as Urgency"),
+                't_RequisitionLines.UrgencyID as Urgency', // FIXED: return integer for blade urgency map
+                // Plan quantity info for remaining qty display
+                DB::raw("ISNULL((
+                SELECT TOP 1 ISNULL(pli.MergedQty, ISNULL(pli.OriginalQTY, 0))
+                FROM t_PlanLineItem pli WITH (NOLOCK)
+                WHERE pli.LineItemID = t_RequisitionLines.PlanLineRef
+            ), 0) as PlanQuantity"),
+                DB::raw("ISNULL((
+                SELECT ISNULL(SUM(rl2.Quantity), 0)
+                FROM t_RequisitionLines rl2 WITH (NOLOCK)
+                WHERE rl2.PlanLineRef = t_RequisitionLines.PlanLineRef
+                  AND rl2.Id != t_RequisitionLines.Id
+                  AND rl2.DeletedOn IS NULL
+            ), 0) as UsedQuantity"),
+                DB::raw("ISNULL((
+                SELECT TOP 1 ISNULL(pli.MergedQty, ISNULL(pli.OriginalQTY, 0))
+                FROM t_PlanLineItem pli WITH (NOLOCK)
+                WHERE pli.LineItemID = t_RequisitionLines.PlanLineRef
+            ), 0) - ISNULL((
+                SELECT ISNULL(SUM(rl2.Quantity), 0)
+                FROM t_RequisitionLines rl2 WITH (NOLOCK)
+                WHERE rl2.PlanLineRef = t_RequisitionLines.PlanLineRef
+                  AND rl2.DeletedOn IS NULL
+            ), 0) as RemainingQuantity"),
                 DB::raw("FORMAT(t_RequisitionLines.CreatedOn, 'dd-MM-yyyy HH:mm') as CreatedOn"),
             ])
             ->orderBy('t_RequisitionLines.CreatedOn', 'desc')

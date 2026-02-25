@@ -151,7 +151,9 @@
                                                 <th width="5%">
                                                     <input type="checkbox" id="select_all" class="form-check-input" checked>
                                                 </th>
-                                                <th width="20%">Item</th>
+                                                <th width="10%">Item No</th>
+                                                <th width="18%">Item Name</th>
+                                                <th width="10%">Category</th>
                                                 <th width="10%">Type</th>
                                                 <th width="8%">Ordered</th>
                                                 <th width="8%">Received</th>
@@ -295,9 +297,13 @@
                         <input type="hidden" name="items[${index}][ordered_qty]"   value="${line.remaining_qty}">
                     </td>
                     <td>
+                        <strong>${line.item_code ?? line.item_id}</strong>
+                    </td>
+                    <td>
                         <strong>${line.item_name}</strong>
                         <br><small class="text-muted">${line.item_description}</small>
                     </td>
+                    <td>${line.category_code ?? ''}</td>
                     <td>
                         <span class="badge bg-${getItemTypeBadgeClass(line.item_type)}">${line.item_type_display}</span>
                     </td>

@@ -1,16 +1,23 @@
 <!-- Order Details -->
-<div class="row mb-3">
-    <div class="col-md-4"><strong>LPO No:</strong> {{ $orderInfo->ExtOrdNum ?? '--' }}</div>
-    <div class="col-md-4"><strong>Order No:</strong> {{ $orderInfo->OrderNo ?? '--' }}</div>
+<div class="row g-2 mb-3 po-detail-grid">
     <div class="col-md-4">
-        <strong>Date:</strong> {{ isset($orderInfo->OrderDate) ? \Carbon\Carbon::parse($orderInfo->OrderDate)->format('d/m/Y') : '--' }}
+        <div class="po-detail-line"><span class="po-detail-label">LPO No:</span><span class="po-detail-value">{{ $orderInfo->ExtOrdNum ?? '--' }}</span></div>
     </div>
-</div>
-<div class="row mb-3">
-    <div class="col-md-6">
-        <strong>Supplier:</strong> {{ $orderInfo->SupplierName ?? $orderInfo->TradingName ?? ('Supplier #' . ($orderInfo->SupplierId ?? '')) }}
+    <div class="col-md-4">
+        <div class="po-detail-line"><span class="po-detail-label">Order No:</span><span class="po-detail-value">{{ $orderInfo->OrderNo ?? '--' }}</span></div>
     </div>
-    <div class="col-md-6"><strong>Priority:</strong> {{ $orderInfo->Priority ?? '--' }}</div>
+    <div class="col-md-4">
+        <div class="po-detail-line"><span class="po-detail-label">Date:</span><span class="po-detail-value">{{ isset($orderInfo->OrderDate) ? \Carbon\Carbon::parse($orderInfo->OrderDate)->format('d/m/Y') : '--' }}</span></div>
+    </div>
+    <div class="col-md-4">
+        <div class="po-detail-line"><span class="po-detail-label">Supplier:</span><span class="po-detail-value">{{ $orderInfo->SupplierName ?? $orderInfo->TradingName ?? ('Supplier #' . ($orderInfo->SupplierId ?? '')) }}</span></div>
+    </div>
+    <div class="col-md-4">
+        <div class="po-detail-line"><span class="po-detail-label">Priority:</span><span class="po-detail-value">{{ $orderInfo->Priority ?? '--' }}</span></div>
+    </div>
+    <div class="col-md-4">
+        <div class="po-detail-line"><span class="po-detail-label">Payment Terms:</span><span class="po-detail-value">{{ $orderInfo->TermsDescription ?? '--' }}</span></div>
+    </div>
 </div>
 
 <!-- Line Items Table -->
@@ -155,3 +162,24 @@
         <i class="fas fa-external-link-alt"></i> Open Full View
     </a>
 </div>
+
+<style>
+    .po-detail-grid .po-detail-line {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .po-detail-label {
+        min-width: 105px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .po-detail-value {
+        overflow-wrap: anywhere;
+    }
+    @media (max-width: 767.98px) {
+        .po-detail-label {
+            min-width: 95px;
+        }
+    }
+</style>

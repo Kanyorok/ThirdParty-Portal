@@ -286,8 +286,9 @@ class PrequalificationApplicationController extends Controller
                 return match ($code) {
                     'A', 'P' => 'APPROVED',
                     'R' => 'REJECTED',
-                    'V' => 'UNDER_REVIEW', // Reviewed/Verification -> treated as under review for UI
+                    'U', 'V' => 'UNDER_REVIEW',
                     'S' => 'SUBMITTED',
+                    'D', 'C' => 'PENDING',
                     default => $stage && str_contains(strtolower($stage), 'review') ? 'UNDER_REVIEW' : 'SUBMITTED',
                 };
             };
@@ -412,6 +413,15 @@ class PrequalificationApplicationController extends Controller
                 // Not Applicable per business rules only:
                 $notApplicable = (bool) ($isExpired || $isFutureWindow || ! $hasCategories || ! $hasUnapplied);
 
+                $statusSummary = [
+                    'approved' => $cats->where('status', 'APPROVED')->count(),
+                    'rejected' => $cats->where('status', 'REJECTED')->count(),
+                    'under_review' => $cats->where('status', 'UNDER_REVIEW')->count(),
+                    'submitted' => $cats->where('status', 'SUBMITTED')->count(),
+                    'pending' => $cats->where('status', 'PENDING')->count(),
+                    'not_applied' => $cats->where('status', 'NOT_APPLIED')->count(),
+                ];
+
                 return [
                     'id' => (int) $round->RoundID,
                     'title' => $round->Title,
@@ -453,6 +463,7 @@ class PrequalificationApplicationController extends Controller
                     'categoryCount' => $cats->count(),
                     'appliedCount' => $cats->where('has_applied', true)->count(),
                     'unappliedCount' => $cats->where('has_applied', false)->count(),
+                    'summary' => $statusSummary,
                     // New flags for frontend alignment
                     'supplierEligible' => (bool) $supplierEligible,
                     'isFutureWindow' => (bool) $isFutureWindow,

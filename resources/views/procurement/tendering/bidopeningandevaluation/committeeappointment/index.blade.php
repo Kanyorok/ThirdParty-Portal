@@ -115,8 +115,8 @@
                             <label for="referenceId" class="form-label">
                                 Reference <span class="text-danger">*</span>
                             </label>
-                            <select id="referenceId" class="form-select select2-reference" name="referenceId">
-                                <option value=""></option>
+                            <select id="referenceId" class="form-select" name="referenceId">
+                                <option value="" selected>-- Select Reference --</option>
                             </select>
                             <div class="text-danger small mt-1" id="referenceId-error" style="display:none;"></div>
                         </div>
@@ -161,33 +161,15 @@
 </div>
 @push('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
-        /* Remove text decoration from Select2 dropdown options */
-        .select2-container--default .select2-results__option {
-            text-decoration: none !important;
-        }
-        
-        /* Specifically target the Reference dropdown */
-        .select2-reference + .select2-container .select2-results__option {
-            text-decoration: none !important;
-        }
-        
-        /* Remove text decoration from selected items */
-        .select2-container--default .select2-selection__rendered {
-            text-decoration: none !important;
-        }
-        
-        /* Ensure no underline on hover */
-        .select2-container--default .select2-results__option:hover {
-            text-decoration: none !important;
+        #referenceId {
+            width: 100%;
         }
     </style>
 @endpush
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script>
     $(document).ready(function () {
         const committeeTypeSelect = document.getElementById('committeeType');
@@ -195,7 +177,7 @@
         const form                = document.getElementById('committeeForm');
         const submitBtn           = document.getElementById('appointCommitteeBtn');
 
-        /* ─── helpers ───────────────────────────────────────────────── */
+        //  helpers
 
         function setFieldError(inputEl, errorDivId, message) {
             const errDiv = document.getElementById(errorDivId);
@@ -221,23 +203,18 @@
                 const el = document.getElementById(id);
                 if (el) setFieldError(el, errId, null);
             });
-            $('.select2-reference').next('.select2-container').find('.select2-selection').css('border-color', '');
         }
 
         function highlightSelect2Error(hasError) {
-            $('.select2-reference').next('.select2-container').find('.select2-selection')
-                .css('border-color', hasError ? '#dc3545' : '');
+            referenceSelect.classList.toggle('is-invalid', !!hasError);
         }
 
-        /* ─── reset modal on close ──────────────────────────────────── */
+        // reset modal on close 
 
         $('#addCommitteeModal').on('hidden.bs.modal', function () {
             form.reset();
             clearAllErrors();
-            referenceSelect.innerHTML = '<option value=""></option>';
-            if ($('.select2-reference').hasClass('select2-hidden-accessible')) {
-                $('.select2-reference').val(null).trigger('change');
-            }
+            referenceSelect.innerHTML = '<option value="" selected>-- Select Reference --</option>';
             const appt = document.getElementById('appointmentDate');
             if (appt) {
                 const pad = n => String(n).padStart(2, '0');
@@ -249,26 +226,10 @@
             form.action = "{{ route('tendercommittee.store') }}";
         });
 
-        /* ─── Select2 initialisation ────────────────────────────────── */
+       
 
-        function initializeSelect2() {
-            if ($('.select2-reference').length && typeof $.fn.select2 !== 'undefined') {
-                if ($('.select2-reference').hasClass('select2-hidden-accessible')) {
-                    $('.select2-reference').select2('destroy');
-                }
-                $('.select2-reference').select2({
-                    placeholder: '-- Select Reference --',
-                    allowClear: true,
-                    width: '100%',
-                    dropdownParent: $('#addCommitteeModal'),
-                });
-            }
-        }
 
-        $('#addCommitteeModal').on('shown.bs.modal', function () { initializeSelect2(); });
-        initializeSelect2();
-
-        /* ─── Appointment date (flatpickr) ──────────────────────────── */
+        // Appointment date (flatpickr)
 
         const appt = document.getElementById('appointmentDate');
         if (appt) {
@@ -292,7 +253,7 @@
             });
         }
 
-        /* ─── Committee Type → load references ──────────────────────── */
+        //commitee/type load referecnes 
 
         if (committeeTypeSelect) {
             committeeTypeSelect.addEventListener('change', function () {
@@ -303,41 +264,35 @@
                     ? "{{ route('rfqcommittee.store') }}"
                     : "{{ route('tendercommittee.store') }}";
 
-                if ($('.select2-reference').hasClass('select2-hidden-accessible')) {
-                    $('.select2-reference').select2('destroy');
-                }
                 setFieldError(referenceSelect, 'referenceId-error', null);
                 highlightSelect2Error(false);
-                referenceSelect.innerHTML = '<option value="">Loading...</option>';
+                referenceSelect.innerHTML = '<option value="" selected>Loading references...</option>';
 
                 if (!type) {
-                    referenceSelect.innerHTML = '<option value=""></option>';
-                    setTimeout(initializeSelect2, 100);
+                    referenceSelect.innerHTML = '<option value="" selected>-- Select Reference --</option>';
                     return;
                 }
 
                 fetch(`/procurement/committee-references/${type}`)
                     .then(r => r.json())
                     .then(data => {
-                        referenceSelect.innerHTML = '<option value=""></option>';
+                        referenceSelect.innerHTML = '<option value="" selected>-- Select Reference --</option>';
                         data.forEach(item => {
                             const ref = item.RefNo ?? item.RFQNumber ?? 'N/A';
                             referenceSelect.innerHTML += `<option value="${item.Id}">${ref}${item.Title ? ' | ' + item.Title : ''}</option>`;
                         });
-                        setTimeout(initializeSelect2, 100);
                     })
                     .catch(err => {
                         console.error('Error fetching references:', err);
-                        referenceSelect.innerHTML = '<option value="">Error loading options</option>';
-                        setTimeout(initializeSelect2, 100);
+                        referenceSelect.innerHTML = '<option value="" selected>Error loading options</option>';
                     });
             });
         }
 
-        /* ─── Clear errors when user corrects fields ─────────────────── */
+        
 
-        $(document).on('change', '.select2-reference', function () {
-            if ($(this).val()) {
+        referenceSelect?.addEventListener('change', function () {
+            if (this.value) {
                 setFieldError(referenceSelect, 'referenceId-error', null);
                 highlightSelect2Error(false);
             }
@@ -349,7 +304,7 @@
             }
         });
 
-        /* ─── Submit: validate → submit ──────────────────────────────── */
+        
 
         submitBtn.addEventListener('click', function () {
             clearAllErrors();
@@ -385,7 +340,7 @@
             form.submit();
         });
 
-        /* ─── Live search for committees table ─────────────────────────── */
+       
 
         const searchInput  = document.getElementById('committeeSearch');
         const searchClear  = document.getElementById('committeeSearchClear');
