@@ -21,6 +21,7 @@ return [
     'invalid_email_format' => 'Please enter a valid email address.',
     'password_required' => 'Password is required.',
     'password_mismatch' => 'Passwords do not match.',
+    'password_reuse_not_allowed' => 'You cannot reuse your current password.',
     'user_exists' => 'An account with this email already exists.',
     'validation_failed' => 'Please check your input and try again.',
     'invalid_phone_format' => 'Please enter a valid phone number in international format.',

@@ -132,6 +132,13 @@ return [
         'Submitted for Approval' => \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Submitted->value,  // 'U'
     ],
 
+    'SupplierMasterId' => [
+        'Approved' => \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Approved->value,  // 'A'
+        'Rejected' => \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Rejected->value,  // 'R'
+        'Pending' => \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Pending->value,    // 'P'
+        'Submitted for Approval' => \App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum::Submitted->value,  // 'U'
+    ],
+
     'TripId' => [
         'Scheduled' => \App\Enums\Core\ApprovalEnum::Scheduled->value,  // 'Sc'
         'Approved' => \App\Enums\Core\ApprovalEnum::Approved->value,  // 'A'

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\ThirdPartyAuth;
 
 use App\Enums\Employee\GenderEnum;
+use App\Models\ThirdParty\ThirdPartyUser;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,14 +11,14 @@ class UpdateThirdPartyProfileRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->guard('sanctum')->check() &&
-            auth()->guard('sanctum')->user()
-            instanceof \App\Models\ThirdParty\ThirdParties;
+        $user = auth()->guard('sanctum')->user();
+
+        return $user instanceof ThirdPartyUser && ! is_null($user->thirdParty);
     }
 
     public function rules(): array
     {
-        $thirdPartyId = auth()->guard('sanctum')->user()->Id ?? null;
+        $thirdPartyId = auth()->guard('sanctum')->user()?->thirdParty?->Id;
 
         return [
             'firstName' => ['nullable', 'string', 'max:100', 'regex:/^[a-zA-Z\s\'-]+$/'],

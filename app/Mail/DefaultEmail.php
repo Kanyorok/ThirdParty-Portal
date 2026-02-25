@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\Communication\Email;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -33,6 +34,14 @@ class DefaultEmail extends Mailable
         $to = collect($this->crmEmail->To)->flatten()->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL))->values()->toArray();
         $cc = collect($this->crmEmail->CC)->flatten()->toArray();
         $bcc = collect($this->crmEmail->BCC)->flatten()->toArray();
+        $extra = $this->crmEmail->Extra;
+        $extraData = is_object($extra) ? (array) $extra : (is_array($extra) ? $extra : []);
+        $replyToEmail = data_get($extraData, 'reply_to.email');
+        $replyToName = data_get($extraData, 'reply_to.name');
+        $replyTo = [];
+        if (is_string($replyToEmail) && filter_var($replyToEmail, FILTER_VALIDATE_EMAIL)) {
+            $replyTo[] = new Address($replyToEmail, is_string($replyToName) ? $replyToName : null);
+        }
 
         // NEVER expose CC as a visible header. Merge any CC entries into BCC so they're hidden.
         $mergedBcc = array_values(array_filter(array_merge($bcc, $cc)));
@@ -42,6 +51,7 @@ class DefaultEmail extends Mailable
             cc: [],
             bcc: $mergedBcc,
             subject: $this->crmEmail->Subject,
+            replyTo: $replyTo,
         );
     }
 

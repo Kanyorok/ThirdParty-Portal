@@ -4,6 +4,7 @@ return [
     'invalid_credentials' => 'Invalid credentials.',
     'user_exists' => 'An Account with this email exists. Use another email.',
     'password_mismatch' => 'Passwords do not match',
+    'password_reuse_not_allowed' => 'You cannot reuse your current password.',
     'login_successful' => 'Login successful.',
     'login_failed_general' => 'Login failed. Please try again later.',
     'logout_successful' => 'Successfully logged out.',

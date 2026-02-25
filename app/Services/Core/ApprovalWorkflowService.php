@@ -455,7 +455,13 @@ abstract class ApprovalWorkflowService
             }
         }
 
-        return strtolower($status->Description);
+        // Safe fallback: use the configured CodeDetail value for the workflow code.
+        // Descriptions like "Approved" can overflow compact status columns (e.g. CHAR(1)).
+        if (! empty($status->Value)) {
+            return (string) $status->Value;
+        }
+
+        return strtolower((string) $status->Description);
     }
 
     /**

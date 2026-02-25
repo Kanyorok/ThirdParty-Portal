@@ -27,9 +27,14 @@ class NotificationController extends Controller
         }
 
         $notifications = $this->collectNotifications($user);
+        $unreadCount = $notifications->filter(fn ($item) => empty($item['read_at']))->count();
 
         return response()->json([
             'success' => true,
+            'summary' => [
+                'total' => $notifications->count(),
+                'unread' => $unreadCount,
+            ],
             'notifications' => NotificationResource::collection($notifications),
         ]);
     }
@@ -60,8 +65,8 @@ class NotificationController extends Controller
         if (! $record || ! $this->belongsTo($record, $user)) {
             return response()->json([
                 'success' => false,
-                'message' => __('auth.unauthenticated'),
-            ], 401);
+                'message' => 'Notification not found.',
+            ], 404);
         }
 
         if ($type === 'email') {
@@ -71,6 +76,7 @@ class NotificationController extends Controller
             ])->save();
             $payload = $this->mapEmailNotification($record);
         } else {
+            $this->markSmsAsRead($record, $user);
             $payload = $this->mapSmsNotification($record);
         }
 
@@ -91,16 +97,43 @@ class NotificationController extends Controller
             ], 401);
         }
 
-        $query = Email::query();
-        $this->applyPartyFilter($query, $user);
-        $query->update([
-            'ReadOn' => Carbon::now(),
+        $readOn = Carbon::now();
+
+        $emailQuery = Email::query();
+        $this->applyPartyFilter($emailQuery, $user);
+        $updatedEmails = $emailQuery->update([
+            'ReadOn' => $readOn,
             'ReadBy' => $user->Id,
         ]);
+
+        $updatedSms = 0;
+        $smsQuery = SMS::query();
+        $this->applyPartyFilter($smsQuery, $user);
+        $smsQuery->chunkById(200, function ($smsRecords) use ($user, $readOn, &$updatedSms) {
+            foreach ($smsRecords as $sms) {
+                $meta = $this->normalizeExtra($sms->Response);
+                if (! empty($meta['read_at'])) {
+                    continue;
+                }
+
+                $meta['read_at'] = $readOn->toIso8601String();
+                $meta['read_by'] = $user->Id;
+
+                $sms->forceFill([
+                    'Response' => (object) $meta,
+                ])->save();
+
+                $updatedSms++;
+            }
+        }, 'Id');
 
         return response()->json([
             'success' => true,
             'message' => 'All notifications have been marked as read.',
+            'updated' => [
+                'emails' => $updatedEmails,
+                'sms' => $updatedSms,
+            ],
         ]);
     }
 
@@ -148,6 +181,7 @@ class NotificationController extends Controller
     private function mapSmsNotification(SMS $sms): array
     {
         $meta = $this->normalizeExtra($sms->Response ?? $sms->Extra);
+        $readAt = $this->parseDateValue($meta['read_at'] ?? null);
 
         return [
             'id' => $sms->SMSId,
@@ -162,8 +196,8 @@ class NotificationController extends Controller
                 'source' => 'sms',
                 'extra' => $meta,
             ],
-            'read_at' => null,
-            'created_at' => $sms->CreatedOn ?? $sms->Dated,
+            'read_at' => $readAt,
+            'created_at' => $this->parseDateValue($sms->CreatedOn ?? $sms->Dated),
         ];
     }
 
@@ -200,7 +234,41 @@ class NotificationController extends Controller
             return (array) $extra;
         }
 
+        if (is_string($extra)) {
+            $decoded = json_decode($extra, true);
+
+            return is_array($decoded) ? $decoded : [];
+        }
+
         return [];
+    }
+
+    private function markSmsAsRead(SMS $sms, ThirdPartyUser $user): void
+    {
+        $meta = $this->normalizeExtra($sms->Response);
+        $meta['read_at'] = Carbon::now()->toIso8601String();
+        $meta['read_by'] = $user->Id;
+
+        $sms->forceFill([
+            'Response' => (object) $meta,
+        ])->save();
+    }
+
+    private function parseDateValue($value): ?Carbon
+    {
+        if ($value instanceof Carbon) {
+            return $value;
+        }
+
+        if (empty($value)) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value);
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     private function resolveAuthenticatedUser(Request $request): ?ThirdPartyUser

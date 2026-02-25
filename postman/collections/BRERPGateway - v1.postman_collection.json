@@ -1,0 +1,421 @@
+{
+  "info": {
+    "_postman_id": "07eef3a6-33ec-4358-a80b-96818d153da3",
+    "name": "BRERPGateway - v1",
+    "description": "Collection - BrErp gateway",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Customer Data",
+      "id": "dde7c4cc-139c-41b6-b9ca-7d010ba462eb",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true,
+        "followRedirects": true,
+        "disableUrlEncoding": false,
+        "disableCookies": false
+      },
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "insomnia/11.2.0"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "token",
+            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkpTIiwiYnJhbmNoSWQiOiIwMDEiLCJuYmYiOjE3NzE1Nzg4MTUsImV4cCI6MTc3MTU3OTExNSwiaWF0IjoxNzcxNTc4ODE1fQ.Y4ufsYWShsvmawYvkT9MIMYj8wFE4nLQ5fQIxgwISfc"
+          },
+          {
+            "key": "Accept",
+            "value": "*/*"
+          },
+          {
+            "key": "Connection",
+            "value": "keep-alive"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"PageSize\": 100,\n  \"LastClientID\": null,\n  \"ModifiedAfter\": null,\n  \"ClientID\": null,\n  \"ClientStatus\": null,\n  \"CustomerType\": null,\n  \"Source\": \"Hello\"\n}\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5263/api/v1/Customer/GetCustomerData",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5263",
+          "path": [
+            "api",
+            "v1",
+            "Customer",
+            "GetCustomerData"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login - CBS",
+      "id": "2657db4f-de77-4489-a14a-fba38954e8e0",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true,
+        "followRedirects": true,
+        "disableUrlEncoding": false,
+        "disableCookies": false
+      },
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "insomnia/12.3.0"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "token",
+            "value": ""
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n\"ConsumerKey\": \"QygbC2Afnekl6qFkB3abbyNCQTEGmCMuk/CiyK84YcEjtK5+S/WaU5wWwfBTAR9K\",\n\"ConsumerSecret\": \"PpcwPXxc1ELTYXmrs7efsBHiTXPq9Qf63yIGL2kdqeseAuVkRx8+dQR4QTWj/PTR\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5263/Token/Login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5263",
+          "path": [
+            "Token",
+            "Login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login - Nimble",
+      "id": "54e1469f-776e-4f34-a3ff-d6d7ece93a70",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true,
+        "followRedirects": true,
+        "disableUrlEncoding": false,
+        "disableCookies": false
+      },
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "insomnia/12.3.0"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ConsumerKey\": \"jQlOo7cg3jGd+Nj3R9gtZoQZjZpgC9NGFmNhL1yoFlBtjTvtrjSwaThiqN2dQXbx\",\n  \"ConsumerSecret\": \"3SHzzbIJK2Dj3TgV1Kh3xkb2VDc78/VRacHpfvEiCsoP2xrW7UEK7ENerjhEbKsy\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://172.16.2.16:8089/Token/Login",
+          "protocol": "http",
+          "host": [
+            "172",
+            "16",
+            "2",
+            "16"
+          ],
+          "port": "8089",
+          "path": [
+            "Token",
+            "Login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Customer Summary Transaction Data",
+      "id": "b2603f13-41a1-4a66-b2df-371da82bf8a9",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true,
+        "followRedirects": true,
+        "disableUrlEncoding": false,
+        "disableCookies": false
+      },
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "insomnia/11.2.0"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "token",
+            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkpTIiwiYnJhbmNoSWQiOiIwMDEiLCJuYmYiOjE3NzE1Nzg4MTUsImV4cCI6MTc3MTU3OTExNSwiaWF0IjoxNzcxNTc4ODE1fQ.Y4ufsYWShsvmawYvkT9MIMYj8wFE4nLQ5fQIxgwISfc"
+          },
+          {
+            "key": "Accept",
+            "value": "*/*"
+          },
+          {
+            "key": "Connection",
+            "value": "keep-alive"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ourBranchID\": null,\n  \"pageNumber\": 1,\n  \"pageSize\": 100,\n  \"clientID\": null,\n  \"clientStatus\": null,\n  \"customerType\": null,\n\t\"source\": \"Nimble\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5263/api/v1/CustomerTransaction/GetClientSummaryStatement",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5263",
+          "path": [
+            "api",
+            "v1",
+            "CustomerTransaction",
+            "GetClientSummaryStatement"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "SyncGls",
+      "id": "5b3c829b-153e-4305-b2d1-91b2fb4adbe4",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true,
+        "followRedirects": true,
+        "disableUrlEncoding": false,
+        "disableCookies": false
+      },
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "insomnia/12.3.0"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "token",
+            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkpPU0VQSCIsImJyYW5jaElkIjoiMDAxIiwibmJmIjoxNzcxNTgwODc1LCJleHAiOjE3NzE1ODExNzUsImlhdCI6MTc3MTU4MDg3NX0.pSV5iY79RK2Xo_SiA5Gkivqy8TdRMtdbenGKzsynMt4"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"BankID\": \"00\",\n\t\"PageSize\": 100\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://172.16.2.16:8089/api/v1/GeneralLedger/SyncGeneralLedgers",
+          "protocol": "http",
+          "host": [
+            "172",
+            "16",
+            "2",
+            "16"
+          ],
+          "port": "8089",
+          "path": [
+            "api",
+            "v1",
+            "GeneralLedger",
+            "SyncGeneralLedgers"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Sync GL Balances",
+      "id": "3fad03aa-38b7-467e-bf73-aad07705b666",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true,
+        "followRedirects": true,
+        "disableUrlEncoding": false,
+        "disableCookies": false
+      },
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "insomnia/12.3.0"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "token",
+            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkpTIiwiYnJhbmNoSWQiOiIwMDEiLCJuYmYiOjE3NzE2NTg1OTksImV4cCI6MTc3MTY1ODg5OSwiaWF0IjoxNzcxNjU4NTk5fQ.GbFq2cBtI9WyitO-g1_9XaokUvz29DdLq5hRP2a6mQ0"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"bankID\": \"00\t\",\n  \"ourBranchID\": null,\n  \"balanceType\": \"A\",\n  \"asAtDate\": \"2019-09-10\",\n  \"lastCursor\": null,\n  \"pageSize\": 100,\n  \"source\": null\n}\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5263/api/v1/GLBalance/SyncGLBalances",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5263",
+          "path": [
+            "api",
+            "v1",
+            "GLBalance",
+            "SyncGLBalances"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "postERPTransaction",
+      "id": "a0495919-20a1-476f-bbd4-45b8d1a97eb2",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true,
+        "followRedirects": true,
+        "disableUrlEncoding": false,
+        "disableCookies": false
+      },
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "User-Agent",
+            "value": "insomnia/12.3.1"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "token",
+            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkpTIiwiYnJhbmNoSWQiOiIwMDEiLCJuYmYiOjE3NzE2NTg1OTksImV4cCI6MTc3MTY1ODg5OSwiaWF0IjoxNzcxNjU4NTk5fQ.GbFq2cBtI9WyitO-g1_9XaokUvz29DdLq5hRP2a6mQ0"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"DrOurBranchID\": \"001\",\n  \"CrOurBranchID\": \"001\",\n  \"DrAccountID\": \"010281\",\n  \"CrAccountID\": \"010711\",\n  \"TrxAmount\": 1000,\n  \"TrxDescription\": \"FNB 26/04/2023 SBS COLLECTION-FEB 2026\",\n  \"UniqueERPTrxCode\": \"550e8410-e29b-a716-441655442319\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5263/api/v1/Transaction/PostERPTransaction",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5263",
+          "path": [
+            "api",
+            "v1",
+            "Transaction",
+            "PostERPTransaction"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "id": "b7e6309c-9d9e-4cab-91aa-f1670fc2ea89",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": ""
+        }
+      },
+      "response": []
+    }
+  ]
+}
