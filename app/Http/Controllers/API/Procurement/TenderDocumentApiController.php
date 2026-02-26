@@ -8,13 +8,20 @@ use App\Http\Controllers\Controller;
 use App\Models\DMS\Document;
 use App\Models\DMS\DocumentRelation;
 use App\Models\Procurement\Tender;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Services\DMS\DocumentService;
+use App\Services\ThirdParty\PortalDocumentPermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class TenderDocumentApiController extends Controller
 {
+    public function __construct(
+        private readonly PortalDocumentPermissionService $permissionService
+    ) {
+    }
+
     private const VISIBLE_STATUSES = [
         TenderStatusEnum::Published->value,
         TenderStatusEnum::OpeningInProgress->value,
@@ -56,6 +63,21 @@ class TenderDocumentApiController extends Controller
             $user = Auth::guard('third_party')->user()
                 ?? Auth::guard('sanctum')->user()
                 ?? Auth::user();
+
+            if (! $user instanceof ThirdPartyUser) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated.',
+                ], 401);
+            }
+
+            if (! $this->permissionService->can($user, 'tender', 'download')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to download tender documents.',
+                ], 403);
+            }
+
             $thirdPartyId = $this->resolveThirdPartyId($request, $user);
             $supplierIds = $this->resolveSupplierIds($thirdPartyId);
 

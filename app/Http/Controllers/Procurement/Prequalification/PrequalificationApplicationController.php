@@ -11,6 +11,7 @@ use App\Http\Resources\Procurement\PrequalificationRoundResource;
 use App\Models\Procurement\Prequalification\ApplicationCategoryStatus;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\Procurement\Prequalification\PrequalificationApplicationDocument;
+use App\Models\Procurement\Prequalification\PrequalificationEvaluation;
 use App\Models\Procurement\Prequalification\PrequalificationResult;
 use App\Models\Procurement\Prequalification\PrequalificationRound;
 use Illuminate\Http\JsonResponse;
@@ -658,14 +659,12 @@ class PrequalificationApplicationController extends Controller
             $createdIds = [];
             $categoryToApp = [];
             foreach ($categoryIds as $cid) {
-                $app = PrequalificationApplication::create([
-                    'RoundID' => $roundId,
-                    'SupplierID' => $supplierId,
-                    'CategoryID' => $cid,
-                    'Status' => PrequalificationApplicationEnum::Submitted,
-                    'SubmittedOn' => now(),
-                    'CreatedBy' => $user->Id,
-                ]);
+                $app = $this->upsertSubmittedApplication(
+                    (int) $roundId,
+                    (int) $supplierId,
+                    (int) $cid,
+                    (int) $user->Id
+                );
                 $createdIds[] = $app->ApplicationID;
                 $categoryToApp[$cid] = $app->ApplicationID;
             }
@@ -850,15 +849,14 @@ class PrequalificationApplicationController extends Controller
         DB::beginTransaction();
 
         try {
+            $actorId = Auth::id() ?: 1;
             foreach ($categoryIds as $cid) {
-                PrequalificationApplication::create([
-                    'RoundID' => $roundId,
-                    'SupplierID' => $supplierId,
-                    'CategoryID' => $cid,
-                    'Status' => PrequalificationApplicationEnum::Submitted->value,
-                    'SubmittedOn' => now(),
-                    'CreatedBy' => Auth::id(),
-                ]);
+                $this->upsertSubmittedApplication(
+                    (int) $roundId,
+                    (int) $supplierId,
+                    (int) $cid,
+                    (int) $actorId
+                );
             }
             DB::commit();
 
@@ -870,5 +868,66 @@ class PrequalificationApplicationController extends Controller
 
             return back()->withInput()->with('error', 'Failed to save application. Please try again.');
         }
+    }
+
+    private function upsertSubmittedApplication(
+        int $roundId,
+        int $supplierId,
+        int $categoryId,
+        int $actorId
+    ): PrequalificationApplication {
+        $application = PrequalificationApplication::withTrashed()
+            ->where('RoundID', $roundId)
+            ->where('SupplierID', $supplierId)
+            ->where('CategoryID', $categoryId)
+            ->first();
+
+        if ($application) {
+            if ($application->trashed()) {
+                $application->restore();
+                $this->resetApplicationArtifacts((int) $application->ApplicationID);
+            }
+
+            $application->fill([
+                'Status' => PrequalificationApplicationEnum::Submitted,
+                'SubmittedOn' => now(),
+                'ModifiedBy' => $actorId,
+                'DeletedBy' => null,
+            ]);
+            $application->DeletedOn = null;
+            $application->save();
+
+            return $application;
+        }
+
+        return PrequalificationApplication::create([
+            'RoundID' => $roundId,
+            'SupplierID' => $supplierId,
+            'CategoryID' => $categoryId,
+            'Status' => PrequalificationApplicationEnum::Submitted,
+            'SubmittedOn' => now(),
+            'CreatedBy' => $actorId,
+            'ModifiedBy' => $actorId,
+        ]);
+    }
+
+    private function resetApplicationArtifacts(int $applicationId): void
+    {
+        $deletedOn = now();
+
+        ApplicationCategoryStatus::query()
+            ->where('ApplicationId', $applicationId)
+            ->whereNull('DeletedOn')
+            ->update(['DeletedOn' => $deletedOn]);
+
+        PrequalificationEvaluation::query()
+            ->where('ApplicationID', $applicationId)
+            ->whereNull('DeletedOn')
+            ->update(['DeletedOn' => $deletedOn]);
+
+        PrequalificationResult::query()
+            ->where('ApplicationID', $applicationId)
+            ->whereNull('DeletedOn')
+            ->update(['DeletedOn' => $deletedOn]);
     }
 }

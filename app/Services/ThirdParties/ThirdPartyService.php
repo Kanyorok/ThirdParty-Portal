@@ -2,6 +2,7 @@
 
 namespace App\Services\ThirdParties;
 
+use App\Enums\ThirdParty\ThirdPartyStatusEnum;
 use App\Exceptions\ErroredException;
 use App\Models\Auth\User;
 use App\Models\Core\Approval\CodeDetail;
@@ -43,6 +44,10 @@ class ThirdPartyService extends ThirdPartiesService
         return DB::transaction(function () use ($name, $tradingName, $businessType, $registrationNumber, $taxPIN, $vatNumber, $locationID, $physicalAddress, $email, $phone, $website, $status, $extra, $actor, $data) {
             $types = $data['types'] ?? [];
             $partyTypes = self::getTypes($types);
+            $resolvedStatus = $status;
+            if (! $resolvedStatus && $partyTypes->contains(fn ($type) => $type->Code === self::TypeSupplier)) {
+                $resolvedStatus = self::codeDetail(ThirdPartyStatusEnum::Inactive);
+            }
 
             $parentParty = parent::create(
                 $name,
@@ -56,7 +61,7 @@ class ThirdPartyService extends ThirdPartiesService
                 $email,
                 $phone,
                 $website,
-                $status,
+                $resolvedStatus,
                 $extra,
                 $actor
             );

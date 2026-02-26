@@ -5,6 +5,7 @@ namespace App\Services\ThirdParties;
 use App\Enums\ThirdParty\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdParty\ThirdPartyStatusEnum;
 use App\Models\Auth\User;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Models\ThirdParty\SupplierMaster;
 use App\Services\Core\ApprovalWorkflowService;
 use Illuminate\Database\Eloquent\Collection;
@@ -56,15 +57,25 @@ class SupplierWorkflowService extends ApprovalWorkflowService
             $supplier->ApprovalStatus = ThirdPartyApprovalStatusEnum::Approved;
             $supplier->save();
 
-            // Activate associated ThirdPartyUsers
-            // Activate associated ThirdPartyUsers
-            // 1. Verify email if not already verified (auto-verify for backend-approved suppliers)
-            \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyId', $supplier->ThirdPartyId)
-                 ->whereNull('EmailVerifiedOn')
-                 ->update(['EmailVerifiedOn' => now()]);
+            // Trigger verification only after supplier approval.
+            $thirdPartyUsers = ThirdPartyUser::where('ThirdPartyId', $supplier->ThirdPartyId)->get();
+            foreach ($thirdPartyUsers as $thirdPartyUser) {
+                if (empty($thirdPartyUser->EmailVerifiedOn)) {
+                    try {
+                        $thirdPartyUser->sendEmailVerificationNotification();
+                    } catch (\Throwable $exception) {
+                        Log::error('Failed to send supplier-approval verification email', [
+                            'third_party_user_id' => $thirdPartyUser->Id,
+                            'third_party_id' => $supplier->ThirdPartyId,
+                            'exception' => $exception->getMessage(),
+                        ]);
+                    }
+                }
+            }
 
-            // 2. Ensure account is active
-            \App\Models\ThirdParty\ThirdPartyUser::where('ThirdPartyId', $supplier->ThirdPartyId)
+            // Only verified users are activated here; unverified users stay inactive until verification.
+            ThirdPartyUser::where('ThirdPartyId', $supplier->ThirdPartyId)
+                ->whereNotNull('EmailVerifiedOn')
                 ->update(['IsActive' => true]);
 
             if ($thirdParty = $supplier->thirdParty) {

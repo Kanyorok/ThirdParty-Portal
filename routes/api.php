@@ -5,6 +5,7 @@ use App\Http\Controllers\API\Enums\CodeDetailsController;
 use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
 use App\Http\Controllers\API\Procurement\SupplierRFQController;
 use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
+use App\Http\Controllers\API\Procurement\Prequalification\PreqApplicationDocumentApiController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
@@ -243,6 +244,28 @@ Route::prefix('procurement')->name('api.procurement.')
             Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
             Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
             Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
+            Route::get('applications/{roundId}/categories/{categoryId}/documents', [PreqApplicationDocumentApiController::class, 'index'])
+                ->name('applications.documents.index')
+                ->whereNumber('roundId')
+                ->whereNumber('categoryId')
+                ->middleware('portal.doc.permission:prequalification,view');
+            Route::post('applications/{roundId}/categories/{categoryId}/documents', [PreqApplicationDocumentApiController::class, 'store'])
+                ->name('applications.documents.store')
+                ->whereNumber('roundId')
+                ->whereNumber('categoryId')
+                ->middleware('portal.doc.permission:prequalification,upload');
+            Route::get('applications/{roundId}/categories/{categoryId}/documents/{id}/download', [PreqApplicationDocumentApiController::class, 'download'])
+                ->name('applications.documents.download')
+                ->whereNumber('roundId')
+                ->whereNumber('categoryId')
+                ->whereNumber('id')
+                ->middleware('portal.doc.permission:prequalification,download');
+            Route::delete('applications/{roundId}/categories/{categoryId}/documents/{id}', [PreqApplicationDocumentApiController::class, 'destroy'])
+                ->name('applications.documents.destroy')
+                ->whereNumber('roundId')
+                ->whereNumber('categoryId')
+                ->whereNumber('id')
+                ->middleware('portal.doc.permission:prequalification,delete');
         });
 
         // RFQ routes - now properly authenticated

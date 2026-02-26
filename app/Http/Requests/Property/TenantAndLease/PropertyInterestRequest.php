@@ -18,35 +18,35 @@ class PropertyInterestRequest extends FormRequest
             'BlockId' => $this->block_id,
             'FloorId' => $this->floor_id,
             'UnitId' => $this->unit_id,
-            'TenantId' => $this->tenant_id,
+            'TenantId' => $this->tenant_id ?? $this->input('TenantId'),
             'InterestedStartDate' => $this->interested_start_date,
             'InterestedEndDate' => $this->interested_end_date,
             'PaymentFrequency' => $this->payment_frequency,
             'AdditionalInformation' => $this->additional_information,
-            'CreatedBy' => $this->input('CreatedBy'),
-            'ModifiedBy' => $this->input('ModifiedBy'),
         ]);
     }
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'PropertyId' => 'required|exists:t_PropertyRegistry,Id',
             'BlockId' => 'required|exists:t_PropertyBlock,Id',
             'FloorId' => 'required|exists:t_PropertyFloor,Id',
             'UnitId' => 'required|exists:t_PropertyUnit,Id',
-            'TenantId' => 'required|exists:t_TenantMaintenance,Id',
 
             'InterestedStartDate' => 'required|date|after_or_equal:today',
             'InterestedEndDate' => 'required|date|after_or_equal:InterestedStartDate',
 
             'PaymentFrequency' => 'required|exists:t_CodeDetails,ID',
 
-            'CreatedBy' => 'required|exists:t_Users,Id',
-            'ModifiedBy' => 'required|exists:t_Users,Id',
-
             'AdditionalInformation' => 'nullable|string|max:255',
         ];
+
+        if (! $this->is('api/v1/property/*')) {
+            $rules['TenantId'] = 'required|exists:t_TenantMaintenance,Id';
+        }
+
+        return $rules;
     }
 
     public function messages(): array

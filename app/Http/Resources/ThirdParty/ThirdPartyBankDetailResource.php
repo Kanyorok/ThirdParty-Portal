@@ -10,15 +10,19 @@ class ThirdPartyBankDetailResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $extra = (array) ($this->Extra ?? []);
+
         return [
             'id' => $this->BankID,
             'thirdPartyId' => $this->ThirdPartyId,
-            'bankName' => $this->BankName,
-            'branch' => $this->Branch,
+            'bankId' => $this->branch?->BankID,
+            'bankName' => $this->branch?->bank?->BankName ?? ($extra['bankName'] ?? null),
+            'branchId' => $this->BranchID,
+            'branch' => $this->branch?->BranchName ?? ($extra['branch'] ?? null),
             'accountNumber' => $this->AccountNumber,
             'currencyId' => $this->CurrencyId,
             'currency' => new CurrencyResource($this->whenLoaded('currency')),
-            'swiftCode' => $this->SwiftCode,
+            'swiftCode' => $this->branch?->bank?->SwiftCode ?? ($extra['swiftCode'] ?? null),
             'createdOn' => $this->CreatedOn?->toIso8601String(),
             'modifiedOn' => $this->ModifiedOn?->toIso8601String(),
             'createdBy' => $this->CreatedBy,

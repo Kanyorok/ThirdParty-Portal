@@ -50,6 +50,17 @@ class MetadataController extends Controller
         return response()->json(['status' => 'success', 'data' => $types]);
     }
 
+    public function getPaymentFrequencies(): JsonResponse
+    {
+        $frequencies = CodeDetail::where('CodeID', 'PaymentFrequency')
+            ->select('ID as id', 'Description as name', 'Value as value')
+            ->whereNull('DeletedOn')
+            ->orderBy('Description')
+            ->get();
+
+        return response()->json(['status' => 'success', 'data' => $frequencies]);
+    }
+
     private function getFlagEmoji(string $countryCode): string
     {
         if (strlen($countryCode) !== 2) {

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\Procurement\SupplierRFQController;
+use App\Http\Controllers\API\Procurement\Prequalification\PreqApplicationDocumentApiController;
 use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
 use App\Http\Controllers\API\Procurement\TenderDocumentApiController;
 use App\Http\Controllers\API\Procurement\TenderInvitationResponseApiController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\ThirdParty\API\LookupController;
 use App\Http\Controllers\ThirdParty\API\MetadataController;
 use App\Http\Controllers\ThirdParty\API\NewThirdPartyController;
 use App\Http\Controllers\ThirdParty\API\NotificationController;
+use App\Http\Controllers\ThirdParty\API\PortalDocumentPermissionController;
 use App\Http\Controllers\ThirdParty\API\ProfileController;
 use App\Http\Controllers\ThirdParty\API\ThirdPartyAuthController;
 use App\Http\Controllers\ThirdParty\API\ThirdPartyPasswordController;
@@ -47,6 +49,7 @@ Route::prefix('portal/auth')->name('portal.auth.')->group(function () {
         Route::get('business-types', [MetadataController::class, 'getBusinessTypes']);
         Route::get('supplier-categories', [MetadataController::class, 'getSupplierCategories']);
         Route::get('tenant-types', [MetadataController::class, 'getTenantTypes']);
+        Route::get('payment-frequencies', [MetadataController::class, 'getPaymentFrequencies']);
         Route::get('localities/{countryId}', [MetadataController::class, 'getLocalities'])->whereNumber('countryId');
         Route::get('code-details/{group}', [MetadataController::class, 'getCodeDetails']);
     });
@@ -88,11 +91,15 @@ Route::prefix('profile')->middleware(['auth.thirdparty'])->group(function () {
 });
 
 Route::middleware(['auth.thirdparty'])->prefix('portal')->group(function () {
+    // Backward-compatible alias used by some portal clients.
+    Route::get('profiles', [ProfileController::class, 'getAvailableProfiles']);
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::get('notifications/preferences', [NotificationController::class, 'preferences']);
     Route::put('notifications/preferences', [NotificationController::class, 'updatePreferences']);
     Route::post('notifications/{type}/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::get('documents/permissions', [PortalDocumentPermissionController::class, 'show']);
+    Route::put('documents/permissions', [PortalDocumentPermissionController::class, 'update']);
 
     Route::prefix('help')->group(function () {
         Route::get('categories', [HelpTicketController::class, 'categories']);
@@ -114,6 +121,24 @@ Route::middleware(['auth.thirdparty'])->prefix('supplier')->group(function () {
     Route::prefix('prequalification')->group(function () {
         Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex']);
         Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->whereNumber('round');
+        Route::get('applications/{round}/categories/{category}/documents', [PreqApplicationDocumentApiController::class, 'index'])
+            ->whereNumber('round')
+            ->whereNumber('category')
+            ->middleware('portal.doc.permission:prequalification,view');
+        Route::post('applications/{round}/categories/{category}/documents', [PreqApplicationDocumentApiController::class, 'store'])
+            ->whereNumber('round')
+            ->whereNumber('category')
+            ->middleware('portal.doc.permission:prequalification,upload');
+        Route::get('applications/{round}/categories/{category}/documents/{id}/download', [PreqApplicationDocumentApiController::class, 'download'])
+            ->whereNumber('round')
+            ->whereNumber('category')
+            ->whereNumber('id')
+            ->middleware('portal.doc.permission:prequalification,download');
+        Route::delete('applications/{round}/categories/{category}/documents/{id}', [PreqApplicationDocumentApiController::class, 'destroy'])
+            ->whereNumber('round')
+            ->whereNumber('category')
+            ->whereNumber('id')
+            ->middleware('portal.doc.permission:prequalification,delete');
         Route::post('applications', [PrequalificationApplicationController::class, 'store']);
     });
 
@@ -122,7 +147,8 @@ Route::middleware(['auth.thirdparty'])->prefix('supplier')->group(function () {
         Route::get('invitations', [TenderInvitationResponseApiController::class, 'index']);
         Route::get('{tender}', [TenderApiController::class, 'show'])->whereNumber('tender');
         Route::get('{tender}/documents/{document}/download', [TenderDocumentApiController::class, 'download'])
-            ->whereNumber('tender');
+            ->whereNumber('tender')
+            ->middleware('portal.doc.permission:tender,download');
         Route::post('respond', [TenderInvitationResponseApiController::class, 'respond']);
     });
 

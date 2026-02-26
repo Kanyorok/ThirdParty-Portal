@@ -57,6 +57,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'auth.thirdparty' => \App\Http\Middleware\AuthenticateThirdPartyToken::class,
+        'portal.doc.permission' => \App\Http\Middleware\EnsurePortalDocumentPermission::class,
         'thirdparty.approved' => \App\Http\Middleware\CheckThirdPartyApprovalStatus::class,
         'verified.user' => \App\Http\Middleware\VerifiedUser::class,
         'license' => \App\Http\Middleware\RequireLicense::class,

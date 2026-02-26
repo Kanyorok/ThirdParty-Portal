@@ -317,7 +317,7 @@ class BidSubmissionApiController extends Controller
 
     private function ensureInvitationAccepted(Tender $tender, int $supplierId): ?JsonResponse
     {
-        if ($tender->TenderType !== TenderTypeEnum::Restricted->value) {
+        if (! $this->isRestrictedTender($tender)) {
             return null;
         }
 
@@ -325,6 +325,7 @@ class BidSubmissionApiController extends Controller
             ->where('TenderId', $tender->Id)
             ->where('SupplierId', $supplierId)
             ->whereNull('DeletedOn')
+            ->orderByDesc('InvitationDate')
             ->first();
 
         if (! $invitation) {
@@ -344,6 +345,18 @@ class BidSubmissionApiController extends Controller
         }
 
         return null;
+    }
+
+    private function isRestrictedTender(Tender $tender): bool
+    {
+        $type = strtolower(trim((string) $tender->getRawOriginal('TenderType')));
+
+        return in_array($type, [
+            TenderTypeEnum::Restricted->value,
+            'restricted',
+            'restricted tender',
+            'rs',
+        ], true);
     }
 
     /**

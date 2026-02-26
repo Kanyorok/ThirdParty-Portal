@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
             'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
             'auth.thirdparty' => \App\Http\Middleware\AuthenticateThirdPartyToken::class,
+            'portal.doc.permission' => \App\Http\Middleware\EnsurePortalDocumentPermission::class,
         ]);
 
         $middleware->trimStrings(except: [

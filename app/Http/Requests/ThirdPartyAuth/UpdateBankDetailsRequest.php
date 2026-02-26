@@ -25,8 +25,9 @@ class UpdateBankDetailsRequest extends FormRequest
 
         return [
             'ThirdPartyId' => 'sometimes|required|integer|exists:t_ThirdParties,Id',
-            'BankName' => 'sometimes|required|string|max:255',
+            'BankName' => 'nullable|string|max:255',
             'Branch' => 'nullable|string|max:255',
+            'BranchID' => 'nullable|integer|exists:t_BankBranches,BranchID',
             'AccountNumber' => [
                 'sometimes',
                 'required',
@@ -40,6 +41,24 @@ class UpdateBankDetailsRequest extends FormRequest
             'CurrencyId' => 'sometimes|required|integer|exists:t_Currencies,Id',
             'SwiftCode' => 'nullable|string|max:50',
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $user = $this->user();
+        $payload = [];
+
+        if ($user?->thirdParty?->Id) {
+            $payload['ThirdPartyId'] = (int) $user->thirdParty->Id;
+        }
+
+        if ($this->has('BranchId') && ! $this->has('BranchID')) {
+            $payload['BranchID'] = $this->input('BranchId');
+        }
+
+        if (! empty($payload)) {
+            $this->merge($payload);
+        }
     }
 
     public function bankDetail(): ?ThirdPartiesBankDetails

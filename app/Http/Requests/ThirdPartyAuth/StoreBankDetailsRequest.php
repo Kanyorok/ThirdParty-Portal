@@ -9,23 +9,36 @@ class StoreBankDetailsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $user = auth()->guard('sanctum')->user();
+        $user = $this->user();
+        return (bool) ($user && $user->thirdParty);
+    }
 
-        if (! $user) {
-            return true;
+    protected function prepareForValidation(): void
+    {
+        $user = $this->user();
+        $payload = [];
+
+        if ($user?->thirdParty?->Id) {
+            // Always bind writes to the authenticated third party.
+            $payload['ThirdPartyId'] = (int) $user->thirdParty->Id;
         }
 
-        $thirdPartyId = $this->input('ThirdPartyId');
+        if ($this->has('BranchId') && ! $this->has('BranchID')) {
+            $payload['BranchID'] = $this->input('BranchId');
+        }
 
-        return $user->thirdParty && $user->thirdParty->Id === (int)$thirdPartyId;
+        if (! empty($payload)) {
+            $this->merge($payload);
+        }
     }
 
     public function rules(): array
     {
         return [
             'ThirdPartyId' => 'required|integer|exists:t_ThirdParties,Id',
-            'BankName' => 'required|string|max:255',
+            'BankName' => 'nullable|string|max:255',
             'Branch' => 'nullable|string|max:255',
+            'BranchID' => 'nullable|integer|exists:t_BankBranches,BranchID',
             'AccountNumber' => [
                 'required',
                 'string',

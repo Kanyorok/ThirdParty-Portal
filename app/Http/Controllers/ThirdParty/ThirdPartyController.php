@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\ThirdParty;
 
+use App\Enums\ThirdParty\ThirdPartyStatusEnum;
 use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdParty\Api\NewThirdPartyRequest;
@@ -131,6 +132,9 @@ class ThirdPartyController extends Controller
     {
         $this->authorize('create', ThirdParties::class);
         $actor = $request->user();
+        $types = $request->array('types');
+        $isSupplierCreation = in_array(ThirdPartyService::TypeSupplier, $types, true);
+        $creationStatus = $isSupplierCreation ? ThirdPartyService::codeDetail(ThirdPartyStatusEnum::Inactive) : null;
         $country = $request->getCountry();
         $businessType = $request->getBusinessType();
         $location = $request->getLocation($country);
@@ -163,7 +167,7 @@ class ThirdPartyController extends Controller
         }
 
         try {
-            return DB::transaction(function () use ($request, $actor, $businessType, $location, $phone, $userDetails, $customerDetails, $tenantDetails, $logo) {
+            return DB::transaction(function () use ($request, $actor, $businessType, $location, $phone, $userDetails, $customerDetails, $tenantDetails, $logo, $types, $isSupplierCreation, $creationStatus) {
 
                 $party = ThirdPartyService::create(
                     name: $request->str('Name')->trim()->toString(),
@@ -177,11 +181,11 @@ class ThirdPartyController extends Controller
                     email: $request->str('Email')->trim()->toString(),
                     phone: $phone,
                     website: $request->str('Website')->trim()->toString(),
-                    status: null,
+                    status: $creationStatus,
                     extra: null,
                     actor: $actor,
                     data: [
-                        'types' => $request->array('types'),
+                        'types' => $types,
                         'user_DateOfBirth' => $customerDetails['DateOfBirth'] ?? null,
                         'user_Gender' => $customerDetails['Gender'] ?? null,
                         'user_MaritalStatus' => $customerDetails['MaritalStatus'] ?? null,
@@ -201,7 +205,8 @@ class ThirdPartyController extends Controller
                         phone: $userDetails['Phone'],
                         gender: $userDetails['Gender'],
                         actor: $actor,
-                        password: $request->get('user_Password') ?? null
+                        password: $request->get('user_Password') ?? null,
+                        sendVerification: ! $isSupplierCreation
                     );
                 }
 
@@ -211,7 +216,11 @@ class ThirdPartyController extends Controller
 
                 Log::info('Created ThirdParty:', ['party' => $party, 'id' => $party->Id]);
 
-                return $this->succeeded("{$party->ThirdPartyName} created successfully", route('thirdparty.parties.show', $party->Id));
+                $message = $isSupplierCreation
+                    ? "{$party->ThirdPartyName} created successfully. Submit it for approval from the Suppliers screen."
+                    : "{$party->ThirdPartyName} created successfully";
+
+                return $this->succeeded($message, route('thirdparty.parties.show', $party->Id));
             });
         } catch (ErroredException $e) {
             return $e->toJson();
