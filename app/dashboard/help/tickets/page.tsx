@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -8,28 +9,54 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/c
 import { Input } from "@/components/common/input"
 import { Label } from "@/components/common/label"
 import { NativeSelect, NativeSelectOption } from "@/components/common/native-select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/common/table"
 import { Textarea } from "@/components/common/textarea"
-import { AlertCircle, ArrowUpRight, CheckCircle2, Download, Eye, Filter, LifeBuoy, Plus, RefreshCw, Save, Search, X } from "lucide-react"
+import { useDebounce } from "@/hooks/use-debounce"
+import { cn } from "@/lib/utils"
+import {
+  AlertCircle,
+  ArrowUpRight,
+  CheckCircle2,
+  Download,
+  Eye,
+  Filter,
+  LifeBuoy,
+  Plus,
+  RefreshCw,
+  Save,
+  Search,
+  SearchX,
+  Send,
+  Ticket as TicketIcon,
+  X,
+} from "lucide-react"
 import { toast } from "sonner"
 
 const STORAGE_KEY = "portal_help_ticket_filters_v2"
 const DEFAULT_PAGE_SIZE = 10
-const PRIMARY = "h-10 rounded-2xl border border-primary/90 bg-primary px-4 text-xs font-semibold text-primary-foreground transition-colors duration-200 hover:bg-primary/85"
-const SECONDARY = "h-10 rounded-2xl border border-border/80 bg-background/95 px-4 text-xs font-semibold text-foreground transition-colors duration-200 hover:border-primary/30 hover:bg-primary/[0.05]"
-const TERTIARY = "h-10 rounded-2xl border border-sky-300/70 bg-sky-50/70 px-4 text-xs font-semibold text-sky-800 transition-colors duration-200 hover:bg-sky-100/80 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200"
-const DANGER = "h-10 rounded-2xl border border-rose-200/80 bg-rose-50/80 px-4 text-xs font-semibold text-rose-700 transition-colors duration-200 hover:bg-rose-100 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
 
-type Ticket = { id: string; subject: string; status: string; priority: string; responseCount: number; createdAt?: string | null; updatedAt?: string | null }
+type Ticket = {
+  id: string
+  subject: string
+  status: string
+  priority: string
+  responseCount: number
+  createdAt?: string | null
+  updatedAt?: string | null
+}
+
 type SortKey = "newest" | "oldest"
 type Filters = { search: string; status: string; severity: string; sort: SortKey }
 type CreateFieldErrors = { subject?: string; message?: string }
 type NoticeTone = "success" | "info"
 
 const DEFAULT_FILTERS: Filters = { search: "", status: "all", severity: "all", sort: "newest" }
+const STATUS_FILTERS = ["all", "open", "pending", "resolved", "closed"]
 
 const s = (v: unknown) => (v == null ? "" : String(v))
-const norm = (v: string) => v.trim().toLowerCase().replace(/\s+/g, "_")
+
+function norm(v: string): string {
+  return v.trim().toLowerCase().replace(/\s+/g, "_")
+}
 
 function readText(v: unknown, depth = 0): string {
   if (v == null) return ""
@@ -79,7 +106,17 @@ function isUserMessage(raw: any): boolean {
 }
 
 function responseCount(raw: any): number {
-  for (const x of [raw?.responses_count, raw?.response_count, raw?.responses, raw?.response, raw?.messages_count, raw?.message_count, raw?.reply_count, raw?.replies_count, raw?.replies]) {
+  for (const x of [
+    raw?.responses_count,
+    raw?.response_count,
+    raw?.responses,
+    raw?.response,
+    raw?.messages_count,
+    raw?.message_count,
+    raw?.reply_count,
+    raw?.replies_count,
+    raw?.replies,
+  ]) {
     const n = readNum(x)
     if (n != null) return n
   }
@@ -116,20 +153,28 @@ function metaFrom(body: any): { page: number; last: number; per: number } | null
   return { page: Math.max(1, Number(page ?? 1)), last: Math.max(1, Number(last ?? 1)), per: Math.max(1, Number(per ?? DEFAULT_PAGE_SIZE)) }
 }
 
-function statusBadge(status: string): string {
+function statusTone(status: string): string {
   const key = norm(status)
-  if (["resolved", "closed", "done"].includes(key)) return "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-  if (["pending", "waiting", "in_progress", "pending_approval"].includes(key)) return "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-  if (["rejected", "failed"].includes(key)) return "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300"
-  return "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300"
+  if (["resolved", "closed", "done"].includes(key)) return "border-emerald-200 text-emerald-700 bg-emerald-50"
+  if (["pending", "waiting", "in_progress", "pending_approval"].includes(key)) return "border-amber-200 text-amber-700 bg-amber-50"
+  if (["rejected", "failed"].includes(key)) return "border-rose-200 text-rose-700 bg-rose-50"
+  return "border-blue-200 text-blue-700 bg-blue-50"
 }
 
-function priorityBadge(priority: string): string {
+function priorityTone(priority: string): string {
   const key = norm(priority)
-  if (["urgent"].includes(key)) return "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300"
-  if (["high"].includes(key)) return "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-  if (["low"].includes(key)) return "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-  return "border-slate-400/30 bg-slate-500/10 text-slate-700 dark:text-slate-300"
+  if (key === "urgent") return "border-rose-200 text-rose-700 bg-rose-50"
+  if (key === "high") return "border-amber-200 text-amber-700 bg-amber-50"
+  if (key === "low") return "border-emerald-200 text-emerald-700 bg-emerald-50"
+  return "border-slate-200 text-slate-700 bg-slate-50"
+}
+
+function rowAccent(status: string): string {
+  const key = norm(status)
+  if (["resolved", "closed", "done"].includes(key)) return "border-l-emerald-400"
+  if (["pending", "waiting", "in_progress", "pending_approval"].includes(key)) return "border-l-amber-400"
+  if (["rejected", "failed"].includes(key)) return "border-l-rose-400"
+  return "border-l-blue-400"
 }
 
 function displayText(value: string, fallback: string): string {
@@ -188,6 +233,10 @@ function createdTicketIdFrom(body: any): string {
   ).trim()
 }
 
+function statusFilterLabel(value: string): string {
+  if (value === "all") return "All"
+  return displayText(value, "All")
+}
 export default function TicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(false)
@@ -197,7 +246,6 @@ export default function TicketsPage() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [lastPage, setLastPage] = useState(1)
   const [serverPaging, setServerPaging] = useState(false)
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [createOpen, setCreateOpen] = useState(false)
   const [createSubject, setCreateSubject] = useState("")
@@ -207,16 +255,21 @@ export default function TicketsPage() {
   const [createError, setCreateError] = useState<string | null>(null)
   const [createFieldErrors, setCreateFieldErrors] = useState<CreateFieldErrors>({})
 
-  const loadTickets = useCallback(async (targetPage: number, status: string, severity: string) => {
+  const debouncedSearch = useDebounce(filters.search, 300)
+
+  const loadTickets = useCallback(async (targetPage: number, status: string, severity: string, search: string) => {
     setLoading(true)
     setError(null)
     try {
       const q = new URLSearchParams({ page: String(targetPage), per_page: String(DEFAULT_PAGE_SIZE) })
       if (status !== "all") q.set("status", status)
       if (severity !== "all") q.set("priority", severity)
+      if (search.trim()) q.set("search", search.trim())
+
       const res = await fetch(`/api/v1/portal/help/tickets?${q.toString()}`, { cache: "no-store" })
       const body = await res.json().catch(() => ({}))
       if (!res.ok || body?.success === false) throw new Error(s(body?.message).trim() || "Failed to load tickets")
+
       setTickets(rowsFrom(body).map(mapTicket).filter((t) => t.id))
       const meta = metaFrom(body)
       if (meta) {
@@ -258,8 +311,8 @@ export default function TicketsPage() {
   }, [])
 
   useEffect(() => {
-    void loadTickets(page, filters.status, filters.severity)
-  }, [loadTickets, page, filters.status, filters.severity])
+    void loadTickets(page, filters.status, filters.severity, debouncedSearch)
+  }, [loadTickets, page, filters.status, filters.severity, debouncedSearch])
 
   useEffect(() => {
     if (!notice) return
@@ -270,10 +323,7 @@ export default function TicketsPage() {
 
   const filtered = useMemo(() => {
     const query = filters.search.trim().toLowerCase()
-    const list = tickets.filter((t) => {
-      if (query && !`${t.id} ${t.subject} ${t.status} ${t.priority}`.toLowerCase().includes(query)) return false
-      return true
-    })
+    const list = tickets.filter((t) => !query || `${t.id} ${t.subject} ${t.status} ${t.priority}`.toLowerCase().includes(query))
     list.sort((a, b) => {
       const ad = new Date(a.updatedAt || a.createdAt || 0).getTime()
       const bd = new Date(b.updatedAt || b.createdAt || 0).getTime()
@@ -284,34 +334,46 @@ export default function TicketsPage() {
 
   const uiLastPage = serverPaging ? Math.max(1, lastPage) : Math.max(1, Math.ceil(filtered.length / DEFAULT_PAGE_SIZE))
   const visible = useMemo(() => (serverPaging ? filtered : filtered.slice((page - 1) * DEFAULT_PAGE_SIZE, page * DEFAULT_PAGE_SIZE)), [filtered, page, serverPaging])
-  useEffect(() => { if (!serverPaging && page > uiLastPage) setPage(uiLastPage) }, [serverPaging, page, uiLastPage])
+
+  useEffect(() => {
+    if (!serverPaging && page > uiLastPage) setPage(uiLastPage)
+  }, [serverPaging, page, uiLastPage])
 
   const filterCount = Number(Boolean(filters.search.trim())) + Number(filters.status !== "all") + Number(filters.severity !== "all") + Number(filters.sort !== "newest")
   const totalVisible = filtered.length
   const openCount = filtered.filter((t) => ["open", "pending", "in_progress", "waiting"].includes(norm(t.status))).length
   const resolvedCount = filtered.filter((t) => ["resolved", "closed", "done"].includes(norm(t.status))).length
   const awaitingFirstResponse = filtered.filter((t) => t.responseCount === 0).length
-  const filterFieldClass = () =>
-    `space-y-1.5 transition-all duration-500 ease-out ${
-      filtersOpen ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0 pointer-events-none"
-    }`
-  const filterFieldStyle = (index: number): React.CSSProperties => ({
-    transitionDelay: filtersOpen ? `${80 + index * 70}ms` : "0ms",
-  })
 
-  const clearFilters = () => { setFilters(DEFAULT_FILTERS); setPage(1); setNotice({ message: "Filters cleared.", tone: "info" }) }
-  const saveFilters = () => { if (typeof window !== "undefined") window.localStorage.setItem(STORAGE_KEY, JSON.stringify(filters)); setNotice({ message: "Filters saved.", tone: "info" }) }
+  const clearFilters = () => {
+    setFilters(DEFAULT_FILTERS)
+    setPage(1)
+    setNotice({ message: "Filters cleared.", tone: "info" })
+  }
+
+  const saveFilters = () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(filters))
+    }
+    setNotice({ message: "View saved.", tone: "info" })
+  }
+
   const exportCsv = () => {
     if (!visible.length) return setNotice({ message: "No rows to export on this page.", tone: "info" })
-    const head = [["Ticket ID", "Label", "Status", "Severity", "Dated"]]
+    const head = [["Ticket ID", "Subject", "Status", "Priority", "Updated"]]
     const csv = [...head, ...visible.map((t) => [t.id, t.subject, t.status, t.priority, fmtDate(t.createdAt || t.updatedAt)])]
-      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n")
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .join("\n")
+
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
     a.download = `help-tickets-${new Date().toISOString().slice(0, 10)}.csv`
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url)
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
   const resetCreateForm = () => {
@@ -326,12 +388,14 @@ export default function TicketsPage() {
     e.preventDefault()
     setCreateBusy(true)
     setCreateError(null)
+
     const check = validateTicketPayload(createSubject, createMessage)
     setCreateFieldErrors(check.nextErrors)
     if (!check.ok) {
       setCreateBusy(false)
       return
     }
+
     try {
       const res = await fetch("/api/v1/portal/help/tickets", {
         method: "POST",
@@ -345,11 +409,13 @@ export default function TicketsPage() {
           severity: createSeverity,
         }),
       })
+
       const body = await res.json().catch(() => ({}))
       if (!res.ok || body?.success === false) {
         const errors = body?.errors ?? {}
         const subjectErr = readText(errors?.subject?.[0] ?? errors?.title?.[0] ?? errors?.label?.[0])
         const messageErr = readText(errors?.message?.[0] ?? errors?.description?.[0] ?? errors?.content?.[0] ?? errors?.body?.[0])
+
         if (subjectErr || messageErr) {
           setCreateFieldErrors((prev) => ({
             ...prev,
@@ -357,23 +423,28 @@ export default function TicketsPage() {
             message: messageErr || prev.message,
           }))
         }
+
         const serverMessage = s(body?.message).trim() || "Failed to submit ticket"
         throw new Error(serverMessage)
       }
+
       const createdTicketId = createdTicketIdFrom(body)
       resetCreateForm()
       setCreateOpen(false)
+
       const successMessage = createdTicketId
         ? `Ticket #${createdTicketId} submitted and routed to support.`
         : "Ticket submitted and routed to support."
+
       setNotice({ message: successMessage, tone: "success" })
       toast.success(successMessage, {
         className:
           "!border-emerald-500/40 !bg-emerald-50 !text-emerald-800 dark:!border-emerald-500/35 dark:!bg-emerald-950/45 dark:!text-emerald-200",
       })
+
       setFilters((prev) => ({ ...prev, search: "", status: "all", severity: "all" }))
       setPage(1)
-      await loadTickets(1, "all", "all")
+      await loadTickets(1, "all", "all", "")
     } catch (e: any) {
       const message = e?.message || "Failed to submit ticket"
       setCreateError(message)
@@ -384,319 +455,406 @@ export default function TicketsPage() {
   }
 
   return (
-    <div className="w-full antialiased relative">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(52rem_24rem_at_0%_0%,rgba(14,165,233,0.10),transparent_58%),radial-gradient(36rem_16rem_at_100%_0%,rgba(16,185,129,0.08),transparent_62%)]"
-      />
-      <div className="w-full space-y-7 sm:space-y-8">
-        <header className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-b from-background via-background to-muted/25 px-5 sm:px-7 py-6">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute right-0 top-0 h-24 w-24 -translate-y-6 translate-x-6 rounded-full bg-primary/10 blur-2xl"
-          />
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+    <div className="w-full space-y-8 antialiased">
+      <header className="space-y-5">
+        <div className="space-y-2.5">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+            <LifeBuoy className="h-3.5 w-3.5 text-blue-600" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-700">Help Center</span>
+          </div>
+
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/85 px-3 py-1.5">
-                <LifeBuoy className="h-3.5 w-3.5 text-primary" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">Support Hub</span>
-              </div>
-              <h1 className="mt-3 text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">My tickets</h1>
-              <p className="mt-1 text-sm text-muted-foreground max-w-2xl">
-                Track support progress, prioritize urgent issues, and create better tickets with clearer details.
+              <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Support tickets</h1>
+              <p className="mt-1 text-sm text-slate-600">
+                Track progress, prioritize response, and manage issue resolution from one view.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Button asChild variant="outline" className={SECONDARY}>
-                <Link href="/dashboard/help">Help center<ArrowUpRight className="ml-1.5 h-4 w-4" /></Link>
+              <Button asChild variant="outline" className="h-10 rounded-full border-slate-300 bg-transparent px-4 text-xs font-semibold hover:bg-slate-50">
+                <Link href="/dashboard/help">
+                  Help center
+                  <ArrowUpRight className="ml-1.5 h-4 w-4" />
+                </Link>
               </Button>
-              <Button type="button" variant="outline" className={SECONDARY} onClick={() => void loadTickets(page, filters.status, filters.severity)} disabled={loading}>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 rounded-full border-slate-300 bg-transparent px-4 text-xs font-semibold hover:bg-slate-50"
+                onClick={() => void loadTickets(page, filters.status, filters.severity, debouncedSearch)}
+                disabled={loading}
+              >
                 {loading ? "Refreshing..." : <><RefreshCw className="mr-1.5 h-4 w-4" />Refresh</>}
               </Button>
-              <Button type="button" className={PRIMARY} onClick={() => setCreateOpen(true)}>
-                <Plus className="mr-1.5 h-4 w-4" />Create ticket
+              <Button
+                type="button"
+                className="h-10 rounded-full border border-blue-600 bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700"
+                onClick={() => setCreateOpen(true)}
+              >
+                <Plus className="mr-1.5 h-4 w-4" />
+                Create ticket
               </Button>
             </div>
           </div>
-        </header>
+        </div>
 
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-border/70 bg-gradient-to-br from-background to-muted/25 p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Visible tickets</p>
-            <p className="mt-2 text-2xl font-semibold text-foreground">{totalVisible}</p>
-          </div>
-          <div className="rounded-2xl border border-amber-200/60 bg-gradient-to-br from-background to-amber-500/5 p-4 dark:border-amber-500/25">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Open / pending</p>
-            <p className="mt-2 text-2xl font-semibold text-amber-700 dark:text-amber-300">{openCount}</p>
-          </div>
-          <div className="rounded-2xl border border-emerald-200/60 bg-gradient-to-br from-background to-emerald-500/5 p-4 dark:border-emerald-500/25">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Resolved / closed</p>
-            <p className="mt-2 text-2xl font-semibold text-emerald-700 dark:text-emerald-300">{resolvedCount}</p>
-          </div>
-          <div className="rounded-2xl border border-sky-200/60 bg-gradient-to-br from-background to-sky-500/5 p-4 dark:border-sky-500/25">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Awaiting first response</p>
-            <p className="mt-2 text-2xl font-semibold text-sky-700 dark:text-sky-300">{awaitingFirstResponse}</p>
-          </div>
-        </section>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="inline-flex h-8 items-center rounded-full border border-slate-200 bg-white px-3 font-medium text-slate-600">
+            Total <span className="ml-1 font-semibold text-slate-900">{totalVisible}</span>
+          </span>
+          <span className="inline-flex h-8 items-center rounded-full border border-amber-200 bg-amber-50 px-3 font-medium text-amber-700">
+            Open / pending <span className="ml-1 font-semibold">{openCount}</span>
+          </span>
+          <span className="inline-flex h-8 items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 font-medium text-emerald-700">
+            Resolved / closed <span className="ml-1 font-semibold">{resolvedCount}</span>
+          </span>
+          <span className="inline-flex h-8 items-center rounded-full border border-blue-200 bg-blue-50 px-3 font-medium text-blue-700">
+            Awaiting first response <span className="ml-1 font-semibold">{awaitingFirstResponse}</span>
+          </span>
+        </div>
+      </header>
 
-        <section className="space-y-2">
-          <div className="rounded-2xl px-4 sm:px-5 py-3.5 flex flex-wrap items-center gap-2.5 border border-border/70 bg-gradient-to-b from-background to-muted/20">
-            <Button type="button" variant="outline" className={DANGER} onClick={clearFilters}>
-              <X className="mr-1.5 h-4 w-4" />Clear
+      <section className="space-y-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="relative flex-1 max-w-3xl">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              value={filters.search}
+              onChange={(e) => {
+                setPage(1)
+                setFilters((prev) => ({ ...prev, search: e.target.value }))
+              }}
+              placeholder="Search by ticket ID, subject, status, or priority..."
+              className="h-11 rounded-xl border-slate-200 bg-white pl-10 pr-10 text-sm focus:border-blue-300 focus:ring-4 focus:ring-blue-50"
+            />
+            {filters.search.trim() ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setPage(1)
+                  setFilters((prev) => ({ ...prev, search: "" }))
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Clear search"
+              >
+                <SearchX className="h-4 w-4" />
+              </button>
+            ) : null}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="outline" className="h-10 rounded-full border-rose-200 bg-rose-50 px-4 text-xs font-semibold text-rose-700 hover:bg-rose-100" onClick={clearFilters}>
+              <X className="mr-1.5 h-4 w-4" />
+              Clear
             </Button>
-            <Button type="button" variant="outline" className={TERTIARY} onClick={saveFilters}>
-              <Save className="mr-1.5 h-4 w-4" />Save view
+            <Button type="button" variant="outline" className="h-10 rounded-full border-blue-200 bg-blue-50 px-4 text-xs font-semibold text-blue-700 hover:bg-blue-100" onClick={saveFilters}>
+              <Save className="mr-1.5 h-4 w-4" />
+              Save view
             </Button>
-            <Button type="button" variant="outline" className={TERTIARY} onClick={() => setFiltersOpen((p) => !p)}>
-              <Filter className="mr-1.5 h-4 w-4" />Filters{filterCount > 0 && <span className="ml-1.5 h-1.5 w-1.5 rounded-full bg-primary" />}
-            </Button>
-            <Button type="button" variant="outline" className={TERTIARY} onClick={exportCsv}>
-              <Download className="mr-1.5 h-4 w-4" />Export
+            <Button type="button" variant="outline" className="h-10 rounded-full border-slate-300 bg-transparent px-4 text-xs font-semibold hover:bg-slate-50" onClick={exportCsv}>
+              <Download className="mr-1.5 h-4 w-4" />
+              Export
             </Button>
           </div>
-          <div
-            className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out ${
-              filtersOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-            }`}
-            aria-hidden={!filtersOpen}
-          >
-            <div className="overflow-hidden">
-              <div className="mx-4 sm:mx-5 mb-1 rounded-2xl border border-border/70 p-3 sm:p-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 bg-background/90">
-                <div className={filterFieldClass()} style={filterFieldStyle(0)}>
-                  <Label htmlFor="ticket-search" className="text-[10px] uppercase tracking-widest font-bold opacity-70">Search</Label>
-                  <div className="relative">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="ticket-search"
-                      value={filters.search}
-                      onChange={(e) => { setPage(1); setFilters((f) => ({ ...f, search: e.target.value })) }}
-                      placeholder="Search ticket label..."
-                      className="h-10 pl-9 border-border/70 bg-transparent focus-visible:ring-0 focus-visible:border-primary/50"
-                    />
-                  </div>
-                </div>
-                <div className={filterFieldClass()} style={filterFieldStyle(1)}>
-                  <Label htmlFor="ticket-status" className="text-[10px] uppercase tracking-widest font-bold opacity-70">Status</Label>
-                  <NativeSelect
-                    id="ticket-status"
-                    value={filters.status}
-                    onChange={(e) => { setPage(1); setFilters((f) => ({ ...f, status: e.target.value })) }}
-                    className="h-10 border-border/70 px-3 text-sm lg:h-10 focus:ring-0"
-                  >
-                    <NativeSelectOption value="all">All statuses</NativeSelectOption>
-                    <NativeSelectOption value="open">Open</NativeSelectOption>
-                    <NativeSelectOption value="pending">Pending</NativeSelectOption>
-                    <NativeSelectOption value="resolved">Resolved</NativeSelectOption>
-                    <NativeSelectOption value="closed">Closed</NativeSelectOption>
-                  </NativeSelect>
-                </div>
-                <div className={filterFieldClass()} style={filterFieldStyle(2)}>
-                  <Label htmlFor="ticket-severity" className="text-[10px] uppercase tracking-widest font-bold opacity-70">Severity</Label>
-                  <NativeSelect
-                    id="ticket-severity"
-                    value={filters.severity}
-                    onChange={(e) => { setPage(1); setFilters((f) => ({ ...f, severity: e.target.value })) }}
-                    className="h-10 border-border/70 px-3 text-sm lg:h-10 focus:ring-0"
-                  >
-                    <NativeSelectOption value="all">All severity</NativeSelectOption>
-                    <NativeSelectOption value="urgent">Urgent</NativeSelectOption>
-                    <NativeSelectOption value="high">High</NativeSelectOption>
-                    <NativeSelectOption value="normal">Normal</NativeSelectOption>
-                    <NativeSelectOption value="low">Low</NativeSelectOption>
-                  </NativeSelect>
-                </div>
-                <div className={filterFieldClass()} style={filterFieldStyle(3)}>
-                  <Label htmlFor="ticket-sort" className="text-[10px] uppercase tracking-widest font-bold opacity-70">Sort</Label>
-                  <NativeSelect
-                    id="ticket-sort"
-                    value={filters.sort}
-                    onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value as SortKey }))}
-                    className="h-10 border-border/70 px-3 text-sm lg:h-10 focus:ring-0"
-                  >
-                    <NativeSelectOption value="newest">Newest first</NativeSelectOption>
-                    <NativeSelectOption value="oldest">Oldest first</NativeSelectOption>
-                  </NativeSelect>
-                </div>
-              </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {STATUS_FILTERS.map((status) => {
+            const active = filters.status === status
+            return (
+              <button
+                key={status}
+                type="button"
+                onClick={() => {
+                  setPage(1)
+                  setFilters((prev) => ({ ...prev, status }))
+                }}
+                className={cn(
+                  "inline-flex h-9 items-center rounded-full border px-4 text-xs font-semibold transition-colors",
+                  active
+                    ? "border-blue-300 bg-blue-50 text-blue-700"
+                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
+                )}
+              >
+                {statusFilterLabel(status)}
+              </button>
+            )
+          })}
+
+          <div className="ml-0 flex items-center gap-2 lg:ml-auto">
+            <div className="min-w-[155px]">
+              <NativeSelect
+                value={filters.severity}
+                onChange={(e) => {
+                  setPage(1)
+                  setFilters((prev) => ({ ...prev, severity: e.target.value }))
+                }}
+                className="h-9 rounded-full border-slate-200 bg-white px-3 text-xs lg:h-9"
+              >
+                <NativeSelectOption value="all">All priorities</NativeSelectOption>
+                <NativeSelectOption value="urgent">Urgent</NativeSelectOption>
+                <NativeSelectOption value="high">High</NativeSelectOption>
+                <NativeSelectOption value="normal">Normal</NativeSelectOption>
+                <NativeSelectOption value="low">Low</NativeSelectOption>
+              </NativeSelect>
             </div>
+            <div className="min-w-[145px]">
+              <NativeSelect
+                value={filters.sort}
+                onChange={(e) => setFilters((prev) => ({ ...prev, sort: e.target.value as SortKey }))}
+                className="h-9 rounded-full border-slate-200 bg-white px-3 text-xs lg:h-9"
+              >
+                <NativeSelectOption value="newest">Newest first</NativeSelectOption>
+                <NativeSelectOption value="oldest">Oldest first</NativeSelectOption>
+              </NativeSelect>
+            </div>
+            {filterCount > 0 ? (
+              <span className="inline-flex h-9 items-center rounded-full border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-700">
+                <Filter className="mr-1.5 h-3.5 w-3.5" />
+                {filterCount} active
+              </span>
+            ) : null}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {notice && (
-          <div
-            className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium ${
-              notice.tone === "success"
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                : "border-primary/25 bg-primary/10 text-primary"
-            }`}
-          >
-            {notice.tone === "success" ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Filter className="h-3.5 w-3.5" />}
-            {notice.message}
-            <button
-              type="button"
-              onClick={() => setNotice(null)}
-              className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-md text-current/80 transition-colors hover:bg-black/5 hover:text-current dark:hover:bg-white/10"
-              aria-label="Dismiss notice"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        )}
-
-        <Dialog
-          open={createOpen}
-          onOpenChange={(nextOpen) => {
-            if (!nextOpen && createBusy) return
-            setCreateOpen(nextOpen)
-            if (!nextOpen) resetCreateForm()
-          }}
+      {notice ? (
+        <div
+          className={cn(
+            "inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium",
+            notice.tone === "success"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-blue-200 bg-blue-50 text-blue-700",
+          )}
         >
-          <DialogContent className="max-w-2xl gap-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-0 shadow-none dark:border-slate-800 dark:bg-slate-900">
-            <div aria-hidden className="h-1.5 bg-emerald-500" />
-            <DialogHeader className="border-b border-slate-200 bg-white px-6 py-5 dark:border-slate-800 dark:bg-slate-950">
-              <DialogTitle className="text-lg font-semibold text-foreground">Create new ticket</DialogTitle>
-              <p className="text-sm text-muted-foreground">Be specific and include impact so we can prioritize and resolve faster.</p>
-            </DialogHeader>
-            <form onSubmit={submitTicket} className="space-y-5 bg-slate-50 px-6 py-5 dark:bg-slate-900">
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_220px]">
-                <div className="space-y-1.5">
-                  <Label htmlFor="ticket-subject" className="text-[10px] uppercase tracking-widest font-bold text-foreground/70">Subject</Label>
-                  <Input
-                    id="ticket-subject"
-                    value={createSubject}
-                    onChange={(e) => {
-                      setCreateSubject(e.target.value)
-                      if (createFieldErrors.subject) setCreateFieldErrors((prev) => ({ ...prev, subject: undefined }))
-                    }}
-                    placeholder="Example: Payment confirmation email not sent after checkout"
-                    className="h-11 rounded-xl border-slate-300 bg-white focus-visible:border-emerald-500/60 focus-visible:ring-0 dark:border-slate-700 dark:bg-slate-950"
-                    required
-                  />
-                  <div className="flex items-center justify-between">
-                    {createFieldErrors.subject ? <p className="text-xs text-rose-600">{createFieldErrors.subject}</p> : <span />}
-                    <p className="text-[11px] text-muted-foreground">{createSubject.trim().length}/120</p>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="ticket-priority" className="text-[10px] uppercase tracking-widest font-bold text-foreground/70">Severity</Label>
-                  <NativeSelect
-                    id="ticket-priority"
-                    value={createSeverity}
-                    onChange={(e) => setCreateSeverity(e.target.value)}
-                    className="h-11 rounded-xl border-slate-300 bg-white px-3 text-sm lg:h-11 focus:ring-0 dark:border-slate-700 dark:bg-slate-950"
-                  >
-                    <NativeSelectOption value="normal">Normal</NativeSelectOption>
-                    <NativeSelectOption value="high">High</NativeSelectOption>
-                    <NativeSelectOption value="urgent">Urgent</NativeSelectOption>
-                    <NativeSelectOption value="low">Low</NativeSelectOption>
-                  </NativeSelect>
-                </div>
-              </div>
+          {notice.tone === "success" ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Filter className="h-3.5 w-3.5" />}
+          {notice.message}
+          <button
+            type="button"
+            onClick={() => setNotice(null)}
+            className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-md text-current/80 transition-colors hover:bg-black/5 hover:text-current"
+            aria-label="Dismiss notice"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      ) : null}
+      <Dialog
+        open={createOpen}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen && createBusy) return
+          setCreateOpen(nextOpen)
+          if (!nextOpen) resetCreateForm()
+        }}
+      >
+        <DialogContent className="max-w-2xl gap-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-none">
+          <DialogHeader className="border-b border-slate-200 px-6 py-5">
+            <DialogTitle className="text-lg font-semibold text-slate-900">Create support ticket</DialogTitle>
+            <p className="text-sm text-slate-600">Use a clear subject and include issue context so support can route and resolve faster.</p>
+          </DialogHeader>
+
+          <form onSubmit={submitTicket} className="space-y-5 px-6 py-5">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_220px]">
               <div className="space-y-1.5">
-                <Label htmlFor="ticket-message" className="text-[10px] uppercase tracking-widest font-bold text-foreground/70">Issue details</Label>
-                <Textarea
-                  id="ticket-message"
-                  value={createMessage}
+                <Label htmlFor="ticket-subject" className="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Subject</Label>
+                <Input
+                  id="ticket-subject"
+                  value={createSubject}
                   onChange={(e) => {
-                    setCreateMessage(e.target.value)
-                    if (createFieldErrors.message) setCreateFieldErrors((prev) => ({ ...prev, message: undefined }))
+                    setCreateSubject(e.target.value)
+                    if (createFieldErrors.subject) setCreateFieldErrors((prev) => ({ ...prev, subject: undefined }))
                   }}
-                  rows={5}
-                  placeholder={"What happened?\nWhat did you expect instead?\nHow can we reproduce it?\nInclude order/reference ID if available."}
-                  className="resize-none rounded-xl border-slate-300 bg-white focus-visible:border-emerald-500/60 focus-visible:ring-0 dark:border-slate-700 dark:bg-slate-950"
+                  placeholder="Example: Payment confirmation email not sent"
+                  className="h-11 rounded-xl border-slate-200 bg-white focus-visible:border-blue-300 focus-visible:ring-4 focus-visible:ring-blue-50"
                   required
                 />
-                <p className="text-[11px] text-muted-foreground">Tip: paste exact error text and mention when it started.</p>
                 <div className="flex items-center justify-between">
-                  {createFieldErrors.message ? <p className="text-xs text-rose-600">{createFieldErrors.message}</p> : <span />}
-                  <p className="text-[11px] text-muted-foreground">{createMessage.trim().length}/2000</p>
+                  {createFieldErrors.subject ? <p className="text-xs text-rose-600">{createFieldErrors.subject}</p> : <span />}
+                  <p className="text-[11px] text-slate-500">{createSubject.trim().length}/120</p>
                 </div>
               </div>
-              {createError && (
-                <p className="flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
-                  <AlertCircle className="h-4 w-4" />
-                  {createError}
-                </p>
-              )}
-              <div className="border-t border-slate-200 pt-4 dark:border-slate-800">
-                <Button type="submit" className="h-11 w-full rounded-xl border border-emerald-600 bg-emerald-600 px-6 text-sm font-semibold text-white transition-colors hover:bg-emerald-500" disabled={createBusy}>
-                  {createBusy ? "Submitting..." : <><CheckCircle2 className="mr-1.5 h-4 w-4" />Submit ticket</>}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
 
-        <section className="px-4 sm:px-5">
-          {loading && <Loading fullScreen={false} message="Loading tickets" className="py-14 bg-transparent" />}
-          {!loading && error && <p className="px-4 sm:px-5 py-10 text-sm text-rose-600 flex items-center gap-2"><AlertCircle className="h-4 w-4" />{error}</p>}
-          {!loading && !error && (
-            <>
-              <div className="overflow-x-auto rounded-3xl border border-border/70 bg-gradient-to-b from-background to-muted/20">
-              <Table className="min-w-[920px]">
-                <TableHeader className="bg-muted/35 border-b border-border/50">
-                  <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="h-12 pl-4 sm:pl-5 text-[11px] font-bold uppercase tracking-wider text-foreground">#</TableHead>
-                    <TableHead className="h-12 text-[11px] font-bold uppercase tracking-wider text-foreground">Subject</TableHead>
-                    <TableHead className="h-12 text-[11px] font-bold uppercase tracking-wider text-foreground">Status</TableHead>
-                    <TableHead className="h-12 text-[11px] font-bold uppercase tracking-wider text-foreground">Priority</TableHead>
-                    <TableHead className="h-12 text-[11px] font-bold uppercase tracking-wider text-foreground">Updated</TableHead>
-                    <TableHead className="h-12 pr-4 sm:pr-5 text-[11px] font-bold uppercase tracking-wider text-foreground text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {visible.length === 0 ? (
-                    <TableRow className="hover:bg-transparent">
-                      <TableCell colSpan={6} className="py-12 text-center text-sm text-muted-foreground">
-                        <div className="mx-auto max-w-md space-y-2">
-                          <p className="text-sm font-medium text-foreground">No tickets found.</p>
-                          <p className="text-xs text-muted-foreground">Adjust filters or create a new ticket to get support faster.</p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    visible.map((t, i) => (
-                      <TableRow key={t.id} className="h-14 border-b border-border/50 hover:bg-muted/25">
-                        <TableCell className="pl-4 sm:pl-5 font-medium text-foreground">{(page - 1) * pageSize + i + 1}</TableCell>
-                        <TableCell className="font-medium text-foreground whitespace-normal">
-                          <div className="space-y-1">
-                            <p className="leading-relaxed">{t.subject}</p>
-                            <p className="text-xs text-muted-foreground">ID: {t.id}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${statusBadge(t.status)}`}>
-                            {displayText(t.status, "Open")}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${priorityBadge(t.priority)}`}>
-                            {displayText(t.priority, "Normal")}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-foreground/90">{fmtDate(t.updatedAt || t.createdAt)}</TableCell>
-                        <TableCell className="pr-4 sm:pr-5 text-right">
-                          <Button asChild className="h-9 rounded-xl border border-primary/90 bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90">
-                            <Link href={`/dashboard/help/tickets/${encodeURIComponent(t.id)}`}><Eye className="mr-1.5 h-3.5 w-3.5" />Open</Link>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+              <div className="space-y-1.5">
+                <Label htmlFor="ticket-priority" className="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Priority</Label>
+                <NativeSelect
+                  id="ticket-priority"
+                  value={createSeverity}
+                  onChange={(e) => setCreateSeverity(e.target.value)}
+                  className="h-11 rounded-xl border-slate-200 bg-white px-3 text-sm lg:h-11"
+                >
+                  <NativeSelectOption value="normal">Normal</NativeSelectOption>
+                  <NativeSelectOption value="high">High</NativeSelectOption>
+                  <NativeSelectOption value="urgent">Urgent</NativeSelectOption>
+                  <NativeSelectOption value="low">Low</NativeSelectOption>
+                </NativeSelect>
               </div>
-              {uiLastPage > 1 && (
-                <div className="px-0 py-4 flex flex-wrap justify-end gap-1.5">
-                  {pageItems(page, uiLastPage).map((it, idx) => typeof it === "number"
-                    ? <Button key={`p-${it}`} type="button" variant="outline" className={`h-9 min-w-9 rounded-xl px-3 text-xs font-semibold ${page === it ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-muted/40"}`} onClick={() => setPage(it)}>{it}</Button>
-                    : <span key={`e-${idx}`} className="inline-flex h-9 min-w-9 items-center justify-center text-xs text-muted-foreground">...</span>)}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="ticket-message" className="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Issue details</Label>
+              <Textarea
+                id="ticket-message"
+                value={createMessage}
+                onChange={(e) => {
+                  setCreateMessage(e.target.value)
+                  if (createFieldErrors.message) setCreateFieldErrors((prev) => ({ ...prev, message: undefined }))
+                }}
+                rows={5}
+                placeholder={"What happened?\nWhat did you expect instead?\nHow can we reproduce it?\nInclude order/reference ID if available."}
+                className="resize-none rounded-xl border-slate-200 bg-white focus-visible:border-blue-300 focus-visible:ring-4 focus-visible:ring-blue-50"
+                required
+              />
+              <p className="text-[11px] text-slate-500">Tip: paste exact error text and mention when it started.</p>
+              <div className="flex items-center justify-between">
+                {createFieldErrors.message ? <p className="text-xs text-rose-600">{createFieldErrors.message}</p> : <span />}
+                <p className="text-[11px] text-slate-500">{createMessage.trim().length}/2000</p>
+              </div>
+            </div>
+
+            {createError ? (
+              <p className="flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                <AlertCircle className="h-4 w-4" />
+                {createError}
+              </p>
+            ) : null}
+
+            <div className="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  if (createBusy) return
+                  setCreateOpen(false)
+                  resetCreateForm()
+                }}
+                className="h-10 rounded-full border-slate-300 bg-transparent px-4 text-xs font-semibold hover:bg-slate-50"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="h-10 rounded-full border border-blue-600 bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                disabled={createBusy}
+              >
+                {createBusy ? "Submitting..." : <><Send className="mr-1.5 h-4 w-4" />Submit ticket</>}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <section className="space-y-3">
+        {loading ? <Loading fullScreen={false} message="Loading tickets" className="py-14 bg-transparent" /> : null}
+        {!loading && error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 flex items-center gap-2"><AlertCircle className="h-4 w-4" />{error}</p> : null}
+
+        {!loading && !error ? (
+          <>
+            {visible.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-12 text-center">
+                <TicketIcon className="mx-auto h-6 w-6 text-slate-500" />
+                <p className="mt-3 text-sm font-semibold text-slate-900">No tickets found</p>
+                <p className="mt-1 text-xs text-slate-600">Adjust filters or create a new ticket.</p>
+              </div>
+            ) : (
+              <>
+                <div className="hidden lg:grid grid-cols-[minmax(0,2.3fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.2fr)_minmax(0,0.8fr)_auto] items-center gap-4 px-4 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  <span>Subject</span>
+                  <span>Status</span>
+                  <span>Priority</span>
+                  <span>Last update</span>
+                  <span>Replies</span>
+                  <span className="justify-self-end">Action</span>
                 </div>
-              )}
-            </>
-          )}
-        </section>
-      </div>
+
+                <div className="space-y-3">
+                  {visible.map((t, i) => (
+                    <div
+                      key={t.id}
+                      className={cn(
+                        "grid gap-3 rounded-2xl border border-slate-200 border-l-4 px-4 py-4 lg:grid-cols-[minmax(0,2.3fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.2fr)_minmax(0,0.8fr)_auto] lg:items-center",
+                        rowAccent(t.status),
+                      )}
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-[15px] font-semibold text-slate-900">{t.subject}</p>
+                        <p className="mt-1.5 text-xs text-slate-600">Ticket #{t.id}</p>
+                        <p className="mt-1 text-xs text-slate-500">Created {fmtDate(t.createdAt)}</p>
+                      </div>
+
+                      <div className="text-sm">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">Status</p>
+                        <span className={cn("inline-flex h-7 items-center rounded-full border px-3 text-xs font-semibold", statusTone(t.status))}>
+                          {displayText(t.status, "Open")}
+                        </span>
+                      </div>
+
+                      <div className="text-sm">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">Priority</p>
+                        <span className={cn("inline-flex h-7 items-center rounded-full border px-3 text-xs font-semibold", priorityTone(t.priority))}>
+                          {displayText(t.priority, "Normal")}
+                        </span>
+                      </div>
+
+                      <div className="text-sm">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">Last update</p>
+                        <p className="font-medium text-slate-900">{fmtDate(t.updatedAt || t.createdAt)}</p>
+                      </div>
+
+                      <div className="text-sm">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">Replies</p>
+                        <span className="inline-flex h-7 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-700">
+                          {t.responseCount}
+                        </span>
+                      </div>
+
+                      <div className="lg:justify-self-end">
+                        <Button
+                          asChild
+                          className="h-9 rounded-full border border-blue-600 bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700"
+                        >
+                          <Link href={`/dashboard/help/tickets/${encodeURIComponent(t.id)}`}>
+                            <Eye className="mr-1.5 h-3.5 w-3.5" />
+                            Open
+                          </Link>
+                        </Button>
+                      </div>
+
+                      <div className="lg:hidden col-span-full text-xs text-slate-500">Row {(page - 1) * pageSize + i + 1}</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {uiLastPage > 1 ? (
+              <div className="flex flex-wrap justify-end gap-1.5 pt-2">
+                {pageItems(page, uiLastPage).map((it, idx) =>
+                  typeof it === "number" ? (
+                    <Button
+                      key={`p-${it}`}
+                      type="button"
+                      variant="outline"
+                      className={cn(
+                        "h-9 min-w-9 rounded-xl px-3 text-xs font-semibold",
+                        page === it
+                          ? "border-blue-600 bg-blue-600 text-white"
+                          : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
+                      )}
+                      onClick={() => setPage(it)}
+                    >
+                      {it}
+                    </Button>
+                  ) : (
+                    <span key={`e-${idx}`} className="inline-flex h-9 min-w-9 items-center justify-center text-xs text-slate-500">
+                      ...
+                    </span>
+                  ),
+                )}
+              </div>
+            ) : null}
+          </>
+        ) : null}
+      </section>
     </div>
   )
 }

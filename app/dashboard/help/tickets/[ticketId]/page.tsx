@@ -7,12 +7,23 @@ import { Button } from "@/components/common/button"
 import Loading from "@/components/common/custom-loader"
 import { Label } from "@/components/common/label"
 import { Textarea } from "@/components/common/textarea"
-import { AlertCircle, ArrowLeft, ChevronLeft, Clock3, LifeBuoy, MessageCircleMore, RefreshCw, Send } from "lucide-react"
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowUpRight,
+  Clock3,
+  History,
+  LifeBuoy,
+  MessageCircleMore,
+  RefreshCw,
+  Send,
+  Ticket as TicketIcon,
+} from "lucide-react"
 
 const PRIMARY_BUTTON =
-  "h-10 rounded-2xl border border-primary/90 bg-primary px-4 text-xs font-semibold text-primary-foreground transition-colors duration-200 hover:bg-primary/85"
+  "h-10 rounded-full border border-blue-600 bg-blue-600 px-4 text-xs font-semibold text-white transition-colors duration-200 hover:bg-blue-700 disabled:opacity-50"
 const SECONDARY_BUTTON =
-  "h-10 rounded-2xl border border-border/80 bg-background/95 px-4 text-xs font-semibold text-foreground transition-colors duration-200 hover:border-primary/30 hover:bg-primary/[0.05]"
+  "h-10 rounded-full border border-slate-300 bg-transparent px-4 text-xs font-semibold text-slate-700 transition-colors duration-200 hover:bg-slate-50 disabled:opacity-50"
 
 type Ticket = {
   id: string
@@ -140,10 +151,10 @@ function formatDate(v?: string | null): string {
 
 function severityTokenClasses(priority: string): string {
   const key = normalizeKey(priority)
-  if (key === "urgent") return "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300"
-  if (key === "high") return "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-  if (key === "low") return "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-  return "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300"
+  if (key === "urgent") return "border-rose-200 text-rose-700 bg-rose-50"
+  if (key === "high") return "border-amber-200 text-amber-700 bg-amber-50"
+  if (key === "low") return "border-emerald-200 text-emerald-700 bg-emerald-50"
+  return "border-blue-200 text-blue-700 bg-blue-50"
 }
 
 function displayToken(value: string, fallback: string): string {
@@ -153,18 +164,14 @@ function displayToken(value: string, fallback: string): string {
 
 function statusTokenClasses(status: string): string {
   const key = normalizeKey(status)
-  if (["resolved", "closed", "done"].includes(key)) return "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-  if (["pending", "waiting", "in_progress", "pending_approval"].includes(key)) return "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-  if (["rejected", "failed"].includes(key)) return "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300"
-  return "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300"
+  if (["resolved", "closed", "done"].includes(key)) return "border-emerald-200 text-emerald-700 bg-emerald-50"
+  if (["pending", "waiting", "in_progress", "pending_approval"].includes(key)) return "border-amber-200 text-amber-700 bg-amber-50"
+  if (["rejected", "failed"].includes(key)) return "border-rose-200 text-rose-700 bg-rose-50"
+  return "border-blue-200 text-blue-700 bg-blue-50"
 }
 
 function senderLabel(isMine?: boolean): string {
-  return isMine ? "Logged-in user" : "Support"
-}
-
-function senderInitials(isMine?: boolean): string {
-  return isMine ? "ME" : "SP"
+  return isMine ? "You" : "Support"
 }
 
 function toTicket(x: any): Ticket {
@@ -263,194 +270,243 @@ export default function TicketDetailPage() {
     }
   }
 
+  const supportCount = detail?.messages.filter((m) => !m.mine).length ?? 0
+
   return (
-    <div className="w-full antialiased relative">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(52rem_24rem_at_0%_0%,rgba(14,165,233,0.10),transparent_58%),radial-gradient(36rem_16rem_at_100%_0%,rgba(16,185,129,0.08),transparent_62%)]"
-      />
-      <div className="w-full space-y-7 sm:space-y-8">
-        <header className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-b from-background via-background to-muted/25 px-5 sm:px-7 py-6">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute right-0 top-0 h-24 w-24 -translate-y-6 translate-x-6 rounded-full bg-primary/10 blur-2xl"
-          />
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+    <div className="w-full space-y-8 antialiased">
+      <header className="space-y-5">
+        <div className="space-y-2.5">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+            <LifeBuoy className="h-3.5 w-3.5 text-blue-600" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-700">Help Center</span>
+          </div>
+
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/85 px-3 py-1.5">
-                <LifeBuoy className="h-3.5 w-3.5 text-primary" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">Support Hub</span>
-              </div>
-              <h1 className="mt-3 text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">Ticket detail</h1>
+              <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Support ticket details</h1>
+              <p className="mt-1 text-sm text-slate-600">
+                Review thread updates, add context, and keep issue resolution moving.
+              </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Button asChild variant="outline" className={SECONDARY_BUTTON}>
                 <Link href="/dashboard/help/tickets">
-                  <ChevronLeft className="mr-1.5 h-4 w-4" />
+                  <ArrowLeft className="mr-1.5 h-4 w-4" />
                   My tickets
                 </Link>
               </Button>
-              <Button type="button" variant="outline" className={SECONDARY_BUTTON} onClick={() => void loadDetail()} disabled={detailLoading}>
+              <Button
+                type="button"
+                variant="outline"
+                className={SECONDARY_BUTTON}
+                onClick={() => void loadDetail()}
+                disabled={detailLoading}
+              >
                 {detailLoading ? "Refreshing..." : <><RefreshCw className="mr-1.5 h-4 w-4" />Refresh</>}
               </Button>
             </div>
           </div>
-        </header>
+        </div>
 
-        <section className="px-4 sm:px-5">
-          <div className="pt-1">
-            <Button asChild type="button" variant="outline" className="h-9 rounded-xl border-border bg-background px-3 text-xs font-semibold hover:bg-muted/30">
-              <Link href="/dashboard/help/tickets">
-                <ArrowLeft className="mr-1.5 h-4 w-4" />
-                Back
-              </Link>
-            </Button>
+        {detail ? (
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="inline-flex h-8 items-center rounded-full border border-slate-200 bg-white px-3 font-medium text-slate-600">
+              Ticket <span className="ml-1 font-semibold text-slate-900">#{detail.id}</span>
+            </span>
+            <span className="inline-flex h-8 items-center rounded-full border border-slate-200 bg-white px-3 font-medium text-slate-600">
+              Messages <span className="ml-1 font-semibold text-slate-900">{detail.messages.length}</span>
+            </span>
+            <span className="inline-flex h-8 items-center rounded-full border border-slate-200 bg-white px-3 font-medium text-slate-600">
+              Support replies <span className="ml-1 font-semibold text-slate-900">{supportCount}</span>
+            </span>
           </div>
+        ) : null}
+      </header>
 
-          {detailLoading && <Loading fullScreen={false} message="Loading ticket" className="py-14 bg-transparent" />}
-          {!detailLoading && detailError && <p className="py-8 text-sm text-rose-600 flex items-center gap-2"><AlertCircle className="h-4 w-4" />{detailError}</p>}
-          {!detailLoading && !detailError && !detail && <p className="py-8 text-sm text-muted-foreground">Ticket not found.</p>}
+      {detailLoading ? <Loading fullScreen={false} message="Loading ticket" className="py-14 bg-transparent" /> : null}
 
-          {!detailLoading && !detailError && detail && (
-            <div className="pb-7">
-              <div className="mt-3 rounded-2xl border border-border/70 bg-gradient-to-b from-background to-muted/20 px-3.5 py-3.5 flex flex-wrap items-center gap-2 text-sm">
-                <span className="font-semibold text-foreground">Ticket: {detail.id}</span>
-                <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${statusTokenClasses(detail.status)}`}>
-                  {displayToken(detail.status, "Open")}
-                </span>
-                <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${severityTokenClasses(detail.priority)}`}>
-                  Priority {displayToken(detail.priority, "Normal")}
-                </span>
-                <span className="text-foreground/90">Created: {formatDate(detail.createdAt || detail.updatedAt)}</span>
+      {!detailLoading && detailError ? (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 flex items-center gap-2">
+          <AlertCircle className="h-4 w-4" />
+          {detailError}
+        </div>
+      ) : null}
+
+      {!detailLoading && !detailError && !detail ? (
+        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center">
+          <p className="text-sm font-semibold text-slate-900">Ticket not found.</p>
+          <p className="mt-1 text-xs text-slate-600">The ticket may have been moved or archived.</p>
+        </div>
+      ) : null}
+
+      {!detailLoading && !detailError && detail ? (
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+          <aside className="space-y-6 xl:sticky xl:top-4 self-start">
+            <section className="border-y border-slate-200 bg-white">
+              <div className="border-b border-slate-200 px-5 py-4">
+                <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+                  <TicketIcon className="h-4 w-4 text-blue-600" />
+                  Ticket profile
+                </h2>
+              </div>
+              <div className="px-5 py-5 space-y-3">
+                <DetailLine label="Subject" value={detail.subject} />
+                <DetailLine label="Ticket ID" value={`#${detail.id}`} />
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Status</p>
+                  <span className={`inline-flex h-7 items-center rounded-full border px-3 text-xs font-semibold ${statusTokenClasses(detail.status)}`}>
+                    {displayToken(detail.status, "Open")}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Priority</p>
+                  <span className={`inline-flex h-7 items-center rounded-full border px-3 text-xs font-semibold ${severityTokenClasses(detail.priority)}`}>
+                    {displayToken(detail.priority, "Normal")}
+                  </span>
+                </div>
+                <DetailLine label="Created" value={formatDate(detail.createdAt)} />
+                <DetailLine label="Last update" value={formatDate(detail.updatedAt || detail.createdAt)} />
+              </div>
+            </section>
+
+            <section className="border-y border-slate-200 bg-white">
+              <div className="border-b border-slate-200 px-5 py-4">
+                <h2 className="text-base font-semibold text-slate-900">Actions</h2>
+              </div>
+              <div className="px-5 py-5 space-y-2.5">
+                <Button asChild className={`${PRIMARY_BUTTON} w-full justify-center`}>
+                  <Link href="/dashboard/help/tickets#create-ticket">
+                    Create new ticket
+                    <ArrowUpRight className="ml-1.5 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button type="button" variant="outline" className={`${SECONDARY_BUTTON} w-full justify-center`} onClick={() => void loadDetail()} disabled={detailLoading}>
+                  <RefreshCw className="mr-1.5 h-4 w-4" />
+                  Refresh details
+                </Button>
+              </div>
+            </section>
+          </aside>
+
+          <div className="space-y-6 min-w-0">
+            <section className="border-y border-slate-200 bg-white">
+              <div className="border-b border-slate-200 px-5 py-4">
+                <h2 className="text-base font-semibold text-slate-900">Issue summary</h2>
+              </div>
+              <div className="px-5 py-5">
+                <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
+                  {detail.description || "No detailed description was provided when this ticket was created."}
+                </p>
+              </div>
+            </section>
+
+            <section className="border-y border-slate-200 bg-white">
+              <div className="border-b border-slate-200 px-5 py-3.5 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDetailTab("comments")}
+                  className={[
+                    "inline-flex h-8 items-center rounded-full border px-3 text-xs font-semibold transition-colors",
+                    detailTab === "comments"
+                      ? "border-blue-300 bg-blue-50 text-blue-700"
+                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
+                  ].join(" ")}
+                >
+                  <MessageCircleMore className="mr-1.5 h-3.5 w-3.5" />
+                  Conversation
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDetailTab("history")}
+                  className={[
+                    "inline-flex h-8 items-center rounded-full border px-3 text-xs font-semibold transition-colors",
+                    detailTab === "history"
+                      ? "border-blue-300 bg-blue-50 text-blue-700"
+                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
+                  ].join(" ")}
+                >
+                  <History className="mr-1.5 h-3.5 w-3.5" />
+                  History
+                </button>
               </div>
 
-              <div className="pt-6 space-y-6">
-                <section className="space-y-2.5 rounded-2xl border border-border/70 bg-background/90 p-4">
-                  <h3 className="text-xl font-semibold text-foreground">Summary</h3>
-                  <p className="text-foreground/95 leading-relaxed">
-                    {detail.subject}
-                    {detail.description ? ` - ${detail.description}` : ""}
-                  </p>
-                </section>
-
-                <section className="space-y-2.5 rounded-2xl border border-border/70 bg-background/90 p-4">
-                  <h4 className="text-base font-semibold text-foreground">Description</h4>
-                  <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
-                    {detail.description || "No detailed description provided for this ticket."}
-                  </p>
-                </section>
-
-                <section className="rounded-2xl border border-border/70 bg-background/90 p-4">
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => setDetailTab("comments")}
-                      className={`-mb-px inline-flex items-center gap-1.5 border-b-2 rounded-t-lg px-3 py-2.5 text-sm font-semibold transition-all ${
-                        detailTab === "comments"
-                          ? "border-primary text-primary bg-primary/[0.08]"
-                          : "border-transparent text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <MessageCircleMore className="h-4 w-4" />
-                      Comments
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDetailTab("history")}
-                      className={`-mb-px inline-flex items-center gap-1.5 border-b-2 rounded-t-lg px-3 py-2.5 text-sm font-semibold transition-all ${
-                        detailTab === "history"
-                          ? "border-primary text-primary bg-primary/[0.08]"
-                          : "border-transparent text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <Clock3 className="h-4 w-4" />
-                      History
-                    </button>
+              <div className="px-5 py-5 space-y-5">
+                {detail.messages.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center">
+                    <MessageCircleMore className="mx-auto h-6 w-6 text-slate-500" />
+                    <p className="mt-3 text-sm font-semibold text-slate-900">No updates yet</p>
+                    <p className="mt-1 text-xs text-slate-600">Start the thread with a clear follow-up.</p>
                   </div>
-
-                  {detailTab === "comments" ? (
-                    <div className="pt-5 space-y-5">
-                      {detail.messages.length === 0 ? (
-                        <div className="rounded-2xl border border-border/60 py-14 px-4 text-center bg-transparent">
-                          <MessageCircleMore className="mx-auto h-10 w-10 text-muted-foreground" />
-                          <p className="mt-4 text-xl font-medium text-foreground">No timeline items yet.</p>
+                ) : detailTab === "comments" ? (
+                  <div className="space-y-3">
+                    {detail.messages.map((m) => (
+                      <article
+                        key={m.id}
+                        className={[
+                          "rounded-xl border px-4 py-3",
+                          m.mine
+                            ? "border-blue-200 bg-blue-50/60"
+                            : "border-slate-200 bg-white",
+                        ].join(" ")}
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">{senderLabel(m.mine)}</p>
+                          <p className="inline-flex items-center text-xs text-slate-500">
+                            <Clock3 className="mr-1 h-3.5 w-3.5" />
+                            {formatDate(m.createdAt)}
+                          </p>
                         </div>
-                      ) : (
-                        <div className="space-y-4 max-h-[420px] overflow-auto pr-1 rounded-xl border border-border/60 bg-muted/[0.12] p-3">
-                          {detail.messages.map((m, index) => (
-                            <div key={m.id} className="relative pl-14">
-                              {index < detail.messages.length - 1 && (
-                                <span className="absolute left-[1.02rem] top-9 bottom-[-1.1rem] w-px bg-border/60" />
-                              )}
-                              <span
-                                className={`absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-semibold ${
-                                  m.mine
-                                    ? "border border-primary/25 bg-primary/10 text-primary"
-                                    : "border border-border/70 bg-muted/35 text-foreground"
-                                }`}
-                              >
-                                {senderInitials(m.mine)}
-                              </span>
-                              <div className="space-y-1 pb-1.5">
-                                <p className="text-sm text-foreground">
-                                  <span className="font-semibold">{senderLabel(m.mine)}</span>{" "}
-                                  <span className="text-foreground/85">commented</span>
-                                </p>
-                                <p className="text-xs text-muted-foreground">{formatDate(m.createdAt)}</p>
-                                <p className="text-sm text-foreground/95 leading-relaxed whitespace-pre-wrap">{m.message}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                        <p className="mt-2 text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">{m.message}</p>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {detail.messages.map((m) => (
+                      <div key={`history-${m.id}`} className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                        <p className="text-xs font-medium text-slate-500">{formatDate(m.createdAt)}</p>
+                        <p className="mt-1 text-sm text-slate-700">
+                          <span className="font-semibold text-slate-900">{senderLabel(m.mine)}</span> added an update.
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-                      <form onSubmit={onReply} className="space-y-2.5">
-                        <Label htmlFor="reply-message" className="text-[10px] uppercase tracking-widest font-bold opacity-70">Reply</Label>
-                        <Textarea
-                          id="reply-message"
-                          value={reply}
-                          onChange={(e) => setReply(e.target.value)}
-                          rows={3}
-                          placeholder="Write a follow-up message..."
-                          className="border-border/70 bg-transparent resize-none focus-visible:ring-0 focus-visible:border-primary/40"
-                        />
-                        <Button type="submit" disabled={replying || !reply.trim()} className={PRIMARY_BUTTON.replace("h-10", "h-9")}>
-                          {replying ? "Sending..." : <><Send className="mr-1.5 h-3.5 w-3.5" />Send reply</>}
-                        </Button>
-                      </form>
+                {detailTab === "comments" ? (
+                  <form onSubmit={onReply} className="space-y-2.5 border-t border-slate-200 pt-4">
+                    <Label htmlFor="reply-message" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      Reply
+                    </Label>
+                    <Textarea
+                      id="reply-message"
+                      value={reply}
+                      onChange={(e) => setReply(e.target.value)}
+                      rows={4}
+                      placeholder="Share a concise follow-up with references if needed..."
+                      className="resize-none rounded-xl border-slate-200 bg-white text-sm focus-visible:border-blue-300 focus-visible:ring-4 focus-visible:ring-blue-50"
+                    />
+                    <div className="flex justify-end">
+                      <Button type="submit" disabled={replying || !reply.trim()} className={PRIMARY_BUTTON}>
+                        {replying ? "Sending..." : <><Send className="mr-1.5 h-4 w-4" />Send reply</>}
+                      </Button>
                     </div>
-                  ) : (
-                    <div className="pt-5 space-y-4 rounded-xl border border-border/60 bg-muted/[0.12] p-3">
-                      {detail.messages.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No history entries yet.</p>
-                      ) : (
-                        detail.messages.map((m, index) => (
-                          <div key={`history-${m.id}`} className="relative pl-14">
-                            {index < detail.messages.length - 1 && (
-                              <span className="absolute left-[1.02rem] top-9 bottom-[-1.1rem] w-px bg-border/60" />
-                            )}
-                            <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-muted/35 text-[11px] font-semibold text-foreground">
-                              {senderInitials(m.mine)}
-                            </span>
-                            <div className="space-y-1 pb-1.5">
-                              <p className="text-sm text-foreground">
-                                <span className="font-semibold">{senderLabel(m.mine)}</span>{" "}
-                                <span className="text-foreground/85">updated the ticket</span>
-                              </p>
-                              <p className="text-xs text-muted-foreground">{formatDate(m.createdAt)}</p>
-                              <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{m.message}</p>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </section>
+                  </form>
+                ) : null}
               </div>
-            </div>
-          )}
-        </section>
-      </div>
+            </section>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function DetailLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="space-y-1">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-sm font-medium text-slate-900 break-words">{value || "-"}</p>
     </div>
   )
 }

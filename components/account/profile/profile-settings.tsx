@@ -17,6 +17,8 @@ import ProfileTabsNav, { type ProfileTabKey } from "@/components/account/profile
 import SupplierProfilePanel from "@/components/account/profile/supplier-profile-panel"
 import TenantProfilePanel from "@/components/account/profile/tenant-profile-panel"
 import CustomerProfilePanel from "@/components/account/profile/customer-profile-panel"
+import DangerZoneCard from "@/components/account/danger-card"
+import BankDetailsForm from "@/components/thirdParty/bank-details"
 
 function LoadingState() {
   return (
@@ -139,19 +141,46 @@ export default function ProfileSettings() {
     }
   }, [resolvedUserImageUrl, optimisticUserImageUrl])
 
-  const hasSupplier = Boolean(profile?.isSupplier ?? thirdParty?.isSupplier)
-  const hasTenant = Boolean(profile?.isTenant ?? thirdParty?.isTenant)
-  const hasCustomer = Boolean(profile?.isCustomer ?? thirdParty?.isCustomer)
+  const roleCodes = new Set(
+    (Array.isArray((thirdParty as any)?.types) ? (thirdParty as any).types : [])
+      .map((item: any) => String(item?.code ?? item?.label ?? "").trim().toUpperCase())
+      .filter(Boolean),
+  )
+
+  const hasSupplier =
+    Boolean((profile as any)?.isSupplier) ||
+    Boolean((profile as any)?.is_supplier) ||
+    Boolean((thirdParty as any)?.isSupplier) ||
+    Boolean((thirdParty as any)?.is_supplier) ||
+    roleCodes.has("SU") ||
+    roleCodes.has("SUPPLIER")
+
+  const hasTenant =
+    Boolean((profile as any)?.isTenant) ||
+    Boolean((profile as any)?.is_tenant) ||
+    Boolean((thirdParty as any)?.isTenant) ||
+    Boolean((thirdParty as any)?.is_tenant) ||
+    roleCodes.has("TN") ||
+    roleCodes.has("TENANT")
+
+  const hasCustomer =
+    Boolean((profile as any)?.isCustomer) ||
+    Boolean((profile as any)?.is_customer) ||
+    Boolean((thirdParty as any)?.isCustomer) ||
+    Boolean((thirdParty as any)?.is_customer) ||
+    roleCodes.has("CU") ||
+    roleCodes.has("CS") ||
+    roleCodes.has("CUSTOMER")
   const isProfileComplete = completionValue >= 100
   const missingPreview = missingFields.slice(0, 3)
 
   if (isLoading) return <LoadingState />
 
   return (
-    <div className="w-full antialiased relative">
-      <div className="w-full space-y-6 sm:space-y-8">
-        <header className="border-b border-border/60 pb-6">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+    <div className="relative w-full antialiased pb-4 sm:pb-6">
+      <div className="w-full space-y-7 sm:space-y-9">
+        <header className="border-b border-border/60 pb-7 sm:pb-8">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 border border-border/60 px-3 py-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
@@ -161,9 +190,6 @@ export default function ProfileSettings() {
               <h1 className="mt-3 text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
                 {thirdPartyDetails?.thirdPartyName || "Profile"}
               </h1>
-              <p className="mt-1 text-sm text-muted-foreground max-w-2xl">
-                Keep your business profile accurate so buyers can trust and engage with you faster.
-              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -181,7 +207,7 @@ export default function ProfileSettings() {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2">
+          <div className="mt-5 flex flex-wrap items-center gap-2.5">
             <span
               className={[
                 "inline-flex items-center rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider",
@@ -214,7 +240,7 @@ export default function ProfileSettings() {
           </div>
 
           {!isProfileComplete && missingPreview.length > 0 && (
-            <div className="mt-4 border border-amber-500/20 bg-amber-500/10 px-3 py-2.5">
+            <div className="mt-5 border border-amber-500/20 bg-amber-500/10 px-3 py-2.5">
               <p className="text-xs text-amber-900 dark:text-amber-200">
                 Next best action: add{" "}
                 <span className="font-semibold">{missingPreview.join(", ")}</span>
@@ -224,8 +250,8 @@ export default function ProfileSettings() {
           )}
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 xl:gap-8">
-          <aside className="lg:col-span-4 xl:col-span-3 min-w-0 space-y-6 lg:sticky lg:top-4 self-start">
+        <div className="grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-12 xl:gap-8">
+          <aside className="min-w-0 space-y-6 self-start lg:sticky lg:top-6 lg:col-span-4 xl:col-span-3">
             <CompanySidebarCard
               name={thirdPartyDetails?.thirdPartyName}
               tradingName={thirdPartyDetails?.tradingName}
@@ -243,7 +269,7 @@ export default function ProfileSettings() {
             />
           </aside>
 
-          <div className="lg:col-span-8 xl:col-span-9 min-w-0 space-y-6">
+          <div className="min-w-0 space-y-7 lg:col-span-8 xl:col-span-9">
             <ProfileTabsNav
               activeTab={activeTab}
               onTabChange={setActiveTab}
@@ -252,9 +278,9 @@ export default function ProfileSettings() {
               hasCustomer={hasCustomer}
             />
 
-            <div className="min-h-[360px]">
+            <div className="min-h-[420px]">
               {activeTab === "party" && (
-                <div className="space-y-6">
+                <div className="space-y-7">
                   <BusinessProfileCard
                     thirdPartyDetails={thirdPartyDetails}
                     thirdParty={thirdParty}
@@ -264,29 +290,42 @@ export default function ProfileSettings() {
                     updateProfile={updateProfile as any}
                     refetch={refetch as any}
                   />
+                  <BankDetailsForm />
+                </div>
+              )}
 
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    <AccountOwnerCard
-                      profile={profile}
-                      imageUrl={userImageUrl}
-                      onEditImage={() => setIsUserImageDialogOpen(true)}
-                      onUpdateContact={async ({ email, phone }) => {
-                        await updateProfile({
-                          email,
-                          phone: phone ?? undefined,
-                        })
-                        await refetch?.()
-                      }}
-                      isSavingContact={isUpdating}
-                    />
-                    <ChangePasswordCard />
-                  </div>
+              {activeTab === "owner" && (
+                <div className="w-full">
+                  <AccountOwnerCard
+                    profile={profile}
+                    imageUrl={userImageUrl}
+                    onEditImage={() => setIsUserImageDialogOpen(true)}
+                    onUpdateContact={async ({ email, phone }) => {
+                      await updateProfile({
+                        email,
+                        phone: phone ?? undefined,
+                      })
+                      await refetch?.()
+                    }}
+                    isSavingContact={isUpdating}
+                  />
+                </div>
+              )}
+
+              {activeTab === "security" && (
+                <div className="w-full">
+                  <ChangePasswordCard />
                 </div>
               )}
 
               {activeTab === "supplier" && <SupplierProfilePanel enabled={hasSupplier} />}
               {activeTab === "tenant" && <TenantProfilePanel enabled={hasTenant} />}
               {activeTab === "customer" && <CustomerProfilePanel enabled={hasCustomer} />}
+              {activeTab === "attrition" && (
+                <div className="w-full">
+                  <DangerZoneCard />
+                </div>
+              )}
             </div>
           </div>
         </div>

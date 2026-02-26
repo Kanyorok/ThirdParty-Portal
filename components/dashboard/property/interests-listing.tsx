@@ -19,8 +19,11 @@ import {
   Calendar,
   ChevronRight,
   Hash,
+  Landmark,
   Loader2,
   MapPin,
+  UserRound,
+  Wallet,
 } from "lucide-react"
 
 function displayText(value: unknown, fallback = "-") {
@@ -168,12 +171,92 @@ function frequencyAccent(
   return "border-l-slate-300"
 }
 
+function resolveImageUrl(input: unknown): string | null {
+  if (!input || typeof input !== "object") return null
+  const node = input as Record<string, unknown>
+  const keys = [
+    "imageUrl",
+    "image_url",
+    "image",
+    "coverImage",
+    "cover_image",
+    "banner",
+    "bannerUrl",
+    "photo",
+    "thumbnail",
+    "thumbnailUrl",
+    "url",
+  ]
+
+  for (const key of keys) {
+    const value = node[key]
+    if (typeof value === "string" && value.trim()) return value.trim()
+  }
+
+  return null
+}
+
+function InterestVisual({
+  title,
+  imageUrl,
+  className,
+}: {
+  title: string
+  imageUrl?: string | null
+  className?: string
+}) {
+  const [hasError, setHasError] = useState(false)
+  const showImage = Boolean(imageUrl && !hasError)
+
+  return (
+    <div
+      className={cn(
+        "relative h-16 w-24 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-sky-50 via-blue-50 to-white",
+        className
+      )}
+    >
+      {showImage ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={String(imageUrl)}
+          alt={title}
+          className="h-full w-full object-cover"
+          onError={() => setHasError(true)}
+        />
+      ) : (
+        <>
+          <div className="absolute -right-5 -top-5 h-14 w-14 rounded-full bg-blue-100/70" />
+          <div className="absolute -left-4 -bottom-4 h-12 w-12 rounded-full bg-cyan-100/60" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Building2 className="h-6 w-6 text-blue-400/90" />
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 function resolvePeriodLabel(interest: LeaseInterest) {
   return `${formatDate(interest.interestedStartDate)} - ${formatDate(interest.interestedEndDate)}`
 }
 
 function resolveCurrencyLabelWithLookup(value: unknown, currencyLookup: Record<string, string>) {
   if (value === null || value === undefined || value === "") return "-"
+
+  if (typeof value === "object") {
+    const node = value as Record<string, unknown>
+    const code = String(node.code ?? node.Code ?? "").trim()
+    if (code) return code.toUpperCase()
+
+    const name = String(node.name ?? node.Name ?? "").trim()
+    if (name) return name
+
+    const nestedId = String(node.id ?? node.Id ?? "").trim()
+    if (nestedId) {
+      const mapped = currencyLookup[nestedId] ?? currencyLookup[nestedId.toLowerCase()]
+      if (mapped) return mapped
+    }
+  }
 
   const raw = String(value).trim()
   if (!raw) return "-"
@@ -188,13 +271,22 @@ function resolveCurrencyLabelWithLookup(value: unknown, currencyLookup: Record<s
   return "-"
 }
 
+function getUnitPriceValue(interest: LeaseInterest): unknown {
+  return (interest as any).unitPrice ?? (interest as any).unit_price ?? null
+}
+
+function getCurrencyValue(interest: LeaseInterest): unknown {
+  return (interest as any).currency ?? (interest as any).currency_code ?? null
+}
+
 function resolveUnitPriceLabel(interest: LeaseInterest, currencyLookup: Record<string, string>) {
-  if (interest.unitPrice === null || interest.unitPrice === undefined || interest.unitPrice === "") {
+  const rawUnitPrice = getUnitPriceValue(interest)
+  if (rawUnitPrice === null || rawUnitPrice === undefined || rawUnitPrice === "") {
     return "-"
   }
-  const amount = Number(interest.unitPrice)
-  if (!Number.isFinite(amount)) return displayText(interest.unitPrice)
-  const currency = resolveCurrencyLabelWithLookup(interest.currency, currencyLookup)
+  const amount = Number(rawUnitPrice)
+  if (!Number.isFinite(amount)) return displayText(rawUnitPrice)
+  const currency = resolveCurrencyLabelWithLookup(getCurrencyValue(interest), currencyLookup)
   if (currency === "-") return amount.toLocaleString()
   return `${currency} ${amount.toLocaleString()}`
 }
@@ -207,6 +299,27 @@ function DetailRow({ label, value }: { label: string; value: unknown }) {
       </div>
       <div className="mt-1 text-sm font-medium text-slate-900 break-words">
         {displayText(value)}
+      </div>
+    </div>
+  )
+}
+
+function HeaderMetric({
+  label,
+  value,
+  className,
+}: {
+  label: string
+  value: string
+  className?: string
+}) {
+  return (
+    <div className={cn("rounded-xl border border-slate-200/80 bg-white/95 px-3 py-2.5", className)}>
+      <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+        {label}
+      </div>
+      <div className="mt-1 text-sm font-semibold text-slate-900 leading-tight">
+        {value}
       </div>
     </div>
   )
@@ -243,6 +356,13 @@ export function InterestsListing({
   })
 
   const detail = (data?.data ?? selectedFromList) as LeaseInterest | null
+  const detailFrequencyLabel = detail
+    ? resolveFrequencyLabel(detail, frequencyLookup)
+    : "-"
+  const detailPeriodLabel = detail ? resolvePeriodLabel(detail) : "-"
+  const detailUnitPriceLabel = detail
+    ? resolveUnitPriceLabel(detail, currencyLookup)
+    : "-"
 
   const openDetail = (id: number) => {
     setSelectedInterestId(id)
@@ -271,6 +391,10 @@ export function InterestsListing({
         const period = resolvePeriodLabel(interest)
         const frequency = resolveFrequencyLabel(interest, frequencyLookup)
         const unitPrice = resolveUnitPriceLabel(interest, currencyLookup)
+        const visualUrl =
+          resolveImageUrl(interest) ??
+          resolveImageUrl(interest.property) ??
+          resolveImageUrl(interest.unit)
 
         return (
           <motion.div
@@ -279,7 +403,7 @@ export function InterestsListing({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
             className={cn(
-              "flex flex-col gap-3 rounded-2xl border border-border/60 border-l-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between",
+              "flex flex-col gap-3 rounded-2xl border border-border/60 border-l-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between transition-colors hover:border-blue-200/80",
               frequencyAccent(interest, frequencyLookup)
             )}
           >
@@ -288,12 +412,13 @@ export function InterestsListing({
               onClick={() => openDetail(interest.id)}
               className="flex min-w-0 flex-1 items-start gap-3 text-left"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/60 text-foreground/70">
-                <Building2 className="h-4 w-4" />
-              </div>
+              <InterestVisual
+                title={propertyName}
+                imageUrl={visualUrl}
+              />
 
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-foreground">{propertyName}</p>
+                <p className="truncate text-[15px] font-semibold text-foreground">{propertyName}</p>
 
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                   <MapPin className="h-3.5 w-3.5" />
@@ -302,7 +427,7 @@ export function InterestsListing({
                   <span>Interest #{displayText(interest.id)}</span>
                 </div>
 
-                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" />
                     {period}
@@ -311,8 +436,8 @@ export function InterestsListing({
               </div>
             </button>
 
-            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-              <div className="mr-1 text-left sm:text-right">
+            <div className="flex flex-wrap items-center gap-2 sm:justify-end sm:pl-4">
+              <div className="mr-1 min-w-[120px] text-left sm:text-right">
                 <p className="text-[11px] text-muted-foreground">Unit price</p>
                 <p className="text-sm font-semibold text-foreground">{unitPrice}</p>
               </div>
@@ -342,7 +467,7 @@ export function InterestsListing({
           if (!nextOpen) setSelectedInterestId(null)
         }}
       >
-        <SheetContent className="sm:max-w-[620px] bg-white border-l border-slate-200 p-0 flex flex-col">
+        <SheetContent className="sm:max-w-[680px] bg-white border-l border-slate-200 p-0 flex flex-col">
           {isLoading && !detail ? (
             <div className="py-20 flex flex-col items-center justify-center text-slate-600 gap-3">
               <div className="h-11 w-11 rounded-xl border border-slate-200 flex items-center justify-center">
@@ -356,51 +481,80 @@ export function InterestsListing({
             </div>
           ) : (
             <>
-              <div className="px-8 py-8 border-b border-slate-200 bg-gradient-to-b from-blue-50/70 via-sky-50/40 to-white">
-                <SheetHeader className="space-y-4 text-left">
-                  <div className="flex items-start gap-4">
-                    <div className="inline-flex h-12 w-12 rounded-xl border border-blue-200 bg-white items-center justify-center shrink-0">
-                      <Hash className="h-5 w-5 text-blue-600" strokeWidth={2} />
-                    </div>
-
-                    <div className="min-w-0 space-y-1.5">
-                      <SheetTitle className="text-2xl font-semibold tracking-tight text-slate-900">
-                        {resolvePropertyName(detail)}
-                      </SheetTitle>
-                      <SheetDescription className="text-sm text-slate-600 font-medium">
-                        {resolveUnitName(detail)} · Interest #{displayText(detail.id)}
-                      </SheetDescription>
-                    </div>
+              <div className="px-8 py-8 border-b border-slate-200 bg-gradient-to-b from-blue-50/80 via-sky-50/40 to-white">
+                <SheetHeader className="text-left">
+                  <div className="space-y-1.5">
+                    <SheetTitle className="text-2xl font-semibold tracking-tight text-slate-900">
+                      {resolvePropertyName(detail)}
+                    </SheetTitle>
+                    <SheetDescription className="text-sm text-slate-600 font-medium">
+                      <span className="text-slate-700">{resolveUnitName(detail)}</span>
+                      <span className="px-1.5">·</span>
+                      <span>Interest #{displayText(detail.id)}</span>
+                    </SheetDescription>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge className={cn("h-7 rounded-full border px-3 text-xs font-semibold", frequencyTone(detail, frequencyLookup))}>
-                      {resolveFrequencyLabel(detail, frequencyLookup)}
-                    </Badge>
-                    <Badge className="h-7 rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700">
-                      {resolvePeriodLabel(detail)}
-                    </Badge>
+                  <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <HeaderMetric
+                      label="Payment Frequency"
+                      value={detailFrequencyLabel === "-" ? "Not specified" : detailFrequencyLabel}
+                      className={cn(
+                        detailFrequencyLabel !== "-" && frequencyTone(detail, frequencyLookup),
+                        "border"
+                      )}
+                    />
+                    <HeaderMetric
+                      label="Interest Period"
+                      value={detailPeriodLabel === "-" ? "Not specified" : detailPeriodLabel}
+                    />
+                    <HeaderMetric
+                      label="Unit Price"
+                      value={detailUnitPriceLabel === "-" ? "Not provided" : detailUnitPriceLabel}
+                    />
                   </div>
                 </SheetHeader>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+              <div className="flex-1 overflow-y-auto px-8 py-6 space-y-7">
                 <section>
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-700 mb-3">
-                    Interest Terms
-                  </h4>
+                  <div className="mb-3 flex items-center gap-2">
+                    <Wallet className="h-4 w-4 text-blue-600" />
+                    <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                      Interest Terms
+                    </h4>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <DetailRow label="Start date" value={formatDate(detail.interestedStartDate)} />
                     <DetailRow label="End date" value={formatDate(detail.interestedEndDate)} />
                     <DetailRow label="Payment frequency" value={resolveFrequencyLabel(detail, frequencyLookup)} />
+                    <DetailRow label="Unit price" value={resolveUnitPriceLabel(detail, currencyLookup)} />
+                    <DetailRow label="Currency" value={resolveCurrencyLabelWithLookup(getCurrencyValue(detail), currencyLookup)} />
                     <DetailRow label="Additional notes" value={detail.additionalInformation} />
                   </div>
                 </section>
 
                 <section>
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-700 mb-3">
-                    References
-                  </h4>
+                  <div className="mb-3 flex items-center gap-2">
+                    <UserRound className="h-4 w-4 text-blue-600" />
+                    <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                      Linked Entities
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <DetailRow label="Tenant name" value={sessionTenantName ?? detail.tenant?.name} />
+                    <DetailRow label="Tenant email" value={sessionTenantEmail ?? detail.tenant?.email} />
+                    <DetailRow label="Property name" value={detail.property?.name} />
+                    <DetailRow label="Unit name" value={detail.unit?.name} />
+                  </div>
+                </section>
+
+                <section>
+                  <div className="mb-3 flex items-center gap-2">
+                    <Landmark className="h-4 w-4 text-blue-600" />
+                    <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                      Reference IDs
+                    </h4>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <DetailRow label="Interest ID" value={detail.id} />
                     <DetailRow label="Property ID" value={detail.propertyId} />
@@ -412,24 +566,13 @@ export function InterestsListing({
                 </section>
 
                 <section>
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-700 mb-3">
-                    Linked Entities
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <DetailRow label="Tenant name" value={sessionTenantName ?? detail.tenant?.name} />
-                    <DetailRow label="Tenant email" value={sessionTenantEmail ?? detail.tenant?.email} />
-                    <DetailRow label="Property name" value={detail.property?.name} />
-                    <DetailRow label="Unit name" value={detail.unit?.name} />
+                  <div className="mb-3 flex items-center gap-2">
+                    <Hash className="h-4 w-4 text-blue-600" />
+                    <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                      Audit Trail
+                    </h4>
                   </div>
-                </section>
-
-                <section>
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-700 mb-3">
-                    Financial and Audit
-                  </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <DetailRow label="Unit price" value={resolveUnitPriceLabel(detail, currencyLookup)} />
-                    <DetailRow label="Currency" value={resolveCurrencyLabelWithLookup(detail.currency, currencyLookup)} />
                     <DetailRow label="Created by" value={detail.createdBy} />
                     <DetailRow label="Created on" value={formatDateTime(detail.createdOn)} />
                     <DetailRow label="Last updated on" value={formatDateTime(detail.modifiedOn)} />

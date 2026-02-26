@@ -16,6 +16,7 @@ import {
   ListChecks,
   MessageSquare,
   Paperclip,
+  Save,
   Send,
   ShieldCheck,
   Trash2,
@@ -24,6 +25,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { parseSubmissionDeadline } from "@/lib/deadline"
+import { isRfqAwardedStatus, isRfqClosedStatus, isRfqSubmittedResponseStatus, normalizeRfqStatusKey } from "@/lib/rfq-status"
 import type { Currency } from "@/types/currencies"
 import { Badge } from "@/components/common/badge"
 import { Button } from "@/components/common/button"
@@ -277,22 +279,11 @@ function normalizeStatus(status?: string) {
 }
 
 function normalizeStatusKey(status?: string) {
-  return String(status ?? "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "_")
+  return normalizeRfqStatusKey(status)
 }
 
 function isSubmittedStatus(status?: string) {
-  const s = normalizeStatusKey(status)
-  return (
-    s === "submitted" ||
-    s === "final" ||
-    s === "approved" ||
-    s === "accepted" ||
-    s === "submitted_response" ||
-    s === "response_submitted"
-  )
+  return isRfqSubmittedResponseStatus(status)
 }
 
 type Tone = { label: string; className: string }
@@ -506,45 +497,6 @@ function safeJsonPreview(value: unknown, maxChars = 1800) {
   }
 }
 
-function isClosedRfqStatus(status?: string) {
-  const s = String(status ?? "").trim().toLowerCase()
-  if (!s) return false
-
-  // Known "open" shapes in upstream systems
-  if (["pub", "published", "open", "active", "live"].includes(s)) return false
-
-  // Known "closed" / terminal shapes
-  if (
-    [
-      "clo",
-      "closed",
-      "close",
-      "cancelled",
-      "canceled",
-      "can",
-      "expired",
-      "exp",
-      "ended",
-      "end",
-      "archived",
-      "arc",
-      "completed",
-      "complete",
-      "com",
-    ].includes(s)
-  ) {
-    return true
-  }
-
-  return (
-    s.includes("close") ||
-    s.includes("cancel") ||
-    s.includes("expire") ||
-    s.includes("archive") ||
-    s.includes("complete")
-  )
-}
-
 function deadlineMeta(deadline?: string | null) {
   const parsed = parseSubmissionDeadline(deadline)
   if (!parsed.date) {
@@ -645,7 +597,7 @@ export function RfqQuotation() {
   const [payload, setPayload] = useState<RfqPayload | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState<"submitted" | null>(null)
+  const [submitting, setSubmitting] = useState<"draft" | "submitted" | null>(null)
   const [reloadSeq, setReloadSeq] = useState(0)
   const [clientLocked, setClientLocked] = useState<"submitted" | null>(null)
 
@@ -688,6 +640,7 @@ export function RfqQuotation() {
   const uploadInputRef = useRef<HTMLInputElement | null>(null)
   const tmpUploadSeq = useRef(0)
   const redirectTimeoutRef = useRef<number | null>(null)
+  const awardLockToastRef = useRef<string | null>(null)
 
   const [submissionSummary, setSubmissionSummary] = useState<SubmissionSummary | null>(null)
 
@@ -823,12 +776,44 @@ export function RfqQuotation() {
   const deadline = useMemo(() => deadlineMeta(submissionDeadline), [submissionDeadline])
   const deadlineDate = deadline.date
 
+  const rfqStatusValue = rfq?.status ?? payload?.status ?? ""
+  const invitationStatusValue =
+    rfq?.invitationStatus ??
+    rfq?.invitation_status ??
+    rfq?.InvitationStatus ??
+    payload?.invitationStatus ??
+    payload?.invitation_status ??
+    payload?.InvitationStatus ??
+    ""
+  const awardStatusValue =
+    rfq?.awardStatus ??
+    rfq?.award_status ??
+    rfq?.AwardStatus ??
+    payload?.awardStatus ??
+    payload?.award_status ??
+    payload?.AwardStatus ??
+    ""
+
+  const lockedByAwarded = [
+    rfqStatusValue,
+    invitationStatusValue,
+    awardStatusValue,
+    supplierResponse?.status,
+  ].some((value) => isRfqAwardedStatus(value))
   const lockedByDeadline = deadline.isClosed
-  const lockedByRfqStatus = isClosedRfqStatus(rfq?.status ?? payload?.status ?? "")
+  const lockedByRfqStatus = [rfqStatusValue, invitationStatusValue, awardStatusValue].some((value) =>
+    isRfqClosedStatus(value)
+  )
   const lockedByStatus =
     isSubmittedStatus(supplierResponse?.status) || clientLocked === "submitted"
-  const isLocked = lockedByDeadline || lockedByRfqStatus || lockedByStatus
-  const clarificationsLocked = lockedByDeadline || lockedByRfqStatus || lockedByStatus
+  const isLocked = lockedByAwarded || lockedByDeadline || lockedByRfqStatus || lockedByStatus
+  const clarificationsLocked =
+    lockedByAwarded || lockedByDeadline || lockedByRfqStatus || lockedByStatus
+  const lockInfoMessage = lockedByAwarded
+    ? "This RFQ has already been awarded and is no longer accepting responses."
+    : lockedByStatus
+      ? "Your quotation has already been submitted."
+      : `This RFQ is closed${lockedByDeadline ? " (deadline passed)" : ""}.`
   const submittedAtDate = submissionSummary
     ? new Date(submissionSummary.submittedAt)
     : null
@@ -836,6 +821,15 @@ export function RfqQuotation() {
     submittedAtDate && Number.isFinite(submittedAtDate.getTime())
       ? format(submittedAtDate, "PP p")
       : null
+
+  useEffect(() => {
+    if (!lockedByAwarded) return
+    const key = String(normalizedRfqId || rfqIdValue || "")
+    if (!key) return
+    if (awardLockToastRef.current === key) return
+    awardLockToastRef.current = key
+    toast.info("This RFQ has already been awarded and no further responses are allowed.")
+  }, [lockedByAwarded, normalizedRfqId, rfqIdValue])
 
   useEffect(() => {
     let cancelled = false
@@ -1197,9 +1191,98 @@ export function RfqQuotation() {
     return out
   }
 
-  const submit = async () => {
+  const buildResponsePayload = (
+    meta: ReturnType<typeof validateSubmitMeta>,
+    asDraft: boolean
+  ) => {
+    const rfqIdValue = (() => {
+      const raw = String(rfq?.id ?? rfq?.rfqId ?? rfqId).trim()
+      const n = Number(raw)
+      return Number.isFinite(n) ? n : raw
+    })()
+
+    const items = enrichedLines.map((l) => {
+      const rawLineId = String(
+        l.raw?.rfqLineId ??
+        l.raw?.rfq_line_id ??
+        l.raw?.lineId ??
+        l.raw?.line_id ??
+        l.raw?.id ??
+        l.raw?.Id ??
+        l.id
+      ).trim()
+      const parsedLineId = Number(rawLineId)
+      const rfqLineIdValue =
+        Number.isFinite(parsedLineId) && Number.isInteger(parsedLineId)
+          ? parsedLineId
+          : rawLineId || l.id
+
+      const qty = parsePositiveNumber(l.quantity) ?? 0
+      const quotedPrice = parsePositiveNumber(l.unitPrice) ?? 0
+      const totalPayable = qty * quotedPrice
+
+      return {
+        rfqLineId: rfqLineIdValue,
+        rfq_line_id: rfqLineIdValue,
+        quantity: qty,
+        qty,
+        quotedPrice,
+        quoted_price: quotedPrice,
+        totalPayable,
+        total_payable: totalPayable,
+        unitPrice: quotedPrice,
+        unit_price: quotedPrice,
+        remarks: null,
+      }
+    })
+
+    const linePayload = items.map((it) => ({
+      lineId: String((it as any).rfqLineId ?? ""),
+      rfqLineId: (it as any).rfqLineId,
+      rfq_line_id: (it as any).rfq_line_id,
+      quantity: (it as any).quantity,
+      qty: (it as any).qty,
+      unitPrice: (it as any).quotedPrice,
+      unit_price: (it as any).quoted_price,
+      quotedPrice: (it as any).quotedPrice,
+      quoted_price: (it as any).quoted_price,
+      totalPayable: (it as any).totalPayable,
+      total_payable: (it as any).total_payable,
+      remarks: null,
+    }))
+
+    return {
+      rfqId: rfqIdValue,
+      rfq_id: rfqIdValue,
+      supplierId: supplierIdValue,
+      supplier_id: supplierIdValue,
+      currency: String(meta.currency).trim().toUpperCase(),
+      durationDays: meta.duration,
+      duration_days: meta.duration,
+      isDraft: asDraft,
+      is_draft: asDraft,
+      status: asDraft ? "draft" : "submitted",
+      remarks: remarks || null,
+      submissionDate: new Date().toISOString(),
+      submission_date: new Date().toISOString(),
+      documents:
+        quoteDocuments.length > 0
+          ? quoteDocuments.map((d) => ({ id: d.id, name: d.name, source: d.source }))
+          : undefined,
+      documentIds: quoteDocuments.length > 0 ? quoteDocuments.map((d) => d.id) : undefined,
+      document_ids: quoteDocuments.length > 0 ? quoteDocuments.map((d) => d.id) : undefined,
+      items,
+      lineItems: items,
+      line_items: items,
+      lines: linePayload,
+    }
+  }
+
+  const persistResponse = async (asDraft: boolean) => {
     if (isLocked) {
-      if (lockedByStatus) {
+      if (lockedByAwarded) {
+        toast.info("This RFQ has already been awarded and no further responses are allowed.")
+      } else if (lockedByStatus) {
         toast.success("Quotation already submitted", {
           description: "A response has already been submitted for this RFQ.",
         })
@@ -1210,6 +1293,51 @@ export function RfqQuotation() {
     }
 
     clearSubmitErrors()
+
+    if (asDraft) {
+      const hasLineInput = enrichedLines.some(
+        (line) =>
+          parsePositiveNumber(line.quantity) != null || parsePositiveNumber(line.unitPrice) != null
+      )
+      const hasContent =
+        hasLineInput ||
+        Boolean(remarks.trim()) ||
+        Boolean(String(quoteCurrency || "").trim()) ||
+        Boolean(String(durationDays || "").trim())
+
+      if (!hasContent) {
+        toast.error("Nothing to save yet")
+        return
+      }
+
+      setSubmitting("draft")
+      try {
+        const savedAt = Date.now()
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(
+            draftKey,
+            JSON.stringify({
+              version: 2,
+              savedAt,
+              remarks,
+              lines: quoteLines,
+              currency: quoteCurrency,
+              durationDays,
+            })
+          )
+        }
+        setMissingLineIds([])
+        setDraftSavedAt(new Date(savedAt))
+        toast.success("Draft response saved successfully")
+      } catch (e: any) {
+        toast.error("Couldn't save draft", {
+          description: e?.message || "Please try again.",
+        })
+      } finally {
+        setSubmitting(null)
+      }
+      return
+    }
 
     const meta = validateSubmitMeta()
     if (!meta.ok) {
@@ -1236,87 +1364,7 @@ export function RfqQuotation() {
 
     setSubmitting("submitted")
     try {
-      const rfqIdValue = (() => {
-        const raw = String(rfq?.id ?? rfq?.rfqId ?? rfqId).trim()
-        const n = Number(raw)
-        return Number.isFinite(n) ? n : raw
-      })()
-
-      const items = enrichedLines.map((l) => {
-        const rawLineId = String(
-          l.raw?.rfqLineId ??
-          l.raw?.rfq_line_id ??
-          l.raw?.lineId ??
-          l.raw?.line_id ??
-          l.raw?.id ??
-          l.raw?.Id ??
-          l.id
-        ).trim()
-        const parsedLineId = Number(rawLineId)
-        const rfqLineIdValue =
-          Number.isFinite(parsedLineId) && Number.isInteger(parsedLineId)
-            ? parsedLineId
-            : rawLineId || l.id
-
-        const qty = parsePositiveNumber(l.quantity) ?? 0
-        const quotedPrice = parsePositiveNumber(l.unitPrice) ?? 0
-        const totalPayable = qty * quotedPrice
-
-        return {
-          rfqLineId: rfqLineIdValue,
-          rfq_line_id: rfqLineIdValue,
-          quantity: qty,
-          qty,
-          quotedPrice,
-          quoted_price: quotedPrice,
-          totalPayable,
-          total_payable: totalPayable,
-          unitPrice: quotedPrice,
-          unit_price: quotedPrice,
-          remarks: null,
-        }
-      })
-
-      const linePayload = items.map((it) => ({
-        lineId: String((it as any).rfqLineId ?? ""),
-        rfqLineId: (it as any).rfqLineId,
-        rfq_line_id: (it as any).rfq_line_id,
-        quantity: (it as any).quantity,
-        qty: (it as any).qty,
-        unitPrice: (it as any).quotedPrice,
-        unit_price: (it as any).quoted_price,
-        quotedPrice: (it as any).quotedPrice,
-        quoted_price: (it as any).quoted_price,
-        totalPayable: (it as any).totalPayable,
-        total_payable: (it as any).total_payable,
-        remarks: null,
-      }))
-
-      const body = {
-        rfqId: rfqIdValue,
-        rfq_id: rfqIdValue,
-        supplierId: supplierIdValue,
-        supplier_id: supplierIdValue,
-        currency: String(meta.currency).trim().toUpperCase(),
-        durationDays: meta.duration,
-        duration_days: meta.duration,
-        isDraft: false,
-        is_draft: false,
-        status: "submitted",
-        remarks: remarks || null,
-        submissionDate: new Date().toISOString(),
-        submission_date: new Date().toISOString(),
-        documents:
-          quoteDocuments.length > 0
-            ? quoteDocuments.map((d) => ({ id: d.id, name: d.name, source: d.source }))
-            : undefined,
-        documentIds: quoteDocuments.length > 0 ? quoteDocuments.map((d) => d.id) : undefined,
-        document_ids: quoteDocuments.length > 0 ? quoteDocuments.map((d) => d.id) : undefined,
-        items,
-        lineItems: items,
-        line_items: items,
-        lines: linePayload,
-      }
+      const body = buildResponsePayload(meta, false)
 
       const res = await fetch("/api/procurement/rfq-responses", {
         method: "POST",
@@ -1376,8 +1424,8 @@ export function RfqQuotation() {
       setClientLocked("submitted")
       setSubmitDialogOpen(false)
 
-      toast.success("Quotation submitted", {
-        description: "Submitted successfully. Redirecting you back to the RFQ…",
+      toast.success("Response submitted successfully", {
+        description: "Redirecting you back to the RFQ…",
       })
       try {
         window.localStorage.removeItem(draftKey)
@@ -1392,10 +1440,20 @@ export function RfqQuotation() {
     }
   }
 
+  const saveDraft = async () => {
+    await persistResponse(true)
+  }
+
+  const submit = async () => {
+    await persistResponse(false)
+  }
+
   const submitClarification = async () => {
     if (clarificationsLocked) {
       toast.error("Clarifications are closed", {
-        description: lockedByStatus
+        description: lockedByAwarded
+          ? "This RFQ has already been awarded."
+          : lockedByStatus
           ? "Your quotation is already submitted."
           : lockedByDeadline
             ? "The submission deadline has passed."
@@ -1735,7 +1793,9 @@ export function RfqQuotation() {
 
   const onSubmitClick = () => {
     if (isLocked) {
-      if (lockedByStatus) {
+      if (lockedByAwarded) {
+        toast.info("This RFQ has already been awarded and no further responses are allowed.")
+      } else if (lockedByStatus) {
         toast.success("Quotation already submitted", {
           description: "A response has already been submitted for this RFQ.",
         })
@@ -1854,17 +1914,40 @@ export function RfqQuotation() {
             Back to RFQs
           </Button>
           {!isLocked ? (
-            <Button
-              onClick={onSubmitClick}
-              disabled={!canSubmit}
-              className="h-9 rounded-xl bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
-            >
-              Submit quote
-              <ArrowUpRight className="ml-1.5 h-4 w-4" />
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={saveDraft}
+                disabled={submitting !== null}
+                className="h-9 rounded-xl border-border/60 !bg-transparent px-3 text-xs font-semibold hover:!bg-transparent"
+              >
+                {submitting === "draft" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Save Draft
+              </Button>
+              <Button
+                onClick={onSubmitClick}
+                disabled={!canSubmit}
+                className="h-9 rounded-xl bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+              >
+                Submit Response
+                <ArrowUpRight className="ml-1.5 h-4 w-4" />
+              </Button>
+            </>
           ) : null}
         </div>
       </header>
+
+      {lockedByAwarded ? (
+        <section className="border-l-2 border-slate-300/70 pl-3">
+          <p className="text-sm text-muted-foreground">
+            This RFQ has already been awarded and no further responses are allowed.
+          </p>
+        </section>
+      ) : null}
 
       {submissionSummary ? (
         <section className="space-y-3 border-l-2 border-emerald-300/70 pl-3">
@@ -2342,18 +2425,36 @@ export function RfqQuotation() {
 
                   {!isLocked ? (
                     <div className="space-y-2">
-                      <Button
-                        disabled={!canSubmit}
-                        onClick={onSubmitClick}
-                        className={PRIMARY_CTA_BUTTON}
-                      >
-                        {submitting === "submitted" ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <ArrowUpRight className="h-4 w-4" />
-                        )}
-                        Submit quotation
-                      </Button>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <Button
+                          variant="outline"
+                          disabled={submitting !== null}
+                          onClick={saveDraft}
+                          className={cn(
+                            "h-11 w-full justify-center gap-2 rounded-lg font-semibold",
+                            SECONDARY_BUTTON_BASE
+                          )}
+                        >
+                          {submitting === "draft" ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Save className="h-4 w-4" />
+                          )}
+                          Save Draft
+                        </Button>
+                        <Button
+                          disabled={!canSubmit}
+                          onClick={onSubmitClick}
+                          className={PRIMARY_CTA_BUTTON}
+                        >
+                          {submitting === "submitted" ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <ArrowUpRight className="h-4 w-4" />
+                          )}
+                          Submit Response
+                        </Button>
+                      </div>
                       <div className={`text-xs ${META_TEXT}`}>
                         {!submitMeta.ok
                           ? "Add currency and validity to enable submission."
@@ -2375,9 +2476,7 @@ export function RfqQuotation() {
                         Back to RFQs
                       </Button>
                       <div className={`${SOFT_PANEL_DASHED} p-3 text-sm ${META_TEXT}`}>
-                        {lockedByStatus
-                          ? "Your quotation has already been submitted."
-                          : `This RFQ is closed${lockedByDeadline ? " (deadline passed)" : ""}.`}
+                        {lockInfoMessage}
                       </div>
                     </div>
                   )}
@@ -2805,18 +2904,33 @@ export function RfqQuotation() {
       {!isLocked ? (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/95 px-3 py-2 backdrop-blur md:hidden">
           <div className="mx-auto max-w-md space-y-1.5">
-            <Button
-              disabled={!canSubmit}
-              onClick={onSubmitClick}
-              className={cn(PRIMARY_CTA_BUTTON, "h-10 rounded-lg")}
-            >
-              {submitting === "submitted" ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ArrowUpRight className="h-4 w-4" />
-              )}
-              Submit quotation
-            </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                disabled={submitting !== null}
+                onClick={saveDraft}
+                className={cn("h-10 rounded-lg font-semibold", SECONDARY_BUTTON_BASE)}
+              >
+                {submitting === "draft" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Draft
+              </Button>
+              <Button
+                disabled={!canSubmit}
+                onClick={onSubmitClick}
+                className={cn(PRIMARY_CTA_BUTTON, "h-10 rounded-lg")}
+              >
+                {submitting === "submitted" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ArrowUpRight className="h-4 w-4" />
+                )}
+                Submit
+              </Button>
+            </div>
             <p className={`text-center text-[11px] ${META_TEXT}`}>
               {!submitMeta.ok
                 ? "Add currency and validity to enable submission."
@@ -2831,7 +2945,7 @@ export function RfqQuotation() {
       <AlertDialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
         <AlertDialogContent className="border-slate-200/70 bg-background shadow-none">
           <AlertDialogHeader>
-            <AlertDialogTitle>Submit quotation?</AlertDialogTitle>
+            <AlertDialogTitle>Submit response?</AlertDialogTitle>
             <AlertDialogDescription>
               Submitting sends your final prices to the buyer. You may not be able to edit after submission.
             </AlertDialogDescription>
@@ -2854,7 +2968,7 @@ export function RfqQuotation() {
                   Submitting…
                 </span>
               ) : (
-                "Submit"
+                "Submit Response"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -32,7 +32,7 @@ export default function LeaseRegistry() {
     const [searchQuery, setSearchQuery] = useState("")
     const debouncedSearch = useDebounce(searchQuery, 400)
     const searchParams = useSearchParams()
-    const page = Number(searchParams.get("page")) || 1
+    const page = Number(searchParams?.get("page")) || 1
     const { data: session, status } = useSession()
     const sessionTenantId = resolveTenantIdFromSessionUser(session?.user)
     const [tenantId, setTenantId] = useState<number | null>(sessionTenantId)

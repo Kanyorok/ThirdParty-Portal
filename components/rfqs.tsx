@@ -1,13 +1,15 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { type MouseEvent, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { format } from "date-fns"
 import { AlertCircle, ArrowUpRight, Loader2, Mail, Search, Timer, X } from "lucide-react"
+import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
 import { useDebounce } from "@/hooks/use-debounce"
 import { parseSubmissionDeadline } from "@/lib/deadline"
+import { isRfqAwardedStatus, isRfqClosedStatus } from "@/lib/rfq-status"
 import Loading from "@/components/common/custom-loader"
 import { Badge } from "@/components/common/badge"
 import { Button } from "@/components/common/button"
@@ -89,8 +91,7 @@ function normalizeInvitationStatus(value?: string | null) {
 }
 
 function resolveRfqLifecycle(rfq: RfqInvitation): Exclude<RfqStatusFilter, "all"> {
-  const status = String(rfq.status ?? "").trim().toLowerCase()
-  const closedByStatus = ["cl", "closed", "cancelled", "canceled", "expired"].includes(status)
+  const closedByStatus = [rfq.status, rfq.invitationStatus].some((value) => isRfqClosedStatus(value))
   const closedByDeadline = deadlineMeta(rfq.submissionDeadline).label.toLowerCase() === "closed"
   return closedByStatus || closedByDeadline ? "closed" : "open"
 }
@@ -407,7 +408,41 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
   )
   const supplierResponseStatus = String(details.supplierResponse?.status ?? "").trim()
 
-  const actionLabel = isDraftStatus(supplierResponseStatus) ? "Continue Draft" : "Start Quotation"
+  const actionBlockedMessage = [
+    detailRfq?.status,
+    detailRfq?.invitationStatus,
+    detailRfq?.invitation_status,
+    detailRfq?.InvitationStatus,
+    detailRfq?.awardStatus,
+    detailRfq?.award_status,
+    detailRfq?.AwardStatus,
+    root?.status,
+    root?.invitationStatus,
+    root?.invitation_status,
+    root?.InvitationStatus,
+    root?.awardStatus,
+    root?.award_status,
+    root?.AwardStatus,
+    rfq.status,
+    rfq.invitationStatus,
+    supplierResponseStatus,
+  ].some((value) => isRfqAwardedStatus(value))
+    ? "This RFQ has already been awarded and is no longer accepting responses."
+    : null
+  const actionBlocked = Boolean(actionBlockedMessage)
+  const actionLabel = actionBlocked
+    ? "Awarded"
+    : isDraftStatus(supplierResponseStatus)
+      ? "Continue Draft"
+      : "Start Quotation"
+  const quotationHref = actionBlocked ? "#" : `/dashboard/supplier/rfqs/${encodeURIComponent(rfqId)}/quotation`
+
+  const onActionClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.stopPropagation()
+    if (!actionBlockedMessage) return
+    event.preventDefault()
+    toast.info(actionBlockedMessage)
+  }
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -464,6 +499,14 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
                 <Badge variant="outline" className="rounded-full px-2 py-0.5 text-[10px]">
                   {normalizeStatus(rfq.status)}
                 </Badge>
+                {actionBlocked ? (
+                  <Badge
+                    variant="outline"
+                    className="rounded-full border-slate-300 bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600"
+                  >
+                    Awarded
+                  </Badge>
+                ) : null}
                 <span className={cn("inline-flex items-center gap-1 font-medium", urgency.tone)}>
                   <Timer className="h-3.5 w-3.5" />
                   {urgency.label}
@@ -472,21 +515,26 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
             </div>
           </div>
 
-          <Button
-            asChild
-            size="sm"
-            variant="outline"
-            className="h-8 rounded-full border-border/60 !bg-transparent px-3 text-xs font-semibold hover:!bg-transparent"
-          >
-            <Link
-              href={`/dashboard/supplier/rfqs/${encodeURIComponent(rfqId)}/quotation`}
-              className="flex items-center gap-1.5"
-              onClick={(e) => e.stopPropagation()}
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className={cn(
+                "h-8 rounded-full border-border/60 !bg-transparent px-3 text-xs font-semibold hover:!bg-transparent",
+                actionBlocked &&
+                  "border-slate-200 text-slate-400 hover:border-slate-200 hover:text-slate-400"
+              )}
             >
-              {actionLabel}
-              <ArrowUpRight className="h-4 w-4" />
-            </Link>
-          </Button>
+              <Link
+                href={quotationHref}
+                className="flex items-center gap-1.5"
+                onClick={onActionClick}
+                aria-disabled={actionBlocked}
+              >
+                {actionLabel}
+                <ArrowUpRight className="h-4 w-4" />
+              </Link>
+            </Button>
         </div>
       </SheetTrigger>
 
@@ -525,6 +573,14 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
                   className="text-[10px] px-2.5 py-0.5 shrink-0 rounded-full uppercase tracking-wide font-semibold border-slate-200 bg-white text-slate-700"
                 >
                   Response: {normalizeStatus(supplierResponseStatus)}
+                </Badge>
+              ) : null}
+              {actionBlocked ? (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] px-2.5 py-0.5 shrink-0 rounded-full uppercase tracking-wide font-semibold border-slate-300 bg-slate-100 text-slate-600"
+                >
+                  Awarded
                 </Badge>
               ) : null}
               <Badge
@@ -756,16 +812,26 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
             <div className="w-full">
               <Button
                 asChild
-                className="w-full h-10 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+                className={cn(
+                  "w-full h-10 rounded-full font-semibold",
+                  actionBlocked
+                    ? "bg-slate-200 text-slate-600 hover:bg-slate-200"
+                    : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                )}
               >
                 <Link
-                  href={`/dashboard/supplier/rfqs/${encodeURIComponent(rfqId)}/quotation`}
+                  href={quotationHref}
                   className="flex items-center justify-center gap-2"
+                  onClick={onActionClick}
+                  aria-disabled={actionBlocked}
                 >
                   {actionLabel}
                   <ArrowUpRight className="h-4 w-4" />
                 </Link>
               </Button>
+              {actionBlockedMessage ? (
+                <p className="mt-2 text-center text-[11px] text-slate-500">{actionBlockedMessage}</p>
+              ) : null}
             </div>
           </SheetFooter>
         </div>

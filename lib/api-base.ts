@@ -34,16 +34,24 @@ export async function getSupplierCategories<T = unknown>(accessToken?: string): 
 }
 
 export async function submitApplication(roundId: number, categoryIds: number[], accessToken: string) {
-    return apiFetch(`/api/procurement/prequalification/applications`, {
-        method: "POST",
-        accessToken,
-        body: JSON.stringify({ round_id: roundId, category_ids: categoryIds }),
-    })
+    const result = await submitApplicationSafe(roundId, categoryIds, accessToken)
+    if (!result.ok) {
+        const errorMessage =
+            result.data?.message ||
+            result.data?.error ||
+            `API request failed: ${result.status}`
+        throw new Error(errorMessage)
+    }
+    return result.data
 }
 
 export async function submitApplicationSafe(roundId: number, categoryIds: number[], accessToken: string) {
-    const baseUrl = getBaseUrl()
-    const url = `${baseUrl}/api/procurement/prequalification/applications`
+    const payload = {
+        round_id: roundId,
+        category_ids: categoryIds,
+    }
+
+    const url = "/api/prequalification/applications"
     const res = await fetch(url, {
         method: 'POST',
         headers: {
@@ -51,7 +59,7 @@ export async function submitApplicationSafe(roundId: number, categoryIds: number
             'Accept': 'application/json',
             'Authorization': `Bearer ${accessToken}`
         },
-        body: JSON.stringify({ round_id: roundId, category_ids: categoryIds }),
+        body: JSON.stringify(payload),
         cache: 'no-store'
     })
     const text = await res.text()

@@ -47,6 +47,7 @@ export async function getInvoices(
     accessToken?: string
 ): Promise<PaginatedResponse<Invoice>> {
     const resolvedTenantId = normalizeTenantId(tenantId)
+    requireQueryId("tenantId", resolvedTenantId)
 
     const payload = await propertyRequest<unknown>("/api/v1/property/invoices/tenant", {
         method: "GET",
@@ -68,6 +69,7 @@ export async function getInvoiceDetails(
 ): Promise<{ data: Invoice }> {
     requireQueryId("invoiceId", invoiceId)
     const resolvedTenantId = normalizeTenantId(tenantId)
+    requireQueryId("tenantId", resolvedTenantId)
 
     return propertyRequest<{ data: Invoice }>("/api/v1/property/invoices/tenant/show", {
         method: "GET",

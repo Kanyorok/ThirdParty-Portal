@@ -143,9 +143,34 @@ export const apiService = {
     return body
   },
 
-  // Backward-compatible alias for legacy consumers.
-  async deleteAccount(_password: string, accessToken?: string): Promise<SuspendAccountResponse> {
-    return this.suspendAccount(accessToken)
+  async deleteAccount(password: string, accessToken?: string): Promise<SuspendAccountResponse> {
+    const trimmedPassword = String(password ?? "").trim()
+    if (!trimmedPassword) {
+      throw new Error("Password is required to delete account")
+    }
+
+    const headers = {
+      ...authHeaders(accessToken),
+      "Content-Type": "application/json",
+    }
+
+    const res = await fetch("/api/third-party-profile", {
+      method: "DELETE",
+      headers,
+      body: JSON.stringify({
+        password: trimmedPassword,
+        current_password: trimmedPassword,
+        confirm_password: trimmedPassword,
+      }),
+      cache: "no-store",
+    })
+
+    const body = (await parseJson<SuspendAccountResponse>(res)) as SuspendAccountResponse
+    if (!res.ok) {
+      throw new Error(body.message || "Failed to delete account")
+    }
+
+    return body
   },
 }
 

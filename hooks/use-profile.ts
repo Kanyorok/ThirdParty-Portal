@@ -97,8 +97,67 @@ export function useProfile() {
 
   const details = {
     ...rawDetails,
-    email: rawDetails?.email ?? profile?.email ?? null,
-    phone: rawDetails?.phone ?? profile?.phone ?? null,
+    thirdPartyName:
+      rawDetails?.thirdPartyName ??
+      rawDetails?.ThirdPartyName ??
+      rawDetails?.third_party_name ??
+      profile?.thirdPartyName ??
+      profile?.third_party_name ??
+      thirdParty?.thirdPartyName ??
+      null,
+    tradingName:
+      rawDetails?.tradingName ??
+      rawDetails?.TradingName ??
+      rawDetails?.trading_name ??
+      profile?.tradingName ??
+      profile?.trading_name ??
+      null,
+    businessType:
+      rawDetails?.businessType ??
+      rawDetails?.BusinessType ??
+      rawDetails?.business_type ??
+      rawDetails?.businessTypeDetail?.label ??
+      rawDetails?.businessTypeDetail?.description ??
+      rawDetails?.businessTypeDetail?.Description ??
+      rawDetails?.business_type_detail?.label ??
+      rawDetails?.business_type_detail?.description ??
+      rawDetails?.business_type_detail?.Description ??
+      profile?.businessType ??
+      profile?.BusinessType ??
+      thirdParty?.businessType ??
+      thirdParty?.BusinessType ??
+      null,
+    registrationNumber:
+      rawDetails?.registrationNumber ??
+      rawDetails?.RegistrationNumber ??
+      rawDetails?.registration_number ??
+      profile?.registrationNumber ??
+      profile?.RegistrationNumber ??
+      null,
+    taxPIN:
+      rawDetails?.taxPIN ??
+      rawDetails?.TaxPIN ??
+      rawDetails?.taxPin ??
+      rawDetails?.tax_pin ??
+      profile?.taxPIN ??
+      profile?.TaxPIN ??
+      profile?.taxPin ??
+      null,
+    physicalAddress:
+      rawDetails?.physicalAddress ??
+      rawDetails?.PhysicalAddress ??
+      rawDetails?.physical_address ??
+      profile?.physicalAddress ??
+      profile?.PhysicalAddress ??
+      null,
+    website:
+      rawDetails?.website ??
+      rawDetails?.Website ??
+      profile?.website ??
+      profile?.Website ??
+      null,
+    email: rawDetails?.email ?? rawDetails?.Email ?? profile?.email ?? profile?.Email ?? null,
+    phone: rawDetails?.phone ?? rawDetails?.Phone ?? profile?.phone ?? profile?.Phone ?? null,
   }
 
   const rawProfileCompletion =

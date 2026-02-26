@@ -24,14 +24,18 @@ import { toast } from "sonner"
 import { Loader2, Plus, UploadCloud, Wrench } from "lucide-react"
 import { MAINTENANCE_CATEGORIES, PRIORITY_LEVELS, CreateMaintenanceRequestPayload } from "@/types/maintenance"
 import { useSession } from "next-auth/react"
-import { normalizeAccessToken } from "@/lib/auth/normalize-access-token"
+import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
 import { maintenanceService } from "@/lib/api/maintenance"
 
 export function MaintenanceRequestSheet({
     children,
+    accessToken,
+    tenantId,
     onSuccess
 }: {
     children?: React.ReactNode
+    accessToken?: string
+    tenantId?: number | null
     onSuccess?: () => void
 }) {
     const [open, setOpen] = useState(false)
@@ -58,16 +62,18 @@ export function MaintenanceRequestSheet({
 
         startTransition(async () => {
             try {
-                const accessToken = normalizeAccessToken(
-                    session?.accessToken || (session as any)?.user?.accessToken
-                )
-                if (!accessToken) {
+                const resolvedAccessToken = accessToken || resolveSessionAccessToken(session as any)
+                if (!resolvedAccessToken) {
                     throw new Error("You must be logged in to submit a request")
+                }
+                if (typeof tenantId !== "number" || !Number.isFinite(tenantId)) {
+                    throw new Error("Tenant profile mapping missing. Please contact support.")
                 }
 
                 await maintenanceService.createRequest(
                     formData as CreateMaintenanceRequestPayload,
-                    accessToken
+                    resolvedAccessToken,
+                    tenantId
                 )
                 toast.success("Maintenance request submitted successfully")
                 setOpen(false)

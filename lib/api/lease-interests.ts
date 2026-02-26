@@ -25,7 +25,7 @@ export type LeaseInterest = {
         id?: number | string | null
         name?: string | null
         email?: string | null
-    [key: string]: unknown
+        [key: string]: unknown
     }
     property?: {
         id?: number | string | null
@@ -72,7 +72,7 @@ export async function getLeaseInterests(
         page?: number
         search?: string
     }
-) : Promise<PaginatedResponse<LeaseInterest>> {
+): Promise<PaginatedResponse<LeaseInterest>> {
     const payload = await propertyRequest<unknown>(
         "/api/v1/property/lease-interests",
         {
@@ -147,7 +147,7 @@ function toCodeDetailArray(payload: unknown): CodeDetail[] {
     for (const candidate of candidates) {
         if (!Array.isArray(candidate)) continue
         return candidate
-            .map((item) => {
+            .map((item): CodeDetail | null => {
                 const id = Number(item?.id ?? item?.Id ?? item?.value)
                 if (!Number.isFinite(id)) return null
                 return {
@@ -158,9 +158,9 @@ function toCodeDetailArray(payload: unknown): CodeDetail[] {
                         String(item?.label ?? item?.Label ?? item?.description ?? item?.name ?? item?.Name ?? "")
                             .trim() || undefined,
                     value: String(item?.value ?? item?.Value ?? "").trim() || undefined,
-                } satisfies CodeDetail
+                }
             })
-            .filter((item): item is CodeDetail => Boolean(item))
+            .filter((item): item is CodeDetail => item !== null)
     }
 
     return []

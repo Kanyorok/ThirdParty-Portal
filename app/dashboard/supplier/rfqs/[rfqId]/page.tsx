@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { format } from "date-fns"
+import { toast } from "sonner"
 import {
     ArrowUpRight,
     Building2,
@@ -14,10 +15,8 @@ import {
 
 import { cn } from "@/lib/utils"
 import { parseSubmissionDeadline } from "@/lib/deadline"
-import { Badge } from "@/components/common/badge"
+import { isRfqAwardedStatus, isRfqClosedStatus, isRfqSubmittedResponseStatus, normalizeRfqStatusKey } from "@/lib/rfq-status"
 import { Button } from "@/components/common/button"
-
-type AnyRecord = Record<string, any>
 
 type RFQPayload = {
     rfq: {
@@ -57,27 +56,19 @@ function deadlineMeta(deadline: string) {
 }
 
 function normalizeStatusKey(status: string) {
-    return String(status ?? "")
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, "_")
+    return normalizeRfqStatusKey(status)
 }
 
 function isSubmittedStatus(status: string) {
-    const s = normalizeStatusKey(status)
-    return (
-        s === "submitted" ||
-        s === "final" ||
-        s === "approved" ||
-        s === "accepted" ||
-        s === "submitted_response" ||
-        s === "response_submitted"
-    )
+    return isRfqSubmittedResponseStatus(status)
 }
 
 function statusBadgeClass(status?: string) {
     const s = normalizeStatusKey(status ?? "")
     if (!s) return "bg-slate-100 text-slate-600 border-slate-200"
+    if (isRfqAwardedStatus(s)) {
+        return "bg-slate-100 text-slate-600 border-slate-300"
+    }
     if (["submitted", "approved", "accepted"].includes(s)) {
         return "bg-emerald-50 text-emerald-700 border-emerald-200"
     }
@@ -136,7 +127,7 @@ export default function RFQPage() {
             }
         }
         run()
-    }, [rfqId])
+    }, [normalizedRfqId])
 
     if (loading) {
         return (
@@ -190,13 +181,55 @@ export default function RFQPage() {
                     ? "bg-amber-500"
                     : "bg-emerald-500"
     const responseStatus = String(supplierResponse?.status ?? "")
+    const invitationStatus =
+        rfq?.invitationStatus ??
+        rfq?.invitation_status ??
+        rfq?.InvitationStatus ??
+        root?.invitationStatus ??
+        root?.invitation_status ??
+        root?.InvitationStatus ??
+        ""
+    const awardStatus =
+        rfq?.awardStatus ??
+        rfq?.award_status ??
+        rfq?.AwardStatus ??
+        root?.awardStatus ??
+        root?.award_status ??
+        root?.AwardStatus ??
+        ""
+    const rfqStatus = rfq?.status ?? root?.status ?? ""
+
+    const isAwarded = [rfqStatus, invitationStatus, awardStatus, responseStatus].some((value) =>
+        isRfqAwardedStatus(value)
+    )
     const isDraft = normalizeStatusKey(responseStatus) === "draft"
     const isSubmitted = isSubmittedStatus(responseStatus)
-    const quotationCtaLabel = isSubmitted
-        ? "Submitted"
+    const isClosedForResponse =
+        [rfqStatus, invitationStatus, awardStatus].some((value) => isRfqClosedStatus(value)) ||
+        urgency.label.toLowerCase() === "closed"
+    const actionBlockedMessage = isAwarded
+        ? "This RFQ has already been awarded and is no longer accepting responses."
+        : isSubmitted
+            ? "You already submitted a response for this RFQ."
+            : isClosedForResponse
+                ? "This RFQ is closed and no longer accepting responses."
+                : null
+    const quotationCtaLabel = isAwarded
+        ? "Awarded"
+        : isSubmitted
+            ? "Submitted"
         : isDraft
             ? "Continue quotation"
             : "Start quotation"
+    const canStartQuotation = !actionBlockedMessage
+
+    const openQuotation = () => {
+        if (!canStartQuotation) {
+            toast.info(actionBlockedMessage || "This RFQ is not open for response.")
+            return
+        }
+        router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}/quotation`)
+    }
    
     return (
         <div className="w-full max-w-7xl mx-auto px-6 py-6 space-y-5">
@@ -245,10 +278,10 @@ export default function RFQPage() {
                             <span
                                 className={cn(
                                     "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                                    statusBadgeClass(rfq.invitationStatus ?? rfq.invitation_status ?? rfq.InvitationStatus)
+                                    statusBadgeClass(invitationStatus)
                                 )}
                             >
-                                {rfq.invitationStatus ?? rfq.invitation_status ?? rfq.InvitationStatus ?? "Invited"}
+                                {invitationStatus || "Invited"}
                             </span>
                             <span
                                 className={cn(
@@ -273,16 +306,19 @@ export default function RFQPage() {
                         <Button
                             className={cn(
                                 "h-8 rounded-full px-4 text-sm font-semibold",
-                                isSubmitted
+                                !canStartQuotation
                                     ? "bg-slate-200 text-slate-700 hover:bg-slate-200"
                                     : "bg-indigo-600 hover:bg-indigo-700 text-white"
                             )}
-                            disabled={isSubmitted}
-                            onClick={() => router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}/quotation`)}
+                            aria-disabled={!canStartQuotation}
+                            onClick={openQuotation}
                         >
                             {quotationCtaLabel}
                             <ArrowUpRight className="h-4 w-4 ml-2" />
                         </Button>
+                        {actionBlockedMessage ? (
+                            <p className="text-xs text-slate-500">{actionBlockedMessage}</p>
+                        ) : null}
                     </div>
                 </div>
             </header>
@@ -447,10 +483,10 @@ export default function RFQPage() {
                                 <span
                                     className={cn(
                                         "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                                        statusBadgeClass(rfq.invitationStatus ?? rfq.invitation_status ?? rfq.InvitationStatus)
+                                        statusBadgeClass(invitationStatus)
                                     )}
                                 >
-                                    {rfq.invitationStatus ?? rfq.invitation_status ?? rfq.InvitationStatus ?? "—"}
+                                    {invitationStatus || "—"}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between text-xs text-slate-600">
@@ -477,16 +513,19 @@ export default function RFQPage() {
                         <Button
                             className={cn(
                                 "w-full h-9 rounded-full font-semibold",
-                                isSubmitted
+                                !canStartQuotation
                                     ? "bg-slate-200 text-slate-700 hover:bg-slate-200"
                                     : "bg-indigo-600 hover:bg-indigo-700 text-white"
                             )}
-                            disabled={isSubmitted}
-                            onClick={() => router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}/quotation`)}
+                            aria-disabled={!canStartQuotation}
+                            onClick={openQuotation}
                         >
                             {quotationCtaLabel}
                             <ArrowUpRight className="h-4 w-4 ml-2" />
                         </Button>
+                        {actionBlockedMessage ? (
+                            <p className="text-[11px] text-slate-500">{actionBlockedMessage}</p>
+                        ) : null}
                     </div>
                 </aside>
             </div>

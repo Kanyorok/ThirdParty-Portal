@@ -1,121 +1,159 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
+import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
 
-interface FrontendBankDetailPayload {
-    bankName?: string;
-    branch?: string;
-    accountNumber?: string;
-    currencyId?: number;
-    swiftCode?: string | null;
-    thirdPartyId?: number;
+import { authOptions } from "@/lib/auth-options"
+import { getApiUrl } from "@/lib/config"
+
+const BANK_DETAILS_ENDPOINT = "/api/third-parties-bank-details"
+
+type BankDetailsWritePayload = {
+  ThirdPartyId: number
+  BranchID?: number
+  BranchId?: number
+  AccountNumber?: string
+  CurrencyId?: number
 }
 
-interface BackendBankDetailPayload {
-    BankName?: string;
-    Branch?: string;
-    AccountNumber?: string;
-    CurrencyId?: number;
-    SwiftCode?: string | null;
-    ThirdPartyId?: number;
+function getBaseApiUrl() {
+  return process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_EXTERNAL_API_URL || getApiUrl()
 }
 
-interface BankDetailResponse {
-    message?: string;
-    errors?: Record<string, string[]>;
-    bankDetail?: any;
-    data?: any;
+async function parseBody(res: Response) {
+  const text = await res.text().catch(() => "")
+  if (!text) return null
+
+  try {
+    return JSON.parse(text)
+  } catch {
+    return { message: text }
+  }
 }
 
-function transformToPascalCase(payload: FrontendBankDetailPayload): BackendBankDetailPayload {
-    const transformed: BackendBankDetailPayload = {};
-    if (payload.bankName !== undefined) transformed.BankName = payload.bankName;
-    if (payload.branch !== undefined) transformed.Branch = payload.branch;
-    if (payload.accountNumber !== undefined) transformed.AccountNumber = payload.accountNumber;
-    if (payload.currencyId !== undefined) transformed.CurrencyId = payload.currencyId;
-    if (payload.swiftCode !== undefined) transformed.SwiftCode = payload.swiftCode;
-    if (payload.thirdPartyId !== undefined) transformed.ThirdPartyId = payload.thirdPartyId;
-    return transformed;
+function normalizeText(value: unknown) {
+  if (typeof value !== "string") return undefined
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : undefined
+}
+
+function normalizeNumber(value: unknown) {
+  const next = Number(value)
+  return Number.isFinite(next) && next > 0 ? next : undefined
+}
+
+function resolveThirdPartyId(session: unknown) {
+  const user = (session as any)?.user as Record<string, unknown> | undefined
+  const fromCamel = Number(user?.thirdPartyId ?? 0)
+  if (Number.isFinite(fromCamel) && fromCamel > 0) return fromCamel
+
+  const fromSnake = Number(user?.third_party_id ?? 0)
+  if (Number.isFinite(fromSnake) && fromSnake > 0) return fromSnake
+
+  return null
+}
+
+async function getSessionContext() {
+  const session = await getServerSession(authOptions)
+  const accessToken = (session as any)?.accessToken as string | undefined
+  const thirdPartyId = resolveThirdPartyId(session)
+
+  if (!session || !accessToken || !thirdPartyId) return null
+  return { accessToken, thirdPartyId }
+}
+
+function buildWritePayload(input: unknown, thirdPartyId: number): BankDetailsWritePayload {
+  const payload = (input && typeof input === "object" ? input : {}) as Record<string, unknown>
+  const branchId = normalizeNumber(
+    payload.BranchID ??
+      payload.BranchId ??
+      payload.branchId ??
+      payload.branchID ??
+      payload.branch_id,
+  )
+
+  return {
+    ThirdPartyId: thirdPartyId,
+    BranchID: branchId,
+    BranchId: branchId,
+    AccountNumber: normalizeText(payload.accountNumber ?? payload.AccountNumber),
+    CurrencyId: normalizeNumber(payload.currencyId ?? payload.CurrencyId),
+  }
 }
 
 export async function PUT(
-    req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
-    const session = await getServerSession(authOptions);
-    const accessToken = (session as any)?.accessToken as string | undefined
-    const thirdPartyId =
-        Number((session?.user as any)?.thirdPartyId ?? (session?.user as any)?.third_party_id ?? 0) || undefined
+  const context = await getSessionContext()
+  if (!context) {
+    return NextResponse.json({ message: "Unauthorized or missing third-party context." }, { status: 401 })
+  }
 
-    if (!session || !accessToken || !thirdPartyId) {
-        return NextResponse.json(
-            { message: "Unauthorized or Missing ThirdPartyId in session" },
-            { status: 401 }
-        );
+  try {
+    const { id } = await params
+    if (!id) {
+      return NextResponse.json({ message: "Bank detail id is required." }, { status: 400 })
     }
 
-    const { id } = await params;
+    const requestBody = await request.json().catch(() => ({}))
+    const payload = buildWritePayload(requestBody, context.thirdPartyId)
 
-    try {
-        const frontendBody: FrontendBankDetailPayload = await req.json();
-        frontendBody.thirdPartyId = thirdPartyId;
+    const requestUrl = new URL(`${getBaseApiUrl()}${BANK_DETAILS_ENDPOINT}/${encodeURIComponent(id)}`)
+    requestUrl.searchParams.set("ThirdPartyId", String(context.thirdPartyId))
 
-        const backendBody = transformToPascalCase(frontendBody);
+    const res = await fetch(requestUrl.toString(), {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${context.accessToken}`,
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    })
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/third-parties-bank-details/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify(backendBody),
-        });
-
-        const data: BankDetailResponse = await res.json();
-
-        if (!res.ok) {
-            console.error('Backend error (PUT):', data);
-            return NextResponse.json(data, { status: res.status });
-        }
-
-        return NextResponse.json(data);
-    } catch (error) {
-        console.error('API Route Error (PUT bank details):', error);
-        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
-    }
+    const body = await parseBody(res)
+    return NextResponse.json(body ?? { message: "Failed to update bank detail." }, { status: res.status })
+  } catch (error) {
+    console.error("[Third Party Bank Details API] PUT error:", error)
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+  }
 }
 
 export async function DELETE(
-    _req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
-    const session = await getServerSession(authOptions);
-    const accessToken = (session as any)?.accessToken as string | undefined
-    if (!session || !accessToken) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  const context = await getSessionContext()
+  if (!context) {
+    return NextResponse.json({ message: "Unauthorized or missing third-party context." }, { status: 401 })
+  }
+
+  try {
+    const { id } = await params
+    if (!id) {
+      return NextResponse.json({ message: "Bank detail id is required." }, { status: 400 })
     }
 
-    const { id } = await params;
+    const requestUrl = new URL(`${getBaseApiUrl()}${BANK_DETAILS_ENDPOINT}/${encodeURIComponent(id)}`)
+    requestUrl.searchParams.set("ThirdPartyId", String(context.thirdPartyId))
 
-    try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/third-parties-bank-details/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${accessToken}`,
-            },
-        });
+    const res = await fetch(requestUrl.toString(), {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${context.accessToken}`,
+      },
+      cache: "no-store",
+    })
 
-        if (!res.ok) {
-            const data: BankDetailResponse = await res.json();
-            console.error('Backend error (DELETE):', data);
-            return NextResponse.json(data, { status: res.status });
-        }
-
-        return new NextResponse(null, { status: 204 });
-    } catch (error) {
-        console.error('API Route Error (DELETE bank details):', error);
-        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+    if (res.status === 204) {
+      return new NextResponse(null, { status: 204 })
     }
+
+    const body = await parseBody(res)
+    return NextResponse.json(body ?? { message: "Failed to delete bank detail." }, { status: res.status })
+  } catch (error) {
+    console.error("[Third Party Bank Details API] DELETE error:", error)
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+  }
 }

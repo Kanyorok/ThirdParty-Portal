@@ -603,7 +603,14 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                     setFormMessage({ type: "error", message: firstErr || "Validation error. Please check your input." });
                     setFormLoadingState("error");
                 } else if (resp.status >= 500) {
-                    setFormMessage({ type: "error", message: "Server error. Please try again later." });
+                    const upstreamMessage =
+                        (typeof resp.data?.message === "string" && resp.data.message.trim()) ||
+                        (typeof resp.data?.error === "string" && resp.data.error.trim()) ||
+                        "";
+                    setFormMessage({
+                        type: "error",
+                        message: upstreamMessage || "Server error. Please try again later.",
+                    });
                     setFormLoadingState("error");
                 } else {
                     setFormMessage({ type: "error", message: resp.data?.message || `Unexpected error (${resp.status}).` });
