@@ -46,7 +46,10 @@ export function NotificationsPopover() {
           type="button"
           variant="ghost"
           size="icon"
-          className={cn("relative rounded-xl shadow-none", isNotifications && "bg-accent text-foreground")}
+          className={cn(
+            "relative rounded-full text-muted-foreground shadow-none hover:bg-accent/60 hover:text-foreground",
+            isNotifications && "bg-primary/10 text-primary",
+          )}
           aria-label="Notifications"
         >
           <Bell className="h-5 w-5" />
@@ -59,7 +62,7 @@ export function NotificationsPopover() {
       <PopoverContent
         align="end"
         sideOffset={12}
-        className="w-[min(26rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-border/60 bg-background/95 p-0 shadow-sm backdrop-blur-xl"
+        className="w-[min(26rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-border/70 bg-popover p-0 shadow-none backdrop-blur-xl"
       >
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">

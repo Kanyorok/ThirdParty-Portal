@@ -44,27 +44,25 @@ async function AsyncDashboardLayout({ children }: { children: ReactNode }) {
             <SidebarInset
                 className={cn(
                     "flex flex-col transition-all duration-300 ease-in-out bg-background/50",
-                    contentLayout === "centered" && "mx-auto w-full max-w-7xl border-x border-border/40 min-h-screen",
+                    contentLayout === "centered" && "mx-auto w-full max-w-[96rem] border-x border-border/40 min-h-screen",
                     "peer-data-[variant=inset]:m-2 peer-data-[variant=inset]:rounded-xl peer-data-[variant=inset]:border"
                 )}
             >
-                <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center border-b border-border/40 bg-background/70 px-4 backdrop-blur-xl lg:px-6">
-                    <div className="flex w-full items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <SidebarTrigger className="-ml-1 size-9 rounded-xl hover:bg-accent transition-transform active:scale-95" />
+                <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 px-4 py-2 backdrop-blur-md lg:px-6">
+                    <div className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card/90 px-2.5 py-2">
+                        <div className="flex min-w-0 flex-1 items-center gap-2">
+                            <SidebarTrigger className="size-9 rounded-full border border-border/70 bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95" />
                             <SearchDialog />
                         </div>
-                        <div className="flex items-center gap-2">
-                            <HeaderActions
-                                layoutControls={(
-                                    <LayoutControls
-                                        contentLayout={contentLayout}
-                                        variant={sidebarVariant}
-                                        collapsible={sidebarCollapsible}
-                                    />
-                                )}
-                            />
-                        </div>
+                        <HeaderActions
+                            layoutControls={(
+                                <LayoutControls
+                                    contentLayout={contentLayout}
+                                    variant={sidebarVariant}
+                                    collapsible={sidebarCollapsible}
+                                />
+                            )}
+                        />
                     </div>
                 </header>
                 <main className={cn(

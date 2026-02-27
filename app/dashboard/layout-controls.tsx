@@ -119,7 +119,7 @@ export function LayoutControls({ variant, collapsible, contentLayout }: LayoutCo
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="size-9 rounded-xl shadow-none hover:bg-accent/50"
+                    className="size-9 rounded-full text-muted-foreground shadow-none hover:bg-accent/70 hover:text-foreground"
                     aria-label="Open layout settings"
                 >
                     <Settings className={cn("size-3.5 transition-transform duration-500", isPending && "animate-spin text-primary")} />
@@ -127,7 +127,7 @@ export function LayoutControls({ variant, collapsible, contentLayout }: LayoutCo
             </PopoverTrigger>
             <PopoverContent
                 align="end"
-                className="w-[320px] p-0 overflow-hidden rounded-2xl border border-border/60 bg-background/95 shadow-sm backdrop-blur-xl"
+                className="w-[320px] overflow-hidden rounded-2xl border border-border/70 bg-popover p-0 shadow-none backdrop-blur-xl"
             >
                 <div className="flex flex-col">
                     <div className="bg-muted/20 p-4 border-b border-border/40">

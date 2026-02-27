@@ -34,7 +34,7 @@ function SidebarSkeleton() {
         <div className="flex flex-col gap-8 py-4 px-3">
             {[1, 2].map((group) => (
                 <div key={group} className="space-y-4">
-                    <div className="px-5 h-2 w-16 bg-sidebar-accent/40 rounded-full mb-4" />
+                    <div className="px-5 h-2 w-16 bg-sidebar-accent/70 rounded-full mb-4" />
                     <div className="space-y-2">
                         {[1, 2, 3].map((i) => (
                             <NavItemSkeleton key={i} />
@@ -113,23 +113,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
     return (
         <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar" {...props}>
-            <SidebarHeader className="p-4">
-                <div className="flex items-center gap-3 px-2 py-1">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground ring-1 ring-primary/15 transition-colors">
+            <SidebarHeader className="px-3 py-3">
+                <div className="flex items-center gap-3 rounded-2xl border border-sidebar-border bg-sidebar-accent/45 px-2.5 py-2">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white ring-1 ring-blue-600/20 transition-colors">
                         <Command className="size-5" />
                     </div>
                     <div className={cn(
                         "flex flex-col transition-all duration-300",
                         state === "collapsed" ? "opacity-0 invisible w-0" : "opacity-100 visible w-auto"
                     )}>
-                        <span className="font-semibold tracking-tight text-sm leading-tight line-clamp-1">
+                        <span className="font-semibold tracking-tight text-sm leading-tight text-sidebar-foreground line-clamp-1">
                             {CLIENT_APP_NAME_STRING}
+                        </span>
+                        <span className="text-[11px] font-medium text-sidebar-foreground/70">
+                            Workspace
                         </span>
                     </div>
                 </div>
             </SidebarHeader>
 
-            <SidebarContent className="px-3 mt-2 scrollbar-none overflow-y-auto">
+            <SidebarContent className="mt-1 px-2.5 scrollbar-none overflow-y-auto">
                 {!isHydrated ? (
                     <SidebarSkeleton />
                 ) : (
@@ -144,26 +147,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 )}
             </SidebarContent>
 
-            <SidebarFooter className="p-4 border-t border-sidebar-border/50">
+            <SidebarFooter className="border-t border-sidebar-border px-3 py-3">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             onClick={() => signOut({ callbackUrl: "/signin" })}
                             tooltip="Logout"
                             className={cn(
-                                "group h-11 w-full rounded-xl transition-all text-muted-foreground hover:bg-destructive/10 hover:text-destructive",
+                                "group h-10 w-full rounded-full border border-rose-300/70 bg-sidebar text-rose-700 transition-all hover:bg-rose-500/10 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200",
                                 state === "collapsed" ? "justify-center px-0" : "justify-start"
                             )}
                         >
                             <LogOut className={cn(
-                                "size-4 shrink-0 transition-transform",
+                                "size-4 shrink-0 transition-transform text-rose-600",
                                 state === "collapsed" ? "" : "group-hover:-translate-x-1"
                             )} />
                             <span className={cn(
-                                "font-semibold text-[12px] tracking-tight ml-3 transition-all",
+                                "font-semibold text-[12px] tracking-tight ml-2 transition-all",
                                 state === "collapsed" ? "opacity-0 w-0" : "opacity-100"
                             )}>
-                                Logout Session
+                                Sign out
                             </span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

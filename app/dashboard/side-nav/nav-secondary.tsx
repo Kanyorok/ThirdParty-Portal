@@ -25,18 +25,18 @@ export const NavSecondary = memo(({ items }: { items: readonly NavSecondaryItem[
     return (
         <Popover>
             <PopoverTrigger asChild>
-                <button className="flex w-full items-center justify-between gap-3 px-3 py-2.5 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-all duration-200 group">
+                <button className="group flex w-full items-center justify-between gap-3 rounded-xl border border-sidebar-border bg-sidebar px-3 py-2.5 transition-all duration-200 hover:bg-sidebar-accent/50">
                     <div className="flex items-center gap-2.5">
-                        <div className="flex size-7 items-center justify-center rounded-lg bg-background border border-border/50 ring-1 ring-transparent group-hover:border-primary/30 group-hover:ring-primary/10 transition-colors">
-                            <MoreHorizontal className="size-3.5 text-muted-foreground group-hover:text-primary" />
+                        <div className="flex size-7 items-center justify-center rounded-lg border border-sidebar-border bg-sidebar transition-colors group-hover:border-primary/30">
+                            <MoreHorizontal className="size-3.5 text-sidebar-foreground/60 group-hover:text-primary" />
                         </div>
-                        <span className="text-[11px] font-semibold tracking-tight text-muted-foreground/80 group-hover:text-foreground transition-colors">
+                        <span className="text-[11px] font-semibold tracking-tight text-sidebar-foreground/75 transition-colors group-hover:text-sidebar-foreground">
                             Utilities
                         </span>
                     </div>
                     <div className="flex gap-1">
-                        <span className="size-1 rounded-full bg-border group-hover:bg-primary/40" />
-                        <span className="size-1 rounded-full bg-border group-hover:bg-primary/40" />
+                        <span className="size-1 rounded-full bg-sidebar-border group-hover:bg-primary/50" />
+                        <span className="size-1 rounded-full bg-sidebar-border group-hover:bg-primary/50" />
                     </div>
                 </button>
             </PopoverTrigger>
@@ -45,7 +45,7 @@ export const NavSecondary = memo(({ items }: { items: readonly NavSecondaryItem[
                 side="right"
                 align="end"
                 sideOffset={12}
-                className="w-56 p-1.5 rounded-2xl border border-border/40 bg-background/95 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200 shadow-none"
+                className="w-56 rounded-2xl border border-sidebar-border bg-sidebar p-1.5 shadow-none backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200"
             >
                 <div className="flex flex-col gap-0.5">
                     {items.map((item) => {
@@ -56,16 +56,16 @@ export const NavSecondary = memo(({ items }: { items: readonly NavSecondaryItem[
                                 href={item.url}
                                 onClick={item.onClick}
                                 className={cn(
-                                    "flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group",
+                                    "group flex items-center justify-between rounded-lg px-3 py-2 transition-all duration-200",
                                     isActive
-                                        ? "bg-primary/5 text-primary"
-                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                        ? "bg-primary/10 text-primary"
+                                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent/55 hover:text-sidebar-foreground"
                                 )}
                             >
                                 <div className="flex items-center gap-3">
                                     <item.icon className={cn(
                                         "size-4 transition-colors",
-                                        isActive ? "text-primary" : "text-muted-foreground/60 group-hover:text-foreground"
+                                        isActive ? "text-primary" : "text-sidebar-foreground/55 group-hover:text-sidebar-foreground"
                                     )} />
                                     <span className="text-[12px] font-semibold tracking-tight">
                                         {item.title}
