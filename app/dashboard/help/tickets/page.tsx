@@ -2,7 +2,7 @@
 "use client"
 
 import Link from "next/link"
-import React, { useCallback, useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/common/button"
 import Loading from "@/components/common/custom-loader"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/common/dialog"
@@ -16,13 +16,10 @@ import {
   AlertCircle,
   ArrowUpRight,
   CheckCircle2,
-  Download,
   Eye,
-  Filter,
   LifeBuoy,
   Plus,
   RefreshCw,
-  Save,
   Search,
   SearchX,
   Send,
@@ -31,7 +28,6 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-const STORAGE_KEY = "portal_help_ticket_filters_v2"
 const DEFAULT_PAGE_SIZE = 10
 
 type Ticket = {
@@ -48,6 +44,14 @@ type SortKey = "newest" | "oldest"
 type Filters = { search: string; status: string; severity: string; sort: SortKey }
 type CreateFieldErrors = { subject?: string; message?: string }
 type NoticeTone = "success" | "info"
+type MentionTrigger = { start: number; end: number; query: string }
+type MentionCandidate = {
+  key: string
+  label: string
+  handle: string
+  mentionId?: number
+  email?: string
+}
 
 const DEFAULT_FILTERS: Filters = { search: "", status: "all", severity: "all", sort: "newest" }
 const STATUS_FILTERS = ["all", "open", "pending", "resolved", "closed"]
@@ -75,6 +79,119 @@ function readText(v: unknown, depth = 0): string {
     }
   }
   return ""
+}
+
+function toPositiveInt(value: unknown): number | undefined {
+  const next = Number(value)
+  if (!Number.isFinite(next) || next <= 0) return undefined
+  return Math.trunc(next)
+}
+
+function toMentionHandle(value: unknown, fallback = "user"): string {
+  const normalized = s(value)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._\-\s]/g, "")
+    .replace(/\s+/g, ".")
+    .replace(/\.{2,}/g, ".")
+    .replace(/^\.|\.$/g, "")
+
+  return normalized || fallback
+}
+
+function sanitizeMentionSearch(value: string): string {
+  return value.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "")
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function uniqueMentionCandidates(list: MentionCandidate[]): MentionCandidate[] {
+  const map = new Map<string, MentionCandidate>()
+  for (const candidate of list) {
+    if (!map.has(candidate.key)) {
+      map.set(candidate.key, candidate)
+    }
+  }
+  return [...map.values()]
+}
+
+function parseMentionRows(payload: unknown): unknown[] {
+  const body = payload as any
+  for (const candidate of [body?.data, body?.items, body?.rows, body]) {
+    if (Array.isArray(candidate)) return candidate
+  }
+  return []
+}
+
+function normalizeMentionCandidate(input: unknown): MentionCandidate | null {
+  if (!input || typeof input !== "object") return null
+
+  const row = input as Record<string, unknown>
+  const mentionId = toPositiveInt(
+    row.id ??
+      row.Id ??
+      row.user_id ??
+      row.userId ??
+      row.third_party_user_id ??
+      row.thirdPartyUserId,
+  )
+
+  const label =
+    readText(row.name ?? row.full_name ?? row.fullName ?? row.label ?? row.title ?? row.username ?? row.email) ||
+    (mentionId ? `User ${mentionId}` : "")
+  if (!label) return null
+
+  const email = s(row.email).trim() || undefined
+  const handle = toMentionHandle(
+    row.username ?? row.handle ?? row.tag ?? row.slug ?? label ?? email ?? (mentionId ? `user.${mentionId}` : "user"),
+    mentionId ? `user.${mentionId}` : "user",
+  )
+
+  return {
+    key: mentionId ? `api:${mentionId}` : `api:${handle}`,
+    label,
+    handle,
+    mentionId,
+    email,
+  }
+}
+
+function getMentionTrigger(value: string, cursor: number): MentionTrigger | null {
+  const prefix = value.slice(0, cursor)
+  const match = /(^|[\s(])@([a-zA-Z0-9._-]*)$/.exec(prefix)
+  if (!match) return null
+
+  const query = match[2] ?? ""
+  const atPosition = prefix.lastIndexOf("@")
+  if (atPosition < 0) return null
+
+  return { start: atPosition, end: cursor, query }
+}
+
+function mentionExistsInText(text: string, handle: string): boolean {
+  if (!text.trim() || !handle) return false
+  const pattern = new RegExp(`(^|[\\s(])@${escapeRegExp(handle)}(?=\\b|[\\s).,!?]|$)`, "i")
+  return pattern.test(text)
+}
+
+function renderMessageWithMentions(text: string) {
+  const parts = text.split(/(@[a-zA-Z0-9._-]+)/g)
+  return parts.map((part, index) => {
+    if (!part.startsWith("@")) {
+      return <React.Fragment key={`txt-${index}`}>{part}</React.Fragment>
+    }
+
+    return (
+      <span
+        key={`mention-${index}`}
+        className="inline-flex items-center rounded-md bg-blue-100/80 px-1 py-0.5 font-semibold text-blue-700"
+      >
+        {part}
+      </span>
+    )
+  })
 }
 
 function readNum(v: unknown, depth = 0): number | null {
@@ -225,11 +342,11 @@ function pageItems(page: number, last: number): Array<number | string> {
 function createdTicketIdFrom(body: any): string {
   return s(
     body?.data?.ticket?.id ??
-      body?.data?.id ??
-      body?.ticket?.id ??
-      body?.id ??
-      body?.ticket_id ??
-      body?.data?.ticket_id,
+    body?.data?.id ??
+    body?.ticket?.id ??
+    body?.id ??
+    body?.ticket_id ??
+    body?.data?.ticket_id,
   ).trim()
 }
 
@@ -254,6 +371,13 @@ export default function TicketsPage() {
   const [createBusy, setCreateBusy] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const [createFieldErrors, setCreateFieldErrors] = useState<CreateFieldErrors>({})
+  const createMessageInputRef = useRef<HTMLTextAreaElement | null>(null)
+  const [createMentionTrigger, setCreateMentionTrigger] = useState<MentionTrigger | null>(null)
+  const [createMentionResults, setCreateMentionResults] = useState<MentionCandidate[]>([])
+  const [createMentionDirectory, setCreateMentionDirectory] = useState<MentionCandidate[]>([])
+  const [createMentionLookupLoading, setCreateMentionLookupLoading] = useState(false)
+  const [createMentionActiveIndex, setCreateMentionActiveIndex] = useState(0)
+  const [createSelectedMentions, setCreateSelectedMentions] = useState<MentionCandidate[]>([])
 
   const debouncedSearch = useDebounce(filters.search, 300)
 
@@ -291,22 +415,6 @@ export default function TicketsPage() {
   }, [])
 
   useEffect(() => {
-    const raw = typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null
-    if (!raw) return
-    try {
-      const parsed = JSON.parse(raw) as Partial<Filters>
-      setFilters({
-        search: s(parsed.search),
-        status: s(parsed.status) || "all",
-        severity: s(parsed.severity) || "all",
-        sort: parsed.sort === "oldest" ? parsed.sort : "newest",
-      })
-    } catch {
-      window.localStorage.removeItem(STORAGE_KEY)
-    }
-  }, [])
-
-  useEffect(() => {
     if (typeof window !== "undefined" && window.location.hash === "#create-ticket") setCreateOpen(true)
   }, [])
 
@@ -320,6 +428,158 @@ export default function TicketsPage() {
     const t = setTimeout(() => setNotice(null), 2600)
     return () => clearTimeout(t)
   }, [notice])
+
+  const fetchCreateMentionCandidates = useCallback(async (query: string, signal?: AbortSignal) => {
+    setCreateMentionLookupLoading(true)
+    try {
+      const params = new URLSearchParams({ limit: "10" })
+      if (query) params.set("q", query)
+
+      const res = await fetch(`/api/v1/portal/help/mentions?${params.toString()}`, {
+        cache: "no-store",
+        signal,
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok || body?.success === false) {
+        if (signal?.aborted) return
+        setCreateMentionResults([])
+        return
+      }
+
+      const normalized = parseMentionRows(body)
+        .map(normalizeMentionCandidate)
+        .filter((item): item is MentionCandidate => item != null)
+
+      setCreateMentionResults(normalized)
+      setCreateMentionDirectory((prev) => uniqueMentionCandidates([...prev, ...normalized]))
+    } catch {
+      if (signal?.aborted) return
+      setCreateMentionResults([])
+    } finally {
+      if (!signal?.aborted) {
+        setCreateMentionLookupLoading(false)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!createOpen || !createMentionTrigger) {
+      setCreateMentionLookupLoading(false)
+      setCreateMentionResults([])
+      return
+    }
+
+    const controller = new AbortController()
+    const query = sanitizeMentionSearch(createMentionTrigger.query)
+    void fetchCreateMentionCandidates(query, controller.signal)
+
+    return () => controller.abort()
+  }, [createOpen, createMentionTrigger, fetchCreateMentionCandidates])
+
+  useEffect(() => {
+    setCreateSelectedMentions((prev) => {
+      const next = prev.filter((mention) => mentionExistsInText(createMessage, mention.handle))
+      return next.length === prev.length ? prev : next
+    })
+  }, [createMessage])
+
+  const createMentionSuggestions = useMemo(() => {
+    if (!createMentionTrigger) return []
+
+    const query = sanitizeMentionSearch(createMentionTrigger.query)
+    const selectedHandles = new Set(createSelectedMentions.map((mention) => mention.handle))
+    const baseRows = query ? createMentionResults : createMentionDirectory
+
+    return baseRows
+      .filter((candidate) => {
+        if (selectedHandles.has(candidate.handle)) return false
+        if (!query) return true
+        const haystack = `${candidate.handle} ${candidate.label} ${candidate.email ?? ""}`.toLowerCase()
+        return haystack.includes(query)
+      })
+      .slice(0, 10)
+  }, [createMentionDirectory, createMentionResults, createMentionTrigger, createSelectedMentions])
+
+  useEffect(() => {
+    if (createMentionActiveIndex >= createMentionSuggestions.length) {
+      setCreateMentionActiveIndex(0)
+    }
+  }, [createMentionActiveIndex, createMentionSuggestions.length])
+
+  const updateCreateMentionTriggerState = useCallback((value: string, cursor: number) => {
+    const trigger = getMentionTrigger(value, cursor)
+    setCreateMentionTrigger(trigger)
+    if (!trigger) {
+      setCreateMentionActiveIndex(0)
+    }
+  }, [])
+
+  const onCreateMessageChange = useCallback((value: string, cursor: number) => {
+    setCreateMessage(value)
+    if (createFieldErrors.message) setCreateFieldErrors((prev) => ({ ...prev, message: undefined }))
+    updateCreateMentionTriggerState(value, cursor)
+  }, [createFieldErrors.message, updateCreateMentionTriggerState])
+
+  const applyCreateMention = useCallback((candidate: MentionCandidate) => {
+    if (!createMentionTrigger) return
+
+    const before = createMessage.slice(0, createMentionTrigger.start)
+    const after = createMessage.slice(createMentionTrigger.end)
+    const token = `@${candidate.handle}`
+    const nextMessage = `${before}${token} ${after}`.replace(/\s{2,}/g, " ")
+
+    setCreateMessage(nextMessage)
+    setCreateSelectedMentions((prev) => uniqueMentionCandidates([...prev, candidate]))
+    setCreateMentionTrigger(null)
+    setCreateMentionActiveIndex(0)
+
+    if (createFieldErrors.message) {
+      setCreateFieldErrors((prev) => ({ ...prev, message: undefined }))
+    }
+
+    requestAnimationFrame(() => {
+      const input = createMessageInputRef.current
+      if (!input) return
+      const nextCursor = before.length + token.length + 1
+      input.focus()
+      input.setSelectionRange(nextCursor, nextCursor)
+    })
+  }, [createFieldErrors.message, createMentionTrigger, createMessage])
+
+  const onCreateMessageKeyDown = useCallback((event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!createMentionTrigger || createMentionSuggestions.length === 0) return
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault()
+      setCreateMentionActiveIndex((prev) => (prev + 1) % createMentionSuggestions.length)
+      return
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault()
+      setCreateMentionActiveIndex((prev) => (prev - 1 + createMentionSuggestions.length) % createMentionSuggestions.length)
+      return
+    }
+
+    if (event.key === "Enter" || event.key === "Tab") {
+      event.preventDefault()
+      const active = createMentionSuggestions[Math.min(createMentionActiveIndex, createMentionSuggestions.length - 1)]
+      if (active) applyCreateMention(active)
+      return
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault()
+      setCreateMentionTrigger(null)
+      setCreateMentionActiveIndex(0)
+    }
+  }, [applyCreateMention, createMentionActiveIndex, createMentionSuggestions, createMentionTrigger])
+
+  const removeCreateMention = useCallback((mention: MentionCandidate) => {
+    const pattern = new RegExp(`(^|[\\s(])@${escapeRegExp(mention.handle)}(?=\\b|[\\s).,!?]|$)`, "gi")
+    setCreateMessage((prev) => prev.replace(pattern, "$1").replace(/\s{2,}/g, " "))
+    setCreateSelectedMentions((prev) => prev.filter((item) => item.key !== mention.key))
+  }, [])
 
   const filtered = useMemo(() => {
     const query = filters.search.trim().toLowerCase()
@@ -339,41 +599,16 @@ export default function TicketsPage() {
     if (!serverPaging && page > uiLastPage) setPage(uiLastPage)
   }, [serverPaging, page, uiLastPage])
 
-  const filterCount = Number(Boolean(filters.search.trim())) + Number(filters.status !== "all") + Number(filters.severity !== "all") + Number(filters.sort !== "newest")
-  const totalVisible = filtered.length
-  const openCount = filtered.filter((t) => ["open", "pending", "in_progress", "waiting"].includes(norm(t.status))).length
-  const resolvedCount = filtered.filter((t) => ["resolved", "closed", "done"].includes(norm(t.status))).length
-  const awaitingFirstResponse = filtered.filter((t) => t.responseCount === 0).length
+  const hasActiveFilters =
+    Boolean(filters.search.trim()) ||
+    filters.status !== "all" ||
+    filters.severity !== "all" ||
+    filters.sort !== "newest"
 
   const clearFilters = () => {
     setFilters(DEFAULT_FILTERS)
     setPage(1)
-    setNotice({ message: "Filters cleared.", tone: "info" })
-  }
-
-  const saveFilters = () => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(filters))
-    }
-    setNotice({ message: "View saved.", tone: "info" })
-  }
-
-  const exportCsv = () => {
-    if (!visible.length) return setNotice({ message: "No rows to export on this page.", tone: "info" })
-    const head = [["Ticket ID", "Subject", "Status", "Priority", "Updated"]]
-    const csv = [...head, ...visible.map((t) => [t.id, t.subject, t.status, t.priority, fmtDate(t.createdAt || t.updatedAt)])]
-      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
-      .join("\n")
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `help-tickets-${new Date().toISOString().slice(0, 10)}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    setNotice({ message: "Filters reset.", tone: "info" })
   }
 
   const resetCreateForm = () => {
@@ -382,6 +617,12 @@ export default function TicketsPage() {
     setCreateSeverity("normal")
     setCreateError(null)
     setCreateFieldErrors({})
+    setCreateMentionTrigger(null)
+    setCreateMentionResults([])
+    setCreateMentionDirectory([])
+    setCreateMentionLookupLoading(false)
+    setCreateMentionActiveIndex(0)
+    setCreateSelectedMentions([])
   }
 
   async function submitTicket(e: React.FormEvent<HTMLFormElement>) {
@@ -397,17 +638,27 @@ export default function TicketsPage() {
     }
 
     try {
+      const mentionIds = [...new Set(
+        createSelectedMentions
+          .filter((mention) => mentionExistsInText(check.cleanMessage, mention.handle))
+          .map((mention) => mention.mentionId)
+          .filter((value): value is number => value != null),
+      )]
+
+      const payload: Record<string, unknown> = {
+        subject: check.cleanSubject,
+        title: check.cleanSubject,
+        message: check.cleanMessage,
+        description: check.cleanMessage,
+        priority: createSeverity,
+        severity: createSeverity,
+      }
+      if (mentionIds.length > 0) payload.mentions = mentionIds
+
       const res = await fetch("/api/v1/portal/help/tickets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subject: check.cleanSubject,
-          title: check.cleanSubject,
-          message: check.cleanMessage,
-          description: check.cleanMessage,
-          priority: createSeverity,
-          severity: createSeverity,
-        }),
+        body: JSON.stringify(payload),
       })
 
       const body = await res.json().catch(() => ({}))
@@ -456,67 +707,47 @@ export default function TicketsPage() {
 
   return (
     <div className="w-full space-y-8 antialiased">
-      <header className="space-y-5">
-        <div className="space-y-2.5">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
-            <LifeBuoy className="h-3.5 w-3.5 text-blue-600" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-700">Help Center</span>
+      <header className="space-y-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0 space-y-1.5">
+            <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5">
+              <LifeBuoy className="h-3.5 w-3.5 text-blue-600" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-700">Help Center</span>
+            </div>
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Support tickets</h1>
           </div>
 
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="min-w-0">
-              <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Support tickets</h1>
-              <p className="mt-1 text-sm text-slate-600">
-                Track progress, prioritize response, and manage issue resolution from one view.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button asChild variant="outline" className="h-10 rounded-full border-slate-300 bg-transparent px-4 text-xs font-semibold hover:bg-slate-50">
-                <Link href="/dashboard/help">
-                  Help center
-                  <ArrowUpRight className="ml-1.5 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-10 rounded-full border-slate-300 bg-transparent px-4 text-xs font-semibold hover:bg-slate-50"
-                onClick={() => void loadTickets(page, filters.status, filters.severity, debouncedSearch)}
-                disabled={loading}
-              >
-                {loading ? "Refreshing..." : <><RefreshCw className="mr-1.5 h-4 w-4" />Refresh</>}
-              </Button>
-              <Button
-                type="button"
-                className="h-10 rounded-full border border-blue-600 bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700"
-                onClick={() => setCreateOpen(true)}
-              >
-                <Plus className="mr-1.5 h-4 w-4" />
-                Create ticket
-              </Button>
-            </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="outline" className="h-10 rounded-full border-slate-300 bg-transparent px-4 text-xs font-semibold hover:bg-slate-50">
+              <Link href="/dashboard/help">
+                Help center
+                <ArrowUpRight className="ml-1.5 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 rounded-full border-slate-300 bg-transparent px-4 text-xs font-semibold hover:bg-slate-50"
+              onClick={() => void loadTickets(page, filters.status, filters.severity, debouncedSearch)}
+              disabled={loading}
+            >
+              {loading ? "Refreshing..." : <><RefreshCw className="mr-1.5 h-4 w-4" />Refresh</>}
+            </Button>
+            <Button
+              type="button"
+              className="h-10 rounded-full border border-blue-600 bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700"
+              onClick={() => setCreateOpen(true)}
+            >
+              <Plus className="mr-1.5 h-4 w-4" />
+              Create ticket
+            </Button>
           </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="inline-flex h-8 items-center rounded-full border border-slate-200 bg-white px-3 font-medium text-slate-600">
-            Total <span className="ml-1 font-semibold text-slate-900">{totalVisible}</span>
-          </span>
-          <span className="inline-flex h-8 items-center rounded-full border border-amber-200 bg-amber-50 px-3 font-medium text-amber-700">
-            Open / pending <span className="ml-1 font-semibold">{openCount}</span>
-          </span>
-          <span className="inline-flex h-8 items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 font-medium text-emerald-700">
-            Resolved / closed <span className="ml-1 font-semibold">{resolvedCount}</span>
-          </span>
-          <span className="inline-flex h-8 items-center rounded-full border border-blue-200 bg-blue-50 px-3 font-medium text-blue-700">
-            Awaiting first response <span className="ml-1 font-semibold">{awaitingFirstResponse}</span>
-          </span>
         </div>
       </header>
 
       <section className="space-y-3">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="relative flex-1 max-w-3xl">
+        <div className="grid grid-cols-1 gap-2 xl:grid-cols-[minmax(0,1.5fr)_minmax(150px,180px)_minmax(160px,190px)_minmax(130px,150px)_auto]">
+          <div className="relative">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               value={filters.search}
@@ -524,7 +755,7 @@ export default function TicketsPage() {
                 setPage(1)
                 setFilters((prev) => ({ ...prev, search: e.target.value }))
               }}
-              placeholder="Search by ticket ID, subject, status, or priority..."
+              placeholder="Search ticket ID or subject..."
               className="h-11 rounded-xl border-slate-200 bg-white pl-10 pr-10 text-sm focus:border-blue-300 focus:ring-4 focus:ring-blue-50"
             />
             {filters.search.trim() ? (
@@ -542,79 +773,55 @@ export default function TicketsPage() {
             ) : null}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" className="h-10 rounded-full border-rose-200 bg-rose-50 px-4 text-xs font-semibold text-rose-700 hover:bg-rose-100" onClick={clearFilters}>
-              <X className="mr-1.5 h-4 w-4" />
-              Clear
-            </Button>
-            <Button type="button" variant="outline" className="h-10 rounded-full border-blue-200 bg-blue-50 px-4 text-xs font-semibold text-blue-700 hover:bg-blue-100" onClick={saveFilters}>
-              <Save className="mr-1.5 h-4 w-4" />
-              Save view
-            </Button>
-            <Button type="button" variant="outline" className="h-10 rounded-full border-slate-300 bg-transparent px-4 text-xs font-semibold hover:bg-slate-50" onClick={exportCsv}>
-              <Download className="mr-1.5 h-4 w-4" />
-              Export
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {STATUS_FILTERS.map((status) => {
-            const active = filters.status === status
-            return (
-              <button
-                key={status}
-                type="button"
-                onClick={() => {
-                  setPage(1)
-                  setFilters((prev) => ({ ...prev, status }))
-                }}
-                className={cn(
-                  "inline-flex h-9 items-center rounded-full border px-4 text-xs font-semibold transition-colors",
-                  active
-                    ? "border-blue-300 bg-blue-50 text-blue-700"
-                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
-                )}
-              >
+          <NativeSelect
+            value={filters.status}
+            onChange={(e) => {
+              setPage(1)
+              setFilters((prev) => ({ ...prev, status: e.target.value }))
+            }}
+            className="h-11 rounded-xl border-slate-200 bg-white px-3 text-sm"
+          >
+            {STATUS_FILTERS.map((status) => (
+              <NativeSelectOption key={status} value={status}>
                 {statusFilterLabel(status)}
-              </button>
-            )
-          })}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
 
-          <div className="ml-0 flex items-center gap-2 lg:ml-auto">
-            <div className="min-w-[155px]">
-              <NativeSelect
-                value={filters.severity}
-                onChange={(e) => {
-                  setPage(1)
-                  setFilters((prev) => ({ ...prev, severity: e.target.value }))
-                }}
-                className="h-9 rounded-full border-slate-200 bg-white px-3 text-xs lg:h-9"
-              >
-                <NativeSelectOption value="all">All priorities</NativeSelectOption>
-                <NativeSelectOption value="urgent">Urgent</NativeSelectOption>
-                <NativeSelectOption value="high">High</NativeSelectOption>
-                <NativeSelectOption value="normal">Normal</NativeSelectOption>
-                <NativeSelectOption value="low">Low</NativeSelectOption>
-              </NativeSelect>
-            </div>
-            <div className="min-w-[145px]">
-              <NativeSelect
-                value={filters.sort}
-                onChange={(e) => setFilters((prev) => ({ ...prev, sort: e.target.value as SortKey }))}
-                className="h-9 rounded-full border-slate-200 bg-white px-3 text-xs lg:h-9"
-              >
-                <NativeSelectOption value="newest">Newest first</NativeSelectOption>
-                <NativeSelectOption value="oldest">Oldest first</NativeSelectOption>
-              </NativeSelect>
-            </div>
-            {filterCount > 0 ? (
-              <span className="inline-flex h-9 items-center rounded-full border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-700">
-                <Filter className="mr-1.5 h-3.5 w-3.5" />
-                {filterCount} active
-              </span>
-            ) : null}
-          </div>
+          <NativeSelect
+            value={filters.severity}
+            onChange={(e) => {
+              setPage(1)
+              setFilters((prev) => ({ ...prev, severity: e.target.value }))
+            }}
+            className="h-11 rounded-xl border-slate-200 bg-white px-3 text-sm"
+          >
+            <NativeSelectOption value="all">All priorities</NativeSelectOption>
+            <NativeSelectOption value="urgent">Urgent</NativeSelectOption>
+            <NativeSelectOption value="high">High</NativeSelectOption>
+            <NativeSelectOption value="normal">Normal</NativeSelectOption>
+            <NativeSelectOption value="low">Low</NativeSelectOption>
+          </NativeSelect>
+
+          <NativeSelect
+            value={filters.sort}
+            onChange={(e) => setFilters((prev) => ({ ...prev, sort: e.target.value as SortKey }))}
+            className="h-11 rounded-xl border-slate-200 bg-white px-3 text-sm"
+          >
+            <NativeSelectOption value="newest">Newest</NativeSelectOption>
+            <NativeSelectOption value="oldest">Oldest</NativeSelectOption>
+          </NativeSelect>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 rounded-xl border-slate-300 bg-transparent px-4 text-xs font-semibold hover:bg-slate-50"
+            onClick={clearFilters}
+            disabled={!hasActiveFilters}
+          >
+            <X className="mr-1.5 h-4 w-4" />
+            Reset
+          </Button>
         </div>
       </section>
 
@@ -627,7 +834,7 @@ export default function TicketsPage() {
               : "border-blue-200 bg-blue-50 text-blue-700",
           )}
         >
-          {notice.tone === "success" ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Filter className="h-3.5 w-3.5" />}
+          {notice.tone === "success" ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
           {notice.message}
           <button
             type="button"
@@ -692,19 +899,84 @@ export default function TicketsPage() {
 
             <div className="space-y-1.5">
               <Label htmlFor="ticket-message" className="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Issue details</Label>
-              <Textarea
-                id="ticket-message"
-                value={createMessage}
-                onChange={(e) => {
-                  setCreateMessage(e.target.value)
-                  if (createFieldErrors.message) setCreateFieldErrors((prev) => ({ ...prev, message: undefined }))
-                }}
-                rows={5}
-                placeholder={"What happened?\nWhat did you expect instead?\nHow can we reproduce it?\nInclude order/reference ID if available."}
-                className="resize-none rounded-xl border-slate-200 bg-white focus-visible:border-blue-300 focus-visible:ring-4 focus-visible:ring-blue-50"
-                required
-              />
-              <p className="text-[11px] text-slate-500">Tip: paste exact error text and mention when it started.</p>
+              <div className="relative">
+                <Textarea
+                  ref={createMessageInputRef}
+                  id="ticket-message"
+                  value={createMessage}
+                  onChange={(e) => onCreateMessageChange(e.target.value, e.currentTarget.selectionStart ?? e.target.value.length)}
+                  onKeyDown={onCreateMessageKeyDown}
+                  onClick={(e) => updateCreateMentionTriggerState(e.currentTarget.value, e.currentTarget.selectionStart ?? e.currentTarget.value.length)}
+                  onKeyUp={(e) => updateCreateMentionTriggerState(e.currentTarget.value, e.currentTarget.selectionStart ?? e.currentTarget.value.length)}
+                  rows={5}
+                  placeholder={"What happened?\nWhat did you expect instead?\nHow can we reproduce it?\nInclude order/reference ID if available.\nUse @ to mention teammates."}
+                  className="resize-none rounded-xl border-slate-200 bg-white focus-visible:border-blue-300 focus-visible:ring-4 focus-visible:ring-blue-50"
+                  required
+                />
+
+                {createMentionTrigger && (createMentionLookupLoading || createMentionSuggestions.length > 0) ? (
+                  <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                    <ul className="max-h-56 overflow-y-auto py-1">
+                      {createMentionLookupLoading ? (
+                        <li className="px-3 py-2 text-xs text-slate-500">Searching users...</li>
+                      ) : null}
+                      {createMentionSuggestions.map((candidate, index) => {
+                        const isActive = index === createMentionActiveIndex
+                        return (
+                          <li key={candidate.key}>
+                            <button
+                              type="button"
+                              onMouseDown={(event) => {
+                                event.preventDefault()
+                                applyCreateMention(candidate)
+                              }}
+                              className={[
+                                "flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors",
+                                isActive ? "bg-blue-50 text-blue-800" : "text-slate-700 hover:bg-slate-50",
+                              ].join(" ")}
+                            >
+                              <span className="truncate">
+                                <span className="font-semibold">@{candidate.handle}</span>
+                                <span className="ml-2 text-slate-500">{candidate.label}</span>
+                              </span>
+                            </button>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
+
+              {createSelectedMentions.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Mentions</span>
+                  {createSelectedMentions.map((mention) => (
+                    <span key={`create-chip-${mention.key}`} className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                      @{mention.handle}
+                      <button
+                        type="button"
+                        onClick={() => removeCreateMention(mention)}
+                        className="inline-flex h-4 w-4 items-center justify-center rounded-full text-blue-700/80 transition-colors hover:bg-blue-100 hover:text-blue-800"
+                        aria-label={`Remove mention ${mention.handle}`}
+                      >
+                        x
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+
+              {createMessage.trim() ? (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Preview</p>
+                  <p className="mt-1 text-sm leading-relaxed whitespace-pre-wrap text-slate-700">
+                    {renderMessageWithMentions(createMessage)}
+                  </p>
+                </div>
+              ) : null}
+
+              <p className="text-[11px] text-slate-500">Tip: paste exact error text, mention when it started, and use @ for collaborators.</p>
               <div className="flex items-center justify-between">
                 {createFieldErrors.message ? <p className="text-xs text-rose-600">{createFieldErrors.message}</p> : <span />}
                 <p className="text-[11px] text-slate-500">{createMessage.trim().length}/2000</p>
@@ -757,71 +1029,66 @@ export default function TicketsPage() {
               </div>
             ) : (
               <>
-                <div className="hidden lg:grid grid-cols-[minmax(0,2.3fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.2fr)_minmax(0,0.8fr)_auto] items-center gap-4 px-4 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  <span>Subject</span>
-                  <span>Status</span>
-                  <span>Priority</span>
-                  <span>Last update</span>
-                  <span>Replies</span>
-                  <span className="justify-self-end">Action</span>
-                </div>
+                <div className="overflow-hidden border-y border-slate-200 bg-white">
+                  <div className="hidden lg:grid grid-cols-[minmax(0,2.5fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.3fr)_auto] items-center gap-4 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    <span>Subject</span>
+                    <span>Status</span>
+                    <span>Priority</span>
+                    <span>Last update</span>
+                    <span className="justify-self-end">Action</span>
+                  </div>
 
-                <div className="space-y-3">
-                  {visible.map((t, i) => (
-                    <div
-                      key={t.id}
-                      className={cn(
-                        "grid gap-3 rounded-2xl border border-slate-200 border-l-4 px-4 py-4 lg:grid-cols-[minmax(0,2.3fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.2fr)_minmax(0,0.8fr)_auto] lg:items-center",
-                        rowAccent(t.status),
-                      )}
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-[15px] font-semibold text-slate-900">{t.subject}</p>
-                        <p className="mt-1.5 text-xs text-slate-600">Ticket #{t.id}</p>
-                        <p className="mt-1 text-xs text-slate-500">Created {fmtDate(t.createdAt)}</p>
+                  <div className="divide-y divide-slate-200">
+                    {visible.map((t, i) => (
+                      <div
+                        key={t.id}
+                        className={cn(
+                          "grid gap-3 border-l-4 px-4 py-4 transition-colors hover:bg-slate-50/70 lg:grid-cols-[minmax(0,2.5fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.3fr)_auto] lg:items-center",
+                          rowAccent(t.status),
+                        )}
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-[15px] font-semibold text-slate-900">{t.subject}</p>
+                          <p className="mt-1.5 text-xs text-slate-600">Ticket #{t.id}</p>
+                          <p className="mt-1 text-xs text-slate-500">Created {fmtDate(t.createdAt)}</p>
+                        </div>
+
+                        <div className="text-sm">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">Status</p>
+                          <span className={cn("inline-flex h-7 items-center rounded-full border px-3 text-xs font-semibold", statusTone(t.status))}>
+                            {displayText(t.status, "Open")}
+                          </span>
+                        </div>
+
+                        <div className="text-sm">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">Priority</p>
+                          <span className={cn("inline-flex h-7 items-center rounded-full border px-3 text-xs font-semibold", priorityTone(t.priority))}>
+                            {displayText(t.priority, "Normal")}
+                          </span>
+                        </div>
+
+                        <div className="text-sm">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">Last update</p>
+                          <p className="font-medium text-slate-900">{fmtDate(t.updatedAt || t.createdAt)}</p>
+                        </div>
+
+                        <div className="lg:justify-self-end">
+                          <Button
+                            asChild
+                            variant="outline"
+                            className="h-9 rounded-full border-slate-300 bg-transparent px-4 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          >
+                            <Link href={`/dashboard/help/tickets/${encodeURIComponent(t.id)}`}>
+                              <Eye className="mr-1.5 h-3.5 w-3.5" />
+                              Open thread
+                            </Link>
+                          </Button>
+                        </div>
+
+                        <div className="lg:hidden col-span-full text-xs text-slate-500">Row {(page - 1) * pageSize + i + 1}</div>
                       </div>
-
-                      <div className="text-sm">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">Status</p>
-                        <span className={cn("inline-flex h-7 items-center rounded-full border px-3 text-xs font-semibold", statusTone(t.status))}>
-                          {displayText(t.status, "Open")}
-                        </span>
-                      </div>
-
-                      <div className="text-sm">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">Priority</p>
-                        <span className={cn("inline-flex h-7 items-center rounded-full border px-3 text-xs font-semibold", priorityTone(t.priority))}>
-                          {displayText(t.priority, "Normal")}
-                        </span>
-                      </div>
-
-                      <div className="text-sm">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">Last update</p>
-                        <p className="font-medium text-slate-900">{fmtDate(t.updatedAt || t.createdAt)}</p>
-                      </div>
-
-                      <div className="text-sm">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">Replies</p>
-                        <span className="inline-flex h-7 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-700">
-                          {t.responseCount}
-                        </span>
-                      </div>
-
-                      <div className="lg:justify-self-end">
-                        <Button
-                          asChild
-                          className="h-9 rounded-full border border-blue-600 bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700"
-                        >
-                          <Link href={`/dashboard/help/tickets/${encodeURIComponent(t.id)}`}>
-                            <Eye className="mr-1.5 h-3.5 w-3.5" />
-                            Open
-                          </Link>
-                        </Button>
-                      </div>
-
-                      <div className="lg:hidden col-span-full text-xs text-slate-500">Row {(page - 1) * pageSize + i + 1}</div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </>
             )}
