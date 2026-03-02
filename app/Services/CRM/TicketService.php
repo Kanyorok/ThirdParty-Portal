@@ -553,14 +553,26 @@ class TicketService extends ApprovalWorkflowService
         $replyToName = config('support.queue_name', config('org.name'));
 
         try {
-            CRMEmailService::createRaw(
+            $service = CRMEmailService::createRaw(
                 SystemHelper::user(),
                 $subject,
                 $body,
                 [[$name => $email]],
                 $recipient['party'] ?? null,
                 $recipient['partyId'] ?? null
-            )->setReplyTo($replyToEmail, $replyToName)->send(true);
+            );
+
+            $service->crmEmail->forceFill([
+                'Extra' => (object) [
+                    'event' => 'ticket_reply_received',
+                    'source' => 'portal_help_ticket',
+                    'ticket_id' => $this->ticket->TicketID,
+                    'title' => "Ticket {$this->ticket->TicketID} updated",
+                    'link' => $this->portalTicketLink(),
+                ],
+            ])->save();
+
+            $service->setReplyTo($replyToEmail, $replyToName)->send(true);
         } catch (Throwable $e) {
             Log::warning('Failed to send ticket response notification email.', [
                 'ticket_id' => $this->ticket->TicketID,
@@ -634,5 +646,12 @@ class TicketService extends ApprovalWorkflowService
         }
 
         return [];
+    }
+
+    private function portalTicketLink(): string
+    {
+        $baseUrl = rtrim((string) (config('app.frontend_url') ?: config('app.url')), '/');
+
+        return "{$baseUrl}/dashboard/help/tickets/{$this->ticket->TicketID}";
     }
 }

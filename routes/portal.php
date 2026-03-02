@@ -103,10 +103,11 @@ Route::middleware(['auth.thirdparty'])->prefix('portal')->group(function () {
 
     Route::prefix('help')->group(function () {
         Route::get('categories', [HelpTicketController::class, 'categories']);
+        Route::get('mentions', [HelpTicketController::class, 'mentions'])->middleware(['throttle:30,1']);
         Route::get('tickets', [HelpTicketController::class, 'index']);
-        Route::post('tickets', [HelpTicketController::class, 'store']);
+        Route::post('tickets', [HelpTicketController::class, 'store'])->middleware(['throttle:10,1']);
         Route::get('tickets/{ticketId}', [HelpTicketController::class, 'show']);
-        Route::post('tickets/{ticketId}/messages', [HelpTicketController::class, 'reply']);
+        Route::post('tickets/{ticketId}/messages', [HelpTicketController::class, 'reply'])->middleware(['throttle:20,1']);
     });
 });
 

@@ -17,10 +17,12 @@ use App\Services\StaticListsService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class HelpTicketController extends Controller
@@ -73,13 +75,15 @@ class HelpTicketController extends Controller
     {
         $validated = $request->validate([
             'subject' => ['required', 'string', 'max:255'],
-            'message' => ['required', 'string'],
+            'message' => ['required', 'string', 'max:10000'],
             'category_id' => [
                 'nullable',
                 'integer',
                 Rule::exists('t_CodeDetails', 'ID')->where(fn ($q) => $q->where('CodeID', StaticListsService::TicketCategories)->where('IsActive', true)),
             ],
             'priority' => ['nullable', 'string', Rule::in(['normal', 'low', 'urgent'])],
+            'mentions' => ['nullable', 'array', 'max:25'],
+            'mentions.*' => ['integer'],
         ]);
 
         $user = $request->user();
@@ -94,8 +98,9 @@ class HelpTicketController extends Controller
         }
 
         $priority = $this->priorityFromInput($validated['priority'] ?? null);
+        $mentions = $this->resolveMentions($user, $validated['mentions'] ?? []);
 
-        $ticket = DB::transaction(function () use ($validated, $user, $actor, $category, $priority) {
+        $ticket = DB::transaction(function () use ($validated, $user, $actor, $category, $priority, $mentions) {
             $ticket = new Ticket();
             $ticket->fill([
                 'TicketID' => $this->generateTicketId(),
@@ -114,16 +119,16 @@ class HelpTicketController extends Controller
                 'ModifiedBy' => $actor->Id,
             ])->save();
 
-            $this->storeComment($ticket, $validated['message'], $user, $actor);
+            $this->storeComment($ticket, $validated['message'], $user, $actor, $mentions);
 
             return $ticket->refresh()->load(['category', 'status']);
         });
 
-        $this->sendCreateEmails($ticket, $user, $validated['message']);
+        $this->sendCreateEmails($ticket, $user, $validated['message'], $mentions);
 
         return response()->json([
             'success' => true,
-            'data' => $this->ticketPayload($ticket, true),
+            'data' => $this->ticketPayload($ticket, true, $user),
             'message' => 'Support ticket created successfully.',
         ], 201);
     }
@@ -149,14 +154,16 @@ class HelpTicketController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $this->ticketPayload($ticket, true),
+            'data' => $this->ticketPayload($ticket, true, $user),
         ]);
     }
 
     public function reply(Request $request, string $ticketId): JsonResponse
     {
         $validated = $request->validate([
-            'message' => ['required', 'string'],
+            'message' => ['required', 'string', 'max:10000'],
+            'mentions' => ['nullable', 'array', 'max:25'],
+            'mentions.*' => ['integer'],
         ]);
 
         $user = $request->user();
@@ -177,11 +184,13 @@ class HelpTicketController extends Controller
         }
 
         $actor = SystemHelper::user();
-        $comment = DB::transaction(function () use ($ticket, $validated, $user, $actor) {
-            return $this->storeComment($ticket, $validated['message'], $user, $actor);
+        $mentions = $this->resolveMentions($user, $validated['mentions'] ?? []);
+
+        $comment = DB::transaction(function () use ($ticket, $validated, $user, $actor, $mentions) {
+            return $this->storeComment($ticket, $validated['message'], $user, $actor, $mentions);
         });
 
-        $this->sendReplyEmails($ticket, $user, $validated['message']);
+        $this->sendReplyEmails($ticket, $user, $validated['message'], $mentions);
 
         return response()->json([
             'success' => true,
@@ -190,6 +199,32 @@ class HelpTicketController extends Controller
                 'message' => $this->messagePayload($comment, $user),
             ],
             'message' => 'Reply sent successfully.',
+        ]);
+    }
+
+    public function mentions(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'q' => ['nullable', 'string', 'max:80'],
+            'query' => ['nullable', 'string', 'max:80'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:25'],
+        ]);
+
+        /** @var ThirdPartyUser $user */
+        $user = $request->user();
+        $query = trim((string) ($validated['query'] ?? $validated['q'] ?? ''));
+        $limit = (int) ($validated['limit'] ?? 15);
+
+        $users = $this->resolveMentionableUsers($user, $query !== '' ? $query : null, $limit)
+            ->reject(fn (ThirdPartyUser $candidate) => (int) $candidate->Id === (int) $user->Id)
+            ->map(fn (ThirdPartyUser $candidate) => $this->mentionPayload($candidate))
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'mentions' => $users,
+            ],
         ]);
     }
 
@@ -215,7 +250,7 @@ class HelpTicketController extends Controller
             });
     }
 
-    private function ticketPayload(Ticket $ticket, bool $includeMessages): array
+    private function ticketPayload(Ticket $ticket, bool $includeMessages, ?ThirdPartyUser $viewer = null): array
     {
         $payload = [
             'id' => $ticket->TicketID,
@@ -244,7 +279,7 @@ class HelpTicketController extends Controller
             ? $ticket->comments
             : $ticket->comments()->orderBy('CreatedOn')->with('creator')->get();
 
-        $payload['messages'] = $messages->map(fn (Comment $comment) => $this->messagePayload($comment));
+        $payload['messages'] = $messages->map(fn (Comment $comment) => $this->messagePayload($comment, $viewer));
 
         return $payload;
     }
@@ -267,11 +302,20 @@ class HelpTicketController extends Controller
             'is_mine' => $user
                 ? ($authorType === 'ThirdPartyUser' && $authorId === (string) $user->Id)
                 : ($authorType === 'ThirdPartyUser'),
+            'mentions' => collect($meta['mentions'] ?? [])->map(function ($mention) {
+                $item = is_object($mention) ? (array) $mention : (is_array($mention) ? $mention : []);
+
+                return [
+                    'id' => isset($item['id']) ? (int) $item['id'] : null,
+                    'name' => $item['name'] ?? null,
+                    'email' => $item['email'] ?? null,
+                ];
+            })->filter(fn ($mention) => ! is_null($mention['id']))->values()->all(),
             'created_at' => $comment->CreatedOn,
         ];
     }
 
-    private function storeComment(Ticket $ticket, string $message, ThirdPartyUser $user, User $actor): Comment
+    private function storeComment(Ticket $ticket, string $message, ThirdPartyUser $user, User $actor, Collection $mentions): Comment
     {
         $comment = new Comment();
         $comment->fill([
@@ -284,6 +328,7 @@ class HelpTicketController extends Controller
                 'author_id' => (string) $user->Id,
                 'author_name' => $user->fullName,
                 'author_email' => $user->Email,
+                'mentions' => $mentions->map(fn (ThirdPartyUser $mentionedUser) => $this->mentionPayload($mentionedUser))->values()->all(),
             ],
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
@@ -292,7 +337,7 @@ class HelpTicketController extends Controller
         return $comment->refresh()->load('creator');
     }
 
-    private function sendCreateEmails(Ticket $ticket, ThirdPartyUser $user, string $message): void
+    private function sendCreateEmails(Ticket $ticket, ThirdPartyUser $user, string $message, Collection $mentions): void
     {
         $ticketId = $ticket->TicketID;
         $subject = "Support ticket {$ticketId} created";
@@ -308,7 +353,8 @@ class HelpTicketController extends Controller
             $subject,
             $body,
             $this->partyType($user),
-            (string) $this->partyId($user)
+            (string) $this->partyId($user),
+            $this->baseNotificationMeta($ticket, 'ticket_created', "Ticket {$ticketId} created")
         );
 
         $supportSubject = "[Portal Help] New ticket {$ticketId}";
@@ -319,10 +365,16 @@ class HelpTicketController extends Controller
             <p><strong>Subject:</strong> " . e($ticket->Title) . "</p>
             <p><strong>Message:</strong><br>" . e($message) . '</p>';
 
-        $this->sendEmailSafely(config('org.email'), config('org.name', 'Support Team'), $supportSubject, $supportBody);
+        $this->sendEmailSafely(config('org.email'), config('org.name', 'Support Team'), $supportSubject, $supportBody, null, null, [
+            'event' => 'ticket_received',
+            'ticket_id' => $ticketId,
+            'source' => 'portal_help_ticket',
+        ]);
+
+        $this->notifyMentionedUsers($ticket, $user, $message, $mentions);
     }
 
-    private function sendReplyEmails(Ticket $ticket, ThirdPartyUser $user, string $message): void
+    private function sendReplyEmails(Ticket $ticket, ThirdPartyUser $user, string $message, Collection $mentions): void
     {
         $ticketId = $ticket->TicketID;
         $subject = "Support ticket {$ticketId} updated";
@@ -337,7 +389,8 @@ class HelpTicketController extends Controller
             $subject,
             $body,
             $this->partyType($user),
-            (string) $this->partyId($user)
+            (string) $this->partyId($user),
+            $this->baseNotificationMeta($ticket, 'ticket_reply_sent', "Reply sent on {$ticketId}")
         );
 
         $supportSubject = "[Portal Help] Reply on ticket {$ticketId}";
@@ -346,7 +399,13 @@ class HelpTicketController extends Controller
             <p><strong>User:</strong> " . e($user->fullName) . " ({$user->Email})</p>
             <p><strong>Reply:</strong><br>" . e($message) . '</p>';
 
-        $this->sendEmailSafely(config('org.email'), config('org.name', 'Support Team'), $supportSubject, $supportBody);
+        $this->sendEmailSafely(config('org.email'), config('org.name', 'Support Team'), $supportSubject, $supportBody, null, null, [
+            'event' => 'ticket_reply_received',
+            'ticket_id' => $ticketId,
+            'source' => 'portal_help_ticket',
+        ]);
+
+        $this->notifyMentionedUsers($ticket, $user, $message, $mentions);
     }
 
     private function sendEmailSafely(
@@ -355,21 +414,37 @@ class HelpTicketController extends Controller
         string $subject,
         string $body,
         ?string $party = null,
-        ?string $partyId = null
+        ?string $partyId = null,
+        ?array $extra = null
     ): void {
         if (! is_string($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return;
         }
 
         try {
-            CRMEmailService::createRaw(
+            $service = CRMEmailService::createRaw(
                 SystemHelper::user(),
                 $subject,
                 $body,
                 [[$name => $email]],
                 $party,
                 $partyId
-            )->send(true);
+            );
+
+            if (is_array($extra) && ! empty($extra)) {
+                $existingExtra = $this->normalizeExtra($service->crmEmail->Extra);
+                $service->crmEmail->forceFill([
+                    'Extra' => (object) array_merge($existingExtra, $extra),
+                ])->save();
+            }
+
+            $replyToEmail = config('support.queue_email', config('org.email'));
+            $replyToName = config('support.queue_name', config('org.name'));
+            if (is_string($replyToEmail) && filter_var($replyToEmail, FILTER_VALIDATE_EMAIL)) {
+                $service->setReplyTo($replyToEmail, (string) $replyToName);
+            }
+
+            $service->send(true);
         } catch (Throwable $e) {
             Log::warning('Unable to send help email.', [
                 'email' => $email,
@@ -419,6 +494,162 @@ class HelpTicketController extends Controller
 
         if (is_array($comment->Response)) {
             return $comment->Response;
+        }
+
+        return [];
+    }
+
+    private function resolveMentions(ThirdPartyUser $user, array $mentionIds): Collection
+    {
+        $ids = collect($mentionIds)
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn (int $id) => $id > 0)
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        $query = ThirdPartyUser::query()
+            ->whereIn('Id', $ids->all())
+            ->where('IsActive', true)
+            ->whereNotNull('Email');
+
+        if ($user->ThirdPartyId) {
+            $query->where('ThirdPartyId', $user->ThirdPartyId);
+        } else {
+            $query->where('Id', $user->Id);
+        }
+
+        $mentionedUsers = $query->get();
+        $resolvedIds = $mentionedUsers->pluck('Id')->map(fn ($id) => (int) $id)->all();
+        $missingIds = array_values(array_diff($ids->all(), $resolvedIds));
+
+        if (! empty($missingIds)) {
+            throw ValidationException::withMessages([
+                'mentions' => ['One or more mentioned users are invalid or unavailable for your organization.'],
+            ]);
+        }
+
+        return $mentionedUsers;
+    }
+
+    private function resolveMentionableUsers(ThirdPartyUser $user, ?string $query = null, int $limit = 15): Collection
+    {
+        $search = trim((string) $query);
+
+        $builder = ThirdPartyUser::query()
+            ->where('IsActive', true)
+            ->whereNotNull('Email');
+
+        if ($user->ThirdPartyId) {
+            $builder->where('ThirdPartyId', $user->ThirdPartyId);
+        } else {
+            $builder->where('Id', $user->Id);
+        }
+
+        if ($search !== '') {
+            $builder->where(function ($q) use ($search) {
+                $q->where('FirstName', 'like', "%{$search}%")
+                    ->orWhere('LastName', 'like', "%{$search}%")
+                    ->orWhere('Email', 'like', "%{$search}%");
+            });
+        }
+
+        return $builder
+            ->orderBy('FirstName')
+            ->orderBy('LastName')
+            ->limit(max(1, min($limit, 25)))
+            ->get(['Id', 'FirstName', 'LastName', 'Email', 'ThirdPartyId']);
+    }
+
+    private function mentionPayload(ThirdPartyUser $mentionedUser): array
+    {
+        return [
+            'id' => (int) $mentionedUser->Id,
+            'name' => $mentionedUser->fullName,
+            'email' => $mentionedUser->Email,
+        ];
+    }
+
+    private function notifyMentionedUsers(Ticket $ticket, ThirdPartyUser $sender, string $message, Collection $mentions): void
+    {
+        if ($mentions->isEmpty()) {
+            return;
+        }
+
+        $ticketId = $ticket->TicketID;
+        $subject = "You were mentioned on support ticket {$ticketId}";
+
+        foreach ($mentions as $mentionedUser) {
+            if (! $mentionedUser instanceof ThirdPartyUser) {
+                continue;
+            }
+
+            if ((int) $mentionedUser->Id === (int) $sender->Id) {
+                continue;
+            }
+
+            $body = "<p>Hello " . e($mentionedUser->fullName) . ",</p>
+                <p>" . e($sender->fullName) . " mentioned you in support ticket <strong>{$ticketId}</strong>.</p>
+                <p><strong>Subject:</strong> " . e($ticket->Title) . "</p>
+                <p><strong>Message:</strong><br>" . e($message) . '</p>
+                <p>Please log in to the portal to continue the conversation.</p>';
+
+            $this->sendEmailSafely(
+                $mentionedUser->Email,
+                $mentionedUser->fullName,
+                $subject,
+                $body,
+                'ThirdPartyUser',
+                (string) $mentionedUser->Id,
+                array_merge(
+                    $this->baseNotificationMeta($ticket, 'ticket_mentioned', "Mentioned on ticket {$ticketId}"),
+                    [
+                        'mentioned_by' => [
+                            'id' => (int) $sender->Id,
+                            'name' => $sender->fullName,
+                            'email' => $sender->Email,
+                        ],
+                    ]
+                )
+            );
+        }
+    }
+
+    private function baseNotificationMeta(Ticket $ticket, string $event, string $title): array
+    {
+        return [
+            'event' => $event,
+            'source' => 'portal_help_ticket',
+            'ticket_id' => $ticket->TicketID,
+            'title' => $title,
+            'link' => $this->ticketPortalLink($ticket),
+        ];
+    }
+
+    private function ticketPortalLink(Ticket $ticket): string
+    {
+        $baseUrl = rtrim((string) (config('app.frontend_url') ?: config('app.url')), '/');
+
+        return "{$baseUrl}/dashboard/help/tickets/{$ticket->TicketID}";
+    }
+
+    private function normalizeExtra($extra): array
+    {
+        if (is_array($extra)) {
+            return $extra;
+        }
+
+        if (is_object($extra)) {
+            return (array) $extra;
+        }
+
+        if (is_string($extra) && $extra !== '') {
+            $decoded = json_decode($extra, true);
+
+            return is_array($decoded) ? $decoded : [];
         }
 
         return [];
